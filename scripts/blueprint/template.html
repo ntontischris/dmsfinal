@@ -1,0 +1,278 @@
+<title>DMS Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:ital,opsz,wght@0,8..30,400;0,8..30,600;0,8..30,800;1,8..30,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a production call sheet. Clapperboard cover, four "parts" like reels, scenarios as numbered scenes, sticky contents rail (drawer on phones). */
+:root {
+  --paper: #f3f4f1;
+  --sheet: #ffffff;
+  --ink: #16181b;
+  --muted: #5b6168;
+  --line: #dcdfdb;
+  --tally: #c4321c;
+  --tally-soft: #fbeae5;
+  --note: #ebeeec;
+  --cover: #121417;
+  --cover-ink: #f2f1ec;
+  --cover-muted: #a3a8ad;
+  --display: "Piazzolla", "Georgia", "Times New Roman", serif;
+  --body: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", "Consolas", "Menlo", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111315; --sheet: #181b1e; --ink: #e8eae7; --muted: #9ba1a7;
+    --line: #2b3034; --tally: #f06b52; --tally-soft: #2c1a16; --note: #1e2326;
+    --cover: #0b0c0e; --cover-ink: #f2f1ec; --cover-muted: #a3a8ad;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111315; --sheet: #181b1e; --ink: #e8eae7; --muted: #9ba1a7;
+  --line: #2b3034; --tally: #f06b52; --tally-soft: #2c1a16; --note: #1e2326;
+  --cover: #0b0c0e; --cover-ink: #f2f1ec; --cover-muted: #a3a8ad;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--paper); color: var(--ink); font: 400 16.5px/1.7 var(--body); padding-inline: 16px; padding-block: 0 80px; }
+a { color: var(--tally); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--tally); outline-offset: 3px; border-radius: 4px; }
+
+.progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: var(--tally); z-index: 30; }
+
+/* Cover */
+.cover { background: var(--cover); color: var(--cover-ink); margin-inline: -16px; padding-inline: 16px; padding-block: 0 56px; }
+.clapper { height: 22px; margin-inline: -16px; background: repeating-linear-gradient(-55deg, var(--cover-ink) 0 26px, var(--cover) 26px 52px); opacity: .92; }
+.cover-in { max-width: 1180px; margin: 0 auto; padding-top: 44px; display: grid; gap: 32px; }
+.slate { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 1px solid #3a3f45; border-radius: 6px; overflow: hidden; }
+.slate div { padding: 10px 14px; border-right: 1px solid #3a3f45; font: 500 11px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--cover-muted); }
+.slate div:last-child { border-right: 0; }
+.slate b { display: block; margin-top: 4px; font: 600 15px/1.3 var(--body); letter-spacing: 0; text-transform: none; color: var(--cover-ink); }
+.rec { display: inline-flex; align-items: center; gap: 7px; }
+.rec::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--tally); box-shadow: 0 0 0 4px rgba(240,107,82,.18); }
+.cover h1 { font: 800 clamp(48px, 9vw, 104px)/.95 var(--display); letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.cover h1 i { font-weight: 400; color: var(--tally); }
+.cover .lede { font: 400 clamp(18px, 2.2vw, 21px)/1.6 var(--display); max-width: 60ch; margin: 0; color: var(--cover-ink); }
+.facts { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 0; padding: 0; list-style: none; font-size: 14.5px; color: var(--cover-muted); }
+.facts b { color: var(--cover-ink); font: 800 22px/1 var(--display); margin-right: 6px; font-variant-numeric: tabular-nums; }
+
+/* Mobile contents drawer */
+.mnav { display: none; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: -16px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.mnav summary { padding: 14px 16px; font: 600 15px/1 var(--body); cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
+.mnav summary::after { content: "☰"; color: var(--tally); }
+.mnav[open] summary::after { content: "✕"; }
+.mnav ol { list-style: none; margin: 0; padding: 0 16px 16px; max-height: 70vh; overflow-y: auto; display: grid; gap: 2px; }
+.mnav a, .rail a { display: grid; grid-template-columns: 36px 1fr; gap: 6px; padding: 6px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 14px; line-height: 1.35; }
+.mnav a span, .rail a span { font: 500 12px/1.6 var(--mono); color: var(--muted); }
+.np a { display: block !important; margin-top: 14px; font: 500 11px/1.4 var(--mono) !important; letter-spacing: .12em; text-transform: uppercase; color: var(--tally) !important; }
+@media (max-width: 960px) { .mnav { display: block; } }
+
+/* Shell */
+.shell { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 56px; }
+@media (max-width: 960px) { .shell { grid-template-columns: minmax(0, 1fr); gap: 0; } .rail { display: none; } }
+.rail { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; max-height: 100vh; overflow-y: auto; padding-block: 40px; }
+.rail ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.rail .np:first-child a { margin-top: 0; }
+.rail a:hover { background: var(--note); }
+.rail a.active { background: var(--tally-soft); }
+.rail a.active span { color: var(--tally); }
+main { min-width: 0; padding-block: 48px; }
+
+/* Intro */
+.intro { display: grid; gap: 48px; }
+.intro h2 { font: 800 30px/1.15 var(--display); margin: 0 0 12px; text-wrap: balance; }
+.intro p { max-width: 66ch; margin: 0 0 12px; }
+.eyebrow { font: 500 11.5px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--tally); display: block; margin-bottom: 8px; }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0; list-style: none; padding: 0; margin: 18px 0 0; border-top: 1px solid var(--line); }
+.how li { padding: 16px 18px 4px 0; font-size: 15px; color: var(--muted); }
+.how b { display: block; color: var(--ink); font: 600 16px/1.3 var(--display); margin-bottom: 4px; }
+.ov-part + .ov-part { margin-top: 30px; }
+.ov-part h3 { font: 700 20px/1.3 var(--display); margin: 0 0 12px; display: flex; gap: 12px; align-items: baseline; }
+.ov-part h3 span { font: 500 11.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--tally); }
+.ov-cards { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.ov-cards a { display: grid; gap: 4px; height: 100%; padding: 16px 18px; background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; color: var(--ink); text-decoration: none; transition: border-color .15s, transform .15s; }
+.ov-cards a:hover { border-color: var(--tally); transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .ov-cards a:hover { transform: none; } }
+.ov-cards .cn { font: 500 12px/1 var(--mono); color: var(--tally); }
+.ov-cards b { font: 600 17px/1.3 var(--display); }
+.ov-cards em { font-style: normal; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.backbone { background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+
+/* Part openers */
+.part { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: center; margin-top: 96px; padding: 40px 0; border-block: 2px solid var(--ink); }
+.part-letter { font: 800 clamp(80px, 13vw, 150px)/.8 var(--display); color: var(--tally); }
+.part-label { font: 500 12px/1 var(--mono); letter-spacing: .16em; color: var(--muted); }
+.part h2 { font: 800 clamp(30px, 4.5vw, 48px)/1.05 var(--display); margin: 8px 0 10px; text-wrap: balance; }
+.part p { margin: 0; max-width: 54ch; color: var(--muted); font-size: 17px; }
+
+/* Chapters */
+.chapter { padding-top: 64px; }
+.chapter + .chapter { margin-top: 64px; border-top: 1px solid var(--line); }
+.ch-head { display: grid; gap: 10px; margin-bottom: 26px; }
+.ch-num { font: 500 12.5px/1 var(--mono); letter-spacing: .14em; color: var(--tally); }
+.ch-num::before { content: "ΚΕΦΑΛΑΙΟ "; color: var(--muted); }
+.chapter h1 { font: 800 clamp(32px, 4.6vw, 48px)/1.08 var(--display); margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.chapter h2 { font: 700 24px/1.25 var(--display); margin: 0 0 14px; text-wrap: balance; }
+.chapter h3 { font: 600 18px/1.4 var(--display); margin: 26px 0 8px; }
+.chapter h4 { font: 600 15px/1.4 var(--body); margin: 18px 0 6px; color: var(--muted); }
+.chapter p, .chapter li { max-width: 70ch; }
+.chapter ul, .chapter ol { padding-left: 22px; }
+.chapter li + li { margin-top: 5px; }
+.sec { margin-top: 48px; }
+code { font: 500 .86em var(--mono); background: var(--note); padding: 1px 5px; border-radius: 4px; }
+
+blockquote { margin: 0 0 8px; padding: 0 0 0 0; max-width: 70ch; }
+blockquote p { font: 400 clamp(19px, 2.3vw, 22px)/1.55 var(--display); margin: 0 0 8px; }
+blockquote strong:first-child { display: block; font: 500 11.5px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--tally); margin-bottom: 10px; }
+
+.steps ol { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 0; }
+.steps ol > li { counter-increment: s; position: relative; padding: 0 0 18px 52px; margin: 0; }
+.steps ol > li::before { content: counter(s, decimal-leading-zero); position: absolute; left: 0; top: 1px; width: 36px; height: 26px; display: grid; place-items: center; font: 500 12px/1 var(--mono); color: var(--tally); background: var(--tally-soft); border-radius: 6px; }
+.steps ol > li:not(:last-child)::after { content: ""; position: absolute; left: 17px; top: 32px; bottom: 4px; width: 2px; background: var(--line); }
+
+.scenes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.scene { background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 8px; min-width: 0; }
+.scene .take { display: block; font: 500 11px/1 var(--mono); letter-spacing: .16em; color: var(--tally); padding-bottom: 10px; border-bottom: 1px dashed var(--line); margin-bottom: 4px; }
+.scene h3 { margin-top: 10px; }
+.scene p, .scene li { font-size: 15.5px; }
+
+.exceptions ul, .exceptions ol { padding-left: 0; list-style: none; }
+.exceptions li { padding: 10px 14px; background: var(--note); border-radius: 8px; }
+.exceptions li + li { margin-top: 8px; }
+
+.tbl { overflow-x: auto; margin: 14px 0 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; line-height: 1.5; }
+th { text-align: left; font: 500 11.5px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--note); white-space: nowrap; }
+th, td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td { min-width: 120px; }
+td:first-child { font-weight: 500; }
+
+pre.mermaid { background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 22px; overflow-x: auto; margin: 16px 0 22px; text-align: center; }
+
+details { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 0 20px; margin: 40px 0 0; }
+details[open] { padding-bottom: 14px; }
+summary { cursor: pointer; padding: 15px 0; font: 600 16px/1.3 var(--display); }
+
+.foot { margin-top: 96px; padding-top: 28px; border-top: 2px solid var(--ink); display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+.foot b { font: 800 22px/1.2 var(--display); color: var(--ink); }
+</style>
+
+<div class="progress" aria-hidden="true"></div>
+
+<header class="cover">
+  <div class="clapper" aria-hidden="true"></div>
+  <div class="cover-in">
+    <div class="slate">
+      <div>Παραγωγή<b>Devre Media</b></div>
+      <div>Έργο<b>Νέο DMS</b></div>
+      <div>Έκδοση<b>v1 · Σχέδιο</b></div>
+      <div>Ημερομηνία<b>Οκτώβριος 2026</b></div>
+      <div><span class="rec">Κατάσταση</span><b>Προς ανάγνωση</b></div>
+    </div>
+    <h1>DMS <i>Blueprint</i></h1>
+    <p class="lede">Το εγχειρίδιο λειτουργίας του νέου συστήματος. Ένα σύστημα για όλη την εταιρεία: την Ιστοσελίδα, τις πωλήσεις, τα γυρίσματα, τα παραδοτέα, την επικοινωνία με τους πελάτες, τα τιμολόγια και την εκπαίδευση της ομάδας.</p>
+    <ul class="facts">
+      <li><b>16</b>κεφάλαια</li>
+      <li><b>5</b>έτοιμοι ρόλοι</li>
+      <li><b>88</b>οθόνες</li>
+      <li><b>1</b>σύστημα στο devremedia.com</li>
+    </ul>
+  </div>
+</header>
+
+<details class="mnav">
+  <summary>Περιεχόμενα</summary>
+  <ol>
+    <li class="np"><a href="#intro">Αρχή</a></li>
+    {{NAV}}
+  </ol>
+</details>
+
+<div class="shell">
+  <nav class="rail" aria-label="Περιεχόμενα">
+    <ol>
+      <li class="np"><a href="#intro">Αρχή</a></li>
+      {{NAV}}
+    </ol>
+  </nav>
+
+  <main>
+    <section class="intro" id="intro">
+      <div>
+        <span class="eyebrow">Πριν ξεκινήσεις</span>
+        <h2>Τι θα βρεις εδώ</h2>
+        <p>Το έγγραφο περιγράφει τι κάνει το νέο σύστημα και ποιος κάνει τι, όχι πώς γράφεται ο κώδικας. Ο πελάτης έχει τον δικό του χώρο: κλείνει γυρίσματα, εγκρίνει δουλειές και βλέπει τι χρωστά. Ο admin ρυθμίζει πακέτα, τιμές, κανόνες και ειδοποιήσεις χωρίς προγραμματιστή, και βλέπει ποιοι πελάτες τον συμφέρουν.</p>
+        <ul class="how">
+          <li><b>Με μια ματιά</b>Η εισαγωγή κάθε κεφαλαίου λέει το σύνολο σε λίγες γραμμές.</li>
+          <li><b>Το σώμα</b>Βήματα, ρόλοι, ειδοποιήσεις, ρυθμίσεις και τι βλέπει ο πελάτης.</li>
+          <li><b>Σκηνές</b>Μικρές ιστορίες με φανταστικούς πελάτες και νούμερα.</li>
+          <li><b>Κανόνες</b>Σε κλειστό πλαίσιο, όσα θα τηρεί το σύστημα σε κάθε αλλαγή.</li>
+        </ul>
+      </div>
+
+      <div class="backbone">
+        <span class="eyebrow">Η ραχοκοκαλιά</span>
+        <h2>Κάθε πελάτης περνά από την ίδια διαδρομή</h2>
+<pre class="mermaid">
+flowchart LR
+  A[Ενδιαφέρον] --> B[Πελάτης + Ευκαιρία]
+  B --> C[Πρόταση]
+  C --> D[Υπογεγραμμένη Συμφωνία]
+  D --> E[Παραγωγή]
+  E --> F[Γυρίσματα]
+  E --> G[Παραδοτέα]
+  D --> H[Τιμολογητέα]
+  H --> I[Τιμολόγιο]
+  I --> J[Είσπραξη]
+</pre>
+      </div>
+
+      <div>
+        <span class="eyebrow">Περιεχόμενα</span>
+        <h2>Τέσσερα μέρη, δεκαέξι κεφάλαια</h2>
+        {{OVERVIEW}}
+      </div>
+    </section>
+
+    {{BODY}}
+
+    <footer class="foot">
+      <b>Devre Media · DMS Blueprint</b>
+      <span>Όλα τα ονόματα πελατών και τα νούμερα στα σενάρια είναι φανταστικά. Οι πραγματικές τιμές και τα κόστη ρυθμίζονται μέσα στο σύστημα.</span>
+      <span>Αργότερα, μετά την πρώτη έκδοση: Τιμολόγια με διαβίβαση στο myDATA, πληρωμή με κάρτα, freelancers, Βοηθός με πρόσβαση στα δεδομένα, πλήρης builder αυτοματισμών, web push, SMS και Viber, μαθήματα και quiz στη Γνώση.</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  const bar = document.querySelector('.progress');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  };
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  const links = [...document.querySelectorAll('.rail a')];
+  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const obs = new IntersectionObserver(entries => {
+    entries.filter(e => e.isIntersecting).forEach(e => {
+      const link = byId.get(e.target.id);
+      if (!link) return;
+      links.forEach(a => a.classList.remove('active'));
+      link.classList.add('active');
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  document.querySelectorAll('.chapter').forEach(s => obs.observe(s));
+
+  const drawer = document.querySelector('.mnav');
+  drawer.addEventListener('click', e => { if (e.target.closest('a')) drawer.open = false; });
+})();
+</script>
