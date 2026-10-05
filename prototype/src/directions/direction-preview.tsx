@@ -46,7 +46,12 @@ interface DirectionPreviewProps {
   code: DirectionScreen;
 }
 
-function HomePreview() {
+interface HomePreviewProps {
+  isShowcase?: boolean;
+}
+
+// isShowcase: η δημόσια βιτρίνα /directions, πάντα σε πλήρη οθόνη, χωρίς το πλαίσιο του prototype.
+export function HomePreview({ isShowcase = false }: HomePreviewProps) {
   const params = useSearchParams();
   const direction = findHomeDirection(params.get("variant"));
   const Home = HOMES[direction.key];
@@ -56,14 +61,14 @@ function HomePreview() {
       <div
         className={`direction ${DIRECTION_FONT_CLASSES}`}
         data-home={direction.key}
-        data-full={params.get("full") === "1" || undefined}
+        data-full={isShowcase || params.get("full") === "1" || undefined}
       >
         <Home key={direction.key} />
       </div>
       <DirectionSwitcher
         options={HOME_DIRECTIONS}
         current={direction}
-        canGoFull
+        canGoFull={!isShowcase}
       />
     </>
   );
