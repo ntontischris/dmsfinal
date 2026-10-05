@@ -16,6 +16,8 @@ export interface ClientRow {
   activeAgreements: number;
   balance: string | null;
   isPossibleDuplicate: boolean;
+  // Σε Πωλήσεις: Πελάτης άλλου πωλητή. Εμφανίζεται μόνο το όνομα και ο Υπεύθυνος.
+  takenBy: string | null;
 }
 
 interface ClientsTableProps {
@@ -84,7 +86,15 @@ export function ClientsTable({
               </tr>
             </thead>
             <tbody>
-              {visible.map((row) => (
+              {visible.map((row) =>
+                row.takenBy !== null ? (
+                  <tr key={row.id} className="taken">
+                    <td colSpan={6}>
+                      {row.name} <Badge>Κατειλημμένος</Badge>{" "}
+                      <span className="muted">{row.takenBy}</span>
+                    </td>
+                  </tr>
+                ) : (
                 <tr key={row.id}>
                   <td data-label="Πελάτης">
                     <Link href={row.href}>{row.name}</Link>{" "}
@@ -109,7 +119,8 @@ export function ClientsTable({
                     </td>
                   )}
                 </tr>
-              ))}
+                ),
+              )}
             </tbody>
           </table>
         </div>

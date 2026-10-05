@@ -31,16 +31,9 @@ export function DetailsSection({ role, client, caps }: SectionProps) {
       <div className="card-title">
         <h2>Στοιχεία</h2>
         {caps.canManage && (
-          <div className="btn-row">
-            <button type="button" className="button">
-              Επεξεργασία
-            </button>
-            {caps.canReassign && (
-              <button type="button" className="button">
-                Μεταβίβαση Υπεύθυνου
-              </button>
-            )}
-          </div>
+          <button type="button" className="button">
+            Επεξεργασία
+          </button>
         )}
       </div>
       <dl className="dl">
@@ -179,6 +172,7 @@ interface OpportunitiesSectionProps extends SectionProps {
 
 export function OpportunitiesSection({
   role,
+  client,
   caps,
   opportunities,
 }: OpportunitiesSectionProps) {
@@ -208,6 +202,9 @@ export function OpportunitiesSection({
                     : opportunity.outcome}
                 </Badge>
                 <span className="muted">{memberName(opportunity.ownerId)}</span>
+                {opportunity.ownerId !== client.ownerId && (
+                  <Badge>με πρόσβαση</Badge>
+                )}
                 {isForgotten(opportunity) && (
                   <Badge tone="attention">Ξεχασμένη</Badge>
                 )}

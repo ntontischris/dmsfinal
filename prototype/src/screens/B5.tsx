@@ -1,4 +1,6 @@
-import { TEAM, findClient } from "@/data/sales";
+import { ACCESS_REQUESTS } from "@/data/access-requests";
+import { TEAM, findClient, memberName } from "@/data/sales";
+import { AccessRequests } from "@/screens/b5-access-requests";
 import { unassignedOpportunities } from "@/data/sales-access";
 import { UnassignedQueue, type QueueItem } from "@/screens/b5-queue";
 import {
@@ -31,6 +33,19 @@ export function B5({ role, query }: ScreenProps) {
     },
   );
 
+  const requests = ACCESS_REQUESTS.map((request) => {
+    const client = findClient(request.clientId);
+    return {
+      id: request.id,
+      requester: memberName(request.requesterId),
+      client: client?.name ?? "",
+      currentOwner: memberName(client?.ownerId ?? null),
+      topic: request.topic,
+      comment: request.comment,
+      date: fmtDate(request.date),
+    };
+  });
+
   return (
     <>
       <StateSwitcher role={role} code="B5" state={state} />
@@ -40,15 +55,27 @@ export function B5({ role, query }: ScreenProps) {
       </p>
       {state === "error" && <ErrorNotice what="η ουρά «Χωρίς υπεύθυνο»" />}
       {state === "empty" && (
-        <StateNotice kind="empty" title="Η ουρά είναι άδεια">
-          <p>Όλες οι Ευκαιρίες από τη φόρμα έχουν Υπεύθυνο.</p>
+        <StateNotice kind="empty" title="Δεν υπάρχει τίποτα σε αναμονή">
+          <p>
+            Όλες οι Ευκαιρίες από τη φόρμα έχουν Υπεύθυνο και δεν υπάρχουν
+            Αιτήματα πρόσβασης.
+          </p>
         </StateNotice>
       )}
       {state === "normal" && (
-        <UnassignedQueue
-          items={items}
-          members={TEAM.map((member) => ({ id: member.id, name: member.name }))}
-        />
+        <>
+          <h2>Χωρίς υπεύθυνο</h2>
+          <UnassignedQueue
+            items={items}
+            members={TEAM.map((member) => ({ id: member.id, name: member.name }))}
+          />
+          <h2>Αιτήματα πρόσβασης</h2>
+          <p className="muted">
+            Ένας Πελάτης έχει έναν πωλητή. Εδώ αποφασίζεις αν άλλος πωλητής
+            ανοίγει Ευκαιρία σε Πελάτη που δεν είναι δικός του.
+          </p>
+          <AccessRequests items={requests} />
+        </>
       )}
     </>
   );

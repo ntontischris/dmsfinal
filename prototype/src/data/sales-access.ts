@@ -3,12 +3,7 @@
 
 import { OPPORTUNITIES, type Opportunity } from "@/data/opportunities";
 import type { RoleId } from "@/data/roles";
-import {
-  SALES_CLIENTS,
-  SALES_USER_ID,
-  TODAY,
-  type SalesClient,
-} from "@/data/sales";
+import { SALES_USER_ID, TODAY, type SalesClient } from "@/data/sales";
 
 export interface SalesCaps {
   isScoped: boolean;
@@ -46,18 +41,20 @@ export const capsOf = (role: RoleId): SalesCaps => {
 export const isMyOpportunity = (opportunity: Opportunity): boolean =>
   opportunity.ownerId === SALES_USER_ID;
 
-// «Με αφορά»: Υπεύθυνος του Πελάτη ή Υπεύθυνος μιας Ευκαιρίας του (01-roles-and-permissions.md, «Πότε κάτι με αφορά»).
-export const clientConcernsMe = (client: SalesClient): boolean =>
-  client.ownerId === SALES_USER_ID ||
-  OPPORTUNITIES.some(
+// «Ένας Πελάτης, ένας πωλητής»: Υπεύθυνος του Πελάτη (owner), πρόσβαση μέσω δικής του Ευκαιρίας (granted), ή κατειλημμένος (taken).
+export type ClientAccess = "owner" | "granted" | "taken";
+
+export const clientAccessFor = (client: SalesClient): ClientAccess => {
+  if (client.ownerId === SALES_USER_ID) return "owner";
+  const hasMyOpportunity = OPPORTUNITIES.some(
     (opportunity) =>
       opportunity.clientId === client.id && isMyOpportunity(opportunity),
   );
+  return hasMyOpportunity ? "granted" : "taken";
+};
 
-export const visibleClients = (role: RoleId): readonly SalesClient[] =>
-  capsOf(role).isScoped
-    ? SALES_CLIENTS.filter(clientConcernsMe)
-    : SALES_CLIENTS;
+export const firstName = (fullName: string): string =>
+  fullName.split(" ")[0] ?? fullName;
 
 export const visibleOpportunities = (role: RoleId): readonly Opportunity[] =>
   capsOf(role).isScoped ? OPPORTUNITIES.filter(isMyOpportunity) : OPPORTUNITIES;

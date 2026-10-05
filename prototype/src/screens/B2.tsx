@@ -2,12 +2,21 @@ import Link from "next/link";
 
 import {
   capsOf,
-  clientConcernsMe,
+  clientAccessFor,
+  firstName,
+  isMyOpportunity,
   opportunitiesOfClient,
   type SalesCaps,
 } from "@/data/sales-access";
-import { KYPSELI_ID, findClient, type SalesClient } from "@/data/sales";
+import {
+  KYPSELI_ID,
+  findClient,
+  memberName,
+  type SalesClient,
+} from "@/data/sales";
+import type { Opportunity } from "@/data/opportunities";
 import type { RoleId } from "@/data/roles";
+import { AccessRequest, takenMessage } from "@/screens/access-request";
 import {
   ActivitiesSection,
   AgreementsSection,
@@ -67,9 +76,8 @@ const renderTab = (
   role: RoleId,
   client: SalesClient,
   caps: SalesCaps,
-  isEmpty: boolean,
+  opportunities: readonly Opportunity[],
 ) => {
-  const opportunities = isEmpty ? [] : opportunitiesOfClient(client.id);
   if (tab === "users") return <UsersSection role={role} client={client} caps={caps} />;
   if (tab === "agreements")
     return <AgreementsSection role={role} client={client} caps={caps} />;
@@ -95,20 +103,38 @@ export function B2({ role, query }: ScreenProps) {
   const keep = { id: query.id };
 
   if (!found) return <StateNotice kind="empty" title="Δεν βρέθηκε ο Πελάτης" />;
-  if (caps.isScoped && !clientConcernsMe(found)) {
+  const access = caps.isScoped ? clientAccessFor(found) : "owner";
+  if (access === "taken") {
     return (
-      <StateNotice kind="denied" title="Χωρίς δικαίωμα">
-        <p>
-          Αυτός ο Πελάτης δεν σε αφορά: δεν είσαι Υπεύθυνος του ούτε Υπεύθυνος
-          καμίας Ευκαιρίας του.
-        </p>
-        <Link href={screenHref(role, "B1", {})}>Πίσω στη λίστα Πελατών</Link>
-      </StateNotice>
+      <>
+        <div className="card-title">
+          <h2>{found.name}</h2>
+          <Badge>Κατειλημμένος</Badge>
+        </div>
+        <StateNotice kind="denied" title="Ο Πελάτης ανήκει σε άλλον πωλητή">
+          <p>{takenMessage(found.ownerId ? memberName(found.ownerId) : null)}</p>
+          <AccessRequest ownerName={found.ownerId ? memberName(found.ownerId) : null} />
+          <p>
+            <Link href={screenHref(role, "B1", {})}>Πίσω στη λίστα Πελατών</Link>
+          </p>
+        </StateNotice>
+      </>
     );
   }
 
+  const isGranted = access === "granted";
   const client = state === "empty" ? asNewClient(found) : found;
-  const allowed = TABS.filter((tab) => tabAllowed(tab.id, caps));
+  const visibleCaps = isGranted ? { ...caps, canManage: false } : caps;
+  const clientOpportunities =
+    state === "empty"
+      ? []
+      : opportunitiesOfClient(client.id).filter(
+          (opportunity) => !isGranted || isMyOpportunity(opportunity),
+        );
+  const ownerName = memberName(client.ownerId);
+  const allowed = TABS.filter(
+    (tab) => tabAllowed(tab.id, visibleCaps) && !(isGranted && tab.id === "activities"),
+  );
   const active = allowed.find((tab) => tab.id === query.tab) ?? allowed[0];
 
   return (
@@ -130,6 +156,22 @@ export function B2({ role, query }: ScreenProps) {
               {caps.isReadOnly && <Badge>Μόνο ανάγνωση</Badge>}
             </span>
           </div>
+          {!caps.isReadOnly && (
+            <div className="toolbar">
+              <Badge tone="strong">Υπεύθυνος Πελάτη: {ownerName}</Badge>
+              {caps.canReassign && (
+                <button type="button" className="button">
+                  Μεταβίβαση Πελάτη
+                </button>
+              )}
+            </div>
+          )}
+          {isGranted && clientOpportunities[0] && (
+            <p className="note">
+              Πρόσβαση μέσω της Ευκαιρίας σου «{clientOpportunities[0].title}» ·
+              Υπεύθυνος Πελάτη: {firstName(ownerName)}
+            </p>
+          )}
           <nav className="tabs" aria-label="Ενότητες Πελάτη">
             {allowed.map((tab) => (
               <Link
@@ -146,7 +188,7 @@ export function B2({ role, query }: ScreenProps) {
               </Link>
             ))}
           </nav>
-          {renderTab(active.id, role, client, caps, state === "empty")}
+          {renderTab(active.id, role, client, visibleCaps, clientOpportunities)}
         </>
       )}
     </>
