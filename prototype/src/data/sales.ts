@@ -236,6 +236,15 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
         provisions: ["1 βίντεο", "2 reels"],
         periods: [],
       },
+      {
+        title: "Φωτογράφιση μενού",
+        kind: "εφάπαξ",
+        state: "πρόταση",
+        proposalPath: "Χάθηκε",
+        lines: [{ description: "Φωτογράφιση 30 πιάτων", totalPrice: 480 }],
+        provisions: ["30 φωτογραφίες"],
+        periods: [],
+      },
     ],
     finance: { invoiced: 1100, collected: 1100, overdue: 0, toInvoice: 0 },
     activities: [
