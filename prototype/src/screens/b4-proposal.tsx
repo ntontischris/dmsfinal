@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { Badge } from "@/screens/shared";
@@ -35,6 +36,7 @@ export interface ProposalView {
 
 interface ProposalPanelProps {
   initial: ProposalView;
+  editorHref: string;
   canApprove: boolean;
   canManage: boolean;
   lossReasons: readonly string[];
@@ -50,6 +52,7 @@ const LINK_TONE: Record<LinkState, "strong" | "attention" | undefined> = {
 
 export function ProposalPanel({
   initial,
+  editorHref,
   canApprove,
   canManage,
   lossReasons,
@@ -67,13 +70,6 @@ export function ProposalPanel({
   const linkAll = (link: LinkState) =>
     view.recipients.map((r) => ({ ...r, link }));
 
-  const revise = () =>
-    patch({
-      path: "Σύνταξη",
-      revision: view.revision + 1,
-      recipients: linkAll("ακυρώθηκε"),
-      approval: null,
-    });
   const revoke = (name: string) =>
     patch({
       recipients: view.recipients.map((r) =>
@@ -101,32 +97,15 @@ export function ProposalPanel({
       <p>
         <strong>{view.title}</strong> · Ισχύς πρότασης έως {view.validUntil}
       </p>
-      <div className="scroll">
-        <table className="rtable">
-          <thead>
-            <tr>
-              <th>Γραμμή</th>
-              <th className="num">Τιμή Καταλόγου</th>
-              <th className="num">
-                Τιμή πρότασης{view.kind === "μηνιαία" && " / μήνα"}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {view.lines.map((line) => (
-              <tr key={line.description}>
-                <td data-label="Γραμμή">{line.description}</td>
-                <td className="num" data-label="Τιμή Καταλόγου">
-                  {line.catalog ?? "Ελεύθερη γραμμή"}
-                </td>
-                <td className="num" data-label="Τιμή πρότασης">
-                  {line.price}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <p>
+        {view.lines.length} γραμμές
+        {view.lines.some((line) => line.catalog === null) &&
+          ` (${view.lines.filter((line) => line.catalog === null).length} ελεύθερες)`}
+        {" · "}
+        <Link href={editorHref}>
+          {mayEdit ? "Άνοιγμα στον Συντάκτη" : "Προβολή στον Συντάκτη"}
+        </Link>
+      </p>
       <p>
         Σύνολο: <strong>{view.total}</strong>
         {view.kind === "μηνιαία" && " / μήνα"} (χωρίς ΦΠΑ)
@@ -268,9 +247,10 @@ export function ProposalPanel({
       </p>
 
       {mayEdit && view.path === "Εστάλη" && (
-        <button type="button" className="button" onClick={revise}>
-          Νέα αναθεώρηση (ακυρώνει τους παλιούς συνδέσμους)
-        </button>
+        <p className="note">
+          Νέα αναθεώρηση γίνεται στον <Link href={editorHref}>Συντάκτη</Link>{" "}
+          και ακυρώνει τους παλιούς συνδέσμους.
+        </p>
       )}
       {mayEdit && view.path === "Έληξε" && (
         <div className="toolbar">

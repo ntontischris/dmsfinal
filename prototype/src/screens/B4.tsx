@@ -78,6 +78,7 @@ const toView = (
     title: opportunity.title,
     clientName: client?.name ?? "",
     clientHref: "",
+    editorHref: "",
     owner: memberName(opportunity.ownerId),
     source: opportunity.source,
     referredBy: opportunity.referredBy ?? null,
@@ -124,6 +125,7 @@ export function B4({ role, query }: ScreenProps) {
   const view = {
     ...toView(opportunity, caps, state === "empty"),
     clientHref: screenHref(role, "B2", { id: opportunity.clientId }),
+    editorHref: screenHref(role, "D3", { id: opportunity.id }),
   };
 
   return (

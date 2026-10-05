@@ -10,6 +10,7 @@ export interface OpportunityView {
   title: string;
   clientName: string;
   clientHref: string;
+  editorHref: string;
   owner: string;
   source: string;
   referredBy: string | null;
@@ -152,6 +153,7 @@ export function OpportunityWorkbench({
       {view.proposal ? (
         <ProposalPanel
           initial={view.proposal}
+          editorHref={view.editorHref}
           canApprove={canApprove}
           canManage={canManage && isOpen}
           lossReasons={lossReasons}
@@ -162,8 +164,13 @@ export function OpportunityWorkbench({
           <h2>Πρόταση</h2>
           <p className="muted">
             Δεν υπάρχει πρόταση ακόμα. Γραμμές, Όροι, Υπογράφων και Ισχύς
-            μπαίνουν στη Σύνταξη.
+            γράφονται στον Συντάκτη πρότασης.
           </p>
+          {isOpen && canManage && (
+            <Link className="button" data-primary="true" href={view.editorHref}>
+              Νέα πρόταση στον Συντάκτη
+            </Link>
+          )}
         </section>
       )}
 
