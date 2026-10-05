@@ -53,6 +53,7 @@ export function OpportunityWorkbench({
   const [kind, setKind] = useState<(typeof KINDS)[number]>("κλήση");
   const [text, setText] = useState("");
   const isOpen = outcome === "Ανοιχτή";
+  const [isReopened, setIsReopened] = useState(false);
 
   const addActivity = () => {
     if (!text.trim()) return;
@@ -147,6 +148,30 @@ export function OpportunityWorkbench({
           <p className="note">
             Κερδισμένη με την υπογραφή του Υπογράφοντα. Δεν αλλάζει με το χέρι.
           </p>
+        )}
+        {outcome === "Χαμένη" && canManage && (
+          <div className="stack">
+            <p className="note">
+              Μια χαμένη Ευκαιρία δεν ξανανοίγει. Αν ο πελάτης το ξανασκεφτεί,
+              ανοίγει νέα, με σύνδεσμο σε αυτήν.
+            </p>
+            {isReopened ? (
+              <p role="status">
+                Άνοιξε νέα Ευκαιρία «{view.title}» με Υπεύθυνο τον Υπεύθυνο του
+                Πελάτη· προηγούμενη: αυτή. Η παλιά πρόταση αντιγράφηκε ως
+                αφετηρία.
+              </p>
+            ) : (
+              <button
+                type="button"
+                className="button"
+                data-primary="true"
+                onClick={() => setIsReopened(true)}
+              >
+                Νέα Ευκαιρία από αυτήν
+              </button>
+            )}
+          </div>
         )}
       </section>
 
