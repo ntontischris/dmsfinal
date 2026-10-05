@@ -3,14 +3,18 @@
 .main:has(.direction) { max-width: none; }
 
 .direction {
-  background: var(--d-bg);
-  color: var(--d-text);
-  font-family: var(--d-font);
   border-radius: var(--radius);
   overflow: hidden;
   margin-bottom: var(--space-6);
   container-type: inline-size;
 }
+.direction[data-direction] {
+  background: var(--d-bg);
+  color: var(--d-text);
+  font-family: var(--d-font);
+}
+/* Οι προτάσεις της Αρχικής ορίζουν δικό τους φόντο· αυτό είναι μόνο δίχτυ (μηδενική ισχύς). */
+:where(.direction[data-full]) { background: var(--color-bg); }
 .direction a { color: inherit; }
 .direction h1, .direction h2, .direction h3 { margin: 0; }
 

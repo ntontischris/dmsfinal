@@ -1,0 +1,322 @@
+/* Πρόταση 7 · Ρεζί */
+.direction[data-home='7'] {
+  --r7-bg: oklch(11% 0.012 255);
+  --r7-panel: oklch(15% 0.014 255);
+  --r7-bezel: oklch(7% 0.01 255);
+  --r7-line: oklch(26% 0.016 255);
+  --r7-text: oklch(95% 0.008 250);
+  --r7-dim: oklch(66% 0.018 250);
+  --r7-red: oklch(62% 0.235 27);
+  --r7-green: oklch(76% 0.2 148);
+  --r7-amber: oklch(83% 0.16 78);
+  --r7-ink-on-red: oklch(99% 0 0);
+  background: var(--r7-bg);
+}
+:root[data-theme='light'] .direction[data-home='7'] {
+  --r7-bg: oklch(94% 0.006 250);
+  --r7-panel: oklch(98.5% 0.003 250);
+  --r7-bezel: oklch(16% 0.012 255);
+  --r7-line: oklch(84% 0.01 250);
+  --r7-text: oklch(17% 0.015 255);
+  --r7-dim: oklch(46% 0.018 255);
+  --r7-red: oklch(56% 0.23 27);
+  --r7-green: oklch(58% 0.17 148);
+  --r7-amber: oklch(66% 0.15 70);
+}
+
+[data-home='7'] .r7 {
+  font-family: var(--r7-display), system-ui, sans-serif;
+  color: var(--r7-text);
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+[data-home='7'] .r7 a { color: inherit; text-decoration: none; }
+[data-home='7'] .r7-dim { color: var(--r7-dim); }
+
+/* Κεφαλίδα */
+[data-home='7'] .r7-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  padding: 0.85rem clamp(1rem, 3cqi, 2rem); border-bottom: 1px solid var(--r7-line);
+  background: color-mix(in oklch, var(--r7-bg) 88%, transparent); backdrop-filter: blur(10px); z-index: 5;
+}
+[data-home='7'][data-full] .r7-header { position: sticky; top: 0; }
+[data-home='7'] .r7-logo {
+  display: flex; align-items: center; gap: 0.55rem;
+  font-weight: 800; font-size: 1.35rem; letter-spacing: 0.06em;
+}
+[data-home='7'] .r7-logo b { font-weight: 300; margin-left: 0.2rem; }
+[data-home='7'] .r7-live {
+  width: 0.65rem; height: 0.65rem; border-radius: 50%; background: var(--r7-red);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--r7-red) 30%, transparent);
+}
+[data-home='7'] .r7-header nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1.35rem; font-size: 0.98rem; text-transform: uppercase; letter-spacing: 0.08em; }
+[data-home='7'] .r7-header nav a { color: var(--r7-dim); }
+[data-home='7'] .r7-header nav a:hover { color: var(--r7-text); }
+[data-home='7'] .r7-header .r7-login { color: var(--r7-text); border: 1px solid var(--r7-line); padding: 0 0.6rem; border-radius: 0.2rem; }
+
+/* Hero: πρόγραμμα + multiviewer */
+[data-home='7'] .r7-hero {
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.75rem;
+  padding: clamp(0.75rem, 2cqi, 1.5rem) clamp(0.75rem, 2cqi, 2rem) 0.5rem;
+}
+[data-home='7'] .r7-pgm { position: relative; display: grid; align-content: start; }
+[data-home='7'] .r7-pgm-screen {
+  position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #000;
+  box-shadow: 0 0 0 4px var(--r7-bezel), 0 0 0 6px var(--r7-red), 0 30px 80px -30px color-mix(in oklch, var(--r7-red) 45%, transparent);
+}
+[data-home='7'] .r7-safe {
+  position: absolute; inset: 5%; border: 1px dashed oklch(100% 0 0 / 0.16);
+  outline: 1px solid oklch(100% 0 0 / 0.08); outline-offset: calc(-1 * 5cqi);
+}
+[data-home='7'] .r7-pgm-tag {
+  position: absolute; top: 0.7rem; left: 0.7rem; padding: 0.15rem 0.5rem;
+  font: 600 0.72rem var(--r7-mono); letter-spacing: 0.08em; background: var(--r7-red); color: var(--r7-ink-on-red);
+}
+[data-home='7'] .r7-lower { position: absolute; left: 4%; right: 8%; bottom: 7%; display: grid; justify-items: start; }
+[data-home='7'] .r7-lower-kicker {
+  font: 600 0.7rem var(--r7-mono); letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--r7-red); color: var(--r7-ink-on-red); padding: 0.3rem 0.65rem;
+}
+[data-home='7'] .r7-lower h1 {
+  margin: 0; padding: 0.55rem 0.9rem 0.65rem; background: oklch(99% 0 0); color: oklch(14% 0.01 255);
+  font-size: clamp(1.6rem, 0.8rem + 2.6cqi, 3.4rem); line-height: 0.98; font-weight: 800; letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+[data-home='7'] .r7-lower h1 span { font-weight: 300; }
+[data-home='7'] .r7-lower-strap {
+  display: block; max-width: 100%; padding: 0.3rem 0.9rem; background: oklch(14% 0.01 255 / 0.88); color: oklch(92% 0.01 250);
+  font: 500 0.78rem var(--r7-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-home='7'] .r7-lower-strap b { color: var(--r7-amber); margin-right: 0.4rem; }
+
+[data-home='7'] .r7-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px;
+  background: var(--r7-bezel); align-self: start; border-radius: 2px;
+}
+[data-home='7'] .r7-mon {
+  position: relative; aspect-ratio: 16 / 9; overflow: hidden; padding: 0; border: 0; cursor: pointer;
+  background: #000; color: oklch(96% 0 0); font: inherit; text-align: left;
+}
+[data-home='7'] .r7-mon::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px oklch(100% 0 0 / 0.08); }
+[data-home='7'] .r7-mon[data-tally='pgm']::after { box-shadow: inset 0 0 0 3px var(--r7-red); }
+[data-home='7'] .r7-mon[data-tally='pvw']::after { box-shadow: inset 0 0 0 3px var(--r7-green); }
+[data-home='7'] .r7-mon:focus-visible { outline: 2px solid var(--r7-amber); outline-offset: 2px; }
+[data-home='7'] .r7-mon-top {
+  position: absolute; top: 0.3rem; left: 0.35rem; right: 0.35rem; display: flex; justify-content: space-between;
+  font: 600 0.6rem var(--r7-mono); letter-spacing: 0.06em; text-shadow: 0 1px 2px #000;
+}
+[data-home='7'] .r7-mon-top em { font-style: normal; padding: 0 0.3rem; background: var(--r7-green); color: #000; }
+[data-home='7'] .r7-mon[data-tally='pgm'] .r7-mon-top em { background: var(--r7-red); color: #fff; }
+[data-home='7'] .r7-mon-label {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 0.15rem 0.35rem; background: oklch(0% 0 0 / 0.75);
+  font: 500 0.62rem var(--r7-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-home='7'] .r7-meters { position: absolute; right: 0.3rem; top: 1.2rem; bottom: 1.3rem; display: flex; gap: 2px; }
+[data-home='7'] .r7-meters i {
+  width: 3px; height: 100%; transform-origin: bottom; transform: scaleY(0.55);
+  background: linear-gradient(to top, var(--r7-green) 0 60%, var(--r7-amber) 60% 85%, var(--r7-red) 85%);
+}
+[data-home='7'] .r7-clock {
+  display: grid; align-content: center; justify-items: center; gap: 0.15rem; aspect-ratio: 16 / 9;
+  background: radial-gradient(ellipse at 50% 40%, oklch(18% 0.02 255), #000 75%); color: oklch(96% 0 0);
+}
+[data-home='7'] .r7-clock-label, [data-home='7'] .r7-clock-sub { font: 500 0.55rem var(--r7-mono); letter-spacing: 0.1em; color: oklch(70% 0.02 250); }
+[data-home='7'] .r7-clock-tc { font: 600 clamp(0.8rem, 0.4rem + 1.1cqi, 1.35rem) var(--r7-mono); color: var(--r7-amber); font-variant-numeric: tabular-nums; }
+[data-home='7'] .r7-hint { grid-column: 2; margin: 0; font: 0.72rem var(--r7-mono); color: var(--r7-dim); }
+[data-home='7'] .r7-hint kbd { font: inherit; border: 1px solid var(--r7-line); padding: 0 0.3rem; border-radius: 0.2rem; }
+
+/* Σκηνές «footage» */
+[data-home='7'] .r7-scene { position: absolute; inset: 0; overflow: hidden; background: #050608; }
+[data-home='7'] .r7-scene i { position: absolute; inset: 0; display: block; }
+[data-home='7'] .r7-grain {
+  inset: -50% !important; opacity: 0.22; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-home='7'] .r7-scene::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 55%, oklch(0% 0 0 / 0.65));
+}
+
+/* Καφέ: ζεστό εσωτερικό, φως από παράθυρο, bokeh */
+[data-home='7'] [data-scene='cafe'] { background: linear-gradient(160deg, oklch(30% 0.06 55), oklch(12% 0.03 40)); }
+[data-home='7'] [data-scene='cafe'] .r7-l1 { background: linear-gradient(115deg, transparent 20%, oklch(85% 0.12 75 / 0.45) 32%, transparent 46%, oklch(85% 0.12 75 / 0.25) 55%, transparent 64%); }
+[data-home='7'] [data-scene='cafe'] .r7-l2 {
+  background:
+    radial-gradient(circle at 18% 30%, oklch(88% 0.14 80 / 0.7) 0 2.2%, transparent 3%),
+    radial-gradient(circle at 72% 22%, oklch(85% 0.15 60 / 0.55) 0 3%, transparent 4%),
+    radial-gradient(circle at 84% 40%, oklch(90% 0.1 85 / 0.5) 0 1.8%, transparent 2.6%),
+    radial-gradient(circle at 40% 18%, oklch(80% 0.15 50 / 0.45) 0 2.6%, transparent 3.5%);
+  filter: blur(2px);
+}
+[data-home='7'] [data-scene='cafe'] .r7-l3 { background: linear-gradient(to top, oklch(10% 0.02 40) 0 22%, transparent 23%), radial-gradient(ellipse 14% 9% at 55% 78%, oklch(92% 0.02 80) 0 60%, transparent 62%); }
+
+/* Αυγή: ουρανός, βουνά, ομίχλη */
+[data-home='7'] [data-scene='dawn'] { background: linear-gradient(to bottom, oklch(32% 0.07 270), oklch(62% 0.1 330) 48%, oklch(84% 0.11 60) 62%); }
+[data-home='7'] [data-scene='dawn'] .r7-l1 { background: radial-gradient(circle at 50% 64%, oklch(97% 0.08 85) 0 4%, oklch(88% 0.12 70 / 0.6) 9%, transparent 30%); }
+[data-home='7'] [data-scene='dawn'] .r7-l2 { background: oklch(22% 0.05 290); clip-path: polygon(0 70%, 14% 56%, 26% 64%, 40% 50%, 55% 62%, 70% 52%, 85% 63%, 100% 55%, 100% 100%, 0 100%); }
+[data-home='7'] [data-scene='dawn'] .r7-l3 { background: linear-gradient(to top, oklch(15% 0.04 290) 0 18%, oklch(80% 0.05 320 / 0.35) 26%, transparent 40%); }
+
+/* Λιμάνι: σούρουπο, γερανοί, νερό */
+[data-home='7'] [data-scene='port'] { background: linear-gradient(to bottom, oklch(35% 0.06 230), oklch(70% 0.12 55) 55%, oklch(25% 0.05 230) 56%, oklch(12% 0.03 240)); }
+[data-home='7'] [data-scene='port'] .r7-l1 { background: radial-gradient(ellipse 30% 12% at 62% 55%, oklch(90% 0.13 70 / 0.8), transparent 70%); }
+[data-home='7'] [data-scene='port'] .r7-l2 { background: oklch(10% 0.02 240); clip-path: polygon(10% 56%, 10% 18%, 12% 18%, 12% 26%, 34% 26%, 34% 29%, 12% 29%, 12% 56%, 60% 56%, 60% 30%, 61.5% 30%, 61.5% 36%, 80% 36%, 80% 38.5%, 61.5% 38.5%, 61.5% 56%); }
+[data-home='7'] [data-scene='port'] .r7-l3 { top: 56%; background: repeating-linear-gradient(to bottom, transparent 0 6px, oklch(85% 0.12 65 / 0.22) 6px 7px); mask: linear-gradient(to bottom, #000, transparent 80%); }
+
+/* Σκηνή φεστιβάλ: δέσμες φωτός, κοινό */
+[data-home='7'] [data-scene='stage'] { background: radial-gradient(ellipse at 50% 100%, oklch(30% 0.12 330), oklch(6% 0.02 300) 70%); }
+[data-home='7'] [data-scene='stage'] .r7-l1 { background: conic-gradient(from 160deg at 30% -10%, transparent 0 8deg, oklch(70% 0.2 330 / 0.5) 10deg 16deg, transparent 18deg); transform-origin: 30% -10%; }
+[data-home='7'] [data-scene='stage'] .r7-l2 { background: conic-gradient(from 180deg at 72% -10%, transparent 0 6deg, oklch(80% 0.15 200 / 0.45) 8deg 14deg, transparent 16deg); transform-origin: 72% -10%; }
+[data-home='7'] [data-scene='stage'] .r7-l3 { background: radial-gradient(circle at 50% 100%, #000 0 6px, transparent 7px) 0 100% / 22px 26px repeat-x, linear-gradient(to top, #000 0 8%, transparent 9%); }
+
+/* Φούρνος: φωτιά από κάτω, καμάρα */
+[data-home='7'] [data-scene='oven'] { background: radial-gradient(ellipse at 50% 85%, oklch(75% 0.18 55), oklch(35% 0.12 40) 35%, oklch(8% 0.02 40) 70%); }
+[data-home='7'] [data-scene='oven'] .r7-l1 { background: radial-gradient(ellipse 34% 40% at 50% 92%, transparent 0 70%, oklch(12% 0.03 40) 72%); }
+[data-home='7'] [data-scene='oven'] .r7-l2 { background: radial-gradient(circle at 30% 40%, oklch(95% 0.05 85 / 0.6) 0 1px, transparent 2px) 0 0 / 34px 29px, radial-gradient(circle at 60% 70%, oklch(95% 0.05 85 / 0.4) 0 1px, transparent 2px) 0 0 / 23px 37px; }
+[data-home='7'] [data-scene='oven'] .r7-l3 { background: linear-gradient(to top, oklch(20% 0.05 50) 0 10%, transparent 11%); }
+
+/* Drone: πόλη από ψηλά */
+[data-home='7'] [data-scene='aerial'] { background: oklch(16% 0.02 240); }
+[data-home='7'] [data-scene='aerial'] .r7-l1 {
+  inset: -30%; transform: rotate(-24deg);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 34px, oklch(80% 0.12 75 / 0.55) 34px 36px),
+    repeating-linear-gradient(0deg, transparent 0 46px, oklch(80% 0.12 75 / 0.4) 46px 48px),
+    repeating-linear-gradient(90deg, oklch(24% 0.02 240) 0 12px, oklch(20% 0.02 240) 12px 20px);
+}
+[data-home='7'] [data-scene='aerial'] .r7-l2 { background: radial-gradient(ellipse at 70% 30%, oklch(70% 0.1 220 / 0.35), transparent 50%); }
+
+/* Στούντιο: key light, σιλουέτα σε καρέκλα */
+[data-home='7'] [data-scene='studio'] { background: radial-gradient(ellipse at 35% 40%, oklch(32% 0.03 250), oklch(8% 0.01 250) 70%); }
+[data-home='7'] [data-scene='studio'] .r7-l1 { background: radial-gradient(ellipse 16% 22% at 55% 42%, oklch(70% 0.05 60) 0 45%, oklch(25% 0.03 50) 70%, transparent 72%); }
+[data-home='7'] [data-scene='studio'] .r7-l2 { background: radial-gradient(ellipse 26% 38% at 55% 100%, oklch(22% 0.03 50) 0 70%, transparent 72%); }
+[data-home='7'] [data-scene='studio'] .r7-l3 { background: linear-gradient(90deg, transparent 63%, oklch(85% 0.08 230 / 0.28) 66%, transparent 70%); }
+
+/* Νύχτα: φανάρια, βρεγμένος δρόμος */
+[data-home='7'] [data-scene='night'] { background: linear-gradient(to bottom, oklch(14% 0.04 270), oklch(20% 0.05 250) 55%, oklch(9% 0.02 250)); }
+[data-home='7'] [data-scene='night'] .r7-l1 {
+  background:
+    radial-gradient(circle at 15% 35%, oklch(85% 0.15 70) 0 1.5%, oklch(70% 0.15 60 / 0.4) 4%, transparent 10%),
+    radial-gradient(circle at 42% 42%, oklch(85% 0.15 70) 0 1%, oklch(70% 0.15 60 / 0.35) 3%, transparent 8%),
+    radial-gradient(circle at 64% 46%, oklch(85% 0.13 25) 0 0.8%, oklch(65% 0.2 25 / 0.4) 2.5%, transparent 6%),
+    radial-gradient(circle at 82% 40%, oklch(88% 0.08 220) 0 1%, oklch(70% 0.12 220 / 0.35) 3%, transparent 8%);
+}
+[data-home='7'] [data-scene='night'] .r7-l2 { background: conic-gradient(from 160deg at 50% 52%, transparent 0 20deg, oklch(12% 0.02 250) 20deg 40deg, transparent 40deg); }
+[data-home='7'] [data-scene='night'] .r7-l3 { top: 60%; background: repeating-linear-gradient(90deg, transparent 0 18%, oklch(80% 0.14 65 / 0.2) 19% 20%, transparent 21%); filter: blur(3px); }
+
+/* Ενότητες */
+[data-home='7'] .r7-section { padding: clamp(2.5rem, 5cqi, 4.5rem) clamp(1rem, 3cqi, 2rem) 0; }
+[data-home='7'] .r7-sec-head {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 1rem;
+  border-bottom: 2px solid var(--r7-text); padding-bottom: 0.6rem; margin-bottom: 0.25rem;
+}
+[data-home='7'] .r7-sec-head > span:first-child { font: 600 0.72rem var(--r7-mono); letter-spacing: 0.14em; color: var(--r7-red); }
+[data-home='7'] .r7-sec-head h2 { margin: 0; font-size: clamp(2rem, 1rem + 4cqi, 4.2rem); font-weight: 800; line-height: 0.9; text-transform: uppercase; letter-spacing: -0.01em; }
+[data-home='7'] .r7-sec-meta { font: 0.75rem var(--r7-mono); color: var(--r7-dim); }
+
+[data-home='7'] .r7-rundown { width: 100%; border-collapse: collapse; font-size: 1.05rem; }
+[data-home='7'] .r7-rundown th { text-align: left; font: 500 0.66rem var(--r7-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--r7-dim); padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--r7-line); }
+[data-home='7'] .r7-rundown td { padding: 1rem 0.75rem; border-bottom: 1px solid var(--r7-line); vertical-align: middle; }
+[data-home='7'] .r7-rundown tr[data-status='ON AIR'] { background: color-mix(in oklch, var(--r7-red) 10%, transparent); box-shadow: inset 4px 0 var(--r7-red); }
+[data-home='7'] .r7-rundown tbody tr:hover { background: var(--r7-panel); }
+[data-home='7'] .r7-num, [data-home='7'] .r7-slug { font: 500 0.8rem var(--r7-mono); color: var(--r7-dim); white-space: nowrap; }
+[data-home='7'] .r7-title { font-size: clamp(1.25rem, 0.9rem + 1.2cqi, 1.8rem); font-weight: 700; text-transform: uppercase; }
+[data-home='7'] .r7-pill { font: 600 0.66rem var(--r7-mono); letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border: 1px solid var(--r7-line); white-space: nowrap; }
+[data-home='7'] tr[data-status='ON AIR'] .r7-pill { background: var(--r7-red); border-color: var(--r7-red); color: var(--r7-ink-on-red); }
+[data-home='7'] tr[data-status='NEXT'] .r7-pill { color: var(--r7-amber); border-color: var(--r7-amber); }
+[data-home='7'] tr[data-status='STBY'] .r7-pill { color: var(--r7-green); border-color: var(--r7-green); }
+
+[data-home='7'] .r7-works { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1.25rem 0.9rem; }
+[data-home='7'] .r7-work { display: grid; gap: 0.3rem; }
+[data-home='7'] .r7-work-frame { position: relative; aspect-ratio: 16 / 10; overflow: hidden; box-shadow: 0 0 0 1px var(--r7-line); }
+[data-home='7'] .r7-work-dur { position: absolute; right: 0.4rem; bottom: 0.4rem; font: 600 0.68rem var(--r7-mono); color: #fff; background: oklch(0% 0 0 / 0.7); padding: 0.05rem 0.35rem; }
+[data-home='7'] .r7-work-id { font: 500 0.65rem var(--r7-mono); color: var(--r7-red); letter-spacing: 0.1em; margin-top: 0.4rem; }
+[data-home='7'] .r7-work strong { font-size: 1.3rem; line-height: 1.05; font-weight: 700; }
+
+/* Crawl πελατών */
+[data-home='7'] .r7-crawl { display: flex; margin-top: clamp(2.5rem, 5cqi, 4.5rem); background: var(--r7-bezel); color: oklch(96% 0 0); border-block: 1px solid var(--r7-line); }
+[data-home='7'] .r7-crawl-tag { flex: none; padding: 0.7rem 1rem; background: var(--r7-red); color: var(--r7-ink-on-red); font: 700 0.75rem var(--r7-mono); letter-spacing: 0.12em; }
+[data-home='7'] .r7-crawl-track { overflow: hidden; flex: 1; mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+[data-home='7'] .r7-crawl-run { display: flex; width: max-content; }
+[data-home='7'] .r7-crawl-run span { padding: 0.55rem 1.6rem; font-size: 1.35rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+[data-home='7'] .r7-crawl-run span::after { content: '■'; margin-left: 3.2rem; font-size: 0.5rem; vertical-align: middle; color: var(--r7-red); }
+
+/* CTA ON AIR */
+[data-home='7'] .r7-cta { display: grid; justify-items: center; gap: 1rem; text-align: center; padding: clamp(3rem, 8cqi, 7rem) 1rem; }
+[data-home='7'] .r7-onair { display: grid; justify-items: center; gap: 1.4rem; }
+[data-home='7'] .r7-onair-sign {
+  font-weight: 900; font-size: clamp(3rem, 1.5rem + 8cqi, 8rem); letter-spacing: 0.08em; line-height: 1;
+  padding: 0.18em 0.45em; border: 3px solid color-mix(in oklch, var(--r7-red) 45%, var(--r7-line)); border-radius: 0.12em;
+  color: color-mix(in oklch, var(--r7-red) 35%, var(--r7-panel)); background: var(--r7-panel);
+}
+[data-home='7'] .r7-onair:hover .r7-onair-sign, [data-home='7'] .r7-onair:focus-visible .r7-onair-sign {
+  color: oklch(99% 0.02 30); background: var(--r7-red); border-color: oklch(75% 0.18 30);
+  text-shadow: 0 0 18px oklch(100% 0 0 / 0.7); box-shadow: 0 0 80px -5px var(--r7-red), 0 0 0 10px color-mix(in oklch, var(--r7-red) 18%, transparent);
+}
+[data-home='7'] .r7-onair-text { display: grid; gap: 0.3rem; font-size: clamp(1.3rem, 1rem + 1.2cqi, 2rem); font-weight: 300; }
+[data-home='7'] .r7-onair-text b { font-weight: 800; text-transform: uppercase; color: var(--r7-red); }
+[data-home='7'] .r7-cta p { margin: 0; font-size: 0.95rem; }
+
+[data-home='7'] .r7-footer {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding: 1.2rem clamp(1rem, 3cqi, 2rem) 5.5rem;
+  border-top: 1px solid var(--r7-line); font: 0.72rem var(--r7-mono); letter-spacing: 0.08em; color: var(--r7-dim);
+}
+[data-home='7'] .r7-footer nav { display: flex; gap: 1.25rem; }
+
+/* Στενά πλάτη */
+@container (max-width: 64rem) {
+  [data-home='7'] .r7-hero { grid-template-columns: 1fr; }
+  [data-home='7'] .r7-hint { grid-column: 1; }
+}
+@container (max-width: 40rem) {
+  [data-home='7'] .r7-lower { position: static; margin-top: 0.75rem; }
+  [data-home='7'] .r7-lower h1 { font-size: clamp(1.7rem, 1rem + 5cqi, 2.4rem); }
+  [data-home='7'] .r7-lower-strap { white-space: normal; }
+  [data-home='7'] .r7-hide-sm { display: none; }
+  [data-home='7'] .r7-slug { display: none; }
+  [data-home='7'] .r7-rundown th:nth-child(2) { display: none; }
+  [data-home='7'] .r7-sec-head { grid-template-columns: 1fr; gap: 0.3rem; }
+  [data-home='7'] .r7-mon-label { display: none; }
+  [data-home='7'] .r7-header nav { font-size: 0.85rem; gap: 0.2rem 0.9rem; }
+}
+
+/* Κίνηση: ζωντανές πηγές. Χωρίς κίνηση όλα μένουν ορατά και στατικά. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-home='7'] .r7-grain { animation: r7-grain 0.5s steps(4) infinite; }
+  [data-home='7'] .r7-l1 { animation: r7-drift 14s ease-in-out infinite alternate; }
+  [data-home='7'] [data-scene='stage'] .r7-l1 { animation: r7-swing 5s ease-in-out infinite alternate; }
+  [data-home='7'] [data-scene='stage'] .r7-l2 { animation: r7-swing 6.5s ease-in-out infinite alternate-reverse; }
+  [data-home='7'] [data-scene='port'] .r7-l3 { animation: r7-water 3s linear infinite; }
+  [data-home='7'] [data-scene='aerial'] .r7-l1 { animation: r7-fly 30s linear infinite; }
+  [data-home='7'] [data-scene='oven'] .r7-l2 { animation: r7-rise 9s linear infinite; }
+  [data-home='7'] .r7-meters i { animation: r7-meter 0.8s ease-in-out infinite alternate; }
+  [data-home='7'] .r7-meters i:nth-child(2) { animation-delay: -0.3s; }
+  [data-home='7'] .r7-pgm-screen { animation: r7-cut 260ms ease-out; }
+  [data-home='7'] .r7-lower-kicker { animation: r7-wipe 600ms 200ms cubic-bezier(0.7, 0, 0.2, 1) both; }
+  [data-home='7'] .r7-lower h1 { animation: r7-wipe 700ms 450ms cubic-bezier(0.7, 0, 0.2, 1) both; }
+  [data-home='7'] .r7-lower-strap { animation: r7-wipe 600ms 800ms cubic-bezier(0.7, 0, 0.2, 1) both; }
+  [data-home='7'] .r7-live { animation: r7-blink 1.2s steps(2) infinite; }
+  [data-home='7'] .r7-crawl-run { animation: r7-crawl 38s linear infinite; }
+  [data-home='7'] .r7-crawl:hover .r7-crawl-run { animation-play-state: paused; }
+  [data-home='7'] .r7-onair-sign { transition: all 160ms ease; }
+  [data-home='7'] .r7-onair:hover .r7-onair-sign { animation: r7-flicker 420ms steps(1); }
+  [data-home='7'] .r7-mon { transition: transform 160ms ease; }
+  [data-home='7'] .r7-mon:hover { transform: scale(1.03); z-index: 1; }
+  [data-home='7'] .r7-work-frame .r7-scene { transition: transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  [data-home='7'] .r7-work:hover .r7-scene { transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-home='7'] .r7-crawl-run { flex-wrap: wrap; width: auto; }
+}
+
+@keyframes r7-grain { 0% { transform: translate(0, 0); } 25% { transform: translate(-6%, 4%); } 50% { transform: translate(5%, -3%); } 75% { transform: translate(-3%, -6%); } }
+@keyframes r7-drift { from { transform: translate(-2%, 0) scale(1.04); } to { transform: translate(2%, -1%) scale(1.1); } }
+@keyframes r7-swing { from { transform: rotate(-14deg); } to { transform: rotate(16deg); } }
+@keyframes r7-water { to { background-position: 0 14px; } }
+@keyframes r7-fly { to { background-position: 0 240px, 240px 0, 0 240px; } }
+@keyframes r7-rise { to { background-position: 0 -290px, 0 -370px; } }
+@keyframes r7-meter { 0% { transform: scaleY(0.25); } 40% { transform: scaleY(0.8); } 70% { transform: scaleY(0.5); } 100% { transform: scaleY(0.95); } }
+@keyframes r7-cut { from { filter: brightness(2.2) contrast(1.4); } }
+@keyframes r7-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes r7-blink { 50% { opacity: 0.25; } }
+@keyframes r7-crawl { to { transform: translateX(-50%); } }
+@keyframes r7-flicker { 0% { opacity: 0.4; } 15% { opacity: 1; } 30% { opacity: 0.55; } 45% { opacity: 1; } }
