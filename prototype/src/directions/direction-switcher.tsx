@@ -3,6 +3,8 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
+import { toggleTheme } from "@/components/theme-toggle";
+
 export interface SwitcherOption {
   key: string;
   name: string;
@@ -13,6 +15,7 @@ interface DirectionSwitcherProps {
   options: readonly SwitcherOption[];
   current: SwitcherOption;
   canGoFull?: boolean;
+  canToggleTheme?: boolean;
 }
 
 const isTyping = (target: EventTarget | null): boolean =>
@@ -26,6 +29,7 @@ export function DirectionSwitcher({
   options,
   current,
   canGoFull,
+  canToggleTheme,
 }: DirectionSwitcherProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -75,6 +79,16 @@ export function DirectionSwitcher({
       <button type="button" onClick={() => go(1)} aria-label="Επόμενη πρόταση">
         →
       </button>
+      {canToggleTheme && (
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label="Σκοτεινό ή φωτεινό θέμα"
+          title="Σκοτεινό / φωτεινό"
+        >
+          ◐
+        </button>
+      )}
       {canGoFull && (
         <button
           type="button"

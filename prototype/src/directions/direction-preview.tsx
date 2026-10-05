@@ -69,6 +69,7 @@ export function HomePreview({ isShowcase = false }: HomePreviewProps) {
         options={HOME_DIRECTIONS}
         current={direction}
         canGoFull={!isShowcase}
+        canToggleTheme={isShowcase}
       />
     </>
   );

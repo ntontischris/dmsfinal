@@ -11,16 +11,16 @@ const saveTheme = (theme: 'dark' | 'light') => {
   }
 };
 
-export function ThemeToggle() {
-  const handleClick = () => {
-    const next = readTheme() === 'dark' ? 'light' : 'dark';
-    if (next === 'light') document.documentElement.dataset.theme = 'light';
-    else delete document.documentElement.dataset.theme;
-    saveTheme(next);
-  };
+export const toggleTheme = () => {
+  const next = readTheme() === 'dark' ? 'light' : 'dark';
+  if (next === 'light') document.documentElement.dataset.theme = 'light';
+  else delete document.documentElement.dataset.theme;
+  saveTheme(next);
+};
 
+export function ThemeToggle() {
   return (
-    <button type="button" className="button" onClick={handleClick}>
+    <button type="button" className="button" onClick={toggleTheme}>
       Σκοτεινό / φωτεινό
     </button>
   );
