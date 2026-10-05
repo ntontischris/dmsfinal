@@ -2,7 +2,7 @@
 // και στη Σελίδα Πελάτη (B2), εναλλαγή με ?variant=a|b|c. Μένει μόνο στο branch
 // prototype/visual-directions· στο main περνά μόνο η κατεύθυνση που θα κλειδώσει.
 
-export const DIRECTION_KEYS = ["a", "b", "c"] as const;
+export const DIRECTION_KEYS = ["a", "b"] as const;
 
 export type DirectionKey = (typeof DIRECTION_KEYS)[number];
 
@@ -23,12 +23,6 @@ export const DIRECTIONS: readonly Direction[] = [
     key: "b",
     name: "Ακρίβεια",
     traits: "Εργαλείο: πυκνό, λεπτές γραμμές, μικρά γράμματα, γρήγορη κίνηση",
-  },
-  {
-    key: "c",
-    name: "Τολμηρό στούντιο",
-    traits:
-      "Bento: χρωματιστά πλακίδια, στρογγυλές γωνίες, παιχνιδιάρικη κίνηση",
   },
 ];
 

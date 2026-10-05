@@ -28,3 +28,9 @@
   font: inherit; cursor: pointer; border: 0; border-radius: 999px;
   width: 2.2rem; height: 2.2rem; background: oklch(92% 0 0); color: inherit;
 }
+
+/* Πλήρης οθόνη: η πρόταση πιάνει όλο το παράθυρο, όπως θα τη δει ο Επισκέπτης. */
+.direction[data-full] {
+  position: fixed; inset: 0; z-index: 40; margin: 0; border-radius: 0; overflow-y: auto;
+}
+.direction-switcher { z-index: 60; }
