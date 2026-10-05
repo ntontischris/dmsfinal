@@ -1,0 +1,129 @@
+/* A · Κινηματογραφικό */
+[data-direction='a'] {
+  --d-font: var(--font-a), system-ui, sans-serif;
+  --d-mono: var(--font-d-mono), ui-monospace, monospace;
+  --d-bg: oklch(13% 0.006 60);
+  --d-surface: oklch(17% 0.008 60);
+  --d-border: oklch(28% 0.01 60);
+  --d-text: oklch(95% 0.012 80);
+  --d-muted: oklch(68% 0.015 70);
+  --d-accent: oklch(79% 0.15 68);
+  --d-rec: oklch(63% 0.22 27);
+  --a-gap: clamp(2.5rem, 1.5rem + 4cqi, 6rem);
+}
+:root[data-theme='light'] [data-direction='a'] {
+  --d-bg: oklch(97% 0.008 80);
+  --d-surface: oklch(93% 0.01 80);
+  --d-border: oklch(84% 0.012 75);
+  --d-text: oklch(18% 0.01 60);
+  --d-muted: oklch(46% 0.015 60);
+  --d-accent: oklch(56% 0.14 55);
+}
+
+[data-direction='a'] .a-label {
+  font: 500 0.75rem/1 var(--d-mono); letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--d-muted); margin-bottom: 1.25rem;
+}
+[data-direction='a'] .a-tc { font-family: var(--d-mono); font-size: 0.8em; color: var(--d-muted); }
+[data-direction='a'] .a-accent { color: var(--d-accent); }
+[data-direction='a'] .a-muted { color: var(--d-muted); }
+
+/* Αρχική */
+.a-home { display: grid; gap: var(--a-gap); padding-bottom: var(--a-gap); }
+.a-hero-frame {
+  position: relative; aspect-ratio: 21 / 9; min-height: 22rem;
+  display: flex; align-items: flex-end; padding: clamp(1.25rem, 4cqi, 3.5rem);
+  background:
+    radial-gradient(ellipse at 70% 30%, oklch(55% 0.12 60 / 0.55), transparent 60%),
+    linear-gradient(180deg, oklch(22% 0.02 250), oklch(10% 0.01 60));
+  color: oklch(97% 0.01 80);
+}
+.a-hero-frame h1 {
+  font-size: clamp(2.6rem, 1rem + 7cqi, 6.5rem); line-height: 0.95;
+  font-weight: 300; letter-spacing: -0.03em;
+}
+.a-rec, .a-hero-frame .a-tc { position: absolute; top: 1.25rem; font: 500 0.8rem var(--d-mono); color: oklch(85% 0.01 80); }
+.a-rec { left: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.a-rec::before { content: ''; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--d-rec); }
+.a-hero-frame .a-tc { right: 1.5rem; }
+.a-hero-foot {
+  display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; align-items: center;
+  padding: 1.5rem clamp(1.25rem, 4cqi, 3.5rem); border-bottom: 1px solid var(--d-border);
+}
+.a-hero-foot p { margin: 0; max-width: 34rem; color: var(--d-muted); font-size: 1.1rem; }
+.a-cta {
+  text-decoration: none; font-weight: 600; padding: 0.9rem 1.6rem;
+  background: var(--d-accent); color: oklch(15% 0.02 60) !important;
+}
+.a-home > section:not(.a-hero) { padding-inline: clamp(1.25rem, 4cqi, 3.5rem); }
+
+.a-strip {
+  list-style: none; margin: 0; padding: 0 0 1rem; display: grid; grid-auto-flow: column;
+  grid-auto-columns: minmax(16rem, 30%); gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory;
+}
+.a-strip li { scroll-snap-align: start; }
+.a-strip h3 { font-size: 1.15rem; font-weight: 500; margin-top: 0.9rem; }
+.a-strip p { margin: 0.25rem 0 0; color: var(--d-muted); font-size: 0.9rem; }
+.a-thumb {
+  aspect-ratio: 16 / 9; display: flex; justify-content: space-between; align-items: flex-end; padding: 0.6rem 0.75rem;
+  font: 0.75rem var(--d-mono); color: oklch(92% 0.01 80);
+  background: linear-gradient(135deg, oklch(45% 0.1 var(--hue)), oklch(18% 0.03 var(--hue)));
+}
+
+.a-service {
+  display: grid; grid-template-columns: 3rem 1fr 2fr; gap: 1rem; align-items: baseline;
+  padding: 1.5rem 0; border-top: 1px solid var(--d-border); text-decoration: none;
+}
+.a-service strong { font-size: clamp(1.3rem, 1rem + 1.5cqi, 2rem); font-weight: 400; }
+.a-service span:last-child { color: var(--d-muted); }
+.a-num { font: 0.8rem var(--d-mono); color: var(--d-accent); }
+@container (max-width: 40rem) {
+  .a-service { grid-template-columns: 2.5rem 1fr; }
+  .a-service span:last-child { grid-column: 2; }
+  .a-strip { grid-auto-columns: 80%; }
+}
+
+.a-logos {
+  display: flex; flex-wrap: wrap; gap: 1rem 3rem; justify-content: center;
+  font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--d-muted);
+}
+
+/* Σελίδα Πελάτη */
+.a-client { display: grid; gap: 2.75rem; padding: clamp(1.25rem, 4cqi, 3rem); }
+.a-slate { position: relative; padding-top: 1.5rem; }
+.a-slate-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 0.4rem;
+  background: repeating-linear-gradient(-45deg, var(--d-text) 0 0.9rem, transparent 0.9rem 1.8rem);
+  opacity: 0.85;
+}
+.a-slate h1 { font-size: clamp(2.4rem, 1rem + 5cqi, 4.5rem); font-weight: 300; letter-spacing: -0.03em; line-height: 1; }
+.a-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1.25rem; margin: 2rem 0 0; }
+.a-meta dt { font: 0.7rem var(--d-mono); text-transform: uppercase; letter-spacing: 0.12em; color: var(--d-muted); }
+.a-meta dd { margin: 0.3rem 0 0; font-size: 1.05rem; }
+.a-next { border-left: 2px solid var(--d-accent); padding-left: 1.25rem; }
+.a-next p { margin: 0; }
+.a-next .a-label { margin-bottom: 0.5rem; }
+.a-big { font-size: 2rem; font-weight: 300; }
+.a-periods { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.a-periods li { display: grid; gap: 0.2rem; padding: 1rem; background: var(--d-surface); }
+.a-periods li[data-state='τρέχουσα'] { outline: 1px solid var(--d-accent); }
+.a-periods small { color: var(--d-muted); }
+.a-usage { margin: 1rem 0 0.25rem; }
+.a-line { display: flex; justify-content: space-between; gap: 1rem; padding: 0.75rem 0; margin: 0; border-bottom: 1px solid var(--d-border); }
+.a-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+.a-log li { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; }
+@container (max-width: 40rem) {
+  .a-periods { grid-template-columns: 1fr; }
+  .a-log li { grid-template-columns: 1fr; gap: 0.1rem; }
+}
+
+/* Κίνηση: αργή, κινηματογραφική. Reveal στην κύλιση μόνο όπου υποστηρίζεται. */
+@media (prefers-reduced-motion: no-preference) {
+  .a-cta, .a-service { transition: background-color 400ms ease, color 400ms ease, padding 400ms ease; }
+  .a-service:hover { padding-left: 0.75rem; color: var(--d-accent); }
+  .a-hero-frame h1 { animation: a-fade 1.2s ease both; }
+  @supports (animation-timeline: view()) {
+    .a-reveal { animation: a-fade linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+  }
+}
+@keyframes a-fade { from { opacity: 0; transform: translateY(1.5rem); } }

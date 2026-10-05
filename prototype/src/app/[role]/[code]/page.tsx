@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { DecisionsPanel } from '@/components/decisions-panel';
 import { ROLES, ROLE_IDS, findRole, isRoleId } from '@/data/roles';
 import { SCREENS, canSee, findScreen, isFinal } from '@/data/screens';
+import { DirectionPreview } from '@/directions/direction-preview';
+import { isDirectionScreen } from '@/directions/directions';
 
 interface ScreenPageProps {
   params: Promise<{ role: string; code: string }>;
@@ -35,7 +38,11 @@ export default async function ScreenPage({ params }: ScreenPageProps) {
           ))}
         </ul>
       </header>
-      {canSee(screen, role) ? (
+      {canSee(screen, role) && isDirectionScreen(screen.code) ? (
+        <Suspense>
+          <DirectionPreview code={screen.code} />
+        </Suspense>
+      ) : canSee(screen, role) ? (
         <section className="card placeholder">
           Η οθόνη στήνεται στο ticket του module «{screen.module}».
           {note && <p>Ως {findRole(role).label}: {note}.</p>}
