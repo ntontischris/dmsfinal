@@ -3,11 +3,11 @@
 import {
   DEFAULT_TERMS,
   STANDARD_DISCOUNT,
+  endOfTerm,
   type Renewal,
   type Terms,
   type UnusedProvisions,
 } from "@/data/agreements";
-import { endOfDuration } from "@/screens/d2-model";
 import {
   FilmingTerms,
   MilestoneTerms,
@@ -45,7 +45,7 @@ function DurationTerms(props: SectionProps) {
     update((d) => ({
       ...d,
       terms: { ...d.terms, durationMonths },
-      end: d.start ? endOfDuration(d.start, durationMonths) : d.end,
+      end: d.start ? endOfTerm(d.start, durationMonths) : null,
     }));
   const renewal = draft.terms.renewal ?? "νέα Ευκαιρία";
   return (

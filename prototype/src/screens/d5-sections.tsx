@@ -3,6 +3,7 @@
 import {
   agreementTotal,
   discountedTotal,
+  endOfTerm,
   lineTotal,
   provisionsOf,
   withVat,
@@ -123,13 +124,15 @@ function MonthlyPrice({ agreement, t, lang }: SectionProps) {
           <>
             <dt>{t.end}</dt>
             <dd>
-              {t.duration(durationMonths)}
-              {agreement.end && ` · ${fmtDate(agreement.end)}`}
+              {agreement.start
+                ? `${fmtDate(endOfTerm(agreement.start, durationMonths))} · ${t.duration(durationMonths)}`
+                : t.endAfter(durationMonths)}
             </dd>
           </>
         )}
       </dl>
       <ul className="d5-plain">
+        <li>{t.proRata}</li>
         <li>{t.unused[unusedProvisions]}</li>
         {renewal && <li>{t.renewal[renewal]}</li>}
       </ul>

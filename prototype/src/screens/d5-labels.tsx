@@ -28,6 +28,8 @@ export interface DocLabels {
   start: string;
   onSignature: string;
   duration: (months: number) => string;
+  endAfter: (months: number) => string;
+  proRata: string;
   end: string;
   total: string;
   instalments: string;
@@ -69,6 +71,9 @@ export const DOC_LABELS: Readonly<Record<DocLanguage, DocLabels>> = {
     start: "Έναρξη",
     onSignature: "με την υπογραφή",
     duration: (m) => `Διάρκεια ${m} μήνες`,
+    endAfter: (m) => `${m} μήνες μετά`,
+    proRata:
+      "Η χρέωση γίνεται ανά ημερολογιακό μήνα. Αν η έναρξη δεν είναι 1η του μήνα, ο πρώτος και ο τελευταίος μήνας χρεώνονται αναλογικά με τις μέρες· ο πρώτος δίνει ολόκληρες τις Παροχές του μήνα.",
     end: "Λήξη",
     total: "Σύνολο",
     instalments: "Πληρωμή σε δόσεις",
@@ -133,6 +138,9 @@ export const DOC_LABELS: Readonly<Record<DocLanguage, DocLabels>> = {
     start: "Start",
     onSignature: "on signature",
     duration: (m) => `Duration ${m} months`,
+    endAfter: (m) => `${m} months later`,
+    proRata:
+      "Billing follows calendar months. If the start is not the 1st of the month, the first and last months are charged pro rata by days; the first month still includes the full month's deliverables.",
     end: "End",
     total: "Total",
     instalments: "Payment in instalments",

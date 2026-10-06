@@ -1,9 +1,11 @@
 "use client";
 
-import type {
-  AgreementPeriod,
-  AgreementRecord,
-  PeriodProvision,
+import {
+  isPartialPeriod,
+  periodAmount,
+  type AgreementPeriod,
+  type AgreementRecord,
+  type PeriodProvision,
 } from "@/data/agreements";
 import { provisionKind } from "@/data/catalogue";
 import { Badge, fmtDate, fmtMoney } from "@/screens/shared";
@@ -21,7 +23,7 @@ function PeriodBalance({ provision }: { provision: PeriodProvision }) {
   );
 }
 
-function PeriodRow({ period }: { period: AgreementPeriod }) {
+function PeriodRow({ draft, period }: { draft: AgreementRecord; period: AgreementPeriod }) {
   const isCurrent = period.state === "τρέχουσα";
   return (
     <tr data-current={isCurrent}>
@@ -30,6 +32,15 @@ function PeriodRow({ period }: { period: AgreementPeriod }) {
       </td>
       <td data-label="Ημερομηνίες">
         {fmtDate(period.starts)} – {fmtDate(period.ends)}
+        {isPartialPeriod(period) && (
+          <>
+            {" "}
+            <Badge tone="attention">σπασμένη</Badge>
+          </>
+        )}
+      </td>
+      <td className="num" data-label="Ποσό">
+        {fmtMoney(periodAmount(draft, period))}
       </td>
       <td data-label="Κατάσταση">
         <Badge tone={isCurrent ? "strong" : undefined}>{period.state}</Badge>
@@ -50,8 +61,9 @@ export function PeriodsSection({ draft }: { draft: AgreementRecord }) {
     <section className="card">
       <h2>Περίοδοι</h2>
       <p className="muted">
-        Ανά είδος Παροχής: δόθηκαν + μεταφέρθηκαν − χρησιμοποιήθηκαν =
-        απομένουν.
+        Ημερολογιακοί μήνες. Ανά είδος Παροχής: δόθηκαν + μεταφέρθηκαν −
+        χρησιμοποιήθηκαν = απομένουν. Η σπασμένη Περίοδος χρεώνεται αναλογικά
+        με τις μέρες.
       </p>
       <div className="scroll">
         <table className="rtable d2-periods">
@@ -59,13 +71,14 @@ export function PeriodsSection({ draft }: { draft: AgreementRecord }) {
             <tr>
               <th>Περίοδος</th>
               <th>Ημερομηνίες</th>
+              <th className="num">Ποσό</th>
               <th>Κατάσταση</th>
               <th>Παροχές</th>
             </tr>
           </thead>
           <tbody>
             {draft.periods.map((period) => (
-              <PeriodRow key={period.label} period={period} />
+              <PeriodRow key={period.label} draft={draft} period={period} />
             ))}
           </tbody>
         </table>

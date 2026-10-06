@@ -51,9 +51,7 @@ export function OutsideSignatureForm({ draft, act }: OutsideProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState("");
   const [when, setWhen] = useState(TODAY);
-  const [start, setStart] = useState(
-    isMonthly ? (draft.start ?? TODAY).slice(0, 7) : TODAY,
-  );
+  const [start, setStart] = useState(draft.start ?? TODAY);
   const [used, setUsed] = useState<Used>({});
   if (!isOpen)
     return (
@@ -61,7 +59,7 @@ export function OutsideSignatureForm({ draft, act }: OutsideProps) {
         Υπογράφηκε εκτός συστήματος
       </button>
     );
-  const startIso = isMonthly ? `${start}-01` : start;
+  const startIso = start;
   const isOldStart = isMonthly && startIso < `${TODAY.slice(0, 7)}-01`;
   const record = () =>
     act(
@@ -95,10 +93,10 @@ export function OutsideSignatureForm({ draft, act }: OutsideProps) {
         />
       </label>
       <label className="stack">
-        <span className="muted">Έναρξη {isMonthly ? "(1η του μήνα)" : ""}</span>
+        <span className="muted">Έναρξη (οποιαδήποτε ημερομηνία, και στο παρελθόν)</span>
         <input
           className="input"
-          type={isMonthly ? "month" : "date"}
+          type="date"
           value={start}
           onChange={(e) => setStart(e.target.value || start)}
         />

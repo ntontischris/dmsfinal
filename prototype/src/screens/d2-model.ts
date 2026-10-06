@@ -39,9 +39,6 @@ const monthStart = (iso: string, offset: number): Date => {
   return new Date(Date.UTC(year, month - 1 + offset, 1));
 };
 
-export const firstOfNextMonth = (iso: string): string =>
-  toIso(monthStart(iso, 1));
-
 // Τελευταία μέρα της Διάρκειας: έναρξη 1/10 και 6 μήνες → 31/3.
 export const endOfDuration = (startIso: string, months: number): string =>
   toIso(new Date(monthStart(startIso, months).getTime() - MS_PER_DAY));
@@ -110,7 +107,7 @@ export const blankAgreement = ({
   actor,
 }: BlankOptions): AgreementRecord => {
   const terms = DEFAULT_TERMS[kind];
-  const start = kind === "μηνιαία" ? firstOfNextMonth(TODAY) : null;
+  // Έναρξη κενή = «με την υπογραφή»· ο συντάκτης μπορεί να βάλει μελλοντική ημερομηνία.
   return {
     id: "new",
     clientId: client.id,
@@ -123,8 +120,8 @@ export const blankAgreement = ({
     language: "el",
     lines: [],
     terms,
-    start,
-    end: start ? endOfDuration(start, terms.durationMonths ?? 6) : null,
+    start: null,
+    end: null,
     validUntil: addDays(TODAY, PROPOSAL_VALIDITY_DAYS),
     recipients: [recipientOf(client.contact, true)],
     revisions: [{ number: 1, when: TODAY, by: actor, summary: "Νέα πρόταση." }],
@@ -223,3 +220,24 @@ export const needsApproval = (
 
 export const revisionNumber = (agreement: AgreementRecord): number =>
   agreement.revisions.at(-1)?.number ?? 1;
+
+export interface ScheduledPeriod {
+  starts: string;
+  ends: string;
+}
+
+// Οι Περίοδοι είναι πάντα ημερολογιακοί μήνες: πρώτη και τελευταία μπορεί να είναι σπασμένες.
+export const periodSchedule = (
+  start: string,
+  end: string,
+): readonly ScheduledPeriod[] => {
+  const periods: ScheduledPeriod[] = [];
+  let starts = start;
+  while (starts <= end) {
+    const monthEnd = endOfDuration(starts, 1);
+    const ends = monthEnd < end ? monthEnd : end;
+    periods.push({ starts, ends });
+    starts = addDays(ends, 1);
+  }
+  return periods;
+};

@@ -3,6 +3,7 @@
 
 import {
   currentRevision,
+  endOfTerm,
   provisionsOf,
   type AgreementPeriod,
   type AgreementRecord,
@@ -112,16 +113,19 @@ export interface OutsideSignature {
   used: Readonly<Partial<Record<ProvisionKindId, number>>>;
 }
 
-// Παλιά έναρξη: ανοίγει μόνο η τρέχουσα Περίοδος, με όσες Παροχές έχουν ήδη χρησιμοποιηθεί.
+// Παλιά έναρξη: ανοίγει μόνο η τρέχουσα Περίοδος (ημερολογιακός μήνας, ίσως σπασμένη στην αρχή),
+// με όσες Παροχές έχουν ήδη χρησιμοποιηθεί. Η πρώτη σπασμένη δίνει ολόκληρες Παροχές.
 const currentPeriod = (
   d: AgreementRecord,
   used: OutsideSignature["used"],
+  start: string,
 ): AgreementPeriod => {
-  const starts = `${TODAY.slice(0, 7)}-01`;
+  const monthStart = `${TODAY.slice(0, 7)}-01`;
+  const starts = start > monthStart ? start : monthStart;
   return {
-    label: monthLabel(starts),
+    label: monthLabel(monthStart),
     starts,
-    ends: endOfDuration(starts, 1),
+    ends: endOfDuration(monthStart, 1),
     state: "τρέχουσα",
     provisions: provisionsOf(d).map((p) => ({
       kindId: p.kindId,
@@ -143,9 +147,9 @@ export const signOutside =
       state: hasStarted ? "ενεργή" : "υπογεγραμμένη",
       path: "Υπογράφηκε",
       start,
-      end: isMonthly ? endOfDuration(start, d.terms.durationMonths ?? 6) : null,
+      end: isMonthly ? endOfTerm(start, d.terms.durationMonths ?? 6) : null,
       recipients: withLinks(d.recipients, "όλοι", "έληξε"),
-      periods: isMonthly && hasStarted ? [currentPeriod(d, used)] : [],
+      periods: isMonthly && hasStarted ? [currentPeriod(d, used, start)] : [],
       signature: {
         by: signatory?.name ?? "—",
         when,

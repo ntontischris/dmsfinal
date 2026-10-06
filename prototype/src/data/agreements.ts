@@ -760,8 +760,8 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
       },
     ],
     terms: { ...monthlyTerms, firstMonthsDiscount: { percent: 10, months: 2 } },
-    start: "2026-09-01",
-    end: "2027-02-28",
+    start: "2026-09-05",
+    end: "2027-03-04",
     validUntil: null,
     recipients: [
       {
@@ -782,8 +782,8 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
     ],
     periods: [
       period(
-        "Σεπτέμβριος 2026",
-        "2026-09-01",
+        "5–30 Σεπτεμβρίου 2026",
+        "2026-09-05",
         "2026-09-30",
         "τρέχουσα",
         socialUse(0, 2, 0, 3),
@@ -978,4 +978,47 @@ export const agreementQueryFor = (
     (candidate) => candidate.opportunityId === opportunityId,
   );
   return agreement ? { id: agreement.id } : { new: opportunityId };
+};
+
+// Έναρξη (κεφ. 3.1 #2): τυπικά η Συμφωνία τρέχει από την πραγματική ημερομηνία έναρξης ως έναρξη + Διάρκεια − 1 μέρα.
+// Λογιστικά οι Περίοδοι είναι ημερολογιακοί μήνες: η πρώτη και η τελευταία μπορεί να είναι σπασμένες.
+// Σπασμένη Περίοδος: ποσό αναλογικά με τις μέρες· η πρώτη δίνει ολόκληρες Παροχές, η τελευταία καμία.
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const daysInMonth = (iso: string): number => {
+  const [year, month] = iso.split("-").map(Number);
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+};
+
+export const endOfTerm = (start: string, months: number): string => {
+  const [year, month, day] = start.split("-").map(Number);
+  const end = new Date(Date.UTC(year, month - 1 + months, day) - DAY_MS);
+  return end.toISOString().slice(0, 10);
+};
+
+export const periodShare = (period: Pick<AgreementPeriod, "starts" | "ends">): number => {
+  const days =
+    (Date.parse(period.ends) - Date.parse(period.starts)) / DAY_MS + 1;
+  return Math.min(1, days / daysInMonth(period.starts));
+};
+
+export const isPartialPeriod = (period: Pick<AgreementPeriod, "starts" | "ends">): boolean =>
+  periodShare(period) < 1;
+
+// Ο αύξων μήνας της Περιόδου από την έναρξη (0 = ο πρώτος, σπασμένος ή όχι), για την έκπτωση πρώτων μηνών.
+const monthIndex = (start: string | null, periodStart: string): number => {
+  if (!start) return 0;
+  const [startYear, startMonth] = start.split("-").map(Number);
+  const [year, month] = periodStart.split("-").map(Number);
+  return (year - startYear) * 12 + (month - startMonth);
+};
+
+export const periodAmount = (
+  agreement: AgreementRecord,
+  period: Pick<AgreementPeriod, "starts" | "ends">,
+): number => {
+  const discount = agreement.terms.firstMonthsDiscount;
+  const isDiscounted = monthIndex(agreement.start, period.starts) < discount.months;
+  const price = isDiscounted ? discountedTotal(agreement) : agreementTotal(agreement);
+  return price * periodShare(period);
 };
