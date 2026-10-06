@@ -122,6 +122,12 @@ const MONEY = new Intl.NumberFormat("el-GR", {
 });
 export const fmtMoney = (value: number): string => MONEY.format(value);
 
+const PERCENT = new Intl.NumberFormat("el-GR", {
+  style: "percent",
+  maximumFractionDigits: 0,
+});
+export const fmtPercent = (value: number): string => PERCENT.format(value);
+
 export const fmtDate = (iso: string): string => {
   const [year, month, day] = iso.split("-");
   return `${day}/${month}/${year}`;

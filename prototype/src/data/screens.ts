@@ -45,7 +45,16 @@ export const SECTIONS: readonly Section[] = [
   { letter: "R", title: "Δημόσιες οθόνες" },
 ];
 
-export const FINAL_SCREENS: readonly string[] = ["B1", "B2", "B3", "B4", "B5", "B6"];
+export const FINAL_SCREENS: readonly string[] = [
+  "B1",
+  "B2",
+  "B3",
+  "B4",
+  "B5",
+  "B6",
+  "C1",
+  "C2",
+];
 
 const ALL_TEAM = "Ιδ · Δι · Πα · Πω · Λο";
 const EVERYONE = `${ALL_TEAM} · Πλ · Επ`;
