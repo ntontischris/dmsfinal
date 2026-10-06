@@ -28,6 +28,10 @@ import { F3 } from "@/screens/F3";
 import { G1 } from "@/screens/G1";
 import { G2 } from "@/screens/G2";
 import { G3 } from "@/screens/G3";
+import { H1 } from "@/screens/H1";
+import { H2 } from "@/screens/H2";
+import { H3 } from "@/screens/H3";
+import { H4 } from "@/screens/H4";
 import type { ScreenProps } from "@/screens/shared";
 
 // Οι οθόνες που έχουν πραγματικό περιεχόμενο. Όλες οι άλλες δείχνουν ακόμα το placeholder.
@@ -62,4 +66,8 @@ export const SCREEN_CONTENT: Readonly<
   G1,
   G2,
   G3,
+  H1,
+  H2,
+  H3,
+  H4,
 };
