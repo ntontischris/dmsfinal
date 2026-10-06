@@ -1,0 +1,16 @@
+/* M1 Οικονομικές Αναφορές. Μόνο ουδέτερα tokens. */
+.m1f-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+.m1f-card { min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; gap: var(--space-1); }
+.m1f-card strong { font-size: 1.25rem; }
+.m1f-chart { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-4); min-width: 0; }
+.m1f-month { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.m1f-month > span { font-size: var(--text-sm); color: var(--color-text-muted); }
+.m1f-bar { display: flex; align-items: center; gap: var(--space-2); min-width: 0; font-size: var(--text-sm); }
+.m1f-fill { height: 0.75rem; border-radius: var(--radius); background: var(--color-accent); min-width: 2px; flex: none; }
+.m1f-fill[data-kind="receipts"] { background: var(--color-text-muted); }
+.m1f-bar em { font-style: normal; overflow-wrap: anywhere; min-width: 0; }
+.m1f-legend { font-size: var(--text-sm); color: var(--color-text-muted); }
+.m1f-total td { font-weight: 600; }
+.m1f-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+.m1f-export { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+.m1f-wrap { min-width: 0; overflow-wrap: anywhere; }

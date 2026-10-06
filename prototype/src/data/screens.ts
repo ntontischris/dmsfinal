@@ -97,6 +97,8 @@ export const FINAL_SCREENS: readonly string[] = [
   "L1",
   "L2",
   "L3",
+  "M1",
+  "M2",
 ];
 
 const ALL_TEAM = "Ιδ · Δι · Πα · Πω · Λο";
