@@ -1,4 +1,5 @@
 import { PRODUCTIONS, findBlockedTime } from "@/data/filming";
+import { stateOf } from "@/data/productions-access";
 import { filmingCapsOf, toMinutes } from "@/data/filming-access";
 import { SALES_USER_ID, findClient } from "@/data/sales";
 import {
@@ -52,8 +53,9 @@ export function E4({ role, query }: ScreenProps) {
     (item) => !caps.isScoped || findClient(item.id)?.ownerId === SALES_USER_ID,
   );
   const clientIds = clients.map((item) => item.id);
-  const productions = PRODUCTIONS.filter((item) =>
-    clientIds.includes(item.clientId),
+  const productions = PRODUCTIONS.filter(
+    (item) =>
+      clientIds.includes(item.clientId) && stateOf(item) === "ανοιχτή",
   );
   return (
     <div className="e">
