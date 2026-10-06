@@ -226,6 +226,12 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
         role: "Πλήρης",
         isSignatory: true,
       },
+      {
+        name: "Νίκος Σταυρίδης",
+        email: "nikos@example.com",
+        role: "Πλήρης",
+        isSignatory: false,
+      },
     ],
     agreements: [
       {
