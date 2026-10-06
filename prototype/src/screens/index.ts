@@ -8,9 +8,13 @@ import { B5 } from "@/screens/B5";
 import { B6 } from "@/screens/B6";
 import { C1 } from "@/screens/C1";
 import { C2 } from "@/screens/C2";
+import { D1 } from "@/screens/D1";
+import { D2 } from "@/screens/D2";
+import { D4 } from "@/screens/D4";
+import { D5 } from "@/screens/D5";
 import type { ScreenProps } from "@/screens/shared";
 
 // Οι οθόνες που έχουν πραγματικό περιεχόμενο. Όλες οι άλλες δείχνουν ακόμα το placeholder.
 export const SCREEN_CONTENT: Readonly<
   Record<string, ComponentType<ScreenProps>>
-> = { B1, B2, B3, B4, B5, B6, C1, C2 };
+> = { B1, B2, B3, B4, B5, B6, C1, C2, D1, D2, D4, D5 };

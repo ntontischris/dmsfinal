@@ -1,0 +1,16 @@
+/* Έγγραφο πρότασης (D5) και ουρά Έγκρισης (D4). Μόνο τα ουδέτερα tokens του globals.css. */
+.d5-doc { max-width: 46rem; overflow-wrap: anywhere; }
+.d5-head { border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-3); margin-bottom: var(--space-4); }
+.d5-brand { font-weight: 600; letter-spacing: 0.04em; margin-bottom: var(--space-2); }
+.d5-title { font-size: var(--text-lg); margin: var(--space-2) 0 var(--space-1); }
+.d5-section { margin-top: var(--space-6); }
+.d5-section h3 { font-size: var(--text-sm); margin-top: var(--space-4); }
+.d5-plain { margin: 0; padding-left: var(--space-4); font-size: var(--text-sm); }
+.d5-plain li { margin-bottom: var(--space-1); }
+.d5-done { border: 1px solid var(--color-accent); border-radius: var(--radius); padding: var(--space-3); width: 100%; }
+.d5-done p { margin: 0 0 var(--space-1); }
+.d5-switch { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
+.d5-switch a[aria-current='true'] { font-weight: 600; color: var(--color-text); }
+.d5-switch > span { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.d4-result { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.d4-result p { margin: 0; }

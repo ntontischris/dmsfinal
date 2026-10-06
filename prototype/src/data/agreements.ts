@@ -887,7 +887,8 @@ export const costOfAgreement = (agreement: AgreementRecord): AgreementCost => {
     },
     margin,
     marginPercent: price > 0 ? margin / price : 0,
-    isLowMargin: price < estimatedCost * min,
+    // Μετριέται στη χαμηλότερη τιμή που θα πληρώσει ο πελάτης, δηλαδή μετά την έκπτωση πρώτων μηνών.
+    isLowMargin: discountedTotal(agreement) < estimatedCost * min,
   };
 };
 
