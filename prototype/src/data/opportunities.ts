@@ -3,15 +3,30 @@
 import { FICTIONAL_CLIENT } from "@/data/fictional-client";
 import { KYPSELI_ID } from "@/data/sales";
 
-// Τα Στάδια τα ορίζει ο admin (Ρυθμίσεις). Αρχικές τιμές: εκκρεμεί (sales #1).
-export const STAGES = ["Πρώτη επαφή", "Πρόταση", "Διαπραγμάτευση"] as const;
-export const LOSS_REASONS = ["Τιμή", "Δεν απάντησε", "Πήγε αλλού"] as const;
+// Αρχικές τιμές των λιστών (Ρυθμίσεις › Πωλήσεις): τις αλλάζει ο admin.
+export const STAGES = [
+  "Νέα",
+  "Πρώτη επαφή",
+  "Συνάντηση",
+  "Πρόταση",
+  "Διαπραγμάτευση",
+] as const;
+export const LOSS_REASONS = [
+  "Τιμή",
+  "Δεν απάντησε",
+  "Επέλεξε άλλον",
+  "Όχι τώρα",
+  "Εκτός αντικειμένου",
+] as const;
 export const SOURCES = [
   "Ιστοσελίδα",
   "Instagram",
+  "Facebook",
   "Σύσταση",
-  "Ανανέωση",
+  "Τηλέφωνο",
+  "Άλλο",
 ] as const;
+export const ACTIVITY_KINDS = ["Κλήση", "Email", "Συνάντηση", "Σημείωση"] as const;
 
 export type Outcome = "Ανοιχτή" | "Κερδισμένη" | "Χαμένη";
 export type ProposalPath =
@@ -42,6 +57,7 @@ export interface Proposal {
   deviations: readonly string[];
   approval?: {
     state: "αναμένει" | "εγκρίθηκε" | "απορρίφθηκε";
+    requestedOn?: string;
     comment?: string;
   };
   lowMargin: boolean;
@@ -80,7 +96,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     stage: "Πρώτη επαφή",
     outcome: "Ανοιχτή",
     ownerId: "anna",
-    source: "Ανανέωση",
+    source: "Τηλέφωνο",
     nextStep: {
       text: "Κλήση για ανανέωση (η Συμφωνία λήγει 31/12)",
       due: "2026-10-20",
@@ -113,13 +129,13 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
       },
       {
         when: "2026-09-18",
-        kind: "email",
+        kind: "Email",
         text: "Στάλθηκε η πρόταση στη Μαρία Παπαδάκη και τον Νίκο Σταυρίδη.",
         by: "Άννα Δημητρίου",
       },
       {
         when: "2026-09-17",
-        kind: "κλήση",
+        kind: "Κλήση",
         text: "Κλήση: θέλει βίντεο 90″ και 3 reels για τα εγκαίνια.",
         by: "Άννα Δημητρίου",
       },
@@ -180,7 +196,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
       },
       {
         when: "2026-09-15",
-        kind: "συνάντηση",
+        kind: "Συνάντηση",
         text: "Θέλει έκπτωση 25% για να κλείσει.",
         by: "Άννα Δημητρίου",
       },
@@ -211,7 +227,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
         "Ελεύθερη γραμμή",
         "Περισσότερες Παροχές από το Πακέτο",
       ],
-      approval: { state: "αναμένει" },
+      approval: { state: "αναμένει", requestedOn: "2026-09-16" },
       lowMargin: true,
       recipients: [
         {
@@ -241,7 +257,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
       },
       {
         when: "2026-09-09",
-        kind: "email",
+        kind: "Email",
         text: "Η κ. Ράπτη ζήτησε αλλαγές σε έναν όρο.",
         by: "Ελένη Ράπτη",
       },
@@ -280,7 +296,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     activities: [
       {
         when: "2026-09-10",
-        kind: "κλήση",
+        kind: "Κλήση",
         text: "Πρώτη κλήση, ενδιαφέρεται για νέο βίντεο.",
         by: "Άννα Δημητρίου",
       },
@@ -303,7 +319,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
       },
       {
         when: "2026-08-21",
-        kind: "email",
+        kind: "Email",
         text: "Στάλθηκε η πρόταση.",
         by: "Νίκος Βασιλείου",
       },
@@ -346,7 +362,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     activities: [
       {
         when: "2026-07-30",
-        kind: "σημείωση",
+        kind: "Σημείωση",
         text: "Έκλεισε ως χαμένη: βρήκε φθηνότερο.",
         by: "Νίκος Βασιλείου",
       },
@@ -356,7 +372,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     id: "o-athinaion",
     clientId: "athinaion",
     title: "Πακέτο social (φόρμα Ιστοσελίδας)",
-    stage: "Πρώτη επαφή",
+    stage: "Νέα",
     outcome: "Ανοιχτή",
     ownerId: null,
     source: "Ιστοσελίδα",
@@ -373,7 +389,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     id: "o-hamogelo",
     clientId: "hamogelo",
     title: "Βίντεο γνωριμίας ιατρείου (φόρμα Ιστοσελίδας)",
-    stage: "Πρώτη επαφή",
+    stage: "Νέα",
     outcome: "Ανοιχτή",
     ownerId: null,
     source: "Ιστοσελίδα",

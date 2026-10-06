@@ -18,6 +18,8 @@ export interface ProposalView {
   validUntil: string;
   deviations: readonly string[];
   approval: ApprovalState | null;
+  pendingDays: number | null;
+  todayIso: string;
   hasLowMargin: boolean;
   lines: readonly {
     description: string;
@@ -43,6 +45,18 @@ interface ProposalPanelProps {
   onLost: (reason: string) => void;
 }
 
+const DEFAULT_VALIDITY_DAYS = 14; // «Ισχύς πρότασης» από Ρυθμίσεις › Πωλήσεις.
+
+const addDaysLabel = (iso: string, days: number): string => {
+  const date = new Date(Date.parse(iso) + days * 86_400_000);
+  return date.toLocaleDateString("el-GR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+};
+
 const LINK_TONE: Record<LinkState, "strong" | "attention" | undefined> = {
   ενεργός: "strong",
   ακυρώθηκε: "attention",
@@ -61,6 +75,7 @@ export function ProposalPanel({
   const [view, setView] = useState(initial);
   const [comment, setComment] = useState("");
   const [closing, setClosing] = useState(false);
+  const [extendDays, setExtendDays] = useState(DEFAULT_VALIDITY_DAYS);
 
   const patch = (next: Partial<ProposalView>) =>
     setView((current) => ({ ...current, ...next }));
@@ -208,6 +223,16 @@ export function ProposalPanel({
             Κατάλογο». Δεν στέλνεται ακόμα.
           </p>
         ))}
+      {view.path === "Αναμένει Έγκριση" && (
+        <p className="note">
+          <Badge tone="attention">
+            Αναμένει Έγκριση
+            {view.pendingDays !== null && ` · ${view.pendingDays} μέρες`}
+          </Badge>{" "}
+          Μετά από 2 εργάσιμες ξαναειδοποιούνται όσοι εγκρίνουν. Δεν λήγει
+          ποτέ: μένει εκεί μέχρι να απαντήσουν.
+        </p>
+      )}
 
       <h3>Υπογράφων και Σύνδεσμοι πρότασης</h3>
       <ul className="list">
@@ -261,13 +286,27 @@ export function ProposalPanel({
             onClick={() =>
               patch({
                 path: "Εστάλη",
-                validUntil: "04/10/2026",
+                validUntil: addDaysLabel(view.todayIso, extendDays),
                 recipients: linkAll("ενεργός"),
               })
             }
           >
             Παράταση (νέος Σύνδεσμος, ίδιες τιμές)
           </button>
+          <label className="muted">
+            Ισχύς, μέρες{" "}
+            <input
+              className="input"
+              type="number"
+              min={1}
+              style={{ width: "5rem" }}
+              aria-label="Μέρες Ισχύος πρότασης"
+              value={extendDays}
+              onChange={(event) =>
+                setExtendDays(Math.max(1, Number(event.target.value) || 1))
+              }
+            />
+          </label>
           {closing ? (
             <select
               className="select"

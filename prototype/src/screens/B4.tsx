@@ -12,7 +12,7 @@ import {
   isMyOpportunity,
   type SalesCaps,
 } from "@/data/sales-access";
-import { findClient, memberName } from "@/data/sales";
+import { TODAY, findClient, memberName } from "@/data/sales";
 import type { ProposalView } from "@/screens/b4-proposal";
 import {
   OpportunityWorkbench,
@@ -31,6 +31,10 @@ import {
 
 const MIN_MARGIN = 0.3; // Φανταστικό «Ελάχιστο περιθώριο» εταιρείας, από τις Ρυθμίσεις.
 
+const MS_PER_DAY = 86_400_000;
+const daysBetween = (fromIso: string, toIso: string): number =>
+  Math.round((Date.parse(toIso) - Date.parse(fromIso)) / MS_PER_DAY);
+
 const toProposalView = (
   proposal: NonNullable<Opportunity["proposal"]>,
   caps: SalesCaps,
@@ -48,6 +52,11 @@ const toProposalView = (
     validUntil: fmtDate(proposal.validUntil),
     deviations: proposal.deviations,
     approval: proposal.approval?.state ?? null,
+    pendingDays:
+      proposal.approval?.state === "αναμένει" && proposal.approval.requestedOn
+        ? daysBetween(proposal.approval.requestedOn, TODAY)
+        : null,
+    todayIso: TODAY,
     hasLowMargin: proposal.lowMargin,
     lines: proposal.lines.map((line) => ({
       description: line.description,

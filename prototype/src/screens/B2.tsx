@@ -21,7 +21,7 @@ import {
   ActivitiesSection,
   AgreementsSection,
   DetailsSection,
-  FinanceSection,
+  CrossModuleSection,
   OpportunitiesSection,
   UsersSection,
 } from "@/screens/b2-sections";
@@ -38,28 +38,36 @@ import {
 type TabId =
   | "details"
   | "users"
-  | "agreements"
   | "opportunities"
-  | "finance"
-  | "activities";
+  | "agreements"
+  | "productions"
+  | "chat"
+  | "activities"
+  | "dispatches"
+  | "ledger";
 
 const TABS: readonly { id: TabId; label: string }[] = [
   { id: "details", label: "Στοιχεία" },
   { id: "users", label: "Χρήστες πελάτη" },
-  { id: "agreements", label: "Συμφωνίες και Περίοδοι" },
   { id: "opportunities", label: "Ευκαιρίες" },
-  { id: "finance", label: "Οικονομικά" },
+  { id: "agreements", label: "Συμφωνίες" },
+  { id: "productions", label: "Παραγωγές" },
+  { id: "chat", label: "Συνομιλία" },
   { id: "activities", label: "Δραστηριότητες" },
+  { id: "dispatches", label: "Ιστορικό αποστολών" },
+  { id: "ledger", label: "Καρτέλα Πελάτη" },
 ];
 
-// Λογιστής: μόνο Στοιχεία, Συμφωνίες, Οικονομικά. Πωλήσεις: χωρίς Οικονομικά και Χρήστες πελάτη (N2 είναι Ιδ · Δι).
+const ACCOUNTANT_TABS: readonly TabId[] = ["details", "agreements", "ledger"];
+
+// Λογιστής: μόνο Στοιχεία, Συμφωνίες, Καρτέλα Πελάτη. Πωλήσεις: όλα εκτός από Χρήστες πελάτη και Καρτέλα Πελάτη.
 const tabAllowed = (tab: TabId, caps: SalesCaps): boolean => {
+  if (caps.isReadOnly) return ACCOUNTANT_TABS.includes(tab);
   if (tab === "users") return caps.canSeeClientUsers;
-  if (tab === "finance") return caps.canSeeFinance;
-  if (tab === "opportunities" || tab === "activities")
-    return caps.canSeeOpportunities;
+  if (tab === "ledger") return caps.canSeeFinance;
   return true;
 };
+
 
 // Κενή κατάσταση: ένας Πελάτης που μόλις δημιουργήθηκε, χωρίς τίποτα πάνω του.
 const asNewClient = (client: SalesClient): SalesClient => ({
@@ -77,10 +85,18 @@ const renderTab = (
   client: SalesClient,
   caps: SalesCaps,
   opportunities: readonly Opportunity[],
+  showAmounts: boolean,
 ) => {
   if (tab === "users") return <UsersSection role={role} client={client} caps={caps} />;
   if (tab === "agreements")
-    return <AgreementsSection role={role} client={client} caps={caps} />;
+    return (
+      <AgreementsSection
+        role={role}
+        client={client}
+        caps={caps}
+        showAmounts={showAmounts}
+      />
+    );
   if (tab === "opportunities")
     return (
       <OpportunitiesSection
@@ -90,7 +106,8 @@ const renderTab = (
         opportunities={opportunities}
       />
     );
-  if (tab === "finance") return <FinanceSection role={role} client={client} caps={caps} />;
+  if (tab === "productions" || tab === "chat" || tab === "dispatches" || tab === "ledger")
+    return <CrossModuleSection tab={tab} role={role} client={client} caps={caps} />;
   if (tab === "activities")
     return <ActivitiesSection role={role} client={client} caps={caps} />;
   return <DetailsSection role={role} client={client} caps={caps} />;
@@ -132,8 +149,13 @@ export function B2({ role, query }: ScreenProps) {
           (opportunity) => !isGranted || isMyOpportunity(opportunity),
         );
   const ownerName = memberName(client.ownerId);
-  const allowed = TABS.filter(
-    (tab) => tabAllowed(tab.id, visibleCaps) && !(isGranted && tab.id === "activities"),
+  // Πωλήσεις: ποσά μόνο στις δικές του Συμφωνίες, δηλαδή των Πελατών του ή όσων προέρχονται από δική του πρόταση.
+  const showAmounts = !caps.isScoped || access === "owner";
+  const grantedTabs: readonly TabId[] = ["details", "agreements", "opportunities"];
+  const allowed = TABS.filter((tab) =>
+    isGranted
+      ? grantedTabs.includes(tab.id)
+      : tabAllowed(tab.id, visibleCaps),
   );
   const active = allowed.find((tab) => tab.id === query.tab) ?? allowed[0];
 
@@ -188,7 +210,14 @@ export function B2({ role, query }: ScreenProps) {
               </Link>
             ))}
           </nav>
-          {renderTab(active.id, role, client, visibleCaps, clientOpportunities)}
+          {renderTab(
+            active.id,
+            role,
+            client,
+            visibleCaps,
+            clientOpportunities,
+            showAmounts,
+          )}
         </>
       )}
     </>

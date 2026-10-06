@@ -5,6 +5,7 @@ import type { Opportunity } from "@/data/opportunities";
 import type { RoleId } from "@/data/roles";
 import { isForgotten, type SalesCaps } from "@/data/sales-access";
 import { memberName, type SalesClient } from "@/data/sales";
+import { SCREENS } from "@/data/screens";
 import { Badge, fmtDate, fmtMoney, screenHref } from "@/screens/shared";
 
 interface SectionProps {
@@ -101,11 +102,14 @@ export function UsersSection({ client, caps }: SectionProps) {
   );
 }
 
-export function AgreementsSection({ client }: SectionProps) {
+export function AgreementsSection({
+  client,
+  showAmounts,
+}: SectionProps & { showAmounts: boolean }) {
   if (client.agreements.length === 0) {
     return (
       <section className="card">
-        <h2>Συμφωνίες και Περίοδοι</h2>
+        <h2>Συμφωνίες</h2>
         <p className="muted">
           Καμία Συμφωνία ακόμα. Η πρώτη υπογεγραμμένη πρόταση θα εμφανιστεί εδώ.
         </p>
@@ -129,7 +133,11 @@ export function AgreementsSection({ client }: SectionProps) {
               </Badge>
             </span>
           </div>
-          <p>{agreementTotal(agreement)}</p>
+          {showAmounts ? (
+            <p>{agreementTotal(agreement)}</p>
+          ) : (
+            <p className="muted">Ποσά: μόνο στις δικές σου Συμφωνίες.</p>
+          )}
           <ul className="list">
             {agreement.lines.map((line) => (
               <li key={line.description}>{line.description}</li>
@@ -217,28 +225,55 @@ export function OpportunitiesSection({
   );
 }
 
-export function FinanceSection({ client }: SectionProps) {
+interface CrossModuleProps extends SectionProps {
+  tab: "productions" | "chat" | "dispatches" | "ledger";
+}
+
+// Ενότητες που ανήκουν σε άλλα modules: φανταστική σύνοψη και σύνδεσμος στην οθόνη τους.
+export function CrossModuleSection({ tab, role, client }: CrossModuleProps) {
   const { invoiced, collected, overdue, toInvoice } = client.finance;
-  const items: readonly [string, number][] = [
-    ["Τιμολογήθηκαν", invoiced],
-    ["Εισπράχθηκαν", collected],
-    ["Υπόλοιπο", invoiced - collected],
-    ["Ληξιπρόθεσμα", overdue],
-    ["Προς τιμολόγηση", toInvoice],
-  ];
+  const content = {
+    productions: {
+      title: "Παραγωγές",
+      summary: "2 Παραγωγές: 1 σε εξέλιξη, 1 παραδομένη τον τελευταίο μήνα.",
+      code: "G1",
+      link: "Άνοιγμα στη λίστα Παραγωγών",
+    },
+    chat: {
+      title: "Συνομιλία",
+      summary:
+        "Μία Συνομιλία με τον Πελάτη, 3 αδιάβαστα μηνύματα, τελευταίο πριν 2 ώρες.",
+      code: "J2",
+      link: "Άνοιγμα της Συνομιλίας",
+    },
+    dispatches: {
+      title: "Ιστορικό αποστολών",
+      summary:
+        "5 αποστολές προς τον Πελάτη: 2 υπενθυμίσεις Γυρίσματος, 1 πρόταση, 1 Τιμολόγιο, 1 ευχές εορτών.",
+      code: "K3",
+      link: "Άνοιγμα στο Ιστορικό αποστολών",
+    },
+    ledger: {
+      title: "Καρτέλα Πελάτη",
+      summary: `Τιμολογήθηκαν ${fmtMoney(invoiced)}, εισπράχθηκαν ${fmtMoney(collected)}, υπόλοιπο ${fmtMoney(invoiced - collected)}, ληξιπρόθεσμα ${fmtMoney(overdue)}, προς τιμολόγηση ${fmtMoney(toInvoice)}.`,
+      code: "I5",
+      link: "Άνοιγμα της Καρτέλας Πελάτη",
+    },
+  }[tab];
+  const hasAccess = SCREENS.some(
+    (screen) => screen.code === content.code && role in screen.access,
+  );
   return (
     <section className="card">
-      <h2>Οικονομικά (σύνοψη)</h2>
-      <dl className="dl">
-        {items.map(([label, value]) => (
-          <div key={label} style={{ display: "contents" }}>
-            <dt>{label}</dt>
-            <dd>{fmtMoney(value)}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="note">
-        Η πλήρης Καρτέλα Πελάτη (Τιμολόγια, Εισπράξεις) είναι η οθόνη I5.
+      <h2>{content.title}</h2>
+      <p>{content.summary}</p>
+      <p>
+        {hasAccess ? (
+          <Link href={screenHref(role, content.code, {})}>{content.link}</Link>
+        ) : (
+          <span className="muted">Η οθόνη {content.code} δεν είναι διαθέσιμη στον ρόλο σου.</span>
+        )}{" "}
+        <span className="muted">(οθόνη {content.code}, άλλο module)</span>
       </p>
     </section>
   );

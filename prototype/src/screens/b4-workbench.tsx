@@ -36,7 +36,7 @@ interface WorkbenchProps {
   canApprove: boolean;
 }
 
-const KINDS = ["κλήση", "email", "συνάντηση", "σημείωση"] as const;
+const KINDS = ["Κλήση", "Email", "Συνάντηση", "Σημείωση"] as const;
 
 export function OpportunityWorkbench({
   view,
@@ -50,7 +50,7 @@ export function OpportunityWorkbench({
   const [outcome, setOutcome] = useState(view.outcome);
   const [lostReason, setLostReason] = useState(view.lostReason);
   const [activities, setActivities] = useState(view.activities);
-  const [kind, setKind] = useState<(typeof KINDS)[number]>("κλήση");
+  const [kind, setKind] = useState<(typeof KINDS)[number]>("Κλήση");
   const [text, setText] = useState("");
   const isOpen = outcome === "Ανοιχτή";
   const [isReopened, setIsReopened] = useState(false);

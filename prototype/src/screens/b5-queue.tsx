@@ -92,8 +92,9 @@ export function UnassignedQueue({ items, members }: QueueProps) {
       </ul>
       {Object.keys(assigned).length > 0 && (
         <p className="note">
-          Ανατέθηκαν {Object.keys(assigned).length}: ο Υπεύθυνος ειδοποιείται
-          και η Ευκαιρία φεύγει από την ουρά.
+          Ανατέθηκαν {Object.keys(assigned).length}: ο νέος Υπεύθυνος ειδοποιείται
+          (εκτός αν είσαι εσύ που αναθέτεις στον εαυτό σου) και η Ευκαιρία
+          φεύγει από την ουρά.
         </p>
       )}
     </>

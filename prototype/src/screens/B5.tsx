@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ACCESS_REQUESTS } from "@/data/access-requests";
 import { TEAM, findClient, memberName } from "@/data/sales";
 import { AccessRequests } from "@/screens/b5-access-requests";
@@ -49,9 +51,13 @@ export function B5({ role, query }: ScreenProps) {
   return (
     <>
       <StateSwitcher role={role} code="B5" state={state} />
-      <p className="muted">
-        Όσοι αναθέτουν ειδοποιούνται για κάθε νέα Ευκαιρία από φόρμα. Αυτόματη
-        μοιρασιά σε πωλητές δεν υπάρχει.
+      <p className="note">
+        Νέες Ευκαιρίες από τη φόρμα πάνε σε: <strong>Τώρα: ουρά «Χωρίς
+        υπεύθυνο»</strong> (η αρχική τιμή του συστήματος είναι ο Ιδιοκτήτης). Αλλάζει στις{" "}
+        <Link href={screenHref(role, "O2", {})}>Ρυθμίσεις › Πωλήσεις</Link>.
+        Όσο υπάρχει ένα μόνο πρόσωπο που αναθέτει, η Ευκαιρία πάει κατευθείαν
+        σε αυτό και δεν περνά από την ουρά. Όσοι αναθέτουν ειδοποιούνται για
+        κάθε νέα Ευκαιρία από φόρμα· αυτόματη μοιρασιά σε πωλητές δεν υπάρχει.
       </p>
       {state === "error" && <ErrorNotice what="η ουρά «Χωρίς υπεύθυνο»" />}
       {state === "empty" && (

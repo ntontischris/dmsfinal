@@ -53,7 +53,7 @@ export type ClientStatus = "Υποψήφιος" | "Ενεργός" | "Ανενε
 
 export interface Activity {
   when: string;
-  kind: "κλήση" | "email" | "συνάντηση" | "σημείωση" | "σύστημα";
+  kind: "Κλήση" | "Email" | "Συνάντηση" | "Σημείωση" | "σύστημα";
   text: string;
   by: string;
 }
@@ -110,13 +110,13 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
     activities: [
       {
         when: "2026-09-18",
-        kind: "email",
+        kind: "Email",
         text: "Στάλθηκε η πρόταση «Βίντεο εγκαινίων δεύτερου καταστήματος».",
         by: "Άννα Δημητρίου",
       },
       {
         when: "2026-09-17",
-        kind: "κλήση",
+        kind: "Κλήση",
         text: "Κλήση με την κ. Παπαδάκη για το δεύτερο κατάστημα.",
         by: "Άννα Δημητρίου",
       },
@@ -175,7 +175,7 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
     activities: [
       {
         when: "2026-09-15",
-        kind: "συνάντηση",
+        kind: "Συνάντηση",
         text: "Συνάντηση για έκπτωση και έξτρα reels.",
         by: "Άννα Δημητρίου",
       },
@@ -200,7 +200,7 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
     activities: [
       {
         when: "2026-09-02",
-        kind: "email",
+        kind: "Email",
         text: "Στάλθηκε πρόταση, Ισχύς 10 μέρες.",
         by: "Άννα Δημητρίου",
       },
@@ -250,7 +250,7 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
     activities: [
       {
         when: "2026-09-10",
-        kind: "κλήση",
+        kind: "Κλήση",
         text: "Ο πελάτης ζήτησε νέο βίντεο, σύσταση από την Κυψέλη.",
         by: "Άννα Δημητρίου",
       },
