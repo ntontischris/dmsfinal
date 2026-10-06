@@ -1,0 +1,23 @@
+/* I1 + I3: Προς τιμολόγηση, Καταχώρηση Τιμολογίου. Μόνο ουδέτερα tokens. */
+.i13-cell { min-width: 0; overflow-wrap: anywhere; }
+.i13-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+.i13-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
+.i13-group { padding: 0; }
+.i13-group > summary { cursor: pointer; list-style: none; padding: var(--space-3) var(--space-4); }
+.i13-group > summary::-webkit-details-marker { display: none; }
+.i13-group > summary::before { content: "▸ "; color: var(--color-text-muted); }
+.i13-group[open] > summary::before { content: "▾ "; }
+.i13-body { padding: 0 var(--space-4) var(--space-3); min-width: 0; }
+.i13-sum { display: inline-flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: baseline; min-width: 0; max-width: 100%; }
+.i13-sum > * { min-width: 0; overflow-wrap: anywhere; }
+.i13-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--space-4); align-items: start; }
+.i13-layout > * { min-width: 0; }
+.i13-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--space-3); }
+.i13-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); min-width: 0; }
+.i13-field .input { width: 100%; }
+.i13-warn { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.i13-warn li { border-left: 2px solid var(--color-attention); padding-left: var(--space-3); font-size: var(--text-sm); overflow-wrap: anywhere; }
+.i13-warn li[data-strong="true"] { border-left-width: 4px; font-weight: 600; }
+.i13-check { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); margin: var(--space-2) 0; }
+.i13-done { border-color: var(--color-accent); }
+.i13-wrap { min-width: 0; overflow-wrap: anywhere; }
