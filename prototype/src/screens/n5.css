@@ -1,0 +1,16 @@
+.n5-section { margin-top: var(--space-4); }
+.n5-section > h2 { margin-bottom: var(--space-2); }
+.n5-card { min-width: 0; }
+.n5-card h3 { margin: 0; }
+.n5-usage { display: grid; gap: var(--space-1); margin: var(--space-2) 0; font-size: var(--text-sm); }
+.n5-bar { height: 0.5rem; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; background: var(--color-surface); }
+.n5-bar > span { display: block; height: 100%; background: var(--color-accent); }
+.n5-bar[data-high='true'] > span { background: var(--color-attention); }
+.n5-warning { border-left-color: var(--color-attention); }
+.n5-fields { margin: var(--space-3) 0; }
+.n5-fields .input, .n5-form .input, .n5-form .select { width: 100%; max-width: 28rem; box-sizing: border-box; }
+.n5-field { width: 100%; }
+.n5-form { margin-bottom: var(--space-4); }
+.n5-dev { margin-top: var(--space-3); font-size: var(--text-sm); }
+.n5-totals { margin-top: var(--space-3); }
+.n5-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
