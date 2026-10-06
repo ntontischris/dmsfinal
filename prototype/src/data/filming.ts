@@ -196,6 +196,7 @@ export interface Filming {
   createdBy: string;
   createdAt: string;
   crew: readonly CrewSlot[];
+  // ids του μητρώου (equipment.ts)
   equipment: readonly string[];
   shotList: readonly string[];
   internalNote?: string;
@@ -214,16 +215,6 @@ export interface Filming {
   outcome?: { by: string; when: string; actualHours?: number };
 }
 
-export const EQUIPMENT_NAMES: readonly string[] = [
-  "Κάμερα A (full frame)",
-  "Κάμερα B (compact)",
-  "Φακός 24–70",
-  "Κιτ φωτισμού LED (3 φώτα)",
-  "Ασύρματα μικρόφωνα (2)",
-  "Gimbal",
-  "Drone",
-];
-
 export const FILMINGS: readonly Filming[] = [
   {
     id: "f-kypseli-0908",
@@ -240,7 +231,7 @@ export const FILMINGS: readonly Filming[] = [
       { personId: "aris", response: "επιβεβαιώνω" },
       { personId: "sofia", response: "επιβεβαιώνω" },
     ],
-    equipment: ["Κάμερα A (full frame)", "Κιτ φωτισμού LED (3 φώτα)"],
+    equipment: ["eq-cam-a", "eq-led-kit"],
     shotList: [
       "Πρωινός καφές στη μπάρα",
       "Νέο φθινοπωρινό μενού",
@@ -308,7 +299,7 @@ export const FILMINGS: readonly Filming[] = [
         reason: "Έχω εξετάσεις στο νοσοκομείο το πρωί.",
       },
     ],
-    equipment: ["Κάμερα A (full frame)", "Gimbal", "Ασύρματα μικρόφωνα (2)"],
+    equipment: ["eq-cam-a", "eq-gimbal", "eq-mics"],
     shotList: [
       "Ο χώρος πριν ανοίξει",
       "Συνέντευξη με τη Μαρία (2΄)",
@@ -337,7 +328,7 @@ export const FILMINGS: readonly Filming[] = [
     createdBy: "Σταύρος Μπαλτάς",
     createdAt: "2026-08-28",
     crew: [{ personId: "aris", response: "επιβεβαιώνω" }],
-    equipment: ["Κάμερα B (compact)", "Gimbal"],
+    equipment: ["eq-cam-b", "eq-gimbal"],
     shotList: ["Ομαδικό πρόγραμμα 18:00", "Συνέντευξη προπονητή"],
     sheet: [{ version: 1, sentAt: "2026-08-31", change: "Πρώτη αποστολή" }],
     approval: { by: "Δημήτρης Ιωάννου", when: "2026-08-28" },
@@ -382,7 +373,7 @@ export const FILMINGS: readonly Filming[] = [
       { personId: "aris", response: "επιβεβαιώνω" },
       { personId: "dimitris", response: "επιβεβαιώνω" },
     ],
-    equipment: ["Κάμερα A (full frame)", "Κιτ φωτισμού LED (3 φώτα)"],
+    equipment: ["eq-cam-a", "eq-led-kit"],
     shotList: ["Νέα αίθουσα crossfit", "Τρία reels με ασκήσεις"],
     sheet: [{ version: 1, sentAt: "2026-09-14", change: "Πρώτη αποστολή" }],
     approval: { by: "Δημήτρης Ιωάννου", when: "2026-09-08" },
@@ -399,7 +390,7 @@ export const FILMINGS: readonly Filming[] = [
     createdBy: "Σταύρος Μπαλτάς",
     createdAt: "2026-09-10",
     crew: [{ personId: "aris", response: "αναμένει" }],
-    equipment: ["Κάμερα B (compact)"],
+    equipment: ["eq-cam-b", "eq-drone"],
     shotList: ["Βραδινό πρόγραμμα"],
     sheet: [{ version: 1, sentAt: "2026-09-17", change: "Πρώτη αποστολή" }],
     approval: { by: "Δημήτρης Ιωάννου", when: "2026-09-10" },
@@ -424,7 +415,7 @@ export const FILMINGS: readonly Filming[] = [
       { personId: "sofia", response: "επιβεβαιώνω" },
       { personId: "dimitris", response: "επιβεβαιώνω" },
     ],
-    equipment: ["Κάμερα A (full frame)"],
+    equipment: ["eq-cam-a"],
     shotList: ["Brunch"],
     sheet: [{ version: 1, sentAt: "2026-09-08", change: "Πρώτη αποστολή" }],
     approval: { by: "Δημήτρης Ιωάννου", when: "2026-09-06" },
@@ -442,7 +433,7 @@ export const FILMINGS: readonly Filming[] = [
     createdBy: "Μαρία Σιμιτζή",
     createdAt: "2026-09-11",
     crew: [{ personId: "sofia", response: "επιβεβαιώνω" }],
-    equipment: ["Κάμερα B (compact)"],
+    equipment: ["eq-cam-b"],
     shotList: ["Πρωινό"],
     sheet: [{ version: 1, sentAt: "2026-09-14", change: "Πρώτη αποστολή" }],
     approval: { by: "Δημήτρης Ιωάννου", when: "2026-09-11" },
@@ -460,7 +451,7 @@ export const FILMINGS: readonly Filming[] = [
     createdBy: "Δημήτρης Ιωάννου",
     createdAt: "2026-09-18",
     crew: [{ personId: "dimitris", response: "επιβεβαιώνω" }],
-    equipment: ["Κάμερα A (full frame)"],
+    equipment: ["eq-cam-a"],
     shotList: ["Νέο φθινοπωρινό μενού"],
     sheet: [],
     internalNote:

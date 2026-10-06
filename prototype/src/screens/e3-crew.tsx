@@ -5,8 +5,6 @@ import { useState } from "react";
 import {
   CREW_PEOPLE,
   CREW_TEMPLATES,
-  EQUIPMENT_NAMES,
-  FILMING_RULES,
   personName,
   type CrewResponse,
   type CrewSlot,
@@ -15,7 +13,6 @@ import {
 import {
   blockedTimeOf,
   clientNameOf,
-  equipmentConflicts,
   personBusyWith,
   productionOf,
   type FilmingCaps,
@@ -245,106 +242,6 @@ export function E3Crew({ caps, live, update }: PanelProps) {
       {!caps.canManageCrew && (
         <p className="muted">Μόνο ανάγνωση: δεν διαχειρίζεσαι το Συνεργείο.</p>
       )}
-    </section>
-  );
-}
-
-export function E3Equipment({ caps, live, update }: PanelProps) {
-  const f = live.filming;
-  const [picked, setPicked] = useState("");
-  const conflicts = equipmentConflicts(f);
-  const blocks = FILMING_RULES.equipmentConflict === "μπλοκάρει";
-  const isEditable =
-    caps.canManageCrew &&
-    (f.state === "προγραμματισμένο" || f.state === "αναμένει έγκριση");
-  const conflictOf = (item: string) => conflicts.filter((c) => c.item === item);
-  const set = (equipment: readonly string[], text: string) =>
-    update((l) => withLog(withFilming(l, { equipment }), text));
-  const candidateConflicts = picked ? conflictOf(picked) : [];
-  const candidates = EQUIPMENT_NAMES.filter(
-    (name) => !f.equipment.includes(name),
-  );
-  const isCandidateBlocked = blocks && candidateConflicts.length > 0;
-
-  return (
-    <section className="card">
-      <div className="card-title">
-        <h2>Εξοπλισμός</h2>
-      </div>
-      {f.equipment.length === 0 && (
-        <p className="muted">Δεν έχει οριστεί Εξοπλισμός.</p>
-      )}
-      <ul className="list">
-        {f.equipment.map((item) => (
-          <li key={item}>
-            <div className="row">
-              <span>{item}</span>
-              {isEditable && (
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() =>
-                    set(
-                      f.equipment.filter((e) => e !== item),
-                      `Αφαιρέθηκε εξοπλισμός: ${item}.`,
-                    )
-                  }
-                >
-                  Αφαίρεση
-                </button>
-              )}
-            </div>
-            {conflictOf(item).map((c) => (
-              <Warning key={c.with.id}>
-                Σύγκρουση: «{item}» δεσμεύεται και στο Γύρισμα {label(c.with)}{" "}
-                την ίδια ώρα. Προειδοποίηση, επιτρέπεται.
-              </Warning>
-            ))}
-          </li>
-        ))}
-      </ul>
-      {isEditable && (
-        <div className="stack">
-          <div className="e3-inline">
-            <select
-              className="select"
-              aria-label="Εξοπλισμός"
-              value={picked}
-              onChange={(event) => setPicked(event.target.value)}
-            >
-              <option value="">Πρόσθεσε εξοπλισμό…</option>
-              {candidates.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="button"
-              disabled={!picked || isCandidateBlocked}
-              onClick={() => {
-                set(
-                  [...f.equipment, picked],
-                  `Προστέθηκε εξοπλισμός: ${picked}.`,
-                );
-                setPicked("");
-              }}
-            >
-              Προσθήκη
-            </button>
-          </div>
-          {candidateConflicts.map((c) => (
-            <Warning key={c.with.id}>
-              Θα συγκρούεται με το Γύρισμα {label(c.with)}.
-            </Warning>
-          ))}
-        </div>
-      )}
-      <p className="note">
-        Το πλήρες μητρώο εξοπλισμού είναι το module «Εξοπλισμός» (F1). Εδώ
-        δηλώνεται μόνο τι χρειάζεται το Γύρισμα.
-      </p>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { equipmentName } from "@/data/equipment";
 import {
   FILMINGS,
   OPEN_STATES,
@@ -60,7 +61,7 @@ const toSheetView = (filming: Filming, personId: string): SheetView | null => {
       skill: CREW_PEOPLE.find((p) => p.id === slot.personId)?.skill ?? "—",
       isMe: slot.personId === personId,
     })),
-    equipment: filming.equipment,
+    equipment: filming.equipment.map(equipmentName),
     shotList: filming.shotList,
     internalNote: filming.internalNote ?? null,
     myResponse: mine.response,
