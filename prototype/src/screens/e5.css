@@ -1,0 +1,19 @@
+/* Οθόνες E4–E7 (Γυρίσματα). Μόνο τα ουδέτερα tokens του globals.css. */
+.e { min-width: 0; max-width: 100%; }
+.e .card { min-width: 0; overflow-wrap: anywhere; }
+.e-form { display: flex; flex-direction: column; gap: var(--space-3); max-width: 36rem; }
+.e-form label, .e-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+.e-form .input { width: 100%; }
+.e-warn { border-left: 2px solid var(--color-attention); padding: var(--space-2) var(--space-3); background: var(--color-surface-raised); font-size: var(--text-sm); margin: var(--space-2) 0; }
+.e-info { border-left: 2px solid var(--color-border); padding: var(--space-2) var(--space-3); background: var(--color-surface); font-size: var(--text-sm); margin: var(--space-2) 0; }
+.e-ok { border-left: 2px solid var(--color-accent); padding: var(--space-2) var(--space-3); background: var(--color-surface-raised); font-size: var(--text-sm); margin: var(--space-2) 0; }
+.e-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr)); gap: var(--space-2); margin-bottom: var(--space-4); }
+.e-day { display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: var(--space-2); text-align: left; min-width: 0; }
+.e-day small { color: var(--color-text-muted); font-size: 0.72rem; line-height: 1.2; overflow-wrap: anywhere; }
+.e-day[aria-pressed='true'] { border-color: var(--color-accent); font-weight: 600; background: var(--color-surface-raised); }
+.e-times { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.e-times .button[aria-pressed='true'], .e-pick[aria-pressed='true'] { border-color: var(--color-accent); font-weight: 600; background: var(--color-surface-raised); }
+.e-checks { display: flex; flex-direction: column; gap: var(--space-1); }
+.e-checks label { flex-direction: row; align-items: center; gap: var(--space-2); }
+.e-list-link { display: block; text-decoration: none; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius); margin-bottom: var(--space-2); font-size: var(--text-sm); }
+.e-list-link[aria-current='true'] { border-color: var(--color-accent); background: var(--color-surface-raised); font-weight: 600; }

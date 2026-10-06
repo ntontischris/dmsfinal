@@ -1,0 +1,7 @@
+/* E1/E2: Γυρίσματα. Μόνο ουδέτερα tokens. */
+.e1-when { white-space: nowrap; }
+.e1-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
+.e1-balance { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.e1-balance > div { min-width: 10rem; }
+.e2-item[data-done='true'] { opacity: 0.8; }
+.e2-item .stack { margin-top: var(--space-3); }
