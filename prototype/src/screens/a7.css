@@ -1,0 +1,8 @@
+/* A7: Επιβεβαίωση διαγραφής από το Google. Μόνο ουδέτερα tokens. */
+.a7-item[data-done='true'] { opacity: 0.8; }
+.a7-item .stack { margin-top: var(--space-3); }
+.a7-item, .a7-recent { min-width: 0; overflow-wrap: anywhere; }
+.a7-recent { display: grid; gap: var(--space-1); }
+.a7-item .dl { grid-template-columns: minmax(0, max-content) minmax(0, 1fr); }
+.a7-item .badge { white-space: normal; }
+@media (max-width: 40rem) { .a7-item .dl { grid-template-columns: minmax(0, 1fr); } }

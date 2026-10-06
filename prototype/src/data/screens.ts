@@ -46,6 +46,9 @@ export const SECTIONS: readonly Section[] = [
 ];
 
 export const FINAL_SCREENS: readonly string[] = [
+  "A5",
+  "A6",
+  "A7",
   "B1",
   "B2",
   "B3",

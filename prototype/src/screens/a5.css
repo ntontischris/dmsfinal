@@ -1,0 +1,52 @@
+/* A5 Ημερολόγιο. Μόνο ουδέτερα tokens. */
+.a5 { min-width: 0; }
+.a5 * { min-width: 0; overflow-wrap: anywhere; }
+.a5-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
+.a5-range { margin-left: var(--space-2); }
+.a5-filters { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+.a5-filter { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; font-size: var(--text-sm); }
+.a5-chip { padding: 0 var(--space-3); border: 1px solid var(--color-border); border-radius: 999px; text-decoration: none; color: var(--color-text-muted); }
+.a5-chip[aria-current='true'], .a5-chip[data-on='true'] { color: var(--color-text); border-color: var(--color-accent); font-weight: 600; }
+
+.a5-item { display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; padding: var(--space-1) var(--space-2); margin-bottom: var(--space-1); border: 1px solid var(--color-border); border-left: 3px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); font-size: var(--text-sm); text-decoration: none; max-width: 100%; }
+.a5-item[data-pending='true'] { border-style: dashed; border-left-style: dashed; }
+.a5-item[data-kind='filming'] { border-left-color: var(--color-accent); }
+.a5-item[data-kind='blocked'] { background: var(--color-surface-raised); }
+.a5-item[data-kind='busy'], .a5-item[data-kind='closed'], .a5-item[data-status='έγινε'] { color: var(--color-text-muted); }
+.a5-item[data-kind='deadline'] { border-left-color: var(--color-attention); }
+.a5-item[data-kind='closed'] { background: var(--color-surface-raised); font-style: italic; }
+.a5-item[data-kind='day'][data-status='ελεύθερη'] { border-left-color: var(--color-accent); }
+.a5-time { color: var(--color-text-muted); white-space: nowrap; }
+.a5-title { font-weight: 600; }
+.a5-detail { color: var(--color-text-muted); }
+
+.a5-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-2); }
+.a5-day { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-2); }
+.a5-day[data-today='true'] { border-color: var(--color-accent); }
+.a5-day-head { margin: 0 0 var(--space-2); font-size: var(--text-sm); }
+.a5-none { margin: 0; }
+.a5-list .a5-day { margin-bottom: var(--space-2); }
+
+.a5-month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-1); }
+.a5-wd { text-align: center; font-size: var(--text-sm); color: var(--color-text-muted); }
+.a5-cell { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-1); min-height: 6rem; }
+.a5-cell[data-out='true'] { opacity: 0.5; }
+.a5-cell[data-today='true'] { border-color: var(--color-accent); }
+.a5-num { font-weight: 600; font-size: var(--text-sm); }
+.a5-dots { display: none; }
+.a5-dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-accent); }
+.a5-dot[data-kind='deadline'] { background: var(--color-attention); }
+.a5-dot[data-kind='busy'], .a5-dot[data-kind='closed'] { background: var(--color-text-muted); }
+.a5-count { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.a5-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--space-4); margin-top: var(--space-6); align-items: start; }
+.a5-url { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-2); }
+.a5-url code { flex: 1 1 12rem; font-family: var(--font-mono); font-size: var(--text-sm); background: var(--color-surface); padding: var(--space-1) var(--space-2); border-radius: var(--radius); }
+
+@media (max-width: 40rem) {
+  .a5-week { grid-template-columns: 1fr; }
+  .a5-month { gap: 2px; }
+  .a5-cell { min-height: 3.25rem; padding: 2px; text-align: center; }
+  .a5-cell-items { display: none; }
+  .a5-dots { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px; }
+}

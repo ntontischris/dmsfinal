@@ -495,27 +495,97 @@ export const CREW_TEMPLATES: readonly CrewTemplate[] = [
 ];
 
 // Κλεισμένος χρόνος: μπλοκάρει τη διαθεσιμότητα ενός ατόμου στην ανάθεση, όχι τη Χωρητικότητα του πελάτη.
+// Ένα γεγονός του Google με δύο προσκεκλημένους γίνεται δύο εγγραφές με το ίδιο googleEventId.
+// Ολοήμερο (π.χ. άδεια): from 00:00, to 24:00, και untilDate για περισσότερες μέρες.
 export interface BlockedTime {
+  id: string;
   personId: string;
   date: string;
+  untilDate?: string;
   from: string;
   to: string;
   label: string;
+  source: "DMS" | "Google";
+  createdBy: string;
+  googleEventId?: string;
 }
 
 export const BLOCKED_TIMES: readonly BlockedTime[] = [
   {
+    id: "bt-sofia-1002",
     personId: "sofia",
     date: "2026-10-02",
     from: "08:00",
     to: "12:00",
     label: "Εξετάσεις",
+    source: "DMS",
+    createdBy: "sofia",
   },
   {
+    id: "bt-aris-0924",
     personId: "aris",
     date: "2026-09-24",
     from: "09:00",
     to: "11:00",
     label: "Οδοντίατρος",
+    source: "DMS",
+    createdBy: "aris",
+  },
+  {
+    id: "bt-dimitris-1009",
+    personId: "dimitris",
+    date: "2026-10-09",
+    from: "10:00",
+    to: "13:00",
+    label: "Συνάντηση με Καφέ Αθηνά",
+    source: "Google",
+    createdBy: "dimitris",
+    googleEventId: "g-athina-meeting",
+  },
+  {
+    id: "bt-giorgos-0922",
+    personId: "giorgos",
+    date: "2026-09-22",
+    from: "15:00",
+    to: "16:30",
+    label: "Συνάντηση με προμηθευτή",
+    source: "Google",
+    createdBy: "dimitris",
+    googleEventId: "g-supplier",
+  },
+  {
+    id: "bt-dimitris-0922",
+    personId: "dimitris",
+    date: "2026-09-22",
+    from: "15:00",
+    to: "16:30",
+    label: "Συνάντηση με προμηθευτή",
+    source: "Google",
+    createdBy: "dimitris",
+    googleEventId: "g-supplier",
+  },
+  {
+    id: "bt-anna-0923",
+    personId: "anna",
+    date: "2026-09-23",
+    from: "11:00",
+    to: "12:00",
+    label: "Ραντεβού με υποψήφιο Πελάτη",
+    source: "DMS",
+    createdBy: "anna",
+  },
+  {
+    id: "bt-sofia-leave",
+    personId: "sofia",
+    date: "2026-10-12",
+    untilDate: "2026-10-14",
+    from: "00:00",
+    to: "24:00",
+    label: "Άδεια",
+    source: "DMS",
+    createdBy: "dimitris",
   },
 ];
+
+export const findBlockedTime = (id: string | undefined): BlockedTime | undefined =>
+  BLOCKED_TIMES.find((blocked) => blocked.id === id);

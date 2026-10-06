@@ -83,7 +83,7 @@ export const pendingApprovalFilmings = (): readonly Filming[] =>
   FILMINGS.filter((filming) => filming.state === "αναμένει έγκριση");
 
 // Ώρες και χρόνοι.
-const toMinutes = (time: string): number => {
+export const toMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 };
@@ -140,21 +140,41 @@ export const personBusyWith = (
     other.crew.some((slot) => slot.personId === personId),
   );
 
+// Οι μέρες που πιάνει ένας Κλεισμένος χρόνος (μία, ή από date ως untilDate για ολοήμερο).
+export const blockedDays = (blocked: BlockedTime): readonly string[] => {
+  const days: string[] = [];
+  const last = blocked.untilDate ?? blocked.date;
+  for (
+    let day = new Date(`${blocked.date}T12:00Z`);
+    day.toISOString().slice(0, 10) <= last;
+    day = new Date(day.getTime() + 86_400_000)
+  )
+    days.push(day.toISOString().slice(0, 10));
+  return days;
+};
+
+export const blockedOverlaps = (
+  blocked: BlockedTime,
+  slot: { date: string; start: string; hours: number },
+): boolean =>
+  blockedDays(blocked).some((date) =>
+    overlaps(
+      {
+        date,
+        start: blocked.from,
+        hours: (toMinutes(blocked.to) - toMinutes(blocked.from)) / 60,
+      },
+      slot,
+    ),
+  );
+
 export const blockedTimeOf = (
   filming: Filming,
   personId: string,
 ): BlockedTime | undefined =>
   BLOCKED_TIMES.find(
     (blocked) =>
-      blocked.personId === personId &&
-      overlaps(
-        {
-          date: blocked.date,
-          start: blocked.from,
-          hours: (toMinutes(blocked.to) - toMinutes(blocked.from)) / 60,
-        },
-        filming,
-      ),
+      blocked.personId === personId && blockedOverlaps(blocked, filming),
   );
 
 // Παροχές «Γύρισμα» της Περιόδου: δοσμένες, δεσμευμένες, καταναλωμένες, διαθέσιμες.

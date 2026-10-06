@@ -1,7 +1,11 @@
-import { PRODUCTIONS } from "@/data/filming";
-import { filmingCapsOf } from "@/data/filming-access";
+import { PRODUCTIONS, findBlockedTime } from "@/data/filming";
+import { filmingCapsOf, toMinutes } from "@/data/filming-access";
 import { SALES_USER_ID, findClient } from "@/data/sales";
-import { E4Form, type E4Client } from "@/screens/e4-form";
+import {
+  E4Form,
+  type BlockedSource,
+  type E4Client,
+} from "@/screens/e4-form";
 import {
   ErrorNotice,
   StateNotice,
@@ -24,6 +28,20 @@ const MONTHLY: readonly E4Client[] = [
 }));
 
 const CREW_EXAMPLE_ID = "f-kypseli-1002";
+const BLOCKED_EXAMPLE_ID = "bt-dimitris-1009";
+
+// Ο Κλεισμένος χρόνος της μετατροπής (?blocked=id από το A6), ή το παράδειγμα.
+const blockedSourceOf = (id: string | undefined): BlockedSource => {
+  const blocked = findBlockedTime(id) ?? findBlockedTime(BLOCKED_EXAMPLE_ID);
+  return {
+    title: blocked?.label ?? "—",
+    date: blocked?.date ?? "2026-10-09",
+    start: blocked?.from ?? "10:00",
+    hours: blocked
+      ? Math.max(1, (toMinutes(blocked.to) - toMinutes(blocked.from)) / 60)
+      : 3,
+  };
+};
 
 // Νέο Γύρισμα από την ομάδα: Ιδ · Δι · Πω (μόνο δικοί του πελάτες για τις Πωλήσεις).
 export function E4({ role, query }: ScreenProps) {
@@ -43,7 +61,7 @@ export function E4({ role, query }: ScreenProps) {
         role={role}
         code="E4"
         state={state}
-        keep={{ from: query.from }}
+        keep={{ from: query.from, blocked: query.blocked }}
       />
       <h1>{fromBlocked ? "Μετατροπή σε Γύρισμα" : "Νέο Γύρισμα"}</h1>
       {!caps.canCreate ? (
@@ -66,10 +84,11 @@ export function E4({ role, query }: ScreenProps) {
         </StateNotice>
       ) : (
         <E4Form
-          key={fromBlocked ? "blocked" : "new"}
+          key={fromBlocked ? `blocked-${query.blocked ?? ""}` : "new"}
           clients={clients}
           productions={productions}
           fromBlocked={fromBlocked}
+          blocked={blockedSourceOf(query.blocked)}
           crewHref={screenHref(role, "E3", { id: CREW_EXAMPLE_ID })}
         />
       )}

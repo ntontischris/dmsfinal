@@ -1,0 +1,12 @@
+.a6 { min-width: 0; overflow-wrap: anywhere; }
+.a6 .a6-form { display: grid; gap: var(--space-3); min-width: 0; }
+.a6 .a6-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; font-size: var(--text-sm); }
+.a6 .a6-field .input, .a6 .a6-field .select { width: 100%; max-width: 100%; box-sizing: border-box; }
+.a6 .a6-times { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: var(--space-3); }
+.a6 .a6-check { display: flex; gap: var(--space-2); align-items: center; font-size: var(--text-sm); }
+.a6 .a6-warn { border: 1px dashed var(--color-attention); border-radius: var(--radius); padding: var(--space-3); font-size: var(--text-sm); }
+.a6 .a6-error { color: var(--color-attention); font-size: var(--text-sm); }
+.a6 .a6-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.a6 .a6-confirm { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; text-align: left; font-size: var(--text-sm); }
+.a6 .rtable td { min-width: 0; }
+.a6 .a6-cell-actions { flex-direction: column; align-items: flex-end; }
