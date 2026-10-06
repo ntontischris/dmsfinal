@@ -4,6 +4,8 @@ import { A2 } from "@/screens/A2";
 import { A5 } from "@/screens/A5";
 import { A6 } from "@/screens/A6";
 import { A7 } from "@/screens/A7";
+import { A8 } from "@/screens/A8";
+import { A9 } from "@/screens/A9";
 import { B1 } from "@/screens/B1";
 import { B2 } from "@/screens/B2";
 import { B3 } from "@/screens/B3";
@@ -46,6 +48,9 @@ import { J3 } from "@/screens/J3";
 import { K1 } from "@/screens/K1";
 import { K2 } from "@/screens/K2";
 import { K3 } from "@/screens/K3";
+import { L1 } from "@/screens/L1";
+import { L2 } from "@/screens/L2";
+import { L3 } from "@/screens/L3";
 import type { ScreenProps } from "@/screens/shared";
 
 // Οι οθόνες που έχουν πραγματικό περιεχόμενο. Όλες οι άλλες δείχνουν ακόμα το placeholder.
@@ -56,6 +61,8 @@ export const SCREEN_CONTENT: Readonly<
   A5,
   A6,
   A7,
+  A8,
+  A9,
   B1,
   B2,
   B3,
@@ -98,4 +105,7 @@ export const SCREEN_CONTENT: Readonly<
   K1,
   K2,
   K3,
+  L1,
+  L2,
+  L3,
 };
