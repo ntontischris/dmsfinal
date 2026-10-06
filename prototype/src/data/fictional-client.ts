@@ -26,6 +26,7 @@ export interface Agreement {
   title: string;
   kind: "μηνιαία" | "εφάπαξ";
   state: "πρόταση" | "υπογεγραμμένη" | "ενεργή" | "έληξε" | "λύθηκε";
+  proposalPath?: "Σύνταξη" | "Αναμένει Έγκριση" | "Εστάλη" | "Έληξε" | "Χάθηκε";
   lines: readonly AgreementLine[];
   provisions: readonly string[];
   periods: readonly Period[];
@@ -99,6 +100,7 @@ export const FICTIONAL_CLIENT: FictionalClient = {
       title: "Βίντεο εγκαινίων δεύτερου καταστήματος",
       kind: "εφάπαξ",
       state: "πρόταση",
+      proposalPath: "Εστάλη",
       lines: [
         { description: "Γύρισμα εγκαινίων (μισή μέρα)", totalPrice: 650 },
         { description: "Μοντάζ: ένα βίντεο 90″ και 3 reels", totalPrice: 550 },

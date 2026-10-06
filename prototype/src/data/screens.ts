@@ -45,7 +45,7 @@ export const SECTIONS: readonly Section[] = [
   { letter: "R", title: "Δημόσιες οθόνες" },
 ];
 
-export const FINAL_SCREENS: readonly string[] = [];
+export const FINAL_SCREENS: readonly string[] = ["B1", "B2", "B3", "B4", "B5", "B6"];
 
 const ALL_TEAM = "Ιδ · Δι · Πα · Πω · Λο";
 const EVERYONE = `${ALL_TEAM} · Πλ · Επ`;
@@ -119,7 +119,7 @@ const ROWS: readonly ScreenRow[] = [
     code: "B2",
     title: "Σελίδα Πελάτη",
     module: "1 Πελάτες και Πωλήσεις",
-    roles: "Ιδ · Δι · Πω (Α) · Λο (ανάγ.: στοιχεία, Συμφωνίες, Οικονομικά)",
+    roles: "Ιδ · Δι · Πω (Α) · Λο (ανάγ.: στοιχεία, Συμφωνίες, Καρτέλα Πελάτη)",
   },
   {
     code: "B3",

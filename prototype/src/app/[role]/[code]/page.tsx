@@ -3,21 +3,28 @@ import { notFound } from 'next/navigation';
 import { DecisionsPanel } from '@/components/decisions-panel';
 import { ROLES, ROLE_IDS, findRole, isRoleId } from '@/data/roles';
 import { SCREENS, canSee, findScreen, isFinal } from '@/data/screens';
+import { SCREEN_CONTENT } from '@/screens';
 
 interface ScreenPageProps {
   params: Promise<{ role: string; code: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
+
+const firstValues = (query: Record<string, string | string[] | undefined>) =>
+  Object.fromEntries(Object.entries(query).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]));
 
 export const generateStaticParams = () =>
   ROLE_IDS.flatMap((role) => SCREENS.map((screen) => ({ role, code: screen.code })));
 
-export default async function ScreenPage({ params }: ScreenPageProps) {
+export default async function ScreenPage({ params, searchParams }: ScreenPageProps) {
   const { role, code } = await params;
+  const query = firstValues(await searchParams);
   const screen = findScreen(code);
   if (!isRoleId(role) || !screen) notFound();
 
   const note = screen.access[role];
   const final = isFinal(screen);
+  const Content = SCREEN_CONTENT[screen.code];
 
   return (
     <>
@@ -35,7 +42,9 @@ export default async function ScreenPage({ params }: ScreenPageProps) {
           ))}
         </ul>
       </header>
-      {canSee(screen, role) ? (
+      {canSee(screen, role) && Content ? (
+        <Content role={role} query={query} />
+      ) : canSee(screen, role) ? (
         <section className="card placeholder">
           Η οθόνη στήνεται στο ticket του module «{screen.module}».
           {note && <p>Ως {findRole(role).label}: {note}.</p>}
