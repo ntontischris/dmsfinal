@@ -50,6 +50,8 @@ export const FINAL_SCREENS: readonly string[] = [
   "A5",
   "A6",
   "A7",
+  "A8",
+  "A9",
   "B1",
   "B2",
   "B3",
@@ -92,6 +94,9 @@ export const FINAL_SCREENS: readonly string[] = [
   "K1",
   "K2",
   "K3",
+  "L1",
+  "L2",
+  "L3",
 ];
 
 const ALL_TEAM = "Ιδ · Δι · Πα · Πω · Λο";

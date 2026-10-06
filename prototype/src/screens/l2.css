@@ -1,0 +1,13 @@
+.l2-bar { position: relative; height: 0.75rem; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; margin: var(--space-2) 0; }
+.l2-bar > span { position: absolute; inset-block: 0; left: 0; background: var(--color-accent); opacity: 0.45; }
+.l2-bar > span.pub { opacity: 1; }
+.l2-bar > i { position: absolute; inset-block: 0; width: 2px; background: var(--color-attention); }
+.l2-cell { min-width: 0; overflow-wrap: anywhere; }
+.l2-sub { display: block; color: var(--color-text-muted); font-size: var(--text-sm); }
+.l2-turn { border-top: 1px solid var(--color-border); padding: var(--space-3) 0; min-width: 0; overflow-wrap: anywhere; font-size: var(--text-sm); }
+.l2-turn:first-child { border-top: 0; }
+.l2-turn p { margin: 0 0 var(--space-2); }
+.l2-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.l2-chip { border: 1px solid var(--color-border); border-radius: 999px; padding: 0 var(--space-2); }
+.l2-chip[data-gone='true'] { color: var(--color-text-muted); text-decoration: line-through; }
+.l2-wrap { overflow-x: auto; }
