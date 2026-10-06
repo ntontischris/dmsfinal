@@ -1,0 +1,12 @@
+.e3-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); width: 100%; max-width: 28rem; }
+.e3-warn { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-attention); border-radius: var(--radius); font-size: var(--text-sm); overflow-wrap: anywhere; }
+.e3-block { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px dashed var(--color-attention); border-radius: var(--radius); font-size: var(--text-sm); color: var(--color-attention); overflow-wrap: anywhere; }
+.e3-banner { border-color: var(--color-attention); }
+.e3-picker { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; padding: 0; margin: 0 0 var(--space-4); }
+.e3-picker a { text-decoration: none; color: inherit; }
+.e3-slot { display: flex; flex-direction: column; gap: var(--space-1); }
+.e3-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.e3-balance { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); gap: var(--space-3); margin: var(--space-3) 0; }
+.e3-balance strong { display: block; font-size: var(--text-lg, 1.25rem); }
+.e3 { min-width: 0; overflow-wrap: anywhere; }
+.e3 .input, .e3 .select { max-width: 100%; }
