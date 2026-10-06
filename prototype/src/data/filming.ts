@@ -108,7 +108,8 @@ export const PERSON_OF_ROLE: Readonly<Partial<Record<RoleId, string>>> = {
 export const personName = (id: string): string =>
   CREW_PEOPLE.find((person) => person.id === id)?.name ?? "—";
 
-// Ελάχιστη μορφή της Παραγωγής (το module «Παραγωγές» τη στήνει πλήρως). Μία ανά Περίοδο στη μηνιαία.
+// Η ταυτότητα της Παραγωγής: μία ανά Περίοδο στη μηνιαία, μία ανά εφάπαξ, και οι Εσωτερικές (clientId και agreementId κενά).
+// Τα υπόλοιπα (κατάσταση, εργασίες, Παραδοτέα, ώρες) ζουν στο productions.ts του module «Παραγωγές».
 export interface ProductionStub {
   id: string;
   title: string;
@@ -120,6 +121,51 @@ export interface ProductionStub {
 }
 
 export const PRODUCTIONS: readonly ProductionStub[] = [
+  {
+    id: "pr-kypseli-07",
+    title: "Κυψέλη Καφέ — Ιούλιος 2026",
+    clientId: "kypseli",
+    agreementId: "ag-kypseli-social",
+    periodLabel: "Ιούλιος 2026",
+    ownerId: "aris",
+    memberIds: ["aris", "sofia"],
+  },
+  {
+    id: "pr-kypseli-08",
+    title: "Κυψέλη Καφέ — Αύγουστος 2026",
+    clientId: "kypseli",
+    agreementId: "ag-kypseli-social",
+    periodLabel: "Αύγουστος 2026",
+    ownerId: "aris",
+    memberIds: ["aris", "sofia"],
+  },
+  {
+    id: "pr-kinisi-08",
+    title: "Γυμναστήριο Κίνηση — Αύγουστος 2026",
+    clientId: "kinisi",
+    agreementId: "ag-kinisi-social",
+    periodLabel: "Αύγουστος 2026",
+    ownerId: "aris",
+    memberIds: ["aris"],
+  },
+  {
+    id: "pr-armyra-2025",
+    title: "Ταβέρνα Αρμύρα — Εταιρικό βίντεο",
+    clientId: "armyra",
+    agreementId: "ag-armyra-2025",
+    periodLabel: null,
+    ownerId: "sofia",
+    memberIds: ["sofia", "aris"],
+  },
+  {
+    id: "pr-showreel-2026",
+    title: "Showreel 2026",
+    clientId: "",
+    agreementId: "",
+    periodLabel: null,
+    ownerId: "giorgos",
+    memberIds: ["giorgos", "aris"],
+  },
   {
     id: "pr-kypseli-09",
     title: "Κυψέλη Καφέ — Σεπτέμβριος 2026",

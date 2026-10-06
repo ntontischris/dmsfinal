@@ -1,0 +1,10 @@
+/* G1: Λίστα Παραγωγών. Μόνο ουδέτερα tokens. */
+.g1-when { white-space: nowrap; }
+.g1-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
+.g1-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr)); gap: var(--space-3); }
+.g1-cards .card { margin: 0; }
+.g1-cards h3 { margin: 0 0 var(--space-1); }
+.g1-cards ul { margin: var(--space-2) 0; padding-left: var(--space-4); }
+.g1-form { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+.g1-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+.g1-hours { display: flex; flex-wrap: wrap; gap: var(--space-3); }

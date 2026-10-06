@@ -1,0 +1,21 @@
+/* Σελίδα Παραγωγής (G2). Μόνο τα ουδέτερα tokens του globals.css. */
+.g2 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.g2 .card { min-width: 0; }
+.g2 .input, .g2 .select { max-width: 100%; }
+.g2-header { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+.g2-header h1 { margin: 0; }
+.g2-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.g2-form { display: flex; flex-direction: column; gap: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); margin: var(--space-2) 0; width: 100%; max-width: 32rem; min-width: 0; }
+.g2-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+.g2-form .input { width: 100%; }
+.g2-memo { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border-left: 2px solid var(--color-accent); background: var(--color-surface-raised); font-size: var(--text-sm); }
+.g2-warn { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-attention); border-radius: var(--radius); font-size: var(--text-sm); }
+.g2-row { display: flex; flex-direction: column; gap: var(--space-1); }
+.g2-row[data-muted='true'] { opacity: 0.65; }
+.g2-row[data-done='true'] .g2-title { text-decoration: line-through; }
+.g2-title { font-weight: 600; }
+.g2-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+.g2-total { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); gap: var(--space-3); }
+.g2-total strong { display: block; font-size: var(--text-lg); }
+.g2-add { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: var(--space-3); }
+.g2-add .input { flex: 1 1 12rem; }
