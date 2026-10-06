@@ -1,0 +1,9 @@
+/* M1 Αναφορές Πωλήσεων. Μόνο ουδέτερα tokens. */
+.m1s-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); }
+.m1s-card { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; overflow-wrap: anywhere; }
+.m1s-card strong { font-size: var(--text-lg); }
+.m1s-section { margin-top: var(--space-5); min-width: 0; }
+.m1s-list { list-style: none; padding: 0; margin: var(--space-2) 0 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.m1s-list li { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; min-width: 0; overflow-wrap: anywhere; border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-2); }
+.m1s-export { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-top: var(--space-4); }
+.m1s-body { min-width: 0; overflow-wrap: anywhere; }
