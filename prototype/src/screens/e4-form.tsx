@@ -33,14 +33,16 @@ interface E4FormProps {
   productions: readonly ProductionStub[];
   fromBlocked: boolean;
   crewHref: string;
+  blocked: BlockedSource;
 }
 
-const BLOCKED_EXAMPLE = {
-  title: "Συνάντηση με Καφέ Αθηνά",
-  date: "2026-10-09",
-  start: "10:00",
-  hours: 3,
-};
+// Ο Κλεισμένος χρόνος που μετατρέπεται (A6): η ώρα του προσυμπληρώνεται.
+export interface BlockedSource {
+  title: string;
+  date: string;
+  start: string;
+  hours: number;
+}
 const FREE = "free";
 
 // Στη μετατροπή, η Παραγωγή που διαλέγεται ορίζει την Περίοδο· η μέρα πρέπει να πέφτει μέσα της.
@@ -153,18 +155,19 @@ export function E4Form({
   productions,
   fromBlocked,
   crewHref,
+  blocked,
 }: E4FormProps) {
   const first = clients[0];
   const [clientId, setClientId] = useState(first?.id ?? "");
   const [productionId, setProductionId] = useState(productions[0]?.id ?? "");
   const [date, setDate] = useState(
-    fromBlocked ? BLOCKED_EXAMPLE.date : "2026-10-05",
+    fromBlocked ? blocked.date : "2026-10-05",
   );
   const [start, setStart] = useState(
-    fromBlocked ? BLOCKED_EXAMPLE.start : "10:00",
+    fromBlocked ? blocked.start : "10:00",
   );
   const [duration, setDuration] = useState(
-    String(fromBlocked ? BLOCKED_EXAMPLE.hours : BOOKING_HOURS.durations[0]),
+    String(fromBlocked ? blocked.hours : BOOKING_HOURS.durations[0]),
   );
   const [freeHours, setFreeHours] = useState("5");
   const [location, setLocation] = useState(lastLocationOf(first?.id ?? ""));
@@ -221,10 +224,12 @@ export function E4Form({
       <h2>{fromBlocked ? "Μετατροπή από Κλεισμένο χρόνο" : "Στοιχεία"}</h2>
       {fromBlocked && (
         <p className="e-info">
-          Από το γεγονός «{BLOCKED_EXAMPLE.title}» (
-          {fmtDate(BLOCKED_EXAMPLE.date)} {BLOCKED_EXAMPLE.start}). Η ώρα έχει
+          Από τον Κλεισμένο χρόνο «{blocked.title}» (
+          {fmtDate(blocked.date)} {blocked.start}). Η ώρα έχει
           προσυμπληρωθεί· διάλεξε σε ποια Παραγωγή μπαίνει. Απαιτεί «Κλείνει
-          Γύρισμα».
+          Γύρισμα». Με τη μετατροπή ο Κλεισμένος χρόνος σβήνει για όλα τα
+          άτομά του και το ίδιο γεγονός του Google γίνεται το Γύρισμα, χωρίς
+          διπλό. Τα άτομα δεν μπαίνουν μόνα τους στο Συνεργείο.
         </p>
       )}
       {fromBlocked ? (
