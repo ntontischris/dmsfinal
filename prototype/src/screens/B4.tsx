@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { agreementQueryFor } from "@/data/agreements";
 import {
   LOSS_REASONS,
   STAGES,
@@ -134,7 +135,7 @@ export function B4({ role, query }: ScreenProps) {
   const view = {
     ...toView(opportunity, caps, state === "empty"),
     clientHref: screenHref(role, "B2", { id: opportunity.clientId }),
-    editorHref: screenHref(role, "D3", { id: opportunity.id }),
+    editorHref: screenHref(role, "D2", agreementQueryFor(opportunity.id)),
   };
 
   return (
