@@ -61,3 +61,4 @@
 .stack .input { width: 100%; max-width: 28rem; }
 tr.taken { opacity: 0.65; background: var(--color-surface); }
 tr.taken td { text-align: left; }
+tr.archived { opacity: 0.65; }
