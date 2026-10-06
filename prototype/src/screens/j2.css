@@ -1,0 +1,26 @@
+/* Στυλ της οθόνης J2 «Συνομιλία». */
+
+.j2-chips { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.j2-chips a { display: inline-block; padding: 0 var(--space-3); border: 1px solid var(--color-border); border-radius: 999px; text-decoration: none; overflow-wrap: anywhere; }
+.j2-chips a[aria-current='true'] { border-color: var(--color-accent); font-weight: 600; }
+
+.j2-layout { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 60rem) { .j2-layout { grid-template-columns: minmax(0, 1fr) 18rem; align-items: start; } }
+
+.j2-thread { display: grid; gap: var(--space-3); min-width: 0; }
+
+.j2-req { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); display: grid; gap: var(--space-2); font-size: var(--text-sm); min-width: 0; background: var(--color-bg); }
+.j2-req p { margin: 0; }
+.j2-req-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+.j2-form { display: grid; gap: var(--space-2); min-width: 0; }
+.j2-form .input { width: 100%; box-sizing: border-box; }
+
+.j2-composer { border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); padding: var(--space-3); display: grid; gap: var(--space-2); min-width: 0; }
+.j2-composer[data-internal='true'] { border: 2px dashed var(--color-attention); background: color-mix(in oklch, var(--color-attention) 10%, var(--color-surface)); }
+.j2-composer textarea { width: 100%; box-sizing: border-box; min-height: 5rem; }
+.j2-composer .btn-row, .j2-form .btn-row { flex-wrap: wrap; }
+.j2-error { margin: 0; font-size: var(--text-sm); color: var(--color-attention); font-weight: 600; }
+
+.j2-side a { overflow-wrap: anywhere; }
+.j2-switch { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: var(--space-2); }
