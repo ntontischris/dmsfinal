@@ -1,0 +1,10 @@
+/* H1: Ουρά Παραδοτέων. Μόνο ουδέτερα tokens. */
+.h1-cell { min-width: 0; overflow-wrap: anywhere; }
+.h1-cell a { overflow-wrap: anywhere; }
+.h1-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.h1-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+.h1-charges ul, .h1-rules ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+.h1-charges li, .h1-rules li { overflow-wrap: anywhere; }
+.h1-rules dl { margin: 0; }
+.h1-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); }
+.h1-wrap { min-width: 0; overflow-wrap: anywhere; }

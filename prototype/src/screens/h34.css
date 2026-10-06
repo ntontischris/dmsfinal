@@ -1,0 +1,20 @@
+/* Όψη πελάτη Παραδοτέων (H3, H4). Μόνο τα ουδέτερα tokens του globals.css. */
+.h34 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.h34 .card { min-width: 0; }
+.h34 .input, .h34 .select { max-width: 100%; }
+.h34-header { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+.h34-header h1 { margin: 0; }
+.h34-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+.h34-item { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.h34-item a { font-weight: 600; }
+.h34-total { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
+.h34-total strong { display: block; font-size: var(--text-lg); }
+.h34-player { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; border: 1px dashed var(--color-border); border-radius: var(--radius); padding: var(--space-4); background: var(--color-surface); min-width: 0; max-width: 100%; }
+.h34-link { overflow-wrap: anywhere; word-break: break-all; font-size: var(--text-sm); }
+.h34-form { display: flex; flex-direction: column; gap: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); margin: var(--space-2) 0; width: 100%; max-width: 32rem; min-width: 0; }
+.h34-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+.h34-form .input { width: 100%; }
+.h34-warn { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-attention); border-radius: var(--radius); font-size: var(--text-sm); }
+.h34-memo { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border-left: 2px solid var(--color-accent); background: var(--color-surface-raised); font-size: var(--text-sm); }
+.h34 .h34-form label.h34-check { flex-direction: row; align-items: center; gap: var(--space-2); }
+.h34 .h34-form label.h34-check input { width: auto; }

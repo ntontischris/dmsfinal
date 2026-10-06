@@ -246,7 +246,7 @@ export function G2ClientDeliverables({
           <ul className="list">
             {waiting.map((d) => (
               <li key={d.id}>
-                <Link href={screenHref(role, "H2", { id: d.id })}>
+                <Link href={screenHref(role, "H4", { id: d.id })}>
                   {d.title}
                 </Link>
               </li>
@@ -267,7 +267,7 @@ export function G2ClientDeliverables({
             <li key={d.id} className="g2-row">
               <Link
                 className="g2-title"
-                href={screenHref(role, "H2", { id: d.id })}
+                href={screenHref(role, "H4", { id: d.id })}
               >
                 {d.title}
               </Link>
