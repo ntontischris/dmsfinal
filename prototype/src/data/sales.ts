@@ -106,7 +106,7 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
     },
     users: FICTIONAL_CLIENT.users,
     agreements: FICTIONAL_CLIENT.agreements,
-    finance: { invoiced: 5400, collected: 3600, overdue: 900, toInvoice: 900 },
+    finance: { invoiced: 2232, collected: 1616, overdue: 616, toInvoice: 900 },
     activities: [
       {
         when: "2026-09-18",
@@ -171,7 +171,7 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
         ],
       },
     ],
-    finance: { invoiced: 1800, collected: 1800, overdue: 0, toInvoice: 900 },
+    finance: { invoiced: 3323.2, collected: 3323.2, overdue: 0, toInvoice: 0 },
     activities: [
       {
         when: "2026-09-15",
@@ -246,7 +246,7 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
         periods: [],
       },
     ],
-    finance: { invoiced: 1100, collected: 1100, overdue: 0, toInvoice: 0 },
+    finance: { invoiced: 2728, collected: 2728, overdue: 0, toInvoice: 0 },
     activities: [
       {
         when: "2026-09-10",
@@ -299,7 +299,7 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
         ],
       },
     ],
-    finance: { invoiced: 900, collected: 0, overdue: 0, toInvoice: 900 },
+    finance: { invoiced: 1257.36, collected: 500, overdue: 0, toInvoice: 0 },
     activities: [
       {
         when: "2026-08-28",

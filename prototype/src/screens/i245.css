@@ -1,0 +1,13 @@
+/* I2, I4, I5: Τιμολόγια, Εισπράξεις, Καρτέλα Πελάτη. Μόνο ουδέτερα tokens. */
+.i245-cell { min-width: 0; overflow-wrap: anywhere; }
+.i245-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+.i245-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+.i245-totals .card { min-width: 0; margin: 0; }
+.i245-big { font-size: var(--text-lg); font-weight: 600; overflow-wrap: anywhere; }
+.i245-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.i245-form { display: flex; flex-direction: column; gap: var(--space-3); max-width: 28rem; }
+.i245-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); min-width: 0; }
+.i245-form .input, .i245-form .select { width: 100%; box-sizing: border-box; }
+.i245-preview { margin: var(--space-3) 0; font-size: var(--text-sm); overflow-wrap: anywhere; }
+.i245-preview ul { margin: var(--space-1) 0 0; padding-left: var(--space-4); }
+.i245-iban { font-family: var(--font-mono); overflow-wrap: anywhere; }

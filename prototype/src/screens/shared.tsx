@@ -120,7 +120,17 @@ const MONEY = new Intl.NumberFormat("el-GR", {
   currency: "EUR",
   maximumFractionDigits: 0,
 });
-export const fmtMoney = (value: number): string => MONEY.format(value);
+const MONEY_CENTS = new Intl.NumberFormat("el-GR", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+// Ακέραια ποσά χωρίς δεκαδικά· με λεπτά όταν υπάρχουν (π.χ. ΦΠΑ, Εισπράξεις).
+export const fmtMoney = (value: number): string =>
+  Number.isInteger(Math.round(value * 100) / 100)
+    ? MONEY.format(value)
+    : MONEY_CENTS.format(value);
 
 const PERCENT = new Intl.NumberFormat("el-GR", {
   style: "percent",
