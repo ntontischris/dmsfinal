@@ -134,7 +134,7 @@ export function C2({ role, query }: ScreenProps) {
       {caps.isReadOnly && (
         <p className="note">
           Βλέπεις τιμές και Παροχές για να διαλέγεις γραμμές στον{" "}
-          <Link href={screenHref(role, "D3", {})}>Συντάκτη πρότασης</Link>. Οι
+          <Link href={screenHref(role, "D2", {})}>πρόταση</Link>. Οι
           ώρες και το κόστος είναι εσωτερικά.
         </p>
       )}

@@ -1,0 +1,7 @@
+/* D1: segmented φίλτρο και κάρτες πελάτη. */
+.d1-seg { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.d1-seg .button[aria-pressed='true'] { border-color: var(--color-accent); font-weight: 600; }
+.d1-cell { display: inline-flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); align-items: center; justify-content: flex-end; min-width: 0; overflow-wrap: anywhere; }
+@media (min-width: 40.0625rem) { .d1-cell { justify-content: flex-start; } }
+.d1-small { font-size: var(--text-sm); color: var(--color-text-muted); }
+.d1-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--space-4); }

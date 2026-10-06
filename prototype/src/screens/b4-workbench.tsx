@@ -189,11 +189,11 @@ export function OpportunityWorkbench({
           <h2>Πρόταση</h2>
           <p className="muted">
             Δεν υπάρχει πρόταση ακόμα. Γραμμές, Όροι, Υπογράφων και Ισχύς
-            γράφονται στον Συντάκτη πρότασης.
+            γράφονται στη Σελίδα Συμφωνίας.
           </p>
           {isOpen && canManage && (
             <Link className="button" data-primary="true" href={view.editorHref}>
-              Νέα πρόταση στον Συντάκτη
+              Νέα πρόταση
             </Link>
           )}
         </section>
