@@ -229,9 +229,10 @@ export function E3ClientActions({ live, initial, update }: Props) {
       )}
       {form === "cancel" && (
         <ReasonForm
-          label="Λόγος ακύρωσης"
+          label="Λόγος ακύρωσης (προαιρετικός)"
           confirmLabel="Ακύρωση Γυρίσματος"
           isDanger
+          isOptional
           onConfirm={cancel}
           onClose={close}
         />

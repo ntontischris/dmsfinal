@@ -53,6 +53,14 @@ export const freeStartTimes = (
     (start) => takenAt(date, start, duration) < capacityOf(date),
   );
 
+// Χωρίς Περίοδο: είτε η Συμφωνία δεν καλύπτει τη μέρα, είτε η Περίοδός της δεν έχει ανοίξει ακόμα.
+const outsideReasonOf = (date: string): string => {
+  const agreement = findAgreement(AGREEMENT_ID);
+  const isCovered =
+    !!agreement?.start && date >= agreement.start && (!agreement.end || date <= agreement.end);
+  return isCovered ? "Η Περίοδος δεν άνοιξε" : "Εκτός Συμφωνίας";
+};
+
 export const dayStatusOf = (
   date: string,
   noticeDays: number,
@@ -68,7 +76,7 @@ export const dayStatusOf = (
       reason: `Νωρίς (${noticeDays} μέρες ειδοποίηση)`,
     };
   const balance = balanceOfDay(AGREEMENT_ID, date);
-  if (!balance) return { kind: "blocked", reason: "Εκτός Συμφωνίας" };
+  if (!balance) return { kind: "blocked", reason: outsideReasonOf(date) };
   if (hasNoBenefit || balance.left <= 0)
     return { kind: "blocked", reason: "Χωρίς Παροχή" };
   const shortest = Math.min(...BOOKING_HOURS.durations);

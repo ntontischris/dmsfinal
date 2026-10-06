@@ -6,20 +6,22 @@ interface ReasonFormProps {
   label: string;
   confirmLabel: string;
   isDanger?: boolean;
+  isOptional?: boolean;
   onConfirm: (reason: string) => void;
   onClose: () => void;
 }
 
-// Φόρμα με υποχρεωτικό λόγο: ίδιο σχήμα για απόρριψη, ακύρωση, αναίρεση.
+// Φόρμα με λόγο (υποχρεωτικό, εκτός αν isOptional): ίδιο σχήμα για απόρριψη, ακύρωση, αναίρεση.
 export function ReasonForm({
   label,
   confirmLabel,
   isDanger,
+  isOptional = false,
   onConfirm,
   onClose,
 }: ReasonFormProps) {
   const [reason, setReason] = useState("");
-  const isValid = reason.trim().length > 0;
+  const isValid = isOptional || reason.trim().length > 0;
   return (
     <div className="stack e3-form">
       <label>
@@ -28,7 +30,7 @@ export function ReasonForm({
           className="input"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
-          aria-required="true"
+          aria-required={!isOptional}
         />
       </label>
       {!isValid && <span className="muted">Ο λόγος είναι υποχρεωτικός.</span>}
