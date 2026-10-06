@@ -19,9 +19,35 @@ import { E4 } from "@/screens/E4";
 import { E5 } from "@/screens/E5";
 import { E6 } from "@/screens/E6";
 import { E7 } from "@/screens/E7";
+import { F1 } from "@/screens/F1";
+import { F2 } from "@/screens/F2";
+import { F3 } from "@/screens/F3";
 import type { ScreenProps } from "@/screens/shared";
 
 // Οι οθόνες που έχουν πραγματικό περιεχόμενο. Όλες οι άλλες δείχνουν ακόμα το placeholder.
 export const SCREEN_CONTENT: Readonly<
   Record<string, ComponentType<ScreenProps>>
-> = { B1, B2, B3, B4, B5, B6, C1, C2, D1, D2, D4, D5, E1, E2, E3, E4, E5, E6, E7 };
+> = {
+  B1,
+  B2,
+  B3,
+  B4,
+  B5,
+  B6,
+  C1,
+  C2,
+  D1,
+  D2,
+  D4,
+  D5,
+  E1,
+  E2,
+  E3,
+  E4,
+  E5,
+  E6,
+  E7,
+  F1,
+  F2,
+  F3,
+};

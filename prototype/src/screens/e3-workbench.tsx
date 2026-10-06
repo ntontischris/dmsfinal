@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import type { Filming } from "@/data/filming";
+import { equipmentName } from "@/data/equipment";
+import { FILMING_RULES, type Filming } from "@/data/filming";
 import {
   clientNameOf,
   endTime,
@@ -10,10 +11,12 @@ import {
   productionOf,
   type FilmingCaps,
 } from "@/data/filming-access";
+import { equipmentCapsOf } from "@/data/equipment-access";
 import type { RoleId } from "@/data/roles";
 import { E3Actions } from "@/screens/e3-actions";
 import { E3ClientActions } from "@/screens/e3-client";
-import { E3Crew, E3Equipment } from "@/screens/e3-crew";
+import { E3Crew } from "@/screens/e3-crew";
+import { E3Equipment } from "@/screens/e3-equipment";
 import {
   fmtDay,
   hoursLabel,
@@ -65,6 +68,14 @@ function Header({ live, caps }: { live: Live; caps: FilmingCaps }) {
             <dd>{f.clientNote}</dd>
           </>
         )}
+        {caps.isClient &&
+          FILMING_RULES.clientSeesEquipment &&
+          f.equipment.length > 0 && (
+            <>
+              <dt>Εξοπλισμός</dt>
+              <dd>{f.equipment.map(equipmentName).join(", ")}</dd>
+            </>
+          )}
         {caps.canSeeInternal && (
           <>
             <dt>Προέλευση</dt>
@@ -174,7 +185,9 @@ export function E3Workbench({ role, caps, initial }: Props) {
             update={update}
           />
           <E3Crew caps={caps} live={live} update={update} />
-          <E3Equipment caps={caps} live={live} update={update} />
+          {equipmentCapsOf(role).canSee && (
+            <E3Equipment role={role} live={live} update={update} />
+          )}
           <E3Sheet role={role} caps={caps} live={live} update={update} />
           <E3History live={live} />
         </>

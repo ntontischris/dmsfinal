@@ -1,0 +1,9 @@
+/* Οθόνες F1–F3 (Εξοπλισμός). Μόνο τα ουδέτερα tokens του globals.css. */
+.f { min-width: 0; max-width: 100%; }
+.f .card { min-width: 0; overflow-wrap: anywhere; }
+.f-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.f-group { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: 0 0 var(--space-2); min-width: 0; }
+.f-group legend { font-size: var(--text-sm); color: var(--color-text-muted); padding: 0 var(--space-1); }
+.f .select, .f .input { max-width: 100%; min-width: 0; }
+.f .e3-inline { width: 100%; }
+.f .e3-inline .select { flex: 1 1 12rem; }
