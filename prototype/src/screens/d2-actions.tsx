@@ -28,12 +28,11 @@ export interface ActionProps {
   draft: AgreementRecord;
   caps: AgreementCaps;
   actor: string;
-  approved: readonly string[];
-  act: (change: Change, notice: string, approves?: boolean) => void;
+  act: (change: Change, notice: string) => void;
 }
 
-function DraftActions({ draft, caps, approved, act }: ActionProps) {
-  const mustApprove = needsApproval(draft, approved, caps.canDeviate);
+function DraftActions({ draft, caps, act }: ActionProps) {
+  const mustApprove = needsApproval(draft, caps.canDeviate);
   const hasLines = draft.lines.length > 0;
   const validity = draft.validUntil ? fmtDate(draft.validUntil) : "—";
   return (
@@ -106,8 +105,7 @@ function ApprovalActions({ draft, caps, actor, act }: ActionProps) {
         onClick={() =>
           act(
             decide(true, actor, comment.trim()),
-            "Εγκρίθηκε και στάλθηκε σε κάθε παραλήπτη.",
-            true,
+            "Εγκρίθηκε και στάλθηκε σε όλους τους παραλήπτες.",
           )
         }
       >

@@ -50,9 +50,13 @@ export function OutsideSignatureForm({ draft, act }: OutsideProps) {
   const isMonthly = draft.kind === "μηνιαία";
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState("");
+  const [by, setBy] = useState(
+    draft.recipients.find((r) => r.isSignatory)?.name ?? "",
+  );
   const [when, setWhen] = useState(TODAY);
   const [start, setStart] = useState(draft.start ?? TODAY);
   const [used, setUsed] = useState<Used>({});
+  const [isInvoiced, setIsInvoiced] = useState(false);
   if (!isOpen)
     return (
       <button type="button" className="button" onClick={() => setIsOpen(true)}>
@@ -67,9 +71,10 @@ export function OutsideSignatureForm({ draft, act }: OutsideProps) {
         file,
         when,
         start: startIso,
+        by: by.trim(),
         used: isOldStart ? used : {},
       }),
-      `Καταχωρίστηκε υπογραφή εκτός συστήματος (${file}) στις ${fmtDate(when)}, με έναρξη ${fmtDate(startIso)}. Οι Σύνδεσμοι πρότασης έληξαν.`,
+      `Καταχωρίστηκε υπογραφή εκτός συστήματος (${file}) στις ${fmtDate(when)}, με έναρξη ${fmtDate(startIso)}. Οι Σύνδεσμοι πρότασης έληξαν.${isOldStart && isInvoiced ? " Η τρέχουσα Περίοδος δεν γεννά Τιμολογητέο: τιμολογήθηκε ήδη εκτός συστήματος." : ""} Ο Υπογράφων προσκαλείται ως Χρήστης πελάτη.`,
     );
   return (
     <fieldset className="d2-form">
@@ -81,6 +86,14 @@ export function OutsideSignatureForm({ draft, act }: OutsideProps) {
           placeholder="symfonia-ypogegrammeni.pdf"
           value={file}
           onChange={(e) => setFile(e.target.value)}
+        />
+      </label>
+      <label className="stack">
+        <span className="muted">Ποιος υπέγραψε</span>
+        <input
+          className="input"
+          value={by}
+          onChange={(e) => setBy(e.target.value)}
         />
       </label>
       <label className="stack">
@@ -102,14 +115,24 @@ export function OutsideSignatureForm({ draft, act }: OutsideProps) {
         />
       </label>
       {isOldStart && (
-        <UsedInputs draft={draft} used={used} onChange={setUsed} />
+        <>
+          <UsedInputs draft={draft} used={used} onChange={setUsed} />
+          <label className="row">
+            <input
+              type="checkbox"
+              checked={isInvoiced}
+              onChange={(e) => setIsInvoiced(e.target.checked)}
+            />
+            <span>Ο τρέχων μήνας έχει ήδη τιμολογηθεί εκτός συστήματος</span>
+          </label>
+        </>
       )}
       <span className="btn-row">
         <button
           type="button"
           className="button"
           data-primary="true"
-          disabled={!file.trim()}
+          disabled={!file.trim() || !by.trim()}
           onClick={record}
         >
           Καταχώριση

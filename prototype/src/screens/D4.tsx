@@ -1,10 +1,12 @@
 import {
   costOfAgreement,
+  deviationItemsOf,
   deviationsOf,
   lineTotal,
   pendingApprovals,
+  uncoveredDeviations,
   type AgreementRecord,
-  type Revision,
+  type Deviation,
 } from "@/data/agreements";
 import { TODAY, findClient, memberName } from "@/data/sales";
 import { ApprovalQueue, type ApprovalItem } from "@/screens/d4-queue";
@@ -22,21 +24,39 @@ const MS_PER_DAY = 86_400_000;
 const daysBetween = (fromIso: string, toIso: string): number =>
   Math.round((Date.parse(toIso) - Date.parse(fromIso)) / MS_PER_DAY);
 
-// Η Έγκριση δένεται με μία αναθεώρηση: δείχνουμε την τελευταία εγκεκριμένη πριν από αυτήν που περιμένει.
+// Εργάσιμες (Δευ–Παρ) μετά την ημέρα του αιτήματος, ως και σήμερα.
+const workingDaysBetween = (fromIso: string, toIso: string): number => {
+  const total = daysBetween(fromIso, toIso);
+  return Array.from({ length: Math.max(0, total) }, (_, index) =>
+    new Date(Date.parse(fromIso) + (index + 1) * MS_PER_DAY).getUTCDay(),
+  ).filter((weekday) => weekday !== 0 && weekday !== 6).length;
+};
+
+// Η Έγκριση δένεται με μία αναθεώρηση: τι από τα σημερινά καλύπτει η τελευταία εγκεκριμένη και τι όχι.
 const previousApprovalOf = (
-  revisions: readonly Revision[],
+  agreement: AgreementRecord,
 ): ApprovalItem["previousApproval"] => {
-  const approved = revisions
+  const approved = agreement.revisions
     .slice(0, -1)
     .filter((revision) => revision.approval?.state === "εγκρίθηκε")
     .at(-1);
-  return approved
-    ? {
-        revision: approved.number,
-        by: approved.approval?.by ?? "—",
-        comment: approved.approval?.comment ?? "",
-      }
-    : null;
+  if (!approved) return null;
+  const covered: readonly Deviation[] =
+    approved.approval?.approvedDeviations ?? [];
+  const current = deviationItemsOf(agreement);
+  const uncovered = uncoveredDeviations(current, covered);
+  return {
+    revision: approved.number,
+    by: approved.approval?.by ?? "—",
+    comment: approved.approval?.comment ?? "",
+    uncovered: uncovered.map((deviation) => ({
+      label: deviation.label,
+      isDeeper: covered.some((old) => old.key === deviation.key),
+    })),
+    covered: current
+      .filter((deviation) => !uncovered.includes(deviation))
+      .map((deviation) => deviation.label),
+  };
 };
 
 const toItem = (
@@ -54,6 +74,7 @@ const toItem = (
     owner: memberName(agreement.ownerId),
     revision: pending?.number ?? 1,
     pendingDays: pending ? daysBetween(pending.when, TODAY) : 0,
+    workingDays: pending ? workingDaysBetween(pending.when, TODAY) : 0,
     deviations: deviationsOf(agreement),
     lines: agreement.lines.map((line) => ({
       id: line.id,
@@ -66,7 +87,7 @@ const toItem = (
       isBelow: line.catalogPrice !== null && line.unitPrice < line.catalogPrice,
     })),
     isLowMargin: costOfAgreement(agreement).isLowMargin,
-    previousApproval: previousApprovalOf(agreement.revisions),
+    previousApproval: previousApprovalOf(agreement),
   };
 };
 

@@ -1,6 +1,16 @@
 import Link from "next/link";
 
-import { agreementQueryFor } from "@/data/agreements";
+import {
+  AGREEMENTS,
+  agreementQueryFor,
+  agreementTotal,
+  costOfAgreement,
+  currentRevision,
+  deviationsOf,
+  lineTotal,
+  type AgreementRecord,
+} from "@/data/agreements";
+import { COST_SETTINGS } from "@/data/catalogue";
 import {
   LOSS_REASONS,
   STAGES,
@@ -30,51 +40,76 @@ import {
   type ScreenProps,
 } from "@/screens/shared";
 
-const MIN_MARGIN = 0.3; // Φανταστικό «Ελάχιστο περιθώριο» εταιρείας, από τις Ρυθμίσεις.
+// «Ελάχιστο περιθώριο» που αντιστοιχεί στον κάτω πολλαπλασιαστή τιμής (Έξοδα και Κόστος ώρας).
+const MIN_MARGIN = 1 - 1 / COST_SETTINGS.multipliers.min;
 
 const MS_PER_DAY = 86_400_000;
 const daysBetween = (fromIso: string, toIso: string): number =>
   Math.round((Date.parse(toIso) - Date.parse(fromIso)) / MS_PER_DAY);
 
+// Η πρόταση της Ευκαιρίας είναι η Συμφωνία με αυτό το opportunityId (module «3 Συμφωνίες»).
+const agreementOf = (opportunityId: string): AgreementRecord | undefined =>
+  AGREEMENTS.find((agreement) => agreement.opportunityId === opportunityId);
+
+const pathOf = (agreement: AgreementRecord): ProposalView["path"] =>
+  agreement.path ??
+  (agreement.state === "πρόταση" ? "Σύνταξη" : "Υπογράφηκε");
+
 const toProposalView = (
-  proposal: NonNullable<Opportunity["proposal"]>,
+  agreement: AgreementRecord,
   caps: SalesCaps,
 ): ProposalView => {
-  const total = proposal.lines.reduce((sum, line) => sum + line.price, 0);
-  const cost = proposal.lines.reduce(
-    (sum, line) => sum + line.estimatedCost,
-    0,
-  );
+  const revision = currentRevision(agreement);
+  const approval = revision?.approval;
+  const cost = costOfAgreement(agreement);
   return {
-    title: proposal.title,
-    kind: proposal.kind,
-    path: proposal.path,
-    revision: proposal.revision,
-    validUntil: fmtDate(proposal.validUntil),
-    deviations: proposal.deviations,
-    approval: proposal.approval?.state ?? null,
+    title: agreement.title,
+    kind: agreement.kind,
+    path: pathOf(agreement),
+    revision: revision?.number ?? 1,
+    validUntil: agreement.validUntil ? fmtDate(agreement.validUntil) : "—",
+    deviations: deviationsOf(agreement),
+    approval: approval?.state ?? null,
     pendingDays:
-      proposal.approval?.state === "αναμένει" && proposal.approval.requestedOn
-        ? daysBetween(proposal.approval.requestedOn, TODAY)
+      approval?.state === "αναμένει" && revision
+        ? daysBetween(revision.when, TODAY)
         : null,
     todayIso: TODAY,
-    hasLowMargin: proposal.lowMargin,
-    lines: proposal.lines.map((line) => ({
+    hasLowMargin: cost.isLowMargin,
+    lines: agreement.lines.map((line) => ({
       description: line.description,
-      catalog: line.catalogPrice === null ? null : fmtMoney(line.catalogPrice),
-      price: fmtMoney(line.price),
+      catalog:
+        line.catalogPrice === null
+          ? null
+          : fmtMoney(line.catalogPrice * line.quantity),
+      price: fmtMoney(lineTotal(line)),
     })),
-    total: fmtMoney(total),
+    total: fmtMoney(agreementTotal(agreement)),
     // Κόστος και περιθώριο: μόνο όσοι «βλέπουν κόστος και κερδοφορία» (Ιδιοκτήτης, Διαχείριση).
     cost: caps.canSeeCost
       ? {
-          total: fmtMoney(cost),
-          margin: `${Math.round(((total - cost) / total) * 100)}%`,
+          total: fmtMoney(cost.estimatedCost),
+          margin: `${Math.round(cost.marginPercent * 100)}%`,
           minMargin: `${Math.round(MIN_MARGIN * 100)}%`,
         }
       : null,
-    recipients: proposal.recipients,
+    recipients: agreement.recipients.map(
+      ({ name, isSignatory, link, opened }) => ({
+        name,
+        isSignatory,
+        link,
+        opened,
+      }),
+    ),
   };
+};
+
+const proposalFor = (
+  opportunityId: string,
+  caps: SalesCaps,
+): ProposalView | null => {
+  const agreement = agreementOf(opportunityId);
+  return agreement ? toProposalView(agreement, caps) : null;
 };
 
 const toView = (
@@ -108,10 +143,7 @@ const toView = (
           ...activity,
           when: fmtDate(activity.when),
         })),
-    proposal:
-      isEmpty || !opportunity.proposal
-        ? null
-        : toProposalView(opportunity.proposal, caps),
+    proposal: isEmpty ? null : proposalFor(opportunity.id, caps),
   };
 };
 

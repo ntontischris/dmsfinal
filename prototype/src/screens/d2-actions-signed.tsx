@@ -5,7 +5,7 @@ import { useState } from "react";
 import type { AgreementRecord } from "@/data/agreements";
 import type { AgreementCaps } from "@/data/agreements-access";
 import { TODAY } from "@/data/sales";
-import { dissolve, type Change } from "@/screens/d2-transitions";
+import { dissolve, isMonthCut, type Change } from "@/screens/d2-transitions";
 import { NumberInput } from "@/screens/d2-ui";
 import { fmtDate } from "@/screens/shared";
 
@@ -31,13 +31,23 @@ function DissolveForm({
   const confirm = () =>
     act(
       dissolve({ when, reason: reason.trim(), by: actor, fee }),
-      `Η Συμφωνία λύθηκε στις ${fmtDate(when)}.${fee > 0 ? " Γεννήθηκε Τιμολογητέο λύσης." : ""}`,
+      [
+        when > TODAY
+          ? `Η Λύση καταχωρίστηκε με ημερομηνία ${fmtDate(when)}· ως τότε η Συμφωνία συνεχίζει.`
+          : `Η Συμφωνία λύθηκε στις ${fmtDate(when)}.`,
+        draft.kind === "μηνιαία" && isMonthCut(when)
+          ? "Η τελευταία Περίοδος γίνεται σπασμένη: χρεώνεται αναλογικά με τις μέρες, χωρίς νέες Παροχές."
+          : "",
+        fee > 0 ? "Γεννήθηκε Τιμολογητέο λύσης." : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
     );
   return (
     <fieldset className="d2-form">
       <legend>Λύση</legend>
       <label className="stack">
-        <span className="muted">Ημερομηνία</span>
+        <span className="muted">Ημερομηνία Λύσης (και μελλοντική, για την ειδοποίηση)</span>
         <input
           className="input"
           type="date"
@@ -86,11 +96,14 @@ function DissolveForm({
 
 function RenewalActions({
   draft,
+  caps,
   notify,
   hasNoContinuation,
   onNoContinuation,
 }: SignedProps) {
-  const isAutomatic = draft.terms.renewal === "αυτόματη συνέχιση";
+  // «Χωρίς συνέχιση» μόνο όποιος λύνει Συμφωνίες (Ιδιοκτήτης, Διαχείριση).
+  const isAutomatic =
+    caps.canDissolve && draft.terms.renewal === "αυτόματη συνέχιση";
   return (
     <>
       <button
@@ -146,7 +159,7 @@ export function SignedActions(props: SignedProps) {
       {caps.canCompose && draft.kind === "μηνιαία" && (
         <RenewalActions {...props} />
       )}
-      {caps.canDissolve &&
+      {caps.canDissolve && !draft.dissolution &&
         (isDissolving ? (
           <DissolveForm
             draft={draft}

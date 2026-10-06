@@ -3,11 +3,15 @@
 import {
   DEFAULT_TERMS,
   PROPOSAL_VALIDITY_DAYS,
+  deviationItemsOf,
   deviationsOf,
+  uncoveredDeviations,
   type AgreementKind,
   type AgreementLine,
   type AgreementRecord,
+  type Deviation,
   type Recipient,
+  type Revision,
 } from "@/data/agreements";
 import {
   CATALOGUE,
@@ -209,14 +213,25 @@ export const lineDeviationsOf = (
     terms: DEFAULT_TERMS[agreement.kind],
   });
 
-// Η Έγκριση δένεται με την αναθεώρηση: χρειάζεται νέα μόνο αν εμφανιστεί Παρέκκλιση που δεν είχε εγκριθεί.
+// Η τελευταία Έγκριση και τα νούμερα που ενέκρινε.
+export const latestApproval = (
+  agreement: AgreementRecord,
+): Revision | undefined =>
+  [...agreement.revisions]
+    .reverse()
+    .find((revision) => revision.approval?.state === "εγκρίθηκε");
+
+export const uncoveredOf = (agreement: AgreementRecord): readonly Deviation[] =>
+  uncoveredDeviations(
+    deviationItemsOf(agreement),
+    latestApproval(agreement)?.approval?.approvedDeviations ?? [],
+  );
+
+// Νέα Έγκριση χρειάζεται μόνο για Παρέκκλιση νέα ή βαθύτερη από όσο εγκρίθηκε· η αφαίρεση δεν θέλει.
 export const needsApproval = (
   agreement: AgreementRecord,
-  approved: readonly string[],
   canDeviate: boolean,
-): boolean =>
-  !canDeviate &&
-  deviationsOf(agreement).some((deviation) => !approved.includes(deviation));
+): boolean => !canDeviate && uncoveredOf(agreement).length > 0;
 
 export const revisionNumber = (agreement: AgreementRecord): number =>
   agreement.revisions.at(-1)?.number ?? 1;

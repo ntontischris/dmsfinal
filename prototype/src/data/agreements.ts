@@ -125,6 +125,7 @@ export interface Revision {
     by?: string;
     when?: string;
     comment?: string;
+    approvedDeviations?: readonly Deviation[];
   };
 }
 
@@ -495,6 +496,13 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
           by: "Δημήτρης Ιωάννου",
           when: "2026-09-13",
           comment: "Εντάξει για 3 μήνες, όχι παραπάνω.",
+          approvedDeviations: [
+            {
+              key: "discount",
+              label: "Έκπτωση 25% για 3 μήνες, πέρα από την τυπική 10% για 2",
+              depth: 75,
+            },
+          ],
         },
       },
       {
@@ -631,6 +639,13 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
           by: "Γιώργος Μαυρίδης",
           when: "2026-08-29",
           comment: "Οκ, ο πελάτης πληρώνει πάντα.",
+          approvedDeviations: [
+            {
+              key: "paymentDays",
+              label: "Μέρες πληρωμής 30 αντί για 15",
+              depth: 15,
+            },
+          ],
         },
       },
     ],
@@ -904,25 +919,53 @@ const quantityOf = (
 ): number =>
   provisions.find((provision) => provision.kindId === kindId)?.quantity ?? 0;
 
-const lineDeviations = (line: AgreementLine): readonly string[] => {
+// Κάθε Παρέκκλιση έχει σταθερό κλειδί και «βάθος» (πόσο χειρότερη από τον Κατάλογο ή την προεπιλογή),
+// ώστε η Έγκριση να δένεται με συγκεκριμένα νούμερα: νέα Έγκριση θέλει μόνο νέα ή βαθύτερη Παρέκκλιση.
+export interface Deviation {
+  key: string;
+  label: string;
+  depth: number;
+}
+
+const lineDeviations = (line: AgreementLine): readonly Deviation[] => {
   if (line.catalogPrice === null || line.catalogProvisions === null)
-    return [`Ελεύθερη γραμμή: «${line.description}»`];
-  const extra = line.provisions.filter(
-    (provision) =>
-      provision.quantity >
-      quantityOf(line.catalogProvisions ?? [], provision.kindId),
+    return [
+      {
+        key: `free:${line.id}`,
+        label: `Ελεύθερη γραμμή: «${line.description}»`,
+        depth: 1,
+      },
+    ];
+  const catalogProvisions = line.catalogProvisions;
+  const extra = line.provisions.reduce(
+    (sum, provision) =>
+      sum +
+      Math.max(0, provision.quantity - quantityOf(catalogProvisions, provision.kindId)),
+    0,
   );
   return [
     ...(line.unitPrice < line.catalogPrice
-      ? [`Τιμή κάτω από τον Κατάλογο: «${line.description}»`]
+      ? [
+          {
+            key: `price:${line.id}`,
+            label: `Τιμή κάτω από τον Κατάλογο: «${line.description}»`,
+            depth: line.catalogPrice - line.unitPrice,
+          },
+        ]
       : []),
-    ...(extra.length > 0
-      ? [`Περισσότερες Παροχές από τον Κατάλογο: «${line.description}»`]
+    ...(extra > 0
+      ? [
+          {
+            key: `provisions:${line.id}`,
+            label: `Περισσότερες Παροχές από τον Κατάλογο: «${line.description}»`,
+            depth: extra,
+          },
+        ]
       : []),
   ];
 };
 
-const termDeviations = (agreement: AgreementRecord): readonly string[] => {
+const termDeviations = (agreement: AgreementRecord): readonly Deviation[] => {
   const base = DEFAULT_TERMS[agreement.kind];
   const terms = agreement.terms;
   const discount = terms.firstMonthsDiscount;
@@ -930,33 +973,71 @@ const termDeviations = (agreement: AgreementRecord): readonly string[] => {
     ...(discount.percent > STANDARD_DISCOUNT.percent ||
     discount.months > STANDARD_DISCOUNT.months
       ? [
-          `Έκπτωση ${discount.percent}% για ${discount.months} μήνες, πέρα από την τυπική ${STANDARD_DISCOUNT.percent}% για ${STANDARD_DISCOUNT.months}`,
+          {
+            key: "discount",
+            label: `Έκπτωση ${discount.percent}% για ${discount.months} μήνες, πέρα από την τυπική ${STANDARD_DISCOUNT.percent}% για ${STANDARD_DISCOUNT.months}`,
+            depth: discount.percent * discount.months,
+          },
         ]
       : []),
     ...(terms.paymentDays > base.paymentDays
-      ? [`Μέρες πληρωμής ${terms.paymentDays} αντί για ${base.paymentDays}`]
+      ? [
+          {
+            key: "paymentDays",
+            label: `Μέρες πληρωμής ${terms.paymentDays} αντί για ${base.paymentDays}`,
+            depth: terms.paymentDays - base.paymentDays,
+          },
+        ]
       : []),
     ...(terms.graceDays > base.graceDays
-      ? [`Περίοδος χάριτος ${terms.graceDays} μέρες αντί για ${base.graceDays}`]
+      ? [
+          {
+            key: "graceDays",
+            label: `Περίοδος χάριτος ${terms.graceDays} μέρες αντί για ${base.graceDays}`,
+            depth: terms.graceDays - base.graceDays,
+          },
+        ]
       : []),
     ...(UNUSED_RANK[terms.unusedProvisions] > UNUSED_RANK[base.unusedProvisions]
       ? [
-          `Αχρησιμοποίητες Παροχές «${terms.unusedProvisions}» αντί για «${base.unusedProvisions}»`,
+          {
+            key: "unusedProvisions",
+            label: `Αχρησιμοποίητες Παροχές «${terms.unusedProvisions}» αντί για «${base.unusedProvisions}»`,
+            depth:
+              UNUSED_RANK[terms.unusedProvisions] - UNUSED_RANK[base.unusedProvisions],
+          },
         ]
       : []),
     ...(terms.filming.cancelHours < base.filming.cancelHours
       ? [
-          `Όριο ακύρωσης ${terms.filming.cancelHours} ώρες αντί για ${base.filming.cancelHours}`,
+          {
+            key: "cancelHours",
+            label: `Όριο ακύρωσης ${terms.filming.cancelHours} ώρες αντί για ${base.filming.cancelHours}`,
+            depth: base.filming.cancelHours - terms.filming.cancelHours,
+          },
         ]
       : []),
   ];
 };
 
 // Παρέκκλιση = ό,τι είναι χειρότερο για την εταιρεία από τον Κατάλογο και τις προεπιλογές της στιγμής της πρότασης.
-export const deviationsOf = (agreement: AgreementRecord): readonly string[] => [
+export const deviationItemsOf = (agreement: AgreementRecord): readonly Deviation[] => [
   ...agreement.lines.flatMap(lineDeviations),
   ...termDeviations(agreement),
 ];
+
+export const deviationsOf = (agreement: AgreementRecord): readonly string[] =>
+  deviationItemsOf(agreement).map((deviation) => deviation.label);
+
+// Οι Παρεκκλίσεις που δεν καλύπτει η τελευταία Έγκριση: νέες, ή βαθύτερες από όσο εγκρίθηκε.
+export const uncoveredDeviations = (
+  current: readonly Deviation[],
+  approved: readonly Deviation[],
+): readonly Deviation[] =>
+  current.filter((deviation) => {
+    const match = approved.find((candidate) => candidate.key === deviation.key);
+    return !match || deviation.depth > match.depth;
+  });
 
 export const currentRevision = (
   agreement: AgreementRecord,

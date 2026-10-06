@@ -8,6 +8,7 @@ import {
   type PeriodProvision,
 } from "@/data/agreements";
 import { provisionKind } from "@/data/catalogue";
+import { TODAY } from "@/data/sales";
 import { Badge, fmtDate, fmtMoney } from "@/screens/shared";
 
 const remainingOf = (p: PeriodProvision): number =>
@@ -158,7 +159,7 @@ export function SignatureSection({ draft }: { draft: AgreementRecord }) {
         )}
         {dissolution && (
           <>
-            <dt>Λύθηκε</dt>
+            <dt>{dissolution.when > TODAY ? "Λύνεται" : "Λύθηκε"}</dt>
             <dd>
               {fmtDate(dissolution.when)}, {dissolution.by}
             </dd>

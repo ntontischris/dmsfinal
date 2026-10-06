@@ -3,6 +3,7 @@
 
 import {
   currentRevision,
+  deviationItemsOf,
   endOfTerm,
   provisionsOf,
   type AgreementPeriod,
@@ -62,6 +63,7 @@ export const decide =
       by,
       when: TODAY,
       comment: comment || undefined,
+      approvedDeviations: isApproved ? deviationItemsOf(d) : undefined,
     });
     return isApproved
       ? send({ ...d, revisions })
@@ -110,6 +112,7 @@ export interface OutsideSignature {
   file: string;
   when: string;
   start: string;
+  by: string;
   used: Readonly<Partial<Record<ProvisionKindId, number>>>;
 }
 
@@ -137,9 +140,8 @@ const currentPeriod = (
 };
 
 export const signOutside =
-  ({ file, when, start, used }: OutsideSignature): Change =>
+  ({ file, when, start, by, used }: OutsideSignature): Change =>
   (d) => {
-    const signatory = d.recipients.find((r) => r.isSignatory);
     const isMonthly = d.kind === "μηνιαία";
     const hasStarted = start <= TODAY;
     return {
@@ -151,7 +153,7 @@ export const signOutside =
       recipients: withLinks(d.recipients, "όλοι", "έληξε"),
       periods: isMonthly && hasStarted ? [currentPeriod(d, used, start)] : [],
       signature: {
-        by: signatory?.name ?? "—",
+        by,
         when,
         method: "εκτός συστήματος",
         file,
@@ -166,6 +168,31 @@ export interface DissolveInput {
   fee: number;
 }
 
+// Η Λύση μπορεί να είναι και μελλοντική (ειδοποίηση). Περίοδοι μετά την ημερομηνία δεν γεννιούνται·
+// αν η ημερομηνία κόβει μήνα, η τελευταία Περίοδος γίνεται σπασμένη χωρίς νέες Παροχές.
+const cutPeriod = (period: AgreementPeriod, when: string): AgreementPeriod =>
+  period.ends <= when
+    ? period
+    : {
+        ...period,
+        ends: when,
+        provisions:
+          period.state === "επόμενη"
+            ? period.provisions.map((p) => ({ ...p, given: 0 }))
+            : period.provisions,
+      };
+
+export const isMonthCut = (when: string): boolean =>
+  when !== endOfDuration(`${when.slice(0, 7)}-01`, 1);
+
 export const dissolve =
   (input: DissolveInput): Change =>
-  (d) => ({ ...d, state: "λύθηκε", end: input.when, dissolution: input });
+  (d) => ({
+    ...d,
+    state: input.when <= TODAY ? "λύθηκε" : d.state,
+    end: input.when,
+    dissolution: input,
+    periods: d.periods
+      .filter((period) => period.starts <= input.when)
+      .map((period) => cutPeriod(period, input.when)),
+  });

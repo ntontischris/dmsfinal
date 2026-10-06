@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import type { ProposalPath, Revision } from "@/data/agreements";
+import type { LinkState } from "@/data/opportunities";
 import { Badge } from "@/screens/shared";
 
-export type PathState =
-  "Σύνταξη" | "Αναμένει Έγκριση" | "Εστάλη" | "Έληξε" | "Υπογράφηκε";
-type LinkState = "ενεργός" | "ακυρώθηκε" | "έληξε" | "ανακλήθηκε";
-type ApprovalState = "αναμένει" | "εγκρίθηκε" | "απορρίφθηκε";
+export type PathState = ProposalPath;
+type ApprovalState = NonNullable<Revision["approval"]>["state"];
 
 export interface ProposalView {
   title: string;
@@ -118,7 +118,7 @@ export function ProposalPanel({
           ` (${view.lines.filter((line) => line.catalog === null).length} ελεύθερες)`}
         {" · "}
         <Link href={editorHref}>
-          {mayEdit ? "Άνοιγμα στον Συντάκτη" : "Προβολή στον Συντάκτη"}
+          {mayEdit ? "Άνοιγμα της πρότασης" : "Προβολή της πρότασης"}
         </Link>
       </p>
       <p>
@@ -273,7 +273,7 @@ export function ProposalPanel({
 
       {mayEdit && view.path === "Εστάλη" && (
         <p className="note">
-          Νέα αναθεώρηση γίνεται στον <Link href={editorHref}>Συντάκτη</Link>{" "}
+          Νέα αναθεώρηση γίνεται στη <Link href={editorHref}>Σελίδα Συμφωνίας</Link>{" "}
           και ακυρώνει τους παλιούς συνδέσμους.
         </p>
       )}

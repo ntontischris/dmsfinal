@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 
-import {
-  currentRevision,
-  deviationsOf,
-  type AgreementRecord,
-} from "@/data/agreements";
+import type { AgreementRecord } from "@/data/agreements";
 import type { AgreementCaps } from "@/data/agreements-access";
 import { ProposalDocument } from "@/screens/d5-document";
 import { ActionBar } from "@/screens/d2-action-bar";
@@ -30,19 +26,7 @@ interface WorkbenchProps {
   context: D2Context;
 }
 
-// Εγκεκριμένες Παρεκκλίσεις της τρέχουσας αναθεώρησης: μόνο αυτές στέλνονται χωρίς νέα Έγκριση.
-const approvedOf = (agreement: AgreementRecord): readonly string[] =>
-  currentRevision(agreement)?.approval?.state === "εγκρίθηκε"
-    ? deviationsOf(agreement)
-    : [];
-
-function InternalSections({
-  section,
-  approved,
-}: {
-  section: SectionProps;
-  approved: readonly string[];
-}) {
+function InternalSections({ section }: { section: SectionProps }) {
   const { draft, caps } = section;
   if (caps.isClient) return null;
   return (
@@ -51,7 +35,6 @@ function InternalSections({
       {!caps.isReadOnly && (
         <DeviationsSection
           draft={draft}
-          approved={approved}
           canDeviate={caps.canDeviate}
         />
       )}
@@ -62,7 +45,6 @@ function InternalSections({
 // Σελίδα Συμφωνίας: προβολή και σύνταξη μαζί. Όσο είναι σε Σύνταξη, όποιος συντάσσει βλέπει πεδία.
 export function D2Workbench({ initial, caps, context }: WorkbenchProps) {
   const [draft, setDraft] = useState(initial);
-  const [approved, setApproved] = useState(() => approvedOf(initial));
   const [notice, setNotice] = useState<string | null>(null);
   const [hasNoContinuation, setHasNoContinuation] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -70,10 +52,8 @@ export function D2Workbench({ initial, caps, context }: WorkbenchProps) {
   const isEditing =
     caps.canCompose && draft.state === "πρόταση" && draft.path === "Σύνταξη";
   const section: SectionProps = { draft, update: setDraft, isEditing, caps };
-  const act = (change: Change, text: string, approves = false) => {
-    const next = change(draft);
-    setDraft(next);
-    if (approves) setApproved(deviationsOf(next));
+  const act = (change: Change, text: string) => {
+    setDraft(change(draft));
     setNotice(text);
   };
   const hasPeriods = draft.kind === "μηνιαία" && draft.periods.length > 0;
@@ -85,7 +65,6 @@ export function D2Workbench({ initial, caps, context }: WorkbenchProps) {
         draft={draft}
         caps={caps}
         actor={context.actor}
-        approved={approved}
         act={act}
         notice={notice}
         notify={setNotice}
@@ -107,7 +86,7 @@ export function D2Workbench({ initial, caps, context }: WorkbenchProps) {
         </section>
       )}
       <LinesSection {...section} />
-      <InternalSections section={section} approved={approved} />
+      <InternalSections section={section} />
       <TermsSection {...section} />
       <div className="grid2">
         <ScheduleSection {...section} />

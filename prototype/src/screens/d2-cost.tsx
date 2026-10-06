@@ -3,11 +3,11 @@
 import {
   agreementTotal,
   costOfAgreement,
-  deviationsOf,
+  deviationItemsOf,
   type AgreementRecord,
 } from "@/data/agreements";
 import { COST_SETTINGS, hourCost } from "@/data/catalogue";
-import { needsApproval } from "@/screens/d2-model";
+import { latestApproval, needsApproval, uncoveredOf } from "@/screens/d2-model";
 import { Badge, fmtMoney, fmtPercent } from "@/screens/shared";
 
 // Μόνο για όσους «Βλέπουν κόστος και κερδοφορία». Ξαναϋπολογίζεται σε κάθε αλλαγή γραμμής.
@@ -60,50 +60,49 @@ export function CostSection({ draft }: { draft: AgreementRecord }) {
 
 interface DeviationsProps {
   draft: AgreementRecord;
-  approved: readonly string[];
   canDeviate: boolean;
 }
 
-export function DeviationsSection({
-  draft,
-  approved,
-  canDeviate,
-}: DeviationsProps) {
-  const deviations = deviationsOf(draft);
+function DeviationBadge({ isUncovered, draft, canDeviate }: { isUncovered: boolean; draft: AgreementRecord; canDeviate: boolean }) {
+  if (isUncovered)
+    return canDeviate || draft.state !== "πρόταση" ? null : <Badge tone="attention">θέλει Έγκριση</Badge>;
+  return <Badge>εγκρίθηκε στην αναθεώρηση {latestApproval(draft)?.number}</Badge>;
+}
+
+// Κάθε Παρέκκλιση με το βάθος της: καλύπτεται μόνο αν η τελευταία Έγκριση ενέκρινε ίσο ή μεγαλύτερο νούμερο.
+export function DeviationsSection({ draft, canDeviate }: DeviationsProps) {
+  const items = deviationItemsOf(draft);
+  const uncovered = uncoveredOf(draft);
   const isProposal = draft.state === "πρόταση";
-  const mustApprove = needsApproval(draft, approved, canDeviate);
+  const mustApprove = needsApproval(draft, canDeviate);
   return (
     <section className="card">
       <h2>Παρεκκλίσεις</h2>
-      {deviations.length === 0 ? (
+      {items.length === 0 ? (
         <p className="muted">
-          {isProposal
-            ? "Καμία Παρέκκλιση: η πρόταση στέλνεται κατευθείαν."
-            : "Καμία Παρέκκλιση."}
+          {isProposal ? "Καμία Παρέκκλιση: η πρόταση στέλνεται κατευθείαν." : "Καμία Παρέκκλιση."}
         </p>
       ) : (
         <ul className="list">
-          {deviations.map((deviation) => (
-            <li key={deviation}>
-              {deviation}{" "}
-              {approved.includes(deviation) && <Badge>εγκρίθηκε</Badge>}
+          {items.map((item) => (
+            <li key={item.key}>
+              {item.label}{" "}
+              <DeviationBadge isUncovered={uncovered.some((u) => u.key === item.key)} draft={draft} canDeviate={canDeviate} />
             </li>
           ))}
         </ul>
       )}
-      {isProposal && deviations.length > 0 && (
+      {isProposal && items.length > 0 && (
         <p className="note">
           {canDeviate
             ? "Έχεις το Δικαίωμα «Παρεκκλίνει από τον Κατάλογο»: στέλνεται χωρίς Έγκριση."
             : mustApprove
-              ? "Δεν στέλνεται χωρίς Έγκριση πρότασης για αυτή την αναθεώρηση."
-              : "Όλες οι Παρεκκλίσεις έχουν εγκριθεί: στέλνεται."}
+              ? "Δεν στέλνεται χωρίς Έγκριση: υπάρχει Παρέκκλιση νέα ή βαθύτερη από όσο εγκρίθηκε."
+              : "Η τελευταία Έγκριση καλύπτει όλες τις Παρεκκλίσεις: στέλνεται."}
         </p>
       )}
       {!isProposal && (
-        <p className="muted">
-          Σε σχέση με τον Κατάλογο και τις προεπιλογές της στιγμής της πρότασης.
-        </p>
+        <p className="muted">Σε σχέση με τον Κατάλογο και τις προεπιλογές της στιγμής της πρότασης.</p>
       )}
     </section>
   );

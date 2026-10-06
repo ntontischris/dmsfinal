@@ -16,6 +16,7 @@ export interface ApprovalItem {
   owner: string;
   revision: number;
   pendingDays: number;
+  workingDays: number;
   deviations: readonly string[];
   lines: readonly {
     id: string;
@@ -25,13 +26,19 @@ export interface ApprovalItem {
     isBelow: boolean;
   }[];
   isLowMargin: boolean;
-  previousApproval: { revision: number; by: string; comment: string } | null;
+  previousApproval: {
+    revision: number;
+    by: string;
+    comment: string;
+    uncovered: readonly { label: string; isDeeper: boolean }[];
+    covered: readonly string[];
+  } | null;
 }
 
 type Decision = { kind: "εγκρίθηκε" | "απορρίφθηκε"; comment: string };
 type Form = "approve" | "reject" | null;
 
-const REMIND_AFTER_DAYS = 2; // Μετά από 2 εργάσιμες ξαναειδοποιούνται όσοι εγκρίνουν.
+const REMIND_AFTER_WORKING_DAYS = 2; // Μετά από 2 εργάσιμες ξαναειδοποιούνται όσοι εγκρίνουν.
 
 function LinesTable({ lines }: { lines: ApprovalItem["lines"] }) {
   return (
@@ -125,10 +132,9 @@ function ResultLine({
         {decision.comment && ` · «${decision.comment}»`}
       </p>
       <p className="muted">
-        Ειδοποιήθηκε ο/η {item.owner}.{" "}
         {decision.kind === "εγκρίθηκε"
-          ? "Μπορεί τώρα να τη στείλει."
-          : "Αναθεωρεί και ξαναζητά Έγκριση."}{" "}
+          ? `Εγκρίθηκε και στάλθηκε σε όλους τους παραλήπτες· ειδοποιήθηκε ο/η ${item.owner}.`
+          : `Ειδοποιήθηκε ο/η ${item.owner}. Αναθεωρεί και ξαναζητά Έγκριση.`}{" "}
         (prototype: δεν αποθηκεύεται)
       </p>
     </section>
@@ -146,7 +152,7 @@ function ItemHeader({ item }: { item: ApprovalItem }) {
           <Badge>{item.kind}</Badge>
           <Badge>Αναθεώρηση {item.revision}</Badge>
           <Badge tone="attention">Αναμένει · {item.pendingDays} μέρες</Badge>
-          {item.pendingDays > REMIND_AFTER_DAYS && (
+          {item.workingDays >= REMIND_AFTER_WORKING_DAYS && (
             <Badge>ξαναειδοποιήθηκαν όσοι εγκρίνουν</Badge>
           )}
           {item.isLowMargin && (
@@ -156,6 +162,33 @@ function ItemHeader({ item }: { item: ApprovalItem }) {
       </div>
       <p className="muted">Υπεύθυνος: {item.owner}</p>
     </>
+  );
+}
+
+function PreviousApproval({
+  previous,
+}: {
+  previous: NonNullable<ApprovalItem["previousApproval"]>;
+}) {
+  return (
+    <div className="note">
+      <p>
+        Η αναθεώρηση {previous.revision} εγκρίθηκε από {previous.by}
+        {previous.comment && `: «${previous.comment}»`}. Η Έγκριση δένεται με
+        εκείνη την αναθεώρηση· η νέα βαθαίνει την Παρέκκλιση:
+      </p>
+      <ul className="d5-plain">
+        {previous.uncovered.map((deviation) => (
+          <li key={deviation.label}>
+            <strong>{deviation.isDeeper ? "βαθύτερη" : "νέα"}:</strong>{" "}
+            {deviation.label}
+          </li>
+        ))}
+        {previous.covered.map((label) => (
+          <li key={label}>ήδη εγκρίθηκε: {label}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -175,13 +208,7 @@ function ApprovalCard({ item }: { item: ApprovalItem }) {
         ))}
       </ul>
       <LinesTable lines={item.lines} />
-      {previous && (
-        <p className="note">
-          Η αναθεώρηση {previous.revision} εγκρίθηκε από {previous.by}
-          {previous.comment && `: «${previous.comment}»`} — η νέα βαθαίνει την
-          Παρέκκλιση.
-        </p>
-      )}
+      {previous && <PreviousApproval previous={previous} />}
       {form ? (
         <DecisionForm
           form={form}

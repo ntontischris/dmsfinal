@@ -73,7 +73,7 @@ export const DOC_LABELS: Readonly<Record<DocLanguage, DocLabels>> = {
     duration: (m) => `Διάρκεια ${m} μήνες`,
     endAfter: (m) => `${m} μήνες μετά`,
     proRata:
-      "Η χρέωση γίνεται ανά ημερολογιακό μήνα. Αν η έναρξη δεν είναι 1η του μήνα, ο πρώτος και ο τελευταίος μήνας χρεώνονται αναλογικά με τις μέρες· ο πρώτος δίνει ολόκληρες τις Παροχές του μήνα.",
+      "Η χρέωση γίνεται ανά ημερολογιακό μήνα. Αν η έναρξη δεν είναι 1η του μήνα, ο πρώτος και ο τελευταίος μήνας χρεώνονται αναλογικά με τις μέρες· ο πρώτος δίνει ολόκληρες τις Παροχές του μήνα, ο τελευταίος δεν δίνει νέες Παροχές.",
     end: "Λήξη",
     total: "Σύνολο",
     instalments: "Πληρωμή σε δόσεις",
@@ -140,7 +140,7 @@ export const DOC_LABELS: Readonly<Record<DocLanguage, DocLabels>> = {
     duration: (m) => `Duration ${m} months`,
     endAfter: (m) => `${m} months later`,
     proRata:
-      "Billing follows calendar months. If the start is not the 1st of the month, the first and last months are charged pro rata by days; the first month still includes the full month's deliverables.",
+      "Billing follows calendar months. If the start is not the 1st of the month, the first and last months are charged pro rata by days; the first month still includes the full month's deliverables, the last month adds no new deliverables.",
     end: "End",
     total: "Total",
     instalments: "Payment in instalments",
