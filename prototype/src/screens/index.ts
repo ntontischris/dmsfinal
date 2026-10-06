@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 
+import { A2 } from "@/screens/A2";
 import { A5 } from "@/screens/A5";
 import { A6 } from "@/screens/A6";
 import { A7 } from "@/screens/A7";
@@ -42,12 +43,16 @@ import { I7 } from "@/screens/I7";
 import { J1 } from "@/screens/J1";
 import { J2 } from "@/screens/J2";
 import { J3 } from "@/screens/J3";
+import { K1 } from "@/screens/K1";
+import { K2 } from "@/screens/K2";
+import { K3 } from "@/screens/K3";
 import type { ScreenProps } from "@/screens/shared";
 
 // Οι οθόνες που έχουν πραγματικό περιεχόμενο. Όλες οι άλλες δείχνουν ακόμα το placeholder.
 export const SCREEN_CONTENT: Readonly<
   Record<string, ComponentType<ScreenProps>>
 > = {
+  A2,
   A5,
   A6,
   A7,
@@ -90,4 +95,7 @@ export const SCREEN_CONTENT: Readonly<
   J1,
   J2,
   J3,
+  K1,
+  K2,
+  K3,
 };

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { Agreement } from "@/data/fictional-client";
+import { clientSendsOf } from "@/data/notifications-access";
 import type { Opportunity } from "@/data/opportunities";
 import type { RoleId } from "@/data/roles";
 import { isForgotten, type SalesCaps } from "@/data/sales-access";
@@ -225,6 +226,18 @@ export function OpportunitiesSection({
   );
 }
 
+// Μόνο ό,τι πήγε στους Χρήστες του Πελάτη· οι Ειδοποιήσεις της ομάδας ζουν μόνο στην K3.
+const dispatchSummary = (clientId: string): string => {
+  const sends = clientSendsOf(clientId);
+  if (sends.length === 0) return "Καμία αποστολή προς τους Χρήστες του Πελάτη ακόμα.";
+  const failed = sends.filter((s) => s.state === "απέτυχε").length;
+  const lines = sends
+    .slice(0, 3)
+    .map((s) => `${fmtDate(s.at.slice(0, 10))} ${s.title} (${s.state})`)
+    .join(" · ");
+  return `${sends.length} αποστολές προς τους Χρήστες του Πελάτη${failed ? `, ${failed} απέτυχαν` : ""}. Τελευταίες: ${lines}.`;
+};
+
 interface CrossModuleProps extends SectionProps {
   tab: "productions" | "chat" | "dispatches" | "ledger";
 }
@@ -248,8 +261,7 @@ export function CrossModuleSection({ tab, role, client }: CrossModuleProps) {
     },
     dispatches: {
       title: "Ιστορικό αποστολών",
-      summary:
-        "5 αποστολές προς τον Πελάτη: 2 υπενθυμίσεις Γυρίσματος, 1 πρόταση, 1 Τιμολόγιο, 1 ευχές εορτών.",
+      summary: dispatchSummary(client.id),
       code: "K3",
       link: "Άνοιγμα στο Ιστορικό αποστολών",
     },
