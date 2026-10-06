@@ -46,6 +46,7 @@ export const SECTIONS: readonly Section[] = [
 ];
 
 export const FINAL_SCREENS: readonly string[] = [
+  "A2",
   "A5",
   "A6",
   "A7",
@@ -88,6 +89,9 @@ export const FINAL_SCREENS: readonly string[] = [
   "J1",
   "J2",
   "J3",
+  "K1",
+  "K2",
+  "K3",
 ];
 
 const ALL_TEAM = "Ιδ · Δι · Πα · Πω · Λο";
@@ -109,7 +113,7 @@ const ROWS: readonly ScreenRow[] = [
   {
     code: "A3",
     title:
-      "Προφίλ και προτιμήσεις (γλώσσα, θέμα, προτιμήσεις Ειδοποιήσεων, Σύνδεσμος ημερολογίου)",
+      "Προφίλ και προτιμήσεις (γλώσσα, θέμα, Σύνδεσμος ημερολογίου· οι προτιμήσεις Ειδοποιήσεων ζουν στην A2)",
     module: "Διατομεακά",
     roles: `${ALL_TEAM} · Πλ`,
   },

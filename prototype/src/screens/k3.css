@@ -1,0 +1,5 @@
+.k3-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); font-size: var(--text-sm); min-width: 0; }
+.k3-filters a { white-space: nowrap; }
+.k3-filters a[aria-current='true'] { font-weight: 600; }
+.k3-cell { min-width: 0; overflow-wrap: anywhere; }
+.k3-sub { display: block; color: var(--color-text-muted); font-size: var(--text-sm); }
