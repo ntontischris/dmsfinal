@@ -1,0 +1,21 @@
+/* Μηνύματα πελάτη (J3). */
+.j3-thread { display: grid; gap: var(--space-3); min-width: 0; }
+.j3-req {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  font-size: var(--text-sm);
+}
+.j3-req-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.j3-composer { display: grid; gap: var(--space-3); min-width: 0; }
+.j3-composer textarea { width: 100%; min-height: 5rem; box-sizing: border-box; }
+.j3-composer select { max-width: 100%; }
+.j3-field { display: grid; gap: var(--space-1); min-width: 0; }
+.j3-check { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.j3-files { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.j3-toggle { display: flex; flex-wrap: wrap; gap: var(--space-2); font-size: var(--text-sm); }
+.j3-toggle a[aria-current='true'] { font-weight: 700; text-decoration: none; }
+.j3-grid { display: grid; gap: var(--space-4); min-width: 0; }

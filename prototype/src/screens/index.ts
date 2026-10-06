@@ -39,6 +39,9 @@ import { I4 } from "@/screens/I4";
 import { I5 } from "@/screens/I5";
 import { I6 } from "@/screens/I6";
 import { I7 } from "@/screens/I7";
+import { J1 } from "@/screens/J1";
+import { J2 } from "@/screens/J2";
+import { J3 } from "@/screens/J3";
 import type { ScreenProps } from "@/screens/shared";
 
 // Οι οθόνες που έχουν πραγματικό περιεχόμενο. Όλες οι άλλες δείχνουν ακόμα το placeholder.
@@ -84,4 +87,7 @@ export const SCREEN_CONTENT: Readonly<
   I5,
   I6,
   I7,
+  J1,
+  J2,
+  J3,
 };
