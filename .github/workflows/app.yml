@@ -1,0 +1,32 @@
+# Αυτόματοι έλεγχοι της εφαρμογής (ADR 0018): πρέπει να είναι πράσινοι πριν από κάθε merge.
+name: app
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Κανένα κλειδί, όρια modules, χρώματα μόνο από tokens
+        run: pnpm check
+      - run: pnpm type-check
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
