@@ -1,7 +1,13 @@
 import type { Metadata } from 'next';
+import { Inter_Tight, JetBrains_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import './globals.css';
+import '@/kit/kit.css';
+
+// Kit: μία variable sans με ελληνικά για όλο το κείμενο, μία mono μόνο για αριθμούς, κωδικούς και ετικέτες.
+const sans = Inter_Tight({ subsets: ['latin', 'greek'], variable: '--font-kit-sans' });
+const mono = JetBrains_Mono({ subsets: ['latin', 'greek'], variable: '--font-kit-mono' });
 
 export const metadata: Metadata = {
   title: 'DMS prototype',
@@ -18,7 +24,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="el" suppressHydrationWarning>
+    <html lang="el" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

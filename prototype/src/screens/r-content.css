@@ -1,24 +1,29 @@
-/* Δημόσιες σελίδες περιεχομένου (R1–R6). Μόνο tokens του globals.css. */
-.rc-hero { padding: var(--space-6) 0 var(--space-5); border-bottom: 1px solid var(--color-border); }
-.rc-hero h2 { font-size: clamp(2rem, 1.2rem + 4vw, 4rem); line-height: 1.02; letter-spacing: -0.02em; max-width: 18ch; margin-bottom: var(--space-4); overflow-wrap: anywhere; }
+/* Δημόσιες σελίδες περιεχομένου (R1–R6) στο ύφος «Μοντάζ». Μόνο tokens του globals.css· ο player είναι εικόνα. */
+.rc-hero { padding: var(--space-6) 0 var(--space-6); border-bottom: 1px solid var(--color-border); }
+.rc-hero h2 { font-size: clamp(2rem, 1.2rem + 4vw, 4rem); font-weight: 600; line-height: 1.02; letter-spacing: -0.035em; max-width: 18ch; margin-bottom: var(--space-4); overflow-wrap: anywhere; text-wrap: balance; }
 .rc-hero p { font-size: var(--text-lg); color: var(--color-text-muted); max-width: 40rem; margin-bottom: var(--space-4); }
 .rc-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
-.rc-eyebrow { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-text-muted); margin-bottom: var(--space-3); }
-.rc-h { font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--space-4); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
-.rc-tile-title { font-weight: 700; font-size: var(--text-lg); margin-bottom: var(--space-1); }
+.rc-eyebrow { font: 500 var(--text-xs)/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.14em; color: var(--color-accent); margin-bottom: var(--space-3); }
+.rc-h { font-size: var(--text-lg); font-weight: 500; letter-spacing: -0.02em; margin-bottom: var(--space-4); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+.rc-h a { font-size: var(--text-sm); font-weight: 500; letter-spacing: 0; color: var(--color-text-muted); }
+.rc-h a:hover { color: var(--color-accent); }
+.rc-tile-title { font-weight: 600; font-size: 1.1rem; letter-spacing: -0.01em; margin-bottom: var(--space-1); }
 .rc-muted { color: var(--color-text-muted); font-size: var(--text-sm); }
-.rc-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
-.rc-chip { display: inline-block; text-decoration: none; border: 1px solid var(--color-border); border-radius: 999px; padding: var(--space-1) var(--space-3); font-size: var(--text-sm); }
-.rc-chip[aria-current='true'] { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
-.rc-logos { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-4) 0; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
-.rc-logo { padding: var(--space-2) var(--space-4); background: var(--color-surface); border-radius: var(--radius); font-weight: 600; }
-.rc-price { font-size: var(--text-lg); font-weight: 700; margin: var(--space-3) 0; }
-.rc-cta { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-6) var(--space-4); text-align: center; }
-.rc-cta h3 { font-size: clamp(1.4rem, 1rem + 2vw, 2.2rem); margin-bottom: var(--space-4); }
-.rc-player { aspect-ratio: 16 / 9; background: var(--color-text); color: var(--color-bg); border-radius: var(--radius); display: grid; place-items: center; text-align: center; padding: var(--space-4); margin-bottom: var(--space-3); overflow-wrap: anywhere; }
+.rc-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-4); }
+.rc-chip { display: inline-block; text-decoration: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-3); font-size: var(--text-sm); color: var(--color-text-muted); }
+.rc-chip:hover { color: var(--color-text); border-color: var(--color-border-strong); }
+.rc-chip[aria-current='true'] { background: var(--color-surface-raised); color: var(--color-text); border-color: var(--color-accent); font-weight: 600; }
+.rc-logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr)); border-left: 1px solid var(--color-border); }
+.rc-logo { padding: var(--space-4); border: 1px solid var(--color-border); border-left: 0; margin-top: -1px; font-weight: 500; }
+.rc-price { font-size: var(--text-lg); font-weight: 600; margin: var(--space-3) 0; font-variant-numeric: tabular-nums; }
+.rc-cta { background: var(--color-surface); border: 1px solid var(--color-border); border-top: 2px solid var(--color-accent); border-radius: var(--radius); padding: var(--space-6) var(--space-4); }
+.rc-cta h3 { font-size: clamp(1.4rem, 1rem + 2vw, 2.2rem); font-weight: 500; letter-spacing: -0.03em; margin-bottom: var(--space-4); }
+.rc-player { position: relative; aspect-ratio: 16 / 9; background: radial-gradient(ellipse at 50% 40%, oklch(26% 0.02 260), oklch(9% 0.005 260) 75%); color: oklch(92% 0.005 260); border-radius: var(--radius); display: grid; place-items: center; text-align: center; padding: var(--space-4); margin-bottom: var(--space-3); overflow-wrap: anywhere; font: var(--text-sm) var(--font-mono); }
+.rc-player::after { content: ''; position: absolute; inset: 5%; border: 1px dashed oklch(100% 0 0 / 0.2); pointer-events: none; }
+.rc-player strong { font-family: var(--font-sans); font-size: var(--text-base); }
 .rc-story { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
-.rc-story h4 { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-2); }
-.rc-avatar { aspect-ratio: 1; background: var(--color-surface-raised); border-radius: var(--radius); display: grid; place-items: center; font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-3); }
+.rc-story h4 { font: 500 var(--text-xs)/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin: 0 0 var(--space-2); }
+.rc-avatar { aspect-ratio: 1; background: var(--color-surface-raised); border-radius: var(--radius-sm); display: grid; place-items: center; font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-3); }
 .rc-error { text-align: center; padding: var(--space-6) var(--space-4); }
 .rc-error h2 { font-size: var(--text-lg); margin-bottom: var(--space-3); }
 .rc-prose { max-width: 40rem; font-size: var(--text-lg); }

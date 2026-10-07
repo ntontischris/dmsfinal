@@ -8,6 +8,8 @@ import {
   sumRemaining,
   visibleStandings,
 } from "@/screens/i2-model";
+import { Segmented } from "@/kit/segmented";
+import { StatGrid } from "@/kit/panel";
 import { InvoiceTable } from "@/screens/i2-table";
 import { CsvButton } from "@/screens/i2-ui";
 import { VoidedCard } from "@/screens/i2-voided";
@@ -22,26 +24,44 @@ import {
 } from "@/screens/shared";
 
 import "./i245.css";
+import "./i2.css";
 
-function Totals({ all }: { all: ReturnType<typeof standingsFor> }) {
+function Totals({
+  all,
+  role,
+  state,
+}: {
+  all: ReturnType<typeof standingsFor>;
+  role: ScreenProps["role"];
+  state?: string;
+}) {
   const month = TODAY.slice(0, 7);
-  const items = [
-    ["Τζίρος μήνα", revenueOf(`${month}-01`, `${month}-31`)],
-    ["Ανεξόφλητα", sumRemaining(all)],
-    [
-      "Ληξιπρόθεσμα",
-      sumRemaining(all.filter((s) => s.status === "ληξιπρόθεσμο")),
-    ],
-  ] as const;
+  const overdue = all.filter((s) => s.status === "ληξιπρόθεσμο");
+  const overdueSum = sumRemaining(overdue);
+  const open = all.filter((s) => s.remaining > 0);
+  const to = (filter?: string) => screenHref(role, "I2", { filter, state });
   return (
-    <div className="i245-totals">
-      {items.map(([label, value]) => (
-        <section key={label} className="card">
-          <div className="muted">{label}</div>
-          <div className="i245-big">{fmtMoney(value)}</div>
-        </section>
-      ))}
-    </div>
+    <StatGrid
+      items={[
+        {
+          label: "Τζίρος μήνα",
+          value: fmtMoney(revenueOf(`${month}-01`, `${month}-31`)),
+        },
+        {
+          label: "Ανεξόφλητα",
+          value: fmtMoney(sumRemaining(all)),
+          hint: `${open.length} Τιμολόγια`,
+          href: to("ανεξόφλητα"),
+        },
+        {
+          label: "Ληξιπρόθεσμα",
+          value: fmtMoney(overdueSum),
+          hint: `${overdue.length} Τιμολόγια`,
+          tone: overdueSum > 0 ? "attention" : undefined,
+          href: to("ληξιπρόθεσμα"),
+        },
+      ]}
+    />
   );
 }
 
@@ -49,23 +69,21 @@ function FilterTabs(props: {
   role: ScreenProps["role"];
   filter: string;
   state?: string;
+  all: ReturnType<typeof standingsFor>;
 }) {
   return (
-    <nav className="tabs" aria-label="Φίλτρο Τιμολογίων">
-      {INVOICE_FILTERS.map((f) => (
-        <Link
-          key={f}
-          className="tab"
-          aria-current={f === props.filter ? "page" : undefined}
-          href={screenHref(props.role, "I2", {
-            filter: f === "όλα" ? undefined : f,
-            state: props.state,
-          })}
-        >
-          {f}
-        </Link>
-      ))}
-    </nav>
+    <Segmented
+      label="Φίλτρο Τιμολογίων"
+      options={INVOICE_FILTERS.map((f) => ({
+        label: f,
+        isCurrent: f === props.filter,
+        count: visibleStandings(props.all, f).length,
+        href: screenHref(props.role, "I2", {
+          filter: f === "όλα" ? undefined : f,
+          state: props.state,
+        }),
+      }))}
+    />
   );
 }
 
@@ -118,8 +136,8 @@ function I2Body({ role, query, filter, isEmpty }: I2BodyProps) {
   const rows = visibleStandings(all, filter);
   return (
     <>
-      {!caps.isClient && <Totals all={all} />}
-      <FilterTabs role={role} filter={filter} state={query.state} />
+      {!caps.isClient && <Totals all={all} role={role} state={query.state} />}
+      <FilterTabs role={role} filter={filter} state={query.state} all={all} />
       <div className="toolbar">
         {caps.canRegisterInvoices && (
           <Link

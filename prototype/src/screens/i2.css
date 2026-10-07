@@ -1,0 +1,16 @@
+/* I2: Τιμολόγια. Πίνακας εργασίας, χωρίς σπασίματα λέξεων. */
+.i2-table th, .i2-table td { vertical-align: middle; }
+.i2-number { min-width: 9rem; }
+.i2-code { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+.i2-number .i245-sub { max-width: 30rem; margin-top: 2px; }
+.i2-client { min-width: 9rem; }
+.i2-nowrap { white-space: nowrap; }
+.i2-actions { white-space: nowrap; }
+.i2-actions a + a { margin-left: var(--space-3); }
+@media (max-width: 40rem) {
+  .i2-number, .i2-client { min-width: 0; }
+  .rtable td.i2-number { display: grid; grid-template-columns: auto 1fr; }
+  .i2-number::before { grid-row: 1; }
+  .i2-number > * { grid-column: 2; }
+  .i2-number .i245-sub { max-width: none; text-align: right; }
+}

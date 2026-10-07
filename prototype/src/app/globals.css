@@ -1,38 +1,56 @@
-/* Ουδέτερα προσωρινά tokens. Οι τελικές τιμές έρχονται από το ticket «Οπτική κατεύθυνση».
-   Σκοτεινό θέμα προεπιλογή, φωτεινό με data-theme="light". */
+/* Kit · «Μοντάζ»: tokens κοινά για Ιστοσελίδα και εφαρμογή (ticket «Οπτική κατεύθυνση»).
+   Σκοτεινό θέμα προεπιλογή, φωτεινό με data-theme="light". Οι τιμές μένουν tokens ως το τελικό build. */
 :root {
   color-scheme: dark;
-  --color-bg: oklch(18% 0 0);
-  --color-surface: oklch(23% 0 0);
-  --color-surface-raised: oklch(28% 0 0);
-  --color-border: oklch(36% 0 0);
-  --color-text: oklch(94% 0 0);
-  --color-text-muted: oklch(70% 0 0);
-  --color-accent: oklch(78% 0 0);
-  --color-attention: oklch(80% 0.1 85);
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  /* Επιφάνειες: ψυχρό σχεδόν-μαύρο, όπως η αίθουσα μοντάζ */
+  --color-bg: oklch(13% 0.006 260);
+  --color-surface: oklch(17% 0.008 260);
+  --color-surface-raised: oklch(21% 0.01 260);
+  --color-border: oklch(29% 0.01 260);
+  --color-border-strong: oklch(38% 0.012 260);
+  --color-text: oklch(94% 0.005 260);
+  --color-text-muted: oklch(70% 0.012 260);
+  /* Ένα χρώμα έμφασης: η κύρια ενέργεια και «σειρά σου» */
+  --color-accent: oklch(80% 0.145 70);
+  --color-on-accent: oklch(18% 0.03 60);
+  /* Καταστάσεις (tally): κόκκινο = πρόβλημα, πράσινο = έτοιμο. Πάντα με λέξη δίπλα. */
+  --color-attention: oklch(68% 0.2 27);
+  --color-danger: oklch(68% 0.2 27);
+  --color-ok: oklch(76% 0.15 150);
+  --color-focus: oklch(80% 0.145 70);
+  --font-sans: var(--font-kit-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-kit-mono), ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --text-xs: 0.6875rem;
   --text-sm: 0.875rem;
-  --text-base: 1rem;
+  --text-base: 0.9375rem;
   --text-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem);
+  --text-xl: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem);
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-6: 1.5rem;
-  --radius: 0.5rem;
+  --radius: 0.35rem;
+  --radius-sm: 0.25rem;
+  --shadow-panel: 0 1px 0 oklch(100% 0 0 / 0.03) inset;
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --color-bg: oklch(98% 0 0);
-  --color-surface: oklch(95% 0 0);
-  --color-surface-raised: oklch(91% 0 0);
-  --color-border: oklch(82% 0 0);
-  --color-text: oklch(20% 0 0);
-  --color-text-muted: oklch(45% 0 0);
-  --color-accent: oklch(35% 0 0);
-  --color-attention: oklch(55% 0.12 85);
+  --color-bg: oklch(95% 0.004 260);
+  --color-surface: oklch(99% 0.002 260);
+  --color-surface-raised: oklch(96.5% 0.004 260);
+  --color-border: oklch(86% 0.006 260);
+  --color-border-strong: oklch(75% 0.008 260);
+  --color-text: oklch(20% 0.01 260);
+  --color-text-muted: oklch(45% 0.012 260);
+  --color-accent: oklch(60% 0.15 55);
+  --color-on-accent: oklch(99% 0.01 80);
+  --color-attention: oklch(54% 0.2 27);
+  --color-danger: oklch(54% 0.2 27);
+  --color-ok: oklch(50% 0.13 150);
+  --color-focus: oklch(55% 0.15 55);
+  --shadow-panel: none;
 }
 
 * { box-sizing: border-box; }
@@ -44,66 +62,92 @@ body {
   font-size: var(--text-base);
   line-height: 1.5;
 }
-a { color: inherit; }
-h1, h2, h3 { line-height: 1.2; margin: 0 0 var(--space-3); }
-h1 { font-size: var(--text-lg); }
-h2 { font-size: var(--text-base); }
-code { font-family: var(--font-mono); font-size: var(--text-sm); }
+a { color: inherit; text-underline-offset: 0.2em; text-decoration-color: var(--color-border-strong); }
+a:hover { text-decoration-color: currentColor; }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+h1, h2, h3 { line-height: 1.2; margin: 0 0 var(--space-3); letter-spacing: -0.01em; }
+h1 { font-size: var(--text-lg); font-weight: 600; }
+h2 { font-size: var(--text-base); font-weight: 600; }
+h3 { font-size: var(--text-sm); font-weight: 600; }
+code { font-family: var(--font-mono); font-size: 0.85em; }
 
+/* Μπάρα: όπως η μπάρα της αίθουσας μοντάζ, με τη «λυχνία» δίπλα στο όνομα */
 .topbar {
   display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center;
-  justify-content: space-between; padding: var(--space-3) var(--space-4);
+  justify-content: space-between; padding: var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--color-border); background: var(--color-surface);
   position: sticky; top: 0; z-index: 10;
 }
-.topbar-brand { font-weight: 600; text-decoration: none; }
+.topbar-brand {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font-weight: 600; letter-spacing: 0.12em; font-size: 0.8rem; text-transform: uppercase; text-decoration: none;
+}
+.topbar-brand::before {
+  content: ''; width: 0.6rem; height: 0.6rem; border-radius: 50%;
+  background: var(--color-danger); box-shadow: 0 0 8px var(--color-danger);
+}
 .topbar-controls { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 
-.shell { display: grid; grid-template-columns: 17rem 1fr; min-height: calc(100dvh - 3.5rem); }
-.sidebar { border-right: 1px solid var(--color-border); padding: var(--space-4); overflow-y: auto; }
-.main { padding: var(--space-6) var(--space-4); max-width: 60rem; width: 100%; }
+.shell { display: grid; grid-template-columns: 16rem 1fr; min-height: calc(100dvh - 3.2rem); }
+.sidebar { border-right: 1px solid var(--color-border); background: var(--color-surface); padding: var(--space-3); overflow-y: auto; }
+.main { padding: var(--space-6); max-width: 76rem; width: 100%; }
 
 @media (max-width: 48rem) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { border-right: 0; border-top: 1px solid var(--color-border); order: 2; }
+  .main { padding: var(--space-4); }
 }
 
-.nav summary { cursor: pointer; font-weight: 600; }
+.nav summary { cursor: pointer; font-weight: 600; font-size: var(--text-sm); }
 .nav-section { margin-top: var(--space-4); }
-.nav-section-title { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-1); }
+.nav-section-title {
+  font: 500 var(--text-xs)/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-text-muted); margin-bottom: var(--space-1); padding-inline: var(--space-2);
+}
 .nav-list { list-style: none; margin: 0; padding: 0; }
 .nav-link {
-  display: flex; gap: var(--space-2); padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius); text-decoration: none; font-size: var(--text-sm);
+  display: flex; gap: var(--space-2); padding: 0.3rem var(--space-2);
+  border-radius: var(--radius-sm); text-decoration: none; font-size: var(--text-sm); color: var(--color-text-muted);
+  border-left: 2px solid transparent;
 }
-.nav-link:hover { background: var(--color-surface-raised); }
-.nav-link[aria-current='page'] { background: var(--color-surface-raised); font-weight: 600; }
-.nav-code { font-family: var(--font-mono); color: var(--color-text-muted); min-width: 2.2rem; }
+.nav-link:hover { background: var(--color-surface-raised); color: var(--color-text); }
+.nav-link[aria-current='page'] { background: var(--color-surface-raised); color: var(--color-text); font-weight: 600; border-left-color: var(--color-accent); }
+.nav-code { font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.9; color: var(--color-text-muted); min-width: 2.2rem; }
 
 .select, .button {
-  font: inherit; font-size: var(--text-sm); color: var(--color-text);
+  font: inherit; font-size: var(--text-sm); font-weight: 500; color: var(--color-text);
   background: var(--color-surface-raised); border: 1px solid var(--color-border);
-  border-radius: var(--radius); padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm); padding: 0.35rem var(--space-3); line-height: 1.4;
 }
-.button { cursor: pointer; }
+.button { cursor: pointer; display: inline-flex; align-items: center; gap: var(--space-2); text-decoration: none; }
+.chip a { text-decoration: none; }
+.button:hover { border-color: var(--color-border-strong); }
 
 .screen-header { margin-bottom: var(--space-6); }
-.eyebrow { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-1); }
-.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; padding: 0; margin: var(--space-3) 0 0; }
-.chip {
-  font-size: var(--text-sm); padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--color-border); border-radius: 999px;
+.screen-header h1 { font-size: var(--text-xl); font-weight: 500; letter-spacing: -0.025em; }
+/* Ετικέτα: μικρή, mono, κεφαλαία. Μόνο για σύντομες ετικέτες, ποτέ για περιεχόμενο. */
+.eyebrow {
+  font: 500 var(--text-xs)/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-text-muted); margin-bottom: var(--space-2);
 }
-.chip[data-current='true'] { border-color: var(--color-accent); font-weight: 600; }
+/* Φίλτρα: «χάπια» (από τη Χρωματική διόρθωση) */
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-1); list-style: none; padding: 0; margin: var(--space-3) 0 0; }
+.chip {
+  display: inline-block; max-width: 100%; font-size: var(--text-sm); padding: 0.2rem var(--space-3);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+.chip[data-current='true'] { border-color: var(--color-accent); color: var(--color-text); font-weight: 600; background: var(--color-surface-raised); }
 
+/* Πάνελ: η βασική επιφάνεια, όπως τα πάνελ της αίθουσας */
 .card {
-  background: var(--color-surface); border: 1px solid var(--color-border);
+  background: var(--color-surface); border: 1px solid var(--color-border); box-shadow: var(--shadow-panel);
   border-radius: var(--radius); padding: var(--space-4); margin-bottom: var(--space-4);
 }
 .placeholder { border-style: dashed; color: var(--color-text-muted); }
 .muted { color: var(--color-text-muted); font-size: var(--text-sm); }
 
-.decisions { border-color: var(--color-attention); }
+.decisions { border-color: var(--color-accent); }
 .decisions-title { display: flex; justify-content: space-between; gap: var(--space-2); }
 .decision { border-top: 1px solid var(--color-border); padding-top: var(--space-3); margin-top: var(--space-3); }
 .decision p { margin: 0 0 var(--space-2); }
