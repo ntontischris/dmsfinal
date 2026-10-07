@@ -1,0 +1,5 @@
+.o7-group { margin-top: var(--space-4); }
+.o7-switch { font-size: var(--text-sm); margin: var(--space-2) 0; }
+.o7-queue { margin: var(--space-2) 0; }
+.o7-choice { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
+.o7-warn { border-left-color: var(--color-attention); }

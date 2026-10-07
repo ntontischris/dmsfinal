@@ -1,6 +1,8 @@
 import type { ComponentType } from "react";
 
 import { A2 } from "@/screens/A2";
+import { A3 } from "@/screens/A3";
+import { A4 } from "@/screens/A4";
 import { A5 } from "@/screens/A5";
 import { A6 } from "@/screens/A6";
 import { A7 } from "@/screens/A7";
@@ -58,6 +60,15 @@ import { N2 } from "@/screens/N2";
 import { N3 } from "@/screens/N3";
 import { N4 } from "@/screens/N4";
 import { N5 } from "@/screens/N5";
+import { O1 } from "@/screens/O1";
+import { O2 } from "@/screens/O2";
+import { O3 } from "@/screens/O3";
+import { O4 } from "@/screens/O4";
+import { O5 } from "@/screens/O5";
+import { O6 } from "@/screens/O6";
+import { O7 } from "@/screens/O7";
+import { P1 } from "@/screens/P1";
+import { P2 } from "@/screens/P2";
 import type { ScreenProps } from "@/screens/shared";
 
 // Οι οθόνες που έχουν πραγματικό περιεχόμενο. Όλες οι άλλες δείχνουν ακόμα το placeholder.
@@ -65,6 +76,8 @@ export const SCREEN_CONTENT: Readonly<
   Record<string, ComponentType<ScreenProps>>
 > = {
   A2,
+  A3,
+  A4,
   A5,
   A6,
   A7,
@@ -122,4 +135,13 @@ export const SCREEN_CONTENT: Readonly<
   N3,
   N4,
   N5,
+  O1,
+  O2,
+  O3,
+  O4,
+  O5,
+  O6,
+  O7,
+  P1,
+  P2,
 };
