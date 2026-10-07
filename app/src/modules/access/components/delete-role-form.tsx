@@ -3,10 +3,10 @@
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/form-message";
 
 import { INITIAL_FORM_STATE } from "../schemas";
 import { deleteRole } from "../team-actions";
-import { FormMessage } from "./form-message";
 
 // Διαγραφή Ρόλου σε δύο βήματα. Γίνεται μόνο όταν δεν τον έχει κανείς (το ελέγχει και η βάση).
 export function DeleteRoleForm({

@@ -1,13 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
-
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/form-message";
+import { useKeptForm } from "@/lib/use-kept-form";
 
 import type { RoleSummary } from "../queries";
-import { INITIAL_FORM_STATE } from "../schemas";
 import { setUserRoles } from "../team-actions";
-import { FormMessage } from "./form-message";
 
 interface UserRolesFormProps {
   userId: string;
@@ -24,12 +22,9 @@ export function UserRolesForm({
   current,
   locked,
 }: UserRolesFormProps) {
-  const [state, action, isSaving] = useActionState(
-    setUserRoles,
-    INITIAL_FORM_STATE,
-  );
+  const { state, isPending: isSaving, onSubmit: action, formRef: actionRef } = useKeptForm(setUserRoles);
   return (
-    <form action={action} className="grid gap-3">
+    <form ref={actionRef} onSubmit={action} className="grid gap-3">
       <input type="hidden" name="userId" value={userId} />
       <ul className="m-0 grid list-none gap-1 p-0">
         {roles.map((role) => {
