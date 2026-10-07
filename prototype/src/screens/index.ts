@@ -70,6 +70,23 @@ import { O6 } from "@/screens/O6";
 import { O7 } from "@/screens/O7";
 import { P1 } from "@/screens/P1";
 import { P2 } from "@/screens/P2";
+import { Q1 } from "@/screens/Q1";
+import { Q2 } from "@/screens/Q2";
+import { Q3 } from "@/screens/Q3";
+import { Q4 } from "@/screens/Q4";
+import { R1 } from "@/screens/R1";
+import { R2 } from "@/screens/R2";
+import { R3 } from "@/screens/R3";
+import { R4 } from "@/screens/R4";
+import { R5 } from "@/screens/R5";
+import { R6 } from "@/screens/R6";
+import { R7 } from "@/screens/R7";
+import { R8 } from "@/screens/R8";
+import { R9 } from "@/screens/R9";
+import { R10 } from "@/screens/R10";
+import { R11 } from "@/screens/R11";
+import { R12 } from "@/screens/R12";
+import { R13 } from "@/screens/R13";
 import type { ScreenProps } from "@/screens/shared";
 
 // Οι οθόνες που έχουν πραγματικό περιεχόμενο. Όλες οι άλλες δείχνουν ακόμα το placeholder.
@@ -146,4 +163,21 @@ export const SCREEN_CONTENT: Readonly<
   O7,
   P1,
   P2,
+  Q1,
+  Q2,
+  Q3,
+  Q4,
+  R1,
+  R2,
+  R3,
+  R4,
+  R5,
+  R6,
+  R7,
+  R8,
+  R9,
+  R10,
+  R11,
+  R12,
+  R13,
 };

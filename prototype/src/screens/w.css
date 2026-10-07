@@ -1,0 +1,30 @@
+/* Πλαίσιο των δημόσιων σελίδων (R1–R13). Μόνο τα ουδέτερα tokens του globals.css. */
+.site { border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; background: var(--color-bg); position: relative; }
+.site-url { padding: var(--space-1) var(--space-3); background: var(--color-surface-raised); border-bottom: 1px solid var(--color-border); overflow-x: auto; white-space: nowrap; }
+.site-head { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
+.site-brand { font-weight: 700; text-decoration: none; letter-spacing: 0.02em; }
+.site-nav { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; font-size: var(--text-sm); }
+.site-nav a { text-decoration: none; }
+.site-nav a[aria-current='page'] { font-weight: 600; text-decoration: underline; text-underline-offset: 0.3em; }
+.site-cta { border: 1px solid var(--color-accent); border-radius: 999px; padding: var(--space-1) var(--space-3); }
+.site-body { padding: var(--space-6) var(--space-4); }
+.site-foot { display: flex; flex-wrap: wrap; gap: var(--space-4); justify-content: space-between; padding: var(--space-4); border-top: 1px solid var(--color-border); background: var(--color-surface); font-size: var(--text-sm); color: var(--color-text-muted); }
+.site-legal { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.site-hero { padding: var(--space-6) 0; }
+.site-hero h2 { font-size: clamp(1.6rem, 1.2rem + 2vw, 2.6rem); line-height: 1.1; margin-bottom: var(--space-3); }
+.site-hero p { font-size: var(--text-lg); color: var(--color-text-muted); max-width: 36rem; }
+.site-section { margin: var(--space-6) 0; }
+.site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: var(--space-4); }
+.site-tile { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-4); text-decoration: none; display: block; }
+.site-cover { aspect-ratio: 16 / 9; background: var(--color-surface-raised); border-radius: var(--radius); display: grid; place-items: center; text-align: center; padding: var(--space-3); color: var(--color-text-muted); font-size: var(--text-sm); margin-bottom: var(--space-3); }
+.site-button { display: inline-block; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; color: var(--color-bg); background: var(--color-text); border: 1px solid var(--color-text); border-radius: 999px; padding: var(--space-2) var(--space-4); }
+.site-button[data-quiet='true'] { color: var(--color-text); background: transparent; border-color: var(--color-border); }
+.site-form { display: grid; gap: var(--space-3); max-width: 32rem; }
+.site-form label { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+.site-form .input { width: 100%; padding: var(--space-2) var(--space-3); }
+.site-trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.site-proto { font-size: var(--text-sm); color: var(--color-text-muted); border: 1px dashed var(--color-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin-bottom: var(--space-4); }
+.site-proto a { margin-right: var(--space-2); }
+.site-proto a[aria-current='true'] { font-weight: 600; }
+.site-widget { position: sticky; bottom: var(--space-3); display: flex; justify-content: flex-end; padding: 0 var(--space-3) var(--space-3); pointer-events: none; }
+.site-widget a { pointer-events: auto; }
