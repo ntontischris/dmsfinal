@@ -3,9 +3,30 @@ import type { ReactNode } from "react";
 
 import { SidebarNav } from "@/components/shell/sidebar-nav";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
+import { SignOutButton, getViewer, type Viewer } from "@/modules/access";
+
+// Μια γραμμή κάτω από τη μπάρα όταν κάτι δεν επιτρέπει την κανονική δουλειά.
+function ViewerNotice({ viewer }: { viewer: Viewer }) {
+  const text =
+    viewer.status === "unconfigured"
+      ? "Η βάση δεν έχει συνδεθεί ακόμα: βλέπεις το σύστημα χωρίς δεδομένα."
+      : viewer.status === "signed-in" && !viewer.team
+        ? "Ο λογαριασμός σου δεν έχει ακόμα πρόσβαση στην ομάδα. Ζήτησε πρόσκληση από τον Ιδιοκτήτη."
+        : null;
+  if (!text) return null;
+  return (
+    <p
+      role="status"
+      className="m-0 border-b border-primary/40 bg-primary/10 px-4 py-2 text-sm"
+    >
+      {text}
+    </p>
+  );
+}
 
 // Το κέλυφος του συστήματος (πίσω από το /login): μπάρα με τη «λυχνία», πλαϊνή πλοήγηση, περιεχόμενο.
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const viewer = await getViewer();
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b bg-card px-4 py-2">
@@ -19,8 +40,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           />
           DMS
         </Link>
-        <ThemeToggle />
+        <div className="flex flex-wrap items-center gap-2">
+          {viewer.status === "signed-in" && (
+            <span className="text-sm text-muted-foreground">
+              {viewer.team?.name ?? viewer.email}
+            </span>
+          )}
+          <ThemeToggle />
+          {viewer.status === "signed-in" && <SignOutButton />}
+        </div>
       </header>
+      <ViewerNotice viewer={viewer} />
       <div className="grid md:grid-cols-[15rem_1fr]">
         <aside className="order-2 border-t bg-card p-3 md:order-none md:min-h-[calc(100dvh-3rem)] md:border-t-0 md:border-r">
           <SidebarNav />
