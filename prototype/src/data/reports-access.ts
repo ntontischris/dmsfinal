@@ -3,6 +3,7 @@
 // το Εύρος του Χρήστη περιορίζει τις γραμμές (ο πωλητής βλέπει μόνο τις δικές του Ευκαιρίες).
 // Πηγές: κεφ. 2 «Αναφορές: λεπτομέρειες κανόνων», κεφ. 1, κεφ. 3.7 (Τζίρος ≠ Εισπράξεις).
 
+import { agreementOfOpportunity, agreementTotal } from "@/data/agreements";
 import { RECEIPTS } from "@/data/finance";
 import {
   TODAY,
@@ -255,11 +256,12 @@ export interface SalesRow {
   isLive: boolean;
 }
 
+// Αξία = το σύνολο της Συμφωνίας της Ευκαιρίας (η πρόταση ζει στη Συμφωνία).
 const proposalValue = (o: Opportunity) => {
-  const p = o.proposal;
-  if (!p) return { monthly: null, once: null };
-  const sum = p.lines.reduce((s, l) => s + l.price, 0);
-  return p.kind === "μηνιαία"
+  const agreement = agreementOfOpportunity(o.id);
+  if (!agreement) return { monthly: null, once: null };
+  const sum = agreementTotal(agreement);
+  return agreement.kind === "μηνιαία"
     ? { monthly: sum, once: null }
     : { monthly: null, once: sum };
 };

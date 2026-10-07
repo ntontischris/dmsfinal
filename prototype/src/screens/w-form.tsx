@@ -160,7 +160,7 @@ const keptValues = (fail: FormFail) =>
     : fail === "human"
       ? {
           name: "Άννα Κ.",
-          email: "anna@example.com",
+          email: "anna.k@mail.example",
           message: "Θέλουμε προσφορά για reels.",
         }
       : { name: undefined, email: undefined, message: undefined };

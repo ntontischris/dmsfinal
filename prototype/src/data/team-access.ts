@@ -2,13 +2,16 @@
 // Χωρίς κλιμάκωση: όποιος προσκαλεί ή αλλάζει Ρόλους Χρήστη δίνει μόνο Ρόλους που δεν ξεπερνούν τα δικά του Δικαιώματα.
 // Πηγές: κεφ. 1 «Ομάδα και Πρόσβαση: λεπτομέρειες κανόνων», ADR 0001, ADR 0007.
 
-import { TODAY } from "@/data/sales";
+import { FILMINGS, PRODUCTIONS } from "@/data/filming";
+import { OPPORTUNITIES } from "@/data/opportunities";
+import { DELIVERABLES, TASKS } from "@/data/productions";
+import { stateOf } from "@/data/productions-access";
+import { SALES_CLIENTS, TODAY } from "@/data/sales";
 import type { RoleId } from "@/data/roles";
 import {
   CLIENT_MEMBERSHIPS,
   CURRENT_CLIENT_USER,
   INVITATIONS,
-  OPEN_ASSIGNMENTS,
   PERMISSIONS,
   ROLE_DEFS,
   TEAM_USERS,
@@ -114,15 +117,28 @@ export const deactivationBlock = (
   return null;
 };
 
-export const assignmentsOf = (id: string): OpenAssignments =>
-  OPEN_ASSIGNMENTS[id] ?? {
-    clients: 0,
-    opportunities: 0,
-    productions: 0,
-    tasks: 0,
-    deliverables: 0,
-    crews: 0,
-  };
+// Ό,τι επιστρέφει για νέα ανάθεση: υπολογίζεται από τα δεδομένα τη στιγμή της απενεργοποίησης.
+export const assignmentsOf = (id: string): OpenAssignments => ({
+  clients: SALES_CLIENTS.filter((client) => client.ownerId === id).length,
+  opportunities: OPPORTUNITIES.filter(
+    (o) => o.outcome === "Ανοιχτή" && o.ownerId === id,
+  ).length,
+  productions: PRODUCTIONS.filter(
+    (p) => p.ownerId === id && stateOf(p) === "ανοιχτή",
+  ).length,
+  tasks: TASKS.filter((t) => t.assigneeId === id && !t.doneAt).length,
+  deliverables: DELIVERABLES.filter(
+    (d) =>
+      d.assigneeId === id &&
+      (d.state === "σε εργασία" || d.state === "αναμένει πελάτη"),
+  ).length,
+  crews: FILMINGS.filter(
+    (f) =>
+      f.date >= TODAY &&
+      (f.state === "προγραμματισμένο" || f.state === "αναμένει έγκριση") &&
+      f.crew.some((slot) => slot.personId === id),
+  ).length,
+});
 
 export type InvitationState = "εκκρεμεί" | "έληξε";
 

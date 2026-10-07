@@ -139,11 +139,6 @@ export function OpportunityWorkbench({
             )}
           </dd>
         </dl>
-        {isOpen && canManage && view.proposal === null && (
-          <button type="button" className="button" data-primary="true">
-            Νέα πρόταση
-          </button>
-        )}
         {outcome === "Κερδισμένη" && (
           <p className="note">
             Κερδισμένη με την υπογραφή του Υπογράφοντα. Δεν αλλάζει με το χέρι.

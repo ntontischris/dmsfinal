@@ -18,11 +18,11 @@ import { Badge, fmtDate, screenHref } from "@/screens/shared";
 
 import "./n2.css";
 
-// Ο πελάτης δεν βλέπει ποιο μέλος ομάδας προσκάλεσε: μόνο «από την ομάδα της Devre Media».
+// Ο πελάτης δεν βλέπει ποιο μέλος ομάδας προσκάλεσε: μόνο «από την ομάδα της Delta Films».
 export const colleagueInvitedBy = (invitedBy: string): string =>
   invitedBy === "system" || invitedBy.includes("@")
     ? invitedByLabel(invitedBy)
-    : "από την ομάδα της Devre Media";
+    : "από την ομάδα της Delta Films";
 
 // Ρόλοι πελάτη που δεν ξεπερνούν τον δικό μου.
 const isWithin = (def: RoleDef, mine: RoleDef | undefined): boolean =>
@@ -117,7 +117,7 @@ export function ColleagueRemoveConfirm(props: {
       </p>
       <SignatoryWarning m={props.m} />
       <p className="note">
-        Η ομάδα της Devre Media ειδοποιείται για την αφαίρεση.
+        Η ομάδα της Delta Films ειδοποιείται για την αφαίρεση.
       </p>
       <div className="btn-row">
         <button className="button" data-danger="true" type="button">

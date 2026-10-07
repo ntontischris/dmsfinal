@@ -65,7 +65,7 @@ export function J1({ role, query }: ScreenProps) {
       role={role}
       code="J1"
       state={state}
-      keep={{ tab: query.tab, view: query.view }}
+      keep={{ tab: query.tab, view: query.view, solo: query.solo }}
     />
   );
   if (!caps.canSee || caps.isClient) {
@@ -122,6 +122,7 @@ function Inbox({ role, query, isEmpty }: InboxProps) {
             href={screenHref(role, "J1", {
               tab: t === "conversations" ? undefined : t,
               state: query.state,
+              solo: query.solo,
             })}
           >
             {labels[t]}
@@ -190,13 +191,15 @@ interface RequestsTabProps {
 }
 
 function RequestsTab({ role, query, isEmpty }: RequestsTabProps) {
-  const view = parseView(role, query.view);
+  const isSolo = role === "owner" && query.solo === "1";
+  const view = parseView(role, query.view, isSolo);
   const items = isEmpty ? [] : requestsOf(role, view);
   return (
     <>
       <ViewLinks
         role={role}
-        views={requestViewsOf(role)}
+        views={requestViewsOf(role, isSolo)}
+        solo={query.solo}
         view={view}
         state={query.state}
       />

@@ -239,7 +239,7 @@ export const ROLE_DEFS: readonly RoleDef[] = [
     kind: "πελάτη",
     isOwner: false,
     isBuiltIn: true,
-    description: "Ο άνθρωπος του Πελάτη που δουλεύει με τη Devre Media.",
+    description: "Ο άνθρωπος του Πελάτη που δουλεύει με τη Delta Films.",
     grants: everything("πελάτη"),
   },
   {
@@ -347,7 +347,7 @@ export const TEAM_USERS: readonly TeamUser[] = [
   },
 ];
 
-// Τι επιστρέφει για νέα ανάθεση όταν απενεργοποιηθεί ο Χρήστης (υπολογίζεται τη στιγμή της απενεργοποίησης).
+// Τι επιστρέφει για νέα ανάθεση όταν απενεργοποιηθεί ο Χρήστης (υπολογίζεται στο team-access.ts από τα δεδομένα).
 export interface OpenAssignments {
   clients: number;
   opportunities: number;
@@ -356,49 +356,6 @@ export interface OpenAssignments {
   deliverables: number;
   crews: number;
 }
-
-export const OPEN_ASSIGNMENTS: Readonly<Record<string, OpenAssignments>> = {
-  dimitris: {
-    clients: 1,
-    opportunities: 1,
-    productions: 2,
-    tasks: 3,
-    deliverables: 1,
-    crews: 2,
-  },
-  aris: {
-    clients: 0,
-    opportunities: 0,
-    productions: 1,
-    tasks: 4,
-    deliverables: 3,
-    crews: 3,
-  },
-  sofia: {
-    clients: 0,
-    opportunities: 0,
-    productions: 0,
-    tasks: 1,
-    deliverables: 0,
-    crews: 2,
-  },
-  anna: {
-    clients: 3,
-    opportunities: 4,
-    productions: 0,
-    tasks: 0,
-    deliverables: 0,
-    crews: 1,
-  },
-  nikos: {
-    clients: 2,
-    opportunities: 2,
-    productions: 0,
-    tasks: 0,
-    deliverables: 0,
-    crews: 0,
-  },
-};
 
 export type InvitationKind = "ομάδας" | "πελάτη";
 
@@ -451,11 +408,11 @@ export const INVITATIONS: readonly Invitation[] = [
   {
     id: "inv-meli",
     kind: "πελάτη",
-    name: "Ελπίδα Κουρή",
-    email: "elpida@example.com",
+    name: "Ελένη Ράπτη",
+    email: "eleni.rapti@example.com",
     roleIds: ["client-full"],
     clientId: "meli",
-    invitedBy: "system",
+    invitedBy: "anna",
     sentAt: "2026-09-12",
     expiresAt: "2026-09-19",
   },
@@ -501,21 +458,21 @@ export const CLIENT_MEMBERSHIPS: readonly ClientMembership[] = [
     clientId: "kinisi",
     roleId: "client-full",
     invitedBy: "system",
-    joinedAt: "2026-05-30",
+    joinedAt: "2026-06-15",
   },
   {
     email: "kostas@example.com",
     clientId: "armyra",
     roleId: "client-full",
     invitedBy: "system",
-    joinedAt: "2025-03-14",
+    joinedAt: "2026-06-15",
   },
   {
     email: "info@athina.example.com",
     clientId: "athina",
     roleId: "client-full",
     invitedBy: "system",
-    joinedAt: "2026-04-02",
+    joinedAt: "2026-08-27",
   },
 ];
 

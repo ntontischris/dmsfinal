@@ -68,7 +68,7 @@ export const FICTIONAL_CLIENT: FictionalClient = {
       state: "ενεργή",
       lines: [
         {
-          description: "Πακέτο social: 2 Γυρίσματα και 8 reels τον μήνα",
+          description: "Μηνιαία Παρουσία: 2 Γυρίσματα και 8 reels τον μήνα",
           monthlyPrice: 900,
         },
       ],
@@ -92,9 +92,15 @@ export const FICTIONAL_CLIENT: FictionalClient = {
           ends: "2026-09-30",
           state: "τρέχουσα",
         },
+        {
+          label: "Οκτώβριος 2026",
+          starts: "2026-10-01",
+          ends: "2026-10-31",
+          state: "επόμενη",
+        },
       ],
       renewal:
-        "Λήγει 31/12/2026· νέα Ευκαιρία «ανανέωση» ανοίγει τον Νοέμβριο.",
+        "Λήγει 31/12/2026· η Ευκαιρία «ανανέωση» ανοίχτηκε με το χέρι στις 19/09 (αλλιώς θα άνοιγε αυτόματα την 01/12).",
     },
     {
       title: "Βίντεο εγκαινίων δεύτερου καταστήματος",
@@ -102,8 +108,12 @@ export const FICTIONAL_CLIENT: FictionalClient = {
       state: "πρόταση",
       proposalPath: "Εστάλη",
       lines: [
-        { description: "Γύρισμα εγκαινίων (μισή μέρα)", totalPrice: 650 },
-        { description: "Μοντάζ: ένα βίντεο 90″ και 3 reels", totalPrice: 550 },
+        {
+          description:
+            "Εκδήλωση Μίνι: Γύρισμα εγκαινίων (μισή μέρα) και βίντεο 90″",
+          totalPrice: 840,
+        },
+        { description: "Έξτρα reel (3 τεμάχια)", totalPrice: 360 },
       ],
       provisions: ["1 Γύρισμα", "1 βίντεο", "3 reels"],
       periods: [],

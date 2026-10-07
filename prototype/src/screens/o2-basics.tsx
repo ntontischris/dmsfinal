@@ -36,7 +36,8 @@ export function O2Basics({ role, query }: O2BasicsProps) {
           </select>
           <span className="muted o-hint">
             Με «Χωρίς υπεύθυνο» μπαίνουν σε κοινή ουρά μέχρι να τις αναλάβει
-            κάποιος.
+            κάποιος. Όσο αναθέτει ένας μόνο άνθρωπος, η ουρά δεν φαίνεται και η
+            Ευκαιρία πάει σε αυτόν.
           </span>
         </span>
         <SaveRow role={role} query={query} code="O2" card="assignee" />

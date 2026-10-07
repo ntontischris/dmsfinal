@@ -65,7 +65,7 @@ export function SourceChips({ sources, role }: SourceChipsProps) {
 export function Referral({ role }: { role: RoleId }) {
   if (role === "client") {
     return (
-      <Link className="button" href={screenHref(role, "J1", {})}>
+      <Link className="button" href={screenHref(role, "J3", {})}>
         Γράψε στη Συνομιλία με την ομάδα
       </Link>
     );

@@ -86,7 +86,6 @@ interface CatalogueItemBase {
   directCost: number;
   directCostNote?: string;
   actuals: ActualsSummary | null;
-  activeAgreements: number;
   isArchived: boolean;
   updated: { when: string; by: string };
 }
@@ -127,7 +126,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     hours: { shoot: 6, edit: 14 },
     directCost: 0,
     actuals: { avgShoot: 6.5, avgEdit: 15.5, productions: 6 },
-    activeAgreements: 3,
     isArchived: false,
     isPublic: true,
     showsPrice: true,
@@ -154,7 +152,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     hours: { shoot: 8, edit: 12 },
     directCost: 0,
     actuals: null,
-    activeAgreements: 0,
     isArchived: false,
     isPublic: true,
     showsPrice: false,
@@ -181,7 +178,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     directCost: 300,
     directCostNote: "εξωτερικός χειριστής κάμερας",
     actuals: { avgShoot: 9, avgEdit: 28, productions: 2 },
-    activeAgreements: 1,
     isArchived: false,
     isPublic: true,
     showsPrice: true,
@@ -207,7 +203,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     hours: { shoot: 3, edit: 5 },
     directCost: 0,
     actuals: null,
-    activeAgreements: 0,
     isArchived: false,
     isPublic: true,
     showsPrice: true,
@@ -232,7 +227,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     hours: { shoot: 3, edit: 7 },
     directCost: 0,
     actuals: { avgShoot: 3.2, avgEdit: 7.8, productions: 11 },
-    activeAgreements: 1,
     isArchived: true,
     isPublic: false,
     showsPrice: false,
@@ -253,7 +247,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     hours: { shoot: 0, edit: 2 },
     directCost: 0,
     actuals: { avgShoot: 0, avgEdit: 2.3, productions: 14 },
-    activeAgreements: 4,
     isArchived: false,
     updated: { when: "2026-05-20", by: "Δημήτρης Ιωάννου" },
   },
@@ -268,7 +261,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     hours: { shoot: 1, edit: 0 },
     directCost: 0,
     actuals: { avgShoot: 1, avgEdit: 0, productions: 5 },
-    activeAgreements: 2,
     isArchived: false,
     updated: { when: "2026-05-20", by: "Δημήτρης Ιωάννου" },
   },
@@ -284,7 +276,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     directCost: 120,
     directCostNote: "ενοικίαση drone και χειριστής",
     actuals: null,
-    activeAgreements: 0,
     isArchived: false,
     updated: { when: "2026-07-08", by: "Γιώργος Μαυρίδης" },
   },
@@ -300,7 +291,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     hours: { shoot: 3, edit: 3 },
     directCost: 0,
     actuals: { avgShoot: 3, avgEdit: 4, productions: 3 },
-    activeAgreements: 0,
     isArchived: false,
     updated: { when: "2026-04-11", by: "Δημήτρης Ιωάννου" },
   },
@@ -315,7 +305,6 @@ export const CATALOGUE: readonly CatalogueItem[] = [
     hours: { shoot: 0, edit: 1.5 },
     directCost: 0,
     actuals: { avgShoot: 0, avgEdit: 1.2, productions: 8 },
-    activeAgreements: 0,
     isArchived: true,
     updated: { when: "2026-02-14", by: "Γιώργος Μαυρίδης" },
   },

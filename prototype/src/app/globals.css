@@ -65,7 +65,7 @@ code { font-family: var(--font-mono); font-size: var(--text-sm); }
 
 @media (max-width: 48rem) {
   .shell { grid-template-columns: 1fr; }
-  .sidebar { border-right: 0; border-bottom: 1px solid var(--color-border); }
+  .sidebar { border-right: 0; border-top: 1px solid var(--color-border); order: 2; }
 }
 
 .nav summary { cursor: pointer; font-weight: 600; }
@@ -113,3 +113,16 @@ code { font-family: var(--font-mono); font-size: var(--text-sm); }
 }
 .chip a { color: inherit; text-decoration: none; }
 .chip a:hover { text-decoration: underline; }
+
+.scenario-bar { border-color: var(--color-accent); }
+.scenario-bar-head { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; font-size: var(--text-sm); margin-bottom: var(--space-2); }
+.scenario-bar p { margin: 0 0 var(--space-2); }
+.scenario-bar-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; margin-top: var(--space-3); }
+.scenario-bar-nav .button { text-decoration: none; }
+.scenarios-main { margin: 0 auto; }
+.scenario-list, .scenario-steps { list-style: none; padding: 0; margin: 0; }
+.scenario-steps { counter-reset: step; }
+.scenario-steps > li { counter-increment: step; }
+.scenario-steps h2::before { content: counter(step) ". "; color: var(--color-text-muted); }
+.btn-row .button, .topbar-controls .button { text-decoration: none; }
+.scenarios-main .btn-row, .scenarios-main .card-title { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; }

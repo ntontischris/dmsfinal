@@ -34,7 +34,7 @@ export interface DeliverableCaps {
   canApprove: boolean;
 }
 
-// Ο «Πλήρης» πελάτη έχει «Εγκρίνει Παραδοτέα». Η Παραγωγή δεν ελέγχει και δεν βλέπει ποσά.
+// Ο «Πλήρης» πελάτη έχει «Εγκρίνει Παραδοτέα». «Ελέγχει Παραδοτέα» μόνο ο Ιδιοκτήτης· η Παραγωγή δεν ελέγχει και δεν βλέπει ποσά.
 export const deliverableCapsOf = (role: RoleId): DeliverableCaps => {
   const isAdminLike = role === "owner" || role === "admin";
   return {
@@ -42,7 +42,7 @@ export const deliverableCapsOf = (role: RoleId): DeliverableCaps => {
     isScoped: role === "production",
     isClient: role === "client",
     canWork: isAdminLike || role === "production",
-    canReview: isAdminLike,
+    canReview: role === "owner",
     canSeeAmounts: isAdminLike,
     canApprove: role === "client",
   };

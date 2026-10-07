@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  canOpenScreen,
   daysOpen,
   findClientOf,
   isStale,
@@ -31,9 +32,10 @@ interface ViewLinksProps {
   views: readonly RequestView[];
   view: RequestView;
   state: string | undefined;
+  solo?: string;
 }
 
-export function ViewLinks({ role, views, view, state }: ViewLinksProps) {
+export function ViewLinks({ role, views, view, state, solo }: ViewLinksProps) {
   return (
     <p className="j1-views">
       {views.map((v) => (
@@ -45,6 +47,7 @@ export function ViewLinks({ role, views, view, state }: ViewLinksProps) {
             tab: "requests",
             view: VIEW_KEYS[v],
             state,
+            solo,
           })}
         >
           {v}
@@ -67,9 +70,15 @@ function Closing({ role, m }: { role: RoleId; m: RequestMessage }) {
       {closing.isAutomatic && <p>έκλεισε μόνο του όταν δημιουργήθηκε</p>}
       {isDone && closing.link && (
         <p>
-          <Link href={screenHref(role, closing.link.code, closing.link.params)}>
-            {closing.link.label}
-          </Link>
+          {canOpenScreen(role, closing.link.code) ? (
+            <Link
+              href={screenHref(role, closing.link.code, closing.link.params)}
+            >
+              {closing.link.label}
+            </Link>
+          ) : (
+            closing.link.label
+          )}
         </p>
       )}
       {isDone && closing.comment && <p>{closing.comment}</p>}

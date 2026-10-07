@@ -43,6 +43,7 @@ export interface AuditEntry {
   area: AuditArea;
   subject: string;
   subjectHref?: string; // κωδικός οθόνης, π.χ. "O1"
+  subjectQuery?: Readonly<Record<string, string>>; // παράμετροι της οθόνης, π.χ. { id: "ag-kypseli-social" }
   action: AuditAction;
   before?: string;
   after?: string;
@@ -66,7 +67,7 @@ export const AUDIT: readonly AuditEntry[] = [
     at: "2026-09-19 17:40",
     actor: "Σύστημα",
     area: "health",
-    subject: "Αποστολή «Τιμολόγιο εκδόθηκε» προς Ζαχαροπλαστείο Μέλι",
+    subject: "Αποστολή «Ληξιπρόθεσμο Τιμολόγιο Α-58» προς Κυψέλη Καφέ",
     subjectHref: "P2",
     action: "ενέργεια",
     after: "απέτυχε οριστικά (όριο αποστολών)",
@@ -79,8 +80,8 @@ export const AUDIT: readonly AuditEntry[] = [
     subject: "Προεπιλεγμένος λογαριασμός τραπέζης",
     subjectHref: "O1",
     action: "αλλαγή",
-    before: "GR16 0110 … 7890 (Τράπεζα Α)",
-    after: "GR27 0260 … 3141 (Τράπεζα Β)",
+    before: "GR97 0140 … 5678 (Εθνική Δοκιμής)",
+    after: "GR16 0110 … 0695 (Τράπεζα Αιγαίου)",
   },
   {
     id: "a11",
@@ -101,8 +102,8 @@ export const AUDIT: readonly AuditEntry[] = [
     subject: "Αναμενόμενες παραγωγικές ώρες του μήνα",
     subjectHref: "O6",
     action: "αλλαγή",
-    before: "352 ώρες",
-    after: "320 ώρες",
+    before: "200 ώρες",
+    after: "220 ώρες",
     sensitivity: "cost",
   },
   {
@@ -121,12 +122,12 @@ export const AUDIT: readonly AuditEntry[] = [
     at: "2026-09-16 16:48",
     actor: "Δημήτρης Ιωάννου",
     area: "agreements",
-    subject: "Συμφωνία «Κυψέλη Social, μηνιαία»",
+    subject: "Συμφωνία «Μηνιαίο πακέτο social media» (Κυψέλη Καφέ)",
     subjectHref: "D2",
+    subjectQuery: { id: "ag-kypseli-social" },
     action: "αλλαγή",
-    before: "τιμή Περιόδου 900 €",
-    after: "τιμή Περιόδου 950 €",
-    sensitivity: "amount",
+    before: "Υπεύθυνος: Δημήτρης Ιωάννου",
+    after: "Υπεύθυνη: Άννα Δημητρίου",
   },
   {
     id: "a7",
@@ -182,25 +183,25 @@ export const AUDIT: readonly AuditEntry[] = [
     before: "Δοκιμαστικό (δεν χρησιμοποιήθηκε)",
   },
   {
-    id: "a2",
-    at: "2026-09-05 10:30",
-    actor: "Δημήτρης Ιωάννου",
-    area: "finance",
-    subject: "Είσπραξη Τιμολογίου 2026-041",
-    subjectHref: "I3",
-    action: "προσθήκη",
-    after: "1.178,00 € με τραπεζική μεταφορά",
-    sensitivity: "amount",
-  },
-  {
     id: "a1",
-    at: "2026-09-01 08:00",
-    actor: "Ανωνυμοποιημένος Χρήστης",
+    at: "2026-08-31 18:00",
+    actor: "Δημήτρης Ιωάννου",
     area: "team",
-    subject: "Χρήστης ομάδας",
+    subject: "Χρήστης ομάδας: Πέτρος Αλεξίου",
     subjectHref: "N1",
     action: "ενέργεια",
     after: "απενεργοποιήθηκε",
+  },
+  {
+    id: "a2",
+    at: "2026-08-28 10:30",
+    actor: "Δημήτρης Ιωάννου",
+    area: "finance",
+    subject: "Είσπραξη Κυψέλη Καφέ, 28/08",
+    subjectHref: "I4",
+    action: "προσθήκη",
+    after: "500,00 € με κωδικό RF",
+    sensitivity: "amount",
   },
 ];
 

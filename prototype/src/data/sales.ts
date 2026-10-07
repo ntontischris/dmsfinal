@@ -1,11 +1,7 @@
 // Φανταστικά δεδομένα του module «1 Πελάτες και Πωλήσεις». Repo public: μόνο επινοημένα στοιχεία, email @example.com.
 // «Σήμερα» είναι σταθερή ημερομηνία, ώστε το «ξεχασμένη» και η λήξη πρότασης να βγαίνουν ίδια σε κάθε φόρτωση.
 
-import {
-  FICTIONAL_CLIENT,
-  type Agreement,
-  type ClientUser,
-} from "@/data/fictional-client";
+import { FICTIONAL_CLIENT, type ClientUser } from "@/data/fictional-client";
 
 export const TODAY = "2026-09-20";
 
@@ -58,13 +54,6 @@ export interface Activity {
   by: string;
 }
 
-export interface ClientFinance {
-  invoiced: number;
-  collected: number;
-  overdue: number;
-  toInvoice: number;
-}
-
 export interface SalesClient {
   id: string;
   name: string;
@@ -75,18 +64,9 @@ export interface SalesClient {
   ownerId: string | null;
   contact: { name: string; email: string; phone: string };
   users: readonly ClientUser[];
-  agreements: readonly Agreement[];
-  finance: ClientFinance;
   activities: readonly Activity[];
   possibleDuplicateOf?: { clientId: string; reason: string };
 }
-
-const noFinance: ClientFinance = {
-  invoiced: 0,
-  collected: 0,
-  overdue: 0,
-  toInvoice: 0,
-};
 
 export const KYPSELI_ID = "kypseli";
 
@@ -105,8 +85,6 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
       phone: "2310 555 0101",
     },
     users: FICTIONAL_CLIENT.users,
-    agreements: FICTIONAL_CLIENT.agreements,
-    finance: { invoiced: 2232, collected: 1616, overdue: 616, toInvoice: 900 },
     activities: [
       {
         when: "2026-09-18",
@@ -149,32 +127,9 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
         isSignatory: true,
       },
     ],
-    agreements: [
-      {
-        title: "Μηνιαίο πακέτο social media",
-        kind: "μηνιαία",
-        state: "ενεργή",
-        lines: [
-          {
-            description: "Πακέτο social: 2 Γυρίσματα και 8 reels τον μήνα",
-            monthlyPrice: 900,
-          },
-        ],
-        provisions: ["2 Γυρίσματα", "8 reels"],
-        periods: [
-          {
-            label: "Σεπτέμβριος 2026",
-            starts: "2026-09-01",
-            ends: "2026-09-30",
-            state: "τρέχουσα",
-          },
-        ],
-      },
-    ],
-    finance: { invoiced: 3323.2, collected: 3323.2, overdue: 0, toInvoice: 0 },
     activities: [
       {
-        when: "2026-09-15",
+        when: "2026-09-11",
         kind: "Συνάντηση",
         text: "Συνάντηση για έκπτωση και έξτρα reels.",
         by: "Άννα Δημητρίου",
@@ -191,17 +146,15 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
     ownerId: "anna",
     contact: {
       name: "Ελένη Ράπτη",
-      email: "eleni@example.com",
+      email: "eleni.rapti@example.com",
       phone: "2610 555 0103",
     },
     users: [],
-    agreements: [],
-    finance: noFinance,
     activities: [
       {
-        when: "2026-09-02",
+        when: "2026-08-29",
         kind: "Email",
-        text: "Στάλθηκε πρόταση, Ισχύς 10 μέρες.",
+        text: "Στάλθηκε η αναθεωρημένη πρόταση, Ισχύς 14 μέρες. Έληξε στις 12/09.",
         by: "Άννα Δημητρίου",
       },
     ],
@@ -233,26 +186,6 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
         isSignatory: false,
       },
     ],
-    agreements: [
-      {
-        title: "Βίντεο προβολής εστιατορίου 2025",
-        kind: "εφάπαξ",
-        state: "έληξε",
-        lines: [{ description: "Βίντεο 60″ και 2 reels", totalPrice: 1100 }],
-        provisions: ["1 βίντεο", "2 reels"],
-        periods: [],
-      },
-      {
-        title: "Φωτογράφιση μενού",
-        kind: "εφάπαξ",
-        state: "πρόταση",
-        proposalPath: "Χάθηκε",
-        lines: [{ description: "Φωτογράφιση 30 πιάτων", totalPrice: 480 }],
-        provisions: ["30 φωτογραφίες"],
-        periods: [],
-      },
-    ],
-    finance: { invoiced: 2728, collected: 2728, overdue: 0, toInvoice: 0 },
     activities: [
       {
         when: "2026-09-10",
@@ -283,34 +216,11 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
         isSignatory: true,
       },
     ],
-    agreements: [
-      {
-        title: "Μηνιαίο πακέτο social media",
-        kind: "μηνιαία",
-        state: "ενεργή",
-        lines: [
-          {
-            description: "Πακέτο social: 2 Γυρίσματα και 8 reels τον μήνα",
-            monthlyPrice: 900,
-          },
-        ],
-        provisions: ["2 Γυρίσματα", "8 reels"],
-        periods: [
-          {
-            label: "Σεπτέμβριος 2026",
-            starts: "2026-09-01",
-            ends: "2026-09-30",
-            state: "τρέχουσα",
-          },
-        ],
-      },
-    ],
-    finance: { invoiced: 1257.36, collected: 500, overdue: 0, toInvoice: 0 },
     activities: [
       {
-        when: "2026-08-28",
+        when: "2026-08-27",
         kind: "σύστημα",
-        text: "Υπογράφηκε η Συμφωνία. Ο Υπογράφων προσκλήθηκε.",
+        text: "Καταχωρίστηκε υπογραφή εκτός συστήματος. Ο Υπογράφων προσκλήθηκε.",
         by: "Σύστημα",
       },
     ],
@@ -329,8 +239,6 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
       phone: "210 555 0105",
     },
     users: [],
-    agreements: [],
-    finance: noFinance,
     activities: [
       {
         when: "2026-09-19",
@@ -358,8 +266,6 @@ export const SALES_CLIENTS: readonly SalesClient[] = [
       phone: "2410 555 0107",
     },
     users: [],
-    agreements: [],
-    finance: noFinance,
     activities: [
       {
         when: "2026-09-20",

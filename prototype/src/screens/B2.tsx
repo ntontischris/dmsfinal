@@ -14,9 +14,11 @@ import {
   memberName,
   type SalesClient,
 } from "@/data/sales";
+import { agreementsOfClient, type AgreementRecord } from "@/data/agreements";
 import type { Opportunity } from "@/data/opportunities";
 import type { RoleId } from "@/data/roles";
-import { AccessRequest, takenMessage } from "@/screens/access-request";
+import { takenMessage } from "@/data/access-requests";
+import { AccessRequest } from "@/screens/access-request";
 import {
   ActivitiesSection,
   AgreementsSection,
@@ -74,9 +76,7 @@ const asNewClient = (client: SalesClient): SalesClient => ({
   ...client,
   status: "Υποψήφιος",
   users: [],
-  agreements: [],
   activities: [],
-  finance: { invoiced: 0, collected: 0, overdue: 0, toInvoice: 0 },
 });
 
 const renderTab = (
@@ -85,7 +85,9 @@ const renderTab = (
   client: SalesClient,
   caps: SalesCaps,
   opportunities: readonly Opportunity[],
+  agreements: readonly AgreementRecord[],
   showAmounts: boolean,
+  isNew: boolean,
 ) => {
   if (tab === "users") return <UsersSection role={role} client={client} caps={caps} />;
   if (tab === "agreements")
@@ -94,6 +96,7 @@ const renderTab = (
         role={role}
         client={client}
         caps={caps}
+        agreements={agreements}
         showAmounts={showAmounts}
       />
     );
@@ -107,7 +110,7 @@ const renderTab = (
       />
     );
   if (tab === "productions" || tab === "chat" || tab === "dispatches" || tab === "ledger")
-    return <CrossModuleSection tab={tab} role={role} client={client} caps={caps} />;
+    return <CrossModuleSection tab={tab} role={role} client={client} caps={caps} isNew={isNew} />;
   if (tab === "activities")
     return <ActivitiesSection role={role} client={client} caps={caps} />;
   return <DetailsSection role={role} client={client} caps={caps} />;
@@ -148,6 +151,7 @@ export function B2({ role, query }: ScreenProps) {
       : opportunitiesOfClient(client.id).filter(
           (opportunity) => !isGranted || isMyOpportunity(opportunity),
         );
+  const clientAgreements = state === "empty" ? [] : agreementsOfClient(client.id);
   const ownerName = memberName(client.ownerId);
   // Πωλήσεις: ποσά μόνο στις δικές του Συμφωνίες, δηλαδή των Πελατών του ή όσων προέρχονται από δική του πρόταση.
   const showAmounts = !caps.isScoped || access === "owner";
@@ -216,7 +220,9 @@ export function B2({ role, query }: ScreenProps) {
             client,
             visibleCaps,
             clientOpportunities,
+            clientAgreements,
             showAmounts,
+            state === "empty",
           )}
         </>
       )}

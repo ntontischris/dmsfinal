@@ -129,7 +129,7 @@ export const KB_ITEMS: readonly KbItem[] = [
       "Η σελίδα Οικονομικά του λογαριασμού σας δείχνει Τιμολόγια, πληρωμές και ό,τι είναι ανοιχτό.",
     audience: team("client"),
     state: "πρόχειρο",
-    updated: { when: "2026-10-05", by: "Γιώργος Μαυρίδης" },
+    updated: { when: "2026-09-19", by: "Γιώργος Μαυρίδης" },
     citedLast30: 0,
     body: [
       "Από το μενού, «Οικονομικά». Εκεί είναι κάθε Τιμολόγιο ως PDF και η κατάστασή του.",
@@ -141,7 +141,7 @@ export const KB_ITEMS: readonly KbItem[] = [
     sectionId: "how-we-work",
     title: "Από το πρώτο τηλέφωνο ως την παράδοση",
     summary:
-      "Τα πέντε βήματα μιας συνεργασίας με τη Devre Media, για όποιον μας γνωρίζει τώρα.",
+      "Τα πέντε βήματα μιας συνεργασίας με τη Delta Films, για όποιον μας γνωρίζει τώρα.",
     audience: { kind: "δημόσιο" },
     state: "δημοσιευμένο",
     updated: { when: "2026-08-30", by: "Γιώργος Μαυρίδης" },
@@ -160,7 +160,7 @@ export const KB_ITEMS: readonly KbItem[] = [
       "Δουλεύουμε Δευτέρα με Παρασκευή· Γυρίσματα Σάββατο ή Κυριακή γίνονται κατόπιν συνεννόησης.",
     audience: { kind: "δημόσιο" },
     state: "δημοσιευμένο",
-    updated: { when: "2026-10-02", by: "Δημήτρης Ιωάννου" },
+    updated: { when: "2026-09-16", by: "Δημήτρης Ιωάννου" },
     citedLast30: 3,
     body: [
       "Το γραφείο απαντά Δευτέρα με Παρασκευή, 09:00–17:00. Γύρισμα σε Σαββατοκύριακο κλείνεται κατόπιν συνεννόησης.",
@@ -220,7 +220,7 @@ export const KB_ITEMS: readonly KbItem[] = [
       "Τρεις απαντήσεις στην πιο συχνή αντίρρηση, με παραδείγματα από πραγματικά αποτελέσματα.",
     audience: team("owner", "admin", "sales"),
     state: "δημοσιευμένο",
-    updated: { when: "2026-09-25", by: "Άννα Δημητρίου" },
+    updated: { when: "2026-09-10", by: "Άννα Δημητρίου" },
     citedLast30: 7,
     body: [
       "Δεν συζητάμε έκπτωση πριν δείξουμε το αποτέλεσμα. Οι τιμές είναι μόνο στον Κατάλογο.",
@@ -248,7 +248,7 @@ export const KB_ITEMS: readonly KbItem[] = [
     summary: "",
     audience: null,
     state: "πρόχειρο",
-    updated: { when: "2026-10-06", by: "Γιώργος Μαυρίδης" },
+    updated: { when: "2026-09-20", by: "Γιώργος Μαυρίδης" },
     citedLast30: 0,
     body: ["(Πρόχειρο χωρίς Περίληψη και Κοινό: δεν δημοσιεύεται ακόμα.)"],
   },
@@ -291,8 +291,8 @@ export const CONVERSATIONS: readonly Conversation[] = [
     kind: "πελάτη",
     who: "Μαρία Παπαδάκη (Κυψέλη Καφέ)",
     language: "el",
-    startedAt: "2026-10-05T16:02",
-    lastAt: "2026-10-05T16:05",
+    startedAt: "2026-09-19T16:02",
+    lastAt: "2026-09-19T16:05",
     turns: [
       {
         question: "πώς ζητάω Γύρισμα;",
@@ -314,8 +314,8 @@ export const CONVERSATIONS: readonly Conversation[] = [
     kind: "δημόσια",
     who: "Επισκέπτης",
     language: "en",
-    startedAt: "2026-10-04T21:40",
-    lastAt: "2026-10-04T21:43",
+    startedAt: "2026-09-18T21:40",
+    lastAt: "2026-09-18T21:43",
     page: "/en/packages",
     turns: [
       {
@@ -337,8 +337,8 @@ export const CONVERSATIONS: readonly Conversation[] = [
     kind: "δημόσια",
     who: "Επισκέπτης",
     language: "el",
-    startedAt: "2026-10-03T11:12",
-    lastAt: "2026-10-03T11:20",
+    startedAt: "2026-09-17T11:12",
+    lastAt: "2026-09-17T11:20",
     page: "/el",
     hitLimit: true,
     turns: [
@@ -363,8 +363,8 @@ export const CONVERSATIONS: readonly Conversation[] = [
     kind: "ομάδας",
     who: "Άρης Κωνσταντίνου",
     language: "el",
-    startedAt: "2026-10-02T08:31",
-    lastAt: "2026-10-02T08:33",
+    startedAt: "2026-09-16T08:31",
+    lastAt: "2026-09-16T08:33",
     turns: [
       {
         question: "τι ώρα πρέπει να είμαστε στο σετ;",
@@ -385,8 +385,8 @@ export const CONVERSATIONS: readonly Conversation[] = [
     kind: "ομάδας",
     who: "Άννα Δημητρίου",
     language: "el",
-    startedAt: "2026-09-29T13:05",
-    lastAt: "2026-09-29T13:06",
+    startedAt: "2026-09-13T13:05",
+    lastAt: "2026-09-13T13:06",
     turns: [
       {
         question: "τι λέμε όταν μας λένε ότι είναι ακριβό;",
@@ -423,8 +423,8 @@ export const UNANSWERED: readonly Unanswered[] = [
     question: "κάνετε και γάμους;",
     kind: "δημόσια",
     timesAsked: 4,
-    firstAt: "2026-09-18",
-    lastAt: "2026-10-03",
+    firstAt: "2026-09-02",
+    lastAt: "2026-09-17",
     conversationIds: ["cv-3"],
     state: "ανοιχτή",
   },
@@ -433,8 +433,8 @@ export const UNANSWERED: readonly Unanswered[] = [
     question: "ποιος κωδικός ανοίγει την αποθήκη;",
     kind: "ομάδας",
     timesAsked: 1,
-    firstAt: "2026-10-02",
-    lastAt: "2026-10-02",
+    firstAt: "2026-09-16",
+    lastAt: "2026-09-16",
     conversationIds: ["cv-4"],
     state: "ανοιχτή",
   },
@@ -443,8 +443,8 @@ export const UNANSWERED: readonly Unanswered[] = [
     question: "πόσο χρωστάμε αυτή τη στιγμή;",
     kind: "πελάτη",
     timesAsked: 3,
-    firstAt: "2026-09-21",
-    lastAt: "2026-10-05",
+    firstAt: "2026-09-05",
+    lastAt: "2026-09-19",
     conversationIds: ["cv-1"],
     state: "ανοιχτή",
   },
@@ -453,8 +453,8 @@ export const UNANSWERED: readonly Unanswered[] = [
     question: "δουλεύετε Κυριακές;",
     kind: "δημόσια",
     timesAsked: 2,
-    firstAt: "2026-09-30",
-    lastAt: "2026-10-01",
+    firstAt: "2026-09-14",
+    lastAt: "2026-09-15",
     conversationIds: [],
     state: "καλύφθηκε",
     coveredBy: "kb-hours",
@@ -464,8 +464,8 @@ export const UNANSWERED: readonly Unanswered[] = [
     question: "γράψε μου ένα ποίημα για καφέ",
     kind: "δημόσια",
     timesAsked: 1,
-    firstAt: "2026-09-27",
-    lastAt: "2026-09-27",
+    firstAt: "2026-09-11",
+    lastAt: "2026-09-11",
     conversationIds: [],
     state: "αγνοήθηκε",
     ignoredReason: "εκτός θέματος",
@@ -502,7 +502,7 @@ export const ASSISTANT_LIMITS: AssistantLimits = {
 
 // Η κατανάλωση του τρέχοντος μήνα (φανταστικό νούμερο), για την ένδειξη στη L2.
 export const MONTH_USAGE = {
-  month: "Οκτώβριος 2026",
+  month: "Σεπτέμβριος 2026",
   spentUsd: 11.4,
   publicUsd: 7.9,
 };

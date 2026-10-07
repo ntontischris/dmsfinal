@@ -1,16 +1,18 @@
 // Ψεύτικα δεδομένα της Ρυθμίσεων › Οικονομικά (O6). Ποσά μηνιαία, σε ευρώ.
+// Οι Τρόποι είσπραξης και το κόστος του μήνα διαβάζονται από τα δεδομένα του συστήματος (finance.ts).
 
+import { MONTH_COSTS, PAYMENT_METHODS, RECEIPTS } from "@/data/finance";
 import type { SettingsListItem } from "@/screens/o-shared";
 
 export const TARGET_MARGIN = 0.35;
 
-export const COLLECTION_METHODS: readonly SettingsListItem[] = [
-  { id: "c1", label: "Τραπεζική μεταφορά", status: "Σε χρήση", uses: 41 },
-  { id: "c2", label: "Μετρητά", status: "Σε χρήση", uses: 6 },
-  { id: "c3", label: "Κάρτα (POS)", status: "Σε χρήση", uses: 9 },
-  { id: "c4", label: "IRIS", status: "Νέα", uses: 0 },
-  { id: "c5", label: "Επιταγή", status: "Αποσύρθηκε", uses: 3 },
-];
+export const COLLECTION_METHODS: readonly SettingsListItem[] =
+  PAYMENT_METHODS.map((method) => ({
+    id: method.id,
+    label: method.name,
+    status: method.isActive ? "Σε χρήση" : "Αποσύρθηκε",
+    uses: RECEIPTS.filter((receipt) => receipt.methodId === method.id).length,
+  }));
 
 export interface ExpenseLine {
   id: string;
@@ -24,23 +26,25 @@ export interface ExpenseCategory {
   lines: readonly ExpenseLine[];
 }
 
-export const EXPENSE_CATEGORIES: readonly ExpenseCategory[] = [
-  {
-    id: "e1",
-    label: "Μισθοδοσία",
-    lines: [
-      { id: "e1a", label: "Μισθός 1", amount: 2800 },
-      { id: "e1b", label: "Μισθός 2", amount: 2100 },
-      { id: "e1c", label: "Μισθός 3", amount: 1500 },
-    ],
-  },
-  { id: "e2", label: "Ενοίκιο", lines: [{ id: "e2a", label: "Ενοίκιο στούντιο", amount: 900 }] },
-  { id: "e3", label: "Συνδρομές λογισμικού", lines: [{ id: "e3a", label: "Συνδρομές λογισμικού", amount: 420 }] },
-  { id: "e4", label: "Εξοπλισμός αποσβέσεις", lines: [{ id: "e4a", label: "Αποσβέσεις εξοπλισμού", amount: 780 }] },
-];
+const CURRENT_MONTH = "2026-09";
+const CURRENT_COST =
+  MONTH_COSTS.find((cost) => cost.month === CURRENT_MONTH) ?? MONTH_COSTS[0];
 
-export const PRODUCTIVE_HOURS = 320;
-export const PREVIOUS_HOURS = 352;
+export const EXPENSE_CATEGORIES: readonly ExpenseCategory[] =
+  CURRENT_COST.categories.map((category, index) => ({
+    id: `e${index + 1}`,
+    label: category.name,
+    lines: category.items
+      .flatMap((item) => item.lines)
+      .map((line, lineIndex) => ({
+        id: `e${index + 1}-${lineIndex + 1}`,
+        label: line.label,
+        amount: line.amount,
+      })),
+  }));
+
+export const PRODUCTIVE_HOURS = CURRENT_COST.productiveHours;
+export const PREVIOUS_HOURS = 200;
 export const MONTH_LABEL = "Σεπτέμβριος 2026";
 
 export interface RangeMultiplier {

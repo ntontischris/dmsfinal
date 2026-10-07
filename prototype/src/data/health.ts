@@ -65,14 +65,14 @@ export interface FailedSend {
 export const FAILED_SENDS: readonly FailedSend[] = [
   {
     id: "a13",
-    what: "Τιμολόγιο εκδόθηκε",
-    to: "Ζαχαροπλαστείο Μέλι",
+    what: "Ληξιπρόθεσμο Τιμολόγιο Α-58",
+    to: "Κυψέλη Καφέ (Μαρία Παπαδάκη)",
     reason: "όριο αποστολών",
     at: "2026-09-19 17:40",
   },
 ];
 
-export const GOOGLE_SYNC = { lastSync: "2026-09-20 09:55", queued: 0 };
+export const GOOGLE_SYNC = { lastSync: "2026-09-20 10:38", queued: 0 };
 
 export interface StuckEvent {
   id: string;
@@ -83,7 +83,7 @@ export interface StuckEvent {
 export const STUCK_EVENTS: readonly StuckEvent[] = [
   {
     id: "g1",
-    name: "Γεγονός 29 «Έκδοση για έγκριση»",
+    name: "Γεγονός 27 «Νέα Έκδοση προς έγκριση»",
     since: "2026-09-20 09:10",
   },
 ];

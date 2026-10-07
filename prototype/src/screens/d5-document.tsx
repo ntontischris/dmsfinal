@@ -52,10 +52,15 @@ export function ProposalDocument({
   language,
 }: ProposalDocumentProps): JSX.Element {
   const t = DOC_LABELS[language];
-  const a = ACTION_LABELS[language];
+  const labels = ACTION_LABELS[language];
   const client = findClient(agreement.clientId);
   const signatory = signatoryOf(agreement);
   const revision = currentRevision(agreement)?.number ?? 1;
+  // Ο Υπογράφων που είναι ήδη Χρήστης δεν παίρνει πρόσκληση: βρίσκει τη Συμφωνία στον λογαριασμό του.
+  const hasAccount = !!client?.users.some(
+    (user) => user.email === signatory?.email,
+  );
+  const a = hasAccount ? { ...labels, signed: labels.signedExisting } : labels;
 
   return (
     <article className="card d5-doc" lang={language}>

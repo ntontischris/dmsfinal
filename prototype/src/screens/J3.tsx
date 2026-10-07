@@ -31,7 +31,14 @@ import "./j3.css";
 const linkOf = (request: MessageRequest): ClosingLinkView | undefined => {
   const link = request.closing?.link;
   return link
-    ? { label: link.label, href: screenHref("client", link.code, link.params) }
+    ? {
+        label: link.label,
+        href: screenHref(
+          "client",
+          link.code === "H2" ? "H4" : link.code,
+          link.params,
+        ),
+      }
     : undefined;
 };
 

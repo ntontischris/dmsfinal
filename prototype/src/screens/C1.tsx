@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { activeAgreementsOf } from "@/data/agreements";
 import { catalogueCapsOf } from "@/data/catalogue-access";
 import {
   CATALOGUE,
@@ -49,7 +50,7 @@ export function C1({ role, query }: ScreenProps) {
       isBelowMin: caps.canSeeCost && cost.isBelowMin,
       isPublic: item.kind === "package" && item.isPublic,
       isArchived: item.isArchived,
-      activeAgreements: item.activeAgreements,
+      activeAgreements: activeAgreementsOf(item.id),
     };
   });
 

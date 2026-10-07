@@ -31,7 +31,7 @@ export const parseLang = (value: string | undefined): Lang =>
 
 // Η διεύθυνση που θα είχε η σελίδα στο πραγματικό σύστημα.
 export const publicPath = (lang: Lang, path: string): string =>
-  `devremedia.com${lang === "en" ? "/en" : ""}${path === "/" && lang === "en" ? "" : path}`;
+  `deltafilms.example${lang === "en" ? "/en" : ""}${path === "/" && lang === "en" ? "" : path}`;
 
 // Τι λείπει για να φανεί μια καταχώριση. Κενή λίστα = φαίνεται.
 export type Blocker =

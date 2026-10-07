@@ -21,9 +21,9 @@ import {
 import "./o7.css";
 
 const VARIANTS: readonly { view: string | undefined; label: string }[] = [
-  { view: undefined, label: "πριν το άνοιγμα" },
+  { view: undefined, label: "μετά το άνοιγμα" },
+  { view: "before", label: "πριν το άνοιγμα" },
   { view: "ready", label: "όλα έτοιμα" },
-  { view: "opened", label: "μετά το άνοιγμα" },
 ];
 
 // O7 «Έλεγχος ετοιμότητας»: Ιδιοκτήτης και Διαχείριση· το «Άνοιγμα» μόνο ο Ιδιοκτήτης.
@@ -56,7 +56,8 @@ export function O7({ role, query }: ScreenProps) {
       </>
     );
   const isEmpty = state === "empty";
-  const isOpened = query.view === "opened" && !isEmpty;
+  const isOpened =
+    (query.view === undefined || query.view === "opened") && !isEmpty;
   const allReady = !isEmpty && (query.view === "ready" || isOpened);
   const lines = linesFor(isEmpty, allReady, query.confirm);
   const pending = lines.filter((line) => !line.done).length;

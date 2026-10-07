@@ -1,9 +1,17 @@
 import Link from "next/link";
 
-import type { Agreement } from "@/data/fictional-client";
+import {
+  agreementTotal,
+  agreementsOfClient,
+  statusLabel,
+  type AgreementRecord,
+} from "@/data/agreements";
+import { balanceOf, ledgerOf, overdueOf, toInvoiceOf } from "@/data/finance-access";
+import { conversationsOf, productionsOfClient } from "@/data/messages-access";
 import { clientSendsOf } from "@/data/notifications-access";
 import type { Opportunity } from "@/data/opportunities";
 import type { RoleId } from "@/data/roles";
+import { stateOf } from "@/data/productions-access";
 import { isForgotten, type SalesCaps } from "@/data/sales-access";
 import { memberName, type SalesClient } from "@/data/sales";
 import { SCREENS } from "@/data/screens";
@@ -15,17 +23,13 @@ interface SectionProps {
   caps: SalesCaps;
 }
 
-const agreementTotal = (agreement: Agreement): string => {
-  const monthly = agreement.lines.reduce(
-    (sum, line) => sum + (line.monthlyPrice ?? 0),
-    0,
-  );
-  const total = agreement.lines.reduce(
-    (sum, line) => sum + (line.totalPrice ?? 0),
-    0,
-  );
-  return monthly > 0 ? `${fmtMoney(monthly)} / μήνα` : fmtMoney(total);
-};
+const priceText = (agreement: AgreementRecord): string =>
+  agreement.kind === "μηνιαία"
+    ? `${fmtMoney(agreementTotal(agreement))} / μήνα`
+    : fmtMoney(agreementTotal(agreement));
+
+const hasScreen = (role: RoleId, code: string): boolean =>
+  SCREENS.some((screen) => screen.code === code && role in screen.access);
 
 export function DetailsSection({ role, client, caps }: SectionProps) {
   return (
@@ -68,15 +72,18 @@ export function DetailsSection({ role, client, caps }: SectionProps) {
   );
 }
 
-export function UsersSection({ client, caps }: SectionProps) {
+export function UsersSection({ role, client, caps }: SectionProps) {
   return (
     <section className="card">
       <div className="card-title">
         <h2>Χρήστες πελάτη</h2>
-        {caps.canSeeClientUsers && (
-          <button type="button" className="button">
+        {caps.canSeeClientUsers && hasScreen(role, "N2") && (
+          <Link
+            className="button"
+            href={screenHref(role, "N2", { client: client.id })}
+          >
             Πρόσκληση Χρήστη
-          </button>
+          </Link>
         )}
       </div>
       {client.users.length === 0 ? (
@@ -104,10 +111,15 @@ export function UsersSection({ client, caps }: SectionProps) {
 }
 
 export function AgreementsSection({
+  role,
   client,
+  agreements,
   showAmounts,
-}: SectionProps & { showAmounts: boolean }) {
-  if (client.agreements.length === 0) {
+}: SectionProps & {
+  agreements: readonly AgreementRecord[];
+  showAmounts: boolean;
+}) {
+  if (agreements.length === 0) {
     return (
       <section className="card">
         <h2>Συμφωνίες</h2>
@@ -119,29 +131,35 @@ export function AgreementsSection({
   }
   return (
     <>
-      {client.agreements.map((agreement) => (
-        <section key={agreement.title} className="card">
+      {agreements.map((agreement) => (
+        <section key={agreement.id} className="card">
           <div className="card-title">
-            <h2>{agreement.title}</h2>
+            <h2>
+              {hasScreen(role, "D2") ? (
+                <Link href={screenHref(role, "D2", { id: agreement.id })}>
+                  {agreement.title}
+                </Link>
+              ) : (
+                agreement.title
+              )}
+            </h2>
             <span className="btn-row">
               <Badge>{agreement.kind}</Badge>
               <Badge
                 tone={agreement.state === "πρόταση" ? "attention" : "strong"}
               >
-                {agreement.proposalPath
-                  ? `${agreement.state} · ${agreement.proposalPath}`
-                  : agreement.state}
+                {statusLabel(agreement)}
               </Badge>
             </span>
           </div>
           {showAmounts ? (
-            <p>{agreementTotal(agreement)}</p>
+            <p>{priceText(agreement)}</p>
           ) : (
             <p className="muted">Ποσά: μόνο στις δικές σου Συμφωνίες.</p>
           )}
           <ul className="list">
             {agreement.lines.map((line) => (
-              <li key={line.description}>{line.description}</li>
+              <li key={line.id}>{line.description}</li>
             ))}
           </ul>
           {agreement.periods.length > 0 && (
@@ -168,7 +186,12 @@ export function AgreementsSection({
               </table>
             </div>
           )}
-          {agreement.renewal && <p className="note">{agreement.renewal}</p>}
+          {agreement.state === "ενεργή" && agreement.end && (
+            <p className="note">
+              Λήγει {fmtDate(agreement.end)}
+              {agreement.terms.renewal ? ` · Ανανέωση: ${agreement.terms.renewal}` : ""}.
+            </p>
+          )}
         </section>
       ))}
     </>
@@ -240,22 +263,36 @@ const dispatchSummary = (clientId: string): string => {
 
 interface CrossModuleProps extends SectionProps {
   tab: "productions" | "chat" | "dispatches" | "ledger";
+  isNew: boolean;
 }
 
-// Ενότητες που ανήκουν σε άλλα modules: φανταστική σύνοψη και σύνδεσμος στην οθόνη τους.
-export function CrossModuleSection({ tab, role, client }: CrossModuleProps) {
-  const { invoiced, collected, overdue, toInvoice } = client.finance;
+const productionsSummary = (clientId: string): string => {
+  const productions = productionsOfClient(clientId);
+  if (productions.length === 0) return "Καμία Παραγωγή ακόμα.";
+  const open = productions.filter((p) => stateOf(p) === "ανοιχτή").length;
+  const delivered = productions.filter((p) => stateOf(p) === "παραδομένη").length;
+  return `${productions.length} Παραγωγές: ${open} σε εξέλιξη, ${delivered} παραδομένες.`;
+};
+
+const chatSummary = (role: RoleId, clientId: string): string => {
+  const row = conversationsOf(role).find((item) => item.client.id === clientId);
+  if (!row?.last) return "Καμία Συνομιλία ακόμα με τον Πελάτη.";
+  return `Μία Συνομιλία με τον Πελάτη, ${row.unread} αδιάβαστα μηνύματα, τελευταίο ${fmtDate(row.last.at.slice(0, 10))}.`;
+};
+
+// Ενότητες που ανήκουν σε άλλα modules: σύνοψη από τα δεδομένα τους και σύνδεσμος στην οθόνη τους.
+export function CrossModuleSection({ tab, role, client, isNew }: CrossModuleProps) {
+  const balance = balanceOf(client.id);
   const content = {
     productions: {
       title: "Παραγωγές",
-      summary: "2 Παραγωγές: 1 σε εξέλιξη, 1 παραδομένη τον τελευταίο μήνα.",
+      summary: productionsSummary(client.id),
       code: "G1",
       link: "Άνοιγμα στη λίστα Παραγωγών",
     },
     chat: {
       title: "Συνομιλία",
-      summary:
-        "Μία Συνομιλία με τον Πελάτη, 3 αδιάβαστα μηνύματα, τελευταίο πριν 2 ώρες.",
+      summary: chatSummary(role, client.id),
       code: "J2",
       link: "Άνοιγμα της Συνομιλίας",
     },
@@ -267,21 +304,25 @@ export function CrossModuleSection({ tab, role, client }: CrossModuleProps) {
     },
     ledger: {
       title: "Καρτέλα Πελάτη",
-      summary: `Τιμολογήθηκαν ${fmtMoney(invoiced)}, εισπράχθηκαν ${fmtMoney(collected)}, υπόλοιπο ${fmtMoney(invoiced - collected)}, ληξιπρόθεσμα ${fmtMoney(overdue)}, προς τιμολόγηση ${fmtMoney(toInvoice)}.`,
+      summary:
+        isNew || ledgerOf(client.id).length === 0
+          ? "Καμία κίνηση ακόμα."
+          : `Υπόλοιπο ${fmtMoney(balance)}, ληξιπρόθεσμα ${fmtMoney(overdueOf(client.id))}, προς τιμολόγηση ${fmtMoney(toInvoiceOf(client.id))}.`,
       code: "I5",
       link: "Άνοιγμα της Καρτέλας Πελάτη",
     },
   }[tab];
-  const hasAccess = SCREENS.some(
-    (screen) => screen.code === content.code && role in screen.access,
-  );
   return (
     <section className="card">
       <h2>{content.title}</h2>
       <p>{content.summary}</p>
       <p>
-        {hasAccess ? (
-          <Link href={screenHref(role, content.code, {})}>{content.link}</Link>
+        {hasScreen(role, content.code) ? (
+          <Link
+            href={screenHref(role, content.code, { client: client.id })}
+          >
+            {content.link}
+          </Link>
         ) : (
           <span className="muted">Η οθόνη {content.code} δεν είναι διαθέσιμη στον ρόλο σου.</span>
         )}{" "}

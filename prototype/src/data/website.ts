@@ -158,8 +158,8 @@ export const WORKS: readonly Work[] = [
     titleEl: "Γυμναστήριο Κίνηση: η επανέναρξη",
     titleEn: "Kinisi Gym: the relaunch",
     summaryEl:
-      "Δώδεκα reels σε έναν μήνα για το νέο πρόγραμμα του γυμναστηρίου.",
-    summaryEn: "Twelve reels in one month for the gym's new programme.",
+      "Οκτώ reels σε έναν μήνα για το νέο πρόγραμμα του γυμναστηρίου.",
+    summaryEn: "Eight reels in one month for the gym's new programme.",
     video: { host: "Vimeo", url: "https://vimeo.com/000000001" },
     cover: "Εξώφυλλο: προπόνηση με φυσικό φως",
     sectorIds: ["sec-social"],
@@ -168,7 +168,7 @@ export const WORKS: readonly Work[] = [
     isFeatured: true,
     consent: given(
       "2026-08-28",
-      "Νίκος Βασιλείου",
+      "Άννα Δημητρίου",
       "Email του Σταύρου Μπαλτά, 28/8",
       "email-kinisi-consent.pdf",
     ),
@@ -176,14 +176,14 @@ export const WORKS: readonly Work[] = [
       challenge:
         "Το γυμναστήριο άνοιγε ξανά μετά από ανακαίνιση και ήθελε να το μάθει η γειτονιά μέσα σε έναν μήνα.",
       solution:
-        "Δύο Γυρίσματα με προπονητές και μέλη, δώδεκα σύντομα reels με ένα σταθερό ύφος.",
+        "Δύο Γυρίσματα με προπονητές και μέλη, οκτώ σύντομα reels με ένα σταθερό ύφος.",
       result: "Όλες οι θέσεις του πρώτου κύκλου γέμισαν πριν την πρεμιέρα.",
     },
     storyEn: {
       challenge:
         "The gym was reopening after a refurbishment and wanted the neighbourhood to know within a month.",
       solution:
-        "Two shoots with trainers and members, twelve short reels in one consistent style.",
+        "Two shoots with trainers and members, eight short reels in one consistent style.",
       result: "Every spot in the first cycle was booked before opening day.",
     },
     isShown: true,
@@ -191,33 +191,33 @@ export const WORKS: readonly Work[] = [
     updated: { when: "2026-09-01", by: "Δημήτρης Ιωάννου" },
   },
   {
-    id: "work-chamogelo",
-    slug: "chamogelo-podcast",
-    titleEl: "Οδοντιατρείο Χαμόγελο: «Πες Τυρί»",
-    titleEn: "Chamogelo Dental: “Say Cheese”",
-    summaryEl: "Ένα podcast με απλές απαντήσεις για τη στοματική υγεία.",
-    summaryEn: "A podcast with plain answers about oral health.",
+    id: "work-kypseli",
+    slug: "kypseli-cafe",
+    titleEl: "Κυψέλη Καφέ: ο καφές της γειτονιάς",
+    titleEn: "Kypseli Café: the neighbourhood coffee",
+    summaryEl: "Μηνιαία reels για το καφέ και τα νέα του κατάστημα.",
+    summaryEn: "Monthly reels for the café and its new shop.",
     video: { host: "YouTube", url: "https://youtube.com/watch?v=0000000002" },
-    cover: "Εξώφυλλο: δύο μικρόφωνα στο στούντιο",
-    sectorIds: ["sec-podcast"],
-    clientId: "hamogelo",
+    cover: "Εξώφυλλο: φλιτζάνι και ατμός στον πάγκο",
+    sectorIds: ["sec-social"],
+    clientId: "kypseli",
     isOwnProduction: false,
     isFeatured: true,
     consent: given(
       "2026-09-04",
-      "Γιώργος Μαυρίδης",
-      "Προφορικά στο Γύρισμα της 4/9, επιβεβαίωση με email",
+      "Άννα Δημητρίου",
+      "Email της Μαρίας Παπαδάκη, 4/9",
     ),
     storyEl: {
       challenge:
-        "Οι ασθενείς έκαναν τις ίδιες ερωτήσεις ξανά και ξανά στο ιατρείο.",
+        "Το καφέ ήθελε να φαίνεται κάθε μήνα στη γειτονιά, χωρίς να χάνει ώρα από τη δουλειά.",
       solution:
-        "Τέσσερα επεισόδια τον μήνα, ένα θέμα το καθένα, με βίντεο για social.",
-      result: "Οι ερωτήσεις στο τηλέφωνο έπεσαν αισθητά μέσα σε τρεις μήνες.",
+        "Δύο Γυρίσματα τον μήνα στον χώρο, οκτώ σύντομα reels έτοιμα για ανάρτηση.",
+      result: "Οι ακόλουθοι διπλασιάστηκαν μέσα σε δύο μήνες.",
     },
     isShown: true,
     order: 2,
-    updated: { when: "2026-09-06", by: "Γιώργος Μαυρίδης" },
+    updated: { when: "2026-09-06", by: "Άννα Δημητρίου" },
   },
   {
     id: "work-armyra",
@@ -240,22 +240,6 @@ export const WORKS: readonly Work[] = [
     updated: { when: "2026-07-20", by: "Νίκος Βασιλείου" },
   },
   {
-    id: "work-meli",
-    slug: "meli-christmas",
-    titleEl: "Ζαχαροπλαστείο Μέλι: Χριστούγεννα",
-    summaryEl: "Η χριστουγεννιάτικη καμπάνια του ζαχαροπλαστείου.",
-    video: { host: "Vimeo", url: "https://vimeo.com/000000004" },
-    cover: "Εξώφυλλο: βιτρίνα με γλυκά",
-    sectorIds: ["sec-social"],
-    clientId: "meli",
-    isOwnProduction: false,
-    isFeatured: false,
-    consent: NONE,
-    isShown: false,
-    order: 4,
-    updated: { when: "2026-09-12", by: "Δημήτρης Ιωάννου" },
-  },
-  {
     id: "work-athina",
     slug: "athina-coffee",
     titleEl: "Καφέ Αθηνά: πρωινός καφές",
@@ -271,21 +255,21 @@ export const WORKS: readonly Work[] = [
       history: [
         {
           action: "δόθηκε",
-          date: "2026-06-10",
-          by: "Άννα Δημητρίου",
-          how: "Email της Μαρίας Σιμιτζή, 10/6",
+          date: "2026-09-02",
+          by: "Νίκος Βασιλείου",
+          how: "Email της Μαρίας Σιμιτζή, 2/9",
         },
         {
           action: "ανακλήθηκε",
           date: "2026-09-15",
-          by: "Άννα Δημητρίου",
+          by: "Νίκος Βασιλείου",
           how: "Τηλεφώνησε η Μαρία Σιμιτζή: αλλάζουν brand",
         },
       ],
     },
     isShown: false,
     order: 5,
-    updated: { when: "2026-09-15", by: "Άννα Δημητρίου" },
+    updated: { when: "2026-09-15", by: "Νίκος Βασιλείου" },
   },
   {
     id: "work-showreel",
@@ -314,22 +298,38 @@ export const LOGOS: readonly ClientLogo[] = [
     image: "kinisi.svg",
     consent: given(
       "2026-08-28",
-      "Νίκος Βασιλείου",
+      "Άννα Δημητρίου",
       "Μαζί με τη Συναίνεση της Δουλειάς",
     ),
     isShown: true,
     order: 1,
-    updated: { when: "2026-08-28", by: "Νίκος Βασιλείου" },
+    updated: { when: "2026-08-28", by: "Άννα Δημητρίου" },
   },
   {
-    id: "logo-chamogelo",
-    clientName: "Οδοντιατρείο Χαμόγελο",
-    clientId: "hamogelo",
-    image: "chamogelo.svg",
-    consent: given("2026-09-04", "Γιώργος Μαυρίδης", "Email, 4/9"),
-    isShown: true,
+    id: "logo-athina",
+    clientName: "Καφέ Αθηνά",
+    clientId: "athina",
+    image: "athina.svg",
+    consent: {
+      isGiven: false,
+      history: [
+        {
+          action: "δόθηκε",
+          date: "2026-09-02",
+          by: "Νίκος Βασιλείου",
+          how: "Email της Μαρίας Σιμιτζή, 2/9",
+        },
+        {
+          action: "ανακλήθηκε",
+          date: "2026-09-15",
+          by: "Νίκος Βασιλείου",
+          how: "Τηλεφώνησε η Μαρία Σιμιτζή: αλλάζουν brand",
+        },
+      ],
+    },
+    isShown: false,
     order: 2,
-    updated: { when: "2026-09-04", by: "Γιώργος Μαυρίδης" },
+    updated: { when: "2026-09-15", by: "Νίκος Βασιλείου" },
   },
   {
     id: "logo-armyra",
@@ -347,7 +347,7 @@ export const LOGOS: readonly ClientLogo[] = [
   },
   {
     id: "logo-kypseli",
-    clientName: "Κυψέλη Μελισσοκομική",
+    clientName: "Κυψέλη Καφέ",
     clientId: "kypseli",
     image: "kypseli.svg",
     consent: NONE,
@@ -454,7 +454,7 @@ export const FORM_LIMITS = {
 };
 
 // Αρχείο συναινέσεων cookies (δείγμα): ανά επιλογή, ημερομηνία και έκδοση πολιτικής.
-export const COOKIE_POLICY_VERSION = "1.0 · 2026-10-01";
+export const COOKIE_POLICY_VERSION = "1.0 · 2026-09-01";
 
 export const COOKIE_CATEGORIES = [
   {

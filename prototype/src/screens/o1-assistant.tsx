@@ -53,7 +53,11 @@ export function AssistantCard({ role, query }: O1CardProps) {
       <p className="muted o-hint">
         Τρέχουσα χρήση: ${ASSISTANT.monthlyUsed.toFixed(2)} από $
         {ASSISTANT.monthlyCap}.{" "}
-        <Link href={screenHref(role, "N5", {})}>Συνδρομές (N5)</Link> ·{" "}
+        {role === "owner" && (
+          <>
+            <Link href={screenHref(role, "N5", {})}>Συνδρομές (N5)</Link> ·{" "}
+          </>
+        )}
         <Link href={screenHref(role, "P2", {})}>Υγεία συστήματος (P2)</Link>
       </p>
       <SaveRow role={role} query={query} code="O1" card="assistant" />

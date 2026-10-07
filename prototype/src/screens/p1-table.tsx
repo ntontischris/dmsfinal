@@ -6,6 +6,13 @@ import type { SettingsCaps } from "@/data/settings-access";
 import { fmtDateTime } from "@/screens/n5-integrations";
 import { screenHref } from "@/screens/shared";
 
+// Οι οθόνες αυτές δεν ανοίγουν για τη Διαχείριση: εκεί το Στοιχείο μένει απλό κείμενο.
+const OWNER_ONLY_SCREENS: readonly string[] = ["I3", "N4", "N5"];
+
+const canLink = (role: RoleId, entry: AuditEntry): boolean =>
+  !!entry.subjectHref &&
+  (role === "owner" || !OWNER_ONLY_SCREENS.includes(entry.subjectHref));
+
 // Ποσά και κόστος κρύβονται ανά Δικαίωμα· η γραμμή μένει πάντα.
 const hiddenLabel = (entry: AuditEntry, caps: SettingsCaps): string | null => {
   if (entry.sensitivity === "amount" && !caps.seesAmounts)
@@ -58,8 +65,10 @@ export function AuditTable({ role, caps, entries }: Props) {
               <td data-label="Ποιος">{e.actor}</td>
               <td data-label="Περιοχή">{AREA_LABELS[e.area]}</td>
               <td data-label="Στοιχείο">
-                {e.subjectHref ? (
-                  <Link href={screenHref(role, e.subjectHref, {})}>
+                {e.subjectHref && canLink(role, e) ? (
+                  <Link
+                    href={screenHref(role, e.subjectHref, e.subjectQuery ?? {})}
+                  >
                     {e.subject}
                   </Link>
                 ) : (

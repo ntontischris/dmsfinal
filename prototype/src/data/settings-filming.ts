@@ -1,4 +1,7 @@
 // Ψεύτικα δεδομένα της Ρυθμίσεων › Γυρίσματα (O4). Αρχικές τιμές από τον πίνακα του κεφ. 5.
+// Ωράριο, Χωρητικότητα, διάρκειες και βήμα είναι οι ίδιες τιμές με το BOOKING_HOURS του filming.ts.
+
+import { FILMINGS, OPEN_STATES } from "@/data/filming";
 
 export interface FilmingRule {
   id: string;
@@ -19,8 +22,10 @@ export const FILMING_RULES: readonly FilmingRule[] = [
   { id: "done-mark", label: "Το «έγινε» μπαίνει", options: ["με το χέρι, με τις πραγματικές ώρες", "αυτόματα στη λήξη"], value: "με το χέρι, με τις πραγματικές ώρες" },
 ];
 
-// Αριθμός κλεισμένων Γυρισμάτων που δεν αλλάζουν με νέο κανόνα.
-export const RULES_AFFECTED = 4;
+// Αριθμός ανοιχτών Γυρισμάτων που δεν αλλάζουν με νέο κανόνα.
+export const RULES_AFFECTED = FILMINGS.filter((filming) =>
+  OPEN_STATES.includes(filming.state),
+).length;
 
 export interface WeekDay {
   id: string;
@@ -34,28 +39,28 @@ export interface WeekDay {
 export const DEFAULT_CAPACITY = 2;
 
 export const WEEK: readonly WeekDay[] = [
-  { id: "mon", label: "Δευτέρα", isOpen: true, from: "09:00", to: "17:00", capacity: 2 },
-  { id: "tue", label: "Τρίτη", isOpen: true, from: "09:00", to: "17:00", capacity: 2 },
-  { id: "wed", label: "Τετάρτη", isOpen: true, from: "09:00", to: "17:00", capacity: 2 },
-  { id: "thu", label: "Πέμπτη", isOpen: true, from: "09:00", to: "17:00", capacity: 2 },
-  { id: "fri", label: "Παρασκευή", isOpen: true, from: "09:00", to: "17:00", capacity: 1 },
-  { id: "sat", label: "Σάββατο", isOpen: false, from: "", to: "", capacity: 0 },
+  { id: "mon", label: "Δευτέρα", isOpen: true, from: "09:00", to: "19:00", capacity: 2 },
+  { id: "tue", label: "Τρίτη", isOpen: true, from: "09:00", to: "19:00", capacity: 2 },
+  { id: "wed", label: "Τετάρτη", isOpen: true, from: "09:00", to: "19:00", capacity: 2 },
+  { id: "thu", label: "Πέμπτη", isOpen: true, from: "09:00", to: "19:00", capacity: 2 },
+  { id: "fri", label: "Παρασκευή", isOpen: true, from: "09:00", to: "19:00", capacity: 2 },
+  { id: "sat", label: "Σάββατο", isOpen: true, from: "10:00", to: "15:00", capacity: 2 },
   { id: "sun", label: "Κυριακή", isOpen: false, from: "", to: "", capacity: 0 },
 ];
 
 export interface DayException {
   id: string;
   date: string;
-  state: "κλειστό" | "ανοιχτό";
+  state: "κλειστό" | "ανοιχτό" | "Χωρητικότητα 1";
   reason: string;
 }
 
 export const DAY_EXCEPTIONS: readonly DayException[] = [
-  { id: "x1", date: "2026-10-02", state: "κλειστό", reason: "εκδήλωση ομάδας" },
+  { id: "x1", date: "2026-09-30", state: "Χωρητικότητα 1", reason: "σεμινάριο ομάδας" },
 ];
 
-export const ALLOWED_DURATIONS: readonly string[] = ["1 ώρα", "2 ώρες", "4 ώρες", "ολοήμερο"];
-export const START_STEP = "30 λεπτά";
+export const ALLOWED_DURATIONS: readonly string[] = ["2 ώρες", "3 ώρες", "4 ώρες"];
+export const START_STEP = "60 λεπτά";
 
 export interface Holiday {
   id: string;

@@ -46,7 +46,9 @@ const contextOf = (
       role === "client"
         ? null
         : screenHref(role, "B2", { id: agreement.clientId }),
-    opportunity: opportunity
+    // Η Ευκαιρία (B4) ανοίγει μόνο για Ιδιοκτήτη, Διαχείριση και Πωλήσεις.
+    opportunity:
+      opportunity && ["owner", "admin", "sales"].includes(role)
       ? {
           title: opportunity.title,
           href: screenHref(role, "B4", { id: opportunity.id }),

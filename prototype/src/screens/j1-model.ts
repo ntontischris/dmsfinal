@@ -32,8 +32,9 @@ export const parseTab = (value: string | undefined): InboxTab =>
 export const parseView = (
   role: RoleId,
   value: string | undefined,
+  isSolo = false,
 ): RequestView => {
-  const views = requestViewsOf(role);
+  const views = requestViewsOf(role, isSolo);
   return views.find((v) => VIEW_KEYS[v] === value) ?? views[0];
 };
 

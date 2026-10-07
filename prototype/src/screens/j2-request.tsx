@@ -7,6 +7,7 @@ import type { CreatedLink, Message, MessageRequest } from "@/data/messages";
 import {
   MENTIONABLE,
   canHandleRequest,
+  canOpenScreen,
   daysOpen,
   isStale,
   messageCapsOf,
@@ -25,6 +26,7 @@ interface BoxProps {
 
 function LinkView({ role, link }: { role: RoleId; link: CreatedLink }) {
   if (link.params.url) return <a href={link.params.url}>{link.label}</a>;
+  if (!canOpenScreen(role, link.code)) return <>{link.label}</>;
   return (
     <Link href={screenHref(role, link.code, link.params)}>{link.label}</Link>
   );
@@ -97,11 +99,11 @@ function RequestActions({ role, message, onChange }: BoxProps) {
           Η απόφαση (δεκτό ως γύρος, χρεώνεται ή νέο Παραδοτέο) παίρνεται στη
           σελίδα του Παραδοτέου και κλείνει το Αίτημα.
         </p>
-        {request.deliverableId && (
+        {request.deliverableId && canOpenScreen(role, "H2") && (
           <Link
             className="button"
             href={screenHref(role, "H2", {
-              deliverable: request.deliverableId,
+              id: request.deliverableId,
             })}
           >
             Άνοιγμα Παραδοτέου

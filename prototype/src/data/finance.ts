@@ -3,6 +3,8 @@
 // Τα ποσά των Τιμολογητέων είναι καθαρά (χωρίς ΦΠΑ)· Τιμολόγια και Εισπράξεις έχουν και ΦΠΑ.
 // Πηγές: κεφ. 3.7, «Λεπτομέρειες κανόνων: Οικονομικά», κεφ. 3.3 (μοντέλο κόστους), ADR 0004, ADR 0017.
 
+import { BANK_ACCOUNTS, COMPANY } from "@/data/settings-company";
+
 export type BillableReason =
   | "Περίοδος"
   | "ορόσημο"
@@ -71,10 +73,13 @@ export const methodName = (id: string): string =>
   PAYMENT_METHODS.find((m) => m.id === id)?.name ?? "—";
 
 // Στοιχεία πληρωμής της εταιρείας (τα αλλάζει μόνο ο Ιδιοκτήτης). Φανταστικά.
+const DEFAULT_ACCOUNT =
+  BANK_ACCOUNTS.find((account) => account.isDefault) ?? BANK_ACCOUNTS[0];
+
 export const COMPANY_PAYMENT = {
-  beneficiary: "Φανταστική Παραγωγές Ο.Ε.",
-  bank: "Τράπεζα Παράδειγμα",
-  iban: "GR00 0000 0000 0000 0000 0000 000",
+  beneficiary: COMPANY.name,
+  bank: DEFAULT_ACCOUNT.bank,
+  iban: DEFAULT_ACCOUNT.iban,
 };
 
 // Υπενθύμιση για ανοιχτό Τιμολογητέο (Γεγονός 56): στις 7 και στις 14 μέρες.
@@ -241,7 +246,7 @@ export const INVOICES: readonly Invoice[] = [
       id: "inv-kin-71",
       clientId: "kinisi",
       kind: "τιμολόγιο",
-      number: "Α-71",
+      number: "Α-64",
       issueDate: "2026-09-02",
       dueDate: "2026-09-17",
       net: 1400,
@@ -259,7 +264,7 @@ export const INVOICES: readonly Invoice[] = [
     id: "inv-kin-72",
     clientId: "kinisi",
     kind: "πιστωτικό",
-    number: "ΠΙΣ-72",
+    number: "ΠΙΣ-65",
     issueDate: "2026-09-05",
     net: 100,
     creditFor: "inv-kin-71",

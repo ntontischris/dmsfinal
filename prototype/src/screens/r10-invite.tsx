@@ -15,19 +15,19 @@ interface Invite {
 }
 
 const TEAM_INVITE: Invite = {
-  by: "Γιώργος Μαυρίδης",
+  by: "Δημήτρης Ιωάννου",
   whereEl: "την ομάδα της Delta Films",
   whereEn: "the Delta Films team",
-  name: "Νίκος Ιωάννου",
-  email: "nikos@example.com",
+  name: "Κατερίνα Μιχαηλίδου",
+  email: "katerina@example.com",
 };
 
 const CLIENT_INVITE: Invite = {
   by: "Μαρία Παπαδάκη",
-  whereEl: "τον Πελάτη «Κυψέλη Μελισσοκομική»",
-  whereEn: "the client «Κυψέλη Μελισσοκομική»",
-  name: "Σοφία Κυριακού",
-  email: "sofia@kypseli.example",
+  whereEl: "τον Πελάτη «Κυψέλη Καφέ»",
+  whereEn: "the client «Κυψέλη Καφέ»",
+  name: "Χαρά Τσολάκη",
+  email: "chara@example.com",
 };
 
 export const pickInvite = (who: string | undefined): Invite =>
@@ -152,7 +152,10 @@ export function InviteDone({
           `Welcome, ${invite.name}. You now belong to ${invite.whereEn}.`,
         )}
       </p>
-      <Link className="site-button" href={screenHref(role, "A1", {})}>
+      <Link
+        className="site-button"
+        href={screenHref(who === "client" ? "client" : "production", "A1", {})}
+      >
         {tr(lang, "Στο σύστημα →", "To the app →")}
       </Link>
     </AuthCard>
