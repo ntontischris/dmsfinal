@@ -1,0 +1,25 @@
+/* Δημόσιες σελίδες περιεχομένου (R1–R6). Μόνο tokens του globals.css. */
+.rc-hero { padding: var(--space-6) 0 var(--space-5); border-bottom: 1px solid var(--color-border); }
+.rc-hero h2 { font-size: clamp(2rem, 1.2rem + 4vw, 4rem); line-height: 1.02; letter-spacing: -0.02em; max-width: 18ch; margin-bottom: var(--space-4); overflow-wrap: anywhere; }
+.rc-hero p { font-size: var(--text-lg); color: var(--color-text-muted); max-width: 40rem; margin-bottom: var(--space-4); }
+.rc-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+.rc-eyebrow { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-text-muted); margin-bottom: var(--space-3); }
+.rc-h { font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--space-4); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+.rc-tile-title { font-weight: 700; font-size: var(--text-lg); margin-bottom: var(--space-1); }
+.rc-muted { color: var(--color-text-muted); font-size: var(--text-sm); }
+.rc-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.rc-chip { display: inline-block; text-decoration: none; border: 1px solid var(--color-border); border-radius: 999px; padding: var(--space-1) var(--space-3); font-size: var(--text-sm); }
+.rc-chip[aria-current='true'] { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+.rc-logos { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-4) 0; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+.rc-logo { padding: var(--space-2) var(--space-4); background: var(--color-surface); border-radius: var(--radius); font-weight: 600; }
+.rc-price { font-size: var(--text-lg); font-weight: 700; margin: var(--space-3) 0; }
+.rc-cta { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-6) var(--space-4); text-align: center; }
+.rc-cta h3 { font-size: clamp(1.4rem, 1rem + 2vw, 2.2rem); margin-bottom: var(--space-4); }
+.rc-player { aspect-ratio: 16 / 9; background: var(--color-text); color: var(--color-bg); border-radius: var(--radius); display: grid; place-items: center; text-align: center; padding: var(--space-4); margin-bottom: var(--space-3); overflow-wrap: anywhere; }
+.rc-story { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
+.rc-story h4 { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-2); }
+.rc-avatar { aspect-ratio: 1; background: var(--color-surface-raised); border-radius: var(--radius); display: grid; place-items: center; font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-3); }
+.rc-error { text-align: center; padding: var(--space-6) var(--space-4); }
+.rc-error h2 { font-size: var(--text-lg); margin-bottom: var(--space-3); }
+.rc-prose { max-width: 40rem; font-size: var(--text-lg); }
+.rc-prose p { margin-bottom: var(--space-3); }

@@ -1,0 +1,19 @@
+/* Διαχείριση Ιστοσελίδας (Q1–Q4). Μόνο tokens του globals.css. */
+.q-reasons { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.q-order { display: inline-flex; gap: var(--space-1); }
+.q-order .button { padding: 0 var(--space-2); }
+.q-switch { display: inline-flex; gap: var(--space-2); align-items: center; font-size: var(--text-sm); }
+.q-switch[data-locked='true'] { color: var(--color-text-muted); }
+.q-field { display: grid; gap: var(--space-1); font-size: var(--text-sm); margin-bottom: var(--space-3); }
+.q-field .input { width: 100%; max-width: 36rem; }
+.q-field textarea.input { min-height: 4.5rem; }
+.q-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+@media (max-width: 40rem) { .q-pair { grid-template-columns: 1fr; } }
+.q-checks { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
+.q-checks li { padding: var(--space-2) 0; border-top: 1px solid var(--color-border); font-size: var(--text-sm); }
+.q-checks li:first-child { border-top: 0; }
+.q-check { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.q-preview { max-width: 20rem; }
+.q-hint { color: var(--color-text-muted); font-size: var(--text-sm); }
+.q-auto { border-color: var(--color-attention); }
+.q-hist li[data-action='ανακλήθηκε'] { color: var(--color-attention); }

@@ -1,0 +1,38 @@
+/* R7, R8, R11, R12 και τα κοινά τους (φόρμα, cookies, widget). Μόνο tokens του globals.css. */
+.r-form-note { font-size: var(--text-sm); color: var(--color-text-muted); }
+.r-field-error { color: var(--color-text); font-size: var(--text-sm); font-weight: 600; }
+.r-alert { border: 1px solid var(--color-text); border-radius: var(--radius); padding: var(--space-3); font-size: var(--text-sm); display: grid; gap: var(--space-2); }
+.r-checks { display: grid; gap: var(--space-1); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); margin: 0; }
+.r-checks legend { font-size: var(--text-sm); padding: 0 var(--space-1); }
+.r-checks label { display: flex; gap: var(--space-2); align-items: center; }
+.r-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--space-6); align-items: start; }
+.r-box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-4); display: grid; gap: var(--space-2); }
+.r-box h3, .r-box h4 { margin: 0; }
+.r-box ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); }
+.r-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.r-tabs a { text-decoration: none; border: 1px solid var(--color-border); border-radius: 999px; padding: var(--space-1) var(--space-3); font-size: var(--text-sm); }
+.r-tabs a[aria-current='page'] { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+.r-scroll { overflow-x: auto; }
+.r-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.r-table th, .r-table td { text-align: left; vertical-align: top; padding: var(--space-2); border-bottom: 1px solid var(--color-border); }
+.r-doc h3 { margin: var(--space-4) 0 var(--space-1); }
+.r-doc p { max-width: 42rem; margin: 0; }
+.r-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
+.r-cookie { border-top: 1px solid var(--color-border); background: var(--color-surface-raised); padding: var(--space-4); display: grid; gap: var(--space-3); }
+.r-cookie-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.r-cookie-actions .site-button { min-width: 8rem; text-align: center; }
+.r-cookie-cats { display: grid; gap: var(--space-2); }
+.r-cookie-cats label { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); }
+.r-log { font-family: var(--font-mono, monospace); font-size: var(--text-sm); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); overflow-x: auto; white-space: pre; }
+.r-chat { max-width: 28rem; margin: 0 auto; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); display: grid; }
+.r-chat-head { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); font-weight: 600; display: flex; justify-content: space-between; gap: var(--space-2); }
+.r-chat-body { padding: var(--space-4); display: grid; gap: var(--space-3); }
+.r-msg { max-width: 90%; padding: var(--space-2) var(--space-3); border-radius: var(--radius); border: 1px solid var(--color-border); font-size: var(--text-sm); display: grid; gap: var(--space-2); }
+.r-msg[data-from='me'] { justify-self: end; background: var(--color-surface-raised); }
+.r-sources { font-size: var(--text-sm); color: var(--color-text-muted); display: grid; gap: var(--space-1); }
+.r-sources div { border-left: 2px solid var(--color-border); padding-left: var(--space-2); }
+.r-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.r-chips a { text-decoration: none; border: 1px solid var(--color-border); border-radius: 999px; padding: var(--space-1) var(--space-3); font-size: var(--text-sm); }
+.r-chat-input { display: flex; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-border); align-items: center; }
+.r-chat-input .input { flex: 1; min-width: 0; padding: var(--space-2) var(--space-3); }
+.r-chat-foot { padding: var(--space-2) var(--space-4) var(--space-3); font-size: var(--text-sm); color: var(--color-text-muted); }
