@@ -70,13 +70,7 @@ const backbone = (
     screens,
   );
 
-export const OPEN_DECISIONS: readonly OpenDecision[] = [
-  ch8(
-    17,
-    "Κάρτες «Σήμερα»: ποια είναι η προεπιλεγμένη σειρά και σύνθεση ανά Ρόλο;",
-    ["A1"],
-  ),
-];
+export const OPEN_DECISIONS: readonly OpenDecision[] = [];
 
 export const decisionsFor = (code: string): readonly OpenDecision[] =>
   OPEN_DECISIONS.filter((decision) => decision.screens.includes(code));

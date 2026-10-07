@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 
+import { A1 } from "@/screens/A1";
 import { A2 } from "@/screens/A2";
 import { A3 } from "@/screens/A3";
 import { A4 } from "@/screens/A4";
@@ -75,6 +76,7 @@ import type { ScreenProps } from "@/screens/shared";
 export const SCREEN_CONTENT: Readonly<
   Record<string, ComponentType<ScreenProps>>
 > = {
+  A1,
   A2,
   A3,
   A4,
