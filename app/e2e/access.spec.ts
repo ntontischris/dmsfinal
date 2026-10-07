@@ -29,7 +29,7 @@ test("λάθος κωδικός: μήνυμα που δεν αποκαλύπτε
   await page.getByLabel("Email", { exact: true }).fill("owner@example.com");
   await page.getByLabel("Κωδικός").fill("λάθος-κωδικός");
   await page.getByRole("button", { name: "Είσοδος" }).click();
-  await expect(page.getByRole("alert")).toHaveText("Λάθος email ή κωδικός.");
+  await expect(page.getByRole("alert").filter({ hasText: "Λάθος" })).toHaveText("Λάθος email ή κωδικός.");
   await shot(page, "login-error");
 });
 

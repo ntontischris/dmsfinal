@@ -21,6 +21,7 @@ export default defineConfig({
     command: "pnpm start -p 3000",
     url: "http://localhost:3000/login",
     reuseExistingServer: false,
+    stdout: "pipe",
     timeout: 60_000,
   },
 });

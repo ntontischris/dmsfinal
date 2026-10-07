@@ -31,7 +31,11 @@ export async function signInWithPassword(_: FormState, form: FormData): Promise<
   if (!supabase) return UNCONFIGURED;
 
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: "Λάθος email ή κωδικός." };
+  if (error) {
+    // Μόνο ο κωδικός του σφάλματος στα logs, ποτέ το email.
+    console.error("signInWithPassword", error.status, error.code);
+    return { error: "Λάθος email ή κωδικός." };
+  }
   const { error: claimError } = await supabase.rpc("claim_first_owner");
   if (claimError) console.error("claim_first_owner", claimError.message);
   redirect(safeNext(String(form.get("next") ?? "")));
