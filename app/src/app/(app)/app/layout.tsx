@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { visibleNav } from "@/components/shell/nav";
 import { SidebarNav } from "@/components/shell/sidebar-nav";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
-import { SignOutButton, getViewer, type Viewer } from "@/modules/access";
+import { SignOutButton, can, getViewer, isOwner, type Viewer } from "@/modules/access";
 
 // Μια γραμμή κάτω από τη μπάρα όταν κάτι δεν επιτρέπει την κανονική δουλειά.
 function ViewerNotice({ viewer }: { viewer: Viewer }) {
@@ -27,6 +28,10 @@ function ViewerNotice({ viewer }: { viewer: Viewer }) {
 // Το κέλυφος του συστήματος (πίσω από το /login): μπάρα με τη «λυχνία», πλαϊνή πλοήγηση, περιεχόμενο.
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const viewer = await getViewer();
+  // Χωρίς βάση φαίνονται όλες οι οθόνες, για να περιηγείται κανείς το σύστημα· η καθεμία λέει ότι λείπει η βάση.
+  const sections = visibleNav((requirement) =>
+    viewer.status === "unconfigured" ? true : requirement === "owner" ? isOwner(viewer) : can(viewer, requirement),
+  );
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b bg-card px-4 py-2">
@@ -53,7 +58,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <ViewerNotice viewer={viewer} />
       <div className="grid md:grid-cols-[15rem_1fr]">
         <aside className="order-2 border-t bg-card p-3 md:order-none md:min-h-[calc(100dvh-3rem)] md:border-t-0 md:border-r">
-          <SidebarNav />
+          <SidebarNav sections={sections} />
         </aside>
         <main className="w-full min-w-0 max-w-6xl p-4 md:p-6">{children}</main>
       </div>

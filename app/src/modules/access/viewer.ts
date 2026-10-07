@@ -4,17 +4,42 @@ import { z } from "zod";
 
 import { createSupabase } from "@/lib/supabase/server";
 
+import { isScope, type Grants } from "./permissions";
+
 // Ποιος βλέπει τη σελίδα. Μία φορά ανά αίτημα (cache), όσες οθόνες κι αν το ρωτήσουν.
+export interface TeamMember {
+  name: string;
+  isOwner: boolean;
+  permissions: Grants;
+}
+
 export type Viewer =
   | { status: "unconfigured" }
   | { status: "anonymous" }
-  | { status: "signed-in"; userId: string; email: string; team: { name: string; isOwner: boolean } | null };
+  | {
+      status: "signed-in";
+      userId: string;
+      email: string;
+      team: TeamMember | null;
+    };
 
 // Ο Χρήστης ομάδας με τους Ρόλους του, όπως τον επιστρέφει η βάση (η RLS δείχνει μόνο ό,τι επιτρέπεται).
 const memberSchema = z.object({
   name: z.string(),
-  team_user_roles: z.array(z.object({ roles: z.object({ is_owner: z.boolean() }).nullable() })),
+  team_user_roles: z.array(
+    z.object({ roles: z.object({ is_owner: z.boolean() }).nullable() }),
+  ),
 });
+const permissionsSchema = z.array(
+  z.object({ permission: z.string(), scope: z.string() }),
+);
+
+const toGrants = (rows: z.infer<typeof permissionsSchema>): Grants =>
+  Object.fromEntries(
+    rows.flatMap((row) =>
+      isScope(row.scope) ? [[row.permission, row.scope]] : [],
+    ),
+  );
 
 export const getViewer = cache(async (): Promise<Viewer> => {
   // Η συνεδρία διαβάζεται πάντα τη στιγμή του αιτήματος, ποτέ στο build.
@@ -25,21 +50,42 @@ export const getViewer = cache(async (): Promise<Viewer> => {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { status: "anonymous" };
 
-  const { data, error } = await supabase
-    .from("team_users")
-    .select("name, team_user_roles(roles(is_owner))")
-    .eq("user_id", auth.user.id)
-    .eq("is_active", true)
-    .maybeSingle();
-  if (error) console.error("getViewer: team_users", error.message);
+  const [memberResult, permissionsResult] = await Promise.all([
+    supabase
+      .from("team_users")
+      .select("name, team_user_roles(roles(is_owner))")
+      .eq("user_id", auth.user.id)
+      .eq("is_active", true)
+      .maybeSingle(),
+    supabase.rpc("my_permissions"),
+  ]);
+  if (memberResult.error)
+    console.error("getViewer: team_users", memberResult.error.message);
+  if (permissionsResult.error)
+    console.error("getViewer: my_permissions", permissionsResult.error.message);
 
-  const member = memberSchema.safeParse(data);
+  const member = memberSchema.safeParse(memberResult.data);
+  const permissions = permissionsSchema.safeParse(permissionsResult.data ?? []);
   return {
     status: "signed-in",
     userId: auth.user.id,
     email: auth.user.email ?? "",
     team: member.success
-      ? { name: member.data.name, isOwner: member.data.team_user_roles.some((row) => row.roles?.is_owner === true) }
+      ? {
+          name: member.data.name,
+          isOwner: member.data.team_user_roles.some(
+            (row) => row.roles?.is_owner === true,
+          ),
+          permissions: permissions.success ? toGrants(permissions.data) : {},
+        }
       : null,
   };
 });
+
+// Ο Χρήστης ομάδας έχει αυτό το Δικαίωμα (με οποιοδήποτε Εύρος); Για την οθόνη μόνο· αποφασίζει η βάση.
+export const can = (viewer: Viewer, permission: string): boolean =>
+  viewer.status === "signed-in" &&
+  viewer.team?.permissions[permission] !== undefined;
+
+export const isOwner = (viewer: Viewer): boolean =>
+  viewer.status === "signed-in" && viewer.team?.isOwner === true;

@@ -13,7 +13,8 @@
     "check:modules": "node scripts/check-modules.mjs",
     "check:design": "node scripts/check-design.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
-    "check": "pnpm check:modules && pnpm check:design && pnpm check:secrets"
+    "check": "pnpm check:modules && pnpm check:design && pnpm check:secrets",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -27,6 +28,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22",
     "@types/react": "^19.3.0",
