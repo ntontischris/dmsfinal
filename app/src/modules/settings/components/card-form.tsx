@@ -1,16 +1,18 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
-import { INITIAL_FORM_STATE, type FormState } from "@/lib/form-state";
+import type { FormState } from "@/lib/form-state";
+import { useKeptForm } from "@/lib/use-kept-form";
 
 interface CardFormProps {
   action: (state: FormState, form: FormData) => Promise<FormState>;
   version?: string; // updated_at που είδε ο Χρήστης: αν άλλαξε στο μεταξύ, η αποθήκευση το λέει
   isLocked?: boolean;
   submitLabel?: string;
+  resetOnSuccess?: boolean; // για φόρμες «νέο …»: αδειάζει μετά την επιτυχία
   children: ReactNode;
 }
 
@@ -20,14 +22,12 @@ export function CardForm({
   version,
   isLocked = false,
   submitLabel = "Αποθήκευση",
+  resetOnSuccess = false,
   children,
 }: CardFormProps) {
-  const [state, formAction, isSaving] = useActionState(
-    action,
-    INITIAL_FORM_STATE,
-  );
+  const { state, isPending: isSaving, onSubmit: formAction, formRef: formActionRef } = useKeptForm(action, { resetOnSuccess });
   return (
-    <form action={formAction} className="grid gap-3">
+    <form ref={formActionRef} onSubmit={formAction} className="grid gap-3">
       {version && <input type="hidden" name="version" value={version} />}
       <fieldset
         disabled={isLocked}

@@ -1,11 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
-import { INITIAL_FORM_STATE } from "@/lib/form-state";
+import { useKeptForm } from "@/lib/use-kept-form";
 
 import { openToClients, setReadinessConfirmation } from "../actions";
 
@@ -17,12 +15,9 @@ export function ConfirmItemForm({
   item: string;
   isDone: boolean;
 }) {
-  const [state, action, isSaving] = useActionState(
-    setReadinessConfirmation,
-    INITIAL_FORM_STATE,
-  );
+  const { state, isPending: isSaving, onSubmit: action, formRef: actionRef } = useKeptForm(setReadinessConfirmation);
   return (
-    <form action={action} className="grid justify-items-end gap-1">
+    <form ref={actionRef} onSubmit={action} className="grid justify-items-end gap-1">
       <input type="hidden" name="item" value={item} />
       <input type="hidden" name="confirmed" value={isDone ? "false" : "true"} />
       <Button
@@ -40,10 +35,7 @@ export function ConfirmItemForm({
 
 // «Άνοιγμα σε πελάτες»: μία φορά, δεν αναιρείται. Θέλει να γραφτεί η λέξη, για να μη γίνει κατά λάθος.
 export function OpenToClientsForm({ pending }: { pending: number }) {
-  const [state, action, isOpening] = useActionState(
-    openToClients,
-    INITIAL_FORM_STATE,
-  );
+  const { state, isPending: isOpening, onSubmit: action, formRef: actionRef } = useKeptForm(openToClients);
   if (pending > 0)
     return (
       <p className="m-0 text-sm text-muted-foreground">
@@ -52,7 +44,7 @@ export function OpenToClientsForm({ pending }: { pending: number }) {
       </p>
     );
   return (
-    <form action={action} className="grid max-w-md gap-3">
+    <form ref={actionRef} onSubmit={action} className="grid max-w-md gap-3">
       <p className="m-0 text-sm">
         Από τη στιγμή του ανοίγματος φεύγουν emails προς πελάτες, ανοίγουν οι
         δημόσιες φόρμες και οι προσκλήσεις πελατών. Δεν αναιρείται.

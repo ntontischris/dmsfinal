@@ -1,13 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input, Select } from "@/components/ui/field";
+import { useKeptForm } from "@/lib/use-kept-form";
 
 import type { RoleKind, RoleSummary } from "../queries";
-import { INITIAL_FORM_STATE } from "../schemas";
 import { createRole } from "../team-actions";
 
 // N4 Νέος Ρόλος: από το μηδέν ή ως «Αντίγραφο του…». Το είδος δεν αλλάζει μετά.
@@ -18,12 +16,9 @@ export function NewRoleForm({
   kind: RoleKind;
   sources: readonly RoleSummary[];
 }) {
-  const [state, action, isSaving] = useActionState(
-    createRole,
-    INITIAL_FORM_STATE,
-  );
+  const { state, isPending: isSaving, onSubmit: action, formRef: actionRef } = useKeptForm(createRole);
   return (
-    <form action={action} className="grid max-w-md gap-3">
+    <form ref={actionRef} onSubmit={action} className="grid max-w-md gap-3">
       <input type="hidden" name="kind" value={kind} />
       <Field
         label="Όνομα"

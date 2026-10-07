@@ -63,7 +63,7 @@ export function BankAccountsCard({
             <p className="kit-label m-0">Νέος λογαριασμός</p>
             <CardForm
               action={addBankAccount}
-              submitLabel="Προσθήκη λογαριασμού"
+              submitLabel="Προσθήκη λογαριασμού" resetOnSuccess
             >
               <Field label="Τράπεζα">
                 <Input name="bank_name" required />

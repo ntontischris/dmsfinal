@@ -1,14 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
+import { useKeptForm } from "@/lib/use-kept-form";
 
 import type { PermissionDef, RoleSummary } from "../queries";
-import { INITIAL_FORM_STATE } from "../schemas";
 import { saveRole } from "../team-actions";
 
 interface Choice {
@@ -81,14 +79,11 @@ interface RoleEditorProps {
 
 // N4: όνομα, περιγραφή και Δικαιώματα ενός Ρόλου. Ο Ιδιοκτήτης είναι κλειδωμένος: έχει πάντα «Όλα».
 export function RoleEditor({ role, permissions }: RoleEditorProps) {
-  const [state, action, isSaving] = useActionState(
-    saveRole,
-    INITIAL_FORM_STATE,
-  );
+  const { state, isPending: isSaving, onSubmit: action, formRef: actionRef } = useKeptForm(saveRole);
   const areas = [...new Set(permissions.map((p) => p.area))];
   const holders = role.holders.length;
   return (
-    <form action={action} className="grid gap-4">
+    <form ref={actionRef} onSubmit={action} className="grid gap-4">
       <input type="hidden" name="id" value={role.id} />
       <Panel label="Ρόλος">
         <div className="grid gap-3">
