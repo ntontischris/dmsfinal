@@ -100,6 +100,8 @@ export function G2({ role, query }: ScreenProps) {
   const tasks = isEmpty ? [] : tasksOf(production.id);
   const internal = isInternal(production);
   const agreement = agreementOf(production);
+  // Πελάτες (B2) και Συμφωνίες (D2) δεν ανοίγουν για Παραγωγή και πελάτη.
+  const canOpenCrm = !caps.isClient && role !== "production";
   const taskOpen = (id: string) =>
     tasks.filter((t) => t.assigneeId === id && !t.doneAt).length;
   const initial: Live = {
@@ -128,6 +130,8 @@ export function G2({ role, query }: ScreenProps) {
           <dd>
             {internal ? (
               "Εσωτερική Παραγωγή"
+            ) : !canOpenCrm ? (
+              clientNameOfProduction(production)
             ) : (
               <Link
                 href={screenHref(role, "B2", { id: production.clientId })}
@@ -140,11 +144,15 @@ export function G2({ role, query }: ScreenProps) {
             <>
               <dt>Συμφωνία</dt>
               <dd>
-                <Link
-                  href={screenHref(role, "D2", { id: agreement.id })}
-                >
-                  {agreement.title}
-                </Link>{" "}
+                {canOpenCrm ? (
+                  <Link
+                    href={screenHref(role, "D2", { id: agreement.id })}
+                  >
+                    {agreement.title}
+                  </Link>
+                ) : (
+                  agreement.title
+                )}{" "}
                 · {production.periodLabel ?? "εφάπαξ"}
               </dd>
             </>

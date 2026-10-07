@@ -3,7 +3,7 @@
 import { AGREEMENTS } from "@/data/agreements";
 import { provisionKind } from "@/data/catalogue";
 import { waitingForClient } from "@/data/deliverables-access";
-import { visibleFilmings } from "@/data/filming-access";
+import { reservedShoots, visibleFilmings } from "@/data/filming-access";
 import { balanceOf, overdueOf } from "@/data/finance-access";
 import { requestsOf } from "@/data/messages-access";
 import { KYPSELI_ID } from "@/data/sales";
@@ -26,7 +26,7 @@ export const clientWaitingCard: CardDef = {
       rows: items.map((d) => ({
         label: d.title,
         meta: d.latest ? `Έκδοση ${d.latest.version}` : undefined,
-        href: href(role, "H2", { id: d.id }),
+        href: href(role, "H4", { id: d.id }),
       })),
       allHref: href(role, "H3", {}),
       emptyText: "Δεν περιμένει τίποτα την απάντησή σου.",
@@ -60,7 +60,7 @@ export const clientBalanceCard: CardDef = {
 export const clientRequestsCard: CardDef = {
   id: "client-requests",
   title: "Τα ανοιχτά Αιτήματά σου",
-  source: "J2",
+  source: "J3",
   kind: "action",
   isFor: isClient,
   build: (role) => {
@@ -70,9 +70,9 @@ export const clientRequestsCard: CardDef = {
       rows: items.map((m) => ({
         label: m.text,
         meta: `από ${fmtDate(m.request.declaredAt.slice(0, 10))}`,
-        href: href(role, "J2", { client: KYPSELI_ID, message: m.id }),
+        href: href(role, "J3", { tab: "requests" }),
       })),
-      allHref: href(role, "J2", { client: KYPSELI_ID }),
+      allHref: href(role, "J3", { tab: "requests" }),
       emptyText: "Κανένα ανοιχτό Αίτημα.",
     };
   },
@@ -121,10 +121,14 @@ export const clientProvisionsCard: CardDef = {
     );
     const period = agreement?.periods.find((p) => p.state === "τρέχουσα");
     const rows = (period?.provisions ?? []).map((p) => {
-      const left = p.given + p.carried - p.used;
+      const reserved =
+        p.kindId === "shoot" && agreement
+          ? reservedShoots(agreement.id, period?.label)
+          : 0;
+      const left = p.given + p.carried - p.used - reserved;
       return {
         label: `${provisionKind(p.kindId).name}: μένουν ${left}`,
-        meta: `από ${p.given + p.carried} αυτόν τον μήνα`,
+        meta: `από ${p.given + p.carried} αυτόν τον μήνα${reserved > 0 ? `, ${reserved} δεσμευμένο` : ""}`,
         href: href(role, "D2", { id: agreement?.id }),
       };
     });

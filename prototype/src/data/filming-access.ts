@@ -193,6 +193,20 @@ const periodOfFilming = (filming: Filming): AgreementPeriod | undefined => {
   );
 };
 
+// Γυρίσματα της Περιόδου που κρατούν Παροχή χωρίς να έχουν γίνει ακόμα (αναμένουν έγκριση ή προγραμματισμένα).
+export const reservedShoots = (
+  agreementId: string,
+  periodLabel: string | undefined,
+): number =>
+  FILMINGS.filter((filming) => {
+    const production = productionOf(filming);
+    return (
+      production?.agreementId === agreementId &&
+      production.periodLabel === periodLabel &&
+      OPEN_STATES.includes(filming.state)
+    );
+  }).length;
+
 export const shootBalance = (filming: Filming): ShootBalance | null => {
   const production = productionOf(filming);
   const period = periodOfFilming(filming);
@@ -200,10 +214,7 @@ export const shootBalance = (filming: Filming): ShootBalance | null => {
     (provision) => provision.kindId === "shoot",
   );
   if (!production || !period || !shoot) return null;
-  const reserved = FILMINGS.filter(
-    (other) =>
-      other.productionId === production.id && OPEN_STATES.includes(other.state),
-  ).length;
+  const reserved = reservedShoots(production.agreementId, period.label);
   const total = shoot.given + shoot.carried;
   return {
     periodLabel: period.label,

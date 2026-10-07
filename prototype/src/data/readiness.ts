@@ -9,6 +9,7 @@ export interface ReadinessLine {
   screen: string | null;
   // Θέλει επιβεβαίωση από τον Ιδιοκτήτη (δεν αρκεί να συμπληρωθεί).
   isManual: boolean;
+  // Η σημερινή κατάσταση (το σύστημα είναι ανοιχτό σε πελάτες από 15/06/2026).
   isReady: boolean;
   note?: string;
 }
@@ -24,7 +25,7 @@ export const READINESS_LINES: readonly ReadinessLine[] = [
     who: "Ιδιοκτήτης (επιβεβαίωση)",
     screen: null,
     isManual: true,
-    isReady: false,
+    isReady: true,
     note: "Σχέδιο από τον developer· περιμένουν έγκριση από τον δικηγόρο. Δημοσιεύονται στις Νομικές σελίδες (R8).",
   },
   { id: "catalogue", what: "Κατάλογος", who: "Διαχείριση", screen: "C1", isManual: false, isReady: true },
@@ -34,8 +35,8 @@ export const READINESS_LINES: readonly ReadinessLine[] = [
     who: "Όποιος «Διαχειρίζεται κόστος»",
     screen: "O6",
     isManual: false,
-    isReady: false,
-    note: "Δεν έχουν μπει ακόμα τα έξοδα του πρώτου μήνα.",
+    isReady: true,
+    note: "Δεν έχουν μπει ακόμα τα έξοδα του πρώτου μήνα (Ιούλιος 2026).",
   },
   { id: "kb", what: "Άρθρα Γνώσης", who: "Διαχείριση", screen: "L1", isManual: false, isReady: true },
   {
@@ -44,11 +45,14 @@ export const READINESS_LINES: readonly ReadinessLine[] = [
     who: "Ιδιοκτήτης (επιβεβαίωση)",
     screen: null,
     isManual: true,
-    isReady: false,
+    isReady: true,
     note: "Χρώματα και λογότυπο: τα δίνει ο developer, τα εγκρίνει ο Ιδιοκτήτης.",
   },
   { id: "texts", what: "Αρχικά κείμενα Αυτοματισμών και Μηνυμάτων συστήματος", who: "Ιδιοκτήτης (επιβεβαίωση)", screen: "K1", isManual: true, isReady: true },
 ];
+
+// Η όψη «πριν το άνοιγμα» (O7): ό,τι εκκρεμούσε την ημέρα πριν πατηθεί το «Άνοιγμα σε πελάτες».
+export const PENDING_BEFORE_OPENING: readonly string[] = ["legal", "cost", "identity"];
 
 export const READY_DEFAULTS: readonly string[] = [
   "Στάδια Ευκαιρίας",
@@ -71,8 +75,9 @@ export interface QueuedItem {
   label: string;
 }
 
+// Όσα θα έφευγαν με το άνοιγμα: μόνο Χρήστες πελάτη που δεν ήταν ήδη μέλη (Συμφωνίες που υπογράφηκαν πριν το άνοιγμα).
 export const OPENING_QUEUE: readonly QueuedItem[] = [
-  { id: "inv1", label: "Πρόσκληση Χρήστη: nikos@example.com (Αρμύρα)" },
-  { id: "inv2", label: "Πρόσκληση Χρήστη: info@athina.example.com (Αθήνα)" },
-  { id: "mail1", label: "Email «Καλώς ήρθες» προς Ταβέρνα Κυψέλη" },
+  { id: "inv1", label: "Πρόσκληση Χρήστη: stavros@example.com (Γυμναστήριο Κίνηση)" },
+  { id: "inv2", label: "Πρόσκληση Χρήστη: kostas@example.com (Ταβέρνα Αρμύρα)" },
+  { id: "mail1", label: "Email «Καλώς ήρθες» προς Γυμναστήριο Κίνηση" },
 ];

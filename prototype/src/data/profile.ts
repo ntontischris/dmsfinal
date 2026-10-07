@@ -67,8 +67,8 @@ export interface ClientCounters {
 }
 
 export const CLIENT_COUNTERS: Readonly<Record<string, ClientCounters>> = {
-  kypseli: { unread: 2, versionsToApprove: 1, openInvoices: 1 },
-  armyra: { unread: 0, versionsToApprove: 0, openInvoices: 2 },
+  kypseli: { unread: 1, versionsToApprove: 1, openInvoices: 1 },
+  armyra: { unread: 0, versionsToApprove: 0, openInvoices: 0 },
 };
 
 export const NIKOS_EMAIL = "nikos@example.com";

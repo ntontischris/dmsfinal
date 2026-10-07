@@ -1,3 +1,5 @@
+import { agreementsOfClient } from "@/data/agreements";
+import { balanceOf } from "@/data/finance-access";
 import { OPPORTUNITIES } from "@/data/opportunities";
 import { capsOf, clientAccessFor } from "@/data/sales-access";
 import { SALES_CLIENTS, memberName } from "@/data/sales";
@@ -29,11 +31,11 @@ export function B1({ role, query }: ScreenProps) {
       (opportunity) =>
         opportunity.clientId === client.id && opportunity.outcome === "Ανοιχτή",
     ).length,
-    activeAgreements: client.agreements.filter(
+    activeAgreements: agreementsOfClient(client.id).filter(
       (agreement) => agreement.state === "ενεργή",
     ).length,
     balance: caps.canSeeFinance
-      ? fmtMoney(client.finance.invoiced - client.finance.collected)
+      ? fmtMoney(balanceOf(client.id))
       : null,
     isPossibleDuplicate: !!client.possibleDuplicateOf && caps.canMerge,
     takenBy:

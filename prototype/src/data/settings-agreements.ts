@@ -1,5 +1,13 @@
 // Φανταστικά δεδομένα για O3 (Συμφωνίες) και O5 (Παραδοτέα): Όροι, Πολιτική Γυρισμάτων, είδη Παροχής.
 
+import {
+  AGREEMENTS,
+  DEFAULT_TERMS,
+  STANDARD_DISCOUNT,
+  type Terms,
+} from "@/data/agreements";
+import type { ProvisionKindId } from "@/data/catalogue";
+import { DELIVERABLES } from "@/data/productions";
 import type { ListItemStatus } from "@/screens/o-shared";
 
 // Σταθερές επιλογές: ο Τρόπος μέτρησης δεν αλλάζει από τις Ρυθμίσεις.
@@ -21,6 +29,13 @@ export interface BenefitType {
   skipsInternalReview: boolean;
   openDeliverables: number;
 }
+
+// Ανοιχτά Παραδοτέα = όσα δεν έχουν εγκριθεί ή ακυρωθεί.
+const isOpenDeliverable = (state: string): boolean =>
+  state === "σε εργασία" || state === "αναμένει πελάτη";
+const openOf = (kindId: ProvisionKindId): number =>
+  DELIVERABLES.filter((d) => d.kindId === kindId && isOpenDeliverable(d.state))
+    .length;
 
 export const BENEFIT_TYPES: readonly BenefitType[] = [
   {
@@ -44,12 +59,12 @@ export const BENEFIT_TYPES: readonly BenefitType[] = [
     unit: "βίντεο",
     measure: "ανά Γύρισμα",
     defaultDuration: "έως 60 δευτ.",
-    changeLimit: 1,
+    changeLimit: DEFAULT_TERMS.μηνιαία.revisionLimit.reel ?? null,
     status: "Σε χρήση",
     uses: 88,
     deadlineDays: 5,
     skipsInternalReview: true,
-    openDeliverables: 3,
+    openDeliverables: openOf("reel"),
   },
   {
     id: "video",
@@ -58,12 +73,12 @@ export const BENEFIT_TYPES: readonly BenefitType[] = [
     unit: "βίντεο",
     measure: "ανά Γύρισμα",
     defaultDuration: "έως 3 λεπτά",
-    changeLimit: 3,
+    changeLimit: DEFAULT_TERMS.μηνιαία.revisionLimit.video ?? null,
     status: "Σε χρήση",
     uses: 34,
     deadlineDays: 10,
     skipsInternalReview: false,
-    openDeliverables: 2,
+    openDeliverables: openOf("video"),
   },
   {
     id: "photo",
@@ -72,12 +87,12 @@ export const BENEFIT_TYPES: readonly BenefitType[] = [
     unit: "φωτογραφία",
     measure: "ανά ώρα",
     defaultDuration: "",
-    changeLimit: 2,
+    changeLimit: DEFAULT_TERMS.μηνιαία.revisionLimit.photo ?? null,
     status: "Σε χρήση",
     uses: 19,
     deadlineDays: 3,
     skipsInternalReview: false,
-    openDeliverables: 1,
+    openDeliverables: openOf("photo"),
   },
   {
     id: "podcast",
@@ -86,12 +101,12 @@ export const BENEFIT_TYPES: readonly BenefitType[] = [
     unit: "επεισόδιο",
     measure: "ανά μέρα",
     defaultDuration: "έως 45 λεπτά",
-    changeLimit: 2,
+    changeLimit: DEFAULT_TERMS.μηνιαία.revisionLimit.episode ?? null,
     status: "Σε χρήση",
     uses: 12,
     deadlineDays: 7,
     skipsInternalReview: false,
-    openDeliverables: 0,
+    openDeliverables: openOf("episode"),
   },
   {
     id: "drone",
@@ -119,34 +134,53 @@ export interface TermRow {
   hint?: string;
 }
 
-// Όροι Συμφωνίας: «—» όπου ο όρος δεν ισχύει για το σετ.
+const MONTHLY = DEFAULT_TERMS.μηνιαία;
+const ONEOFF = DEFAULT_TERMS.εφάπαξ;
+
+const unusedText = (terms: Terms): string =>
+  terms.unusedProvisions === "επόμενη Περίοδο"
+    ? "μεταφέρονται στην επόμενη Περίοδο"
+    : terms.unusedProvisions;
+
+// Όροι Συμφωνίας: διαβάζονται από τις προεπιλογές του συστήματος (DEFAULT_TERMS)· «—» όπου ο όρος δεν ισχύει για το σετ.
 export const TERM_ROWS: readonly TermRow[] = [
-  { id: "pay", label: "Μέρες πληρωμής", monthly: "15", oneoff: "15" },
+  {
+    id: "pay",
+    label: "Μέρες πληρωμής",
+    monthly: String(MONTHLY.paymentDays),
+    oneoff: String(ONEOFF.paymentDays),
+  },
   {
     id: "unused",
     label: "Αχρησιμοποίητες Παροχές",
-    monthly: "μεταφέρονται στην επόμενη Περίοδο",
+    monthly: unusedText(MONTHLY),
     oneoff: "—",
   },
-  { id: "grace", label: "Περίοδος χάριτος (μέρες)", monthly: "5", oneoff: "—" },
+  {
+    id: "grace",
+    label: "Περίοδος χάριτος (μέρες)",
+    monthly: String(MONTHLY.graceDays),
+    oneoff: "—",
+  },
   {
     id: "renew",
     label: "Διάρκεια και Ανανέωση",
-    monthly: "12 μήνες, αυτόματη συνέχιση",
+    monthly: `${MONTHLY.durationMonths} μήνες, ${MONTHLY.renewal}`,
     oneoff: "—",
   },
   {
     id: "exit",
     label: "Ρήτρα λύσης (μέρες προειδοποίηση)",
-    monthly: "30",
+    monthly: String(MONTHLY.dissolution.noticeDays),
     oneoff: "—",
   },
 ];
 
-export const ONEOFF_MILESTONES = [
-  { id: "m1", label: "Υπογραφή", percent: 50 },
-  { id: "m2", label: "Παράδοση", percent: 50 },
-] as const;
+export const ONEOFF_MILESTONES = ONEOFF.milestones.map((milestone, index) => ({
+  id: `m${index + 1}`,
+  label: milestone.trigger === "υπογραφή" ? "Υπογραφή" : "Παράδοση",
+  percent: milestone.percent,
+}));
 
 export interface FilmingPolicyRow {
   id: string;
@@ -155,37 +189,64 @@ export interface FilmingPolicyRow {
   hint?: string;
 }
 
+const yesNo = (flag: boolean): string => (flag ? "ναι" : "όχι");
+
 export const FILMING_POLICY: readonly FilmingPolicyRow[] = [
-  { id: "notice", label: "Ελάχιστη προειδοποίηση (μέρες)", value: "3" },
+  {
+    id: "notice",
+    label: "Ελάχιστη προειδοποίηση (ώρες πριν)",
+    value: String(MONTHLY.filming.noticeDays * 24),
+  },
   {
     id: "cutoff",
     label: "Όριο ακύρωσης (ώρες πριν)",
-    value: "24",
-    hint: "Πρόσφατη αλλαγή: 48 → 24.",
+    value: String(MONTHLY.filming.cancelHours),
+    hint: "Πρόσφατη αλλαγή: 48 → 24. Ισχύει για νέες προτάσεις· οι υπάρχουσες Συμφωνίες κρατούν τις 48.",
   },
-  { id: "late", label: "Αργή ακύρωση καίει Παροχή", value: "ναι" },
-  { id: "noshow", label: "«Δεν έγινε» καίει Παροχή", value: "ναι" },
+  {
+    id: "late",
+    label: "Αργή ακύρωση καίει Παροχή",
+    value: yesNo(MONTHLY.filming.lateCancelBurns),
+  },
+  {
+    id: "noshow",
+    label: "«Δεν έγινε» καίει Παροχή",
+    value: yesNo(MONTHLY.filming.noShowBurns),
+  },
 ];
 
 export const PRICING_DEFAULTS: readonly FilmingPolicyRow[] = [
-  { id: "advance", label: "Προκαταβολή (%)", value: "30" },
+  {
+    id: "advance",
+    label: "Προκαταβολή εφάπαξ (%)",
+    value: String(ONEOFF.milestones[0]?.percent ?? 0),
+    hint: "Το ποσοστό της πρώτης δόσης, στην υπογραφή.",
+  },
   {
     id: "discount",
     label: "Τυπική έκπτωση πρώτων μηνών (%)",
-    value: "10",
+    value: String(STANDARD_DISCOUNT.percent),
     hint: "Μεγαλύτερη έκπτωση από αυτή είναι Παρέκκλιση.",
   },
 ];
 
-// O3: υπάρχοντα στοιχεία που δεν αλλάζουν με την αποθήκευση Όρων.
+// O3: υπάρχοντα στοιχεία που δεν αλλάζουν με την αποθήκευση Όρων (υπολογίζονται από τις Συμφωνίες).
+const activeCount = AGREEMENTS.filter((a) => a.state === "ενεργή").length;
+const draftCount = AGREEMENTS.filter(
+  (a) =>
+    a.state === "πρόταση" &&
+    (a.path === "Σύνταξη" || a.path === "Αναμένει Έγκριση" || a.path === "Εστάλη"),
+).length;
+
 export const TERMS_FORWARD = {
-  affected: 3,
-  what: "στοιχεία (2 υπογεγραμμένες Συμφωνίες και 1 πρόταση σε σύνταξη)",
+  affected: activeCount + draftCount,
+  what: `στοιχεία (${activeCount} ενεργές Συμφωνίες και ${draftCount} προτάσεις σε εξέλιξη)`,
 };
 
 // O5
 export const DELIVERABLE_RULES = {
   internalReview: "ναι",
   reworkDays: 2,
-  openDeliverables: 6,
+  openDeliverables: DELIVERABLES.filter((d) => isOpenDeliverable(d.state))
+    .length,
 } as const;

@@ -8,7 +8,7 @@ export function ConsentLog({ version }: { version: string }) {
         πολιτικής. Δεν αποθηκεύεται όνομα ή email.
       </p>
       <div className="r-log">
-        {`2026-10-07 14:32  Απαραίτητα: ναι · Στατιστικά: ναι · Marketing: όχι  · πολιτική ${version}`}
+        {`2026-09-20 11:32  Απαραίτητα: ναι · Στατιστικά: ναι · Marketing: όχι  · πολιτική ${version}`}
       </div>
     </section>
   );

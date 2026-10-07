@@ -19,6 +19,8 @@ import {
   type ProductionCaps,
 } from "@/data/productions-access";
 import type { RoleId } from "@/data/roles";
+import { ClientStatusBadge } from "@/screens/h3-group";
+import { clientStatusOf } from "@/screens/h3-model";
 import { Badge, fmtDate, screenHref } from "@/screens/shared";
 
 interface Row {
@@ -273,7 +275,7 @@ export function G2ClientDeliverables({
               </Link>
               <div className="g2-signals">
                 <span className="muted">{provisionKind(d.kindId).name}</span>
-                <Badge>{d.state}</Badge>
+                <ClientStatusBadge state={clientStatusOf(d.state)} />
                 <span className="muted">
                   γύροι {d.rounds.used}/{d.rounds.limit}
                 </span>

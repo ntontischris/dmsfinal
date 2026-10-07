@@ -243,7 +243,7 @@ export const DELIVERABLE_DETAILS: readonly DeliverableDetail[] = [
             isClient: false,
             when: "2026-09-18",
             isInternal: true,
-            text: "Ο γύρος του ορίου έχει γίνει. Αν ζητήσουν κι άλλο, χρεώνεται.",
+            text: "Έγινε ο 1ος γύρος από τους 2. Ο επόμενος είναι ο τελευταίος χωρίς χρέωση.",
           },
         ],
       },
@@ -258,7 +258,7 @@ export const DELIVERABLE_DETAILS: readonly DeliverableDetail[] = [
       {
         when: "2026-09-13",
         who: "Μαρία Παπαδάκη",
-        what: "Ζήτησε αλλαγές στην v1 (γύρος 1 από 1)",
+        what: "Ζήτησε αλλαγές στην v1 (γύρος 1 από 2)",
       },
       {
         when: "2026-09-18",
@@ -352,7 +352,7 @@ export const DELIVERABLE_DETAILS: readonly DeliverableDetail[] = [
         addedBy: "aris",
         addedAt: "2026-09-09",
         state: "χρειάζεται αλλαγές",
-        review: { by: "dimitris", when: "2026-09-09" },
+        review: { by: "giorgos", when: "2026-09-09" },
         sentAt: "2026-09-09",
         answer: { by: "Γυμναστήριο Κίνηση", when: "2026-09-10" },
         comments: [
@@ -373,7 +373,7 @@ export const DELIVERABLE_DETAILS: readonly DeliverableDetail[] = [
         addedBy: "aris",
         addedAt: "2026-09-14",
         state: "αναμένει πελάτη",
-        review: { by: "dimitris", when: "2026-09-14" },
+        review: { by: "giorgos", when: "2026-09-14" },
         sentAt: "2026-09-14",
         comments: [
           {
@@ -392,11 +392,11 @@ export const DELIVERABLE_DETAILS: readonly DeliverableDetail[] = [
       {
         when: "2026-09-10",
         who: "Γυμναστήριο Κίνηση",
-        what: "Ζήτησε αλλαγές στην v1 (γύρος 1 από 1)",
+        what: "Ζήτησε αλλαγές στην v1 (γύρος 1 από 2)",
       },
       {
         when: "2026-09-14",
-        who: "dimitris",
+        who: "giorgos",
         what: "Έστειλε την v2 στον πελάτη",
       },
       {
@@ -434,7 +434,7 @@ export const DELIVERABLE_DETAILS: readonly DeliverableDetail[] = [
         addedBy: "aris",
         addedAt: "2026-09-08",
         state: "χρειάζεται αλλαγές",
-        review: { by: "dimitris", when: "2026-09-08" },
+        review: { by: "giorgos", when: "2026-09-08" },
         sentAt: "2026-09-08",
         answer: { by: "Γυμναστήριο Κίνηση", when: "2026-09-09" },
         comments: [
@@ -455,29 +455,55 @@ export const DELIVERABLE_DETAILS: readonly DeliverableDetail[] = [
         addedBy: "aris",
         addedAt: "2026-09-12",
         state: "χρειάζεται αλλαγές",
-        review: { by: "dimitris", when: "2026-09-12" },
+        review: { by: "giorgos", when: "2026-09-12" },
         sentAt: "2026-09-12",
-        answer: { by: "Γυμναστήριο Κίνηση", when: "2026-09-18" },
+        answer: { by: "Γυμναστήριο Κίνηση", when: "2026-09-15" },
         comments: [
           {
             id: "c2",
             who: "Γυμναστήριο Κίνηση",
             isClient: true,
-            when: "2026-09-18",
+            when: "2026-09-15",
             at: 2,
-            text: "Τελικά θέλουμε άλλη μουσική, πιο δυναμική.",
+            text: "Θέλουμε άλλη μουσική, πιο δυναμική.",
+          },
+        ],
+      },
+      {
+        number: 3,
+        link: vimeo("913000503"),
+        host: "Vimeo",
+        addedBy: "aris",
+        addedAt: "2026-09-16",
+        state: "χρειάζεται αλλαγές",
+        review: { by: "giorgos", when: "2026-09-17" },
+        sentAt: "2026-09-17",
+        answer: { by: "Γυμναστήριο Κίνηση", when: "2026-09-18" },
+        comments: [
+          {
+            id: "c3",
+            who: "Γυμναστήριο Κίνηση",
+            isClient: true,
+            when: "2026-09-18",
+            at: 9,
+            text: "Τελικά προτιμάμε την πρώτη μουσική, και μεγαλύτερο το λογότυπο.",
           },
         ],
       },
     ],
-    charge: { round: 2, askedAt: "2026-09-18" },
+    charge: { round: 3, askedAt: "2026-09-18" },
     requests: [],
     trail: [
-      { when: "2026-09-09", who: "Γυμναστήριο Κίνηση", what: "Ζήτησε αλλαγές στην v1 (γύρος 1 από 1)" },
+      { when: "2026-09-09", who: "Γυμναστήριο Κίνηση", what: "Ζήτησε αλλαγές στην v1 (γύρος 1 από 2)" },
+      {
+        when: "2026-09-15",
+        who: "Γυμναστήριο Κίνηση",
+        what: "Ζήτησε αλλαγές στην v2 (γύρος 2 από 2)",
+      },
       {
         when: "2026-09-18",
         who: "Γυμναστήριο Κίνηση",
-        what: "Ζήτησε αλλαγές στην v2 (γύρος 2 από 1, πέρα από το όριο· προειδοποιήθηκε ότι χρεώνεται)",
+        what: "Ζήτησε αλλαγές στην v3 (γύρος 3 από 2, πέρα από το όριο· προειδοποιήθηκε ότι χρεώνεται)",
       },
     ],
   },

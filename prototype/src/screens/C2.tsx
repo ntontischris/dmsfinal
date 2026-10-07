@@ -41,7 +41,6 @@ const blankItem = (kind: "package" | "service"): CatalogueItem =>
         hours: { shoot: 0, edit: 0 },
         directCost: 0,
         actuals: null,
-        activeAgreements: 0,
         isArchived: false,
         isPublic: false,
         showsPrice: false,
@@ -62,7 +61,6 @@ const blankItem = (kind: "package" | "service"): CatalogueItem =>
         hours: { shoot: 0, edit: 0 },
         directCost: 0,
         actuals: null,
-        activeAgreements: 0,
         isArchived: false,
         updated: { when: "", by: "" },
       };
@@ -133,7 +131,7 @@ export function C2({ role, query }: ScreenProps) {
       </div>
       {caps.isReadOnly && (
         <p className="note">
-          Βλέπεις τιμές και Παροχές για να διαλέγεις γραμμές στον{" "}
+          Βλέπεις τιμές και Παροχές για να διαλέγεις γραμμές στην{" "}
           <Link href={screenHref(role, "D2", {})}>πρόταση</Link>. Οι
           ώρες και το κόστος είναι εσωτερικά.
         </p>

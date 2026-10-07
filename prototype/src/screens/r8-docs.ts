@@ -34,7 +34,7 @@ export const LEGAL_DOCS: readonly LegalDoc[] = [
     titleEl: "Πολιτική απορρήτου",
     titleEn: "Privacy policy",
     version: "1.0",
-    date: "2026-10-01",
+    date: "2026-09-01",
     sections: [
       s(
         "Ποιοι είμαστε",
@@ -74,7 +74,7 @@ export const LEGAL_DOCS: readonly LegalDoc[] = [
     titleEl: "Πολιτική cookies",
     titleEn: "Cookie policy",
     version: "1.0",
-    date: "2026-10-01",
+    date: "2026-09-01",
     sections: [
       s(
         "Τι είναι τα cookies",
@@ -102,7 +102,7 @@ export const LEGAL_DOCS: readonly LegalDoc[] = [
     titleEl: "Όροι χρήσης",
     titleEn: "Terms of use",
     version: "1.0",
-    date: "2026-10-01",
+    date: "2026-09-01",
     sections: [
       s(
         "Η Ιστοσελίδα",
@@ -130,7 +130,7 @@ export const LEGAL_DOCS: readonly LegalDoc[] = [
     titleEl: "Όροι ηλεκτρονικής υπογραφής",
     titleEn: "Electronic signing terms",
     version: "1.0",
-    date: "2026-10-01",
+    date: "2026-09-01",
     sections: [
       s(
         "Τι υπογράφετε",

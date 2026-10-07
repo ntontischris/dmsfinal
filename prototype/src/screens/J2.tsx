@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import type { Message } from "@/data/messages";
 import {
+  canOpenScreen,
   conversationsOf,
   findClientOf,
   messageCapsOf,
@@ -138,9 +139,13 @@ function Header({
     <section className="card">
       <h2 className="card-title">
         Συνομιλία:{" "}
-        <Link href={screenHref(role, "B2", { client: client.id })}>
-          {client.name}
-        </Link>
+        {canOpenScreen(role, "B2") ? (
+          <Link href={screenHref(role, "B2", { id: client.id })}>
+            {client.name}
+          </Link>
+        ) : (
+          client.name
+        )}
       </h2>
       <p className="muted">
         Υπεύθυνος Πελάτη: {teamName(client.ownerId)} · Κατάσταση:{" "}

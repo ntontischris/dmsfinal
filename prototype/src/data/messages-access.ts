@@ -18,6 +18,7 @@ import {
   type MessageRequest,
 } from "@/data/messages";
 import type { RoleId } from "@/data/roles";
+import { canSee, findScreen } from "@/data/screens";
 import {
   KYPSELI_ID,
   SALES_CLIENTS,
@@ -160,8 +161,11 @@ export type RequestView =
   "για μένα" | "όλα τα ανοιχτά" | "χωρίς υπεύθυνο" | "κλεισμένα";
 
 // Το «Χωρίς υπεύθυνο» φαίνεται μόνο σε όσους το μοιράζουν (αρχή «Λειτουργεί με έναν άνθρωπο»).
-export const requestViewsOf = (role: RoleId): readonly RequestView[] =>
-  messageCapsOf(role).canReassign
+export const requestViewsOf = (
+  role: RoleId,
+  isSolo = false,
+): readonly RequestView[] =>
+  messageCapsOf(role).canReassign && !isSolo
     ? ["για μένα", "όλα τα ανοιχτά", "χωρίς υπεύθυνο", "κλεισμένα"]
     : ["για μένα", "όλα τα ανοιχτά", "κλεισμένα"];
 
@@ -253,4 +257,10 @@ export const mentionsOf = (role: RoleId): readonly Message[] => {
   return MESSAGES.filter((m) => m.mentions?.includes(me)).sort((a, b) =>
     b.at.localeCompare(a.at),
   );
+};
+
+// Ανοίγει ο ρόλος αυτή την οθόνη; Από τον κατάλογο οθονών, ώστε οι σύνδεσμοι να μην οδηγούν σε «Χωρίς δικαίωμα».
+export const canOpenScreen = (role: RoleId, code: string): boolean => {
+  const screen = findScreen(code);
+  return screen ? canSee(screen, role) : true;
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { PROPOSAL_VALIDITY_DAYS } from "@/data/agreements";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -45,7 +46,6 @@ interface ProposalPanelProps {
   onLost: (reason: string) => void;
 }
 
-const DEFAULT_VALIDITY_DAYS = 14; // «Ισχύς πρότασης» από Ρυθμίσεις › Πωλήσεις.
 
 const addDaysLabel = (iso: string, days: number): string => {
   const date = new Date(Date.parse(iso) + days * 86_400_000);
@@ -75,7 +75,7 @@ export function ProposalPanel({
   const [view, setView] = useState(initial);
   const [comment, setComment] = useState("");
   const [closing, setClosing] = useState(false);
-  const [extendDays, setExtendDays] = useState(DEFAULT_VALIDITY_DAYS);
+  const [extendDays, setExtendDays] = useState<number>(PROPOSAL_VALIDITY_DAYS);
 
   const patch = (next: Partial<ProposalView>) =>
     setView((current) => ({ ...current, ...next }));
@@ -202,7 +202,13 @@ export function ProposalPanel({
               type="button"
               className="button"
               data-primary="true"
-              onClick={() => patch({ path: "Σύνταξη", approval: "εγκρίθηκε" })}
+              onClick={() =>
+                patch({
+                  path: "Εστάλη",
+                  approval: "εγκρίθηκε",
+                  recipients: linkAll("ενεργός"),
+                })
+              }
             >
               Έγκριση
             </button>

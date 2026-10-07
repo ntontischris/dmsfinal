@@ -1,9 +1,7 @@
 import { findAgreement } from "@/data/agreements";
-import { BOOKING_HOURS } from "@/data/filming";
+import { BOOKING_HOURS, NOW } from "@/data/filming";
 import { capacityOf, takenAt } from "@/data/filming-access";
 import {
-  TODAY_ISO,
-  addDays,
   balanceOfDay,
   hhmm,
   weekdayOf,
@@ -61,19 +59,25 @@ const outsideReasonOf = (date: string): string => {
   return isCovered ? "Η Περίοδος δεν άνοιξε" : "Εκτός Συμφωνίας";
 };
 
+// Η πρώτη μέρα που ξεκινά μετά την ελάχιστη ειδοποίηση (σε ώρες από το NOW).
+const earliestDateOf = (noticeHours: number): string =>
+  new Date(Date.parse(`${NOW}:00Z`) + noticeHours * 3_600_000)
+    .toISOString()
+    .slice(0, 10);
+
 export const dayStatusOf = (
   date: string,
-  noticeDays: number,
+  noticeHours: number,
   hasNoBenefit: boolean,
 ): DayStatus => {
   const closedReason = BOOKING_HOURS.closedDays[date];
   if (!BOOKING_HOURS.week[weekdayOf(date)])
     return { kind: "blocked", reason: "Κλειστά" };
   if (closedReason) return { kind: "blocked", reason: "Αργία" };
-  if (date < addDays(TODAY_ISO, noticeDays))
+  if (date < earliestDateOf(noticeHours))
     return {
       kind: "blocked",
-      reason: `Νωρίς (${noticeDays} μέρες ειδοποίηση)`,
+      reason: `Νωρίς (${noticeHours} ώρες ειδοποίηση)`,
     };
   const balance = balanceOfDay(AGREEMENT_ID, date);
   if (!balance) return { kind: "blocked", reason: outsideReasonOf(date) };
@@ -85,8 +89,13 @@ export const dayStatusOf = (
   return { kind: "ok", left: balance.left };
 };
 
-export const noticeDaysOf = (): number =>
-  findAgreement(AGREEMENT_ID)?.terms.filming.noticeDays ?? 0;
+// Οι Όροι κρατούν την ελάχιστη προειδοποίηση σε ώρες (48)· παλιά εγγραφή σε μέρες μετατρέπεται.
+export const noticeHoursOf = (): number => {
+  const filming = findAgreement(AGREEMENT_ID)?.terms.filming as
+    | { noticeHours?: number; noticeDays?: number }
+    | undefined;
+  return filming?.noticeHours ?? (filming?.noticeDays ?? 0) * 24;
+};
 
 export const cancelHoursOf = (): number =>
   findAgreement(AGREEMENT_ID)?.terms.filming.cancelHours ?? 0;

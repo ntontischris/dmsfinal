@@ -25,6 +25,9 @@ export default async function RoleLayout({ children, params }: RoleLayoutProps) 
           DMS · prototype
         </Link>
         <div className="topbar-controls">
+          <Link className="button" href="/scenarios">
+            Σενάρια
+          </Link>
           <RoleSwitcher current={role} />
           <ThemeToggle />
         </div>

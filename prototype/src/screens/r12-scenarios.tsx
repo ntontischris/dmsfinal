@@ -31,8 +31,8 @@ export const QUESTIONS: Readonly<Record<Ask, { el: string; en: string }>> = {
   },
   price: { el: "Πόσο κοστίζει;", en: "How much does it cost?" },
   unknown: {
-    el: "Μπορείτε να γυρίσετε στη Θεσσαλονίκη;",
-    en: "Can you shoot in Thessaloniki?",
+    el: "Μπορείτε να γυρίσετε σε νησί;",
+    en: "Can you shoot on an island?",
   },
   offtopic: {
     el: "Τι καιρό θα κάνει αύριο;",
@@ -135,8 +135,8 @@ export function AnswerBody({ ask, lang }: { ask: Ask; lang: Lang }): ReactNode {
             title: tr(lang, "Πώς δουλεύουμε", "How we work"),
             summary: tr(
               lang,
-              "Από το briefing ως την παράδοση, σε τέσσερα βήματα.",
-              "From briefing to delivery, in four steps.",
+              "Από το briefing ως την παράδοση, σε πέντε βήματα.",
+              "From briefing to delivery, in five steps.",
             ),
           },
         ]}

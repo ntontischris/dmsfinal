@@ -107,7 +107,7 @@ const approvedReels = (
     state: "εγκρίθηκε" as const,
     latest: { version: 1, inReview: false },
     deadline: approvedAt,
-    rounds: { used: index % 3 === 0 ? 1 : 0, limit: 1 },
+    rounds: { used: index % 3 === 0 ? 1 : 0, limit: 2 },
     approvedAt,
   }));
 
@@ -124,7 +124,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "εγκρίθηκε",
     latest: { version: 1, inReview: false, sentAt: "2026-09-11" },
     deadline: "2026-09-15",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
     approvedAt: "2026-09-12",
   },
   {
@@ -136,7 +136,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "εγκρίθηκε",
     latest: { version: 2, inReview: false, sentAt: "2026-09-14" },
     deadline: "2026-09-15",
-    rounds: { used: 1, limit: 1 },
+    rounds: { used: 1, limit: 2 },
     approvedAt: "2026-09-15",
   },
   {
@@ -148,7 +148,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "αναμένει πελάτη",
     latest: { version: 2, inReview: false, sentAt: "2026-09-18" },
     deadline: "2026-09-17",
-    rounds: { used: 1, limit: 1 },
+    rounds: { used: 1, limit: 2 },
   },
   {
     id: "d-kypseli-09-4",
@@ -159,7 +159,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "σε εργασία",
     latest: { version: 1, inReview: true },
     deadline: "2026-09-23",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
   },
   {
     id: "d-kypseli-09-5",
@@ -170,7 +170,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "σε εργασία",
     latest: { version: 1, inReview: false },
     deadline: "2026-09-18",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
   },
   {
     id: "d-kypseli-09-6",
@@ -180,7 +180,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     assigneeId: "sofia",
     state: "ακυρώθηκε",
     deadline: "2026-09-22",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
     cancellation: {
       reason: "Ο πελάτης άλλαξε το μενού· η συνταγή δεν ισχύει πια.",
       provision: "επιστρέφει",
@@ -195,7 +195,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "εγκρίθηκε",
     latest: { version: 1, inReview: false, sentAt: "2026-09-08" },
     deadline: "2026-09-10",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
     approvedAt: "2026-09-09",
   },
   {
@@ -207,7 +207,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "εγκρίθηκε",
     latest: { version: 1, inReview: false, sentAt: "2026-09-08" },
     deadline: "2026-09-10",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
     approvedAt: "2026-09-10",
   },
   {
@@ -219,7 +219,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "αναμένει πελάτη",
     latest: { version: 2, inReview: false, sentAt: "2026-09-14" },
     deadline: "2026-09-16",
-    rounds: { used: 1, limit: 1 },
+    rounds: { used: 1, limit: 2 },
   },
   {
     id: "d-kinisi-09-4",
@@ -229,7 +229,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     assigneeId: "aris",
     state: "σε εργασία",
     deadline: "2026-09-24",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
   },
   {
     id: "d-kinisi-09-5",
@@ -238,9 +238,9 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     kindId: "reel",
     assigneeId: "aris",
     state: "σε εργασία",
-    latest: { version: 2, inReview: false, sentAt: "2026-09-12" },
+    latest: { version: 3, inReview: false, sentAt: "2026-09-17" },
     deadline: "2026-09-22",
-    rounds: { used: 2, limit: 1 },
+    rounds: { used: 3, limit: 2 },
   },
   {
     id: "d-athina-09-1",
@@ -251,7 +251,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "εγκρίθηκε",
     latest: { version: 1, inReview: false, sentAt: "2026-09-12" },
     deadline: "2026-09-15",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
     approvedAt: "2026-09-13",
   },
   {
@@ -263,7 +263,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "σε εργασία",
     latest: { version: 1, inReview: true },
     deadline: "2026-09-21",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
   },
   {
     id: "d-athina-09-3",
@@ -273,7 +273,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     assigneeId: "dimitris",
     state: "σε εργασία",
     deadline: "2026-09-25",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
   },
   {
     id: "d-armyra-1",
@@ -284,7 +284,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "εγκρίθηκε",
     latest: { version: 3, inReview: false, sentAt: "2025-06-10" },
     deadline: "2025-06-12",
-    rounds: { used: 2, limit: 3 },
+    rounds: { used: 2, limit: 2 },
     approvedAt: "2025-06-11",
   },
   {
@@ -296,7 +296,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "εγκρίθηκε",
     latest: { version: 1, inReview: false, sentAt: "2025-06-05" },
     deadline: "2025-06-12",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
     approvedAt: "2025-06-06",
   },
   {
@@ -308,7 +308,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "εγκρίθηκε",
     latest: { version: 1, inReview: false, sentAt: "2025-06-05" },
     deadline: "2025-06-12",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
     approvedAt: "2025-06-07",
   },
   {
@@ -320,7 +320,7 @@ export const DELIVERABLES: readonly DeliverableSummary[] = [
     state: "αναμένει πελάτη",
     latest: { version: 1, inReview: false, sentAt: "2025-06-05" },
     deadline: "2025-06-12",
-    rounds: { used: 0, limit: 1 },
+    rounds: { used: 0, limit: 2 },
   },
   {
     id: "d-showreel-1",
@@ -370,7 +370,7 @@ export const TASKS: readonly ProductionTask[] = [
   {
     id: "t-kypseli-10-1",
     productionId: "pr-kypseli-10",
-    title: "Ερωτήσεις συνέντευξης για το δεύτερο κατάστημα",
+    title: "Ερωτήσεις για τη συνέντευξη με τη Μαρία",
     assigneeId: "aris",
     due: "2026-09-30",
   },
@@ -488,8 +488,8 @@ export const PRODUCTION_RECORDS: readonly ProductionRecord[] = [
         what: "Γύρισμα 8/9 σημειώθηκε «έγινε».",
       },
       {
-        when: "2026-09-16",
-        who: "Σοφία Λαζαρίδου",
+        when: "2026-09-10",
+        who: "Δημήτρης Ιωάννου",
         what: "Ακύρωσε το «Reel: συνταγή της εβδομάδας»· η Παροχή επιστρέφει.",
       },
     ],

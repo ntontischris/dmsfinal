@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { agreementsOfClient } from "@/data/agreements";
 import type { RoleId } from "@/data/roles";
 import { SALES_CLIENTS, findClient } from "@/data/sales";
 import { INVITATIONS, type ClientMembership } from "@/data/team";
@@ -25,9 +26,9 @@ export const isSignatoryAt = (email: string, clientId: string): boolean =>
 
 // Πρόταση που περιμένει υπογραφή του Υπογράφοντος.
 export const hasProposalAwaitingSignature = (clientId: string): boolean =>
-  findClient(clientId)?.agreements.some(
-    (a) => a.state === "πρόταση" && a.proposalPath === "Εστάλη",
-  ) ?? false;
+  agreementsOfClient(clientId).some(
+    (a) => a.state === "πρόταση" && a.path === "Εστάλη",
+  );
 
 export const clientNameOf = (id: string): string => findClient(id)?.name ?? id;
 

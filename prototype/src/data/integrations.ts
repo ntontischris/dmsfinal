@@ -30,9 +30,9 @@ export const INTEGRATIONS: readonly Integration[] = [
     name: "Google ημερολόγιο",
     purpose: "Το Εταιρικό ημερολόγιο, αμφίδρομα (ADR 0005)",
     status: "λειτουργεί",
-    lastOk: "2026-09-20 10:45",
+    lastOk: "2026-09-20 10:38",
     facts: [
-      { label: "Ημερολόγιο", value: "Devre Media · Γυρίσματα" },
+      { label: "Ημερολόγιο", value: "Delta Films · Γυρίσματα" },
       { label: "Συγχρονισμός", value: "με κάθε αλλαγή, και έλεγχος κάθε 15′" },
       { label: "Ουρά αλλαγών", value: "0 σε αναμονή" },
     ],
@@ -42,17 +42,17 @@ export const INTEGRATIONS: readonly Integration[] = [
   {
     id: "email",
     name: "Αποστολή email",
-    purpose: "Κάθε email του συστήματος, από noreply@mail.devremedia.com",
+    purpose: "Κάθε email του συστήματος, από noreply@mail.deltafilms.example",
     status: "προσοχή",
     lastOk: "2026-09-20 11:02",
     facts: [
       { label: "Πλάνο", value: "Δωρεάν (100 την ημέρα, 3.000 τον μήνα)" },
       { label: "Ταυτοποίηση domain", value: "SPF, DKIM, DMARC εντάξει" },
-      { label: "Απέτυχαν σήμερα", value: "0" },
+      { label: "Απέτυχαν σήμερα", value: "0 (χθες 4, λόγω ορίου)" },
     ],
     usage: { label: "Σήμερα", used: 74, limit: 100, unit: "emails" },
     warning:
-      "Πάνω από 70 την ημέρα: ώρα για το επόμενο πλάνο, πριν αρχίσουν να αποτυγχάνουν αποστολές.",
+      "Πάνω από 70 την ημέρα. Χθες το όριο των 100 ξεπεράστηκε και 4 αποστολές απέτυχαν: ώρα για το επόμενο πλάνο.",
     developerOnly: "Ο πάροχος, το domain αποστολής και οι εγγραφές DNS.",
   },
   {
@@ -66,7 +66,7 @@ export const INTEGRATIONS: readonly Integration[] = [
       { label: "Μοντέλο αναζήτησης", value: "openai/text-embedding-3-small" },
       { label: "Κατάταξη", value: "voyage/rerank-2.5" },
     ],
-    usage: { label: "Αυτόν τον μήνα", used: 12.4, limit: 30, unit: "$" },
+    usage: { label: "Αυτόν τον μήνα", used: 11.4, limit: 30, unit: "$" },
     developerOnly:
       "Τα μοντέλα (απόφαση ποιότητας που θέλει δοκιμή). Το πλαφόν αλλάζει στις Ρυθμίσεις › Εταιρεία › Βοηθός.",
   },
@@ -147,7 +147,7 @@ export const SUBSCRIPTIONS: readonly Subscription[] = [
     provider: "Vercel AI Gateway",
     what: "Χρήση AI",
     plan: "ανά χρήση (πλαφόν $30)",
-    monthly: 12.4,
+    monthly: 11.4,
     currency: "$",
     renews: "μηνιαία",
     account: "του developer",
@@ -181,7 +181,7 @@ export const SUBSCRIPTIONS: readonly Subscription[] = [
   {
     id: "domain",
     provider: "SiteGround",
-    what: "Domain devremedia.com και DNS",
+    what: "Domain deltafilms.example και DNS",
     plan: "ετήσιο",
     monthly: 2,
     currency: "€",

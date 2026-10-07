@@ -2,7 +2,13 @@
 // Τα Γυρίσματα και ο Κλεισμένος χρόνος ζουν στο filming.ts: το Ημερολόγιο είναι όψη, όχι πηγή (ADR 0005).
 // Repo public: μόνο επινοημένα ονόματα και διευθύνσεις.
 
-import { CREW_PEOPLE, PERSON_OF_ROLE, type CrewPerson } from "@/data/filming";
+import {
+  CREW_PEOPLE,
+  PERSON_OF_ROLE,
+  findProduction,
+  type CrewPerson,
+} from "@/data/filming";
+import { DELIVERABLES } from "@/data/productions";
 import type { RoleId } from "@/data/roles";
 
 // Όλα τα μέλη της ομάδας με Βασικά (Κλεισμένος χρόνος, Σύνδεσμος). Ο Λογιστής δεν μπαίνει σε Συνεργείο.
@@ -33,41 +39,28 @@ export interface Deadline {
   assigneeId: string;
 }
 
-export const DEADLINES: readonly Deadline[] = [
-  {
-    id: "dl-kypseli-reel",
-    title: "Reel φθινοπωρινού μενού",
-    clientId: "kypseli",
-    date: "2026-09-25",
-    assigneeId: "aris",
-  },
-  {
-    id: "dl-athina-photos",
-    title: "Φωτογραφίες νέου χώρου",
-    clientId: "athina",
-    date: "2026-09-29",
-    assigneeId: "sofia",
-  },
-  {
-    id: "dl-kinisi-video",
-    title: "Βίντεο προπόνησης Σεπτεμβρίου",
-    clientId: "kinisi",
-    date: "2026-10-01",
-    assigneeId: "aris",
-  },
-];
+// Παράγονται από τα ανοιχτά Παραδοτέα (productions.ts): το id είναι του Παραδοτέου, ώστε ο σύνδεσμος H2 να το ανοίγει.
+export const DEADLINES: readonly Deadline[] = DELIVERABLES.filter(
+  (deliverable) => deliverable.state === "σε εργασία",
+).map((deliverable) => ({
+  id: deliverable.id,
+  title: deliverable.title,
+  clientId: findProduction(deliverable.productionId)?.clientId ?? "",
+  date: deliverable.deadline,
+  assigneeId: deliverable.assigneeId,
+}));
 
 // Εταιρικό ημερολόγιο: μία σύνδεση με λογαριασμό-ρομπότ (κεφ. 6).
 export const COMPANY_CALENDAR = {
-  name: "Devre — Εταιρικό",
-  lastSync: "2026-09-20T11:58",
+  name: "Delta Films — Εταιρικό",
+  lastSync: "2026-09-20T10:38",
   // Στο παράδειγμα «Google εκτός»: αλλαγές του DMS που περιμένουν να γραφτούν, με επανάληψη.
   outage: {
     since: "2026-09-20T10:40",
     pendingWrites: [
-      "Νέο Γύρισμα: Καφέ Αθηνά, Παρ 09/10 10:00",
+      "Νέο Γύρισμα: Καφέ Αθηνά, Παρ 02/10 11:00",
       "Κλεισμένος χρόνος: Άννα Δημητρίου, Τετ 23/09 11:00",
-      "Μετάθεση: Κυψέλη Καφέ, Πέμ 24/09 10:00",
+      "Νέο Γύρισμα: Κυψέλη Καφέ, Πέμ 24/09 10:00",
     ],
     alertAfterHours: 1,
   },
@@ -142,7 +135,7 @@ export const GOOGLE_CHANGES: readonly GoogleChange[] = [
     when: "2026-09-20T08:50",
     by: "dimitris",
     kind: "μετακίνηση απορρίφθηκε",
-    text: "Κυψέλη Καφέ, Παρ 02/10: η μετακίνηση στις 08:00 επανήλθε στις 09:00. Λόγος: η Σοφία Λαζαρίδου έχει Κλεισμένο χρόνο 08:00–12:00.",
+    text: "Κυψέλη Καφέ, Παρ 02/10: η μετακίνηση στις 08:00 επανήλθε στις 09:00. Λόγος: οι 08:00 είναι εκτός Ωραρίου κρατήσεων (Δευ–Παρ 09:00–19:00).",
     filmingId: "f-kypseli-1002",
   },
   {
@@ -180,4 +173,4 @@ export const CALENDAR_LINK_OF: Readonly<Record<string, CalendarLink>> = {
 };
 
 export const calendarLinkUrl = (token: string): string =>
-  `https://devremedia.com/cal/${token}.ics`;
+  `https://deltafilms.example/cal/${token}.ics`;

@@ -3,7 +3,11 @@
 import { useState } from "react";
 
 import type { Message } from "@/data/messages";
-import { isOwnMessage, isUnread } from "@/data/messages-access";
+import {
+  canOpenScreen,
+  isOwnMessage,
+  isUnread,
+} from "@/data/messages-access";
 import type { RoleId } from "@/data/roles";
 import { MessageActions } from "@/screens/j2-actions";
 import { Composer } from "@/screens/j2-composer";
@@ -50,8 +54,8 @@ export function J2Thread(props: ThreadProps) {
           isHighlighted={message.id === highlightId}
           isOwn={isOwnMessage(role, message)}
           tagHref={
-            message.productionId
-              ? screenHref(role, "G2", { production: message.productionId })
+            message.productionId && canOpenScreen(role, "G2")
+              ? screenHref(role, "G2", { id: message.productionId })
               : undefined
           }
           actions={

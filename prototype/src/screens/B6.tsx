@@ -1,3 +1,4 @@
+import { agreementsOfClient } from "@/data/agreements";
 import { OPPORTUNITIES } from "@/data/opportunities";
 import {
   SALES_CLIENTS,
@@ -36,7 +37,7 @@ const toSide = (client: SalesClient): PairSide => ({
         ).length,
       ),
     ],
-    ["Συμφωνίες", String(client.agreements.length)],
+    ["Συμφωνίες", String(agreementsOfClient(client.id).length)],
   ],
 });
 

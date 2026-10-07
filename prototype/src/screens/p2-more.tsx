@@ -142,7 +142,11 @@ export function AssistantCapCard({ role, query }: ScreenProps) {
       </p>
       <div className="btn-row">
         <Link href={screenHref(role, "O1", {})}>Όρια στις Ρυθμίσεις (O1)</Link>
-        <Link href={screenHref(role, "N5", {})}>Χρήση και συνδρομές (N5)</Link>
+        {role === "owner" && (
+          <Link href={screenHref(role, "N5", {})}>
+            Χρήση και συνδρομές (N5)
+          </Link>
+        )}
       </div>
     </HealthCard>
   );

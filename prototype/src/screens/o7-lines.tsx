@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  PENDING_BEFORE_OPENING,
   READINESS_LINES,
   READY_DEFAULTS,
   type ReadinessLine,
@@ -20,7 +21,9 @@ export const linesFor = (
     ...line,
     done: allPending
       ? false
-      : allReady || line.isReady || line.id === confirmedId,
+      : allReady ||
+        line.id === confirmedId ||
+        (line.isReady && !PENDING_BEFORE_OPENING.includes(line.id)),
   }));
 
 function ConfirmButton({

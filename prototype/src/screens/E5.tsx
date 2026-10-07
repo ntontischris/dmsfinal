@@ -1,5 +1,5 @@
 import { E5Booking } from "@/screens/e5-booking";
-import { cancelHoursOf, noticeDaysOf } from "@/screens/e5-days";
+import { cancelHoursOf, noticeHoursOf } from "@/screens/e5-days";
 import {
   ErrorNotice,
   StateNotice,
@@ -31,7 +31,7 @@ export function E5({ role, query }: ScreenProps) {
         <E5Booking
           key={state}
           noBenefit={state === "empty"}
-          noticeDays={noticeDaysOf()}
+          noticeHours={noticeHoursOf()}
           cancelHours={cancelHoursOf()}
           messagesHref={screenHref(role, "J3", {})}
         />

@@ -26,7 +26,7 @@ import "./e5.css";
 
 interface BookingProps {
   noBenefit: boolean;
-  noticeDays: number;
+  noticeHours: number;
   cancelHours: number;
   messagesHref: string;
 }
@@ -36,10 +36,10 @@ interface DayGroup {
   days: readonly { date: string; status: DayStatus }[];
 }
 
-const groupDays = (noBenefit: boolean, noticeDays: number): DayGroup[] => {
+const groupDays = (noBenefit: boolean, noticeHours: number): DayGroup[] => {
   const days = Array.from({ length: FILMING_RULES.horizonDays }, (_, index) => {
     const date = addDays(TODAY_ISO, index);
-    return { date, status: dayStatusOf(date, noticeDays, noBenefit) };
+    return { date, status: dayStatusOf(date, noticeHours, noBenefit) };
   });
   const months = [...new Set(days.map((day) => day.date.slice(0, 7)))];
   return months.map((key) => ({
@@ -127,7 +127,7 @@ function Summary({
 // Κράτηση σε τρία βήματα στην ίδια σελίδα: μέρα, διάρκεια, ώρα. Ο πελάτης δεν βλέπει άτομα ούτε Εξοπλισμό.
 export function E5Booking({
   noBenefit,
-  noticeDays,
+  noticeHours,
   cancelHours,
   messagesHref,
 }: BookingProps) {
@@ -138,7 +138,7 @@ export function E5Booking({
   const [note, setNote] = useState("");
   const [confirmed, setConfirmed] = useState(false);
 
-  const groups = groupDays(noBenefit, noticeDays);
+  const groups = groupDays(noBenefit, noticeHours);
   const hasAnyDay = groups.some((group) =>
     group.days.some((day) => day.status.kind === "ok"),
   );
@@ -193,7 +193,7 @@ export function E5Booking({
       <section className="card">
         <h2>1. Διάλεξε μέρα</h2>
         <p className="muted">
-          Ελάχιστη ειδοποίηση {noticeDays} μέρες. Οι μέρες χωρίς Παροχή γράφουν
+          Ελάχιστη ειδοποίηση {noticeHours} ώρες. Οι μέρες χωρίς Παροχή γράφουν
           «Χωρίς Παροχή».
         </p>
         <DayPicker groups={groups} date={date} onPick={pickDate} />

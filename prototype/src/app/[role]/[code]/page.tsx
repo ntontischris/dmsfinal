@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DecisionsPanel } from "@/components/decisions-panel";
+import { ScenarioBar } from "@/components/scenario-bar";
 import { ROLES, ROLE_IDS, findRole, isRoleId } from "@/data/roles";
 import { SCREENS, canSee, findScreen, isFinal } from "@/data/screens";
 import { SCREEN_CONTENT } from "@/screens";
@@ -45,6 +46,7 @@ export default async function ScreenPage({
 
   return (
     <>
+      <ScenarioBar scenarioId={query.sc} stepNumber={query.st} />
       <header className="screen-header">
         <div className="eyebrow">
           {screen.code} · Module {screen.module} ·{" "}

@@ -36,14 +36,14 @@ export function FilmingTerms(props: SectionProps) {
         id="t-fnotice"
         label="Γυρίσματα: προειδοποίηση"
         props={props}
-        text={`Κράτηση τουλάχιστον ${filming.noticeDays} μέρες πριν`}
-        defaultText={`Κράτηση τουλάχιστον ${base.noticeDays} μέρες πριν`}
+        text={`Κράτηση τουλάχιστον ${filming.noticeDays * 24} ώρες πριν`}
+        defaultText={`Κράτηση τουλάχιστον ${base.noticeDays * 24} ώρες πριν`}
         input={
           <NumberInput
             id="t-fnotice"
-            value={filming.noticeDays}
-            onChange={(noticeDays) => setFilming({ noticeDays })}
-            suffix="μέρες"
+            value={filming.noticeDays * 24}
+            onChange={(hours) => setFilming({ noticeDays: hours / 24 })}
+            suffix="ώρες"
           />
         }
       />

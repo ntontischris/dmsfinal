@@ -6,11 +6,6 @@ interface AccessRequestProps {
   ownerName: string | null;
 }
 
-export const takenMessage = (ownerName: string | null): string =>
-  ownerName
-    ? `Ο Πελάτης ανήκει στον/στην ${ownerName}. Για νέα Ευκαιρία ζήτα πρόσβαση από τη Διαχείριση.`
-    : "Ο Πελάτης δεν έχει ακόμα Υπεύθυνο. Για νέα Ευκαιρία ζήτα πρόσβαση από τη Διαχείριση.";
-
 // Μικρή φόρμα αιτήματος πρόσβασης, μόνο στη μνήμη (prototype).
 export function AccessRequest({ ownerName }: AccessRequestProps) {
   const [isOpen, setIsOpen] = useState(false);

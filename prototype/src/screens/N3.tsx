@@ -72,7 +72,7 @@ export function N3({ role, query }: ScreenProps) {
       <p className="note">
         Οι άνθρωποι του Πελάτη «{clientNameOf(CURRENT_CLIENT_ID)}» που μπαίνουν
         στην πύλη. Όταν προσκαλείς ή αφαιρείς συνάδελφο, ειδοποιείται η ομάδα
-        της Devre Media.
+        της Delta Films.
       </p>
       {removing && <ColleagueRemoveConfirm role={role} m={removing} />}
       <ColleaguesSection role={role} members={members} />
@@ -85,7 +85,7 @@ export function N3({ role, query }: ScreenProps) {
         roles={grantable.allowed}
         lockedRoles={grantable.locked}
         clientName={clientNameOf(CURRENT_CLIENT_ID)}
-        footnote="Προεπιλογή: «Πλήρης». Δίνεις μόνο Ρόλους πελάτη που δεν ξεπερνούν τον δικό σου. Η ομάδα της Devre Media ειδοποιείται."
+        footnote="Προεπιλογή: «Πλήρης». Δίνεις μόνο Ρόλους πελάτη που δεν ξεπερνούν τον δικό σου. Η ομάδα της Delta Films ειδοποιείται."
       />
     </>
   );

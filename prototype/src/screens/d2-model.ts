@@ -5,6 +5,7 @@ import {
   PROPOSAL_VALIDITY_DAYS,
   deviationItemsOf,
   deviationsOf,
+  findAgreement,
   uncoveredDeviations,
   type AgreementKind,
   type AgreementLine,
@@ -103,7 +104,20 @@ interface BlankOptions {
   actor: string;
 }
 
-// Νέα πρόταση: άδειες γραμμές, Όροι από τις προεπιλογές, Υπογράφων η επαφή του Πελάτη.
+// Ανανέωση: οι γραμμές της Συμφωνίας που ανανεώνεται, στις τρέχουσες τιμές του Καταλόγου.
+const renewalLines = (
+  opportunity: Opportunity,
+  kind: AgreementKind,
+): readonly AgreementLine[] => {
+  const renewed = findAgreement(opportunity.renewsAgreementId);
+  if (!renewed || renewed.kind !== kind) return [];
+  return renewed.lines.flatMap((line) => {
+    const item = CATALOGUE.find((candidate) => candidate.id === line.itemId);
+    return item && !item.isArchived ? [lineFromItem(item)] : [];
+  });
+};
+
+// Νέα πρόταση: άδειες γραμμές (ή, στην Ανανέωση, από τον Κατάλογο), Όροι από τις προεπιλογές, Υπογράφων η επαφή του Πελάτη.
 export const blankAgreement = ({
   opportunity,
   client,
@@ -116,13 +130,14 @@ export const blankAgreement = ({
     id: "new",
     clientId: client.id,
     opportunityId: opportunity.id,
-    ownerId: opportunity.ownerId ?? client.ownerId ?? SALES_USER_ID,
+    // Ευκαιρία χωρίς Υπεύθυνο: η πρόταση μένει «Χωρίς υπεύθυνο» (δεν παίρνει τον Υπεύθυνο του Πελάτη).
+    ownerId: opportunity.ownerId ?? "",
     title: opportunity.title,
     kind,
     state: "πρόταση",
     path: "Σύνταξη",
     language: "el",
-    lines: [],
+    lines: renewalLines(opportunity, kind),
     terms,
     start: null,
     end: null,

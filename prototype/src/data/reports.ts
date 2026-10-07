@@ -96,15 +96,16 @@ export const DEFAULT_PERIOD: PeriodId = "this-year";
 export const OPPORTUNITY_DATES: Readonly<
   Record<string, { opened: string; closed?: string }>
 > = {
-  "o-renewal": { opened: "2026-09-10" },
-  "o-launch": { opened: "2026-08-25" },
-  "o-kinisi": { opened: "2026-08-18" },
+  "o-renewal": { opened: "2026-09-19" },
+  "o-kypseli-social": { opened: "2026-06-05", closed: "2026-06-24" },
+  "o-launch": { opened: "2026-09-17" },
+  "o-kinisi": { opened: "2026-09-11" },
   "o-meli": { opened: "2026-08-20" },
-  "o-armyra": { opened: "2026-09-14" },
-  "o-athina": { opened: "2026-07-20", closed: "2026-09-04" },
-  "o-armyra-lost": { opened: "2026-06-02", closed: "2026-07-10" },
-  "o-athinaion": { opened: "2026-09-18" },
-  "o-hamogelo": { opened: "2026-09-19" },
+  "o-armyra": { opened: "2026-09-10" },
+  "o-athina": { opened: "2026-07-20", closed: "2026-08-27" },
+  "o-armyra-lost": { opened: "2026-06-02", closed: "2026-07-30" },
+  "o-athinaion": { opened: "2026-09-19" },
+  "o-hamogelo": { opened: "2026-09-20" },
 };
 
 // Παλαιότερες κλεισμένες Ευκαιρίες. Στο prototype υπάρχουν μόνο για να έχουν οι Αναφορές πωλήσεων ιστορικό.
@@ -124,18 +125,6 @@ export interface PastOpportunity {
 
 export const PAST_OPPORTUNITIES: readonly PastOpportunity[] = [
   {
-    id: "p-kypseli-social",
-    clientName: "Κυψέλη Καφέ",
-    title: "Μηνιαίο πακέτο social",
-    ownerId: "anna",
-    source: "Τηλέφωνο",
-    outcome: "Κερδισμένη",
-    kind: "μηνιαία",
-    value: 900,
-    opened: "2026-05-12",
-    closed: "2026-06-20",
-  },
-  {
     id: "p-kinisi-social",
     clientName: "Γυμναστήριο Κίνηση",
     title: "Πακέτο social",
@@ -144,8 +133,8 @@ export const PAST_OPPORTUNITIES: readonly PastOpportunity[] = [
     outcome: "Κερδισμένη",
     kind: "μηνιαία",
     value: 1300,
-    opened: "2026-06-03",
-    closed: "2026-07-08",
+    opened: "2026-03-02",
+    closed: "2026-03-25",
   },
   {
     id: "p-armyra-video",
@@ -155,9 +144,9 @@ export const PAST_OPPORTUNITIES: readonly PastOpportunity[] = [
     source: "Ιστοσελίδα",
     outcome: "Κερδισμένη",
     kind: "εφάπαξ",
-    value: 1100,
+    value: 2200,
     opened: "2025-04-02",
-    closed: "2025-05-06",
+    closed: "2025-05-12",
   },
   {
     id: "p-orea-lost",

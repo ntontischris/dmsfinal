@@ -1,4 +1,4 @@
-import { personName } from "@/data/filming";
+import { NOW, personName } from "@/data/filming";
 import type { ProductionMember } from "@/data/productions-access";
 import type { ProductionState, ProductionTask } from "@/data/productions";
 
@@ -96,7 +96,7 @@ export const removeMember = (live: Live, personId: string): Live => {
   );
 };
 
-export const TODAY = "2026-09-20";
+export const TODAY = NOW.slice(0, 10);
 
 // Το «ποιος» στα δεδομένα είναι id ανθρώπου, όνομα ή «σύστημα».
 export const whoLabel = (who: string): string =>

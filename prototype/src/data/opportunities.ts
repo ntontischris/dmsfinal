@@ -3,7 +3,7 @@
 import { FICTIONAL_CLIENT } from "@/data/fictional-client";
 import { KYPSELI_ID } from "@/data/sales";
 
-// Αρχικές τιμές των λιστών (Ρυθμίσεις › Πωλήσεις): τις αλλάζει ο admin.
+// Αρχικές τιμές των λιστών (Ρυθμίσεις › Πωλήσεις, Blueprint κεφ. 5): τις αλλάζει ο admin. Ένα σημείο ορισμού: το settings-sales.ts τις διαβάζει από εδώ.
 export const STAGES = [
   "Νέα",
   "Πρώτη επαφή",
@@ -33,13 +33,6 @@ export type ProposalPath =
   "Σύνταξη" | "Αναμένει Έγκριση" | "Εστάλη" | "Έληξε" | "Υπογράφηκε";
 export type LinkState = "ενεργός" | "ακυρώθηκε" | "έληξε" | "ανακλήθηκε";
 
-export interface ProposalLine {
-  description: string;
-  catalogPrice: number | null;
-  price: number;
-  estimatedCost: number;
-}
-
 export interface Recipient {
   name: string;
   isSignatory: boolean;
@@ -53,14 +46,6 @@ export interface Proposal {
   path: ProposalPath;
   revision: number;
   validUntil: string;
-  lines: readonly ProposalLine[];
-  deviations: readonly string[];
-  approval?: {
-    state: "αναμένει" | "εγκρίθηκε" | "απορρίφθηκε";
-    requestedOn?: string;
-    comment?: string;
-  };
-  lowMargin: boolean;
   recipients: readonly Recipient[];
 }
 
@@ -82,6 +67,8 @@ export interface Opportunity {
   source: string;
   referredBy?: string;
   nextStep?: { text: string; due: string };
+  // Ανανέωση: η Συμφωνία που ανανεώνει. Η νέα πρόταση ξεκινά από τις τρέχουσες τιμές του Καταλόγου.
+  renewsAgreementId?: string;
   activities: readonly OpportunityActivity[];
   proposal?: Proposal;
 }
@@ -97,6 +84,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     outcome: "Ανοιχτή",
     ownerId: "anna",
     source: "Τηλέφωνο",
+    renewsAgreementId: "ag-kypseli-social",
     nextStep: {
       text: "Κλήση για ανανέωση (η Συμφωνία λήγει 31/12)",
       due: "2026-10-20",
@@ -104,11 +92,55 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     activities: [
       {
         when: "2026-09-19",
+        kind: "Σημείωση",
+        text: "Ανοίχτηκε με το χέρι για ανανέωση, νωρίτερα από την αυτόματη Ευκαιρία της 01/12. Η πρόταση ξεκινά από τις τρέχουσες τιμές του Καταλόγου (1.300 €).",
+        by: "Άννα Δημητρίου",
+      },
+    ],
+  },
+  {
+    id: "o-kypseli-social",
+    clientId: KYPSELI_ID,
+    title: "Μηνιαίο πακέτο social media",
+    stage: "Διαπραγμάτευση",
+    outcome: "Κερδισμένη",
+    ownerId: "anna",
+    source: "Ιστοσελίδα",
+    activities: [
+      {
+        when: "2026-06-24",
         kind: "σύστημα",
-        text: "Ανοίχτηκε Ευκαιρία «ανανέωση».",
+        text: "Υπέγραψε ο Υπογράφων. Η Ευκαιρία έγινε κερδισμένη.",
+        by: "Σύστημα",
+      },
+      {
+        when: "2026-06-18",
+        kind: "Email",
+        text: "Στάλθηκε η πρόταση στη Μαρία Παπαδάκη, με τιμή 900 € (έκπτωση πρώτου πελάτη, εγκεκριμένη από τον Ιδιοκτήτη).",
+        by: "Άννα Δημητρίου",
+      },
+      {
+        when: "2026-06-05",
+        kind: "σύστημα",
+        text: "Φόρμα ενδιαφέροντος: «2 Γυρίσματα και 8 reels τον μήνα».",
         by: "Σύστημα",
       },
     ],
+    proposal: {
+      title: "Μηνιαίο πακέτο social media",
+      kind: "μηνιαία",
+      path: "Υπογράφηκε",
+      revision: 1,
+      validUntil: "2026-07-02",
+      recipients: [
+        {
+          name: "Μαρία Παπαδάκη",
+          isSignatory: true,
+          link: "έληξε",
+          opened: true,
+        },
+      ],
+    },
   },
   {
     id: "o-launch",
@@ -146,22 +178,6 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
       path: "Εστάλη",
       revision: 1,
       validUntil: "2026-10-02",
-      lines: [
-        {
-          description: launchVideo.lines[0].description,
-          catalogPrice: 650,
-          price: 650,
-          estimatedCost: 380,
-        },
-        {
-          description: launchVideo.lines[1].description,
-          catalogPrice: 550,
-          price: 550,
-          estimatedCost: 300,
-        },
-      ],
-      deviations: [],
-      lowMargin: false,
       recipients: [
         {
           name: "Μαρία Παπαδάκη",
@@ -181,7 +197,7 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
   {
     id: "o-kinisi",
     clientId: "kinisi",
-    title: "Πακέτο social με 4 έξτρα reels",
+    title: "4 έξτρα reels τον μήνα",
     stage: "Διαπραγμάτευση",
     outcome: "Ανοιχτή",
     ownerId: "anna",
@@ -189,52 +205,30 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     nextStep: { text: "Αναμονή Έγκρισης, μετά αποστολή", due: "2026-09-22" },
     activities: [
       {
-        when: "2026-09-19",
+        when: "2026-09-16",
         kind: "σύστημα",
         text: "Ζητήθηκε Έγκριση πρότασης (Παρέκκλιση).",
         by: "Άννα Δημητρίου",
       },
       {
-        when: "2026-09-15",
+        when: "2026-09-11",
         kind: "Συνάντηση",
         text: "Θέλει έκπτωση 25% για να κλείσει.",
         by: "Άννα Δημητρίου",
       },
     ],
     proposal: {
-      title: "Πακέτο social με 4 έξτρα reels",
+      title: "4 έξτρα reels τον μήνα",
       kind: "μηνιαία",
       path: "Αναμένει Έγκριση",
       revision: 2,
       validUntil: "2026-10-10",
-      lines: [
-        {
-          description:
-            "Πακέτο social: 2 Γυρίσματα και 8 reels τον μήνα (έκπτωση 25%)",
-          catalogPrice: 900,
-          price: 675,
-          estimatedCost: 560,
-        },
-        {
-          description: "4 επιπλέον reels τον μήνα (ελεύθερη γραμμή)",
-          catalogPrice: null,
-          price: 150,
-          estimatedCost: 140,
-        },
-      ],
-      deviations: [
-        "Έκπτωση 25%, πέρα από την τυπική 10% πρώτων μηνών",
-        "Ελεύθερη γραμμή",
-        "Περισσότερες Παροχές από το Πακέτο",
-      ],
-      approval: { state: "αναμένει", requestedOn: "2026-09-16" },
-      lowMargin: true,
       recipients: [
         {
           name: "Σταύρος Μπαλτάς",
           isSignatory: true,
           link: "ακυρώθηκε",
-          opened: false,
+          opened: true,
         },
       ],
     },
@@ -256,10 +250,10 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
         by: "Σύστημα",
       },
       {
-        when: "2026-09-09",
+        when: "2026-08-29",
         kind: "Email",
-        text: "Η κ. Ράπτη ζήτησε αλλαγές σε έναν όρο.",
-        by: "Ελένη Ράπτη",
+        text: "Η κ. Ράπτη ζήτησε αλλαγές σε έναν όρο (μέρες πληρωμής 30). Στάλθηκε η αναθεωρημένη πρόταση.",
+        by: "Άννα Δημητρίου",
       },
     ],
     proposal: {
@@ -268,16 +262,6 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
       path: "Έληξε",
       revision: 2,
       validUntil: "2026-09-12",
-      lines: [
-        {
-          description: "Πακέτο podcast: 2 επεισόδια τον μήνα",
-          catalogPrice: 700,
-          price: 700,
-          estimatedCost: 430,
-        },
-      ],
-      deviations: [],
-      lowMargin: false,
       recipients: [
         { name: "Ελένη Ράπτη", isSignatory: true, link: "έληξε", opened: true },
       ],
@@ -312,10 +296,10 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
     source: "Ιστοσελίδα",
     activities: [
       {
-        when: "2026-08-28",
-        kind: "σύστημα",
-        text: "Υπέγραψε ο Υπογράφων. Η Ευκαιρία έγινε κερδισμένη.",
-        by: "Σύστημα",
+        when: "2026-08-27",
+        kind: "Σημείωση",
+        text: "Καταχωρίστηκε υπογραφή εκτός συστήματος. Η Ευκαιρία έγινε κερδισμένη.",
+        by: "Νίκος Βασιλείου",
       },
       {
         when: "2026-08-21",
@@ -330,21 +314,11 @@ export const OPPORTUNITIES: readonly Opportunity[] = [
       path: "Υπογράφηκε",
       revision: 1,
       validUntil: "2026-09-04",
-      lines: [
-        {
-          description: "Πακέτο social: 2 Γυρίσματα και 8 reels τον μήνα",
-          catalogPrice: 900,
-          price: 900,
-          estimatedCost: 560,
-        },
-      ],
-      deviations: [],
-      lowMargin: false,
       recipients: [
         {
           name: "Μαρία Σιμιτζή",
           isSignatory: true,
-          link: "ενεργός",
+          link: "έληξε",
           opened: true,
         },
       ],

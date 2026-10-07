@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { activeAgreementsOf } from "@/data/agreements";
 import type { CatalogueCaps } from "@/data/catalogue-access";
 import {
   COST_SETTINGS,
@@ -14,6 +15,7 @@ import {
   type CataloguePackage,
 } from "@/data/catalogue";
 import type { RoleId } from "@/data/roles";
+import { SCREENS } from "@/data/screens";
 import {
   Badge,
   fmtDate,
@@ -22,7 +24,27 @@ import {
   screenHref,
 } from "@/screens/shared";
 
-export interface SectionProps {
+export // Σύνδεσμος μόνο προς οθόνη που ανοίγει για τον ρόλο· αλλιώς απλό κείμενο.
+function ScreenLink({
+  role,
+  code,
+  children,
+}: {
+  role: RoleId;
+  code: string;
+  children: ReactNode;
+}) {
+  const isOpen = SCREENS.some(
+    (screen) => screen.code === code && role in screen.access,
+  );
+  return isOpen ? (
+    <Link href={screenHref(role, code, {})}>{children}</Link>
+  ) : (
+    <>{children}</>
+  );
+}
+
+interface SectionProps {
   role: RoleId;
   item: CatalogueItem;
   caps: CatalogueCaps;
@@ -188,7 +210,10 @@ export function ProvisionsSection({ role, item, caps }: SectionProps) {
       )}
       <p className="note">
         Τα είδη Παροχής, οι μονάδες και ο Τρόπος μέτρησης ορίζονται στις{" "}
-        <Link href={screenHref(role, "O3", {})}>Ρυθμίσεις › Συμφωνίες</Link>.
+        <ScreenLink role={role} code="O3">
+          Ρυθμίσεις › Συμφωνίες
+        </ScreenLink>
+        .
         Ό,τι ξεπερνά τις Παροχές χρεώνεται με την τιμή της αντίστοιχης Υπηρεσίας
         στη Συμφωνία.
       </p>
@@ -522,7 +547,10 @@ export function PublicSection({
           )}
           <div className="muted">
             Η σύνδεση γίνεται από τον Τομέα, στους{" "}
-            <Link href={screenHref(role, "Q1", {})}>Τομείς</Link>. Προεπισκόπηση
+            <ScreenLink role={role} code="Q1">
+              Τομείς
+            </ScreenLink>
+            . Προεπισκόπηση
             στη σελίδα <Link href={screenHref("visitor", "R5", {})}>Τιμές</Link>
             .
           </div>
@@ -534,18 +562,19 @@ export function PublicSection({
 
 export function UsageSection({ role, item, caps, isNew }: SectionProps) {
   if (isNew) return null;
+  const activeCount = activeAgreementsOf(item.id);
   return (
     <section className="card">
       <h2>Χρήση και ιστορικό</h2>
       <dl className="dl">
         <dt>Σε χρήση</dt>
         <dd>
-          {item.activeAgreements === 0 ? (
+          {activeCount === 0 ? (
             "Καμία ενεργή Συμφωνία."
           ) : (
-            <Link href={screenHref(role, "D1", { item: item.id })}>
-              {item.activeAgreements} ενεργές Συμφωνίες
-            </Link>
+            <ScreenLink role={role} code="D1">
+              {activeCount} ενεργές Συμφωνίες
+            </ScreenLink>
           )}
           <div className="muted">
             Οι αλλαγές εδώ δεν τις αγγίζουν: κάθε Συμφωνία κρατά αντίγραφο
@@ -555,9 +584,9 @@ export function UsageSection({ role, item, caps, isNew }: SectionProps) {
         <dt>Τελευταία αλλαγή</dt>
         <dd>
           {fmtDate(item.updated.when)}, {item.updated.by} ·{" "}
-          <Link href={screenHref(role, "P1", { item: item.id })}>
+          <ScreenLink role={role} code="P1">
             Ίχνος ενεργειών
-          </Link>
+          </ScreenLink>
         </dd>
       </dl>
       {caps.canManage && (

@@ -47,6 +47,14 @@ export interface Terms {
   firstMonthsDiscount: { percent: number; months: number };
 }
 
+// Ελάχιστη προειδοποίηση κράτησης 48 ώρες = 2 μέρες (Blueprint). Το όριο ακύρωσης 48→24 ώρες ισχύει μόνο για νέες προτάσεις (ADR 0015).
+const NEW_FILMING: Terms["filming"] = {
+  noticeDays: 2,
+  cancelHours: 24,
+  lateCancelBurns: true,
+  noShowBurns: true,
+};
+
 export const DEFAULT_TERMS: Readonly<Record<AgreementKind, Terms>> = {
   μηνιαία: {
     paymentDays: 15,
@@ -55,12 +63,7 @@ export const DEFAULT_TERMS: Readonly<Record<AgreementKind, Terms>> = {
     durationMonths: 6,
     renewal: "νέα Ευκαιρία",
     dissolution: { noticeDays: 30, fee: 0 },
-    filming: {
-      noticeDays: 5,
-      cancelHours: 48,
-      lateCancelBurns: true,
-      noShowBurns: true,
-    },
+    filming: NEW_FILMING,
     revisionLimit: { reel: 2, video: 2, photo: 1, episode: 1 },
     milestones: [],
     firstMonthsDiscount: { percent: 0, months: 0 },
@@ -72,12 +75,7 @@ export const DEFAULT_TERMS: Readonly<Record<AgreementKind, Terms>> = {
     durationMonths: null,
     renewal: null,
     dissolution: { noticeDays: 0, fee: 0 },
-    filming: {
-      noticeDays: 5,
-      cancelHours: 48,
-      lateCancelBurns: true,
-      noShowBurns: true,
-    },
+    filming: NEW_FILMING,
     revisionLimit: { reel: 2, video: 2, photo: 1, episode: 1 },
     milestones: [
       { trigger: "υπογραφή", percent: 50 },
@@ -89,7 +87,8 @@ export const DEFAULT_TERMS: Readonly<Record<AgreementKind, Terms>> = {
 
 // Ρυθμίσεις › Συμφωνίες: η τυπική έκπτωση πρώτων μηνών (ό,τι την ξεπερνά είναι Παρέκκλιση) και η Ισχύς πρότασης.
 export const STANDARD_DISCOUNT = { percent: 10, months: 2 } as const;
-export const PROPOSAL_VALIDITY_DAYS = 14;
+// Ισχύς πρότασης 14→21 μέρες: μόνο για νέες προτάσεις· οι υπάρχουσες κρατούν τη δική τους ημερομηνία λήξης.
+export const PROPOSAL_VALIDITY_DAYS = 21;
 
 // Μία γραμμή: Πακέτο ή Υπηρεσία του Καταλόγου (itemId) ή ελεύθερη γραμμή (itemId null).
 // Τιμή, Παροχές και ώρες είναι ανά Περίοδο στη μηνιαία, συνολικά στην εφάπαξ, και για όλη την ποσότητα.
@@ -186,8 +185,10 @@ const SOCIAL_PROVISIONS: readonly Provision[] = [
   { kindId: "reel", quantity: 8 },
 ];
 
-const monthlyTerms = DEFAULT_TERMS.μηνιαία;
-const oneOffTerms = DEFAULT_TERMS.εφάπαξ;
+// Οι υπάρχουσες Συμφωνίες κρατούν το όριο ακύρωσης 48 ωρών της εποχής τους.
+const LEGACY_FILMING: Terms["filming"] = { ...NEW_FILMING, cancelHours: 48 };
+const monthlyTerms: Terms = { ...DEFAULT_TERMS.μηνιαία, filming: LEGACY_FILMING };
+const oneOffTerms: Terms = { ...DEFAULT_TERMS.εφάπαξ, filming: LEGACY_FILMING };
 
 const period = (
   label: string,
@@ -211,7 +212,7 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
   {
     id: "ag-kypseli-social",
     clientId: "kypseli",
-    opportunityId: null,
+    opportunityId: "o-kypseli-social",
     ownerId: "anna",
     title: "Μηνιαίο πακέτο social media",
     kind: "μηνιαία",
@@ -225,7 +226,7 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
         description: "Μηνιαία Παρουσία: 2 Γυρίσματα και 8 reels τον μήνα",
         quantity: 1,
         unitPrice: 900,
-        catalogPrice: 900,
+        catalogPrice: 1300,
         provisions: SOCIAL_PROVISIONS,
         catalogProvisions: SOCIAL_PROVISIONS,
         hours: { shoot: 6, edit: 14 },
@@ -250,7 +251,22 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
         number: 1,
         when: "2026-06-18",
         by: "Άννα Δημητρίου",
-        summary: "Πρώτη πρόταση από τον Κατάλογο, με έναρξη 1/7.",
+        summary:
+          "Πρώτη πρόταση από τον Κατάλογο, με έναρξη 1/7 και τιμή 900 € (έκπτωση πρώτου πελάτη).",
+        approval: {
+          state: "εγκρίθηκε",
+          by: "Γιώργος Μαυρίδης",
+          when: "2026-06-18",
+          comment: "Έκπτωση πρώτου πελάτη.",
+          approvedDeviations: [
+            {
+              key: "price:l1",
+              label:
+                "Τιμή κάτω από τον Κατάλογο: «Μηνιαία Παρουσία: 2 Γυρίσματα και 8 reels τον μήνα»",
+              depth: 400,
+            },
+          ],
+        },
       },
     ],
     periods: [
@@ -438,7 +454,7 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
     clientId: "kinisi",
     opportunityId: "o-kinisi",
     ownerId: "anna",
-    title: "Πακέτο social με 4 έξτρα reels",
+    title: "4 έξτρα reels τον μήνα",
     kind: "μηνιαία",
     state: "πρόταση",
     path: "Αναμένει Έγκριση",
@@ -446,18 +462,6 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
     lines: [
       {
         id: "l1",
-        itemId: "pkg-social",
-        description: "Μηνιαία Παρουσία: 2 Γυρίσματα και 8 reels τον μήνα",
-        quantity: 1,
-        unitPrice: 1300,
-        catalogPrice: 1300,
-        provisions: SOCIAL_PROVISIONS,
-        catalogProvisions: SOCIAL_PROVISIONS,
-        hours: { shoot: 6, edit: 14 },
-        directCost: 0,
-      },
-      {
-        id: "l2",
         itemId: null,
         description: "4 επιπλέον reels τον μήνα, ίδιο υλικό",
         quantity: 1,
@@ -490,7 +494,7 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
         number: 1,
         when: "2026-09-12",
         by: "Άννα Δημητρίου",
-        summary: "Έκπτωση 25% τους 3 πρώτους μήνες.",
+        summary: "Έκπτωση 25% τους 3 πρώτους μήνες στα έξτρα reels.",
         approval: {
           state: "εγκρίθηκε",
           by: "Δημήτρης Ιωάννου",
@@ -510,7 +514,7 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
         when: "2026-09-16",
         by: "Άννα Δημητρίου",
         summary:
-          "«Θέλω αλλαγές» του πελάτη: +4 reels τον μήνα ως ελεύθερη γραμμή.",
+          "«Θέλω αλλαγές» του πελάτη: 4 reels τον μήνα ως ελεύθερη γραμμή.",
         approval: { state: "αναμένει" },
       },
     ],
@@ -548,7 +552,7 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
     ],
     terms: { ...monthlyTerms, durationMonths: 12 },
     start: "2025-10-01",
-    end: "2026-09-30",
+    end: "2026-03-31",
     validUntil: null,
     recipients: [],
     revisions: [
@@ -608,16 +612,9 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
     validUntil: "2026-09-12",
     recipients: [
       {
-        name: "Στέλιος Ράπτης",
-        email: "stelios@example.com",
-        isSignatory: true,
-        link: "έληξε",
-        opened: true,
-      },
-      {
         name: "Ελένη Ράπτη",
-        email: "eleni@example.com",
-        isSignatory: false,
+        email: "eleni.rapti@example.com",
+        isSignatory: true,
         link: "έληξε",
         opened: true,
       },
@@ -633,7 +630,7 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
         number: 2,
         when: "2026-08-29",
         by: "Άννα Δημητρίου",
-        summary: "«Θέλω αλλαγές» της Ελένης: μέρες πληρωμής 30 αντί για 15.",
+        summary: "«Θέλω αλλαγές» της κ. Ράπτη: μέρες πληρωμής 30 αντί για 15.",
         approval: {
           state: "εγκρίθηκε",
           by: "Γιώργος Μαυρίδης",
@@ -781,7 +778,7 @@ export const AGREEMENTS: readonly AgreementRecord[] = [
     recipients: [
       {
         name: "Μαρία Σιμιτζή",
-        email: "simitzi@example.com",
+        email: "info@athina.example.com",
         isSignatory: true,
         link: "έληξε",
         opened: true,
@@ -824,6 +821,19 @@ export const findAgreement = (
   id: string | undefined,
 ): AgreementRecord | undefined =>
   AGREEMENTS.find((agreement) => agreement.id === id);
+
+export const agreementOfOpportunity = (
+  opportunityId: string,
+): AgreementRecord | undefined =>
+  AGREEMENTS.find((agreement) => agreement.opportunityId === opportunityId);
+
+// Πόσες ενεργές Συμφωνίες έχουν γραμμή από αυτό το στοιχείο του Καταλόγου.
+export const activeAgreementsOf = (itemId: string): number =>
+  AGREEMENTS.filter(
+    (agreement) =>
+      agreement.state === "ενεργή" &&
+      agreement.lines.some((line) => line.itemId === itemId),
+  ).length;
 
 export const agreementsOfClient = (
   clientId: string,

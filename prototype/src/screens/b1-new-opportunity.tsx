@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { AccessRequest, takenMessage } from "@/screens/access-request";
+import { takenMessage } from "@/data/access-requests";
+import { AccessRequest } from "@/screens/access-request";
 
 export interface PickerClient {
   id: string;

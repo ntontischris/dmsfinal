@@ -210,7 +210,7 @@ export function TermsSection({ agreement, t, lang }: SectionProps) {
       </ul>
       <h3>{t.filmingTitle}</h3>
       <ul className="d5-plain">
-        <li>{t.notice(terms.filming.noticeDays)}</li>
+        <li>{t.notice(terms.filming.noticeDays * 24)}</li>
         <li>{t.cancel(terms.filming.cancelHours)}</li>
         <li>{t.lateCancel(terms.filming.lateCancelBurns)}</li>
         <li>{t.noShow(terms.filming.noShowBurns)}</li>

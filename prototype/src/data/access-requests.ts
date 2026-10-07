@@ -1,5 +1,11 @@
 // Φανταστικά εκκρεμή Αιτήματα πρόσβασης («Ένας Πελάτης, ένας πωλητής»). Μόνο επινοημένα στοιχεία.
 
+// Το μήνυμα ζει εδώ και όχι στο «use client» αρχείο της φόρμας: το καλούν και Server Components.
+export const takenMessage = (ownerName: string | null): string =>
+  ownerName
+    ? `Ο Πελάτης ανήκει στον/στην ${ownerName}. Για νέα Ευκαιρία ζήτα πρόσβαση από τη Διαχείριση.`
+    : "Ο Πελάτης δεν έχει ακόμα Υπεύθυνο. Για νέα Ευκαιρία ζήτα πρόσβαση από τη Διαχείριση.";
+
 export interface AccessRequest {
   id: string;
   requesterId: string;

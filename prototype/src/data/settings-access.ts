@@ -39,4 +39,5 @@ export const ACTOR_NAME: Readonly<Partial<Record<RoleId, string>>> = {
   admin: "Δημήτρης Ιωάννου",
 };
 
-export const OPENED_ON = "2026-10-01";
+// «Άνοιγμα σε πελάτες»: έγινε από τον Ιδιοκτήτη. Ο κόσμος του σεναρίου είναι μετά από αυτό.
+export const OPENED_ON = "2026-06-15";

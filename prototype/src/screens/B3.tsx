@@ -1,4 +1,9 @@
-import { LOSS_REASONS, STAGES } from "@/data/opportunities";
+import { agreementOfOpportunity, agreementTotal } from "@/data/agreements";
+import {
+  LOSS_REASONS,
+  STAGES,
+  type Opportunity,
+} from "@/data/opportunities";
 import { capsOf, isForgotten, visibleOpportunities } from "@/data/sales-access";
 import { findClient, memberName } from "@/data/sales";
 import { PipelineBoard, type BoardCard } from "@/screens/b3-board";
@@ -12,6 +17,13 @@ import {
   screenHref,
   type ScreenProps,
 } from "@/screens/shared";
+
+const amountOf = (opportunity: Opportunity, canSee: boolean): string | null => {
+  const agreement = agreementOfOpportunity(opportunity.id);
+  if (!canSee || !agreement) return null;
+  const total = fmtMoney(agreementTotal(agreement));
+  return agreement.kind === "μηνιαία" ? `${total} / μήνα` : total;
+};
 
 // Pipeline Ευκαιριών: Στήλες ανά Στάδιο. Πωλήσεις: μόνο οι δικές του Ευκαιρίες (Α).
 export function B3({ role, query }: ScreenProps) {
@@ -33,15 +45,7 @@ export function B3({ role, query }: ScreenProps) {
         ? `${opportunity.nextStep.text} (${fmtDate(opportunity.nextStep.due)})`
         : null,
       isForgotten: isForgotten(opportunity),
-      amount:
-        caps.canSeeAmounts && opportunity.proposal
-          ? fmtMoney(
-              opportunity.proposal.lines.reduce(
-                (sum, line) => sum + line.price,
-                0,
-              ),
-            )
-          : null,
+      amount: amountOf(opportunity, caps.canSeeAmounts),
     }),
   );
 

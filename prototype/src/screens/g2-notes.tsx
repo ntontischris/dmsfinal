@@ -29,10 +29,14 @@ export function G2Messages({
           </p>
           <Link
             className="button"
-            href={screenHref(role, "J2", {
-              client: production.clientId,
-              production: production.id,
-            })}
+            href={
+              role === "client"
+                ? screenHref(role, "J3", {})
+                : screenHref(role, "J2", {
+                    client: production.clientId,
+                    production: production.id,
+                  })
+            }
           >
             Άνοιγμα Συνομιλίας
           </Link>

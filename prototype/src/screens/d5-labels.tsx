@@ -43,7 +43,7 @@ export interface DocLabels {
   unused: Record<UnusedProvisions, string>;
   renewal: Record<Renewal, string>;
   filmingTitle: string;
-  notice: (days: number) => string;
+  notice: (hours: number) => string;
   cancel: (hours: number) => string;
   lateCancel: (burns: boolean) => string;
   noShow: (burns: boolean) => string;
@@ -105,7 +105,7 @@ export const DOC_LABELS: Readonly<Record<DocLanguage, DocLabels>> = {
         "Στη λήξη συνεχίζει αυτόματα με τους ίδιους όρους, εκτός αν μας ειδοποιήσετε.",
     },
     filmingTitle: "Πολιτική Γυρισμάτων",
-    notice: (d) => `Κλείνετε Γύρισμα τουλάχιστον ${d} μέρες πριν.`,
+    notice: (h) => `Κλείνετε Γύρισμα τουλάχιστον ${h} ώρες πριν.`,
     cancel: (h) => `Ακύρωση χωρίς χρέωση ως ${h} ώρες πριν.`,
     lateCancel: (burns) =>
       burns
@@ -171,7 +171,7 @@ export const DOC_LABELS: Readonly<Record<DocLanguage, DocLabels>> = {
         "It continues automatically on the same terms unless you tell us otherwise.",
     },
     filmingTitle: "Shoot policy",
-    notice: (d) => `Book a shoot at least ${d} days ahead.`,
+    notice: (h) => `Book a shoot at least ${h} hours ahead.`,
     cancel: (h) => `Free cancellation up to ${h} hours before.`,
     lateCancel: (burns) =>
       burns
@@ -200,6 +200,7 @@ export interface ActionLabels {
   confirm: string;
   cancel: string;
   signed: string;
+  signedExisting: string;
   signedRecord: string;
   changesPrompt: string;
   send: string;
@@ -225,6 +226,8 @@ export const ACTION_LABELS: Readonly<Record<DocLanguage, ActionLabels>> = {
     cancel: "Άκυρο",
     signed:
       "Υπογράφηκε. Θα λάβετε email με το PDF και πρόσκληση στον λογαριασμό σας.",
+    signedExisting:
+      "Υπογράφηκε. Θα λάβετε email με το PDF και θα το βρείτε στον λογαριασμό σας.",
     signedRecord:
       "Καταγράφηκαν η ώρα και η διεύθυνση σύνδεσης. Το PDF κλείδωσε και δεν αλλάζει πια.",
     changesPrompt: "Τι θέλετε να αλλάξει;",
@@ -250,6 +253,8 @@ export const ACTION_LABELS: Readonly<Record<DocLanguage, ActionLabels>> = {
     cancel: "Cancel",
     signed:
       "Signed. You will receive an email with the PDF and an invitation to your account.",
+    signedExisting:
+      "Signed. You will receive an email with the PDF and you will find it in your account.",
     signedRecord:
       "The time and connection address were recorded. The PDF is now locked.",
     changesPrompt: "What would you like changed?",
