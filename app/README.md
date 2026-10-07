@@ -22,3 +22,10 @@ pnpm type-check && pnpm lint && pnpm test && pnpm build
 - Το repo είναι public: κανένα κλειδί στον κώδικα (`.env*` αγνοείται, τα κλειδιά μπαίνουν στις μεταβλητές του Vercel).
 - Χρώματα μόνο από tokens (`pnpm check:design`). Κανένα κεφαλαίο σε περιεχόμενο, mono μόνο για ετικέτες/κωδικούς/timecodes, ένα κύριο κουμπί ανά περιοχή.
 - Ελέγχεται σε Node 22 (CI). Τοπικά δουλεύει και σε Node 20.9+.
+
+## Βάση (Supabase)
+
+- `supabase/migrations/`: κάθε αλλαγή στη βάση είναι migration (`npx supabase migration new <όνομα>`).
+- `supabase/tests/`: τεστ pgTAP για κάθε κανόνα πρόσβασης. Τρέχουν σε κάθε PR στο GitHub (`supabase test db`), πάνω σε προσωρινή τοπική βάση. Τοπικά θέλουν Docker.
+- Στο `main` τα migrations περνούν μόνα τους στη βάση ανάπτυξης (job `migrate`), όταν υπάρχουν τα secrets του repo `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`.
+- Τα κλειδιά της εφαρμογής (`NEXT_PUBLIC_SUPABASE_URL` κ.λπ.) τα γράφει στο Vercel η σύνδεση Supabase ↔ Vercel. Δεν μπαίνουν ποτέ στον κώδικα.
