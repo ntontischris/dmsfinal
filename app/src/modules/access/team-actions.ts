@@ -29,6 +29,14 @@ const messageOf = (
   return fallback;
 };
 
+const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
+
+// «Αποθηκεύτηκε»: πόσες αλλαγές, και ποιους επηρεάζει.
+const savedNotice = (changes: number, holders: number): string =>
+  `Αποθηκεύτηκε (${plural(changes, "αλλαγή", "αλλαγές")}). ${
+    holders === 0 ? "Κανείς δεν τον έχει ακόμα." : `Ισχύει από την επόμενη ενέργεια ${holders === 1 ? "του Χρήστη" : `των ${holders} Χρηστών`} που τον έχουν.`
+  }`;
+
 const grantsFromForm = (form: FormData): Grants =>
   Object.fromEntries(
     [...form.entries()].flatMap(([key, value]) =>
@@ -90,10 +98,7 @@ export async function saveRole(
       return { error: messageOf(error, "Τα Δικαιώματα δεν αποθηκεύτηκαν.") };
   }
   revalidatePath("/app/team", "layout");
-  const holders = current.data.holders.length;
-  return {
-    notice: `Αποθηκεύτηκε (${changes.length} αλλαγές). Ισχύει από την επόμενη ενέργεια ${holders === 1 ? "του 1 Χρήστη" : `των ${holders} Χρηστών`} που τον έχουν.`,
-  };
+  return { notice: savedNotice(changes.length, current.data.holders.length) };
 }
 
 const newRoleSchema = z.object({

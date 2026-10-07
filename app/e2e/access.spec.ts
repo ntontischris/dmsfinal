@@ -55,7 +55,7 @@ test("ο Ιδιοκτήτης βλέπει την Ομάδα και φτιάχν
     .check();
   await page.getByRole("button", { name: "Αποθήκευση", exact: true }).click();
   await expect(page.getByRole("status")).toContainText(
-    "Αποθηκεύτηκε (1 αλλαγές)",
+    "Αποθηκεύτηκε (1 αλλαγή)",
   );
   await shot(page, "n4-role");
 });

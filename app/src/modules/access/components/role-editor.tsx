@@ -114,7 +114,7 @@ export function RoleEditor({ role, permissions }: RoleEditorProps) {
         </div>
       </Panel>
       <Panel label="Δικαιώματα">
-        <p className="mt-0 text-sm text-muted-foreground">
+        <p className="mt-0 mb-4 text-sm text-muted-foreground">
           {role.isOwner ? HELP.owner : HELP[role.kind]}
         </p>
         <div className="grid gap-4">
