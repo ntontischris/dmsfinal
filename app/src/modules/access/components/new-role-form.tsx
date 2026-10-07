@@ -3,12 +3,12 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input, Select } from "@/components/ui/field";
 
 import type { RoleKind, RoleSummary } from "../queries";
 import { INITIAL_FORM_STATE } from "../schemas";
 import { createRole } from "../team-actions";
-import { FormMessage } from "./form-message";
 
 // N4 Νέος Ρόλος: από το μηδέν ή ως «Αντίγραφο του…». Το είδος δεν αλλάζει μετά.
 export function NewRoleForm({

@@ -3,11 +3,11 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input } from "@/components/ui/field";
 
 import { setPassword } from "../actions";
 import { INITIAL_FORM_STATE, MIN_PASSWORD } from "../schemas";
-import { FormMessage } from "./form-message";
 
 // R10 Νέος κωδικός: μετά από πρόσκληση ή επαναφορά.
 export function SetPasswordForm() {

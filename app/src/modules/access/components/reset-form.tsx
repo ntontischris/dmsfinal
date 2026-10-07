@@ -3,11 +3,11 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input } from "@/components/ui/field";
 
 import { requestPasswordReset } from "../actions";
 import { INITIAL_FORM_STATE } from "../schemas";
-import { FormMessage } from "./form-message";
 
 // R10 Επαναφορά κωδικού: σύνδεσμος στο email, που ισχύει 1 ώρα.
 export function ResetForm() {

@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input } from "@/components/ui/field";
 
 import { sendMagicLink, signInWithGoogle, signInWithPassword } from "../actions";
 import { INITIAL_FORM_STATE } from "../schemas";
-import { FormMessage } from "./form-message";
 
 // R9 Είσοδος: email και κωδικός, σύνδεσμος στο email, ή Google. Μόνο για όσους έχουν προσκληθεί.
 export function LoginForm({ next }: { next: string }) {

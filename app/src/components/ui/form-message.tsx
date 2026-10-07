@@ -1,4 +1,4 @@
-import type { FormState } from "../schemas";
+import type { FormState } from "@/lib/form-state";
 
 // Το μήνυμα μιας φόρμας εισόδου: λάθος σε κόκκινο, ενημέρωση ουδέτερη. Ανακοινώνεται στους αναγνώστες οθόνης.
 export function FormMessage({ state }: { state: FormState }) {

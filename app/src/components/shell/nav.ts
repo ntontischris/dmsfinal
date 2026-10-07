@@ -37,6 +37,13 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Ρυθμίσεις",
+    items: [
+      { code: "O1", label: "Ρυθμίσεις", href: "/app/settings/company", requires: "settings.manage" },
+      { code: "O7", label: "Έλεγχος ετοιμότητας", href: "/app/settings/readiness", requires: "settings.manage" },
+    ],
+  },
+  {
     title: "Σύστημα",
     items: [{ code: "KIT", label: "Kit", href: "/app/kit" }],
   },

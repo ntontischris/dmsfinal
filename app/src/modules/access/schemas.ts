@@ -24,10 +24,5 @@ export const newPasswordSchema = z
 export const safeNext = (next: string | null | undefined): string =>
   next && next.startsWith("/app") && !next.startsWith("//") ? next : "/app";
 
-// Η απάντηση μιας φόρμας εισόδου: ένα λάθος ή μια ουδέτερη ενημέρωση.
-export interface FormState {
-  error?: string;
-  notice?: string;
-}
-
-export const INITIAL_FORM_STATE: FormState = {};
+export type { FormState } from "@/lib/form-state";
+export { INITIAL_FORM_STATE } from "@/lib/form-state";

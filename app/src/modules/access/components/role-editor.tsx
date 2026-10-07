@@ -3,13 +3,13 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
 
 import type { PermissionDef, RoleSummary } from "../queries";
 import { INITIAL_FORM_STATE } from "../schemas";
 import { saveRole } from "../team-actions";
-import { FormMessage } from "./form-message";
 
 interface Choice {
   value: string;

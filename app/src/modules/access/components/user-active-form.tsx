@@ -3,10 +3,10 @@
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/form-message";
 
 import { INITIAL_FORM_STATE } from "../schemas";
 import { setUserActive } from "../team-actions";
-import { FormMessage } from "./form-message";
 
 // N1: απενεργοποίηση (σε δύο βήματα) ή επανενεργοποίηση ενός Χρήστη ομάδας. Δεν διαγράφεται ποτέ.
 export function UserActiveForm({
