@@ -34,7 +34,7 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="grid max-w-md gap-1.5">
+    <label className="grid max-w-md content-start gap-1.5">
       <span className="kit-label">{label}</span>
       {children}
       {hint && <span className="text-sm text-muted-foreground">{hint}</span>}

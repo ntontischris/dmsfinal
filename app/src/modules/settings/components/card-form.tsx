@@ -31,7 +31,7 @@ export function CardForm({
       {version && <input type="hidden" name="version" value={version} />}
       <fieldset
         disabled={isLocked}
-        className="m-0 grid min-w-0 gap-3 border-0 p-0 sm:grid-cols-2"
+        className="m-0 grid min-w-0 items-start gap-3 border-0 p-0 sm:grid-cols-2"
       >
         {children}
       </fieldset>

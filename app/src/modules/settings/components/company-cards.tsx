@@ -69,7 +69,7 @@ export function TaxCard({
   return (
     <Panel label="Φορολογικά στοιχεία και ΦΠΑ" aside={<OwnerOnly />}>
       {!isOwner && (
-        <p className="mt-0 text-sm text-muted-foreground">
+        <p className="mt-0 mb-3 text-sm text-muted-foreground">
           Τυπώνονται στις Συμφωνίες και στην Καρτέλα Πελάτη. Τα αλλάζει μόνο ο
           Ιδιοκτήτης.
         </p>
