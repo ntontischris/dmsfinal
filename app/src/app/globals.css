@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* Kit «Μοντάζ» (Blueprint κεφ. 10). Μία πηγή για τα χρώματα: αυτά τα tokens.
+   Σκοτεινό θέμα προεπιλογή, φωτεινό με data-theme="light". Οι τιμές μένουν tokens ως το τελικό build.
+   Τα ονόματα ακολουθούν τη σύμβαση του shadcn, ώστε τα components του να δουλεύουν χωρίς αλλαγές. */
+@custom-variant dark (&:where(:root:not([data-theme='light']) *));
+
+:root {
+  color-scheme: dark;
+  --background: oklch(13% 0.006 260);
+  --card: oklch(17% 0.008 260);
+  --muted: oklch(21% 0.01 260);
+  --border: oklch(29% 0.01 260);
+  --border-strong: oklch(38% 0.012 260);
+  --input: oklch(29% 0.01 260);
+  --foreground: oklch(94% 0.005 260);
+  --muted-foreground: oklch(70% 0.012 260);
+  /* Ένα χρώμα έμφασης: η κύρια ενέργεια και «σειρά σου» */
+  --primary: oklch(80% 0.145 70);
+  --primary-foreground: oklch(18% 0.03 60);
+  /* Καταστάσεις (tally): κόκκινο = πρόβλημα, πράσινο = έτοιμο. Πάντα με λέξη δίπλα. */
+  --destructive: oklch(68% 0.2 27);
+  --ok: oklch(76% 0.15 150);
+  --ring: oklch(80% 0.145 70);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --background: oklch(95% 0.004 260);
+  --card: oklch(99% 0.002 260);
+  --muted: oklch(96.5% 0.004 260);
+  --border: oklch(86% 0.006 260);
+  --border-strong: oklch(75% 0.008 260);
+  --input: oklch(86% 0.006 260);
+  --foreground: oklch(20% 0.01 260);
+  --muted-foreground: oklch(45% 0.012 260);
+  --primary: oklch(60% 0.15 55);
+  --primary-foreground: oklch(99% 0.01 80);
+  --destructive: oklch(54% 0.2 27);
+  --ok: oklch(50% 0.13 150);
+  --ring: oklch(55% 0.15 55);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-ok: var(--ok);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-kit-sans), system-ui, sans-serif;
+  --font-mono: var(--font-kit-mono), ui-monospace, monospace;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.35rem;
+  --text-xs: 0.6875rem;
+  --text-base: 0.9375rem;
+}
+
+@layer base {
+  * { border-color: var(--border); }
+  body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: var(--text-base); line-height: 1.5; }
+  a { text-underline-offset: 0.2em; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  h1, h2, h3 { letter-spacing: -0.01em; line-height: 1.2; }
+}
+
+/* Ετικέτα: μικρή, mono, κεφαλαία. Μόνο για σύντομες ετικέτες, ποτέ για περιεχόμενο. */
+@utility kit-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+}
