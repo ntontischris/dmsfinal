@@ -28,6 +28,9 @@ export default async function RoleLayout({ children, params }: RoleLayoutProps) 
           <Link className="button" href="/scenarios">
             Σενάρια
           </Link>
+          <Link className="button" href="/kit">
+            Kit
+          </Link>
           <RoleSwitcher current={role} />
           <ThemeToggle />
         </div>

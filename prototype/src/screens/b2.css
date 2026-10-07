@@ -1,0 +1,10 @@
+/* Σελίδα Πελάτη: ο inspector είναι πρώτος στο DOM (πάνω σε κινητό), δεξιά σε desktop */
+.b2-split > .kit-inspector { grid-column: 2; grid-row: 1; }
+.b2-split > .b2-main { grid-column: 1; grid-row: 1; min-width: 0; }
+.b2-main { display: grid; gap: var(--space-4); align-content: start; }
+.b2-main > * { min-width: 0; }
+@media (max-width: 60rem) {
+  .b2-split > .kit-inspector, .b2-split > .b2-main { grid-column: 1; grid-row: auto; }
+}
+.b2-periods { margin-top: var(--space-3); }
+.b2-periods h3 { margin: 0 0 var(--space-2); font-size: var(--text-base); font-weight: 500; }

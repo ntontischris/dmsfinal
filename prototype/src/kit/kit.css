@@ -1,0 +1,111 @@
+/* Kit · components που δεν υπήρχαν ως κοινά στοιχεία. Μόνο tokens του globals.css. */
+
+/* Ετικέτα mono (κοινή για κεφαλίδες πάνελ, δείκτες, timeline) */
+.kit-label {
+  font: 500 var(--text-xs)/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Πάνελ με κεφαλίδα (από το Μοντάζ) */
+.kit-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; margin-bottom: var(--space-4); min-width: 0; }
+.kit-panel-head {
+  display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between;
+  padding: 0.45rem var(--space-3); background: var(--color-surface-raised); border-bottom: 1px solid var(--color-border);
+}
+.kit-panel-head a { color: var(--color-text-muted); }
+.kit-panel-body { padding: var(--space-4); }
+.kit-panel-body[data-flush='true'] { padding: 0; }
+
+/* Κάρτα δείκτη (Τεχνικό δελτίο): ετικέτα, μεγάλος αριθμός, σημείωση */
+.kit-stats { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); margin-bottom: var(--space-4); }
+.kit-stat {
+  display: grid; gap: var(--space-1); align-content: start; min-width: 0; text-decoration: none;
+  padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius); border-top: 2px solid var(--color-border-strong);
+}
+a.kit-stat:hover { border-color: var(--color-border-strong); }
+.kit-stat[data-tone='attention'] { border-top-color: var(--color-danger); }
+.kit-stat[data-tone='strong'] { border-top-color: var(--color-accent); }
+.kit-stat[data-tone='ok'] { border-top-color: var(--color-ok); }
+.kit-stat-value {
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem); line-height: 1.1; font-weight: 500; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em; overflow-wrap: anywhere;
+}
+.kit-stat[data-tone='attention'] .kit-stat-value { color: var(--color-danger); }
+.kit-stat-hint { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+/* Πλαϊνή στήλη ιδιοτήτων (Μοντάζ): κωδικός, τίτλος, ιδιότητες, ενέργειες */
+.kit-split { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: var(--space-4); align-items: start; }
+.kit-split[data-side='start'] { grid-template-columns: 18rem minmax(0, 1fr); }
+@media (max-width: 60rem) { .kit-split, .kit-split[data-side='start'] { grid-template-columns: 1fr; } }
+.kit-inspector { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; position: sticky; top: 4rem; min-width: 0; }
+@media (max-width: 60rem) { .kit-inspector { position: static; } }
+.kit-inspector-code { margin: var(--space-4) var(--space-4) var(--space-1); font: 500 var(--text-sm) var(--font-mono); color: var(--color-accent); }
+.kit-inspector-title { margin: 0 var(--space-4) var(--space-3); font-size: 1.2rem; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.kit-inspector .dl { padding: var(--space-3) var(--space-4); margin: 0; border-top: 1px solid var(--color-border); grid-template-columns: 6.5rem 1fr; }
+.kit-inspector-foot { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-border); display: grid; gap: var(--space-2); }
+.kit-inspector-foot .button { justify-content: center; text-decoration: none; }
+
+/* Timeline (Μοντάζ): κανάλια με κλιπ σε άξονα χρόνου, playhead = σήμερα */
+.kit-timeline { overflow-x: auto; }
+.kit-tl { position: relative; min-width: 36rem; display: grid; grid-template-columns: 7.5rem 1fr; }
+.kit-tl-ruler, .kit-tl-lane { display: contents; }
+.kit-tl-name { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); border-right: 1px solid var(--color-border); background: var(--color-surface-raised); overflow-wrap: anywhere; }
+.kit-tl-track { position: relative; min-height: 2.6rem; border-bottom: 1px solid var(--color-border); background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--kit-tl-cols) - 1px), var(--color-border) calc(100% / var(--kit-tl-cols) - 1px) calc(100% / var(--kit-tl-cols))); }
+.kit-tl-ticks { position: relative; height: 1.7rem; border-bottom: 1px solid var(--color-border-strong); }
+.kit-tl-tick { position: absolute; top: 0.35rem; translate: 0.3rem 0; }
+.kit-tl-clip {
+  position: absolute; top: 0.35rem; bottom: 0.35rem; min-width: 5.5rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  padding: 0.15rem 0.45rem; border-radius: var(--radius-sm); font-size: var(--text-xs); line-height: 1.5; text-decoration: none;
+  background: var(--color-surface-raised); border: 1px solid var(--color-border-strong); color: var(--color-text);
+}
+.kit-tl-clip[data-tone='strong'] { background: oklch(from var(--color-accent) l c h / 0.22); border-color: oklch(from var(--color-accent) l c h / 0.7); }
+.kit-tl-clip[data-tone='attention'] { background: oklch(from var(--color-danger) l c h / 0.2); border-color: oklch(from var(--color-danger) l c h / 0.7); }
+.kit-tl-clip[data-tone='ok'] { background: oklch(from var(--color-ok) l c h / 0.18); border-color: oklch(from var(--color-ok) l c h / 0.6); }
+.kit-tl-overlay { position: absolute; top: 0; bottom: 0; left: 7.5rem; right: 0; pointer-events: none; }
+.kit-tl-head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--color-danger); pointer-events: none; z-index: 1; }
+.kit-tl-head::before { content: ''; position: absolute; top: 0; left: -4px; border: 5px solid transparent; border-top-color: var(--color-danger); }
+
+/* Βήματα (κόμβοι της Χρωματικής διόρθωσης) */
+.kit-steps { display: flex; list-style: none; margin: 0 0 var(--space-4); padding: 0; counter-reset: kit-step; overflow-x: auto; }
+.kit-step { flex: 1 1 0; min-width: 7.5rem; counter-increment: kit-step; position: relative; padding: 0 var(--space-3) 0 0; }
+.kit-step::before {
+  content: counter(kit-step, decimal-leading-zero); display: grid; place-items: center; width: 1.9rem; height: 1.9rem;
+  font: 500 var(--text-xs) var(--font-mono); border: 1px solid var(--color-border-strong); border-radius: 50%;
+  background: var(--color-surface); color: var(--color-text-muted); position: relative; z-index: 1;
+}
+.kit-step::after { content: ''; position: absolute; top: 0.95rem; left: 1.9rem; right: 0; height: 1px; background: var(--color-border-strong); }
+.kit-step:last-child::after { display: none; }
+.kit-step[data-state='done']::before { content: '✓'; background: oklch(from var(--color-ok) l c h / 0.15); border-color: var(--color-ok); color: var(--color-ok); }
+.kit-step[data-state='done']::after { background: var(--color-ok); }
+.kit-step[data-state='current']::before { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
+.kit-step-label { display: block; margin-top: var(--space-2); font-size: var(--text-sm); font-weight: 600; }
+.kit-step[data-state='todo'] .kit-step-label { color: var(--color-text-muted); font-weight: 500; }
+.kit-step-hint { display: block; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* Φίλτρα σε ομάδα (segmented) */
+.kit-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius); margin-bottom: var(--space-4); max-width: 100%; }
+.kit-seg a {
+  display: inline-flex; gap: var(--space-2); align-items: baseline; padding: 0.3rem var(--space-3); border-radius: var(--radius-sm);
+  font-size: var(--text-sm); text-decoration: none; color: var(--color-text-muted); white-space: nowrap;
+}
+.kit-seg a:hover { color: var(--color-text); }
+.kit-seg a[aria-current='true'] { background: var(--color-surface-raised); color: var(--color-text); font-weight: 600; box-shadow: inset 0 0 0 1px var(--color-border-strong); }
+.kit-seg .num { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* Γραμμή λίστας (Φως): αριθμός, τίτλος, στοιχεία, δεξιά τιμή */
+.kit-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-border); }
+.kit-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); align-items: baseline; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
+.kit-row-index { font: 500 var(--text-xs) var(--font-mono); color: var(--color-text-muted); }
+.kit-row-title { font-size: 1.05rem; font-weight: 500; letter-spacing: -0.01em; text-decoration: none; overflow-wrap: anywhere; }
+a.kit-row-title:hover { color: var(--color-accent); }
+.kit-row-meta { grid-column: 2; font-size: var(--text-sm); color: var(--color-text-muted); }
+.kit-row-aside { grid-column: 3; grid-row: 1 / span 2; justify-self: end; text-align: right; display: grid; gap: var(--space-1); justify-items: end; }
+@media (max-width: 30rem) {
+  .kit-row { grid-template-columns: 2rem minmax(0, 1fr); }
+  .kit-row-aside { grid-column: 2; grid-row: auto; justify-self: start; justify-items: start; text-align: left; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .kit-seg a, .kit-stat, .kit-row-title { transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease; }
+}

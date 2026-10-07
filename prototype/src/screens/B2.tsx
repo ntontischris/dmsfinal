@@ -18,6 +18,12 @@ import { agreementsOfClient, type AgreementRecord } from "@/data/agreements";
 import type { Opportunity } from "@/data/opportunities";
 import type { RoleId } from "@/data/roles";
 import { takenMessage } from "@/data/access-requests";
+import {
+  ClientInspector,
+  RelationshipSteps,
+  relationshipSteps,
+} from "@/screens/b2-inspector";
+import "./b2.css";
 import { AccessRequest } from "@/screens/access-request";
 import {
   ActivitiesSection,
@@ -175,55 +181,54 @@ export function B2({ role, query }: ScreenProps) {
         <ErrorNotice what="η Σελίδα Πελάτη" />
       ) : (
         <>
-          <div className="card-title">
-            <h2>{client.name}</h2>
-            <span className="btn-row">
-              <Badge tone="strong">{client.status}</Badge>
-              {caps.isReadOnly && <Badge>Μόνο ανάγνωση</Badge>}
-            </span>
-          </div>
-          {!caps.isReadOnly && (
-            <div className="toolbar">
-              <Badge tone="strong">Υπεύθυνος Πελάτη: {ownerName}</Badge>
-              {caps.canReassign && (
-                <button type="button" className="button">
-                  Μεταβίβαση Πελάτη
-                </button>
+          <div className="kit-split b2-split">
+            <ClientInspector
+              client={client}
+              caps={visibleCaps}
+              canReassign={!caps.isReadOnly && caps.canReassign}
+              agreements={clientAgreements}
+              showAmounts={showAmounts}
+            />
+            <div className="b2-main">
+              {isGranted && clientOpportunities[0] && (
+                <p className="note">
+                  Πρόσβαση μέσω της Ευκαιρίας σου «{clientOpportunities[0].title}» ·
+                  Υπεύθυνος Πελάτη: {firstName(ownerName)}
+                </p>
+              )}
+              {!caps.isReadOnly && (
+                <RelationshipSteps
+                  steps={relationshipSteps(clientOpportunities, clientAgreements)}
+                />
+              )}
+              <nav className="tabs" aria-label="Ενότητες Πελάτη">
+                {allowed.map((tab) => (
+                  <Link
+                    key={tab.id}
+                    className="tab"
+                    href={screenHref(role, "B2", {
+                      ...keep,
+                      tab: tab.id,
+                      state: state === "normal" ? undefined : state,
+                    })}
+                    aria-current={tab.id === active.id ? "page" : undefined}
+                  >
+                    {tab.label}
+                  </Link>
+                ))}
+              </nav>
+              {renderTab(
+                active.id,
+                role,
+                client,
+                visibleCaps,
+                clientOpportunities,
+                clientAgreements,
+                showAmounts,
+                state === "empty",
               )}
             </div>
-          )}
-          {isGranted && clientOpportunities[0] && (
-            <p className="note">
-              Πρόσβαση μέσω της Ευκαιρίας σου «{clientOpportunities[0].title}» ·
-              Υπεύθυνος Πελάτη: {firstName(ownerName)}
-            </p>
-          )}
-          <nav className="tabs" aria-label="Ενότητες Πελάτη">
-            {allowed.map((tab) => (
-              <Link
-                key={tab.id}
-                className="tab"
-                href={screenHref(role, "B2", {
-                  ...keep,
-                  tab: tab.id,
-                  state: state === "normal" ? undefined : state,
-                })}
-                aria-current={tab.id === active.id ? "page" : undefined}
-              >
-                {tab.label}
-              </Link>
-            ))}
-          </nav>
-          {renderTab(
-            active.id,
-            role,
-            client,
-            visibleCaps,
-            clientOpportunities,
-            clientAgreements,
-            showAmounts,
-            state === "empty",
-          )}
+          </div>
         </>
       )}
     </>

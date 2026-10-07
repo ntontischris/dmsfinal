@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import {
   agreementTotal,
-  agreementsOfClient,
   statusLabel,
   type AgreementRecord,
 } from "@/data/agreements";
@@ -15,6 +14,7 @@ import { stateOf } from "@/data/productions-access";
 import { isForgotten, type SalesCaps } from "@/data/sales-access";
 import { memberName, type SalesClient } from "@/data/sales";
 import { SCREENS } from "@/data/screens";
+import { Rows, type RowItem } from "@/kit/rows";
 import { Badge, fmtDate, fmtMoney, screenHref } from "@/screens/shared";
 
 interface SectionProps {
@@ -28,44 +28,36 @@ const priceText = (agreement: AgreementRecord): string =>
     ? `${fmtMoney(agreementTotal(agreement))} / μήνα`
     : fmtMoney(agreementTotal(agreement));
 
+const toneOfAgreement = (
+  agreement: AgreementRecord,
+): "ok" | "strong" | undefined => {
+  if (agreement.state === "ενεργή" || agreement.state === "υπογεγραμμένη") return "ok";
+  return agreement.state === "πρόταση" ? "strong" : undefined;
+};
+
+const toneOfOutcome = (opportunity: Opportunity): "ok" | "strong" | undefined => {
+  if (opportunity.outcome === "Κερδισμένη") return "ok";
+  return opportunity.outcome === "Ανοιχτή" ? "strong" : undefined;
+};
+
 const hasScreen = (role: RoleId, code: string): boolean =>
   SCREENS.some((screen) => screen.code === code && role in screen.access);
 
-export function DetailsSection({ role, client, caps }: SectionProps) {
+export function DetailsSection({ client, caps }: SectionProps) {
   return (
     <section className="card">
-      <div className="card-title">
-        <h2>Στοιχεία</h2>
-        {caps.canManage && (
-          <button type="button" className="button">
-            Επεξεργασία
-          </button>
-        )}
-      </div>
-      <dl className="dl">
-        <dt>Επωνυμία</dt>
-        <dd>{client.legalName}</dd>
-        <dt>Πόλη</dt>
-        <dd>{client.city}</dd>
-        <dt>ΑΦΜ</dt>
-        <dd>{client.vat}</dd>
-        <dt>Κύριο πρόσωπο</dt>
-        <dd>
-          {client.contact.name}, {client.contact.email}, {client.contact.phone}
-        </dd>
-        {!caps.isReadOnly && (
-          <>
-            <dt>Υπεύθυνος</dt>
-            <dd>{memberName(client.ownerId)}</dd>
-          </>
-        )}
-      </dl>
-      {client.possibleDuplicateOf && caps.canMerge && (
+      <h2>Στοιχεία</h2>
+      {client.possibleDuplicateOf && caps.canMerge ? (
         <p className="note">
           Σήμα «Πιθανό διπλό»: {client.possibleDuplicateOf.reason}{" "}
           <Link href={screenHref("owner", "B6", {})}>
             Άνοιγμα στη Συγχώνευση
           </Link>
+        </p>
+      ) : (
+        <p className="muted">
+          Η ταυτότητα του Πελάτη είναι στη στήλη ιδιοτήτων. Οι Ευκαιρίες, οι
+          Συμφωνίες και τα υπόλοιπα βρίσκονται στις καρτέλες.
         </p>
       )}
     </section>
@@ -112,7 +104,6 @@ export function UsersSection({ role, client, caps }: SectionProps) {
 
 export function AgreementsSection({
   role,
-  client,
   agreements,
   showAmounts,
 }: SectionProps & {
@@ -129,40 +120,40 @@ export function AgreementsSection({
       </section>
     );
   }
+  const items: RowItem[] = agreements.map((agreement) => ({
+    id: agreement.id,
+    title: agreement.title,
+    href: hasScreen(role, "D2")
+      ? screenHref(role, "D2", { id: agreement.id })
+      : undefined,
+    meta: [
+      agreement.kind,
+      agreement.state === "ενεργή" && agreement.end
+        ? `λήγει ${fmtDate(agreement.end)}${agreement.terms.renewal ? ` · ανανέωση: ${agreement.terms.renewal}` : ""}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    aside: (
+      <>
+        <Badge tone={toneOfAgreement(agreement)}>{statusLabel(agreement)}</Badge>
+        {showAmounts ? (
+          <span className="num">{priceText(agreement)}</span>
+        ) : (
+          <span className="muted">Ποσά: μόνο στις δικές σου Συμφωνίες.</span>
+        )}
+      </>
+    ),
+  }));
   return (
-    <>
-      {agreements.map((agreement) => (
-        <section key={agreement.id} className="card">
-          <div className="card-title">
-            <h2>
-              {hasScreen(role, "D2") ? (
-                <Link href={screenHref(role, "D2", { id: agreement.id })}>
-                  {agreement.title}
-                </Link>
-              ) : (
-                agreement.title
-              )}
-            </h2>
-            <span className="btn-row">
-              <Badge>{agreement.kind}</Badge>
-              <Badge
-                tone={agreement.state === "πρόταση" ? "attention" : "strong"}
-              >
-                {statusLabel(agreement)}
-              </Badge>
-            </span>
-          </div>
-          {showAmounts ? (
-            <p>{priceText(agreement)}</p>
-          ) : (
-            <p className="muted">Ποσά: μόνο στις δικές σου Συμφωνίες.</p>
-          )}
-          <ul className="list">
-            {agreement.lines.map((line) => (
-              <li key={line.id}>{line.description}</li>
-            ))}
-          </ul>
-          {agreement.periods.length > 0 && (
+    <section className="card">
+      <h2>Συμφωνίες</h2>
+      <Rows items={items} />
+      {agreements
+        .filter((agreement) => agreement.periods.length > 0)
+        .map((agreement) => (
+          <div key={agreement.id} className="b2-periods">
+            <h3>Περίοδοι: {agreement.title}</h3>
             <div className="scroll">
               <table className="rtable">
                 <thead>
@@ -185,16 +176,9 @@ export function AgreementsSection({
                 </tbody>
               </table>
             </div>
-          )}
-          {agreement.state === "ενεργή" && agreement.end && (
-            <p className="note">
-              Λήγει {fmtDate(agreement.end)}
-              {agreement.terms.renewal ? ` · Ανανέωση: ${agreement.terms.renewal}` : ""}.
-            </p>
-          )}
-        </section>
-      ))}
-    </>
+          </div>
+        ))}
+    </section>
   );
 }
 
@@ -221,29 +205,26 @@ export function OpportunitiesSection({
       {opportunities.length === 0 ? (
         <p className="muted">Καμία Ευκαιρία για αυτόν τον Πελάτη.</p>
       ) : (
-        <ul className="list">
-          {opportunities.map((opportunity) => (
-            <li key={opportunity.id} className="row">
-              <Link href={screenHref(role, "B4", { id: opportunity.id })}>
-                {opportunity.title}
-              </Link>
-              <span className="btn-row">
-                <Badge>
+        <Rows
+          items={opportunities.map((opportunity) => ({
+            id: opportunity.id,
+            title: opportunity.title,
+            href: screenHref(role, "B4", { id: opportunity.id }),
+            meta: `${memberName(opportunity.ownerId)}${opportunity.ownerId !== client.ownerId ? " · με πρόσβαση" : ""}`,
+            aside: (
+              <>
+                <Badge tone={toneOfOutcome(opportunity)}>
                   {opportunity.outcome === "Ανοιχτή"
                     ? opportunity.stage
                     : opportunity.outcome}
                 </Badge>
-                <span className="muted">{memberName(opportunity.ownerId)}</span>
-                {opportunity.ownerId !== client.ownerId && (
-                  <Badge>με πρόσβαση</Badge>
-                )}
                 {isForgotten(opportunity) && (
                   <Badge tone="attention">Ξεχασμένη</Badge>
                 )}
-              </span>
-            </li>
-          ))}
-        </ul>
+              </>
+            ),
+          }))}
+        />
       )}
     </section>
   );

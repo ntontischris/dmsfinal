@@ -1,0 +1,135 @@
+/* R1 Αρχική: η αίθουσα μοντάζ. Πάνελ με tokens του globals.css· μέσα στο monitor (εικόνα) σταθερά χρώματα. */
+.r1 { container-type: inline-size; }
+.r1 :where(button) { font: inherit; color: inherit; cursor: pointer; }
+.r1-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; min-width: 0; }
+.r1-panel-head { display: flex; justify-content: space-between; gap: var(--space-3); margin: 0; padding: 0.45rem var(--space-3); background: var(--color-surface-raised); border-bottom: 1px solid var(--color-border); }
+.r1-tally[data-on='true'] { color: var(--color-attention); }
+
+/* Διάταξη: inspector αριστερά, program δεξιά, timeline από κάτω */
+.r1-suite { display: grid; gap: var(--space-2); grid-template-columns: 15rem minmax(0, 1fr); grid-template-areas: 'insp prog' 'tl tl'; margin-bottom: var(--space-6); }
+.r1-suite[data-clips='false'] { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'prog'; }
+.r1-program { grid-area: prog; display: flex; flex-direction: column; }
+.r1-suite .kit-inspector { grid-area: insp; position: static; display: flex; flex-direction: column; }
+.r1-suite .kit-inspector-foot { margin-top: auto; }
+.r1-summary { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+.r1-suite .kit-inspector .dl { grid-template-columns: 4rem minmax(0, 1fr); }
+.r1-tcv { font-family: var(--font-mono); font-size: var(--text-sm); white-space: nowrap; }
+.r1-timeline { grid-area: tl; }
+
+/* Το monitor: γεμίζει το πλάτος του πάνελ σε 16:9 */
+.r1-monitor { position: relative; overflow: hidden; aspect-ratio: 16 / 9; container-type: inline-size; background: #000; }
+.r1-shot { position: absolute; inset: 0; opacity: 0; }
+.r1-shot:not([data-active='true']) { visibility: hidden; }
+.r1-shot[data-active='true'] { opacity: 1; }
+.r1-shot svg { width: 100%; height: 100%; display: block; }
+.r1-safe { position: absolute; inset: 5%; border: 1px dashed oklch(100% 0 0 / 0.22); pointer-events: none; }
+.r1-safe::after { content: ''; position: absolute; inset: 5.5%; border: 1px dashed oklch(100% 0 0 / 0.14); }
+.r1-osd { position: absolute; top: 7%; font: 500 max(0.6rem, 1.1cqi) var(--font-mono); color: oklch(100% 0 0 / 0.75); }
+.r1-osd-l { left: 7%; }
+.r1-osd-r { right: 7%; }
+.r1-title { position: absolute; left: 9%; right: 9%; bottom: 17%; color: oklch(98% 0.01 80); }
+.r1-title p { margin: 0 0 1.4cqi; font: 500 max(0.6rem, 1.15cqi) var(--font-mono); letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.85; }
+.r1-title h2 { margin: 0; max-width: 14ch; font-size: max(1.5rem, 7cqi); font-weight: 600; line-height: 0.98; letter-spacing: -0.035em; text-wrap: balance; text-shadow: 0 2px 30px oklch(0% 0 0 / 0.5); }
+.r1-caption { position: absolute; left: 50%; bottom: 7%; translate: -50% 0; margin: 0; padding: 0.3em 0.7em; white-space: nowrap; font-size: max(0.65rem, 1.5cqi); color: oklch(97% 0 0); background: oklch(0% 0 0 / 0.55); }
+
+/* Transport */
+.r1-transport { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding: var(--space-2) var(--space-3); border-top: 1px solid var(--color-border); }
+.r1-tc { font: 500 1.3rem var(--font-mono); color: var(--color-accent); font-variant-numeric: tabular-nums; }
+.r1-buttons { display: flex; gap: var(--space-1); }
+.r1-buttons button { width: 2.1rem; height: 2.1rem; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-surface-raised); font-size: 0.8rem; }
+.r1-buttons button:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.r1-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.r1-lede { margin: 0; padding: var(--space-3); border-top: 1px solid var(--color-border); color: var(--color-text-muted); }
+
+/* Timeline: κύλιση μόνο μέσα του */
+.r1-scroll { overflow-x: auto; scrollbar-width: thin; }
+.r1-tracks { position: relative; min-width: 36rem; --pos: 0; }
+.r1-row { display: grid; grid-template-columns: 3rem minmax(0, 1fr); height: 2.35rem; border-top: 1px solid var(--color-border); }
+.r1-row:first-child { height: 1.6rem; border-top: 0; }
+.r1-lane-label { display: grid; place-items: center; font: 600 var(--text-xs) var(--font-mono); color: var(--color-text-muted); border-right: 1px solid var(--color-border); background: var(--color-surface-raised); }
+.r1-lane { position: relative; overflow: hidden; }
+.r1-tick { position: absolute; bottom: 0; height: 30%; border-left: 1px solid var(--color-border); font: 0.6rem var(--font-mono); color: var(--color-text-muted); padding: 0.15rem 0 0 0.3rem; white-space: nowrap; }
+.r1-tick[data-major='true'] { height: 100%; }
+.r1-clip { position: absolute; top: 3px; bottom: 3px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; padding: 0 0.45rem; border-radius: var(--radius-sm); border: 0; text-align: left; font-size: 0.68rem; white-space: nowrap; color: oklch(97% 0 0); }
+.r1-clip b, .r1-clip small { overflow: hidden; text-overflow: ellipsis; position: relative; }
+.r1-clip small { font: 0.58rem var(--font-mono); opacity: 0.8; }
+.r1-clip-title { background: oklch(46% 0.1 300); border-top: 3px solid oklch(66% 0.14 300); }
+.r1-clip-video { background: repeating-linear-gradient(90deg, transparent 0 3.2rem, oklch(0% 0 0 / 0.3) 3.2rem calc(3.2rem + 1px)), linear-gradient(180deg, oklch(56% 0.12 var(--hue)), oklch(36% 0.08 var(--hue))); border-top: 3px solid oklch(72% 0.14 var(--hue)); outline: 2px solid transparent; outline-offset: -2px; }
+.r1-clip-video b { font-weight: 600; }
+.r1-clip-video:hover, .r1-clip-video[aria-pressed='true'] { outline-color: var(--color-accent); filter: brightness(1.15); }
+.r1-clip-audio { background: oklch(38% 0.07 165); border-top: 3px solid oklch(58% 0.11 165); justify-content: flex-end; }
+.r1-clip-audio svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.r1-clip-audio path { stroke: oklch(85% 0.08 165 / 0.65); stroke-width: 2.4; fill: none; }
+.r1-ph-layer { position: absolute; top: 0; bottom: 0; left: 3rem; right: 0; pointer-events: none; }
+.r1-playhead { position: absolute; top: 0; bottom: 0; left: calc(var(--pos) * 100%); width: 1.5px; background: var(--color-attention); }
+.r1-playhead::before { content: ''; position: absolute; top: 0; left: 50%; translate: -50% 0; border-inline: 6px solid transparent; border-top: 9px solid var(--color-attention); }
+
+/* Ενότητες κάτω από την αίθουσα */
+.r1-section { margin: var(--space-6) 0; padding-top: var(--space-6); }
+.r1-sec-head { display: grid; grid-template-columns: 7rem minmax(0, 1fr) auto; gap: var(--space-2) var(--space-4); align-items: baseline; margin-bottom: var(--space-4); }
+.r1-sec-head .kit-label { color: var(--color-accent); }
+.r1-sec-head h3 { margin: 0; font-size: var(--text-xl); font-weight: 500; letter-spacing: -0.03em; line-height: 1.05; }
+.r1-bins { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-border); }
+.r1-bins a { display: grid; grid-template-columns: 1.4rem 4.5rem minmax(8rem, 1fr) 2fr 1.5rem; gap: var(--space-4); align-items: center; padding: var(--space-4) var(--space-2); border-bottom: 1px solid var(--color-border); text-decoration: none; }
+.r1-bins svg { width: 1.3rem; fill: var(--color-surface-raised); stroke: var(--color-text-muted); stroke-width: 1.2; }
+.r1-bin-code { font: var(--text-xs) var(--font-mono); color: var(--color-text-muted); }
+.r1-bins strong { font-size: 1.3rem; font-weight: 500; letter-spacing: -0.015em; }
+.r1-bin-line { color: var(--color-text-muted); font-size: var(--text-sm); }
+.r1-bin-go { justify-self: end; color: var(--color-accent); opacity: 0; }
+.r1-bins a:hover { background: var(--color-surface); }
+.r1-bins a:hover svg { fill: var(--color-accent); stroke: var(--color-accent); }
+.r1-bins a:hover .r1-bin-go, .r1-bins a:focus-visible .r1-bin-go { opacity: 1; }
+.r1-sources { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); border-left: 1px solid var(--color-border); }
+.r1-sources li { display: grid; gap: var(--space-1); padding: var(--space-4); border: 1px solid var(--color-border); border-left: 0; margin-top: -1px; font-size: 1.1rem; font-weight: 500; }
+.r1-sources small { font: var(--text-xs) var(--font-mono); color: var(--color-text-muted); letter-spacing: 0.1em; }
+.r1-queue { display: grid; justify-items: start; gap: var(--space-4); }
+.r1-queue > .r1-panel { width: 100%; }
+.r1-job { display: grid; grid-template-columns: 1.4fr 1fr 2fr auto; gap: var(--space-4); align-items: center; padding: var(--space-3); font: var(--text-xs) var(--font-mono); }
+.r1-job-spec, .r1-job-state { color: var(--color-text-muted); }
+.r1-progress { height: 0.35rem; border-radius: 1rem; background: var(--color-surface-raised); overflow: hidden; }
+.r1-progress i { display: block; height: 100%; width: 30%; background: linear-gradient(90deg, transparent, var(--color-accent), transparent); }
+.r1-queue h3 { margin: var(--space-3) 0 0; font-size: clamp(1.8rem, 1rem + 4cqi, 3.6rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1; max-width: 16ch; text-wrap: balance; }
+
+/* Στενό: program πρώτο σε όλο το πλάτος, μετά timeline, μετά inspector */
+@container (max-width: 46rem) {
+  .r1-suite { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'prog' 'tl' 'insp'; }
+  .r1-sec-head { grid-template-columns: minmax(0, 1fr); }
+  .r1-bins a { grid-template-columns: 1.4rem minmax(0, 1fr) 1.2rem; gap: var(--space-1) var(--space-3); }
+  .r1-bins svg { grid-row: 1 / span 3; align-self: start; }
+  .r1-bin-code, .r1-bins strong, .r1-bin-line { grid-column: 2; }
+  .r1-bin-go { grid-column: 3; grid-row: 1 / span 3; opacity: 1; }
+  .r1-job { grid-template-columns: 1fr; gap: var(--space-2); }
+}
+@container (max-width: 30rem) {
+  .r1-suite { margin-inline: calc(-1 * var(--space-4)); }
+  .r1-suite > .r1-panel, .r1-suite .kit-inspector { border-radius: 0; border-inline: 0; }
+  .r1-osd-r, .r1-caption, .r1-timeline .r1-panel-head span + span { display: none; }
+  .r1-title h2 { font-size: max(1.5rem, 9cqi); }
+  .r1-tc { font-size: 1.05rem; }
+  .r1-actions { margin-left: 0; width: 100%; }
+  .r1-actions .site-button { flex: 1; text-align: center; }
+}
+
+/* Κίνηση μόνο χωρίς prefers-reduced-motion */
+@media (prefers-reduced-motion: no-preference) {
+  .r1-shot { transition: opacity 700ms ease, visibility 0s 700ms; }
+  .r1-shot[data-active='true'] { transition: opacity 700ms ease; }
+  .r1-shot[data-active='true'] svg { animation: r1-push 14s linear both; }
+  .r1-progress i { animation: r1-scan 2.2s ease-in-out infinite; }
+  .r1-clip-video, .r1-bins a, .r1-bins svg, .r1-bin-go { transition: all 150ms ease; }
+  .r1s-drift { animation: r1s-drift 9s ease-in-out infinite alternate; }
+  .r1s-shimmer { animation: r1s-shimmer 2.6s ease-in-out infinite alternate; }
+  .r1s-blink { animation: r1s-blink 1.6s steps(1) infinite; }
+  .r1s-sway { animation: r1s-sway 7s ease-in-out infinite alternate; }
+  .r1s-steam { animation: r1s-steam 5s ease-in-out infinite; }
+  .r1s-grain { animation: r1s-grain 0.5s steps(4) infinite; }
+}
+.r1s-grain { opacity: 0.17; mix-blend-mode: overlay; }
+@keyframes r1-push { from { transform: scale(1); } to { transform: scale(1.09); } }
+@keyframes r1-scan { from { translate: -110% 0; } to { translate: 360% 0; } }
+@keyframes r1s-drift { to { transform: translate(14px, -10px); } }
+@keyframes r1s-shimmer { from { opacity: 1; } to { opacity: 0.35; } }
+@keyframes r1s-blink { 50% { opacity: 0.15; } }
+@keyframes r1s-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+@keyframes r1s-steam { 0% { opacity: 0; transform: translateY(20px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-40px); } }
+@keyframes r1s-grain { 0% { transform: translate(0, 0); } 25% { transform: translate(-12px, 8px); } 50% { transform: translate(9px, -14px); } 75% { transform: translate(-6px, -4px); } }

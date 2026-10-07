@@ -16,6 +16,8 @@ import {
   type CardContent,
   type CardDef,
 } from "@/screens/a1-model";
+import { pickStats } from "@/screens/a1-stats";
+import { StatGrid } from "@/kit/panel";
 import { unreadCount } from "@/screens/a2-model";
 import {
   StateNotice,
@@ -68,6 +70,7 @@ export function A1({ role, query }: ScreenProps) {
       card.id !== failedId && card.kind === "action" && content.count === 0,
   );
   const visible = built.filter((item) => !quiet.includes(item));
+  const stats = pickStats(visible.filter(({ card }) => card.id !== failedId));
   const unread = state === "empty" ? 0 : unreadCount(inboxOf(role));
   const isAllClear = visible.every(
     ({ card, content }) => card.kind !== "action" && content.count === 0,
@@ -137,6 +140,12 @@ export function A1({ role, query }: ScreenProps) {
           Δεν σε περιμένει τίποτα. Ό,τι νέο έρθει θα εμφανιστεί εδώ, στη σειρά
           που διάλεξες.
         </StateNotice>
+      )}
+
+      {stats.length > 0 && (
+        <div className="a1-stats">
+          <StatGrid items={stats} />
+        </div>
       )}
 
       {chosen.length === 0 ? (

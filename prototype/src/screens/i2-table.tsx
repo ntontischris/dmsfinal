@@ -8,6 +8,7 @@ import { PdfLink } from "@/screens/i2-ui";
 import { Badge, fmtDate, fmtMoney, screenHref } from "@/screens/shared";
 
 import "./i245.css";
+import "./i2.css";
 
 interface InvoiceTableProps {
   role: RoleId;
@@ -21,12 +22,12 @@ function NumberCell(props: { s: InvoiceStanding; showTrail: boolean }) {
   const { invoice } = props.s;
   const corrected = correctedNumberOf(invoice);
   return (
-    <td data-label="Αριθμός" className="i245-cell">
-      {invoice.number}
+    <td data-label="Αριθμός" className="i2-number">
+      <span className="i2-code">{invoice.number}</span>
       {corrected && <span className="i245-sub">διορθώνει {corrected}</span>}
       {props.showTrail &&
         invoice.corrections?.map((c) => (
-          <span key={c.when + c.what} className="i245-sub">
+          <span key={c.when + c.what} className="i245-sub" title={c.what}>
             Διόρθωση ({personName(c.by)}, {fmtDate(c.when)}): {c.what}
           </span>
         ))}
@@ -34,12 +35,17 @@ function NumberCell(props: { s: InvoiceStanding; showTrail: boolean }) {
   );
 }
 
+const toneOf = (status: InvoiceStanding["status"]) => {
+  if (status === "εξοφλημένο") return "ok";
+  if (status === "ληξιπρόθεσμο") return "attention";
+  if (status === "πιστωτικό") return undefined;
+  return "strong";
+};
+
 function StatusCell({ s }: { s: InvoiceStanding }) {
   return (
     <td data-label="Κατάσταση">
-      <Badge tone={s.status === "ληξιπρόθεσμο" ? "attention" : undefined}>
-        {s.status}
-      </Badge>
+      <Badge tone={toneOf(s.status)}>{s.status}</Badge>
     </td>
   );
 }
@@ -66,28 +72,33 @@ function InvoiceRow(props: InvoiceTableProps & { s: InvoiceStanding }) {
   return (
     <tr>
       <NumberCell s={s} showTrail={props.showTrail} />
-      <td data-label="Είδος">{invoice.kind}</td>
+      <td data-label="Είδος" className="i2-nowrap">
+        {invoice.kind}
+      </td>
       {props.showClient && (
-        <td data-label="Πελάτης" className="i245-cell">
+        <td data-label="Πελάτης" className="i2-client">
           {clientNameOf(invoice.clientId)}
         </td>
       )}
-      <td data-label="Έκδοση">{fmtDate(invoice.issueDate)}</td>
-      <td data-label="Λήξη">
+      <td data-label="Έκδοση" className="i2-nowrap">
+        {fmtDate(invoice.issueDate)}
+      </td>
+      <td data-label="Λήξη" className="i2-nowrap">
         {invoice.dueDate ? fmtDate(invoice.dueDate) : "—"}
       </td>
       <AmountCells s={s} />
       <StatusCell s={s} />
-      <td data-label="PDF">
+      <td data-label="Ενέργειες" className="i2-actions">
         <PdfLink pdf={invoice.pdf} />
-      </td>
-      {props.canEdit && (
-        <td data-label="Ενέργειες">
-          <Link href={screenHref(role, "I3", { invoice: invoice.id })}>
-            Διόρθωση/ακύρωση
+        {props.canEdit && (
+          <Link
+            href={screenHref(role, "I3", { invoice: invoice.id })}
+            title="Διόρθωση/ακύρωση"
+          >
+            Διόρθωση
           </Link>
-        </td>
-      )}
+        )}
+      </td>
     </tr>
   );
 }
@@ -104,23 +115,24 @@ function HeadRow(props: { showClient: boolean; canEdit: boolean }) {
       <th className="num">Εξοφλήθηκε</th>
       <th className="num">Υπόλοιπο</th>
       <th>Κατάσταση</th>
-      <th>PDF</th>
-      {props.canEdit && <th>Ενέργειες</th>}
+      <th>Ενέργειες</th>
     </tr>
   );
 }
 
 export function InvoiceTable(props: InvoiceTableProps) {
   return (
-    <table className="rtable">
-      <thead>
-        <HeadRow showClient={props.showClient} canEdit={props.canEdit} />
-      </thead>
-      <tbody>
-        {props.rows.map((s) => (
-          <InvoiceRow key={s.invoice.id} {...props} s={s} />
-        ))}
-      </tbody>
-    </table>
+    <div className="scroll">
+      <table className="rtable i2-table">
+        <thead>
+          <HeadRow showClient={props.showClient} canEdit={props.canEdit} />
+        </thead>
+        <tbody>
+          {props.rows.map((s) => (
+            <InvoiceRow key={s.invoice.id} {...props} s={s} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

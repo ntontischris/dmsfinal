@@ -102,8 +102,11 @@ export function ErrorNotice({ what }: { what: string }) {
   );
 }
 
+// attention = πρόβλημα (κόκκινο), strong = «σειρά σου» (χρώμα έμφασης), ok = έτοιμο (πράσινο).
+export type BadgeTone = "attention" | "strong" | "ok";
+
 interface BadgeProps {
-  tone?: "attention" | "strong";
+  tone?: BadgeTone;
   children: ReactNode;
 }
 

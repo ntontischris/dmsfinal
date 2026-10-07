@@ -61,6 +61,7 @@ export function SiteFrame({
       </div>
       <header className="site-head">
         <Link className="site-brand" href={siteHref(role, "R1", lang)}>
+          <i className="site-lamp" aria-hidden />
           {COMPANY.tradeName}
         </Link>
         <nav
@@ -99,29 +100,41 @@ export function SiteFrame({
       </header>
       <div className="site-body">{children}</div>
       <footer className="site-foot">
-        <div>
+        <div className="site-foot-block">
+          <span className="kit-label">{tr(lang, "Εταιρεία", "Company")}</span>
           <strong>{COMPANY.name}</strong>
-          <br />
-          {COMPANY.address} · {COMPANY.phone} · {COMPANY.email}
-          <br />
-          {tr(lang, "ΑΦΜ", "VAT no.")} {TAX.afm} · {TAX.doy}
+          <span>
+            {COMPANY.address} · {COMPANY.phone} · {COMPANY.email}
+          </span>
+          <span>
+            {tr(lang, "ΑΦΜ", "VAT no.")} {TAX.afm} · {TAX.doy}
+          </span>
         </div>
-        <nav className="site-legal" aria-label={tr(lang, "Νομικά", "Legal")}>
-          <Link href={siteHref(role, "R8", lang, { doc: "privacy" })}>
-            {tr(lang, "Απόρρητο", "Privacy")}
-          </Link>
-          <Link href={siteHref(role, "R8", lang, { doc: "cookies" })}>
-            Cookies
-          </Link>
-          <Link href={siteHref(role, "R8", lang, { doc: "terms" })}>
-            {tr(lang, "Όροι χρήσης", "Terms")}
-          </Link>
-          <Link
-            href={screenHref(role, code, { ...query, cookies: "settings" })}
-          >
-            {tr(lang, "Ρυθμίσεις cookies", "Cookie settings")}
-          </Link>
+        <nav
+          className="site-foot-block"
+          aria-label={tr(lang, "Νομικά", "Legal")}
+        >
+          <span className="kit-label">{tr(lang, "Νομικά", "Legal")}</span>
+          <div className="site-legal">
+            <Link href={siteHref(role, "R8", lang, { doc: "privacy" })}>
+              {tr(lang, "Απόρρητο", "Privacy")}
+            </Link>
+            <Link href={siteHref(role, "R8", lang, { doc: "cookies" })}>
+              Cookies
+            </Link>
+            <Link href={siteHref(role, "R8", lang, { doc: "terms" })}>
+              {tr(lang, "Όροι χρήσης", "Terms")}
+            </Link>
+            <Link
+              href={screenHref(role, code, { ...query, cookies: "settings" })}
+            >
+              {tr(lang, "Ρυθμίσεις cookies", "Cookie settings")}
+            </Link>
+          </div>
         </nav>
+        <span className="site-foot-tc kit-label">
+          © {COMPANY.tradeName} · 25 fps
+        </span>
       </footer>
       <CookieLayer role={role} code={code} lang={lang} query={query} />
       {hasWidget && <WidgetBubble role={role} lang={lang} />}

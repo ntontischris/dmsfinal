@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export default function ScenariosLayout({ children }: { children: ReactNode }) {
+export default function KitLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <header className="topbar">
@@ -20,7 +20,7 @@ export default function ScenariosLayout({ children }: { children: ReactNode }) {
           <ThemeToggle />
         </div>
       </header>
-      <main className="main scenarios-main">{children}</main>
+      <main className="main kit-main">{children}</main>
     </>
   );
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { Panel } from "@/kit/panel";
 import { ROWS_SHOWN, type CardContent, type CardDef } from "@/screens/a1-model";
+import { Badge } from "@/screens/shared";
 
 interface TodayCardProps {
   card: CardDef;
@@ -10,57 +12,60 @@ interface TodayCardProps {
 export function TodayCard({ card, content }: TodayCardProps) {
   const isEmpty = content.count === 0;
   const hidden = content.rows.length - ROWS_SHOWN;
+  const urgent = content.rows.filter((row) => row.isUrgent).length;
+  const hasCount = !isEmpty && card.kind !== "info" && !content.isCountless;
   return (
-    <section
-      className="card a1-card"
+    <div
+      className="a1-card"
       data-kind={card.kind}
       data-empty={isEmpty}
-      aria-labelledby={`a1-${card.id}`}
+      data-urgent={urgent > 0}
     >
-      <header className="a1-card-head">
-        <h2 id={`a1-${card.id}`}>
-          <Link href={content.allHref}>{card.title}</Link>
-        </h2>
-        {!isEmpty && card.kind !== "info" &&
-          !content.isCountless && (
-          <span className="a1-count" aria-label={`${content.count} σε αναμονή`}>
-            {content.count}
-          </span>
+      <Panel
+        label={card.title}
+        aside={
+          hasCount ? (
+            <span className="num" aria-label={`${content.count} σε αναμονή`}>
+              {content.count}
+            </span>
+          ) : undefined
+        }
+      >
+        {isEmpty ? (
+          <p className="muted a1-empty">{content.emptyText}</p>
+        ) : (
+          <>
+            {content.summary && (
+              <p className="muted a1-summary">{content.summary}</p>
+            )}
+            {content.rows.length > 0 && (
+              <ul className="a1-rows">
+                {content.rows.slice(0, ROWS_SHOWN).map((row) => (
+                  <li
+                    key={`${row.label}${row.meta}`}
+                    data-urgent={!!row.isUrgent}
+                  >
+                    <Link href={row.href}>{row.label}</Link>
+                    {row.meta && <span className="muted">{row.meta}</span>}
+                    {row.isUrgent && <Badge tone="attention">επείγον</Badge>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
-      </header>
-      {isEmpty ? (
-        <p className="muted a1-empty">{content.emptyText}</p>
-      ) : (
-        <>
-          {content.summary && (
-            <p className="muted a1-summary">{content.summary}</p>
+        <footer className="a1-card-foot">
+          {content.cta && (
+            <Link className="button" data-primary href={content.cta.href}>
+              {content.cta.label}
+            </Link>
           )}
-          {content.rows.length > 0 && (
-            <ul className="a1-rows">
-              {content.rows.slice(0, ROWS_SHOWN).map((row) => (
-                <li
-                  key={`${row.label}${row.meta}`}
-                  data-urgent={!!row.isUrgent}
-                >
-                  <Link href={row.href}>{row.label}</Link>
-                  {row.meta && <span className="muted">{row.meta}</span>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
-      <footer className="a1-card-foot">
-        {content.cta && (
-          <Link className="button" data-primary href={content.cta.href}>
-            {content.cta.label}
+          <Link href={content.allHref}>
+            {hidden > 0 ? `Όλα (${content.rows.length}) →` : "Όλα →"}
           </Link>
-        )}
-        <Link href={content.allHref}>
-          {hidden > 0 ? `Όλα (${content.rows.length}) →` : "Άνοιγμα →"}
-        </Link>
-      </footer>
-    </section>
+        </footer>
+      </Panel>
+    </div>
   );
 }
 
@@ -72,19 +77,18 @@ interface CardErrorProps {
 // Σφάλμα σε μία κάρτα: οι άλλες φορτώνουν κανονικά.
 export function CardError({ card, retryHref }: CardErrorProps) {
   return (
-    <section className="card a1-card" data-kind="error" role="alert">
-      <header className="a1-card-head">
-        <h2>{card.title}</h2>
-      </header>
-      <p className="muted a1-empty">
-        Η κάρτα δεν φόρτωσε. Οι υπόλοιπες δεν επηρεάζονται.
-      </p>
-      <footer className="a1-card-foot">
-        <Link className="button" href={retryHref}>
-          Ξαναδοκίμασε
-        </Link>
-      </footer>
-    </section>
+    <div className="a1-card" data-kind="error" role="alert">
+      <Panel label={card.title} aside="σφάλμα">
+        <p className="muted a1-empty">
+          Η κάρτα δεν φόρτωσε. Οι υπόλοιπες δεν επηρεάζονται.
+        </p>
+        <footer className="a1-card-foot">
+          <Link className="button" href={retryHref}>
+            Ξαναδοκίμασε
+          </Link>
+        </footer>
+      </Panel>
+    </div>
   );
 }
 
