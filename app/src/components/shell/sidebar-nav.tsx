@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { NAV } from "@/components/shell/nav";
+import { currentHref, type NavSection } from "@/components/shell/nav";
 import { cn } from "@/lib/cn";
 
-export function SidebarNav() {
-  const pathname = usePathname();
+// Η πλαϊνή πλοήγηση. Τις ενότητες τις φιλτράρει ο server ανάλογα με τα Δικαιώματα του Χρήστη.
+export function SidebarNav({ sections }: { sections: readonly NavSection[] }) {
+  const current = currentHref(usePathname(), sections);
   return (
     <nav aria-label="Οθόνες" className="grid gap-4">
-      {NAV.map((section) => (
+      {sections.map((section) => (
         <div key={section.title}>
           <p className="kit-label mb-1 px-2">{section.title}</p>
           <ul className="m-0 list-none p-0">
             {section.items.map((item) => {
-              const isCurrent = pathname === item.href;
+              const isCurrent = item.href === current;
               return (
                 <li key={item.href}>
                   <Link

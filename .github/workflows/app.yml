@@ -45,10 +45,52 @@ jobs:
       - name: Έλεγχος των migrations
         run: supabase db lint --level error
 
+  # Από άκρη σε άκρη: τοπικό Supabase (βάση + είσοδος), φανταστικοί Χρήστες, η εφαρμογή σε production build, browser.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      - name: Τοπικό Supabase
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api,postgres-meta
+      - name: Στοιχεία σύνδεσης του τοπικού Supabase (δημόσιες προεπιλογές, όχι μυστικά)
+        run: |
+          eval "$(supabase status -o env)"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
+      - name: Φανταστικοί Χρήστες
+        run: node e2e/seed.mjs
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Τεστ από άκρη σε άκρη
+        run: pnpm e2e
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e
+          path: |
+            app/e2e-results
+            app/e2e-report
+          retention-days: 7
+
   # Στο main: τα migrations περνούν στη βάση ανάπτυξης. Τρέχει μόνο όταν υπάρχουν τα secrets του repo.
   migrate:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [checks, database]
+    needs: [checks, database, e2e]
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
