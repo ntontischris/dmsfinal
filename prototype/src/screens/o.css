@@ -1,0 +1,12 @@
+/* Κοινά της σελίδας Ρυθμίσεων (O1–O7). Μόνο τα ουδέτερα tokens του globals.css. */
+.o-card { margin-bottom: var(--space-4); min-width: 0; }
+.o-card > h2 { margin-top: 0; }
+.o-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
+.o-field { width: 100%; }
+.o-field .input, .o-field .select { width: 100%; max-width: none; box-sizing: border-box; }
+.o-hint { font-size: var(--text-sm); }
+.o-locked { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; padding: var(--space-2) 0; border-top: 1px solid var(--color-border); font-size: var(--text-sm); }
+.o-locked > span:nth-child(2) { flex: 1 1 10rem; overflow-wrap: anywhere; }
+.o-list-actions { margin-top: var(--space-3); }
+.o-recent { margin-top: var(--space-6); }
+.o-first { border-left-color: var(--color-attention); }

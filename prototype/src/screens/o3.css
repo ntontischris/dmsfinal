@@ -1,0 +1,4 @@
+/* O3/O5: σύντομοι πίνακες Όρων και ειδών Παροχής. */
+.o3-switch { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); flex-wrap: wrap; }
+.o3-table input.input { width: 100%; max-width: 14rem; box-sizing: border-box; }
+.o3-table td { vertical-align: top; }

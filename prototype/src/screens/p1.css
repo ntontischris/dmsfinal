@@ -1,0 +1,6 @@
+.p1-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--space-3); align-items: end; margin-top: var(--space-3); }
+.p1-form label { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+.p1-form .input, .p1-form .select { width: 100%; box-sizing: border-box; }
+.p1-chips { margin: var(--space-3) 0; align-items: center; }
+.p1-hidden { color: var(--color-text-muted); font-style: italic; }
+.p1-ba { overflow-wrap: anywhere; }

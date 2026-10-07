@@ -1,0 +1,8 @@
+.p2-banner { border-left: 4px solid var(--color-accent); }
+.p2-banner[data-red='true'] { border-left-color: var(--color-attention); }
+.p2-card { min-width: 0; }
+.p2-card[data-red='true'] { border-left: 4px solid var(--color-attention); }
+.p2-list { list-style: none; padding: 0; margin: var(--space-2) 0; display: grid; gap: var(--space-3); }
+.p2-list li { border-top: 1px solid var(--color-border); padding-top: var(--space-2); }
+.p2-bar { height: 0.5rem; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; background: var(--color-surface); }
+.p2-bar > span { display: block; height: 100%; background: var(--color-accent); }
