@@ -1,6 +1,6 @@
 -- Πελάτες, Ευκαιρίες και Ρυθμίσεις › Πωλήσεις (κεφ. 2, ADR 0007, 0009, 0015). Φανταστικοί Χρήστες και στοιχεία.
 begin;
-select plan(188);
+select plan(189);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Διαχείριση · a3 Άννα (Πωλήσεις) · a4 Νίκος (Πωλήσεις) · a5 Λογιστής
@@ -490,6 +490,7 @@ select set_config('t.r8', public.sales_create_opportunity(
   'Reels', (select id from public.sales_sources where code = 'phone'), '', 'Κλήση', current_date + 1)::text, true);
 select is(public.sales_duplicate_pairs(), '[]'::jsonb, 'Ο πωλητής δεν βλέπει τα Πιθανά διπλά');
 select is((select bool_or(is_possible_duplicate) from public.sales_client_list()), false, 'Ο πωλητής δεν βλέπει το σήμα στη λίστα');
+select is((select count(*)::int from public.sales_client_list() where can_open is null or is_possible_duplicate is null), 0, 'Ο Πελάτης χωρίς Υπεύθυνο δίνει «δεν ανοίγει», όχι κενό');
 select throws_ok(
   $$ select public.sales_merge_clients('00000000-0000-0000-0000-0000000000b4', '00000000-0000-0000-0000-0000000000b2') $$,
   '42501', null, 'Ο πωλητής δεν συγχωνεύει Πελάτες'

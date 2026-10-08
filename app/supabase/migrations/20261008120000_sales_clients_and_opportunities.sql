@@ -398,7 +398,7 @@ as $$
     or (
       (authz.has('clients.view') or authz.has('clients.manage'))
       and (
-        cmanager = auth.uid()
+        coalesce(cmanager = auth.uid(), false)
         or exists (select 1 from public.opportunities o where o.client_id = cid and o.manager_id = auth.uid())
       )
     )
@@ -416,7 +416,7 @@ as $$
     or (
       (authz.has('clients.view') or authz.has('clients.manage'))
       and (
-        omanager = auth.uid()
+        coalesce(omanager = auth.uid(), false)
         or exists (select 1 from public.clients c where c.id = ocid and c.manager_id = auth.uid())
       )
     )

@@ -8,7 +8,7 @@ import type { ActivityRow, Opportunity, Pipeline } from "./types";
 // Ανάγνωση Ευκαιριών και Δραστηριοτήτων. Τα φιλτράρει η βάση (RLS): εδώ δεν αποφασίζεται ποιος τι βλέπει.
 
 export const OPPORTUNITY_COLUMNS =
-  "id, client_id, title, stage_id, source_id, referred_by, manager_id, outcome, loss_reason_id, next_step, next_step_due, follows_opportunity_id, closed_at, created_at, client:clients!opportunities_client_id_fkey(name, manager_id), manager:team_users!opportunities_manager_id_fkey(name), follows:opportunities!opportunities_follows_opportunity_id_fkey(id, title)";
+  "id, client_id, title, stage_id, source_id, referred_by, manager_id, outcome, loss_reason_id, next_step, next_step_due, follows_opportunity_id, closed_at, created_at, client:clients!opportunities_client_id_fkey(name, manager_id), manager:team_users!opportunities_manager_id_fkey(name)";
 
 export const ACTIVITY_COLUMNS =
   "id, opportunity_id, occurred_at, kind_id, event, body, previous_id, subject_id, actor:team_users!opportunity_activities_actor_id_fkey(name), opportunity:opportunities!opportunity_activities_opportunity_id_fkey(title)";
@@ -35,7 +35,6 @@ const opportunitySchema = z.object({
     .object({ name: z.string(), manager_id: z.string().nullable() })
     .nullable(),
   manager: z.object({ name: z.string() }).nullable(),
-  follows: z.object({ id: z.string(), title: z.string() }).nullable(),
 });
 
 const activitySchema = z.object({
@@ -68,8 +67,9 @@ export const toOpportunity = (
   lossReasonId: row.loss_reason_id,
   nextStep: row.next_step,
   nextStepDue: row.next_step_due,
-  followsId: row.follows?.id ?? row.follows_opportunity_id,
-  followsTitle: row.follows?.title ?? null,
+  followsId: row.follows_opportunity_id,
+  // Ο τίτλος της Ευκαιρίας που συνεχίζεται διαβάζεται χωριστά (getOpportunity): το PostgREST δεν λύνει αυτο-αναφορά με hint.
+  followsTitle: null,
   closedAt: row.closed_at,
   createdAt: row.created_at,
 });
@@ -128,7 +128,7 @@ export async function getOpportunity(
 ): Promise<ReadResult<Opportunity | null>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
-  return read(
+  const result = await read(
     "getOpportunity",
     supabase
       .from("opportunities")
@@ -138,6 +138,20 @@ export async function getOpportunity(
     (data) =>
       data === null ? null : toOpportunity(opportunitySchema.parse(data)),
   );
+  if (!result.ok || !result.data?.followsId) return result;
+  const followed = await read(
+    "getOpportunity.follows",
+    supabase
+      .from("opportunities")
+      .select("title")
+      .eq("id", result.data.followsId)
+      .maybeSingle(),
+    (data) =>
+      data === null ? null : z.object({ title: z.string() }).parse(data).title,
+  );
+  // Αν η προηγούμενη δεν φαίνεται ή δεν φόρτωσε, μένει ο σύνδεσμος χωρίς τίτλο: η Ευκαιρία φορτώνει κανονικά.
+  const followsTitle = followed.ok ? followed.data : null;
+  return { ok: true, data: { ...result.data, followsTitle } };
 }
 
 export async function listOpportunityActivities(
