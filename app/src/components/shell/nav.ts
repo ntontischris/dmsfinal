@@ -20,6 +20,35 @@ export const NAV: readonly NavSection[] = [
     items: [{ code: "A1", label: "Σήμερα", href: "/app" }],
   },
   {
+    title: "Πελάτες και Πωλήσεις",
+    items: [
+      {
+        code: "B1",
+        label: "Πελάτες",
+        href: "/app/clients",
+        requires: "clients.view",
+      },
+      {
+        code: "B3",
+        label: "Pipeline Ευκαιριών",
+        href: "/app/pipeline",
+        requires: "clients.manage",
+      },
+      {
+        code: "B5",
+        label: "Χωρίς υπεύθυνο",
+        href: "/app/unassigned",
+        requires: "clients.transfer",
+      },
+      {
+        code: "B6",
+        label: "Πιθανά διπλά",
+        href: "/app/clients/duplicates",
+        requires: "clients.merge",
+      },
+    ],
+  },
+  {
     title: "Ομάδα και Πρόσβαση",
     items: [
       {
@@ -39,8 +68,24 @@ export const NAV: readonly NavSection[] = [
   {
     title: "Ρυθμίσεις",
     items: [
-      { code: "O1", label: "Ρυθμίσεις", href: "/app/settings/company", requires: "settings.manage" },
-      { code: "O7", label: "Έλεγχος ετοιμότητας", href: "/app/settings/readiness", requires: "settings.manage" },
+      {
+        code: "O1",
+        label: "Ρυθμίσεις",
+        href: "/app/settings/company",
+        requires: "settings.manage",
+      },
+      {
+        code: "O2",
+        label: "Ρυθμίσεις Πωλήσεων",
+        href: "/app/settings/sales",
+        requires: "settings.manage",
+      },
+      {
+        code: "O7",
+        label: "Έλεγχος ετοιμότητας",
+        href: "/app/settings/readiness",
+        requires: "settings.manage",
+      },
     ],
   },
   {
