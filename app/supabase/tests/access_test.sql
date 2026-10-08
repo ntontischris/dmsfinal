@@ -1,6 +1,6 @@
 -- Ρόλοι, Δικαιώματα, Εύρος, χωρίς κλιμάκωση, τελευταίος Ιδιοκτήτης, Ίχνος (κεφ. 1, κεφ. 7). Φανταστικοί Χρήστες.
 begin;
-select plan(33);
+select plan(34);
 
 -- ───────────── Δεδομένα ─────────────
 insert into auth.users (id, email) values
@@ -157,6 +157,12 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 select throws_ok(
   $$ update public.team_users set is_active = false where user_id = '00000000-0000-0000-0000-000000000001' $$,
   'P0001', null, 'Έναν Ιδιοκτήτη τον απενεργοποιεί μόνο Ιδιοκτήτης'
+);
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select lives_ok(
+  $$ update public.team_users set is_active = false where user_id = '00000000-0000-0000-0000-000000000002' $$,
+  'Ο Ιδιοκτήτης απενεργοποιεί ενεργό μη-Ιδιοκτήτη'
 );
 
 -- ───────────── Ίχνος ενεργειών ─────────────
