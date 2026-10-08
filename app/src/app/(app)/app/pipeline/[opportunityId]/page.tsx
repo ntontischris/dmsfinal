@@ -7,6 +7,7 @@ import { Split } from "@/components/ui/inspector";
 import { Notice } from "@/components/ui/notice";
 import { Panel } from "@/components/ui/panel";
 import { AccessNotice, getViewer } from "@/modules/access";
+import { ProposalPanel, agreementCaps } from "@/modules/agreements";
 import {
   ActivityList,
   CloseLostForm,
@@ -62,20 +63,6 @@ function Missing() {
   );
 }
 
-function ProposalPlaceholder() {
-  return (
-    <Panel label="Πρόταση">
-      <Notice kind="empty" title="Οι προτάσεις έρχονται με το module Συμφωνίες">
-        <p className="m-0">
-          Μέχρι τότε η Ευκαιρία προχωρά με Στάδια και Δραστηριότητες και κλείνει
-          μόνο ως χαμένη. Ως κερδισμένη κλείνει μόνο με την υπογραφή της
-          Συμφωνίας.
-        </p>
-      </Notice>
-    </Panel>
-  );
-}
-
 // Τι ακολουθεί το κλείσιμο: χαμένη μένει χαμένη (νέα Ευκαιρία με σύνδεσμο), κερδισμένη γίνεται μόνο με υπογραφή.
 function OutcomeNotice({
   opportunity,
@@ -109,6 +96,7 @@ interface DetailProps {
   activities: readonly ActivityRow[];
   lookups: ActivityLookups;
   caps: SalesCaps;
+  canCreateProposal: boolean; // «Συντάσσει Συμφωνίες» (agreements.draft): η βάση ελέγχει το εύρος στη δημιουργία
 }
 
 function OpportunityDetail({
@@ -117,6 +105,7 @@ function OpportunityDetail({
   activities,
   lookups,
   caps,
+  canCreateProposal,
 }: DetailProps) {
   const today = athensToday();
   const canWork = canWorkOn(caps, opportunity);
@@ -160,7 +149,11 @@ function OpportunityDetail({
             />
           )}
           <OutcomeNotice opportunity={opportunity} followUp={followUp} />
-          <ProposalPlaceholder />
+          <ProposalPanel
+            opportunityId={opportunity.id}
+            canCreate={canCreateProposal && opportunity.outcome === "open"}
+            defaultTitle={opportunity.title}
+          />
         </div>
       </Split>
     </>
@@ -182,9 +175,11 @@ function BackShell({ children }: { children: ReactNode }) {
 async function OpportunityLoader({
   opportunityId,
   caps,
+  canCreateProposal,
 }: {
   opportunityId: string;
   caps: SalesCaps;
+  canCreateProposal: boolean;
 }) {
   const [found, activities, lookups, lists] = await Promise.all([
     getOpportunity(opportunityId),
@@ -213,6 +208,7 @@ async function OpportunityLoader({
       activities={activities.data}
       lookups={lookups.data}
       caps={caps}
+      canCreateProposal={canCreateProposal}
     />
   );
 }
@@ -247,5 +243,11 @@ export default async function OpportunityPage({
       </BackShell>
     );
 
-  return <OpportunityLoader opportunityId={opportunityId} caps={caps} />;
+  return (
+    <OpportunityLoader
+      opportunityId={opportunityId}
+      caps={caps}
+      canCreateProposal={agreementCaps(viewer).canDraft}
+    />
+  );
 }

@@ -1,7 +1,7 @@
 // Τύποι του module «Πελάτες και Ευκαιρίες». Οι τιμές των λιστών (Στάδια, Πηγές…) είναι δεδομένα, όχι τύποι.
 
 export type Outcome = "open" | "won" | "lost";
-export type ActivityEvent = "created" | "stage_changed" | "assigned" | "lost";
+export type ActivityEvent = "created" | "stage_changed" | "assigned" | "lost" | "agreement";
 export type FormRouting = "owner" | "person" | "queue";
 export type DuplicateReason = "phone" | "email_domain" | "name";
 export type ListName = "stages" | "sources" | "loss_reasons" | "activity_kinds";

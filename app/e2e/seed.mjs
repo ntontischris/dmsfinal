@@ -219,3 +219,51 @@ const currentMonth =
   new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Athens", year: "numeric", month: "2-digit" }).format(new Date()) + "-01";
 await insertPlain("cost_months", { month: currentMonth, expenses_total: 8800, productive_hours: 220 });
 console.log(`seed: Κόστος ώρας (${currentMonth})`);
+
+// ───────────── Συμφωνίες: Πελάτες και Ευκαιρίες για το e2e/agreements.spec.ts ─────────────
+// Οι πίνακες των Συμφωνιών είναι κλειστοί και τα RPC θέλουν συνδεδεμένο Χρήστη, άρα το seed βάζει μόνο Πελάτες και Ευκαιρίες·
+// κάθε Συμφωνία των τεστ γράφεται από την οθόνη. Τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το όνομα του project.
+
+const proposalStage = await codeId("sales_stages", "proposal");
+const threeDaysAhead = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Athens" }).format(new Date(Date.now() + 3 * 24 * 3600 * 1000));
+
+// Πελάτης με το κύριο πρόσωπό του και ανοιχτές Ευκαιρίες στο στάδιο «Πρόταση».
+async function seedProposalClient({ name, email, contactName, managerId, titles }) {
+  const clientId = await insertRow("clients", {
+    name,
+    city: "Αθήνα",
+    contact_name: contactName,
+    contact_email: email,
+    contact_phone: "",
+    manager_id: managerId,
+  });
+  for (const title of titles) {
+    await insertRow("opportunities", {
+      client_id: clientId,
+      manager_id: managerId,
+      stage_id: proposalStage,
+      source_id: phoneSource,
+      title,
+      next_step: "Πρόταση",
+      next_step_due: threeDaysAhead,
+    });
+  }
+}
+
+for (const P of ["desktop", "mobile"]) {
+  await seedProposalClient({
+    name: `Πελάτης Συμφωνιών ${P}`,
+    email: `symfonies.${P}@pelatis.example.gr`,
+    contactName: "Μαρία Συμφωνίου",
+    managerId: ANNA,
+    titles: ["Α", "Β", "Γ", "Δ"].map((letter) => `Πρόταση ${letter} ${P}`),
+  });
+  await seedProposalClient({
+    name: `Πελάτης Νίκου ${P}`,
+    email: `nikou.${P}@pelatis.example.gr`,
+    contactName: "Νίκος Πελάτου",
+    managerId: NIKOS,
+    titles: [`Πρόταση Νίκου ${P}`],
+  });
+  console.log(`seed: Συμφωνίες (${P})`);
+}

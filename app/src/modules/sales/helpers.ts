@@ -182,6 +182,9 @@ export const describeActivity = (
         kind: SYSTEM_KIND,
         text: `Έκλεισε ως χαμένη: ${nameIn(lookups.lossReasons, a.subjectId)}.`,
       };
+    // Το κείμενο το γράφει η βάση των Συμφωνιών στο body.
+    case "agreement":
+      return { kind: "Συμφωνία", text: a.body };
   }
 };
 
