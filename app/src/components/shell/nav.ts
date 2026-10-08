@@ -49,6 +49,17 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Κατάλογος",
+    items: [
+      {
+        code: "C1",
+        label: "Κατάλογος",
+        href: "/app/catalogue",
+        requires: "catalogue.view",
+      },
+    ],
+  },
+  {
     title: "Ομάδα και Πρόσβαση",
     items: [
       {
@@ -79,6 +90,18 @@ export const NAV: readonly NavSection[] = [
         label: "Ρυθμίσεις Πωλήσεων",
         href: "/app/settings/sales",
         requires: "settings.manage",
+      },
+      {
+        code: "O3",
+        label: "Ρυθμίσεις Συμφωνιών",
+        href: "/app/settings/agreements",
+        requires: "settings.manage",
+      },
+      {
+        code: "O6",
+        label: "Ρυθμίσεις Οικονομικών",
+        href: "/app/settings/finance",
+        requires: "finance.cost",
       },
       {
         code: "O7",

@@ -145,3 +145,77 @@ for (const [P, n] of [["desktop", 1], ["mobile", 2]]) {
   }
   console.log(`seed: Πωλήσεις (${P})`);
 }
+
+// ───────────── Κατάλογος και Κόστος: Πακέτα, Υπηρεσίες και Κόστος ώρας για το e2e/catalogue.spec.ts ─────────────
+// Οι πίνακες του Καταλόγου είναι κλειστοί στην εφαρμογή (μόνο RPC), αλλά όχι στο service role· τα RPC θέλουν συνδεδεμένο Χρήστη,
+// γι' αυτό τα fixtures μπαίνουν απευθείας. Κάθε ενεργό στοιχείο έχει τιμή: το «Κατάλογος» του Ελέγχου ετοιμότητας είναι έτοιμο σε όλο το τρέξιμο.
+
+async function insertPlain(table, values) {
+  const { error } = await admin.from(table).insert(values);
+  if (error) throw error;
+}
+
+const kindIds = {
+  shoot: await codeId("provision_kinds", "shoot"),
+  reel: await codeId("provision_kinds", "reel"),
+  video: await codeId("provision_kinds", "video"),
+};
+
+// Ένα στοιχείο σε τέσσερις πίνακες: ονόματα, τιμή, ώρες και Άμεσο κόστος, Παροχές.
+async function seedCatalogueItem({ item, price, hours, directCost = 0, directCostNote = "", provisions }) {
+  const itemId = await insertRow("catalogue_items", item);
+  await insertPlain("catalogue_item_amounts", { item_id: itemId, price });
+  await insertPlain("catalogue_item_costs", {
+    item_id: itemId,
+    hours_shoot: hours[0],
+    hours_edit: hours[1],
+    direct_cost: directCost,
+    direct_cost_note: directCostNote,
+  });
+  for (const [code, quantity] of provisions) {
+    await insertPlain("catalogue_item_provisions", { item_id: itemId, kind_id: kindIds[code], quantity });
+  }
+}
+
+for (const P of ["desktop", "mobile"]) {
+  await seedCatalogueItem({
+    item: { kind: "package", billing: "monthly", name: `Μηνιαία Παρουσία ${P}`, description: "Το βασικό μηνιαίο πακέτο social." },
+    price: 1300,
+    hours: [6, 14],
+    provisions: [["shoot", 2], ["reel", 8]],
+  });
+  await seedCatalogueItem({
+    item: { kind: "service", name: `Έξτρα reel ${P}`, unit: "ανά reel" },
+    price: 150,
+    hours: [1, 3],
+    provisions: [["reel", 1]],
+  });
+  // Το στοιχείο που επεξεργάζεται ο Ιδιοκτήτης στο τεστ.
+  await seedCatalogueItem({
+    item: { kind: "package", billing: "one_off", name: `Εκδήλωση ${P}` },
+    price: 400,
+    hours: [4, 6],
+    provisions: [["shoot", 1], ["video", 1]],
+  });
+  await seedCatalogueItem({
+    item: { kind: "service", name: `Drone ${P}`, unit: "ανά ώρα" },
+    price: 80,
+    hours: [0, 0],
+    directCost: 40,
+    directCostNote: "ενοικίαση",
+    provisions: [],
+  });
+  await seedCatalogueItem({
+    item: { kind: "package", billing: "monthly", name: `Παλιό πακέτο ${P}`, retired_at: new Date().toISOString() },
+    price: 500,
+    hours: [0, 0],
+    provisions: [["reel", 4]],
+  });
+  console.log(`seed: Κατάλογος (${P})`);
+}
+
+// Κόστος ώρας του τρέχοντος μήνα Αθήνας: 8.800 € ÷ 220 ώρες = 40,00 €. Οι πολλαπλασιαστές μένουν στα προεπιλεγμένα 1,3 / 1,6 / 2.
+const currentMonth =
+  new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Athens", year: "numeric", month: "2-digit" }).format(new Date()) + "-01";
+await insertPlain("cost_months", { month: currentMonth, expenses_total: 8800, productive_hours: 220 });
+console.log(`seed: Κόστος ώρας (${currentMonth})`);

@@ -1,10 +1,11 @@
 import { Tabs } from "@/components/ui/segmented";
 
-// Οι καρτέλες της σελίδας Ρυθμίσεων. Οι υπόλοιπες ενότητες (Συμφωνίες, Γυρίσματα, Παραδοτέα,
-// Οικονομικά) προστίθενται εδώ μαζί με το module τους, ώστε κάθε τιμή να έχει μία πηγή.
+// Οι καρτέλες της σελίδας Ρυθμίσεων. Οι υπόλοιπες ενότητες (Γυρίσματα, Παραδοτέα) προστίθενται εδώ μαζί με το module τους, ώστε κάθε τιμή να έχει μία πηγή.
 const TABS = [
   { id: "company", label: "Εταιρεία", href: "/app/settings/company" },
   { id: "sales", label: "Πωλήσεις", href: "/app/settings/sales" },
+  { id: "agreements", label: "Συμφωνίες", href: "/app/settings/agreements" },
+  { id: "finance", label: "Οικονομικά", href: "/app/settings/finance" },
   {
     id: "readiness",
     label: "Έλεγχος ετοιμότητας",
