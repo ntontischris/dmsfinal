@@ -28,10 +28,12 @@ export const READINESS: Readonly<Record<string, ReadinessInfo>> = {
   catalogue: {
     label: "Κατάλογος: Πακέτα, Υπηρεσίες, τιμές",
     who: "Διαχείριση",
+    href: "/app/catalogue",
   },
   costs: {
     label: "Έξοδα και ώρες: ο πρώτος μήνας Κόστους ώρας",
     who: "Όποιος «Διαχειρίζεται κόστος»",
+    href: "/app/settings/finance",
   },
   knowledge: { label: "Άρθρα Γνώσης", who: "Όποιος διαχειρίζεται τη Γνώση" },
   legal_texts: {
@@ -52,7 +54,6 @@ export const READINESS: Readonly<Record<string, ReadinessInfo>> = {
 const MODULES: Readonly<Record<string, string>> = {
   "module:files": "τα Αρχεία",
   "module:filming": "τα Γυρίσματα",
-  "module:catalogue": "τον Κατάλογο",
   "module:finance": "τα Οικονομικά",
   "module:knowledge": "τη Γνώση",
   "module:automations": "τους Αυτοματισμούς",
