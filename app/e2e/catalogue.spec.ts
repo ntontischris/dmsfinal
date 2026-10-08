@@ -46,7 +46,9 @@ test("οι Πωλήσεις βλέπουν τιμές και Παροχές, ό�
   await expect(page.locator("th", { hasText: "Τιμή" })).toHaveCount(1);
   await expect(page.locator("th", { hasText: "Εκτ. κόστος" })).toHaveCount(0);
   await expect(page.locator("th", { hasText: "Περιθώριο" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Νέο Πακέτο" })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Νέο Πακέτο", exact: true }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("checkbox", { name: "και αρχειοθετημένα" }),
   ).toHaveCount(0);

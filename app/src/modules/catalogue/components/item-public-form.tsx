@@ -154,8 +154,9 @@ function EditablePublic({ item }: { item: CatalogueItem }) {
 // «Δημόσιο» (μόνο Πακέτα): ό,τι φαίνεται στην Ιστοσελίδα και στον Βοηθό. Όποιος δεν Διαχειρίζεται Κατάλογο βλέπει τα ίδια ως κείμενο.
 export function ItemPublicForm({ item, canEdit }: ItemPublicFormProps) {
   if (item.kind !== "package") return null;
-  // Το key κλειδώνει τη φόρμα στην κατάσταση του διακομιστή: μετά από επαναφορά/αλλαγή (νέο updatedAt) τα κουτάκια ξαναγεμίζουν από το item και δεν ξαναστέλνεται παλιό «Δημόσιο» = true.
-  const formKey = `${item.id}:${item.updatedAt}:${item.isPublic}:${item.isRetired}:${item.showsPrice}`;
+  // Το key αλλάζει μόνο με την αρχειοθέτηση/επαναφορά: τότε τα κουτάκια ξαναγεμίζουν από το item και δεν ξαναστέλνεται παλιό «Δημόσιο» = true.
+  // Δεν εξαρτάται από ό,τι αλλάζει η ίδια η φόρμα, αλλιώς θα ξαναστηνόταν μετά την αποθήκευση και θα χανόταν το «Αποθηκεύτηκε».
+  const formKey = `${item.id}:${item.isRetired}`;
   return canEdit ? (
     <EditablePublic key={formKey} item={item} />
   ) : (
