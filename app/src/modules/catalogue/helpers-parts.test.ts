@@ -125,6 +125,17 @@ describe("Παροχές", () => {
       ),
     ).toBe("2 Γυρίσματα, 8 reels");
   });
+  it("provisionsText γράφει ενικό όταν η ποσότητα είναι 1", () => {
+    expect(
+      provisionsText(
+        [
+          { kindId: SHOOT, quantity: 1 },
+          { kindId: REEL, quantity: 1 },
+        ],
+        KINDS,
+      ),
+    ).toBe("1 Γύρισμα, 1 reel");
+  });
   it("άγνωστο είδος και κενή λίστα δείχνουν «—»", () => {
     expect(
       provisionsText(

@@ -202,7 +202,10 @@ export const provisionsText = (
   return provisions
     .map((provision) => {
       const kind = kinds.find((candidate) => candidate.id === provision.kindId);
-      return kind ? `${provision.quantity} ${kind.unit}` : NOT_PRICED_LABEL;
+      if (!kind) return NOT_PRICED_LABEL;
+      // Ένα: η ετικέτα στον ενικό («1 Γύρισμα»)· αλλιώς η μονάδα στον πληθυντικό («2 Γυρίσματα»).
+      const word = provision.quantity === 1 ? kind.label : kind.unit;
+      return `${provision.quantity} ${word}`;
     })
     .join(", ");
 };
