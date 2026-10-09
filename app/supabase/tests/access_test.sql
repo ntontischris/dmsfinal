@@ -184,7 +184,7 @@ select throws_ok(
 
 -- ───────────── Χωρίς σύνδεση ─────────────
 set local role anon;
-select is((select count(*)::int from public.roles), 0, 'Χωρίς σύνδεση δεν φαίνεται κανένας Ρόλος');
+select throws_ok($$ select count(*) from public.roles $$,'42501', null, 'Χωρίς σύνδεση δεν διαβάζεται κανένας Ρόλος');
 
 select * from finish();
 rollback;
