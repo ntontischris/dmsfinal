@@ -17,6 +17,8 @@ interface ItemFormProps {
 const CODE_HINT = "Προαιρετικός. Δεν είναι μοναδικός.";
 const NOTE_HINT = "Τι περιέχει, πού φυλάγεται.";
 const CATEGORY_HINT = "Αποσυρμένη Κατηγορία δεν προσφέρεται σε νέο αντικείμενο.";
+const QUANTITY_HINT =
+  "Πάνω από 1: κάθε μονάδα παίρνει αρίθμηση #1, #2… και το δικό της κωδικό.";
 
 // Νέο αντικείμενο ή αλλαγή στοιχείων. Η Κατάσταση δεν αλλάζει εδώ: έχει τη δική της φόρμα.
 export function ItemForm({ categories, item }: ItemFormProps) {
@@ -46,6 +48,17 @@ export function ItemForm({ categories, item }: ItemFormProps) {
           ))}
         </Select>
       </Field>
+      {!item && (
+        <Field label="Ποσότητα" hint={QUANTITY_HINT}>
+          <Input
+            name="quantity"
+            type="number"
+            min={1}
+            max={50}
+            defaultValue={1}
+          />
+        </Field>
+      )}
       <Field label="Κωδικός ή σειριακός" hint={CODE_HINT}>
         <Input name="code" defaultValue={item?.code ?? ""} autoComplete="off" />
       </Field>

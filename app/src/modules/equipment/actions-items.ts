@@ -20,20 +20,29 @@ const ITEM_FIELDS = ["categoryId", "name", "code", "note"] as const;
 const toOptional = (value: string): string | null =>
   value === "" ? null : value;
 
+const CREATE_FIELDS = [...ITEM_FIELDS, "quantity"] as const;
+
+const createNotice = (quantity: number): string =>
+  quantity === 1
+    ? "Το αντικείμενο προστέθηκε στο μητρώο."
+    : `Προστέθηκαν ${quantity} μονάδες στο μητρώο.`;
+
+// Μία ή περισσότερες μονάδες: η βάση γράφει όλες μαζί ή καμία.
 export async function createItem(
   _: FormState,
   form: FormData,
 ): Promise<FormState> {
-  const parsed = createItemSchema.safeParse(pick(form, ITEM_FIELDS));
+  const parsed = createItemSchema.safeParse(pick(form, CREATE_FIELDS));
   if (!parsed.success) return firstIssue(parsed.error);
-  const { categoryId, name, code, note } = parsed.data;
-  const outcome = await callRpc("equipment_item_create", {
+  const { categoryId, name, code, note, quantity } = parsed.data;
+  const outcome = await callRpc("equipment_items_create_many", {
     p_category_id: categoryId,
     p_name: name,
     p_code: toOptional(code),
     p_note: toOptional(note),
+    p_quantity: quantity,
   });
-  return finishWith(outcome, "Το αντικείμενο προστέθηκε στο μητρώο.");
+  return finishWith(outcome, createNotice(quantity));
 }
 
 export async function updateItem(

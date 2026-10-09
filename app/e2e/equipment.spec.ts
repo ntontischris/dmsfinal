@@ -127,3 +127,32 @@ test("η Παραγωγή βλέπει το μητρώο μόνο για ανά�
   await expect(card(page, TEMPLATE)).toContainText(CAMERA);
   await shot(page, "f3-production-template");
 });
+
+test("ο Ιδιοκτήτης φτιάχνει δύο μονάδες με ποσότητα και τις βλέπει ομαδοποιημένες στο F1", async ({
+  page,
+}) => {
+  const P = project();
+  const GROUP = `Μικρόφωνο ${P}`;
+
+  await signIn(page, "owner@example.com");
+  await page.goto("/app/equipment");
+  const newItem = await openNewItem(page);
+  await fieldOf(newItem, "Όνομα").fill(GROUP);
+  await fieldOf(newItem, "Κατηγορία").selectOption({ label: "Ήχος" });
+  await fieldOf(newItem, "Ποσότητα").fill("2");
+  await button(newItem, "Δημιουργία").click();
+  await expect(newItem.getByRole("status")).toContainText(
+    "Προστέθηκαν 2 μονάδες στο μητρώο.",
+  );
+
+  const group = page.locator("summary", { hasText: `${GROUP} ×2` });
+  await expect(group).toContainText("2 διαθέσιμα");
+  await group.click();
+  await expect(
+    page.getByRole("link", { name: `${GROUP} #1`, exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: `${GROUP} #2`, exact: true }),
+  ).toBeVisible();
+  await shot(page, "f1-owner-quantity");
+});

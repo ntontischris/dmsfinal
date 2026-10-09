@@ -1,6 +1,6 @@
 -- Εξοπλισμός: μητρώο, Κατηγορίες, Πρότυπα, κανόνες διαγραφής και Ίχνος (κεφ. 3, ADR 0007). Φανταστικοί Χρήστες και στοιχεία.
 begin;
-select plan(111);
+select plan(128);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή · e3 Πωλήσεις · e4 «Ελεγκτής» (audit.view μόνο) · e5 «Δεσμεύει μόνο» (equipment.reserve μόνο)
@@ -340,6 +340,72 @@ select throws_ok($$ select * from public.equipment_categories $$, '42501', null,
 select throws_ok($$ select * from public.equipment_items $$, '42501', null, 'Ο πίνακας αντικειμένων δεν διαβάζεται απευθείας');
 select throws_ok($$ select * from public.equipment_templates $$, '42501', null, 'Ο πίνακας Προτύπων δεν διαβάζεται απευθείας');
 select throws_ok($$ select * from public.equipment_template_items $$, '42501', null, 'Ο πίνακας συνδέσεων Προτύπου δεν διαβάζεται απευθείας');
+
+-- ───────────── Ποσότητα στη δημιουργία (#123) ─────────────
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select set_config('t.many', array_to_string(public.equipment_items_create_many(current_setting('t.cat_sound')::uuid, 'Lavalier', 'LAV', 'Για συνέντευξη', 3), ','), true);
+select is(cardinality(string_to_array(current_setting('t.many'), ',')), 3, 'Ποσότητα 3 φτιάχνει τρεις μονάδες');
+select is(
+  (select string_agg(i.name, '|' order by i.name) from public.equipment_items_view(true) i where i.id = any (string_to_array(current_setting('t.many'), ',')::uuid[])),
+  'Lavalier #1|Lavalier #2|Lavalier #3', 'Οι μονάδες παίρνουν αρίθμηση #1 έως #3'
+);
+select is(
+  (select string_agg(i.code, '|' order by i.code) from public.equipment_items_view(true) i where i.id = any (string_to_array(current_setting('t.many'), ',')::uuid[])),
+  'LAV-1|LAV-2|LAV-3', 'Ο κωδικός παίρνει αρίθμηση -1 έως -3'
+);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e4","role":"authenticated"}', true);
+select is(
+  (select count(*)::int from public.audit_log a where a.entity = 'equipment_items' and a.action = 'insert' and a.entity_id = any (string_to_array(current_setting('t.many'), ','))),
+  3, 'Κάθε μονάδα γράφει την εγγραφή της στο Ίχνος'
+);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select set_config('t.one', array_to_string(public.equipment_items_create_many(current_setting('t.cat_drone')::uuid, 'Drone Mavic', null, null, 1), ','), true);
+select is(
+  (select i.name from public.equipment_items_view(true) i where i.id = current_setting('t.one')::uuid), 'Drone Mavic',
+  'Ποσότητα 1 δεν βάζει αρίθμηση'
+);
+select is(
+  (select i.code from public.equipment_items_view(true) i where i.id = current_setting('t.one')::uuid), null,
+  'Ποσότητα 1 χωρίς κωδικό μένει χωρίς κωδικό'
+);
+select set_config('t.clash', public.equipment_item_create(current_setting('t.cat_lens')::uuid, 'Ρύθμιση #2', null, null)::text, true);
+select throws_ok(
+  $$ select public.equipment_items_create_many(current_setting('t.cat_lens')::uuid, 'Ρύθμιση', null, null, 3) $$, 'P0001',
+  'Υπάρχει ήδη αντικείμενο με αυτό το όνομα', 'Το precheck απορρίπτει πριν γραφτεί τίποτα: σύγκρουση ονόματος σε μία μονάδα'
+);
+select is(
+  (select count(*)::int from public.equipment_items_view(true) i where lower(i.name) like 'ρύθμιση%'), 1,
+  'Μετά την αποτυχία δεν μπαίνει καμία μονάδα'
+);
+select throws_ok(
+  $$ select public.equipment_items_create_many(current_setting('t.cat_cam')::uuid, 'Μηδέν', null, null, 0) $$, 'P0001',
+  'Η Ποσότητα είναι από 1 ως 50', 'Ποσότητα 0 απορρίπτεται'
+);
+select throws_ok(
+  $$ select public.equipment_items_create_many(current_setting('t.cat_cam')::uuid, 'Πολλά', null, null, 51) $$, 'P0001',
+  'Η Ποσότητα είναι από 1 ως 50', 'Ποσότητα 51 απορρίπτεται'
+);
+select set_config('t.cat_q', public.equipment_category_create('Ποσότητα δοκιμή')::text, true);
+select lives_ok($$ select public.equipment_category_retire(current_setting('t.cat_q')::uuid) $$, 'Αποσύρεται Κατηγορία για τον έλεγχο ποσότητας');
+select throws_ok(
+  $$ select public.equipment_items_create_many(current_setting('t.cat_q')::uuid, 'Αποσυρμένο', null, null, 2) $$, 'P0001',
+  'Η Κατηγορία έχει αποσυρθεί, δεν δέχεται νέα αντικείμενα', 'Σε αποσυρμένη Κατηγορία δεν μπαίνουν μονάδες'
+);
+select throws_ok(
+  $$ select public.equipment_items_create_many(null::uuid, 'Χωρίς Κατηγορία', null, null, 2) $$, 'P0001',
+  'Η Κατηγορία δεν βρέθηκε', 'Ποσότητα χωρίς Κατηγορία απορρίπτεται'
+);
+select throws_ok(
+  $$ select public.equipment_items_create_many(gen_random_uuid(), 'Άγνωστη Κατηγορία', null, null, 2) $$, 'P0001',
+  'Η Κατηγορία δεν βρέθηκε', 'Ποσότητα σε ανύπαρκτη Κατηγορία απορρίπτεται'
+);
+set local role anon;
+select throws_ok($$ select public.equipment_items_create_many(gen_random_uuid(), 'Νέο', null, null, 2) $$, '42501', null, 'Ο ανώνυμος δεν φτιάχνει μονάδες');
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}', true);
+select throws_ok($$ select public.equipment_items_create_many(current_setting('t.cat_cam')::uuid, 'Νέο', null, null, 2) $$, '42501', null, 'Οι Πωλήσεις δεν φτιάχνουν μονάδες');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
+select throws_ok($$ select public.equipment_items_create_many(current_setting('t.cat_cam')::uuid, 'Νέο', null, null, 2) $$, '42501', null, 'Η Παραγωγή δεν φτιάχνει μονάδες');
 
 select * from finish();
 rollback;
