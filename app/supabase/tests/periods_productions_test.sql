@@ -105,8 +105,8 @@ select ok(authz.audit_entity_allowed('agreement_periods'), 'Το Ίχνος κα
 select ok(authz.audit_entity_allowed('agreement_period_provisions'), 'Το Ίχνος καταγράφει τις Παροχές Περιόδου');
 select ok(authz.audit_entity_allowed('productions'), 'Το Ίχνος καταγράφει τις Παραγωγές');
 select ok(authz.audit_entity_allowed('production_members'), 'Το Ίχνος καταγράφει τα Μέλη Παραγωγής');
-select is(authz.period_provision_used(gen_random_uuid(), gen_random_uuid()), 0, 'Χωρίς Γυρίσματα καμία Παροχή δεν έχει καταναλωθεί');
-select is(authz.period_provision_reserved(gen_random_uuid(), gen_random_uuid()), 0, 'Χωρίς Γυρίσματα καμία Παροχή δεν είναι δεσμευμένη');
+select is(authz.period_provision_used(gen_random_uuid(), gen_random_uuid()), 0::numeric, 'Χωρίς Γυρίσματα καμία Παροχή δεν έχει καταναλωθεί');
+select is(authz.period_provision_reserved(gen_random_uuid(), gen_random_uuid()), 0::numeric, 'Χωρίς Γυρίσματα καμία Παροχή δεν είναι δεσμευμένη');
 select is(authz.production_has_work(gen_random_uuid()), false, 'Χωρίς Εργασίες και Παραδοτέα καμία Παραγωγή δεν έχει δουλειά');
 select is(authz.client_user_client_id(), null::uuid, 'Κανένας Χρήστης δεν συνδέεται ακόμα με Πελάτη');
 
@@ -260,34 +260,34 @@ select set_config('t.pp1', (select p.id::text from public.productions p where p.
 
 -- ───────────── Υπόλοιπο Περιόδου (Π3) ─────────────
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), 12,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), 12,
   'Η πρώτη Περίοδος έχει ολόκληρες τις Παροχές της'
 );
 select is(
-  (select b.given from authz.period_balance(current_setting('t.p7')::uuid, current_setting('t.reel')::uuid) b), 0,
+  (select b.given::integer from authz.period_balance(current_setting('t.p7')::uuid, current_setting('t.reel')::uuid) b), 0,
   'Η μερική τελευταία Περίοδος έχει μηδέν Παροχές'
 );
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p7')::uuid, current_setting('t.reel')::uuid) b), 12,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p7')::uuid, current_setting('t.reel')::uuid) b), 12,
   'Η μερική τελευταία Περίοδος μεταφέρει ό,τι δεν χρησιμοποιήθηκε'
 );
 select is((select unused_provisions from public.agreements where id = current_setting('t.a2')::uuid), 'next_period', 'Οι Όροι της Συμφωνίας: επόμενη Περίοδος');
 
 -- Προσομοίωση κατανάλωσης: 2 reel στην πρώτη Περίοδο (με το χέρι μέσα στη συναλλαγή, όπως θα κάνει το Γύρισμα).
-create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns integer
+create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns numeric
 language sql stable security definer set search_path = ''
-as $$ select case when p_period = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 2 else 0 end; $$;
+as $$ select case when p_period = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 2::numeric else 0::numeric end; $$;
 
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), 10,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), 10,
   'Τα καταναλωμένα αφαιρούνται από το υπόλοιπο της Περιόδου'
 );
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 22,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 22,
   'Με επόμενη Περίοδο μεταφέρεται το υπόλοιπο της προηγούμενης'
 );
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p3')::uuid, current_setting('t.reel')::uuid) b), 24,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p3')::uuid, current_setting('t.reel')::uuid) b), 24,
   'Με επόμενη Περίοδο δεν μεταφέρεται το μεταφερόμενο παλαιότερο'
 );
 
@@ -296,29 +296,29 @@ set local session_replication_role = 'replica';
 update public.agreements set unused_provisions = 'accumulate' where id = current_setting('t.a2')::uuid;
 set local session_replication_role = 'origin';
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 22,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 22,
   'Με σώρευση η δεύτερη Περίοδος έχει το ίδιο υπόλοιπο με την επόμενη Περίοδο'
 );
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p3')::uuid, current_setting('t.reel')::uuid) b), 34,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p3')::uuid, current_setting('t.reel')::uuid) b), 34,
   'Με σώρευση μεταφέρονται όλα τα αχρησιμοποίητα των προηγούμενων Περιόδων'
 );
 set local session_replication_role = 'replica';
 update public.agreements set unused_provisions = 'lost' where id = current_setting('t.a2')::uuid;
 set local session_replication_role = 'origin';
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 12,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 12,
   'Με απώλεια δεν μεταφέρεται τίποτα'
 );
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p3')::uuid, current_setting('t.reel')::uuid) b), 12,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p3')::uuid, current_setting('t.reel')::uuid) b), 12,
   'Με απώλεια η τρίτη Περίοδος έχει μόνο τις δικές της Παροχές'
 );
 set local session_replication_role = 'replica';
 update public.agreements set unused_provisions = 'next_period' where id = current_setting('t.a2')::uuid;
 set local session_replication_role = 'origin';
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p7')::uuid, current_setting('t.reel')::uuid) b), 12,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p7')::uuid, current_setting('t.reel')::uuid) b), 12,
   'Η μερική τελευταία Περίοδος μεταφέρει και χωρίς Παροχές'
 );
 select is(
@@ -530,20 +530,20 @@ select is(
 
 -- ───────────── Αρνητικό υπόλοιπο και Συμφωνία που έληξε ─────────────
 -- Κατανάλωση πάνω από το δοσμένο: το leftover της p1 γίνεται -3· το next_period το κόβει στο 0 για την p2.
-create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns integer
+create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns numeric
 language sql stable security definer set search_path = ''
-as $$ select case when p_period = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 15 else 0 end; $$;
+as $$ select case when p_period = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 15::numeric else 0::numeric end; $$;
 select is(
-  (select b.balance from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), -3,
+  (select b.balance::integer from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), -3,
   'Η κατανάλωση πάνω από το δοσμένο δίνει αρνητικό υπόλοιπο Περιόδου'
 );
 select is(
-  (select b.carried from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 0,
+  (select b.carried::integer from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 0,
   'Το αρνητικό leftover δεν μεταφέρεται (next_period κόβει στο 0)'
 );
-create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns integer
+create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns numeric
 language sql stable security definer set search_path = ''
-as $$ select 0; $$;
+as $$ select 0::numeric; $$;
 
 -- Συμφωνία που έληξε (χωρίς triggers, όπως στην αλλαγή Όρου): το backfill της migration τη γεννά (Π2).
 set local session_replication_role = 'replica';
