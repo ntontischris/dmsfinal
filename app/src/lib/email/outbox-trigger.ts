@@ -1,7 +1,9 @@
 import { timingSafeEqual } from "node:crypto";
 
-// Το «σκούντημα» της ουράς: μετά από κάθε εγγραφή, καλεί το cron route ώστε το μήνυμα να φύγει τώρα,
-// όχι στο επόμενο λεπτό. Δεν περιμένουμε την απάντηση· το cron κάθε λεπτού είναι το δίχτυ ασφαλείας.
+import { appOrigin } from "@/lib/app-origin";
+
+// Το «σκούντημα» της ουράς: μετά από κάθε εγγραφή καλεί το cron route ώστε το μήνυμα να φύγει τώρα.
+// Τρέχει με after() της Next (μετά την απάντηση)· το cron κάθε λεπτού είναι το δίχτυ ασφαλείας.
 
 const OUTBOX_PATH = "/api/cron/outbox";
 
@@ -15,10 +17,9 @@ const sameText = (left: string, right: string): boolean => {
 export const isCronAuthorized = (header: string | null, secret: string | undefined): boolean =>
   Boolean(secret) && header !== null && sameText(header, `Bearer ${secret}`);
 
-export function kickOutbox(origin: string, secret: string | undefined = process.env.CRON_SECRET): void {
+export async function kickOutbox(secret: string | undefined = process.env.CRON_SECRET): Promise<void> {
   if (!secret) return;
-  void fetch(`${origin}${OUTBOX_PATH}`, {
-    headers: { Authorization: `Bearer ${secret}` },
-    cache: "no-store",
-  }).catch(() => console.error("kickOutbox", "το σκούντημα απέτυχε"));
+  await fetch(`${appOrigin()}${OUTBOX_PATH}`, { headers: { Authorization: `Bearer ${secret}` } }).catch(() =>
+    console.error("kickOutbox", "το σκούντημα απέτυχε"),
+  );
 }

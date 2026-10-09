@@ -1,13 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { appOrigin } from "@/lib/app-origin";
 import { buildAuthEmail, parseAuthHookPayload } from "@/lib/email/auth-hook";
-import { verifyStandardWebhook } from "@/lib/email/standard-webhooks";
-import { sendEmail } from "@/lib/email/send-email";
 import { recordEmailLog } from "@/lib/email/log";
+import { sendEmail } from "@/lib/email/send-email";
+import { verifyStandardWebhook } from "@/lib/email/standard-webhooks";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+// Το hook της Supabase λήγει στα 5 δευτερόλεπτα· αφήνουμε χρόνο για την απάντηση.
+export const HOOK_TIMEOUT_MS = 4_000;
 
 // Send Email Hook της Supabase (ADR 0016): η Supabase φτιάχνει το token, εμείς στέλνουμε το email.
-// Απάντηση: 200 {} σε επιτυχία· 401 σε λάθος υπογραφή· 500 σε αποτυχία αποστολής (η Supabase δείχνει σφάλμα).
+// Απάντηση: 200 {} σε επιτυχία· 401 σε λάθος υπογραφή· 400 σε άγνωστο τύπο· 500 σε αποτυχία αποστολής.
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const secret = process.env.SEND_EMAIL_HOOK_SECRET;
   if (!secret) return NextResponse.json({ error: "hook not configured" }, { status: 500 });
@@ -29,11 +33,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const parsed = parseAuthHookPayload(safeJson(body));
   if (!parsed.success) return NextResponse.json({ error: "invalid payload" }, { status: 400 });
 
-  const origin = new URL(request.url).origin;
-  const email = buildAuthEmail(parsed.data, origin);
+  const email = buildAuthEmail(parsed.data, appOrigin());
   if (!email) return NextResponse.json({ error: "unsupported email type" }, { status: 400 });
 
-  const outcome = await sendEmail({ to: email.to, toName: email.toName, ...email.message });
+  const outcome = await sendEmail(
+    { to: email.to, toName: email.toName, ...email.message },
+    { timeoutMs: HOOK_TIMEOUT_MS },
+  );
   await recordEmailLog(createAdminClient(), {
     kind: email.type,
     toEmail: email.to,

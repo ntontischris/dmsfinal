@@ -20,6 +20,7 @@ const hookSchema = z.object({
   email_data: z.object({
     token_hash: z.string().min(1),
     email_action_type: z.string().min(1),
+    redirect_to: z.string().optional(),
   }),
 });
 
@@ -35,10 +36,24 @@ export interface AuthEmail {
 }
 
 // Ο σύνδεσμος πάει στο /auth/confirm της εφαρμογής (ίδιος δρόμος με τα υπόλοιπα συνδέσμων εισόδου).
-export const confirmLink = (origin: string, tokenHash: string, type: string): string =>
-  `${origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(type)}`;
+export const confirmLink = (origin: string, tokenHash: string, type: string, next?: string): string =>
+  `${origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(type)}${
+    next ? `&next=${encodeURIComponent(next)}` : ""
+  }`;
 
-const SUPPORTED = ["invite", "magiclink", "recovery", "email_change", "signup"] as const;
+// Η διαδρομή της εφαρμογής όπου πάει ο Χρήστης μετά, μόνο αν το redirect_to είναι της ίδιας εφαρμογής.
+export const nextPathFor = (redirectTo: string | undefined, origin: string): string | undefined => {
+  if (!redirectTo) return undefined;
+  try {
+    const url = new URL(redirectTo);
+    return url.origin === origin ? `${url.pathname}${url.search}` : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+// Η αλλαγή email δεν υποστηρίζεται ακόμα (θέλει δύο συνδέσμους)· ό,τι άλλο δεν είναι στη λίστα απορρίπτεται.
+const SUPPORTED = ["invite", "magiclink", "recovery", "signup"] as const;
 type SupportedType = (typeof SUPPORTED)[number];
 const isSupported = (value: string): value is SupportedType => SUPPORTED.some((type) => type === value);
 
@@ -51,7 +66,7 @@ const recipientOf = (payload: AuthHookPayload): { name: string; locale: Locale }
 export function buildAuthEmail(payload: AuthHookPayload, origin: string): AuthEmail | null {
   const type = payload.email_data.email_action_type;
   if (!isSupported(type)) return null;
-  const link = confirmLink(origin, payload.email_data.token_hash, type);
+  const link = confirmLink(origin, payload.email_data.token_hash, type, nextPathFor(payload.email_data.redirect_to, origin));
   const { name, locale } = recipientOf(payload);
   const message =
     type === "invite"

@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabase } from "@/lib/supabase/server";
 
-import { rpcMessage, UNCONFIGURED } from "./provision";
+import { rpcMessage } from "@/lib/rpc-error";
+
+import { UNCONFIGURED } from "./provision";
 import { removeResultSchema, uuidSchema } from "./invitation-schemas";
 import type { FormState } from "./schemas";
 

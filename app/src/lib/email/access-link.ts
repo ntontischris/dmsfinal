@@ -18,7 +18,7 @@ export interface AccessLinkInput {
 }
 
 export type AccessLinkResult =
-  | { ok: true; link: string; userId: string; type: AccessLinkType }
+  | { ok: true; link: string; userId: string; type: AccessLinkType; existing: boolean }
   | { ok: false; error: string };
 
 const alreadyRegistered = (error: { code?: string; status?: number }): boolean =>
@@ -51,5 +51,5 @@ export async function accessLinkFor(admin: SupabaseClient, input: AccessLinkInpu
     console.error("accessLinkFor", result.error?.code ?? "χωρίς κωδικό");
     return { ok: false, error: "Ο σύνδεσμος δεν δημιουργήθηκε" };
   }
-  return { ok: true, link: confirmLink(input.origin, hashed, type), userId, type };
+  return { ok: true, link: confirmLink(input.origin, hashed, type), userId, type, existing: type === "magiclink" };
 }

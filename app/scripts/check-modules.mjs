@@ -1,3 +1,4 @@
+import { posix } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { report, walk } from "./lib/walk.mjs";
@@ -8,15 +9,39 @@ const IMPORT = /(?:import|export)[^"']*?from\s*["']([^"']+)["']|import\(\s*["'](
 
 const moduleOf = (path) => path.match(/^src\/modules\/([^/]+)\//)?.[1] ?? null;
 
-// Το service role (`@/lib/supabase/admin`) μπαίνει μόνο στα hooks, στα cron και στο module Πρόσβασης (ADR 0016).
-const ADMIN_IMPORT = "@/lib/supabase/admin";
-const ADMIN_ALLOWED = [/^src\/app\/api\/hooks\//, /^src\/app\/api\/cron\//, /^src\/modules\/access\//];
-const importsAdmin = (text) => [...text.matchAll(IMPORT)].some((match) => (match[1] ?? match[2]) === ADMIN_IMPORT);
+// Το service role (`@/lib/supabase/admin`) μπαίνει μόνο στα αρχεία που το έχουν ανάγκη (ADR 0016, ADR 0018):
+// τα routes του hook και του cron, τα deliver της ουράς, και οι ενέργειες πρόσβασης που χρειάζονται `auth.admin`.
+// Ελέγχεται με την πραγματική διαδρομή (σχετικά imports, χωρίς επέκταση) και απορρίπτει dynamic import χωρίς σταθερή διαδρομή.
+const ADMIN_MODULE = "src/lib/supabase/admin";
+const ADMIN_FILES = new Set([
+  "src/app/api/hooks/send-email/route.ts",
+  "src/app/api/cron/outbox/route.ts",
+  "src/lib/email/deliver-outbox.ts",
+  "src/lib/email/deliver-agreement.ts",
+  "src/modules/access/provision.ts",
+  "src/modules/access/client-user-actions.ts",
+  "src/modules/access/team-actions.ts",
+]);
+// Τα `import type` δεν φτάνουν ποτέ στο κώδικα που τρέχει, άρα δεν μετράνε.
+const SPECIFIER = /(?:import|export)(?!\s+type\s)[^"']*?from\s*["']([^"']+)["']|(?:import|require)\(\s*["']([^"']+)["']\s*\)/g;
+const DYNAMIC_NON_LITERAL = /import\(\s*(?!["'])/;
+
+// Η διαδρομή ενός import σε σχέση με το αρχείο του, χωρίς επέκταση. Null για πακέτα (π.χ. «next/server»).
+export function resolveImport(fromPath, spec) {
+  const target = spec.startsWith("@/") ? `src/${spec.slice(2)}` : spec.startsWith(".") ? posix.join(posix.dirname(fromPath), spec) : null;
+  return target === null ? null : posix.normalize(target).replace(/\.(ts|tsx|mjs|js)$/, "");
+}
+
+const specifiersOf = (text) => [...text.matchAll(SPECIFIER)].map((match) => match[1] ?? match[2]);
 
 export function findAdminViolations(files) {
-  return files
-    .filter((file) => importsAdmin(file.text) && !ADMIN_ALLOWED.some((allowed) => allowed.test(file.path)))
-    .map((file) => `${file.path}: «${ADMIN_IMPORT}» (μόνο hooks, cron και Πρόσβαση)`);
+  const violations = [];
+  for (const file of files) {
+    if (DYNAMIC_NON_LITERAL.test(file.text)) violations.push(`${file.path}: import() με μη σταθερή διαδρομή`);
+    const reachesAdmin = specifiersOf(file.text).some((spec) => resolveImport(file.path, spec) === ADMIN_MODULE);
+    if (reachesAdmin && !ADMIN_FILES.has(file.path)) violations.push(`${file.path}: «@/lib/supabase/admin» (μόνο στα επιτρεπόμενα αρχεία)`);
+  }
+  return violations;
 }
 
 export function findModuleViolations(files) {

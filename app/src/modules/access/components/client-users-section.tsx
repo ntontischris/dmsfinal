@@ -15,7 +15,7 @@ export async function ClientUsersSection({ clientId, viewer }: { clientId: strin
   const [users, invitations, roles] = await Promise.all([
     listClientUsers(clientId),
     listInvitations(clientId),
-    listClientRoleChoices(isTeam ? null : (viewer.clientGrants ?? {})),
+    listClientRoleChoices(clientId),
   ]);
   const rows = invitations.ok ? invitations.data : [];
   return (

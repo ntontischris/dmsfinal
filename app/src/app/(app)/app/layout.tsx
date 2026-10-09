@@ -15,6 +15,13 @@ import {
   type Viewer,
 } from "@/modules/access";
 
+// «owner» και «team» δεν είναι Δικαιώματα· όλα τα άλλα ελέγχονται ως Δικαιώματα (ομάδας ή πελάτη).
+const allowsRequirement = (viewer: Viewer, requirement: string): boolean => {
+  if (requirement === "owner") return isOwner(viewer);
+  if (requirement === "team") return viewer.status === "signed-in" && viewer.team !== null;
+  return can(viewer, requirement);
+};
+
 // Μια γραμμή κάτω από τη μπάρα όταν κάτι δεν επιτρέπει την κανονική δουλειά.
 function ViewerNotice({ viewer, memberships }: { viewer: Viewer; memberships: readonly MembershipRow[] }) {
   const text =
@@ -41,7 +48,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const clientRows = memberships?.ok ? memberships.data : [];
   // Χωρίς βάση φαίνονται όλες οι οθόνες, για να περιηγείται κανείς το σύστημα· η καθεμία λέει ότι λείπει η βάση.
   const sections = visibleNav((requirement) =>
-    viewer.status === "unconfigured" ? true : requirement === "owner" ? isOwner(viewer) : can(viewer, requirement),
+    viewer.status === "unconfigured" ? true : allowsRequirement(viewer, requirement),
   );
   return (
     <div className="min-h-dvh">

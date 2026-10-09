@@ -28,18 +28,39 @@ describe("check:modules", () => {
 describe("check:modules, service role", () => {
   const adminImport = 'import { createAdminClient } from "@/lib/supabase/admin";';
 
-  it("δέχεται το service role στα hooks, στα cron και στην Πρόσβαση", () => {
+  it("δέχεται το service role στα επιτρεπόμενα αρχεία", () => {
     const files = [
       file("src/app/api/hooks/send-email/route.ts", adminImport),
       file("src/app/api/cron/outbox/route.ts", adminImport),
-      file("src/modules/access/invite-actions.ts", adminImport),
+      file("src/modules/access/provision.ts", adminImport),
     ];
     expect(findAdminViolations(files)).toEqual([]);
   });
 
-  it("απορρίπτει το service role σε άλλα σημεία", () => {
-    expect(findAdminViolations([file("src/modules/sales/actions.ts", adminImport)])).toHaveLength(1);
+  it("απορρίπτει το service role σε αρχείο που δεν είναι στη λίστα", () => {
+    expect(findAdminViolations([file("src/modules/access/invitation-actions.ts", adminImport)])).toHaveLength(1);
     expect(findAdminViolations([file("src/app/(app)/app/page.tsx", adminImport)])).toHaveLength(1);
+  });
+
+  it("βρίσκει το service role και με σχετικό import", () => {
+    const relative = 'import { createAdminClient } from "../../lib/supabase/admin";';
+    expect(findAdminViolations([file("src/modules/sales/actions.ts", relative)])).toHaveLength(1);
+  });
+
+  it("βρίσκει το service role και με require και με επέκταση", () => {
+    expect(findAdminViolations([file("src/modules/sales/a.ts", 'const a = require("@/lib/supabase/admin.ts");')])).toHaveLength(1);
+  });
+
+  it("απορρίπτει dynamic import με μη σταθερή διαδρομή", () => {
+    expect(findAdminViolations([file("src/modules/sales/a.ts", "const m = await import(`@/lib/${name}`);")])).toHaveLength(1);
+  });
+
+  it("δέχεται τους τύπους του service role (import type) οπουδήποτε", () => {
+    expect(findAdminViolations([file("src/lib/email/x.ts", 'import type { AdminClient } from "@/lib/supabase/admin";')])).toEqual([]);
+  });
+
+  it("δεν μπερδεύει άλλο αρχείο με το admin επειδή έχει παρόμοιο όνομα", () => {
+    expect(findAdminViolations([file("src/modules/sales/a.ts", 'import x from "@/lib/supabase/admin-helpers";')])).toEqual([]);
   });
 });
 

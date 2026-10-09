@@ -1,13 +1,15 @@
 "use server";
 
+import { after } from "next/server";
+
 import { kickOutbox } from "@/lib/email/outbox-trigger";
+import { rpcMessage } from "@/lib/rpc-error";
 import { createSupabase } from "@/lib/supabase/server";
 
-import { requestOrigin } from "./request-origin";
-import { rpcMessage, UNCONFIGURED } from "./provision";
+import { UNCONFIGURED } from "./provision";
 import type { FormState } from "./schemas";
 
-// Ρυθμίσεις › Ενσωματώσεις (N5): δοκιμαστικό email στον Ιδιοκτήτη. Η βάση δέχεται μόνο αυτό το είδος και μόνο σε εμένα.
+// Ρυθμίσεις › Ενσωματώσεις (O8): δοκιμαστικό email στον Ιδιοκτήτη. Η βάση δέχεται μόνο αυτό το είδος και μόνο σε εμένα.
 export async function sendTestEmail(): Promise<FormState> {
   const supabase = await createSupabase();
   if (!supabase) return UNCONFIGURED;
@@ -22,6 +24,6 @@ export async function sendTestEmail(): Promise<FormState> {
     p_payload: {},
   });
   if (error) return { error: rpcMessage(error, "Το δοκιμαστικό email δεν μπήκε στην ουρά.") };
-  kickOutbox(await requestOrigin());
+  after(() => kickOutbox());
   return { notice: "Το δοκιμαστικό μπήκε στην ουρά. Θα φανεί στο Ιστορικό σε λίγο." };
 }

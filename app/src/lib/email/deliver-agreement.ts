@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { accessLinkFor } from "./access-link";
+import { attachInvitationAccount, failInvitation } from "./invitation-account";
 import { toLocale } from "./locale";
 import { sendEmail, type SendOutcome } from "./send-email";
 import { invitationMessage, type EmailMessageBody } from "./templates/auth-messages";
@@ -63,9 +64,12 @@ async function clientInviteMessage(admin: SupabaseClient, row: AgreementRow, ori
     locale,
     metadata: { kind: "client" },
   });
-  if (!link.ok) return { error: link.error };
-  const attached = await admin.rpc("invitation_attach_user", { p_id: invitationId, p_user_id: link.userId });
-  if (attached.error) return { error: "Η πρόσκληση δεν συνδέθηκε με λογαριασμό" };
+  if (!link.ok) {
+    await failInvitation(admin, invitationId, link.error);
+    return { error: link.error };
+  }
+  const attached = await attachInvitationAccount(admin, { invitationId, userId: link.userId, existing: link.existing });
+  if (!attached.ok) return { error: attached.error };
 
   const { data: client } = await admin.from("clients").select("name").eq("id", target.data.clientId).maybeSingle();
   const message: EmailMessageBody = invitationMessage({

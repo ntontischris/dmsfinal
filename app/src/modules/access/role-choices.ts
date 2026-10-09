@@ -1,37 +1,24 @@
 import { z } from "zod";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createSupabase } from "@/lib/supabase/server";
 
 import type { RoleOption } from "./components/team-invite-form";
-import type { Grants } from "./permissions";
 
-// Οι Ρόλοι πελάτη που μπορεί να δώσει ο συνδεδεμένος. Ο πίνακας των Ρόλων δεν φαίνεται σε Χρήστη πελάτη (RLS),
-// γι' αυτό διαβάζεται με service role, και φιλτράρεται εδώ με τον κανόνα της βάσης: κανένα Δικαίωμα πέρα από τα δικά του.
+const roleOptionSchema = z.object({ id: z.string(), name: z.string() });
 
-const roleRowSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  role_permissions: z.array(z.object({ permission: z.string() })),
-});
-
-const roleRowsSchema = z.array(roleRowSchema);
-
-// Όλοι οι Ρόλοι (ομάδα) ή μόνο όσοι καλύπτονται από τα Δικαιώματα `mine` (Χρήστης πελάτη).
-export async function listClientRoleChoices(mine: Grants | null): Promise<RoleOption[]> {
-  const admin = createAdminClient();
-  if (!admin) return [];
-  const { data, error } = await admin
-    .from("roles")
-    .select("id, name, role_permissions(permission)")
-    .eq("kind", "client")
-    .order("name");
+// Οι Ρόλοι πελάτη που μπορεί να δώσει ο συνδεδεμένος στον Πελάτη: η βάση τους φιλτράρει (client_role_choices).
+// Ο Χρήστης πελάτη βλέπει μόνο όσους δεν ξεπερνούν τα δικά του Δικαιώματα.
+export async function listClientRoleChoices(clientId: string): Promise<RoleOption[]> {
+  const supabase = await createSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("client_role_choices", { p_client: clientId });
   if (error) {
-    console.error("listClientRoleChoices", error.message);
+    console.error("client_role_choices", error.message);
     return [];
   }
-  const parsed = roleRowsSchema.safeParse(data ?? []);
-  if (!parsed.success) return [];
-  return parsed.data
-    .filter((role) => mine === null || role.role_permissions.every((row) => mine[row.permission] !== undefined))
-    .map(({ id, name }) => ({ id, name }));
+  const rows: unknown[] = Array.isArray(data) ? data : [];
+  return rows.flatMap((row) => {
+    const parsed = roleOptionSchema.safeParse(row);
+    return parsed.success ? [parsed.data] : [];
+  });
 }

@@ -1,10 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
+import "server-only";
 
-// Το κλειδί service role παρακάμπτει τη RLS. Επιτρέπεται ΜΟΝΟ σε τρία σημεία (ADR 0016, ADR 0018):
-// 1) τα routes των hooks (`src/app/api/hooks/`), 2) τα routes των cron (`src/app/api/cron/`),
-// 3) το module Πρόσβασης, για τις ενέργειες πρόσκλησης και απενεργοποίησης (`auth.admin`).
-// Τον έλεγχο στο `pnpm check:modules` τον κάνει ο κανόνας για το import αυτού του αρχείου.
-export function createAdminClient() {
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+// Το κλειδί service role παρακάμπτει τη RLS. Επιτρέπεται ΜΟΝΟ σε αυτά τα αρχεία (κανόνας check:modules, ADR 0016):
+// τα routes των hooks και του cron, ο worker της ουράς και οι ενέργειες πρόσβασης που χρειάζονται `auth.admin`.
+export type AdminClient = SupabaseClient;
+
+export function createAdminClient(): AdminClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;

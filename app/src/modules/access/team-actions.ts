@@ -234,15 +234,17 @@ export async function setUserRoles(
 }
 
 // Η απενεργοποίηση κλείνει τις ανανεώσεις της συνεδρίας (η βάση ήδη κόβει την πρόσβαση)· η επανενεργοποίηση τις ανοίγει.
-async function setAccountBan(userId: string, banned: boolean): Promise<void> {
+async function setAccountBan(userId: string, banned: boolean): Promise<boolean> {
   const admin = createAdminClient();
-  if (!admin) return;
+  if (!admin) return false;
   const { error } = await admin.auth.admin.updateUserById(userId, {
     ban_duration: banned ? "876000h" : "none",
   });
   if (error) console.error("setAccountBan", error.code ?? "άγνωστο");
+  return !error;
 }
 
+// Η αλλαγή γράφεται και με γεγονός στο ίχνος (team_user_set_active)· ό,τι αποτύχει στο λογαριασμό λέγεται καθαρά.
 export async function setUserActive(
   _: FormState,
   form: FormData,
@@ -252,15 +254,17 @@ export async function setUserActive(
   const isActive = form.get("active") === "true";
   const supabase = await createSupabase();
   if (!supabase) return UNCONFIGURED;
-  const { data, error } = await supabase
-    .from("team_users")
-    .update({ is_active: isActive })
-    .eq("user_id", userId.data)
-    .select("user_id");
+  const { error } = await supabase.rpc("team_user_set_active", {
+    p_user_id: userId.data,
+    p_active: isActive,
+  });
   if (error) return { error: messageOf(error, "Η αλλαγή δεν αποθηκεύτηκε.") };
-  if (!data || data.length === 0)
-    return { error: "Δεν έχεις Δικαίωμα για αυτή την αλλαγή." };
-  await setAccountBan(userId.data, !isActive);
+  if (!(await setAccountBan(userId.data, !isActive)))
+    return {
+      error: isActive
+        ? "Ο Χρήστης ενεργοποιήθηκε στη βάση, αλλά ο λογαριασμός του δεν ξεμπλοκάρισε. Ξαναπροσπάθησε."
+        : "Η πρόσβαση κόπηκε στη βάση, αλλά η συνεδρία του δεν ακυρώθηκε. Ξαναπροσπάθησε.",
+    };
   revalidatePath("/app/team", "layout");
   return {
     notice: isActive

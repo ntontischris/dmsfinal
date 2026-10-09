@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createSupabase } from "@/lib/supabase/server";
 
 import { claimOnEntry } from "./claim";
-import { requestOrigin as origin } from "./request-origin";
+import { appOrigin as origin } from "@/lib/app-origin";
 import { emailSchema, loginSchema, newPasswordSchema, safeNext, type FormState } from "./schemas";
 
 // Οι ενέργειες εισόδου (R9, R10). Κανένα μήνυμα δεν αποκαλύπτει αν υπάρχει λογαριασμός (κεφ. 9).
@@ -14,7 +14,7 @@ const UNCONFIGURED: FormState = { error: "Η βάση δεν έχει συνδε
 const LINK_SENT = "Αν το email έχει λογαριασμό, σου στείλαμε σύνδεσμο. Ισχύει 24 ώρες.";
 
 const callbackUrl = async (next: string): Promise<string> =>
-  `${await origin()}/auth/callback?next=${encodeURIComponent(next)}`;
+  `${origin()}/auth/callback?next=${encodeURIComponent(next)}`;
 
 const firstError = (issues: readonly { message: string }[]): FormState => ({ error: issues[0]?.message });
 

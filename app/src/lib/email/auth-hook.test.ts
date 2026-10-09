@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildAuthEmail, confirmLink, parseAuthHookPayload } from "./auth-hook";
+import { buildAuthEmail, confirmLink, nextPathFor, parseAuthHookPayload } from "./auth-hook";
 
 const ORIGIN = "https://dmsfinal-app.vercel.app";
 
@@ -49,5 +49,15 @@ describe("buildAuthEmail", () => {
 
   it("επιστρέφει null για άγνωστο τύπο", () => {
     expect(build(payload("mystery"))).toBeNull();
+  });
+
+  it("αφήνει τη διαδρομή του redirect_to μόνο για την ίδια εφαρμογή", () => {
+    expect(nextPathFor(`${ORIGIN}/app/team?x=1`, ORIGIN)).toBe("/app/team?x=1");
+    expect(nextPathFor("https://evil.example.com/app", ORIGIN)).toBeUndefined();
+    expect(nextPathFor("not a url", ORIGIN)).toBeUndefined();
+  });
+
+  it("δεν στέλνει email αλλαγής διεύθυνσης", () => {
+    expect(build(payload("email_change"))).toBeNull();
   });
 });

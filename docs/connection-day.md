@@ -188,7 +188,8 @@
 | `SUPABASE_SERVICE_ROLE_KEY` | Κλειδί διαχειριστή της βάσης (παρακάμπτει τη RLS) | Supabase → Project Settings → API → `service_role`. Μόνο για **Production** και **Preview**. |
 | `SEND_EMAIL_HOOK_SECRET` | Μυστικό υπογραφής του Hook | Το δίνει η Supabase στο 8β (μορφή `v1,whsec_…`). |
 | `CRON_SECRET` | Μυστικό της ουράς email | Φτιάξ' το τυχαία (π.χ. 32 χαρακτήρες). Το Vercel Cron το στέλνει μόνο του. |
-| `EMAIL_ALLOWED_DOMAINS` | Προαιρετικό: μόνο αυτά τα domains παίρνουν email (π.χ. `devremedia.com`) | Στο Production **δεν** το βάζεις. Χρήσιμο μόνο για δοκιμές. |
+| `EMAIL_ALLOWED_DOMAINS` | Μόνο αυτά τα domains παίρνουν email (π.χ. `devremedia.com`) | Στο **Preview** είναι **υποχρεωτικό** (αλλιώς δεν στέλνεται τίποτα). Στο Production **δεν** το βάζεις. |
+| `APP_ORIGIN` | Προαιρετικό: η διεύθυνση της εφαρμογής για τους συνδέσμους στα email | Όχι απαραίτητο· χωρίς αυτό το Production χρησιμοποιεί τη διεύθυνση του Vercel (`dmsfinal-app.vercel.app`). |
 
 ### 8β. Supabase (Authentication)
 1. **Authentication → Hooks → Send Email Hook** → τύπος **HTTPS** → URL: `https://dmsfinal-app.vercel.app/api/hooks/send-email` → **Enable**.

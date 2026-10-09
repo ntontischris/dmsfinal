@@ -27,7 +27,7 @@ async function processOutbox(admin: SupabaseClient, origin: string): Promise<num
   return rows.data.length;
 }
 
-async function handleOutboxRow(admin: SupabaseClient, row: OutboxRow, origin: string): Promise<void> {
+export async function handleOutboxRow(admin: SupabaseClient, row: OutboxRow, origin: string): Promise<void> {
   const delivery = await deliverOutboxRow(admin, row, origin).catch((error: unknown) => {
     console.error("deliverOutboxRow", error instanceof Error ? error.name : "άγνωστο σφάλμα");
     return null;
@@ -52,7 +52,7 @@ async function processAgreements(admin: SupabaseClient, origin: string): Promise
   return rows.data.length;
 }
 
-async function handleAgreementRow(admin: SupabaseClient, row: AgreementRow, origin: string): Promise<void> {
+export async function handleAgreementRow(admin: SupabaseClient, row: AgreementRow, origin: string): Promise<void> {
   const delivery = await deliverAgreementRow(admin, row, origin).catch((error: unknown) => {
     console.error("deliverAgreementRow", error instanceof Error ? error.name : "άγνωστο σφάλμα");
     return null;
