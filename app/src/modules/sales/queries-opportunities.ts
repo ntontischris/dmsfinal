@@ -42,7 +42,9 @@ const activitySchema = z.object({
   opportunity_id: z.string(),
   occurred_at: z.string(),
   kind_id: z.string().nullable(),
-  event: z.enum(["created", "stage_changed", "assigned", "lost"]).nullable(),
+  event: z
+    .enum(["created", "stage_changed", "assigned", "lost", "agreement"])
+    .nullable(),
   body: z.string(),
   previous_id: z.string().nullable(),
   subject_id: z.string().nullable(),

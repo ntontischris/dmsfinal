@@ -110,10 +110,6 @@ export function ProvisionKindsEditor({
             <ProvisionKindFields />
           </ActionForm>
         </div>
-        <p className="m-0 text-sm text-muted-foreground">
-          Οι Όροι Συμφωνίας, η Πολιτική Γυρισμάτων και το Όριο αλλαγών ανά είδος
-          έρχονται με το module Συμφωνίες.
-        </p>
       </div>
     </Panel>
   );

@@ -16,13 +16,17 @@ export async function proxy(request: NextRequest) {
       setAll: (list) => {
         list.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        list.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        list.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options),
+        );
       },
     },
   });
 
   const { data } = await supabase.auth.getClaims();
-  const isSystem = request.nextUrl.pathname === "/app" || request.nextUrl.pathname.startsWith("/app/");
+  const isSystem =
+    request.nextUrl.pathname === "/app" ||
+    request.nextUrl.pathname.startsWith("/app/");
   if (isSystem && !data?.claims) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";
@@ -33,5 +37,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon\\.ico|p/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

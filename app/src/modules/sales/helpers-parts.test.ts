@@ -106,6 +106,20 @@ describe("describeActivity", () => {
       describeActivity(activity({ kindId: "zz", body: "x" }), LOOKUPS).kind,
     ).toBe("Δραστηριότητα");
   });
+  it("Συμφωνία: το κείμενο της βάσης", () => {
+    expect(
+      describeActivity(
+        activity({
+          event: "agreement",
+          body: "Στάλθηκε η πρόταση (αναθεώρηση 1) σε 1 παραλήπτες.",
+        }),
+        LOOKUPS,
+      ),
+    ).toEqual({
+      kind: "Συμφωνία",
+      text: "Στάλθηκε η πρόταση (αναθεώρηση 1) σε 1 παραλήπτες.",
+    });
+  });
   it("δημιουργία", () => {
     expect(
       describeActivity(

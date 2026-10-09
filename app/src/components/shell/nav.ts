@@ -60,6 +60,23 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Συμφωνίες",
+    items: [
+      {
+        code: "D1",
+        label: "Συμφωνίες",
+        href: "/app/agreements",
+        requires: "agreements.view",
+      },
+      {
+        code: "D4",
+        label: "Προτάσεις προς έγκριση",
+        href: "/app/agreements/approvals",
+        requires: "agreements.deviate",
+      },
+    ],
+  },
+  {
     title: "Ομάδα και Πρόσβαση",
     items: [
       {

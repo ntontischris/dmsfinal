@@ -15,6 +15,7 @@ import {
   signIn,
   tableRow,
 } from "./sales-parts";
+import { panel } from "./catalogue-parts";
 
 // Πελάτες και Ευκαιρίες (B1–B6) και Ρυθμίσεις › Πωλήσεις (O2) από άκρη σε άκρη. Φανταστικά στοιχεία.
 // Τους Πελάτες και τις Ευκαιρίες που διαβάζονται εδώ τους φτιάχνει το e2e/seed.mjs (βοηθητικά: e2e/sales-parts.ts).
@@ -134,9 +135,8 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   await expect(page).toHaveURL(PIPELINE_URL);
   await expect(page.locator("dt", { hasText: "Συνεχίζει" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Κερδισμένη/ })).toHaveCount(0);
-  await expect(
-    page.getByText("Οι προτάσεις έρχονται με το module Συμφωνίες"),
-  ).toBeVisible();
+  // Το πάνελ «Πρόταση» (B4): η Άννα μπορεί να συντάξει, άρα βλέπει τη φόρμα δημιουργίας.
+  await expect(panel(page, "Πρόταση")).toContainText("Σύνταξη πρότασης");
 });
 
 test("Αίτημα πρόσβασης: ο πωλητής ζητά, η Διαχείριση εγκρίνει", async ({
