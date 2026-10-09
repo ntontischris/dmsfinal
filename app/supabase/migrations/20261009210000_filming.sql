@@ -72,6 +72,7 @@ create table public.filmings (
   check (state <> 'rejected' or rejected_reason is not null),
   check ((state = 'cancelled') = (cancelled_at is not null)),
   check (state <> 'cancelled' or cancelled_side is not null),
+  check (cancel_request_at is null or cancel_request_reason is not null),
   check (client_id is null or kind_id is not null or is_extra)
 );
 
@@ -353,6 +354,7 @@ end;
 $$;
 
 -- Παροχές που καταναλώθηκαν πριν από το σύστημα (υπογραφή εκτός συστήματος, παλιά έναρξη). Ανήκουν στην πρώτη Περίοδο.
+-- Παροχές που καταναλώθηκαν πριν από το σύστημα. Δεν εφαρμόζεται στις εφάπαξ: η υπογραφή με παλιά έναρξη είναι μόνο μηνιαία.
 create function authz.signed_used(p_agreement uuid, p_kind uuid) returns numeric
 language sql stable security definer set search_path = ''
 as $$
@@ -417,6 +419,22 @@ as $$
       join public.filmings f on f.id = fe.filming_id
      where fe.item_id = p_item and f.state in ('pending', 'scheduled')
   );
+$$;
+
+-- Δικαιώματα Πελάτη (c.book κ.λπ.): ρόλοι Πελάτη δεν υπάρχουν ακόμα (#107)· μέχρι τότε κλείνει (fail closed).
+-- Το authz.require δεν βλέπει ρόλους Πελάτη, γι' αυτό υπάρχει χωριστός έλεγχος.
+create function authz.client_user_has(p_perm text) returns boolean
+language sql stable set search_path = ''
+as $$ select false; $$;
+
+create function authz.require_client_permission(p_perm text) returns void
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  if authz.client_user_client_id() is null or not authz.client_user_has(p_perm) then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+end;
 $$;
 
 -- Κλεισμένος χρόνος (C2): stub, δεν μπλοκάρει τίποτα ακόμα.
@@ -778,6 +796,9 @@ begin
   end if;
   if jsonb_typeof(p_json -> p_key) <> 'number' then
     raise exception 'Μη έγκυρη τιμή στους Κανόνες γυρισμάτων' using errcode = 'P0001';
+  end if;
+  if (p_json ->> p_key)::numeric <> trunc((p_json ->> p_key)::numeric) then
+    raise exception 'Η τιμή πρέπει να είναι ακέραιος αριθμός στους Κανόνες γυρισμάτων' using errcode = 'P0001';
   end if;
   v_value := (p_json ->> p_key)::integer;
   if v_value < p_min or v_value > p_max then
@@ -1170,7 +1191,7 @@ declare
 begin
   select x.* into f from public.filmings x where x.id = p_filming;
   return jsonb_build_object(
-    'id', f.id, 'startsAt', f.starts_at, 'hours', f.hours, 'actualHours', f.actual_hours, 'location', f.location,
+    'id', f.id, 'startsAt', f.starts_at, 'hours', f.hours, 'actualHours', case when authz.is_team_user() then f.actual_hours end, 'location', f.location,
     'origin', f.origin, 'state', f.state, 'isExtra', f.is_extra, 'burned', f.burned,
     'kind', (select jsonb_build_object('id', k.id, 'label', k.label, 'measure', k.measure) from public.provision_kinds k where k.id = f.kind_id),
     'client', (select jsonb_build_object('id', c.id, 'name', c.name) from public.clients c where c.id = f.client_id),
@@ -1260,10 +1281,15 @@ begin
   if p_limit is null or p_limit < 1 or p_limit > 100 then
     raise exception 'Η σελίδα έχει από 1 ως 100 γραμμές' using errcode = 'P0001';
   end if;
-  select coalesce(jsonb_agg(authz.filming_row(f.id) order by f.starts_at, f.id), '[]'::jsonb)
+  -- Η πιο πρόσφατη πρώτη στις καρτέλες κλεισμένων, όλων και «θέλουν έγινε»· η παλαιότερη πρώτη στις ανοιχτές.
+  select coalesce(jsonb_agg(authz.filming_row(f.id) order by f.sort_key), '[]'::jsonb)
     into v_rows
     from (
-      select x.* from public.filmings x
+      select x.id, row_number() over (order by
+               (case when p_tab in ('closed', 'all', 'needs_outcome') then x.starts_at end) desc nulls last,
+               (case when p_tab not in ('closed', 'all', 'needs_outcome') then x.starts_at end) asc nulls last,
+               x.id) as sort_key
+        from public.filmings x
        where authz.can_see_filming(x.id) and case p_tab
          when 'open' then x.state in ('pending', 'scheduled')
          when 'pending' then x.state = 'pending'
@@ -1271,7 +1297,9 @@ begin
          when 'closed' then x.state in ('done', 'no_show', 'cancelled', 'rejected')
          else true
        end
-       order by x.starts_at, x.id
+       order by (case when p_tab in ('closed', 'all', 'needs_outcome') then x.starts_at end) desc nulls last,
+                (case when p_tab not in ('closed', 'all', 'needs_outcome') then x.starts_at end) asc nulls last,
+                x.id
        limit p_limit
     ) f;
   return v_rows;
@@ -1391,6 +1419,7 @@ declare
   v_state text;
   v_id uuid;
 begin
+  perform authz.require_client_permission('c.book');
   a := authz.client_agreement(p_agreement);
   perform authz.require_agreement_bookable(a);
   perform authz.require_filming_slot(p_starts_at, p_hours);
@@ -1578,9 +1607,7 @@ as $$
 declare
   v_state text;
 begin
-  if authz.client_user_client_id() is null then
-    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
-  end if;
+  perform authz.require_client_permission('c.book');
   perform authz.filming_gate(p_id, authz.is_client_of_filming(p_id), 'c.book');
   select f.state into v_state from public.filmings f where f.id = p_id for update;
   if v_state not in ('pending', 'scheduled') then
@@ -1604,10 +1631,11 @@ as $$
 declare
   f public.filmings;
 begin
-  if authz.client_user_client_id() is null then
-    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
-  end if;
+  perform authz.require_client_permission('c.book');
   perform authz.filming_gate(p_id, authz.is_client_of_filming(p_id), 'c.book');
+  if nullif(trim(coalesce(p_reason, '')), '') is null then
+    raise exception 'Γράψε τον λόγο του αιτήματος' using errcode = 'P0001';
+  end if;
   select x.* into f from public.filmings x where x.id = p_id for update;
   if f.state <> 'scheduled' then
     raise exception 'Μόνο προγραμματισμένο Γύρισμα έχει αίτημα ακύρωσης' using errcode = 'P0001';
@@ -1668,6 +1696,8 @@ declare
   v_place record;
   v_extra boolean;
   v_reset boolean;
+  v_user uuid;
+  v_name text;
 begin
   perform authz.require('filming.book');
   perform authz.filming_gate(p_id, authz.can_book_filming(p_id), 'filming.book');
@@ -1685,15 +1715,23 @@ begin
       raise exception 'Η νέα μέρα δεν πέφτει σε Περίοδο της Συμφωνίας' using errcode = 'P0001';
     end if;
     perform authz.require_production_open(v_place.r_production);
-    v_extra := f.is_extra;
-    if v_place.r_production is distinct from f.production_id or v_place.r_period is distinct from f.period_id then
-      v_extra := v_place.r_outside or f.kind_id is null or not authz.filming_available(v_agreement, v_place.r_period, f.kind_id) >= authz.filming_need(v_agreement, v_place.r_period, f.kind_id, p_hours, p_starts_at);
-    end if;
+    -- Το ίδιο το Γύρισμα εξαιρείται από το υπόλοιπο: σηκώνεται προσωρινά το is_extra, ώστε να μην μετράει η παλιά του ώρα.
     update public.filmings x
        set production_id = v_place.r_production, period_id = v_place.r_period, starts_at = p_starts_at,
-           hours = p_hours, is_extra = v_extra
+           hours = p_hours, is_extra = true
      where x.id = p_id;
+    v_extra := v_place.r_outside or f.kind_id is null
+      or authz.filming_available(v_agreement, v_place.r_period, f.kind_id)
+         < authz.filming_need(v_agreement, v_place.r_period, f.kind_id, p_hours, p_starts_at);
+    update public.filmings x set is_extra = v_extra where x.id = p_id;
   end if;
+  -- Κάθε μέλος του Συνεργείου ελέγχεται στη νέα ώρα (όπως στο ρητό Συνεργείο).
+  for v_user in select c.user_id from public.filming_crew c where c.filming_id = p_id loop
+    if authz.crew_clash(v_user, p_id) then
+      select u.name into v_name from public.team_users u where u.user_id = v_user;
+      raise exception 'Το άτομο % έχει άλλο Γύρισμα αυτή την ώρα', v_name using errcode = 'P0001';
+    end if;
+  end loop;
   select coalesce(s.change_resets_confirmations, false) into v_reset from public.filming_settings s where s.id;
   if v_reset then
     update public.filming_crew c set response = 'pending', reason = null, responded_at = null where c.filming_id = p_id;
@@ -1791,9 +1829,12 @@ declare
   v_skipped jsonb := '[]'::jsonb;
   v_added uuid[];
   v_removed uuid[];
+  v_new uuid[];
   v_reset boolean := coalesce((select s.change_resets_confirmations from public.filming_settings s where s.id), false);
 begin
   perform authz.assert_distinct_ids(p_users);
+  v_new := array(select x from unnest(coalesce(p_users, '{}'::uuid[])) x
+                  where not exists (select 1 from public.filming_crew c where c.filming_id = p_filming and c.user_id = x));
   foreach v_user in array coalesce(p_users, '{}'::uuid[]) loop
     select u.name into v_name from public.team_users u where u.user_id = v_user and u.is_active;
     if not found then
@@ -1803,7 +1844,7 @@ begin
       end if;
       raise exception 'Ο Χρήστης δεν βρέθηκε' using errcode = 'P0001';
     end if;
-    if authz.crew_clash(v_user, p_filming) then
+    if authz.crew_clash(v_user, p_filming) and (p_lenient or v_user = any (v_new)) then
       if p_lenient then
         v_skipped := v_skipped || jsonb_build_object('userId', v_user, 'name', v_name, 'reason', 'busy');
         continue;
@@ -2367,6 +2408,8 @@ revoke all on function
   authz.can_book_filming(uuid),
   authz.can_approve_filming(),
   authz.require_filming_viewer(),
+  authz.client_user_has(text),
+  authz.require_client_permission(text),
   authz.filming_gate(uuid, boolean, text),
   authz.client_agreement(uuid),
   authz.team_agreement_for_booking(uuid),
