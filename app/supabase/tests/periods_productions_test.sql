@@ -256,6 +256,7 @@ select set_config('t.p1', (select pe.id::text from public.agreement_periods pe w
 select set_config('t.p7', (select pe.id::text from public.agreement_periods pe where pe.agreement_id = current_setting('t.a2')::uuid and pe.n = 7), true);
 select set_config('t.pa3', (select p.id::text from public.productions p where p.agreement_id = current_setting('t.a3')::uuid), true);
 select set_config('t.pa5', (select p.id::text from public.productions p where p.agreement_id = current_setting('t.a5')::uuid), true);
+select set_config('t.pp1', (select p.id::text from public.productions p where p.period_id = current_setting('t.p1')::uuid), true);
 
 -- ───────────── Υπόλοιπο Περιόδου (Π3) ─────────────
 select is(
@@ -500,7 +501,7 @@ select ok(
 );
 select is(
   (select x ->> 'production_id' from jsonb_array_elements(public.agreement_view(current_setting('t.a2')::uuid) -> 'periods') x where x ->> 'n' = '1'),
-  (select p.id::text from public.productions p where p.period_id = current_setting('t.p1')::uuid),
+  current_setting('t.pp1'),
   'Η Περίοδος 1 δείχνει τη δική της Παραγωγή'
 );
 
