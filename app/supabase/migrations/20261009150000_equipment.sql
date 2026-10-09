@@ -312,6 +312,8 @@ begin
           join public.equipment_templates t on t.id = ti.template_id
          where ti.item_id = i.id
       ), '[]'::jsonb),
+      -- Διαβάζει το Ίχνος με security definer ΕΣΚΕΜΕΝΑ (παρακάμπτει το RLS του audit_log)· το module δεν έχει ποσά.
+      -- Κάθε μελλοντική στήλη κόστους ή αξίας στο equipment_items δεν πρέπει να εμφανίζεται εδώ.
       'history', coalesce((
         select jsonb_agg(h.entry order by h.at desc)
           from (
@@ -503,6 +505,10 @@ begin
   if length(v_name) = 0 then
     raise exception 'Το αντικείμενο θέλει όνομα' using errcode = 'P0001';
   end if;
+  perform 1 from public.equipment_categories c where c.id = p_category_id;
+  if not found then
+    raise exception 'Η Κατηγορία δεν βρέθηκε' using errcode = 'P0001';
+  end if;
   perform 1 from public.equipment_items i where i.id = p_id for update;
   if not found then
     raise exception 'Το αντικείμενο δεν βρέθηκε' using errcode = 'P0001';
@@ -530,7 +536,7 @@ declare
   v_from text;
 begin
   perform authz.require('equipment.manage');
-  if p_status not in ('available', 'in_repair', 'retired') then
+  if p_status is null or p_status not in ('available', 'in_repair', 'retired') then
     raise exception 'Άγνωστη Κατάσταση' using errcode = 'P0001';
   end if;
   if p_status = 'in_repair' and v_note is null then
@@ -544,7 +550,9 @@ begin
      set status = p_status,
          status_note = case when p_status = 'available' then null else v_note end
    where i.id = p_id;
-  perform authz.equipment_event(p_id, 'status_changed', jsonb_build_object('from', v_from, 'to', p_status, 'note', v_note));
+  if v_from is distinct from p_status then
+    perform authz.equipment_event(p_id, 'status_changed', jsonb_build_object('from', v_from, 'to', p_status, 'note', v_note));
+  end if;
 end;
 $$;
 
