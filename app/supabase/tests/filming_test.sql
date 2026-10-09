@@ -93,7 +93,7 @@ language sql stable
 as $$ select (((now() at time zone 'Europe/Athens')::date + p_days) + p_time) at time zone 'Europe/Athens'; $$;
 -- Η δεύτερη μέρα της Περιόδου n της Συμφωνίας, στις 10:00.
 create function public.t_period_day(p_agreement uuid, p_n integer) returns timestamptz
-language sql stable
+language sql stable security definer
 as $$
   select ((pe.starts + 1) + time '10:00') at time zone 'Europe/Athens'
     from public.agreement_periods pe where pe.agreement_id = p_agreement and pe.n = p_n;
