@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { Table, Td, Th, Tr } from "@/components/ui/table";
 
@@ -18,14 +20,17 @@ const NOTE =
 interface PeriodPlanProps {
   periods: readonly PeriodRow[];
   isProposal: boolean; // πριν την υπογραφή είναι σχέδιο, όχι Περίοδοι που τρέχουν
+  canSeeProductions: boolean; // ο σύνδεσμος προς την Παραγωγή μόνο για όποιον έχει «Παραγωγές»
 }
 
 function PeriodLine({
   period,
   hasAmount,
+  showProduction,
 }: {
   period: PeriodRow;
   hasAmount: boolean;
+  showProduction: boolean;
 }) {
   return (
     <Tr>
@@ -50,14 +55,25 @@ function PeriodLine({
         {period.givesProvisions ? "ολόκληρες" : "χωρίς νέες Παροχές"}
       </Td>
       <Td data-label="Κατάσταση">{STATE_TEXT[period.state]}</Td>
+      {showProduction && (
+        <Td data-label="Παραγωγή">
+          {period.productionId ? (
+            <Link href={`/app/productions/${period.productionId}`}>Παραγωγή</Link>
+          ) : (
+            "—"
+          )}
+        </Td>
+      )}
     </Tr>
   );
 }
 
 // Το πλάνο των Περιόδων μιας μηνιαίας Συμφωνίας: υπολογίζεται από τη βάση (ημερομηνίες, μερικοί μήνες, έκπτωση, Παροχές).
-export function PeriodPlan({ periods, isProposal }: PeriodPlanProps) {
+export function PeriodPlan({ periods, isProposal, canSeeProductions }: PeriodPlanProps) {
   if (periods.length === 0) return null;
   const hasAmount = periods.some((period) => period.amount !== null);
+  const showProduction =
+    canSeeProductions && periods.some((period) => period.productionId !== null);
   return (
     <section className="grid gap-2">
       <h3 className="kit-label m-0">
@@ -71,11 +87,17 @@ export function PeriodPlan({ periods, isProposal }: PeriodPlanProps) {
             {hasAmount && <Th isNumeric>Ποσό</Th>}
             <Th>Παροχές</Th>
             <Th>Κατάσταση</Th>
+            {showProduction && <Th>Παραγωγή</Th>}
           </tr>
         </thead>
         <tbody>
           {periods.map((period) => (
-            <PeriodLine key={period.n} period={period} hasAmount={hasAmount} />
+            <PeriodLine
+              key={period.n}
+              period={period}
+              hasAmount={hasAmount}
+              showProduction={showProduction}
+            />
           ))}
         </tbody>
       </Table>

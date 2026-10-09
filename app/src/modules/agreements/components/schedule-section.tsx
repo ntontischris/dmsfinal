@@ -140,7 +140,13 @@ function ScheduleForm({ agreement }: { agreement: AgreementDetail }) {
 }
 
 // Τίτλος, γλώσσα, Ισχύς, Έναρξη και Διάρκεια, και κάτω το πλάνο των Περιόδων (μηνιαία). Η Λήξη υπολογίζεται.
-export function ScheduleSection({ agreement }: { agreement: AgreementDetail }) {
+export function ScheduleSection({
+  agreement,
+  canSeeProductions,
+}: {
+  agreement: AgreementDetail;
+  canSeeProductions: boolean;
+}) {
   return (
     <Panel label="Χρονοδιάγραμμα">
       <div className="grid gap-5">
@@ -153,6 +159,7 @@ export function ScheduleSection({ agreement }: { agreement: AgreementDetail }) {
           <PeriodPlan
             periods={agreement.periods}
             isProposal={agreement.state === "proposal"}
+            canSeeProductions={canSeeProductions}
           />
         )}
       </div>

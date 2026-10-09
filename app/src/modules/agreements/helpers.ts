@@ -72,6 +72,7 @@ const NO_CAPS: AgreementCaps = {
   canSeeCost: false,
   canManageCost: false,
   canManageSettings: false,
+  canSeeProductions: false,
 };
 
 // Ό,τι ζητά η οθόνη, από τα Δικαιώματα. Μόνο για να κρύβει κουμπιά· τα χρήματα και οι εγγραφές τα αποφασίζει η βάση.
@@ -89,6 +90,7 @@ export const agreementCaps = (viewer: Viewer): AgreementCaps => {
     canSeeCost: has("finance.cost"),
     canManageCost: has("finance.costManage") && has("finance.cost"),
     canManageSettings: has("settings.manage"),
+    canSeeProductions: has("productions.manage"),
   };
 };
 

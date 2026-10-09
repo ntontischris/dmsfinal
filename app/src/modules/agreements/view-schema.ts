@@ -126,6 +126,7 @@ const periodSchema = z.object({
   isDiscounted: z.boolean(),
   state: z.enum(["closed", "current", "next"]),
   amount: nullableNumber,
+  productionId: nullableString,
 });
 
 const canSchema = z.object({

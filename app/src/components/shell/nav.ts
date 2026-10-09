@@ -77,6 +77,17 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Παραγωγές",
+    items: [
+      {
+        code: "G1",
+        label: "Παραγωγές",
+        href: "/app/productions",
+        requires: "productions.manage",
+      },
+    ],
+  },
+  {
     title: "Εξοπλισμός",
     items: [
       {
