@@ -97,9 +97,10 @@ test("ο Ιδιοκτήτης προσκαλεί Χρήστη πελάτη κα�
   const context = await browser.newContext();
   const guest = await acceptInvite(context, email);
   const nav = guest.getByRole("navigation", { name: "Οθόνες" });
-  await expect(nav.getByRole("link", { name: "Συνάδελφοι", exact: true })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Ομάδα", exact: true })).toHaveCount(0);
-  await expect(nav.getByRole("link", { name: "Πελάτες", exact: true })).toHaveCount(0);
+  // Τα ονόματα των συνδέσμων περιέχουν και τον κωδικό της οθόνης («N3 Συνάδελφοι»)· γι' αυτό ταιριάζουμε με regex.
+  await expect(nav.getByRole("link", { name: /Συνάδελφοι/ })).toBeVisible();
+  await expect(nav.getByRole("link", { name: /Ομάδα/ })).toHaveCount(0);
+  await expect(nav.getByRole("link", { name: /Πελάτες/ })).toHaveCount(0);
   await context.close();
 });
 
