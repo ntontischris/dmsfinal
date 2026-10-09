@@ -215,11 +215,15 @@ language plpgsql security definer set search_path = ''
 as $$
 begin
   perform authz.require('productions.manage');
-  if not authz.can_manage_production(p_production) then
+  -- Η ύπαρξη ελέγχεται πρώτα: το Εύρος «όλα» δίνει can_manage και σε ανύπαρκτο id.
+  if p_production is null or not exists (select 1 from public.productions p where p.id = p_production) then
     -- Το «δεν βρέθηκε» μόνο σε Εύρος «όλα»· αλλιώς ίδια άρνηση με την ξένη Παραγωγή (χωρίς να φαίνεται αν υπάρχει).
     if coalesce(authz.scope('productions.manage'), '') = 'all' then
       perform authz.require_production(p_production);
     end if;
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+  if not authz.can_manage_production(p_production) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
 end;
