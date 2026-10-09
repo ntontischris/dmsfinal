@@ -420,9 +420,11 @@ select throws_ok($$ select public.production_deliver(current_setting('t.pi2')::u
 select is(jsonb_array_length(public.productions_view('cancelled')), 1, 'Η λίστα «Όλες» δείχνει και τις ακυρωμένες');
 
 -- Δουλειά: η Παραγωγή με δουλειά δεν ακυρώνεται.
+reset role;
 create or replace function authz.production_has_work(p_production uuid) returns boolean
 language sql stable security definer set search_path = ''
 as $$ select true; $$;
+set local role authenticated;
 select throws_ok($$ select public.production_cancel(current_setting('t.pm1')::uuid, 'Λόγος') $$, 'P0001', 'Η Παραγωγή έχει δουλειά και δεν ακυρώνεται', 'Η Παραγωγή με δουλειά δεν ακυρώνεται');
 select ok(public.production_view(current_setting('t.pm1')::uuid) -> 'viewerCan' ->> 'cancel' = 'false', 'Με δουλειά το κουμπί ακύρωσης κλείνει');
 
@@ -460,9 +462,11 @@ select is(jsonb_array_length(public.productions_view()), 7, 'Η αφαίρεση
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
 
 -- ───────────── Πελάτης με σύνδεση (υπάρχει μόνο στο τεστ) ─────────────
+reset role;
 create or replace function authz.client_user_client_id() returns uuid
 language sql stable security definer set search_path = ''
 as $$ select current_setting('t.client_f1')::uuid; $$;
+set local role authenticated;
 select set_config('t.client_f1', '00000000-0000-0000-0000-0000000000f1', true);
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
 select is(jsonb_array_length(public.productions_view()), current_setting('t.m1')::int + 8, 'Ο Πελάτης βλέπει μόνο τις Παραγωγές του');
