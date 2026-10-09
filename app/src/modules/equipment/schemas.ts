@@ -34,7 +34,21 @@ const itemFields = {
   note,
 };
 
-export const createItemSchema = z.object(itemFields);
+// Η Ποσότητα είναι τρόπος εγγραφής: N μονάδες με αρίθμηση. Η φόρμα στέλνει κείμενο· κενό = 1.
+const QUANTITY_MESSAGE = "Η Ποσότητα είναι από 1 ως 50.";
+export const quantitySchema = z.preprocess(
+  (value) => (value === "" || value === undefined ? 1 : value),
+  z
+    .coerce.number({ error: QUANTITY_MESSAGE })
+    .int(QUANTITY_MESSAGE)
+    .min(1, QUANTITY_MESSAGE)
+    .max(50, QUANTITY_MESSAGE),
+);
+
+export const createItemSchema = z.object({
+  ...itemFields,
+  quantity: quantitySchema,
+});
 export const updateItemSchema = z.object({ ...itemFields, itemId: z.uuid() });
 export const itemRefSchema = z.object({ itemId: z.uuid() });
 

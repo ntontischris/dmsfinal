@@ -127,3 +127,26 @@ describe("formItemIds", () => {
     expect(formItemIds(new FormData())).toEqual([]);
   });
 });
+
+describe("createItemSchema quantity", () => {
+  it("should default the quantity to 1 when the field is empty", () => {
+    expect(createItemSchema.parse({ ...itemInput, quantity: "" }).quantity).toBe(1);
+  });
+
+  it("should read a quantity typed as text into a number", () => {
+    expect(createItemSchema.parse({ ...itemInput, quantity: "3" }).quantity).toBe(3);
+  });
+
+  it("should accept the bounds 1 and 50", () => {
+    expect(createItemSchema.safeParse({ ...itemInput, quantity: "1" }).success).toBe(true);
+    expect(createItemSchema.safeParse({ ...itemInput, quantity: "50" }).success).toBe(true);
+  });
+
+  it("should reject a quantity outside 1 to 50 with the Greek message", () => {
+    for (const quantity of ["0", "51", "2.5", "abc"]) {
+      const result = createItemSchema.safeParse({ ...itemInput, quantity });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0]?.message).toBe("Η Ποσότητα είναι από 1 ως 50.");
+    }
+  });
+});

@@ -3,6 +3,7 @@
 import { Field, Input } from "@/components/ui/field";
 
 import { createTemplate, updateTemplate } from "../actions-templates";
+import { comparePickerItems } from "../helpers";
 import { STATUS_LABELS } from "../labels";
 import type { EquipmentItemRow, EquipmentTemplate } from "../types";
 
@@ -30,7 +31,9 @@ const itemLabel = (item: EquipmentItemRow): string => {
 // Φόρμα Προτύπου: όνομα, σημείωση και τα αντικείμενα με τσεκαρισμένα checkbox (τουλάχιστον ένα).
 export function TemplateForm({ items, template }: TemplateFormProps) {
   const selected = new Set(template?.items.map((item) => item.id) ?? []);
-  const options = items.filter((item) => isPickable(item, selected));
+  const options = items
+    .filter((item) => isPickable(item, selected))
+    .sort(comparePickerItems);
   return (
     <ActionForm
       action={template ? updateTemplate : createTemplate}

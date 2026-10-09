@@ -72,3 +72,15 @@ export interface HistoryLine {
   actor: string;
   text: string;
 }
+
+// Μονάδες με το ίδιο βασικό όνομα και την ίδια Κατηγορία φαίνονται μαζί στο F1 (#123).
+export interface UnitGroup {
+  baseName: string;
+  categoryName: string;
+  units: EquipmentItemRow[];
+  counts: Record<EquipmentStatus, number>;
+}
+
+export type RegistryRow =
+  | { kind: "item"; item: EquipmentItemRow }
+  | { kind: "group"; group: UnitGroup };

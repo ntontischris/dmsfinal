@@ -8,6 +8,8 @@ import {
   type EquipmentStatus,
   type HistoryEntry,
   type HistoryLine,
+  type RegistryRow,
+  type UnitGroup,
 } from "./types";
 
 // Καθαρές συναρτήσεις του module: Δικαιώματα της οθόνης, σήματα, μορφοποίηση και κείμενα του Ιστορικού.
@@ -103,3 +105,73 @@ export const filterItems = (
       matchesStatus(item, filter.status) &&
       matchesQuery(item, filter.query),
   );
+
+// Μονάδες (#123): το «#N» στο τέλος του ονόματος είναι αρίθμηση. Το «#» μέσα στο όνομα δεν είναι επίθημα.
+const UNIT_SUFFIX = / #(\d+)$/;
+type NonEmpty<T> = [T, ...T[]];
+
+export const unitBaseName = (name: string): string => name.replace(UNIT_SUFFIX, "");
+
+export const unitNumber = (name: string): number | null => {
+  const match = UNIT_SUFFIX.exec(name);
+  return match ? Number(match[1]) : null;
+};
+
+const unitOrder = (item: EquipmentItemRow): number =>
+  unitNumber(item.name) ?? Number.MAX_SAFE_INTEGER;
+
+const compareUnits = (a: EquipmentItemRow, b: EquipmentItemRow): number =>
+  unitOrder(a) - unitOrder(b) || a.name.localeCompare(b.name, "el");
+
+// Η λίστα επιλογής του Προτύπου: Κατηγορία, βασικό όνομα, αριθμός μονάδας· έτσι οι μονάδες μιας ομάδας μένουν μαζί.
+export const comparePickerItems = (a: EquipmentItemRow, b: EquipmentItemRow): number =>
+  a.categoryName.localeCompare(b.categoryName, "el") ||
+  unitBaseName(a.name).localeCompare(unitBaseName(b.name), "el") ||
+  compareUnits(a, b);
+
+const countOf = (units: readonly EquipmentItemRow[], status: EquipmentStatus): number =>
+  units.filter((unit) => unit.status === status).length;
+
+const countByStatus = (units: readonly EquipmentItemRow[]): UnitGroup["counts"] => ({
+  available: countOf(units, "available"),
+  in_repair: countOf(units, "in_repair"),
+  retired: countOf(units, "retired"),
+});
+
+// Ένα αντικείμενο μόνο του μένει γραμμή· δύο ή περισσότερα με ίδια Κατηγορία και βασικό όνομα γίνονται ομάδα.
+const rowOf = ([head, ...rest]: NonEmpty<EquipmentItemRow>): RegistryRow => {
+  if (rest.length === 0) return { kind: "item", item: head };
+  const units = [head, ...rest].sort(compareUnits);
+  return {
+    kind: "group",
+    group: {
+      baseName: unitBaseName(head.name),
+      categoryName: head.categoryName,
+      units,
+      counts: countByStatus(units),
+    },
+  };
+};
+
+// Τα αντικείμενα του F1 ως γραμμές: οι μονάδες ομαδοποιούνται στην εφαρμογή, η βάση μένει ανά μονάδα.
+export function groupEquipmentUnits(items: readonly EquipmentItemRow[]): RegistryRow[] {
+  const buckets = new Map<string, NonEmpty<EquipmentItemRow>>();
+  for (const item of items) {
+    const key = `${item.categoryId}|${unitBaseName(item.name)}`;
+    const bucket = buckets.get(key);
+    const next: NonEmpty<EquipmentItemRow> = bucket ? [...bucket, item] : [item];
+    buckets.set(key, next);
+  }
+  return [...buckets.values()].map(rowOf);
+}
+
+// «Sony FX3 ×3 · 2 διαθέσιμα · 1 σε επισκευή», με τα αποσυρμένα μόνο αν υπάρχουν.
+export const groupLabel = (group: UnitGroup): string => {
+  const parts = [
+    `${group.baseName} ×${group.units.length}`,
+    `${group.counts.available} διαθέσιμα`,
+    `${group.counts.in_repair} σε επισκευή`,
+  ];
+  if (group.counts.retired > 0) parts.push(`${group.counts.retired} αποσυρμένα`);
+  return parts.join(" · ");
+};
