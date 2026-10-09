@@ -77,6 +77,23 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Εξοπλισμός",
+    items: [
+      {
+        code: "F1",
+        label: "Εξοπλισμός",
+        href: "/app/equipment",
+        requires: "equipment.view",
+      },
+      {
+        code: "F3",
+        label: "Πρότυπα εξοπλισμού",
+        href: "/app/equipment/templates",
+        requires: "equipment.view",
+      },
+    ],
+  },
+  {
     title: "Ομάδα και Πρόσβαση",
     items: [
       {

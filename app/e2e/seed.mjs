@@ -14,6 +14,7 @@ const USERS = [
   { email: "admin@example.com", name: "Δημήτρης Διαχείριση", role: "Διαχείριση" },
   { email: "sales@example.com", name: "Άννα Πωλήσεις", role: "Πωλήσεις" },
   { email: "nikos@example.com", name: "Νίκος Πωλήσεις", role: "Πωλήσεις" },
+  { email: "production@example.com", name: "Ρένα Παραγωγή", role: "Παραγωγή" },
 ];
 
 const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
@@ -267,3 +268,22 @@ for (const P of ["desktop", "mobile"]) {
   });
   console.log(`seed: Συμφωνίες (${P})`);
 }
+
+// ───────────── Εξοπλισμός: ένα αντικείμενο ανά project για το e2e/equipment.spec.ts ─────────────
+// Τα αντικείμενα μπαίνουν απευθείας με service role: το Πρότυπο της Παραγωγής δουλεύει πάνω σε αυτά.
+async function nameId(table, name) {
+  const { data, error } = await admin.from(table).select("id").eq("name", name).single();
+  if (error) throw error;
+  return data.id;
+}
+
+const cameraCategory = await nameId("equipment_categories", "Κάμερες");
+for (const P of ["desktop", "mobile"]) {
+  await insertRow("equipment_items", {
+    category_id: cameraCategory,
+    name: `Κάμερα ${P}`,
+    code: "SN-A7-001",
+    note: "Στο ντουλάπι του studio",
+  });
+}
+console.log("seed: Εξοπλισμός");
