@@ -147,9 +147,9 @@ export const crewRespondSchema = z
   .object({
     filmingId: uuid,
     response: z.enum(["confirmed", "declined"]),
-    reason: reason,
+    reason: optionalText(REASON_LIMIT),
   })
-  .refine((value) => value.response === "confirmed" || value.reason !== "", {
+  .refine((value) => value.response === "confirmed" || value.reason !== null, {
     message: "Το «δεν μπορώ» θέλει λόγο.",
     path: ["reason"],
   });

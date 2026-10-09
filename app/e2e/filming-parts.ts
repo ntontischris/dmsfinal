@@ -51,7 +51,10 @@ export async function signedMonthlyAgreement(
   });
 }
 
-// Η Άννα κλείνει Γύρισμα στην E4 για τον Πελάτη της Συμφωνίας (15 του μήνα, 10:00, 3 ώρες).
+// Οι δύο λειτουργίες (desktop, mobile) μοιράζονται τη βάση: ώρες που δεν επικαλύπτονται, ώστε το Συνεργείο να μην συγκρούεται.
+export const startTimeOf = (P: string): string => (P === "mobile" ? "15:00" : "10:00");
+
+// Η Άννα κλείνει Γύρισμα στην E4 για τον Πελάτη της Συμφωνίας (15 του μήνα, 3 ώρες).
 export async function bookFilmingFromScreen(
   page: Page,
   P: string,
@@ -62,7 +65,7 @@ export async function bookFilmingFromScreen(
   });
   await fieldOf(form, "Πελάτης").selectOption({ label: clientName(P) });
   await fieldOf(form, "Ημερομηνία").fill(currentFifteenth());
-  await fieldOf(form, "Ώρα").fill("10:00");
+  await fieldOf(form, "Ώρα").fill(startTimeOf(P));
   await fieldOf(form, "Διάρκεια (ώρες)").fill("3");
   await button(form, "Κλείσιμο Γυρίσματος").click();
   await expect(form.getByRole("status")).toContainText("Το Γύρισμα κλείστηκε.");
