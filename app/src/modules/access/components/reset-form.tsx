@@ -7,7 +7,7 @@ import { useKeptForm } from "@/lib/use-kept-form";
 
 import { requestPasswordReset } from "../actions";
 
-// R10 Επαναφορά κωδικού: σύνδεσμος στο email, που ισχύει 1 ώρα.
+// R10 Επαναφορά κωδικού: σύνδεσμος στο email, που ισχύει 24 ώρες.
 export function ResetForm() {
   const { state, isPending: isSending, onSubmit: action, formRef: actionRef } = useKeptForm(requestPasswordReset);
   return (

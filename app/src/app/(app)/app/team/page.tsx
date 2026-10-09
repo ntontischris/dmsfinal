@@ -1,27 +1,29 @@
 import Link from "next/link";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
-import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { Panel, StatGrid } from "@/components/ui/panel";
 import {
   AccessNotice,
+  InvitationList,
+  TeamInviteForm,
   TeamTable,
   can,
   getViewer,
+  grantableTeamRoles,
   isOwner,
+  listInvitations,
   listRoles,
   listTeamUsers,
 } from "@/modules/access";
 
 export const metadata = { title: "Ομάδα" };
 
-// N1 Ομάδα: οι Χρήστες ομάδας, οι Ρόλοι τους, απενεργοποίηση. Για όποιον «Προσκαλεί και απενεργοποιεί Χρήστες ομάδας».
+const header = <ScreenHeader eyebrow="N1 · Ομάδα και Πρόσβαση" title="Ομάδα" />;
+
+// N1 Ομάδα: οι Χρήστες ομάδας, οι προσκλήσεις, η πρόσκληση νέου Χρήστη, απενεργοποίηση. Για όποιον «Προσκαλεί και απενεργοποιεί Χρήστες ομάδας».
 export default async function TeamPage() {
   const viewer = await getViewer();
-  const header = (
-    <ScreenHeader eyebrow="N1 · Ομάδα και Πρόσβαση" title="Ομάδα" />
-  );
   if (!can(viewer, "access.team"))
     return (
       <>
@@ -35,7 +37,11 @@ export default async function TeamPage() {
       </>
     );
 
-  const [users, roles] = await Promise.all([listTeamUsers(), listRoles()]);
+  const [users, roles, invitations] = await Promise.all([
+    listTeamUsers(),
+    listRoles(),
+    listInvitations(null),
+  ]);
   if (!users.ok || !roles.ok)
     return (
       <>
@@ -47,17 +53,14 @@ export default async function TeamPage() {
     );
 
   const active = users.data.filter((user) => user.isActive).length;
+  const grantable =
+    viewer.status === "signed-in" && viewer.team
+      ? grantableTeamRoles(roles.data, viewer.team)
+      : [];
+  const rows = invitations.ok ? invitations.data : [];
   return (
     <>
-      <ScreenHeader eyebrow="N1 · Ομάδα και Πρόσβαση" title="Ομάδα">
-        <Button
-          variant="primary"
-          disabled
-          title="Ανοίγει μαζί με την αποστολή email"
-        >
-          Πρόσκληση
-        </Button>
-      </ScreenHeader>
+      <ScreenHeader eyebrow="N1 · Ομάδα και Πρόσβαση" title="Ομάδα" />
       <div className="grid gap-4">
         <StatGrid
           items={[
@@ -69,8 +72,8 @@ export default async function TeamPage() {
           ]}
         />
         <p className="m-0 text-sm text-muted-foreground">
-          Η πρόσκληση νέων Χρηστών ανοίγει μαζί με την αποστολή email. Ως τότε,
-          ο developer προσκαλεί από το Supabase.
+          Αν το email ανήκει σε Χρήστη που έχει απενεργοποιηθεί, κάνε
+          Επανενεργοποίηση στη λίστα Χρηστών και μετά πρόσκληση.
           {isOwner(viewer) && (
             <>
               {" "}
@@ -79,6 +82,12 @@ export default async function TeamPage() {
             </>
           )}
         </p>
+        <Panel label="Πρόσκληση Χρήστη ομάδας">
+          <TeamInviteForm roles={grantable} />
+        </Panel>
+        <Panel label="Προσκλήσεις" isFlush>
+          <InvitationList invitations={rows} empty="Καμία πρόσκληση ακόμα." />
+        </Panel>
         <Panel label="Χρήστες ομάδας" aside={String(users.data.length)} isFlush>
           <TeamTable users={users.data} roles={roles.data} />
         </Panel>

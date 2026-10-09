@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Split } from "@/components/ui/inspector";
-import { getViewer } from "@/modules/access";
+import { ClientUsersSection, can, getViewer, type Viewer } from "@/modules/access";
 import {
   ClientInspector,
   clientAccess,
@@ -35,11 +36,13 @@ async function ClientView({
   card,
   caps,
   tab,
+  usersSection,
 }: {
   client: ClientDetail;
   card: ClientRow | null;
   caps: SalesCaps;
   tab: string | undefined;
+  usersSection: ReactNode;
 }) {
   const access = clientAccess(caps, client);
   const canEdit = caps.canManage && access !== "granted";
@@ -65,6 +68,7 @@ async function ClientView({
             caps={caps}
             canEdit={canEdit}
           />
+          {usersSection}
         </div>
       </Split>
     </>
@@ -77,11 +81,13 @@ function ClientOutcome({
   card,
   caps,
   tab,
+  usersSection,
 }: {
   client: ClientDetail | null;
   card: ClientRow | null;
   caps: SalesCaps;
   tab: string | undefined;
+  usersSection: ReactNode;
 }) {
   if (client === null)
     return card && !card.canOpen ? (
@@ -90,7 +96,9 @@ function ClientOutcome({
       <Missing />
     );
   if (client.archivedAt) return <Merged client={client} />;
-  return <ClientView client={client} card={card} caps={caps} tab={tab} />;
+  return (
+    <ClientView client={client} card={card} caps={caps} tab={tab} usersSection={usersSection} />
+  );
 }
 
 // B2: Inspector με την ταυτότητα, καρτέλες για Ευκαιρίες και Δραστηριότητες. Η πρόσβαση αποφασίζεται στη βάση.
@@ -120,6 +128,13 @@ export default async function ClientPage({
       card={card.data}
       caps={caps}
       tab={typeof tab === "string" ? tab : undefined}
+      usersSection={usersSectionFor(viewer, id.data, client.data)}
     />
   );
+}
+
+// N2 Χρήστες πελάτη: μόνο όποιος «Προσκαλεί και αφαιρεί Χρήστες πελάτη», και μόνο σε Πελάτη που δεν είναι αρχειοθετημένος.
+function usersSectionFor(viewer: Viewer, clientId: string, client: ClientDetail | null): ReactNode {
+  if (!client || client.archivedAt || !can(viewer, "access.clientUsers")) return null;
+  return <ClientUsersSection clientId={clientId} viewer={viewer} />;
 }

@@ -21,6 +21,8 @@ export type Viewer =
       userId: string;
       email: string;
       team: TeamMember | null;
+      // Τα Δικαιώματα πελάτη (c.*) της τρέχουσας συμμετοχής· μόνο για Χρήστες πελάτη.
+      clientGrants?: Grants;
     };
 
 // Ο Χρήστης ομάδας με τους Ρόλους του, όπως τον επιστρέφει η βάση (η RLS δείχνει μόνο ό,τι επιτρέπεται).
@@ -66,6 +68,7 @@ export const getViewer = cache(async (): Promise<Viewer> => {
 
   const member = memberSchema.safeParse(memberResult.data);
   const permissions = permissionsSchema.safeParse(permissionsResult.data ?? []);
+  const grants = permissions.success ? toGrants(permissions.data) : {};
   return {
     status: "signed-in",
     userId: auth.user.id,
@@ -76,16 +79,20 @@ export const getViewer = cache(async (): Promise<Viewer> => {
           isOwner: member.data.team_user_roles.some(
             (row) => row.roles?.is_owner === true,
           ),
-          permissions: permissions.success ? toGrants(permissions.data) : {},
+          permissions: grants,
         }
       : null,
+    clientGrants: clientOnly(grants),
   };
 });
 
-// Ο Χρήστης ομάδας έχει αυτό το Δικαίωμα (με οποιοδήποτε Εύρος); Για την οθόνη μόνο· αποφασίζει η βάση.
+const clientOnly = (grants: Grants): Grants =>
+  Object.fromEntries(Object.entries(grants).filter(([permission]) => permission.startsWith("c.")));
+
+// Ο Χρήστης έχει αυτό το Δικαίωμα (ομάδας ή πελάτη, με οποιοδήποτε Εύρος)· για την οθόνη μόνο, αποφασίζει η βάση.
 export const can = (viewer: Viewer, permission: string): boolean =>
   viewer.status === "signed-in" &&
-  viewer.team?.permissions[permission] !== undefined;
+  (viewer.team?.permissions[permission] !== undefined || viewer.clientGrants?.[permission] !== undefined);
 
 export const isOwner = (viewer: Viewer): boolean =>
   viewer.status === "signed-in" && viewer.team?.isOwner === true;

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabase } from "@/lib/supabase/server";
 
 import { diffGrants, isScope, type Grants } from "./permissions";
@@ -232,6 +233,16 @@ export async function setUserRoles(
   };
 }
 
+// Η απενεργοποίηση κλείνει τις ανανεώσεις της συνεδρίας (η βάση ήδη κόβει την πρόσβαση)· η επανενεργοποίηση τις ανοίγει.
+async function setAccountBan(userId: string, banned: boolean): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin) return;
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    ban_duration: banned ? "876000h" : "none",
+  });
+  if (error) console.error("setAccountBan", error.code ?? "άγνωστο");
+}
+
 export async function setUserActive(
   _: FormState,
   form: FormData,
@@ -249,6 +260,7 @@ export async function setUserActive(
   if (error) return { error: messageOf(error, "Η αλλαγή δεν αποθηκεύτηκε.") };
   if (!data || data.length === 0)
     return { error: "Δεν έχεις Δικαίωμα για αυτή την αλλαγή." };
+  await setAccountBan(userId.data, !isActive);
   revalidatePath("/app/team", "layout");
   return {
     notice: isActive

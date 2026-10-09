@@ -1,12 +1,13 @@
 // Η πλοήγηση της εφαρμογής: ενότητες με τα modules τους. Κάθε module προσθέτει εδώ τις οθόνες του όταν χτιστεί.
 // Ο κωδικός είναι αυτός του Blueprint (κεφ. 8), για να αντιστοιχίζεται με το prototype.
-// `requires`: ένα Δικαίωμα, ή «owner» για ό,τι κάνει μόνο ο Ιδιοκτήτης. Όποιος δεν το έχει, δεν βλέπει την οθόνη στη λίστα.
+// `requires`: ένα Δικαίωμα (ή περισσότερα, αρκεί ένα), ή «owner» για ό,τι κάνει μόνο ο Ιδιοκτήτης.
 
 export interface NavItem {
   code: string;
   label: string;
   href: string;
-  requires?: string;
+  // Ένα Δικαίωμα, ή περισσότερα (αρκεί ένα). «owner» = μόνο Ιδιοκτήτης.
+  requires?: string | readonly string[];
 }
 
 export interface NavSection {
@@ -83,14 +84,14 @@ export const NAV: readonly NavSection[] = [
         code: "G1",
         label: "Παραγωγές",
         href: "/app/productions",
-        requires: "productions.manage",
+        requires: ["productions.manage", "c.productions"],
       },
     ],
   },
   {
     title: "Γυρίσματα",
     items: [
-      { code: "E1", label: "Γυρίσματα", href: "/app/filming", requires: "filming.view" },
+      { code: "E1", label: "Γυρίσματα", href: "/app/filming", requires: ["filming.view", "c.book"] },
       { code: "E2", label: "Ουρά έγκρισης", href: "/app/filming/queue", requires: "filming.approve" },
       { code: "E6", label: "Τα Γυρίσματά μου", href: "/app/filming/mine", requires: "filming.view" },
       { code: "E7", label: "Πρότυπα Συνεργείου", href: "/app/filming/crew-templates", requires: "filming.crew" },
@@ -131,6 +132,12 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Ο Πελάτης μου",
+    items: [
+      { code: "N3", label: "Συνάδελφοι", href: "/app/colleagues", requires: "c.colleagues" },
+    ],
+  },
+  {
     title: "Ρυθμίσεις",
     items: [
       {
@@ -163,6 +170,12 @@ export const NAV: readonly NavSection[] = [
         href: "/app/settings/readiness",
         requires: "settings.manage",
       },
+      {
+        code: "O8",
+        label: "Ενσωματώσεις",
+        href: "/app/settings/integrations",
+        requires: "owner",
+      },
     ],
   },
   {
@@ -172,13 +185,17 @@ export const NAV: readonly NavSection[] = [
 ];
 
 // Μόνο οι οθόνες που επιτρέπονται, και μόνο οι ενότητες που έχουν κάτι.
+const requirementsOf = (requires: string | readonly string[]): readonly string[] =>
+  typeof requires === "string" ? [requires] : requires;
+
 export const visibleNav = (
   allows: (requirement: string) => boolean,
 ): NavSection[] =>
   NAV.map((section) => ({
     ...section,
     items: section.items.filter(
-      (item) => !item.requires || allows(item.requires),
+      (item) =>
+        !item.requires || requirementsOf(item.requires).some(allows),
     ),
   })).filter((section) => section.items.length > 0);
 

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { createSupabase } from "@/lib/supabase/server";
 
+import { claimOnEntry } from "./claim";
 import { safeNext } from "./schemas";
 
 // Πού πηγαίνει ο Χρήστης αφού ανοίξει έναν σύνδεσμο από email (πρόσκληση, είσοδο, επαναφορά, Google).
@@ -20,7 +21,7 @@ export async function handleCodeLink(request: NextRequest): Promise<NextResponse
   if (!supabase || !code) return expired(request);
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return expired(request);
-  await supabase.rpc("claim_first_owner");
+  await claimOnEntry(supabase);
   return NextResponse.redirect(new URL(targetOf(request.nextUrl.searchParams.get("next"), false), request.url));
 }
 
@@ -36,7 +37,7 @@ export async function handleTokenLink(request: NextRequest): Promise<NextRespons
   if (!supabase || !tokenHash || !isOtpType(type)) return expired(request);
   const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
   if (error) return expired(request);
-  await supabase.rpc("claim_first_owner");
+  await claimOnEntry(supabase);
   const mustSetPassword = type === "invite" || type === "recovery";
   return NextResponse.redirect(new URL(targetOf(request.nextUrl.searchParams.get("next"), mustSetPassword), request.url));
 }
