@@ -346,24 +346,26 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 select set_config('t.many', array_to_string(public.equipment_items_create_many(current_setting('t.cat_sound')::uuid, 'Lavalier', 'LAV', 'Για συνέντευξη', 3), ','), true);
 select is(cardinality(string_to_array(current_setting('t.many'), ',')), 3, 'Ποσότητα 3 φτιάχνει τρεις μονάδες');
 select is(
-  (select string_agg(i.name, '|' order by i.name) from public.equipment_items i where i.id = any (string_to_array(current_setting('t.many'), ',')::uuid[])),
+  (select string_agg(i.name, '|' order by i.name) from public.equipment_items_view(true) i where i.id = any (string_to_array(current_setting('t.many'), ',')::uuid[])),
   'Lavalier #1|Lavalier #2|Lavalier #3', 'Οι μονάδες παίρνουν αρίθμηση #1 έως #3'
 );
 select is(
-  (select string_agg(i.code, '|' order by i.code) from public.equipment_items i where i.id = any (string_to_array(current_setting('t.many'), ',')::uuid[])),
+  (select string_agg(i.code, '|' order by i.code) from public.equipment_items_view(true) i where i.id = any (string_to_array(current_setting('t.many'), ',')::uuid[])),
   'LAV-1|LAV-2|LAV-3', 'Ο κωδικός παίρνει αρίθμηση -1 έως -3'
 );
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e4","role":"authenticated"}', true);
 select is(
   (select count(*)::int from public.audit_log a where a.entity = 'equipment_items' and a.action = 'insert' and a.entity_id = any (string_to_array(current_setting('t.many'), ','))),
   3, 'Κάθε μονάδα γράφει την εγγραφή της στο Ίχνος'
 );
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
 select set_config('t.one', array_to_string(public.equipment_items_create_many(current_setting('t.cat_drone')::uuid, 'Drone Mavic', null, null, 1), ','), true);
 select is(
-  (select i.name from public.equipment_items i where i.id = current_setting('t.one')::uuid), 'Drone Mavic',
+  (select i.name from public.equipment_items_view(true) i where i.id = current_setting('t.one')::uuid), 'Drone Mavic',
   'Ποσότητα 1 δεν βάζει αρίθμηση'
 );
 select is(
-  (select i.code from public.equipment_items i where i.id = current_setting('t.one')::uuid), null,
+  (select i.code from public.equipment_items_view(true) i where i.id = current_setting('t.one')::uuid), null,
   'Ποσότητα 1 χωρίς κωδικό μένει χωρίς κωδικό'
 );
 select set_config('t.clash', public.equipment_item_create(current_setting('t.cat_lens')::uuid, 'Ρύθμιση #2', null, null)::text, true);
@@ -372,7 +374,7 @@ select throws_ok(
   'Υπάρχει ήδη αντικείμενο με αυτό το όνομα', 'Σύγκρουση ονόματος σε μία μονάδα ακυρώνει όλη την ποσότητα'
 );
 select is(
-  (select count(*)::int from public.equipment_items i where lower(i.name) like 'ρύθμιση%'), 1,
+  (select count(*)::int from public.equipment_items_view(true) i where lower(i.name) like 'ρύθμιση%'), 1,
   'Μετά την αποτυχία δεν μπαίνει καμία μονάδα'
 );
 select throws_ok(
