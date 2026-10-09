@@ -383,7 +383,7 @@ select throws_ok($$ select public.production_view(gen_random_uuid()) $$, 'P0001'
 select set_config('t.pi1', public.production_create_internal('Showreel 2026', '00000000-0000-0000-0000-0000000000e2')::text, true);
 select set_config('t.pi2', public.production_create_internal('Παλιό υλικό', null)::text, true);
 select is(jsonb_array_length(public.productions_view(null, true)), 2, 'Οι Εσωτερικές φαίνονται στη λίστα του Ιδιοκτήτη');
-select is((select owner_id from public.productions where id = current_setting('t.pi2')::uuid), null::uuid, 'Η Εσωτερική Παραγωγή μπορεί να μείνει χωρίς υπεύθυνο');
+select is(public.production_view(current_setting('t.pi2')::uuid) -> 'owner' ->> 'id', null, 'Η Εσωτερική Παραγωγή μπορεί να μείνει χωρίς υπεύθυνο');
 select throws_ok($$ select public.production_create_internal('   ', null) $$, 'P0001', 'Η Παραγωγή θέλει τίτλο', 'Η Εσωτερική Παραγωγή θέλει τίτλο');
 select throws_ok(
   $$ select public.production_create_internal('Νέα', gen_random_uuid()) $$, 'P0001', 'Ο Υπεύθυνος δεν βρέθηκε', 'Ο Υπεύθυνος ανύπαρκτος'
@@ -406,16 +406,16 @@ select is(
 select throws_ok($$ select public.production_deliver(current_setting('t.pm2')::uuid, '') $$, 'P0001', 'Η παράδοση θέλει σχόλιο: τι παραδόθηκε και πού', 'Η παράδοση χωρίς σχόλιο απορρίπτεται');
 select throws_ok($$ select public.production_deliver(current_setting('t.pm2')::uuid, null) $$, 'P0001', 'Η παράδοση θέλει σχόλιο: τι παραδόθηκε και πού', 'Η παράδοση με κενό σχόλιο απορρίπτεται');
 select lives_ok($$ select public.production_deliver(current_setting('t.pm2')::uuid, 'Παραδόθηκε στο drive') $$, 'Ο Ιδιοκτήτης παραδίδει με σχόλιο');
-select is((select state from public.productions where id = current_setting('t.pm2')::uuid), 'delivered', 'Η παραδομένη Παραγωγή έχει κατάσταση «παραδομένη»');
+select is(public.production_view(current_setting('t.pm2')::uuid) ->> 'state', 'delivered', 'Η παραδομένη Παραγωγή έχει κατάσταση «παραδομένη»');
 select throws_ok($$ select public.production_deliver(current_setting('t.pm2')::uuid, 'Ξανά') $$, 'P0001', 'Η Παραγωγή δεν είναι ανοιχτή', 'Δεν παραδίδεται δεύτερη φορά');
 select throws_ok($$ select public.production_cancel(current_setting('t.pm2')::uuid, 'Λόγος') $$, 'P0001', 'Μόνο ανοιχτή Παραγωγή ακυρώνεται', 'Η παραδομένη Παραγωγή δεν ακυρώνεται');
 select throws_ok($$ select public.production_reopen(current_setting('t.pm2')::uuid, '') $$, 'P0001', 'Η επανάνοιξη θέλει λόγο', 'Η επανάνοιξη χωρίς λόγο απορρίπτεται');
 select lives_ok($$ select public.production_reopen(current_setting('t.pm2')::uuid, 'Αίτημα αλλαγής') $$, 'Ο Ιδιοκτήτης ξανανοίγει με λόγο');
-select is((select state from public.productions where id = current_setting('t.pm2')::uuid), 'open', 'Η ξανανοιγμένη Παραγωγή είναι ανοιχτή');
+select is(public.production_view(current_setting('t.pm2')::uuid) ->> 'state', 'open', 'Η ξανανοιγμένη Παραγωγή είναι ανοιχτή');
 select throws_ok($$ select public.production_reopen(current_setting('t.pm2')::uuid, 'Λόγος') $$, 'P0001', 'Η Παραγωγή δεν είναι παραδομένη', 'Μόνο παραδομένη Παραγωγή ξανανοίγει');
 select throws_ok($$ select public.production_cancel(current_setting('t.pm2')::uuid, '') $$, 'P0001', 'Η ακύρωση θέλει λόγο', 'Η ακύρωση χωρίς λόγο απορρίπτεται');
 select lives_ok($$ select public.production_cancel(current_setting('t.pi2')::uuid, 'Δεν χρειάζεται πια') $$, 'Η ανοιχτή Παραγωγή χωρίς δουλειά ακυρώνεται');
-select is((select state from public.productions where id = current_setting('t.pi2')::uuid), 'cancelled', 'Η ακυρωμένη Παραγωγή έχει κατάσταση «ακυρωμένη»');
+select is(public.production_view(current_setting('t.pi2')::uuid) ->> 'state', 'cancelled', 'Η ακυρωμένη Παραγωγή έχει κατάσταση «ακυρωμένη»');
 select throws_ok($$ select public.production_deliver(current_setting('t.pi2')::uuid, 'Σχόλιο') $$, 'P0001', 'Η Παραγωγή δεν είναι ανοιχτή', 'Η ακυρωμένη Παραγωγή δεν παραδίδεται');
 select is(jsonb_array_length(public.productions_view('cancelled')), 1, 'Η λίστα «Όλες» δείχνει και τις ακυρωμένες');
 
@@ -431,7 +431,7 @@ select lives_ok(
   $$ select public.production_transfer(current_setting('t.pm2')::uuid, '00000000-0000-0000-0000-0000000000e5') $$,
   'Ο Ιδιοκτήτης μεταβιβάζει σε Χρήστη με Δικαίωμα Παραγωγών'
 );
-select is((select owner_id from public.productions where id = current_setting('t.pm2')::uuid), '00000000-0000-0000-0000-0000000000e5'::uuid, 'Ο νέος Υπεύθυνος αποθηκεύεται');
+select is(public.production_view(current_setting('t.pm2')::uuid) -> 'owner' ->> 'id', '00000000-0000-0000-0000-0000000000e5', 'Ο νέος Υπεύθυνος αποθηκεύεται');
 select throws_ok($$ select public.production_transfer(current_setting('t.pm2')::uuid, '00000000-0000-0000-0000-0000000000e3') $$, 'P0001', 'Ο Υπεύθυνος δεν έχει Δικαίωμα Παραγωγών', 'Μεταβίβαση σε χωρίς Δικαίωμα απορρίπτεται');
 select throws_ok($$ select public.production_transfer(current_setting('t.pm2')::uuid, null) $$, 'P0001', 'Η μεταβίβαση θέλει Υπεύθυνο', 'Η μεταβίβαση χωρίς Υπεύθυνο απορρίπτεται');
 select throws_ok($$ select public.production_transfer(current_setting('t.pm2')::uuid, gen_random_uuid()) $$, 'P0001', 'Ο Υπεύθυνος δεν βρέθηκε', 'Μεταβίβαση σε ανύπαρκτο Χρήστη απορρίπτεται');
