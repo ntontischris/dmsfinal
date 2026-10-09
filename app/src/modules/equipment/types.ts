@@ -77,7 +77,8 @@ export interface HistoryLine {
 export interface UnitGroup {
   baseName: string;
   categoryName: string;
-  units: EquipmentItemRow[];
+  units: EquipmentItemRow[]; // όλες οι μονάδες, για το πλήθος
+  shown: EquipmentItemRow[]; // όσες ταιριάζουν στο φίλτρο, για τη λίστα
   counts: Record<EquipmentStatus, number>;
 }
 

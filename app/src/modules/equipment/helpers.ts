@@ -95,20 +95,20 @@ const matchesQuery = (item: EquipmentItemRow, query: string): boolean => {
 const matchesStatus = (item: EquipmentItemRow, status: ItemFilter["status"]): boolean =>
   status === "all" ? item.status !== "retired" : item.status === status;
 
+export const matchesItemFilter = (item: EquipmentItemRow, filter: ItemFilter): boolean =>
+  (filter.categoryId === "all" || item.categoryId === filter.categoryId) &&
+  matchesStatus(item, filter.status) &&
+  matchesQuery(item, filter.query);
+
 export const filterItems = (
   items: readonly EquipmentItemRow[],
   filter: ItemFilter,
-): EquipmentItemRow[] =>
-  items.filter(
-    (item) =>
-      (filter.categoryId === "all" || item.categoryId === filter.categoryId) &&
-      matchesStatus(item, filter.status) &&
-      matchesQuery(item, filter.query),
-  );
+): EquipmentItemRow[] => items.filter((item) => matchesItemFilter(item, filter));
 
 // Μονάδες (#123): το «#N» στο τέλος του ονόματος είναι αρίθμηση. Το «#» μέσα στο όνομα δεν είναι επίθημα.
 const UNIT_SUFFIX = / #(\d+)$/;
 type NonEmpty<T> = [T, ...T[]];
+type ItemPredicate = (item: EquipmentItemRow) => boolean;
 
 export const unitBaseName = (name: string): string => name.replace(UNIT_SUFFIX, "");
 
@@ -138,40 +138,53 @@ const countByStatus = (units: readonly EquipmentItemRow[]): UnitGroup["counts"] 
   retired: countOf(units, "retired"),
 });
 
-// Ένα αντικείμενο μόνο του μένει γραμμή· δύο ή περισσότερα με ίδια Κατηγορία και βασικό όνομα γίνονται ομάδα.
-const rowOf = ([head, ...rest]: NonEmpty<EquipmentItemRow>): RegistryRow => {
-  if (rest.length === 0) return { kind: "item", item: head };
+// Η ομάδα μετριέται πάντα με όλες τις μονάδες της· το φίλτρο κρατά μόνο όσες ταιριάζουν, και η γραμμή μένει αν ταιριάζει έστω μία.
+// Ένα αντικείμενο μόνο του (μία μονάδα στο σύνολο) μένει γραμμή, ό,τι κι αν κάνει το φίλτρο.
+const rowOf = (
+  [head, ...rest]: NonEmpty<EquipmentItemRow>,
+  matches: ItemPredicate,
+): RegistryRow[] => {
   const units = [head, ...rest].sort(compareUnits);
-  return {
-    kind: "group",
-    group: {
-      baseName: unitBaseName(head.name),
-      categoryName: head.categoryName,
-      units,
-      counts: countByStatus(units),
+  const shown = units.filter(matches);
+  if (shown.length === 0) return [];
+  if (units.length === 1) return [{ kind: "item", item: head }];
+  return [
+    {
+      kind: "group",
+      group: {
+        baseName: unitBaseName(head.name),
+        categoryName: head.categoryName,
+        units,
+        shown,
+        counts: countByStatus(units),
+      },
     },
-  };
+  ];
 };
 
-// Τα αντικείμενα του F1 ως γραμμές: οι μονάδες ομαδοποιούνται στην εφαρμογή, η βάση μένει ανά μονάδα.
-export function groupEquipmentUnits(items: readonly EquipmentItemRow[]): RegistryRow[] {
+// Ομαδοποίηση πρώτα, φίλτρο μετά. Η ομάδα ξεχωρίζει χωρίς διάκριση πεζών, όπως η μοναδικότητα της βάσης (lower(name)).
+export function groupEquipmentUnits(
+  items: readonly EquipmentItemRow[],
+  matches: ItemPredicate,
+): RegistryRow[] {
   const buckets = new Map<string, NonEmpty<EquipmentItemRow>>();
   for (const item of items) {
-    const key = `${item.categoryId}|${unitBaseName(item.name)}`;
+    const key = `${item.categoryId}|${unitBaseName(item.name).toLowerCase()}`;
     const bucket = buckets.get(key);
     const next: NonEmpty<EquipmentItemRow> = bucket ? [...bucket, item] : [item];
     buckets.set(key, next);
   }
-  return [...buckets.values()].map(rowOf);
+  return [...buckets.values()].flatMap((bucket) => rowOf(bucket, matches));
 }
 
-// «Sony FX3 ×3 · 2 διαθέσιμα · 1 σε επισκευή», με τα αποσυρμένα μόνο αν υπάρχουν.
-export const groupLabel = (group: UnitGroup): string => {
-  const parts = [
+const countPart = (count: number, text: string): string[] =>
+  count > 0 ? [`${count} ${text}`] : [];
+
+// «Sony FX3 ×3 · 2 διαθέσιμα · 1 σε επισκευή»: το πλήθος είναι όλων των μονάδων, και τα μέρη με 0 κρύβονται.
+export const groupLabel = (group: UnitGroup): string =>
+  [
     `${group.baseName} ×${group.units.length}`,
-    `${group.counts.available} διαθέσιμα`,
-    `${group.counts.in_repair} σε επισκευή`,
-  ];
-  if (group.counts.retired > 0) parts.push(`${group.counts.retired} αποσυρμένα`);
-  return parts.join(" · ");
-};
+    ...countPart(group.counts.available, "διαθέσιμα"),
+    ...countPart(group.counts.in_repair, "σε επισκευή"),
+    ...countPart(group.counts.retired, "αποσυρμένα"),
+  ].join(" · ");

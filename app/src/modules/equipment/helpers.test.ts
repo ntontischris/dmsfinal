@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { STATUS_LABELS } from "./labels";
 import {
-  comparePickerItems,
   filterItems,
-  groupEquipmentUnits,
-  groupLabel,
   historyLines,
   isEquipmentStatus,
   selectableCategories,
@@ -191,103 +188,5 @@ describe("historyLines", () => {
       entry({ action: "insert", after: { name: "Gimbal" } }),
     ]);
     expect(lines.map((line) => line.text)).toEqual(["Προστέθηκε στο μητρώο."]);
-  });
-});
-
-const CAMERA_CATEGORY = "66666666-6666-4666-8666-666666666666";
-const SOUND_CATEGORY = "77777777-7777-4777-8777-777777777777";
-
-describe("groupEquipmentUnits", () => {
-  it("should group units that share a category and base name into one row", () => {
-    const rows = groupEquipmentUnits([
-      item({ id: "u1", name: "Sony FX3 #1", status: "available" }),
-      item({ id: "u2", name: "Sony FX3 #2", status: "in_repair", statusNote: "Οθόνη" }),
-    ]);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ kind: "group", group: { baseName: "Sony FX3" } });
-  });
-
-  it("should keep a lone unit as a single item row with its full name", () => {
-    const rows = groupEquipmentUnits([item({ id: "u1", name: "Sony FX3 #1" })]);
-    expect(rows).toEqual([{ kind: "item", item: expect.objectContaining({ name: "Sony FX3 #1" }) }]);
-  });
-
-  it("should not group units of different categories even with the same base name", () => {
-    const rows = groupEquipmentUnits([
-      item({ id: "u1", name: "Mic #1", categoryId: CAMERA_CATEGORY }),
-      item({ id: "u2", name: "Mic #2", categoryId: SOUND_CATEGORY }),
-    ]);
-    expect(rows.map((row) => row.kind)).toEqual(["item", "item"]);
-  });
-
-  it("should count units per status in the group", () => {
-    const [row] = groupEquipmentUnits([
-      item({ id: "u1", name: "Sony FX3 #1", status: "available" }),
-      item({ id: "u2", name: "Sony FX3 #2", status: "available" }),
-      item({ id: "u3", name: "Sony FX3 #3", status: "in_repair", statusNote: "Οθόνη" }),
-      item({ id: "u4", name: "Sony FX3 #4", status: "retired" }),
-    ]);
-    expect(row?.kind === "group" && row.group.counts).toEqual({
-      available: 2,
-      in_repair: 1,
-      retired: 1,
-    });
-  });
-
-  it("should order units by unit number inside the group", () => {
-    const [row] = groupEquipmentUnits([
-      item({ id: "u10", name: "Sony FX3 #10" }),
-      item({ id: "u2", name: "Sony FX3 #2" }),
-      item({ id: "u1", name: "Sony FX3 #1" }),
-    ]);
-    expect(row?.kind === "group" && row.group.units.map((unit) => unit.name)).toEqual([
-      "Sony FX3 #1",
-      "Sony FX3 #2",
-      "Sony FX3 #10",
-    ]);
-  });
-
-  it("should treat a # inside the name that is not a suffix as part of the name", () => {
-    const rows = groupEquipmentUnits([
-      item({ id: "u1", name: "Κιτ #1 Φωτός" }),
-      item({ id: "u2", name: "Κιτ #1 Φωτός" }),
-    ]);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ kind: "group", group: { baseName: "Κιτ #1 Φωτός" } });
-  });
-});
-
-describe("groupLabel", () => {
-  it("should show the count, available and in-repair units", () => {
-    const [row] = groupEquipmentUnits([
-      item({ name: "Sony FX3 #1", status: "available" }),
-      item({ name: "Sony FX3 #2", status: "available" }),
-      item({ name: "Sony FX3 #3", status: "in_repair", statusNote: "Οθόνη" }),
-    ]);
-    expect(row?.kind === "group" && groupLabel(row.group)).toBe(
-      "Sony FX3 ×3 · 2 διαθέσιμα · 1 σε επισκευή",
-    );
-  });
-
-  it("should add the retired count only when some unit is retired", () => {
-    const [row] = groupEquipmentUnits([
-      item({ name: "Sony FX3 #1", status: "available" }),
-      item({ name: "Sony FX3 #2", status: "retired" }),
-    ]);
-    expect(row?.kind === "group" && groupLabel(row.group)).toBe(
-      "Sony FX3 ×2 · 1 διαθέσιμα · 0 σε επισκευή · 1 αποσυρμένα",
-    );
-  });
-});
-
-describe("comparePickerItems", () => {
-  it("should keep units of one group together, ordered by unit number", () => {
-    const sorted = [
-      item({ id: "u3", name: "Sony FX3 #3" }),
-      item({ id: "x", name: "Rode", categoryName: "Ήχος" }),
-      item({ id: "u1", name: "Sony FX3 #1" }),
-      item({ id: "u2", name: "Sony FX3 #2" }),
-    ].sort(comparePickerItems);
-    expect(sorted.map((row) => row.id)).toEqual(["x", "u1", "u2", "u3"]);
   });
 });

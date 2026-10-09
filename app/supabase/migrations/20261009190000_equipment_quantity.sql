@@ -41,6 +41,8 @@ begin
   ) then
     raise exception 'Υπάρχει ήδη αντικείμενο με αυτό το όνομα' using errcode = 'P0001';
   end if;
+  -- Το precheck πιο πάνω πιάνει τη σύγκρουση πριν γραφτεί τίποτα. Αυτό το exception καλύπτει μόνο τον
+  -- ταυτόχρονο αγώνα (δύο αιτήματα με το ίδιο όνομα)· πραγματικός φύλακας είναι το unique index equipment_items_name_lower.
   begin
     for v_unit in 1..p_quantity loop
       insert into public.equipment_items (category_id, name, code, note)

@@ -371,7 +371,7 @@ select is(
 select set_config('t.clash', public.equipment_item_create(current_setting('t.cat_lens')::uuid, 'Ρύθμιση #2', null, null)::text, true);
 select throws_ok(
   $$ select public.equipment_items_create_many(current_setting('t.cat_lens')::uuid, 'Ρύθμιση', null, null, 3) $$, 'P0001',
-  'Υπάρχει ήδη αντικείμενο με αυτό το όνομα', 'Σύγκρουση ονόματος σε μία μονάδα ακυρώνει όλη την ποσότητα'
+  'Υπάρχει ήδη αντικείμενο με αυτό το όνομα', 'Το precheck απορρίπτει πριν γραφτεί τίποτα: σύγκρουση ονόματος σε μία μονάδα'
 );
 select is(
   (select count(*)::int from public.equipment_items_view(true) i where lower(i.name) like 'ρύθμιση%'), 1,

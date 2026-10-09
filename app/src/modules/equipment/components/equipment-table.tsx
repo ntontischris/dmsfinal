@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, Td, Th, Tr } from "@/components/ui/table";
 
 import {
-  filterItems,
   groupEquipmentUnits,
+  matchesItemFilter,
   groupLabel,
   statusTone,
 } from "../helpers";
@@ -39,7 +39,9 @@ const DEFAULT_FILTER: ItemFilterValues = {
 // F1: αναζήτηση, Κατηγορία και Κατάσταση ζουν στον browser· τα αποσυρμένα κρύβονται αν δεν διαλέξεις Κατάσταση.
 export function EquipmentTable({ items, categories }: EquipmentTableProps) {
   const [filter, setFilter] = useState<ItemFilterValues>(DEFAULT_FILTER);
-  const visible = groupEquipmentUnits(filterItems(items, filter));
+  const visible = groupEquipmentUnits(items, (item) =>
+    matchesItemFilter(item, filter),
+  );
   return (
     <div className="grid gap-3">
       <EquipmentToolbar
@@ -83,14 +85,14 @@ function RegistryLine({ row }: { row: RegistryRow }) {
 function GroupRow({ group }: { group: UnitGroup }) {
   return (
     <Tr>
-      <Td colSpan={3} data-label="Μονάδες">
+      <Td colSpan={3} data-label="Μονάδες" className="max-sm:block max-sm:before:hidden">
         <details>
           <summary className="cursor-pointer">
             <span className="font-medium">{groupLabel(group)}</span>
             <span className="ml-2 text-sm text-muted-foreground">{group.categoryName}</span>
           </summary>
           <ul className="mt-2 grid gap-1 pl-4">
-            {group.units.map((unit) => (
+            {group.shown.map((unit) => (
               <li key={unit.id} className="flex flex-wrap items-center gap-2 text-sm">
                 <Link href={`/app/equipment/${unit.id}`} className="font-medium">
                   {unit.name}
