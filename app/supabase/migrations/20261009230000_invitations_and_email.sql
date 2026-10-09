@@ -1,10 +1,12 @@
 -- Προσκλήσεις, Χρήστες πελάτη και ουρά email (#107, ADR 0016, ADR 0018, κεφ. 1 «Πελάτες ως Χρήστες»).
 -- Αρχές:
 --  • Όλοι οι νέοι πίνακες είναι κλειστοί (RLS χωρίς policies, χωρίς privileges). Γράφονται και διαβάζονται μόνο από
---    συναρτήσεις security definer με έλεγχο Δικαιώματος στο σώμα τους (authz.require πρώτο, ή authz.assert_client_access).
+--    συναρτήσεις security definer με έλεγχο Δικαιώματος στο σώμα τους. Η σειρά είναι πάντα: Δικαίωμα, ύπαρξη, Εύρος.
 --  • Ένας Χρήστης ανήκει σε ένα μόνο είδος: ή team_users ή client_users. Το εξασφαλίζουν triggers και στις δύο μεριές.
---  • Το email δεν στέλνεται από τη βάση. Η ουρά email_outbox διαβάζεται από τον worker (service role), και κάθε
---    αποστολή καταγράφεται στο email_log μόνο με θέμα και κατάσταση (ποτέ σύνδεσμος, token ή κωδικός).
+--  • Η πρόσβαση δίνεται μόνο με αποδοχή: η attach γράφει μόνο το user_id της πρόσκλησης, και η claim_invitation (ο ίδιος
+--    ο Χρήστης, με τον σύνδεσμο) γράφει τη συμμετοχή.
+--  • Το email δεν στέλνεται από τη βάση. Η ουρά email_outbox (και η agreement_outbox) διαβάζεται από τον worker με
+--    κλείδωμα 2 λεπτών. Κάθε αποστολή καταγράφεται στο email_log μόνο με θέμα και κατάσταση.
 --  • Οι προσκλήσεις λήγουν σε 7 ημέρες. Η λήξη γράφεται στη στήλη status όταν τη διαβάζει κάποια συνάρτηση
 --    (authz.expire_invitations), ώστε ο περιορισμός «μία εκκρεμής ανά email» να μένει σωστός χωρίς cron.
 
@@ -32,6 +34,7 @@ create index client_users_role_idx on public.client_users (role_id);
 comment on table public.client_users is 'Συμμετοχές Χρηστών πελάτη σε Πελάτες. Κλειστός πίνακας.';
 
 -- Προσκλήσεις: ομάδας (kind team, Ρόλοι ομάδας) ή Χρήστη πελάτη (kind client, client_id και Ρόλος πελάτη).
+-- user_id γράφεται με την αποστολή (attach)· η συμμετοχή γράφεται μόνο με την αποδοχή (claim_invitation).
 create table public.invitations (
   id uuid primary key default gen_random_uuid(),
   kind text not null check (kind in ('team', 'client')),
@@ -47,6 +50,8 @@ create table public.invitations (
   accepted_at timestamptz,
   cancelled_at timestamptz,
   user_id uuid references auth.users (id) on delete set null,
+  -- Το σφάλμα της αποτυχημένης αποστολής (ο worker το γράφει με invitation_fail).
+  error text not null default '' check (length(error) <= 500),
   check ((kind = 'client') = (client_id is not null)),
   check ((status = 'accepted') = (accepted_at is not null))
 );
@@ -67,6 +72,8 @@ create table public.email_outbox (
   attempts integer not null default 0,
   last_error text not null default '',
   provider_id text not null default '',
+  -- Κλείδωμα της παραλαβής: ο worker που πήρε τη γραμμή δεν την ξαναπαίρνει για 2 λεπτά.
+  locked_until timestamptz,
   created_at timestamptz not null default now(),
   created_by uuid,
   handled_at timestamptz,
@@ -74,6 +81,9 @@ create table public.email_outbox (
 );
 
 create index email_outbox_pending_idx on public.email_outbox (created_at) where status = 'pending';
+
+-- Το κλείδωμα της ουράς Συμφωνιών (ίδιος κανόνας με την email_outbox).
+alter table public.agreement_outbox add column locked_until timestamptz;
 
 -- Ιστορικό όσων στάλθηκαν από οποιονδήποτε δρόμο. Μόνο θέμα και κατάσταση, ποτέ σύνδεσμοι ή κωδικοί.
 create table public.email_log (
@@ -93,6 +103,11 @@ alter table public.client_users enable row level security;
 alter table public.invitations enable row level security;
 alter table public.email_outbox enable row level security;
 alter table public.email_log enable row level security;
+
+-- Σταθερό κλειδί για τον Ρόλο «Πλήρης»: η αυτόματη πρόσκληση Υπογράφοντα και η προεπιλογή βρίσκουν τον Ρόλο με αυτό,
+-- ώστε η μετονομασία του δεν σπάει τη ροή. Η διαγραφή του Ρόλου απαγορεύεται ήδη από τον roles_guard (είναι έτοιμος Ρόλος).
+alter table public.roles add column system_key text unique;
+update public.roles set system_key = 'client_full' where kind = 'client' and name = 'Πλήρης';
 
 -- ───────────── Κανόνες ένα είδος ανά Χρήστη, για κάθε είδος εγγραφής ─────────────
 
@@ -175,15 +190,35 @@ as $$
   );
 $$;
 
--- Ο Πελάτης υπάρχει (πρώτα), και μετά ο συνδεδεμένος έχει δικαίωμα πάνω του.
+-- Ικανότητα πρώτα: μόνο όποιος έχει έστω ένα Δικαίωμα Χρηστών πελάτη (ομάδα ή πελάτης).
+create function authz.assert_client_capability() returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not (authz.has('access.clientUsers') or authz.client_user_has('c.colleagues')) then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+end;
+$$;
+
+-- Ικανότητα πρώτα για τις προσκλήσεις: ομάδα (access.team ή access.clientUsers) ή Χρήστης πελάτη με c.colleagues.
+create function authz.assert_invitation_capability() returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if not (authz.has('access.team') or authz.has('access.clientUsers') or authz.client_user_has('c.colleagues')) then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+end;
+$$;
+
+-- Ικανότητα, μετά ύπαρξη, μετά Εύρος. Ξένο και ανύπαρκτο id δίνουν το ίδιο σφάλμα (χωρίς διαρροή).
 create function authz.assert_client_access(p_client uuid) returns void
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  if not exists (select 1 from public.clients c where c.id = p_client) then
-    raise exception 'Ο Πελάτης δεν βρέθηκε' using errcode = 'P0001';
-  end if;
-  if not authz.can_manage_client_users(p_client) then
+  perform authz.assert_client_capability();
+  if not exists (select 1 from public.clients c where c.id = p_client) or not authz.can_manage_client_users(p_client) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
 end;
@@ -232,8 +267,8 @@ begin
 end;
 $$;
 
--- Το email δεν ανήκει σε Χρήστη του άλλου είδους, δεν είναι ήδη μέλος, και δεν έχει εκκρεμή πρόσκληση.
-create function authz.assert_invitable(p_email text, p_kind text, p_client uuid) returns void
+-- Το email δεν ανήκει σε Χρήστη του άλλου είδους και δεν είναι ήδη μέλος. Χωρίς τον έλεγχο εκκρεμότητας.
+create function authz.assert_invitee_kind(p_email text, p_kind text, p_client uuid) returns void
 language plpgsql security definer set search_path = ''
 as $$
 begin
@@ -261,6 +296,15 @@ begin
       raise exception 'Ο Χρήστης είναι ήδη Χρήστης αυτού του Πελάτη' using errcode = 'P0001';
     end if;
   end if;
+end;
+$$;
+
+-- Για νέα πρόσκληση: το email είναι ελεύθερο και δεν έχει ήδη εκκρεμή πρόσκληση.
+create function authz.assert_invitable(p_email text, p_kind text, p_client uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform authz.assert_invitee_kind(p_email, p_kind, p_client);
   if exists (select 1 from public.invitations i where i.email = p_email and i.status = 'pending') then
     raise exception 'Υπάρχει ήδη εκκρεμής πρόσκληση για αυτό το email' using errcode = 'P0001';
   end if;
@@ -378,16 +422,17 @@ begin
 end;
 $$;
 
--- Ο Ρόλος null σημαίνει «Πλήρης». Ο Χρήστης πελάτη προσκαλεί συναδέλφους μόνο στον επιλεγμένο του Πελάτη.
+-- Ο Ρόλος null σημαίνει «Πλήρης» (με το σταθερό κλειδί). Ο Χρήστης πελάτη προσκαλεί συναδέλφους μόνο στον επιλεγμένο του Πελάτη.
 create function public.invitation_create_client(p_client uuid, p_name text, p_email text, p_locale text, p_role_id uuid) returns uuid
 language plpgsql security definer set search_path = ''
 as $$
 declare
   v_email text := lower(trim(coalesce(p_email, '')));
-  v_role uuid := coalesce(p_role_id, (select r.id from public.roles r where r.kind = 'client' and r.name = 'Πλήρης'));
+  v_role uuid;
   v_id uuid;
 begin
   perform authz.assert_client_access(p_client);
+  v_role := coalesce(p_role_id, (select r.id from public.roles r where r.system_key = 'client_full'));
   perform authz.assert_invite_fields(p_name, v_email, p_locale);
   perform authz.assert_client_role_grantable(v_role, p_client);
   perform authz.expire_invitations();
@@ -400,8 +445,9 @@ begin
 end;
 $$;
 
--- Ο worker της πρότασης: ο Υπογράφων προσκαλείται αυτόματα ως Χρήστης πελάτη με Ρόλο «Πλήρης» (service role μόνο).
--- Επιστρέφει null όταν δεν χρειάζεται πρόσκληση (ήδη μέλος ή εκκρεμεί ήδη για τον ίδιο Πελάτη).
+-- Ο worker της πρότασης: ο Υπογράφων προσκαλείται ως Χρήστης πελάτη με Ρόλο «Πλήρης» (service role μόνο).
+-- Επιστρέφει: null όταν δεν χρειάζεται τίποτα (ήδη μέλος, ή Χρήστης ομάδας που παραλείπεται)· το id της υπάρχουσας
+-- εκκρεμούς πρόσκλησης όταν δεν έχει ακόμα λογαριασμό (νέα προσπάθεια)· αλλιώς το id της νέας πρόσκλησης.
 create function public.invitation_create_signatory(p_agreement uuid) returns uuid
 language plpgsql security definer set search_path = ''
 as $$
@@ -409,7 +455,8 @@ declare
   v_target jsonb := authz.client_invite_target(p_agreement);
   v_client uuid;
   v_email text;
-  v_role uuid := (select r.id from public.roles r where r.kind = 'client' and r.name = 'Πλήρης');
+  v_pending record;
+  v_role uuid := (select r.id from public.roles r where r.system_key = 'client_full');
   v_id uuid;
 begin
   if v_target is null then
@@ -420,9 +467,15 @@ begin
   if (v_target ->> 'alreadyMember')::boolean then
     return null;
   end if;
-  perform authz.expire_invitations();
-  if exists (select 1 from public.invitations i where i.email = v_email and i.status = 'pending' and i.client_id = v_client) then
+  if exists (select 1 from public.team_users t where lower(t.email) = v_email) then
     return null;
+  end if;
+  perform authz.expire_invitations();
+  select i.id, i.user_id into v_pending
+    from public.invitations i
+   where i.email = v_email and i.status = 'pending' and i.client_id = v_client;
+  if found then
+    return case when v_pending.user_id is null then v_pending.id end;
   end if;
   perform authz.assert_invitable(v_email, 'client', v_client);
   insert into public.invitations (kind, email, name, locale, role_ids, client_id, invited_by)
@@ -435,7 +488,8 @@ begin
 end;
 $$;
 
--- Ο worker δίνει τον λογαριασμό στην πρόσκληση μετά τη δημιουργία του (service role μόνο). Γράφει ομάδα ή πελάτη.
+-- Δίνει τον λογαριασμό στην πρόσκληση (service role μόνο). ΔΕΝ δίνει πρόσβαση: αυτό το κάνει η claim_invitation
+-- όταν μπει ο ίδιος ο Χρήστης με τον σύνδεσμο. Ελέγχει το «ένα είδος ανά Χρήστη» από τώρα.
 create function public.invitation_attach_user(p_id uuid, p_user_id uuid) returns void
 language plpgsql security definer set search_path = ''
 as $$
@@ -446,38 +500,55 @@ begin
   if not found or v_inv.status <> 'pending' then
     raise exception 'Η πρόσκληση δεν είναι εκκρεμής' using errcode = 'P0001';
   end if;
-  if v_inv.kind = 'team' then
-    insert into public.team_users (user_id, name, email, language) values (p_user_id, v_inv.name, v_inv.email, v_inv.locale);
-    insert into public.team_user_roles (user_id, role_id) select p_user_id, r from unnest(v_inv.role_ids) as r;
-  else
-    insert into public.client_users (client_id, user_id, name, role_id, invited_by, is_current)
-    values (v_inv.client_id, p_user_id, v_inv.name, v_inv.role_ids[1], v_inv.invited_by,
-            not exists (select 1 from public.client_users cu where cu.user_id = p_user_id and cu.removed_at is null))
-    on conflict (client_id, user_id) do update
-      set name = excluded.name, role_id = excluded.role_id, invited_by = excluded.invited_by,
-          joined_at = now(), removed_at = null, is_current = excluded.is_current;
-    perform authz.access_event('client_user_added', v_inv.client_id::text, jsonb_build_object('userId', p_user_id));
+  if v_inv.kind = 'team' and exists (select 1 from public.client_users cu where cu.user_id = p_user_id and cu.removed_at is null) then
+    raise exception 'Ο Χρήστης είναι ήδη Χρήστης πελάτη· ένας Χρήστης ανήκει σε ένα μόνο είδος' using errcode = 'P0001';
+  end if;
+  if v_inv.kind = 'client' and exists (select 1 from public.team_users t where t.user_id = p_user_id) then
+    raise exception 'Ο Χρήστης είναι ήδη Χρήστης ομάδας· ένας Χρήστης ανήκει σε ένα μόνο είδος' using errcode = 'P0001';
   end if;
   update public.invitations set user_id = p_user_id where id = p_id;
 end;
 $$;
 
--- Νέα λήξη 7 ημερών· ο worker στέλνει το email (kind invite_resend). Ο παλιός σύνδεσμος ακυρώνεται από τον worker.
+-- Η αποστολή απέτυχε (service role μόνο): η πρόσκληση κλείνει ως ακυρωμένη με το σφάλμα. Είναι η υπηρεσιακή εκδοχή
+-- της invitation_cancel, που θέλει συνεδρία χρήστη.
+create function public.invitation_fail(p_id uuid, p_error text) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  update public.invitations
+     set status = 'cancelled', cancelled_at = now(), error = left(coalesce(p_error, ''), 500)
+   where id = p_id and status = 'pending';
+  if not found then
+    raise exception 'Η πρόσκληση δεν είναι εκκρεμής' using errcode = 'P0001';
+  end if;
+end;
+$$;
+
+-- Νέα λήξη 7 ημερών και ξανά όλοι οι έλεγχοι του καλούντα (ο Ρόλος μπορεί να μην δίνεται πια). Ο worker στέλνει το email.
 create function public.invitation_resend(p_id uuid) returns void
 language plpgsql security definer set search_path = ''
 as $$
 declare
   v_inv public.invitations;
 begin
-  perform authz.expire_invitations();
+  perform authz.assert_invitation_capability();
   select * into v_inv from public.invitations i where i.id = p_id for update;
   if not found then
-    raise exception 'Η πρόσκληση δεν βρέθηκε' using errcode = 'P0001';
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   perform authz.assert_invitation_scope(v_inv);
+  perform authz.expire_invitations();
+  select * into v_inv from public.invitations i where i.id = p_id;
   if v_inv.status not in ('pending', 'expired') then
     raise exception 'Η πρόσκληση δεν επαναστέλνεται' using errcode = 'P0001';
   end if;
+  if v_inv.kind = 'team' then
+    perform authz.assert_team_roles_grantable(v_inv.role_ids);
+  else
+    perform authz.assert_client_role_grantable(v_inv.role_ids[1], v_inv.client_id);
+  end if;
+  perform authz.assert_invitee_kind(v_inv.email, v_inv.kind, v_inv.client_id);
   if exists (select 1 from public.invitations i where i.email = v_inv.email and i.status = 'pending' and i.id <> p_id) then
     raise exception 'Υπάρχει ήδη εκκρεμής πρόσκληση για αυτό το email' using errcode = 'P0001';
   end if;
@@ -496,13 +567,14 @@ as $$
 declare
   v_inv public.invitations;
 begin
-  perform authz.expire_invitations();
+  perform authz.assert_invitation_capability();
   select * into v_inv from public.invitations i where i.id = p_id for update;
   if not found then
-    raise exception 'Η πρόσκληση δεν βρέθηκε' using errcode = 'P0001';
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   perform authz.assert_invitation_scope(v_inv);
-  if v_inv.status <> 'pending' then
+  perform authz.expire_invitations();
+  if (select i.status from public.invitations i where i.id = p_id) <> 'pending' then
     raise exception 'Ακυρώνεται μόνο εκκρεμής πρόσκληση' using errcode = 'P0001';
   end if;
   update public.invitations set status = 'cancelled', cancelled_at = now() where id = p_id;
@@ -561,28 +633,63 @@ begin
 end;
 $$;
 
--- Ο χρήστης που μπήκε με τον σύνδεσμο: η πρόσκλησή του γίνεται «αποδεκτή». Ξανακαλούμενη επιστρέφει false.
+-- Ο Χρήστης που μπήκε με τον σύνδεσμο αποδέχεται την πρόσκλησή του: μόνο η πρόσκληση που έχει δοθεί στον λογαριασμό του
+-- (user_id = auth.uid()), εκκρεμής και μη ληγμένη. Γράφει τη συμμετοχή και κλείνει την πρόσκληση. Ξανακαλούμενη: false.
 create function public.claim_invitation() returns boolean
 language plpgsql security definer set search_path = ''
 as $$
 declare
-  v_email text;
-  v_count integer;
+  v_inv public.invitations;
 begin
   if auth.uid() is null then
     return false;
   end if;
-  select lower(u.email) into v_email from auth.users u where u.id = auth.uid();
-  update public.invitations
-     set status = 'accepted', accepted_at = now(), user_id = auth.uid()
-   where status = 'pending'
-     and expires_at > now()
-     and (user_id = auth.uid() or email = v_email);
-  get diagnostics v_count = row_count;
-  return v_count > 0;
+  select * into v_inv from public.invitations i
+   where i.user_id = auth.uid() and i.status = 'pending' and i.expires_at > now()
+   for update;
+  if not found then
+    return false;
+  end if;
+  if v_inv.kind = 'team' then
+    insert into public.team_users (user_id, name, email, language) values (auth.uid(), v_inv.name, v_inv.email, v_inv.locale);
+    insert into public.team_user_roles (user_id, role_id) select auth.uid(), r from unnest(v_inv.role_ids) as r;
+    perform authz.access_event('team_user_added', v_inv.id::text);
+  else
+    insert into public.client_users (client_id, user_id, name, role_id, invited_by, is_current)
+    values (v_inv.client_id, auth.uid(), v_inv.name, v_inv.role_ids[1], v_inv.invited_by,
+            not exists (select 1 from public.client_users cu where cu.user_id = auth.uid() and cu.removed_at is null))
+    on conflict (client_id, user_id) do update
+      set name = excluded.name, role_id = excluded.role_id, invited_by = excluded.invited_by,
+          joined_at = now(), removed_at = null, is_current = excluded.is_current;
+    perform authz.access_event('client_user_added', v_inv.client_id::text, jsonb_build_object('userId', auth.uid()));
+  end if;
+  update public.invitations set status = 'accepted', accepted_at = now() where id = v_inv.id;
+  return true;
 end;
 $$;
 
+-- Ρόλοι πελάτη που μπορεί να δώσει ο συνδεδεμένος στον Πελάτη: όλοι για την ομάδα· για Χρήστη πελάτη μόνο όσους δεν
+-- ξεπερνούν τα δικά του Δικαιώματα. Για τη φόρμα της πρόσκλησης, χωρίς να φαίνονται οι Ρόλοι στην ομάδα μόνο.
+create function public.client_role_choices(p_client uuid) returns jsonb
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  perform authz.assert_client_access(p_client);
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('id', r.id, 'name', r.name) order by r.name)
+      from public.roles r
+     where r.kind = 'client' and not r.is_owner
+       and (authz.is_team_user() or authz.client_role_grantable(r.id, p_client))
+  ), '[]'::jsonb);
+end;
+$$;
+
+-- Το id του λογαριασμού με αυτό το email (service role μόνο). Αντικαθιστά το κόλπο «generateLink για να βρω το id».
+create function public.auth_user_id_by_email(p_email text) returns uuid
+language sql stable security definer set search_path = ''
+as $$
+  select u.id from auth.users u where lower(u.email) = lower(trim(coalesce(p_email, ''))) limit 1;
+$$;
 
 -- ───────────── Χρήστες πελάτη ─────────────
 
@@ -648,12 +755,7 @@ declare
   v_deactivate boolean;
   v_warning boolean;
 begin
-  if not exists (select 1 from public.clients c where c.id = p_client) then
-    raise exception 'Ο Πελάτης δεν βρέθηκε' using errcode = 'P0001';
-  end if;
-  if not authz.can_manage_client_users(p_client) then
-    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
-  end if;
+  perform authz.assert_client_access(p_client);
   if p_user_id = auth.uid() then
     raise exception 'Δεν αφαιρείς τον εαυτό σου· γράψε στη Συνομιλία' using errcode = 'P0001';
   end if;
@@ -698,21 +800,40 @@ as $$
    where cu.user_id = auth.uid() and cu.removed_at is null;
 $$;
 
+-- Ενεργοποίηση ή απενεργοποίηση Χρήστη ομάδας (access.team). Γράφει το γεγονός. Ο server κλείνει τις συνεδρίες.
+create function public.team_user_set_active(p_user_id uuid, p_active boolean) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform authz.require('access.team');
+  if not exists (select 1 from public.team_users t where t.user_id = p_user_id) then
+    raise exception 'Ο Χρήστης ομάδας δεν βρέθηκε' using errcode = 'P0001';
+  end if;
+  if exists (select 1 from public.team_users t where t.user_id = p_user_id and t.is_active = p_active) then
+    return;
+  end if;
+  update public.team_users set is_active = p_active where user_id = p_user_id;
+  perform authz.access_event(case when p_active then 'user_reactivated' else 'user_deactivated' end, p_user_id::text);
+end;
+$$;
+
 -- ───────────── Ουρά email ─────────────
 
--- Ο worker (service role) παίρνει τα εκκρεμή μηνύματα. Ο μετρητής προσπάθειας ανεβαίνει εδώ.
+-- Ο worker (service role) παίρνει τα εκκρεμή μηνύματα. Κλειδώνει τη γραμμή για 2 λεπτά και ανεβάζει τον μετρητή.
 create function public.email_outbox_claim(p_limit integer default 20)
 returns table (id uuid, kind text, to_name text, to_email text, locale text, payload jsonb, attempts integer)
 language sql security definer set search_path = ''
 as $$
   with picked as (
     select o.id from public.email_outbox o
-     where o.status = 'pending'
+     where o.status = 'pending' and (o.locked_until is null or o.locked_until < now())
      order by o.created_at
      limit greatest(1, least(coalesce(p_limit, 20), 100))
      for update skip locked
   ), claimed as (
-    update public.email_outbox o set attempts = o.attempts + 1 from picked where o.id = picked.id
+    update public.email_outbox o
+       set attempts = o.attempts + 1, locked_until = now() + interval '2 minutes'
+      from picked where o.id = picked.id
     returning o.id as out_id, o.kind as out_kind, o.to_name as out_name, o.to_email as out_email,
               o.locale as out_locale, o.payload as out_payload, o.attempts as out_attempts, o.created_at as out_created
   )
@@ -722,7 +843,7 @@ as $$
 $$;
 
 -- Αποτέλεσμα αποστολής. Επιτυχία: «sent» και γραμμή στο ιστορικό· αποτυχία: ξαναπροσπαθεί μέχρι 5 φορές, μετά «failed».
--- Η πρώτη πραγματική επιτυχία (όχι τοπική) σηκώνει το flag του πάροχου.
+-- Η πρώτη πραγματική επιτυχία (όχι τοπική) σηκώνει το flag του πάροχου. Το κλείδωμα λύνεται σε κάθε περίπτωση.
 create function public.email_outbox_done(
   p_outbox uuid, p_ok boolean, p_subject text default '', p_error text default '',
   p_provider_id text default '', p_suppressed boolean default false
@@ -739,6 +860,7 @@ begin
   if not found or o.status <> 'pending' then
     return;
   end if;
+  update public.email_outbox set locked_until = null where id = p_outbox;
   if coalesce(p_suppressed, false) then
     update public.email_outbox set status = 'suppressed', handled_at = now(), last_error = v_error where id = p_outbox;
     insert into public.email_log (kind, to_email, subject, status, error) values (o.kind, o.to_email, v_subject, 'suppressed', v_error);
@@ -751,6 +873,60 @@ begin
     insert into public.email_log (kind, to_email, subject, status, error) values (o.kind, o.to_email, v_subject, 'failed', v_error);
   else
     update public.email_outbox set last_error = v_error where id = p_outbox;
+  end if;
+end;
+$$;
+
+-- Ο worker των Συμφωνιών: ίδιο κλείδωμα. Η παραλαβή επιστρέφει μόνο όσα δεν είναι κλειδωμένα.
+create or replace function public.agreement_outbox_claim(p_limit integer default 20)
+returns table (
+  id uuid, kind text, to_name text, to_email text, locale text, payload jsonb, agreement_id uuid, agreement_title text,
+  manager_name text, attempts integer, document jsonb
+)
+language sql security definer set search_path = ''
+as $$
+  with picked as (
+    select o.id from public.agreement_outbox o
+     where o.status = 'pending'
+       and (o.locked_until is null or o.locked_until < now())
+       and (select d.email_sender_connected from public.agreement_defaults d where d.id)
+     order by o.created_at limit greatest(1, least(coalesce(p_limit, 20), 100))
+     for update skip locked
+  ), claimed as (
+    update public.agreement_outbox o
+       set attempts = o.attempts + 1, locked_until = now() + interval '2 minutes'
+      from picked where o.id = picked.id
+    returning o.*
+  )
+  select c.id, c.kind, c.to_name, c.to_email, c.locale, c.payload, c.agreement_id, a.title, u.name, c.attempts,
+         case when c.kind = 'signed_copy'
+              then (select d.document from public.agreement_documents d where d.agreement_id = c.agreement_id and d.revision = a.revision) end
+    from claimed c
+    join public.agreements a on a.id = c.agreement_id
+    join public.opportunities op on op.id = a.opportunity_id
+    left join public.team_users u on u.user_id = op.manager_id
+   order by c.created_at;
+$$;
+
+-- Το αποτέλεσμα της Συμφωνίας όπως πριν, και λύνεται το κλείδωμα.
+create or replace function public.agreement_outbox_done(p_outbox uuid, p_ok boolean, p_error text default '') returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  o public.agreement_outbox;
+begin
+  select * into o from public.agreement_outbox x where x.id = p_outbox for update;
+  if not found or o.status <> 'pending' then
+    return;
+  end if;
+  update public.agreement_outbox set locked_until = null where id = p_outbox;
+  if coalesce(p_ok, false) then
+    update public.agreement_outbox set status = 'sent', handled_at = now(), payload = '{}'::jsonb, last_error = '' where id = p_outbox;
+  elsif o.attempts >= 5 then
+    update public.agreement_outbox set status = 'failed', handled_at = now(), payload = '{}'::jsonb, last_error = left(coalesce(p_error, ''), 500)
+     where id = p_outbox;
+  else
+    update public.agreement_outbox set last_error = left(coalesce(p_error, ''), 500) where id = p_outbox;
   end if;
 end;
 $$;
@@ -863,8 +1039,7 @@ create trigger email_outbox_audit after insert or update of status on public.ema
 create trigger email_log_audit after insert on public.email_log
   for each row execute function authz.audit_row('id');
 
--- ───────────── Ίχνος: λίστα επιτρεπτών (ξαναγράφεται ολόκληρη, με τους τέσσερις νέους πίνακες) ─────────────
--- Ξαναγράφεται ΟΛΟΚΛΗΡΗ η λίστα (default deny). Προστέθηκαν οι έξι πίνακες των Γυρισμάτων, χωρίς ποσά.
+-- Ίχνος: λίστα επιτρεπτών (ξαναγράφεται ολόκληρη). Τα email_log και email_outbox μόνο για τον Ιδιοκτήτη.
 create or replace function authz.audit_entity_allowed(p_entity text) returns boolean
 language sql stable security definer set search_path = ''
 as $$
@@ -929,12 +1104,12 @@ as $$
     when 'crew_templates' then true
     when 'crew_template_members' then true
     when 'filming_settings' then true
-    -- Προσκλήσεις, Χρήστες πελάτη και ουρά email (#107): χωρίς ποσά
+    -- Προσκλήσεις, Χρήστες πελάτη και ουρά email (#107): χωρίς ποσά· το email μόνο για τον Ιδιοκτήτη
     when 'access' then true
     when 'invitations' then true
     when 'client_users' then true
-    when 'email_outbox' then true
-    when 'email_log' then true
+    when 'email_outbox' then authz.is_owner()
+    when 'email_log' then authz.is_owner()
     else false
   end;
 $$;
@@ -944,10 +1119,12 @@ $$;
 revoke all on table public.client_users, public.invitations, public.email_outbox, public.email_log
   from anon, authenticated;
 
--- Βοηθητικές συναρτήσεις του module: μόνο από τις security definer συναρτήσεις του (ο ρόλος του μυστικού κώδικα).
+-- Βοηθητικές συναρτήσεις του module: μόνο από τις security definer συναρτήσεις του.
 revoke all on function
-  authz.can_manage_client_users(uuid), authz.assert_client_access(uuid), authz.client_role_grantable(uuid, uuid),
-  authz.expire_invitations(), authz.assert_invite_fields(text, text, text), authz.assert_invitable(text, text, uuid),
+  authz.can_manage_client_users(uuid), authz.assert_client_capability(), authz.assert_invitation_capability(),
+  authz.assert_client_access(uuid), authz.client_role_grantable(uuid, uuid),
+  authz.expire_invitations(), authz.assert_invite_fields(text, text, text), authz.assert_invitee_kind(text, text, uuid),
+  authz.assert_invitable(text, text, uuid),
   authz.assert_team_roles_grantable(uuid[]), authz.assert_client_role_grantable(uuid, uuid),
   authz.assert_invitation_scope(public.invitations), authz.access_event(text, text, jsonb),
   authz.mark_sender_connected(text), authz.client_invite_target(uuid),
@@ -959,23 +1136,27 @@ revoke all on function
   public.invitation_create_team(text, text, text, uuid[]), public.invitation_create_client(uuid, text, text, text, uuid),
   public.invitation_resend(uuid), public.invitation_cancel(uuid), public.invitations_view(uuid), public.claim_invitation(),
   public.client_users_view(uuid), public.client_user_select(uuid), public.client_user_remove(uuid, uuid),
-  public.my_client_memberships(), public.email_outbox_enqueue(text, text, text, text, jsonb), public.email_log_view(integer)
+  public.my_client_memberships(), public.email_outbox_enqueue(text, text, text, text, jsonb), public.email_log_view(integer),
+  public.client_role_choices(uuid), public.team_user_set_active(uuid, boolean)
   from public, anon;
 grant execute on function
   public.invitation_create_team(text, text, text, uuid[]), public.invitation_create_client(uuid, text, text, text, uuid),
   public.invitation_resend(uuid), public.invitation_cancel(uuid), public.invitations_view(uuid), public.claim_invitation(),
   public.client_users_view(uuid), public.client_user_select(uuid), public.client_user_remove(uuid, uuid),
-  public.my_client_memberships(), public.email_outbox_enqueue(text, text, text, text, jsonb), public.email_log_view(integer)
+  public.my_client_memberships(), public.email_outbox_enqueue(text, text, text, text, jsonb), public.email_log_view(integer),
+  public.client_role_choices(uuid), public.team_user_set_active(uuid, boolean)
   to authenticated;
 
 -- Συναρτήσεις του worker και των μηνυμάτων συστήματος: μόνο service role.
 revoke all on function
-  public.invitation_attach_user(uuid, uuid), public.invitation_create_signatory(uuid), public.client_invite_target(uuid),
+  public.invitation_attach_user(uuid, uuid), public.invitation_fail(uuid, text),
+  public.invitation_create_signatory(uuid), public.client_invite_target(uuid),
   public.email_outbox_claim(integer), public.email_outbox_done(uuid, boolean, text, text, text, boolean),
-  public.email_log_record(text, text, text, text, text, text)
+  public.email_log_record(text, text, text, text, text, text), public.auth_user_id_by_email(text)
   from public, anon, authenticated;
 grant execute on function
-  public.invitation_attach_user(uuid, uuid), public.invitation_create_signatory(uuid), public.client_invite_target(uuid),
+  public.invitation_attach_user(uuid, uuid), public.invitation_fail(uuid, text),
+  public.invitation_create_signatory(uuid), public.client_invite_target(uuid),
   public.email_outbox_claim(integer), public.email_outbox_done(uuid, boolean, text, text, text, boolean),
-  public.email_log_record(text, text, text, text, text, text)
+  public.email_log_record(text, text, text, text, text, text), public.auth_user_id_by_email(text)
   to service_role;
