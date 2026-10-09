@@ -20,16 +20,17 @@ const NOTE =
 interface PeriodPlanProps {
   periods: readonly PeriodRow[];
   isProposal: boolean; // πριν την υπογραφή είναι σχέδιο, όχι Περίοδοι που τρέχουν
+  canSeeProductions: boolean; // ο σύνδεσμος προς την Παραγωγή μόνο για όποιον έχει «Παραγωγές»
 }
 
 function PeriodLine({
   period,
   hasAmount,
-  hasProduction,
+  showProduction,
 }: {
   period: PeriodRow;
   hasAmount: boolean;
-  hasProduction: boolean;
+  showProduction: boolean;
 }) {
   return (
     <Tr>
@@ -54,7 +55,7 @@ function PeriodLine({
         {period.givesProvisions ? "ολόκληρες" : "χωρίς νέες Παροχές"}
       </Td>
       <Td data-label="Κατάσταση">{STATE_TEXT[period.state]}</Td>
-      {hasProduction && (
+      {showProduction && (
         <Td data-label="Παραγωγή">
           {period.productionId ? (
             <Link href={`/app/productions/${period.productionId}`}>Παραγωγή</Link>
@@ -68,10 +69,11 @@ function PeriodLine({
 }
 
 // Το πλάνο των Περιόδων μιας μηνιαίας Συμφωνίας: υπολογίζεται από τη βάση (ημερομηνίες, μερικοί μήνες, έκπτωση, Παροχές).
-export function PeriodPlan({ periods, isProposal }: PeriodPlanProps) {
+export function PeriodPlan({ periods, isProposal, canSeeProductions }: PeriodPlanProps) {
   if (periods.length === 0) return null;
   const hasAmount = periods.some((period) => period.amount !== null);
-  const hasProduction = periods.some((period) => period.productionId !== null);
+  const showProduction =
+    canSeeProductions && periods.some((period) => period.productionId !== null);
   return (
     <section className="grid gap-2">
       <h3 className="kit-label m-0">
@@ -85,7 +87,7 @@ export function PeriodPlan({ periods, isProposal }: PeriodPlanProps) {
             {hasAmount && <Th isNumeric>Ποσό</Th>}
             <Th>Παροχές</Th>
             <Th>Κατάσταση</Th>
-            {hasProduction && <Th>Παραγωγή</Th>}
+            {showProduction && <Th>Παραγωγή</Th>}
           </tr>
         </thead>
         <tbody>
@@ -94,7 +96,7 @@ export function PeriodPlan({ periods, isProposal }: PeriodPlanProps) {
               key={period.n}
               period={period}
               hasAmount={hasAmount}
-              hasProduction={hasProduction}
+              showProduction={showProduction}
             />
           ))}
         </tbody>

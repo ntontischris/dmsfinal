@@ -203,7 +203,7 @@ function Sections({ agreement, kinds, caps, extras, origin }: BodyProps) {
       </div>
       <TermsSection agreement={agreement} />
       <div className={PAIR}>
-        <ScheduleSection agreement={agreement} />
+        <ScheduleSection agreement={agreement} canSeeProductions={caps.canSeeProductions} />
         {internal && <PeopleSection agreement={agreement} />}
       </div>
       {internal && (

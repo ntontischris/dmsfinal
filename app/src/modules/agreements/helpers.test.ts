@@ -43,6 +43,7 @@ const ALL_CODES = [
   "finance.costManage",
   "settings.manage",
   "finance.invoices",
+  "productions.manage",
 ];
 const grantAll = (except: readonly string[] = []): Viewer =>
   viewerWith(
@@ -63,6 +64,7 @@ describe("agreementCaps", () => {
     canSeeCost: false,
     canManageCost: false,
     canManageSettings: false,
+    canSeeProductions: false,
   };
   it("ανώνυμος: όλα false", () => {
     expect(agreementCaps({ status: "anonymous" })).toEqual(NONE);
@@ -97,10 +99,15 @@ describe("agreementCaps", () => {
       canSeeCost: true,
       canManageCost: false,
       canManageSettings: true,
+      canSeeProductions: true,
     });
   });
   it("Ιδιοκτήτης: όλα true", () => {
     expect(Object.values(agreementCaps(grantAll())).every(Boolean)).toBe(true);
+  });
+  it("ο σύνδεσμος της Παραγωγής θέλει «Παραγωγές» και τίποτε άλλο", () => {
+    expect(agreementCaps(viewerWith({ "agreements.view": "all" })).canSeeProductions).toBe(false);
+    expect(agreementCaps(viewerWith({ "productions.manage": "mine" })).canSeeProductions).toBe(true);
   });
   it("μόνο «Παρεκκλίνει»: βλέπει και παρεκκλίνει αλλά δεν συντάσσει", () => {
     expect(agreementCaps(viewerWith({ "agreements.deviate": "all" }))).toEqual({

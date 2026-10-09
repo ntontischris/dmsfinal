@@ -10,7 +10,7 @@ import {
 
 // Ανάγνωση των Παραγωγών. Όλα περνούν από RPC: οι πίνακες είναι κλειστοί στην εφαρμογή.
 
-const P0001 = "P0001"; // «δεν βρέθηκε»: δεν είναι σφάλμα φόρτωσης
+const NOT_VISIBLE = ["P0001", "42501"]; // «δεν βρέθηκε» ή «δεν έχεις Δικαίωμα»: όχι σφάλμα φόρτωσης, ίδια σελίδα
 
 export async function listProductions(options: {
   state: ProductionState | null;
@@ -37,7 +37,7 @@ export async function getProduction(
   const { data, error } = await supabase.rpc("production_view", {
     p_production: productionId,
   });
-  if (error?.code === P0001) return { ok: true, data: null };
+  if (error && NOT_VISIBLE.includes(error.code ?? "")) return { ok: true, data: null };
   if (error) {
     console.error("getProduction:", error.message);
     return { ok: false };

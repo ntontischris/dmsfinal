@@ -10,12 +10,13 @@ import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
 
 // Παραγωγές (G1, G2) από άκρη σε άκρη. Το «Showreel {project}» το φτιάχνει το e2e/seed.mjs (Εσωτερική, Υπεύθυνος ο Ιδιοκτήτης).
 // Τα τεστ γράφουν στην ίδια βάση, σειριακά: οι νέες εγγραφές φέρουν το όνομα του project.
+// Σειριακά και χωρίς retries. Η Ρένα είναι ήδη Μέλος του seed, γι' αυτό το τεστ προσθέτει άλλον Χρήστη.
 test.describe.configure({ retries: 0 });
 
 const DELIVERY_NOTE = "Drive, φάκελος Οκτωβρίου";
 const REOPEN_REASON = "Ζητήθηκε αλλαγή στο μοντάζ";
 const CANCEL_REASON = "Δεν θα γυριστεί";
-const MEMBER_NAME = "Ρένα Παραγωγή";
+const MEMBER_NAME = "Δημήτρης Διαχείριση";
 const OWNER_NAME = "Γιώργος Ιδιοκτήτης";
 
 test("ο Ιδιοκτήτης βλέπει την Παραγωγή, προσθέτει Μέλος, την παραδίδει και την ξανανοίγει", async ({

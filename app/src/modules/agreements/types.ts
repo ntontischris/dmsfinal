@@ -141,7 +141,7 @@ export type PublicResult =                   // αποτέλεσμα των δη
   | { status: "locked" | "code_expired" | "invalid_name" | "not_accepted" | "invalid_message" | "not_signatory" | "unknown" | "error" }
   | { status: LinkStatus };
 export interface AgreementCaps {              // από τα Δικαιώματα, μόνο για να κρύβει κουμπιά
-  canView: boolean; canDraft: boolean; canDeviate: boolean; canSeeAmounts: boolean; canSeeCost: boolean; canManageCost: boolean; canManageSettings: boolean;
+  canView: boolean; canDraft: boolean; canDeviate: boolean; canSeeAmounts: boolean; canSeeCost: boolean; canManageCost: boolean; canManageSettings: boolean; canSeeProductions: boolean;
 }
 export interface AgreementRowView {           // γραμμή της D1 έτοιμη για εμφάνιση (περνά σε client component)
   id: string; href: string; clientName: string; clientHref: string; title: string; kindLabel: string; statusLabel: string; bucket: Bucket;

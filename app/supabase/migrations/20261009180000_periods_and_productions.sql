@@ -215,8 +215,11 @@ language plpgsql security definer set search_path = ''
 as $$
 begin
   perform authz.require('productions.manage');
-  perform authz.require_production(p_production);
   if not authz.can_manage_production(p_production) then
+    -- Το «δεν βρέθηκε» μόνο σε Εύρος «όλα»· αλλιώς ίδια άρνηση με την ξένη Παραγωγή (χωρίς να φαίνεται αν υπάρχει).
+    if coalesce(authz.scope('productions.manage'), '') = 'all' then
+      perform authz.require_production(p_production);
+    end if;
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
 end;
@@ -253,6 +256,9 @@ $$;
 -- Κάθε Περίοδος: given (από τις Παροχές της, 0 αν δεν δίνει)· leftover = given − used − reserved.
 -- Μεταφερόμενο (carried) ακολουθεί τους Όρους της Συμφωνίας: lost = 0· next_period = leftover της αμέσως προηγούμενης·
 -- accumulate = άθροισμα των leftover όλων των προηγούμενων. balance = given + carried − used − reserved.
+-- Πολιτική αρνητικού υπολοίπου: αν η κατανάλωση ξεπεράσει το δοσμένο, το leftover είναι αρνητικό. Για μεταφορά μετράει
+-- ως 0: το next_period κόβει στο 0 το leftover της προηγούμενης, το accumulate αθροίζει και μετά κόβει στο 0.
+-- Το balance της ίδιας της Περιόδου μένει όπως είναι (μπορεί να είναι αρνητικό, και φαίνεται έτσι).
 create function authz.period_balance(p_period uuid, p_kind uuid)
 returns table (given integer, carried integer, used integer, reserved integer, balance integer)
 language sql stable security definer set search_path = ''
@@ -366,7 +372,7 @@ as $$
     'deliver', p.state = 'open' and authz.can_manage_production(p.id),
     'reopen', p.state = 'delivered' and authz.can_manage_production(p.id),
     'cancel', p.state = 'open' and authz.can_manage_production(p.id) and not authz.production_has_work(p.id),
-    'transfer', coalesce(authz.scope('productions.manage') = 'all', false),
+    'transfer', p.state = 'open' and coalesce(authz.scope('productions.manage') = 'all', false),
     'members', authz.can_manage_production(p.id)
   )
   from public.productions p
@@ -665,8 +671,10 @@ declare
   v_team boolean := authz.is_team_user();
 begin
   perform authz.require_production_viewer();
-  perform authz.require_production(p_production);
   if not authz.can_see_production(p_production) then
+    if coalesce(authz.scope('productions.manage'), '') = 'all' then
+      perform authz.require_production(p_production);
+    end if;
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   return authz.production_card(p_production) || authz.production_detail(p_production, v_team);
@@ -819,6 +827,9 @@ begin
     raise exception 'Η μεταβίβαση θέλει Υπεύθυνο' using errcode = 'P0001';
   end if;
   perform authz.check_production_owner(p_owner_id);
+  if (select p.state from public.productions p where p.id = p_production) <> 'open' then
+    raise exception 'Μόνο ανοιχτή Παραγωγή μεταβιβάζεται' using errcode = 'P0001';
+  end if;
   select p.owner_id into v_from from public.productions p where p.id = p_production for update;
   if v_from is not distinct from p_owner_id then
     raise exception 'Η Παραγωγή έχει ήδη αυτόν τον Υπεύθυνο' using errcode = 'P0001';
@@ -873,7 +884,7 @@ do $$
 declare
   v_agreement uuid;
 begin
-  for v_agreement in select a.id from public.agreements a where a.state in ('signed', 'active') loop
+  for v_agreement in select a.id from public.agreements a where a.state <> 'proposal' loop
     perform authz.agreement_materialize(v_agreement);
   end loop;
 end;

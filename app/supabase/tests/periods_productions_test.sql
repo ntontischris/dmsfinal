@@ -1,7 +1,7 @@
 -- Περίοδοι και Παραγωγές (G1, G2): γέννηση σε δύο διαδρομές υπογραφής, υπόλοιπα Περιόδου, RPC με άρνηση ανά ρόλο,
 -- μεταβάσεις, Μέλη, Πελάτης, Ίχνος (κεφ. 3, ADR 0007). Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(169);
+select plan(175);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (productions.manage «mine») · e3 Πωλήσεις · e4 «Ελεγκτής» (audit.view)
@@ -442,6 +442,11 @@ select throws_ok($$ select public.production_transfer(current_setting('t.pm2')::
 select throws_ok($$ select public.production_transfer(gen_random_uuid(), '00000000-0000-0000-0000-0000000000e5') $$, 'P0001', 'Η Παραγωγή δεν βρέθηκε', 'Μεταβίβαση ανύπαρκτης Παραγωγής');
 select throws_ok($$ select public.production_transfer(null, '00000000-0000-0000-0000-0000000000e5') $$, 'P0001', 'Η Παραγωγή δεν βρέθηκε', 'Μεταβίβαση χωρίς Παραγωγή');
 
+select throws_ok(
+  $$ select public.production_transfer(current_setting('t.pi2')::uuid, '00000000-0000-0000-0000-0000000000e5') $$,
+  'P0001', 'Μόνο ανοιχτή Παραγωγή μεταβιβάζεται', 'Η ακυρωμένη Παραγωγή δεν μεταβιβάζεται'
+);
+
 -- ───────────── Μέλη (Π6) ─────────────
 select lives_ok($$ select public.production_member_add(current_setting('t.pm2')::uuid, '00000000-0000-0000-0000-0000000000e2') $$, 'Ο Ιδιοκτήτης προσθέτει Μέλος');
 select throws_ok($$ select public.production_member_add(current_setting('t.pm2')::uuid, '00000000-0000-0000-0000-0000000000e5') $$, 'P0001', 'Ο Υπεύθυνος είναι ήδη μέλος της Παραγωγής', 'Ο Υπεύθυνος δεν προστίθεται ως Μέλος');
@@ -522,6 +527,44 @@ select is(
   (select count(*)::int from public.audit_log where entity = 'agreement_periods' and action = 'insert'),
   (select count(*)::int from public.agreement_periods), 'Κάθε Περίοδος γράφει εγγραφή στο Ίχνος'
 );
+
+-- ───────────── Αρνητικό υπόλοιπο και Συμφωνία που έληξε ─────────────
+-- Κατανάλωση πάνω από το δοσμένο: το leftover της p1 γίνεται -3· το next_period το κόβει στο 0 για την p2.
+create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns integer
+language sql stable security definer set search_path = ''
+as $$ select case when p_period = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 15 else 0 end; $$;
+select is(
+  (select b.balance from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), -3,
+  'Η κατανάλωση πάνω από το δοσμένο δίνει αρνητικό υπόλοιπο Περιόδου'
+);
+select is(
+  (select b.carried from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 0,
+  'Το αρνητικό leftover δεν μεταφέρεται (next_period κόβει στο 0)'
+);
+create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns integer
+language sql stable security definer set search_path = ''
+as $$ select 0; $$;
+
+-- Συμφωνία που έληξε (χωρίς triggers, όπως στην αλλαγή Όρου): το backfill της migration τη γεννά (Π2).
+set local session_replication_role = 'replica';
+update public.agreements set start_on = (now() at time zone 'Europe/Athens')::date, state = 'expired' where id = current_setting('t.a4')::uuid;
+set local session_replication_role = 'origin';
+do $$
+declare
+  v_agreement uuid;
+begin
+  for v_agreement in select a.id from public.agreements a where a.state <> 'proposal' loop
+    perform authz.agreement_materialize(v_agreement);
+  end loop;
+end;
+$$;
+select ok(exists (select 1 from public.agreement_periods where agreement_id = current_setting('t.a4')::uuid), 'Η έληξε Συμφωνία παίρνει Περιόδους στο backfill');
+select ok(exists (select 1 from public.productions where agreement_id = current_setting('t.a4')::uuid), 'Η έληξε Συμφωνία παίρνει Παραγωγές στο backfill');
+
+-- Άρνηση χωρίς διαρροή: Μέλος «όσα με αφορούν» παίρνει 42501 και για ανύπαρκτο id (όχι P0001).
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
+select throws_ok($$ select public.production_view(gen_random_uuid()) $$, '42501', null, 'Το «όσα με αφορούν» δεν μαθαίνει αν υπάρχει ανύπαρκτη Παραγωγή');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
 
 -- ───────────── Κλειστοί πίνακες και κανόνες ─────────────
 set local role authenticated;
