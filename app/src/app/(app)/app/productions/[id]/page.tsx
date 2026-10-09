@@ -10,6 +10,7 @@ import {
   MembersPanel,
   OwnerPanel,
   PeriodCard,
+  ProductionFilmings,
   StatePanel,
   getProduction,
   listMemberCandidates,
@@ -69,6 +70,7 @@ async function ProductionPageContent({ production }: { production: ProductionDet
         {(canManage || production.members.length > 0) && (
           <MembersPanel production={production} candidates={members?.ok ? members.data : []} />
         )}
+        <ProductionFilmings filmings={production.filmings} />
         {canManage && <HistoryPanel history={production.history} />}
       </div>
     </>

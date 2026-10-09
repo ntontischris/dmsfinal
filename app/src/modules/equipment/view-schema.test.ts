@@ -76,6 +76,8 @@ describe("itemDetailSchema", () => {
       updated_at: "2026-10-09T10:00:00Z",
       updated_by_name: "Γιώργος Ιδιοκτήτης",
       templates: [{ id: ITEM_ID, name: "Ζωντανή" }],
+      nextReservation: null,
+      reservations: [],
       history: [
         {
           at: "2026-10-09T10:00:00Z",

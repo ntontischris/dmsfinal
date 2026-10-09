@@ -5,6 +5,7 @@ export type {
   PeriodBalance,
   ProductionCard,
   ProductionDetail,
+  ProductionFilming,
   ProductionState,
   ProductionTab,
   ProductionsCaps,
@@ -27,5 +28,6 @@ export { MembersPanel } from "./components/members-panel";
 export { NewInternalDetails } from "./components/new-internal-details";
 export { OwnerPanel } from "./components/owner-panel";
 export { PeriodCard } from "./components/period-card";
+export { ProductionFilmings } from "./components/production-filmings";
 export { ProductionList } from "./components/production-list";
 export { StatePanel } from "./components/state-panel";

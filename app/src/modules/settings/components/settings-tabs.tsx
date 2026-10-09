@@ -6,6 +6,7 @@ const TABS = [
   { id: "sales", label: "Πωλήσεις", href: "/app/settings/sales" },
   { id: "agreements", label: "Συμφωνίες", href: "/app/settings/agreements" },
   { id: "finance", label: "Οικονομικά", href: "/app/settings/finance" },
+  { id: "filming", label: "Γυρίσματα", href: "/app/settings/filming" },
   {
     id: "readiness",
     label: "Έλεγχος ετοιμότητας",

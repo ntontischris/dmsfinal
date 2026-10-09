@@ -50,6 +50,7 @@ const detailJson = {
       after: { event: "created" },
     },
   ],
+  filmings: [],
   viewerCan: {
     deliver: true,
     reopen: false,

@@ -44,6 +44,8 @@ export interface EquipmentItemDetail extends EquipmentItemRow {
   updatedByName: string | null;
   templates: TemplateLink[];
   history: HistoryEntry[];
+  nextReservation: EquipmentReservation | null;
+  reservations: EquipmentReservation[];
 }
 
 export interface TemplateItem {
@@ -85,3 +87,12 @@ export interface UnitGroup {
 export type RegistryRow =
   | { kind: "item"; item: EquipmentItemRow }
   | { kind: "group"; group: UnitGroup };
+
+// Δέσμευση του αντικειμένου σε Γύρισμα (F2). Ο σύνδεσμος στο Γύρισμα μόνο όπου το βλέπει ο Χρήστης.
+export interface EquipmentReservation {
+  filmingId: string | null;
+  startsAt: string;
+  hours: number;
+  state: "pending" | "scheduled" | "done" | "no_show" | "cancelled" | "rejected";
+  conflict: boolean;
+}
