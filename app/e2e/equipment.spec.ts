@@ -30,10 +30,10 @@ test("ο Ιδιοκτήτης φτιάχνει Κατηγορία και αντ�
   await signIn(page, "owner@example.com");
   const nav = page.getByRole("navigation", { name: "Οθόνες" });
   await expect(
-    nav.getByRole("link", { name: "Εξοπλισμός", exact: true }),
+    nav.getByRole("link", { name: /Εξοπλισμός$/ }),
   ).toBeVisible();
   await expect(
-    nav.getByRole("link", { name: "Πρότυπα εξοπλισμού", exact: true }),
+    nav.getByRole("link", { name: /Πρότυπα εξοπλισμού$/ }),
   ).toBeVisible();
 
   await page.goto("/app/equipment");
@@ -100,7 +100,7 @@ test("η Παραγωγή βλέπει το μητρώο μόνο για ανά�
   await signIn(page, "production@example.com");
   const nav = page.getByRole("navigation", { name: "Οθόνες" });
   await expect(
-    nav.getByRole("link", { name: "Εξοπλισμός", exact: true }),
+    nav.getByRole("link", { name: /Εξοπλισμός$/ }),
   ).toBeVisible();
 
   await page.goto("/app/equipment");
