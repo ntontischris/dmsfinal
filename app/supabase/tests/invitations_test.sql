@@ -23,6 +23,15 @@ begin
 end;
 $$;
 
+-- Ο επιλεγμένος Πελάτης του συνδεδεμένου, όπως φαίνεται στη δημόσια συνάρτηση (η authz δεν είναι δοσμένη στον authenticated).
+create function public.t_current_client() returns uuid
+language sql stable
+as $$
+  select (x ->> 'clientId')::uuid
+    from jsonb_array_elements(public.my_client_memberships()) x
+   where (x ->> 'isCurrent')::boolean;
+$$;
+
 -- ───────────── Χρήστες (e1–eD) ─────────────
 -- e1 Ιδιοκτήτης · e2 Διαχείριση · e3 «Πελάτες μου» (access.clientUsers με Εύρος «με αφορά», Υπεύθυνος του f1)
 -- e4 Πωλήσεις · e5 Λογιστής · e6 Χρήστης πελάτη του f1 («Πλήρης») · e7 Χρήστης πελάτη του f2 («Πλήρης»)
@@ -331,11 +340,11 @@ select throws_ok(
   $$ select public.invitation_create_client('00000000-0000-0000-0000-0000000000f1', 'Χ', 'nope2@example.com', 'el', null) $$,
   '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χρήστης πελάτη χωρίς c.colleagues δεν προσκαλεί'
 );
-select is(authz.client_user_has('c.book'), false, 'Χωρίς Δικαιώματα: δεν έχει c.book');
+select is((select count(*)::int from public.my_permissions() where permission = 'c.book'), 0, 'Χωρίς Δικαιώματα: δεν έχει c.book');
 
 -- ───────────── Δικαιώματα Πελάτη και σύνδεση πολλών Πελατών ─────────────
 select public.t_as('00000000-0000-0000-0000-0000000000e6');
-select is(authz.client_user_has('c.book'), true, 'Ο «Πλήρης» έχει c.book στον επιλεγμένο Πελάτη');
+select is((select count(*)::int from public.my_permissions() where permission = 'c.book'), 1, 'Ο «Πλήρης» έχει c.book στον επιλεγμένο Πελάτη');
 select is(
   (select count(*)::int from public.my_permissions() where permission like 'c.%'), 9,
   'Ο Χρήστης πελάτη βλέπει τα Δικαιώματα πελάτη του'
@@ -348,9 +357,9 @@ select is(
 );
 select public.t_as('00000000-0000-0000-0000-0000000000e8');
 select is(jsonb_array_length(public.my_client_memberships()), 2, 'Ο Χρήστης με δύο Πελάτες τους βλέπει και τους δύο');
-select is(authz.client_user_client_id(), '00000000-0000-0000-0000-0000000000f1'::uuid, 'Ο επιλεγμένος Πελάτης είναι ο τρέχων');
+select is(public.t_current_client(), '00000000-0000-0000-0000-0000000000f1'::uuid, 'Ο επιλεγμένος Πελάτης είναι ο τρέχων');
 select lives_ok($$ select public.client_user_select('00000000-0000-0000-0000-0000000000f2') $$, 'Αλλαγή επιλεγμένου Πελάτη');
-select is(authz.client_user_client_id(), '00000000-0000-0000-0000-0000000000f2'::uuid, 'Μετά την εναλλαγή ισχύει ο νέος Πελάτης');
+select is(public.t_current_client(), '00000000-0000-0000-0000-0000000000f2'::uuid, 'Μετά την εναλλαγή ισχύει ο νέος Πελάτης');
 select public.t_as('00000000-0000-0000-0000-0000000000e6');
 select throws_ok(
   $$ select public.client_user_select('00000000-0000-0000-0000-0000000000f2') $$,
@@ -362,7 +371,7 @@ reset role;
 update public.client_users set is_current = false where user_id = '00000000-0000-0000-0000-0000000000e8';
 set local role authenticated;
 select public.t_as('00000000-0000-0000-0000-0000000000e8');
-select is(authz.client_user_client_id(), null::uuid, 'Με δύο Πελάτες και κανέναν επιλεγμένο δεν ισχύει κανένας');
+select is(public.t_current_client(), null::uuid, 'Με δύο Πελάτες και κανέναν επιλεγμένο δεν ισχύει κανένας');
 reset role;
 update public.client_users set is_current = true
  where user_id = '00000000-0000-0000-0000-0000000000e8' and client_id = '00000000-0000-0000-0000-0000000000f1';
