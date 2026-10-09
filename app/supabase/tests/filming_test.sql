@@ -35,24 +35,18 @@ select u.id::uuid, r.id
   ) as u (id, role_name)
   join public.roles r on r.name = u.role_name and r.kind = 'team';
 
--- Αντικατάσταση σύνδεσης Πελάτη (μόνο μέσα στη συναλλαγή): ο e6 είναι Πελάτης f1, οι υπόλοιποι δεν έχουν σύνδεση.
-create or replace function authz.client_user_client_id() returns uuid
-language sql stable security definer set search_path = ''
-as $$
-  select case when (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub') = '00000000-0000-0000-0000-0000000000e6'
-              then '00000000-0000-0000-0000-0000000000f1'::uuid end;
-$$;
-
--- Δικαίωμα Πελάτη (c.book) μέσα στη συναλλαγή: η λίστα κρατιέται στη ρύθμιση t.client_perms.
-select set_config('t.client_perms', 'c.book', true);
-create or replace function authz.client_user_has(p_perm text) returns boolean
-language sql stable security definer set search_path = ''
-as $$ select position(p_perm in coalesce(current_setting('t.client_perms', true), '')) > 0; $$;
-
 -- Πελάτες: f1 (Υπεύθυνος η Άννα, e3), f2 (Υπεύθυνος ο Νίκος, e5).
 insert into public.clients (id, name, legal_name, city, afm, contact_name, contact_email, contact_phone, manager_id) values
   ('00000000-0000-0000-0000-0000000000f1', 'Κυψέλη Καφέ', '', 'Αθήνα', null, 'Μαρία Παπαδάκη', 'maria@kypseli.example.gr', '210 1111111', '00000000-0000-0000-0000-0000000000e3'),
   ('00000000-0000-0000-0000-0000000000f2', 'Ταβέρνα Αρμύρα', '', 'Ναύπλιο', null, 'Κώστας Αρμύρας', 'armyra@example.com', '27520 33333', '00000000-0000-0000-0000-0000000000e5');
+
+-- Χρήστης πελάτη: ο e6 ανήκει στον f1 με Ρόλο «Κράτηση» (μόνο c.book). Τα τεστ άρνησης τον βάζουν σε «Χωρίς δικαιώματα».
+insert into public.roles (name, kind) values ('Κράτηση', 'client'), ('Χωρίς δικαιώματα', 'client');
+insert into public.role_permissions (role_id, permission, scope)
+select r.id, 'c.book', 'all' from public.roles r where r.name = 'Κράτηση' and r.kind = 'client';
+insert into public.client_users (client_id, user_id, name, role_id, is_current)
+select '00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000e6', 'Μαρία Παπαδάκη', r.id, true
+  from public.roles r where r.name = 'Κράτηση' and r.kind = 'client';
 
 -- Ευκαιρίες: c1 (A, μηνιαία, f1) · c2 (B, εφάπαξ, f1) · c3 (C, εφάπαξ, f2) · c4 (D, μηνιαία με παλιά έναρξη, f1)
 insert into public.opportunities (id, client_id, title, stage_id, source_id, manager_id, next_step, next_step_due)
@@ -268,14 +262,20 @@ select throws_ok(
 );
 
 -- Σύνδεση Πελάτη χωρίς το Δικαίωμα c.book: κλειδωμένα όλα (fail closed).
-select set_config('t.client_perms', '', true);
+reset role;
+update public.client_users set role_id = (select r.id from public.roles r where r.name = 'Χωρίς δικαιώματα' and r.kind = 'client')
+ where user_id = '00000000-0000-0000-0000-0000000000e6';
+set local role authenticated;
 select throws_ok($$ select public.filming_book(current_setting('t.a')::uuid, public.t_at(20, time '10:00'), 2, current_setting('t.shoot')::uuid, null, null) $$,
   '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Η σύνδεση χωρίς c.book δεν κλείνει');
 select throws_ok($$ select public.filming_client_cancel(gen_random_uuid(), null) $$,
   '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Η σύνδεση χωρίς c.book δεν ακυρώνει');
 select throws_ok($$ select public.filming_request_cancel(gen_random_uuid(), 'Λόγος') $$,
   '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Η σύνδεση χωρίς c.book δεν στέλνει αίτημα');
-select set_config('t.client_perms', 'c.book', true);
+reset role;
+update public.client_users set role_id = (select r.id from public.roles r where r.name = 'Κράτηση' and r.kind = 'client')
+ where user_id = '00000000-0000-0000-0000-0000000000e6';
+set local role authenticated;
 select set_config('t.k1', public.filming_book(current_setting('t.a')::uuid, public.t_at(20, time '10:00'), 2, current_setting('t.shoot')::uuid, 'Αθήνα', 'Κάλυψη εκδήλωσης')::text, true);
 select set_config('t.k2', public.filming_book(current_setting('t.a')::uuid, public.t_at(21, time '10:00'), 2, current_setting('t.shoot')::uuid, null, null)::text, true);
 select throws_ok(
