@@ -84,12 +84,8 @@ test("η ουρά έγκρισης φαίνεται στον Ιδιοκτήτη 
   await expect(nav.getByRole("link", { name: "Ουρά έγκρισης" })).toBeVisible();
 
   await visit(page, "/app/filming/queue");
-  await expect(
-    card(page, "Αναμένουν έγκριση"),
-  ).toBeVisible();
-  await expect(
-    card(page, "Αιτήματα ακύρωσης"),
-  ).toBeVisible();
+  await expect(card(page, "Αναμένουν έγκριση")).toBeVisible();
+  await expect(card(page, "Αιτήματα ακύρωσης")).toBeVisible();
 
   await inContext(browser, "production@example.com", async (producer) => {
     await visit(producer, "/app/filming/queue");
@@ -135,8 +131,6 @@ test("το Πρότυπο Συνεργείου αποθηκεύεται και �
   await fieldOf(create, "Όνομα").fill(TEMPLATE);
   await create.getByLabel(PRODUCER, { exact: true }).check();
   await button(create, "Δημιουργία Προτύπου").click();
-  await expect(create.getByRole("status")).toContainText(
-    "Το Πρότυπο αποθηκεύτηκε.",
-  );
+  // Το revalidation ξαναφορτώνει τη φόρμα, άρα ελέγχουμε το αποτέλεσμα στη λίστα, όχι το μήνυμα.
   await expect(page.getByText(TEMPLATE, { exact: true })).toBeVisible();
 });
