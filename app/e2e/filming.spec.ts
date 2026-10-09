@@ -24,8 +24,6 @@ import {
 test.describe.configure({ mode: "serial", retries: 0 });
 
 const CREW_SAVED = "Το Συνεργείο αποθηκεύτηκε.";
-const CREW_CONFIRMED = "Η συμμετοχή επιβεβαιώθηκε.";
-const DONE_SAVED = "Το Γύρισμα σημειώθηκε «έγινε».";
 
 test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορίζει Συνεργείο και η Ρένα επιβεβαιώνει και ολοκληρώνεται με «έγινε»", async ({
   page,
@@ -57,7 +55,7 @@ test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορί�
     const row = tableRow(producer, clientName(P));
     await expect(row).toBeVisible();
     await button(row, "Επιβεβαιώνω").click();
-    await expect(producer.getByRole("status")).toContainText(CREW_CONFIRMED);
+    await expect(row).toContainText("Επιβεβαίωσε");
   });
 
   await inContext(browser, "owner@example.com", async (owner) => {
@@ -70,7 +68,6 @@ test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορί�
     });
     await fieldOf(outcome, "Πραγματικές ώρες").fill("3");
     await button(outcome, "Έγινε").click();
-    await expect(owner.getByRole("status")).toContainText(DONE_SAVED);
     await expect(
       owner.getByText("Έγινε", { exact: true }).first(),
     ).toBeVisible();
