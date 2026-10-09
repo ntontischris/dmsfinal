@@ -96,11 +96,16 @@ const bookingAgreementSchema: z.ZodType<BookingAgreement> = z.object({
 
 export const bookingOptionsSchema = z.array(bookingAgreementSchema);
 
+// Η βάση στέλνει τα μέλη του Προτύπου ως userId· η εφαρμογή τα κρατά ως NamedRef.
+const templateMember = z
+  .object({ userId: z.string(), name: z.string() })
+  .transform((member) => ({ id: member.userId, name: member.name }));
+
 const crewTemplateSchema: z.ZodType<CrewTemplate> = z.object({
   id: z.string(),
   name: z.string(),
   note: z.string().nullable(),
-  members: z.array(named),
+  members: z.array(templateMember),
 });
 
 export const crewTemplatesSchema = z.array(crewTemplateSchema);

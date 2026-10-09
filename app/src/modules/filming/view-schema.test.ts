@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { bookingOptionsSchema, queueSchema, settingsViewSchema } from "./view-schema";
+import {
+  bookingOptionsSchema,
+  crewTemplatesSchema,
+  queueSchema,
+  settingsViewSchema,
+} from "./view-schema";
 import { cardSchema, filmingsViewSchema } from "./view-schema-card";
 
 const FILMING_ID = "11111111-1111-4111-8111-111111111111";
@@ -176,5 +181,19 @@ describe("settingsViewSchema", () => {
         doneMarking: "manual",
       }),
     ).toThrow();
+  });
+});
+
+describe("crewTemplatesSchema", () => {
+  it("should map the userId of each member to id", () => {
+    const parsed = crewTemplatesSchema.parse([
+      {
+        id: PRODUCTION_ID,
+        name: "Βασικό συνεργείο",
+        note: null,
+        members: [{ userId: CLIENT_ID, name: "Ρένα Παραγωγή" }],
+      },
+    ]);
+    expect(parsed[0]?.members).toEqual([{ id: CLIENT_ID, name: "Ρένα Παραγωγή" }]);
   });
 });
