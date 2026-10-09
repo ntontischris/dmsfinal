@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import {
   PRODUCER,
   bookFilmingFromScreen,
+  visit,
   clientName,
   fieldOf,
   openFilmingFromList,
@@ -52,7 +53,7 @@ test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορί�
   });
 
   await inContext(browser, "production@example.com", async (producer) => {
-    await producer.goto("/app/filming/mine");
+    await visit(producer, "/app/filming/mine");
     const row = tableRow(producer, clientName(P));
     await expect(row).toBeVisible();
     await button(row, "Επιβεβαιώνω").click();
@@ -85,7 +86,7 @@ test("η ουρά έγκρισης φαίνεται στον Ιδιοκτήτη 
   const nav = page.getByRole("navigation", { name: "Οθόνες" });
   await expect(nav.getByRole("link", { name: "Ουρά έγκρισης" })).toBeVisible();
 
-  await page.goto("/app/filming/queue");
+  await visit(page, "/app/filming/queue");
   await expect(
     card(page, "Αναμένουν έγκριση"),
   ).toBeVisible();
@@ -94,7 +95,7 @@ test("η ουρά έγκρισης φαίνεται στον Ιδιοκτήτη 
   ).toBeVisible();
 
   await inContext(browser, "production@example.com", async (producer) => {
-    await producer.goto("/app/filming/queue");
+    await visit(producer, "/app/filming/queue");
     await expect(
       producer.getByText("Την ουρά έγκρισης τη βλέπει"),
     ).toBeVisible();
@@ -105,7 +106,7 @@ test("ο Ιδιοκτήτης αλλάζει έναν Κανόνα γυρισμ�
   page,
 }) => {
   await signIn(page, "owner@example.com");
-  await page.goto("/app/settings/filming");
+  await visit(page, "/app/settings/filming");
   const rules = page.locator("form", {
     has: page.getByRole("button", { name: "Αποθήκευση Κανόνων", exact: true }),
   });
@@ -131,7 +132,7 @@ test("το Πρότυπο Συνεργείου αποθηκεύεται και �
   const P = project();
   const TEMPLATE = `Πρότυπο ${P}`;
   await signIn(page, "owner@example.com");
-  await page.goto("/app/filming/crew-templates");
+  await visit(page, "/app/filming/crew-templates");
 
   const create = page.locator("section", { hasText: "Νέο Πρότυπο" });
   await fieldOf(create, "Όνομα").fill(TEMPLATE);

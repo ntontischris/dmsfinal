@@ -15,6 +15,11 @@ import { button, inContext, tableRow } from "./sales-parts";
 export const FILMING_URL = /\/app\/filming\/[0-9a-f-]{36}$/;
 export const PRODUCER = "Ρένα Παραγωγή";
 
+// Ανοίγει μια διεύθυνση και περιμένει να φορτώσουν τα scripts: πριν από αυτό, ένα κλικ σε φόρμα πέφτει σε υποβολή χωρίς JS.
+export async function visit(page: Page, url: string): Promise<void> {
+  await page.goto(url, { waitUntil: "networkidle" });
+}
+
 export const fieldOf = (scope: Page | Locator, label: string): Locator =>
   scope
     .locator(`label:has(> span:text-is("${label}"))`)
@@ -59,7 +64,7 @@ export async function bookFilmingFromScreen(
   page: Page,
   P: string,
 ): Promise<void> {
-  await page.goto("/app/filming/new");
+  await visit(page, "/app/filming/new");
   const form = page.locator("form", {
     has: page.getByRole("button", { name: "Κλείσιμο Γυρίσματος", exact: true }),
   });
@@ -76,7 +81,7 @@ export async function openFilmingFromList(
   page: Page,
   P: string,
 ): Promise<void> {
-  await page.goto("/app/filming");
+  await visit(page, "/app/filming");
   await tableRow(page, clientName(P)).getByRole("link").first().click();
   await expect(page).toHaveURL(FILMING_URL);
 }
