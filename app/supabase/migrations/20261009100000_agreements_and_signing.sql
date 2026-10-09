@@ -1280,22 +1280,56 @@ as $$
        + (select count(*) from public.agreement_revision_limits r where r.kind_id = p_kind);
 $$;
 
--- Ίχνος: οι γραμμές με ποσά ή κόστος φαίνονται μόνο σε όποιον βλέπει και τα ίδια τα ποσά ή το κόστος (ADR 0007).
--- Ίδια με του Καταλόγου, με τους νέους πίνακες.
+-- Ίχνος: λίστα επιτρεπτών (default deny, όπως ορίστηκε στο security hardening). Ολόκληρη η λίστα ξαναγράφεται εδώ
+-- με τις οντότητες των Συμφωνιών: όσες έχουν ποσά ή κόστος φαίνονται μόνο σε όποιον βλέπει τα ίδια τα ποσά ή το κόστος (ADR 0007).
 create or replace function authz.audit_entity_allowed(p_entity text) returns boolean
 language sql stable security definer set search_path = ''
 as $$
   select case p_entity
+    -- Κατάλογος: ποσά και κόστος
     when 'catalogue_item_costs' then authz.has('finance.cost')
     when 'cost_months' then authz.has('finance.cost')
     when 'cost_settings' then authz.has('finance.cost')
     when 'catalogue_item_amounts' then authz.has('finance.amounts')
+    -- Πρόσβαση και Ρυθμίσεις
+    when 'roles' then true
+    when 'role_permissions' then true
+    when 'team_users' then true
+    when 'team_user_roles' then true
+    when 'company_settings' then true
+    when 'bank_accounts' then true
+    when 'readiness_confirmations' then true
+    when 'system_state' then true
+    -- Πωλήσεις: λίστες και ρυθμίσεις
+    when 'sales_stages' then true
+    when 'sales_sources' then true
+    when 'sales_loss_reasons' then true
+    when 'sales_activity_kinds' then true
+    when 'sales_settings' then true
+    -- Πωλήσεις: Πελάτες και Ευκαιρίες (το Εύρος κρίνεται ανά εγγραφή στο authz.audit_row_allowed)
+    when 'clients' then true
+    when 'client_duplicate_flags' then true
+    when 'opportunities' then true
+    when 'access_requests' then true
+    -- Κατάλογος
+    when 'provision_kinds' then true
+    when 'catalogue_items' then true
+    when 'catalogue_item_provisions' then true
+    -- Συμφωνίες: ποσά και κόστος
     when 'agreement_line_costs' then authz.has('finance.cost')
     when 'agreement_costs' then authz.has('finance.cost') and authz.has('finance.amounts')
     when 'agreement_amounts' then authz.has('finance.amounts')
     when 'agreement_line_amounts' then authz.has('finance.amounts')
     when 'agreement_defaults' then authz.has('finance.amounts')
-    else true
+    -- Συμφωνίες: χωρίς ποσά (Σύνδεσμοι, κωδικοί, εξερχόμενα, έγγραφα και αναθεωρήσεις δεν γράφονται ποτέ στο Ίχνος)
+    when 'agreements' then true
+    when 'agreement_revision_limits' then true
+    when 'agreement_milestones' then true
+    when 'agreement_lines' then true
+    when 'agreement_line_provisions' then true
+    when 'agreement_recipients' then true
+    when 'agreement_signatures' then true
+    else false
   end;
 $$;
 
