@@ -1,7 +1,7 @@
 -- Περίοδοι και Παραγωγές (G1, G2): γέννηση σε δύο διαδρομές υπογραφής, υπόλοιπα Περιόδου, RPC με άρνηση ανά ρόλο,
 -- μεταβάσεις, Μέλη, Πελάτης, Ίχνος (κεφ. 3, ADR 0007). Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(160);
+select plan(169);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (productions.manage «mine») · e3 Πωλήσεις · e4 «Ελεγκτής» (audit.view)
@@ -479,6 +479,30 @@ select is(public.production_view(current_setting('t.pa3')::uuid) -> 'owner' ->> 
 select is(public.production_view(current_setting('t.pa3')::uuid) -> 'owner' ->> 'name', 'Νίκος', 'Ο Πελάτης βλέπει το όνομα του Υπευθύνου');
 select throws_ok($$ select public.production_deliver(current_setting('t.pa3')::uuid, 'Σχόλιο') $$, '42501', null, 'Ο Πελάτης δεν παραδίδει ακόμα και με σύνδεση');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+
+-- ───────────── Υποψήφιοι Υπεύθυνοι (Π5) και σύνδεσμος Περιόδου στο D ─────────────
+select ok(public.productions_owner_candidates() @> jsonb_build_array(jsonb_build_object('id', '00000000-0000-0000-0000-0000000000e5')), 'Ο Ιδιοκτήτης βλέπει Χρήστη με Δικαίωμα Παραγωγών ως υποψήφιο Υπεύθυνο');
+select ok(not (public.productions_owner_candidates() @> jsonb_build_array(jsonb_build_object('id', '00000000-0000-0000-0000-0000000000e3'))), 'Ο Χρήστης Πωλήσεων δεν είναι υποψήφιος Υπεύθυνος');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
+select throws_ok($$ select public.productions_owner_candidates() $$, '42501', null, 'Η Παραγωγή «όσα με αφορούν» δεν βλέπει υποψήφιους Υπευθύνους');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}', true);
+select throws_ok($$ select public.productions_owner_candidates() $$, '42501', null, 'Οι Πωλήσεις δεν βλέπουν υποψήφιους Υπευθύνους');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select ok(public.productions_member_candidates() @> jsonb_build_array(jsonb_build_object('id', '00000000-0000-0000-0000-0000000000e3')), 'Ο Ιδιοκτήτης βλέπει όλους τους ενεργούς Χρήστες ως υποψήφια Μέλη');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
+select lives_ok($$ select public.productions_member_candidates() $$, 'Η Παραγωγή «όσα με αφορούν» βλέπει υποψήφια Μέλη');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}', true);
+select throws_ok($$ select public.productions_member_candidates() $$, '42501', null, 'Οι Πωλήσεις δεν βλέπουν υποψήφια Μέλη');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select ok(
+  not exists (select 1 from jsonb_array_elements(public.agreement_view(current_setting('t.a2')::uuid) -> 'periods') x where x ->> 'production_id' is null),
+  'Κάθε Περίοδος της υπογεγραμμένης μηνιαίας Συμφωνίας δείχνει την Παραγωγή της'
+);
+select is(
+  (select x ->> 'production_id' from jsonb_array_elements(public.agreement_view(current_setting('t.a2')::uuid) -> 'periods') x where x ->> 'n' = '1'),
+  (select p.id::text from public.productions p where p.period_id = current_setting('t.p1')::uuid),
+  'Η Περίοδος 1 δείχνει τη δική της Παραγωγή'
+);
 
 -- ───────────── Ίχνος και γεγονότα ─────────────
 select ok(jsonb_array_length(public.production_view(current_setting('t.pm2')::uuid) -> 'history') > 0, 'Η σελίδα δείχνει το ιστορικό από το Ίχνος');

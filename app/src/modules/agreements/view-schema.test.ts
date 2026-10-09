@@ -167,6 +167,7 @@ const viewJson = {
       is_discounted: true,
       state: "next",
       amount: 940,
+      production_id: null,
     },
   ],
   change_requests: [],

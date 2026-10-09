@@ -673,6 +673,37 @@ begin
 end;
 $$;
 
+-- Υποψήφιοι Υπεύθυνοι (Π5): ενεργοί Χρήστες με Δικαίωμα Παραγωγών. Μόνο για Εύρος «όλα», όσοι μπορούν να μεταβιβάσουν.
+create function public.productions_owner_candidates() returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform authz.require('productions.manage');
+  if coalesce(authz.scope('productions.manage'), '') <> 'all' then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+  return (
+    select coalesce(jsonb_agg(jsonb_build_object('id', u.user_id, 'name', u.name) order by lower(u.name), u.user_id), '[]'::jsonb)
+      from public.team_users u
+     where u.is_active and authz.user_scope(u.user_id, 'productions.manage') is not null
+  );
+end;
+$$;
+
+-- Υποψήφια Μέλη (Π6): όλοι οι ενεργοί Χρήστες ομάδας. Για όσους μπορούν να αλλάξουν Μέλη (Εύρος «όλα» ή «όσα με αφορούν»).
+create function public.productions_member_candidates() returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform authz.require('productions.manage');
+  return (
+    select coalesce(jsonb_agg(jsonb_build_object('id', u.user_id, 'name', u.name) order by lower(u.name), u.user_id), '[]'::jsonb)
+      from public.team_users u
+     where u.is_active
+  );
+end;
+$$;
+
 -- ───────────── Εγγραφή ─────────────
 
 -- Εσωτερική Παραγωγή (Π9): μόνο όποιος έχει Δικαίωμα Παραγωγών με Εύρος «όλα».
@@ -889,7 +920,9 @@ revoke all on function
   public.production_cancel(uuid, text),
   public.production_transfer(uuid, uuid),
   public.production_member_add(uuid, uuid),
-  public.production_member_remove(uuid, uuid)
+  public.production_member_remove(uuid, uuid),
+  public.productions_owner_candidates(),
+  public.productions_member_candidates()
   from public, anon, authenticated;
 
 grant execute on function
@@ -901,10 +934,227 @@ grant execute on function
   public.production_cancel(uuid, text),
   public.production_transfer(uuid, uuid),
   public.production_member_add(uuid, uuid),
-  public.production_member_remove(uuid, uuid)
+  public.production_member_remove(uuid, uuid),
+  public.productions_owner_candidates(),
+  public.productions_member_candidates()
   to authenticated;
 
 -- Οι πίνακες είναι κλειστοί: διαβάζονται και γράφονται μόνο από τις συναρτήσεις παραπάνω.
 revoke all on table
   public.agreement_periods, public.agreement_period_provisions, public.productions, public.production_members
   from anon, authenticated;
+
+-- ───────────── Σύνδεσμος Παραγωγής στο D (Συμφωνία, ανά Περίοδο) ─────────────
+
+-- Ξαναγράφεται η public.agreement_view (της 20261009100000) μόνο για να φέρει production_id σε κάθε Περίοδο.
+-- Η μόνη αλλαγή είναι η γραμμή 'production_id' στο πλάνο των Περιόδων· το υπόλοιπο σώμα είναι το ίδιο.
+-- Το CREATE OR REPLACE κρατά τα Δικαιώματα εκτέλεσης που έχει ήδη.
+create or replace function public.agreement_view(p_agreement uuid) returns jsonb
+language plpgsql stable security definer set search_path = ''
+as $$
+declare
+  a public.agreements;
+  o public.opportunities;
+  c public.clients;
+  m public.agreement_amounts;
+  v_base jsonb;
+  v_today date := public.sales_today();
+  v_amounts boolean := coalesce(authz.has('finance.amounts'), false);
+  v_cost boolean := coalesce(authz.has('finance.cost'), false);
+  v_manage_cost boolean := coalesce(authz.can_manage_cost(), false);
+  v_deviate boolean := coalesce(authz.has('agreements.deviate'), false);
+  v_draft boolean;
+  v_internal boolean;
+  v_path text;
+  v_state text;
+  v_fig record;
+  v_sig public.agreement_signatures;
+  v_lines jsonb;
+  v_deviations jsonb := '[]'::jsonb;
+  v_revisions jsonb;
+  v_recipients jsonb;
+  v_milestones jsonb;
+  v_limits jsonb;
+  v_periods jsonb := '[]'::jsonb;
+  v_changes jsonb := '[]'::jsonb;
+  v_outbox integer := 0;
+  v_has_lines boolean;
+  v_needs boolean;
+  v_editable boolean;
+  v_period_start date;
+begin
+  if not coalesce(authz.can_see_agreement(p_agreement), false) then
+    return null;
+  end if;
+  select * into a from public.agreements x where x.id = p_agreement;
+  select * into o from public.opportunities x where x.id = a.opportunity_id;
+  select * into c from public.clients x where x.id = o.client_id;
+  select * into m from public.agreement_amounts x where x.agreement_id = p_agreement;
+  select b.data into v_base from public.agreement_baselines b where b.agreement_id = p_agreement;
+  v_draft := coalesce(authz.can_draft_agreement(p_agreement), false);
+  v_internal := v_draft or v_deviate;
+  v_path := authz.agreement_eff_path(a);
+  v_state := authz.agreement_eff_state(a);
+  select * into v_fig from authz.agreement_figures(p_agreement);
+  select * into v_sig from public.agreement_signatures s where s.agreement_id = p_agreement;
+  select exists (select 1 from public.agreement_lines l where l.agreement_id = p_agreement) into v_has_lines;
+  v_editable := v_draft and a.state = 'proposal' and v_path in ('draft', 'awaiting_approval');
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id', l.id, 'position', l.position, 'kind', l.line_kind, 'item_id', l.item_id,
+           'description', l.description, 'description_en', l.description_en, 'unit', l.unit, 'quantity', l.quantity,
+           'unit_price', case when v_amounts then la.unit_price end,
+           'catalog_price', case when v_amounts then la.catalog_price end,
+           'line_total', case when v_amounts then round(l.quantity * la.unit_price, 2) end,
+           'hours_shoot', case when v_cost then lc.hours_shoot end,
+           'hours_edit', case when v_cost then lc.hours_edit end,
+           'direct_cost', case when v_cost then lc.direct_cost end,
+           'provisions', coalesce((
+             select jsonb_agg(jsonb_build_object(
+                      'kind_id', p.kind_id, 'quantity', p.quantity,
+                      'catalog_quantity', (select (e ->> 'quantity')::integer from jsonb_array_elements(l.catalog_provisions) e
+                                            where e ->> 'kind_id' = p.kind_id::text)) order by k.sort, k.id)
+               from public.agreement_line_provisions p join public.provision_kinds k on k.id = p.kind_id
+              where p.line_id = l.id), '[]'::jsonb)
+         ) order by l.position, l.id), '[]'::jsonb)
+    into v_lines
+    from public.agreement_lines l
+    join public.agreement_line_amounts la on la.line_id = l.id
+    join public.agreement_line_costs lc on lc.line_id = l.id
+   where l.agreement_id = p_agreement;
+
+  if v_internal then
+    select coalesce(jsonb_agg(jsonb_build_object(
+             'key', d.key, 'kind', d.kind, 'subject', d.subject,
+             'depth', case when not d.is_money or v_amounts then d.depth end,
+             'base_value', case when not d.is_money or v_amounts then d.base_value end,
+             'value', case when not d.is_money or v_amounts then d.value end,
+             'status', coalesce(u.status, 'covered')) order by d.key), '[]'::jsonb)
+      into v_deviations
+      from authz.agreement_deviations(p_agreement) d
+      left join authz.agreement_uncovered(p_agreement) u on u.key = d.key;
+    select coalesce(jsonb_agg(jsonb_build_object(
+             'id', q.id, 'revision', q.revision, 'from_name', q.from_name, 'message', q.message, 'created_at', q.created_at)
+             order by q.created_at desc), '[]'::jsonb)
+      into v_changes from public.agreement_change_requests q where q.agreement_id = p_agreement;
+    select count(*)::integer into v_outbox from public.agreement_outbox x where x.agreement_id = p_agreement and x.status = 'pending';
+  end if;
+  v_needs := v_draft and a.state = 'proposal' and coalesce(authz.agreement_needs_approval(p_agreement), false);
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'number', r.number, 'created_at', r.created_at, 'created_by_name', cu.name, 'summary', r.summary, 'sent_at', r.sent_at,
+           'approval', case when v_internal and r.approval_state is not null then jsonb_build_object(
+             'state', r.approval_state, 'requested_at', r.requested_at, 'requested_by_name', ru.name,
+             'decided_at', r.decided_at, 'decided_by_name', du.name, 'comment', r.comment) end
+         ) order by r.number desc), '[]'::jsonb)
+    into v_revisions
+    from public.agreement_revisions r
+    left join public.team_users cu on cu.user_id = r.created_by
+    left join public.team_users ru on ru.user_id = r.requested_by
+    left join public.team_users du on du.user_id = r.decided_by
+   where r.agreement_id = p_agreement;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id', r.id, 'name', r.name, 'email', r.email, 'is_signatory', r.is_signatory,
+           'link', (
+             select jsonb_build_object(
+                      'id', l.id, 'status', authz.link_status(l, a), 'is_opened', l.first_opened_at is not null,
+                      'open_count', l.open_count, 'first_opened_at', l.first_opened_at)
+               from public.agreement_links l
+              where l.agreement_id = p_agreement and lower(l.recipient_email) = lower(r.email)
+              order by l.revision desc, l.issued_at desc limit 1)
+         ) order by r.position, r.id), '[]'::jsonb)
+    into v_recipients from public.agreement_recipients r where r.agreement_id = p_agreement;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id', ms.id, 'trigger', ms.trigger, 'percent', ms.percent, 'due_on', ms.due_on,
+           'amount', case when v_amounts then round(v_fig.price * ms.percent / 100, 2) end) order by ms.position, ms.id), '[]'::jsonb)
+    into v_milestones from public.agreement_milestones ms where ms.agreement_id = p_agreement;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'kind_id', r.kind_id, 'label', k.label, 'label_en', k.label_en, 'rounds', r.rounds,
+           'base_rounds', (v_base -> 'revision_limits' ->> r.kind_id::text)::integer) order by k.sort, k.id), '[]'::jsonb)
+    into v_limits
+    from public.agreement_revision_limits r join public.provision_kinds k on k.id = r.kind_id
+   where r.agreement_id = p_agreement;
+
+  if a.kind = 'monthly' then
+    v_period_start := coalesce(a.start_on, v_today);
+    select coalesce(jsonb_agg(jsonb_build_object(
+             'n', p.n + 1, 'starts', p.starts, 'ends', p.ends, 'is_partial', p.share < 1, 'gives_provisions', p.gives_provisions,
+             'production_id', (select r.id from public.productions r join public.agreement_periods pe on pe.id = r.period_id where pe.agreement_id = p_agreement and pe.n = p.n + 1),
+             'is_discounted', p.n < m.discount_months,
+             'state', case when p.ends < v_today then 'closed' when p.starts <= v_today then 'current' else 'next' end,
+             'amount', case when v_amounts then round((case when p.n < m.discount_months then v_fig.discounted_price else v_fig.price end) * p.share, 2) end
+           ) order by p.n), '[]'::jsonb)
+      into v_periods from authz.agreement_period_rows(v_period_start, a.duration_months) p;
+  end if;
+
+  return jsonb_build_object(
+    'id', a.id, 'kind', a.kind, 'title', a.title, 'language', a.language, 'state', v_state, 'path', v_path, 'revision', a.revision,
+    'valid_until', a.valid_until, 'start_on', a.start_on, 'end_on', a.end_on, 'duration_months', a.duration_months,
+    'signed_at', a.signed_at, 'updated_at', a.updated_at,
+    'opportunity', jsonb_build_object('id', o.id, 'title', o.title, 'outcome', o.outcome, 'manager_id', o.manager_id,
+      'manager_name', (select u.name from public.team_users u where u.user_id = o.manager_id)),
+    'client', jsonb_build_object('id', c.id, 'name', c.name, 'contact_name', c.contact_name, 'contact_email', c.contact_email),
+    'terms', jsonb_build_object(
+      'payment_days', a.payment_days, 'unused_provisions', a.unused_provisions, 'grace_days', a.grace_days, 'renewal', a.renewal,
+      'dissolution_notice_days', a.dissolution_notice_days, 'filming_notice_hours', a.filming_notice_hours,
+      'filming_cancel_hours', a.filming_cancel_hours, 'late_cancel_burns', a.late_cancel_burns, 'no_show_burns', a.no_show_burns),
+    'money_terms', case when v_amounts then jsonb_build_object(
+      'discount_percent', m.discount_percent, 'discount_months', m.discount_months, 'dissolution_fee', m.dissolution_fee, 'vat_rate', m.vat_rate) end,
+    'baseline', case when v_internal then jsonb_build_object(
+      'payment_days', v_base -> 'payment_days', 'unused_provisions', v_base -> 'unused_provisions', 'grace_days', v_base -> 'grace_days',
+      'dissolution_notice_days', v_base -> 'dissolution_notice_days',
+      'dissolution_fee', case when v_amounts then v_base -> 'dissolution_fee' end,
+      'filming_notice_hours', v_base -> 'filming_notice_hours', 'filming_cancel_hours', v_base -> 'filming_cancel_hours',
+      'late_cancel_burns', v_base -> 'late_cancel_burns', 'no_show_burns', v_base -> 'no_show_burns',
+      'standard_discount_percent', v_base -> 'standard_discount_percent', 'standard_discount_months', v_base -> 'standard_discount_months',
+      'advance_percent', v_base -> 'advance_percent') end,
+    'lines', v_lines,
+    'milestones', v_milestones,
+    'milestones_total', (select coalesce(sum(ms.percent), 0) from public.agreement_milestones ms where ms.agreement_id = p_agreement),
+    'revision_limits', v_limits,
+    'recipients', v_recipients,
+    'revisions', v_revisions,
+    'deviations', v_deviations,
+    'needs_approval', v_needs,
+    'totals', case when v_amounts then jsonb_build_object(
+      'price', v_fig.price, 'discounted_price', v_fig.discounted_price, 'vat_rate', m.vat_rate,
+      'vat', round(v_fig.price * m.vat_rate / 100, 2), 'gross', round(v_fig.price * (1 + m.vat_rate / 100), 2)) end,
+    'cost', case when v_cost then jsonb_build_object(
+      'hour_cost', v_fig.hour_cost, 'hour_cost_month', v_fig.hour_cost_month, 'estimated_cost', v_fig.estimated_cost,
+      'multiplier_min', v_fig.mult_min, 'multiplier_target', v_fig.mult_target, 'multiplier_max', v_fig.mult_max,
+      'is_low_margin', coalesce(v_fig.is_low_margin, false), 'is_frozen', v_fig.is_frozen) end,
+    'periods', v_periods,
+    'change_requests', v_changes,
+    'signature', case when v_sig.agreement_id is not null then jsonb_build_object(
+      'method', v_sig.method, 'signed_name', v_sig.signed_name, 'signed_on', v_sig.signed_on, 'recorded_at', v_sig.recorded_at,
+      'otp_delivery', v_sig.otp_delivery, 'document_hash', v_sig.document_hash,
+      'reference', case when v_internal then v_sig.reference end,
+      'ip', case when v_internal then v_sig.ip end,
+      'used_provisions', case when v_internal then v_sig.used_provisions end,
+      'month_invoiced', case when v_internal then v_sig.month_invoiced end) end,
+    'document', (select jsonb_build_object('revision', d.revision, 'hash', d.hash, 'created_at', d.created_at)
+                   from public.agreement_documents d where d.agreement_id = p_agreement and d.revision = a.revision),
+    'outbox_pending', v_outbox,
+    'email_sender_connected', coalesce((select d.email_sender_connected from public.agreement_defaults d where d.id), false),
+    'proposal_validity_days', (select d.proposal_validity_days from public.agreement_defaults d where d.id),
+    'can', jsonb_build_object(
+      'see_amounts', v_amounts, 'see_cost', v_cost, 'manage_cost', v_manage_cost,
+      'edit', v_editable,
+      'edit_prices', v_editable and v_amounts,
+      'edit_cost', v_editable and v_manage_cost,
+      'send', v_editable and v_has_lines and not v_needs and v_amounts,
+      'request_approval', v_editable and v_has_lines and v_needs,
+      'withdraw_approval', v_draft and v_path = 'awaiting_approval',
+      'decide', v_deviate and v_amounts and v_path = 'awaiting_approval',
+      'new_revision', v_draft and a.state = 'proposal' and v_path in ('sent', 'expired'),
+      'extend', v_draft and v_amounts and a.state = 'proposal' and v_path = 'expired',
+      'close_lost', v_draft and a.state = 'proposal' and v_path = 'expired',
+      'manage_links', v_draft and v_amounts and a.state = 'proposal' and v_path = 'sent',
+      'sign_outside', v_deviate and v_has_lines and a.state = 'proposal' and v_path in ('draft', 'sent', 'expired')
+    )
+  );
+end;
+$$;

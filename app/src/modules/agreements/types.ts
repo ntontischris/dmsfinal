@@ -55,6 +55,7 @@ export interface CostBlock {
 }
 export interface PeriodRow {
   n: number; starts: string; ends: string; isPartial: boolean; givesProvisions: boolean; isDiscounted: boolean; state: PeriodState; amount: number | null;
+  productionId: string | null; // η Παραγωγή της Περιόδου, όταν η Συμφωνία έχει υπογραφεί (μηνιαία)
 }
 export interface ChangeRequest { id: string; revision: number; fromName: string; message: string; createdAt: string }
 export interface SignatureInfo {

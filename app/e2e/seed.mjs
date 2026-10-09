@@ -287,3 +287,10 @@ for (const P of ["desktop", "mobile"]) {
   });
 }
 console.log("seed: Εξοπλισμός");
+
+// ───────────── Παραγωγές: μία Εσωτερική Παραγωγή ανά project για το e2e/productions.spec.ts ─────────────
+// Η Εσωτερική δεν έχει Συμφωνία, άρα μπαίνει με service role. Υπεύθυνος ο Ιδιοκτήτης.
+for (const P of ["desktop", "mobile"]) {
+  await insertRow("productions", { title: `Showreel ${P}`, owner_id: ids["owner@example.com"] });
+}
+console.log("seed: Παραγωγές");
