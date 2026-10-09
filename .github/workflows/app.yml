@@ -108,4 +108,5 @@ jobs:
             exit 0
           fi
           supabase link --project-ref "$SUPABASE_PROJECT_REF"
-          supabase db push
+          # --include-all: με παράλληλα PR η σειρά merge δεν ταιριάζει πάντα με τις χρονοσημάνσεις των migrations.
+          supabase db push --include-all
