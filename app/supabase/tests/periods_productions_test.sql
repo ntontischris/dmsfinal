@@ -23,13 +23,14 @@ insert into public.team_users (user_id, name, email) values
 insert into public.roles (name, kind) values ('Ελεγκτής', 'team'), ('Παραγωγός όλων', 'team');
 insert into public.role_permissions (role_id, permission, scope)
 select r.id, g.permission, g.scope
-  from (values ('Ελεγκτής', 'audit.view', 'all'), ('Παραγωγός όλων', 'productions.manage', 'all')) as g (role_name, permission, scope)
+  from (values ('Ελεγκτής', 'audit.view', 'all'), ('Παραγωγός όλων', 'productions.manage', 'all'), ('Παραγωγός όλων', 'clients.manage', 'all')) as g (role_name, permission, scope)
   join public.roles r on r.name = g.role_name and r.kind = 'team';
 insert into public.team_user_roles (user_id, role_id)
 select u.id::uuid, r.id
   from (values
     ('00000000-0000-0000-0000-0000000000e1', 'Ιδιοκτήτης'),
     ('00000000-0000-0000-0000-0000000000e2', 'Παραγωγή'),
+    ('00000000-0000-0000-0000-0000000000e2', 'Πωλήσεις'),
     ('00000000-0000-0000-0000-0000000000e3', 'Πωλήσεις'),
     ('00000000-0000-0000-0000-0000000000e4', 'Ελεγκτής'),
     ('00000000-0000-0000-0000-0000000000e5', 'Παραγωγός όλων')
