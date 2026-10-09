@@ -33,6 +33,7 @@ export function CrewPanel({ card, candidates, templates }: CrewPanelProps) {
         {canEdit && (
           <>
             <CrewSetForm
+              key={current.join(",")}
               filmingId={card.id}
               candidates={candidates}
               current={current}

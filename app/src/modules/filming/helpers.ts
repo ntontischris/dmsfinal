@@ -7,12 +7,14 @@ import {
 } from "./labels";
 import { formatHours } from "./helpers-time";
 import type {
+  BookingAgreement,
   BookingKind,
   FilmingHistoryEntry,
   FilmingSignals,
   FilmingState,
   OpenFilmingOption,
   FilmingRow,
+  ProvisionMeasure,
 } from "./types";
 
 // Καθαρές συναρτήσεις του module: σήματα, κείμενα, υπόλοιπα, επιλογές. Καμία είσοδος/έξοδος·
@@ -81,7 +83,7 @@ export interface FilmingHistoryLine {
   text: string;
 }
 
-// Μία γραμμή ανά γεγονός. Οι εγγραφές insert/update μπαίνουν μόνο όπου το Ίχνος δεν έχει γεγονός.
+// Μία γραμμή για κάθε γεγονός του Ίχνους. Οι εγγραφές insert/update δεν μπαίνουν: τα γεγονότα τις περιγράφουν ήδη.
 export const historyLines = (
   entries: readonly FilmingHistoryEntry[],
 ): FilmingHistoryLine[] =>
@@ -108,3 +110,19 @@ export const openFilmingChoices = (
     production: row.production,
   }));
 
+
+// Πάνω από τη διάρκεια του είδους: μόνο για Παροχή ανά Γύρισμα· το επιπλέον είναι έξτρα (Γ4). Καθαρά, από τα δεδομένα των επιλογών.
+export const isAboveDefault = (
+  hours: number,
+  measure: ProvisionMeasure,
+  defaultHours: number | null,
+): boolean => measure === "per_filming" && defaultHours !== null && hours > defaultHours;
+
+// Η προεπιλεγμένη διάρκεια του είδους μιας Συμφωνίας, από τις επιλογές κράτησης (null αν δεν βρεθεί).
+export const kindDefaultHours = (
+  agreements: readonly BookingAgreement[],
+  agreementId: string | null | undefined,
+  kindId: string | null | undefined,
+): number | null =>
+  agreements.find((agreement) => agreement.id === agreementId)?.kinds.find((kind) => kind.id === kindId)
+    ?.defaultHours ?? null;

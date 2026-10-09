@@ -35,7 +35,7 @@ export const pick = (
 ): Record<string, string> =>
   Object.fromEntries(keys.map((key) => [key, String(form.get(key) ?? "")]));
 
-export const refreshProductions = (): void =>
+export const revalidateAppLayout = (): void =>
   revalidatePath("/app", "layout");
 
 export type RpcOutcome =
@@ -56,6 +56,6 @@ export async function callRpc(
 // Επιτυχία: φρεσκάρει τις οθόνες και δίνει το μήνυμα· αποτυχία: το μήνυμα λάθους όπως ήρθε.
 export const finishWith = (outcome: RpcOutcome, notice: string): FormState => {
   if (!outcome.ok) return outcome.state;
-  refreshProductions();
+  revalidateAppLayout();
   return { notice };
 };

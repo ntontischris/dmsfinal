@@ -38,6 +38,7 @@ export function EquipmentPanel({
         {canEdit && (
           <>
             <EquipmentSetForm
+              key={current.join(",")}
               filmingId={card.id}
               candidates={candidates}
               current={current}

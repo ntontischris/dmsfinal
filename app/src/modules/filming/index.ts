@@ -31,7 +31,7 @@ export {
   formatDateTime,
   formatHours,
 } from "./helpers-time";
-export { openFilmingChoices } from "./helpers";
+export { kindDefaultHours, openFilmingChoices } from "./helpers";
 export type { ReadResult } from "./read";
 export {
   getFilming,

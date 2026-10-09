@@ -11,6 +11,7 @@ import { formatDateTime } from "../helpers";
 import type { FilmingCard } from "../types";
 
 import { ActionForm } from "./action-form";
+import { TwoStepAction } from "./two-step-action";
 import { MutedNote } from "./form-fields";
 
 interface DecisionPanelProps {
@@ -103,16 +104,16 @@ function CancelRequestForms({ card, reason }: { card: FilmingCard; reason: strin
 
 function CancelForm({ filmingId }: { filmingId: string }) {
   return (
-    <ActionForm
+    <TwoStepAction
       action={cancelFilming}
-      submitLabel="Ακύρωση Γυρίσματος"
-      variant="danger"
-      size="sm"
+      triggerLabel="Ακύρωση Γυρίσματος"
+      confirmLabel="Ναι, ακύρωση"
+      question="Το Γύρισμα κλείνει και φεύγει από τη λίστα των ανοιχτών. Η ακύρωση από την ομάδα δεν καίει Παροχή."
     >
       <input type="hidden" name="filmingId" value={filmingId} />
       <Field label="Λόγος ακύρωσης (υποχρεωτικός)">
         <Input name="reason" required maxLength={500} />
       </Field>
-    </ActionForm>
+    </TwoStepAction>
   );
 }

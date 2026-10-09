@@ -18,6 +18,7 @@ import { MEASURE_LABELS } from "../labels";
 import type { BookingAgreement, BookingKind, NamedRef } from "../types";
 
 import { ActionForm } from "./action-form";
+import { DurationNotice } from "./duration-notice";
 import { MutedNote } from "./form-fields";
 
 export interface NewFilmingProps {
@@ -192,6 +193,13 @@ function ClientBookingForm({
         </Field>
       )}
       {kind && <KindBalance kind={kind} />}
+      {kind && (
+        <DurationNotice
+          hours={Number(hours.replace(",", "."))}
+          measure={kind.measure}
+          defaultHours={kind.defaultHours}
+        />
+      )}
       <Field label="Πού">
         <Input name="location" maxLength={200} />
       </Field>
@@ -271,17 +279,22 @@ function DateTimeFields({ today }: { today: string }) {
 }
 
 // Το υπόλοιπο του είδους, χωρίς ποσά· αν τελείωσε, το Γύρισμα μπαίνει ως έξτρα (προειδοποίηση, όχι μπλοκ).
+// Το υπόλοιπο του είδους της τρέχουσας Περιόδου, χωρίς ποσά. Μια μέρα της επόμενης Περιόδου χρεώνεται σε εκείνη.
 function KindBalance({ kind }: { kind: BookingKind }) {
   const extra = isExtraBalance(kind.balance);
   return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      <span className="text-muted-foreground">
-        {MEASURE_LABELS[kind.measure]}
-        {kind.balance !== null
-          ? ` · ${balanceText(kind.balance)}`
-          : " · χωρίς μέτρηση στην τρέχουσα Περίοδο"}
-      </span>
-      {extra && <Badge tone="attention">Έξτρα: η Παροχή τελείωσε</Badge>}
+    <div className="grid gap-1 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <span>Υπόλοιπο τρέχουσας Περιόδου</span>
+        <span className="text-muted-foreground">
+          {MEASURE_LABELS[kind.measure]}
+          {kind.balance !== null
+            ? ` · ${balanceText(kind.balance)}`
+            : " · χωρίς μέτρηση στην τρέχουσα Περίοδο"}
+        </span>
+        {extra && <Badge tone="attention">Έξτρα: η Παροχή τελείωσε</Badge>}
+      </div>
+      <MutedNote>Μέρα της επόμενης Περιόδου χρεώνεται σε εκείνη την Περίοδο.</MutedNote>
     </div>
   );
 }

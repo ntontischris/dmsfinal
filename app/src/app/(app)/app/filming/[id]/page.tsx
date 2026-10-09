@@ -17,6 +17,8 @@ import {
   filmingCaps,
   getFilming,
   listCrewCandidates,
+  kindDefaultHours,
+  listBookingOptions,
   listCrewTemplates,
   listEquipmentCandidates,
   type FilmingCard,
@@ -64,11 +66,13 @@ async function FilmingPageContent({ card }: { card: FilmingCard }) {
     crewTemplates,
     equipmentCandidates,
     equipmentTemplates,
+    bookingOptions,
   ] = await Promise.all([
     canCrew ? listCrewCandidates() : null,
     canCrew ? listCrewTemplates() : null,
     canEquipment ? listEquipmentCandidates() : null,
     canEquipment ? listTemplates() : null,
+    card.viewerCan.reschedule ? listBookingOptions() : null,
   ]);
   if (
     (crewCandidates !== null && !crewCandidates.ok) ||
@@ -91,7 +95,14 @@ async function FilmingPageContent({ card }: { card: FilmingCard }) {
         <FilmingHeader card={card} />
         <ProvisionCard provision={card.provision} />
         <DecisionPanel card={card} />
-        <OutcomePanel card={card} />
+        <OutcomePanel
+          card={card}
+          defaultHours={
+            bookingOptions?.ok
+              ? kindDefaultHours(bookingOptions.data, card.agreement?.id, card.kind?.id)
+              : null
+          }
+        />
         {(canCrew || card.crew.length > 0) && (
           <CrewPanel
             card={card}

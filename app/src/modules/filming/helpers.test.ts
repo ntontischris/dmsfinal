@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   activeSignals,
+  isAboveDefault,
+  kindDefaultHours,
   balanceText,
   defaultHours,
   defaultKindId,
@@ -11,7 +13,7 @@ import {
   stateTone,
   waitingText,
 } from "./helpers";
-import type { BookingKind, FilmingHistoryEntry, FilmingRow } from "./types";
+import type { BookingAgreement, BookingKind, FilmingHistoryEntry, FilmingRow } from "./types";
 
 const kind = (overrides: Partial<BookingKind> = {}): BookingKind => ({
   id: "44444444-4444-4444-8444-444444444444",
@@ -119,5 +121,27 @@ describe("openFilmingChoices", () => {
     expect(openFilmingChoices([row])).toEqual([
       { id: row.id, startsAt: row.startsAt, hours: 3, production: row.production },
     ]);
+  });
+});
+
+describe("isAboveDefault", () => {
+  it("should warn only for a per-filming provision booked above its default duration", () => {
+    expect(isAboveDefault(4, "per_filming", 3)).toBe(true);
+    expect(isAboveDefault(3, "per_filming", 3)).toBe(false);
+  });
+
+  it("should not warn for per-hour provisions or kinds without a default", () => {
+    expect(isAboveDefault(5, "per_hour", 3)).toBe(false);
+    expect(isAboveDefault(5, "per_filming", null)).toBe(false);
+  });
+});
+
+describe("kindDefaultHours", () => {
+  it("should find the default duration of the kind inside the chosen agreement", () => {
+    const agreements = [
+      { id: "a1", kinds: [kind({ id: "k1", defaultHours: 2 }), kind({ id: "k2", defaultHours: 4 })] },
+    ] as unknown as BookingAgreement[];
+    expect(kindDefaultHours(agreements, "a1", "k2")).toBe(4);
+    expect(kindDefaultHours(agreements, "missing", "k2")).toBeNull();
   });
 });

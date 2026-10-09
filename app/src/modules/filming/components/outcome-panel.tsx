@@ -4,21 +4,23 @@ import { Panel } from "@/components/ui/panel";
 import {
   markFilmingDone,
   markFilmingNoShow,
-  rescheduleFilming,
   undoFilmingOutcome,
 } from "../actions-transitions";
 import { athensDate, athensTime } from "../helpers-time";
+import { RescheduleForm } from "./reschedule-form";
 import type { FilmingCard } from "../types";
 
 import { ActionForm } from "./action-form";
+import { TwoStepAction } from "./two-step-action";
 import { MutedNote } from "./form-fields";
 
 interface OutcomePanelProps {
   card: FilmingCard;
+  defaultHours: number | null;
 }
 
 // Το αποτέλεσμα και η μετάθεση: «έγινε», «δεν έγινε», αλλαγή ώρας και αναίρεση με λόγο. Τα πεδία έχουν τις τιμές του Γυρίσματος.
-export function OutcomePanel({ card }: OutcomePanelProps) {
+export function OutcomePanel({ card, defaultHours }: OutcomePanelProps) {
   const can = card.viewerCan;
   const hasAny = can.markDone || can.markNoShow || can.reschedule || can.undo;
   if (!hasAny) return null;
@@ -26,7 +28,16 @@ export function OutcomePanel({ card }: OutcomePanelProps) {
     <Panel label="Αποτέλεσμα και μετάθεση">
       <div className="grid gap-5">
         {can.markDone && <DoneForms card={card} />}
-        {can.reschedule && <RescheduleForm card={card} />}
+        {can.reschedule && (
+          <RescheduleForm
+            filmingId={card.id}
+            date={athensDate(card.startsAt)}
+            time={athensTime(card.startsAt)}
+            hours={card.hours}
+            measure={card.kind?.measure ?? null}
+            defaultHours={defaultHours}
+          />
+        )}
         {can.undo && <UndoForm filmingId={card.id} />}
       </div>
     </Panel>
@@ -60,57 +71,16 @@ function DoneForms({ card }: { card: FilmingCard }) {
         </Field>
       </ActionForm>
       {card.viewerCan.markNoShow && (
-        <ActionForm
+        <TwoStepAction
           action={markFilmingNoShow}
-          submitLabel="Δεν έγινε"
-          variant="danger"
-          size="sm"
+          triggerLabel="Δεν έγινε"
+          confirmLabel="Ναι, δεν έγινε"
+          question="Το «δεν έγινε» καίει την Παροχή, αν το ορίζει ο Κανόνας της Συμφωνίας."
         >
           <input type="hidden" name="filmingId" value={card.id} />
-        </ActionForm>
+        </TwoStepAction>
       )}
     </div>
-  );
-}
-
-function RescheduleForm({ card }: { card: FilmingCard }) {
-  return (
-    <ActionForm
-      action={rescheduleFilming}
-      submitLabel="Μετάθεση"
-      variant="default"
-      size="sm"
-    >
-      <input type="hidden" name="filmingId" value={card.id} />
-      <Field label="Ημερομηνία">
-        <Input
-          name="date"
-          type="date"
-          required
-          defaultValue={athensDate(card.startsAt)}
-        />
-      </Field>
-      <Field label="Ώρα">
-        <Input
-          name="time"
-          type="time"
-          required
-          defaultValue={athensTime(card.startsAt)}
-        />
-      </Field>
-      <Field label="Ώρες">
-        <Input
-          name="hours"
-          type="number"
-          inputMode="decimal"
-          step="0.5"
-          min="0.5"
-          max="12"
-          required
-          defaultValue={card.hours}
-        />
-      </Field>
-    </ActionForm>
   );
 }
 

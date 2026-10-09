@@ -59,7 +59,7 @@ export async function signedMonthlyAgreement(
 // Οι δύο λειτουργίες (desktop, mobile) μοιράζονται τη βάση: ώρες που δεν επικαλύπτονται, ώστε το Συνεργείο να μην συγκρούεται.
 export const startTimeOf = (P: string): string => (P === "mobile" ? "15:00" : "10:00");
 
-// Η Άννα κλείνει Γύρισμα στην E4 για τον Πελάτη της Συμφωνίας (15 του μήνα, 3 ώρες).
+// Η Άννα κλείνει Γύρισμα στην E4 για τον Πελάτη της Συμφωνίας (15 του μήνα, 3 ώρες). Μετά την επιτυχία η οθόνη πάει στο Γύρισμα.
 export async function bookFilmingFromScreen(
   page: Page,
   P: string,
@@ -73,7 +73,7 @@ export async function bookFilmingFromScreen(
   await fieldOf(form, "Ώρα").fill(startTimeOf(P));
   await fieldOf(form, "Διάρκεια (ώρες)").fill("3");
   await button(form, "Κλείσιμο Γυρίσματος").click();
-  await expect(form.getByRole("status")).toContainText("Το Γύρισμα κλείστηκε.");
+  await expect(page).toHaveURL(FILMING_URL);
 }
 
 // Ανοίγει το Γύρισμα του Πελάτη του τεστ από τη λίστα E1 (η πρώτη γραμμή του).

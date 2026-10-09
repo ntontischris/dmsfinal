@@ -41,9 +41,9 @@ export function ReservationsPanel({
           <MutedNote>Καμία ανοιχτή δέσμευση.</MutedNote>
         ) : (
           <ul className="m-0 grid list-none gap-3 p-0 text-sm">
-            {reservations.map((row) => (
+            {reservations.map((row, index) => (
               <ReservationLine
-                key={`${row.startsAt}-${row.filmingId ?? "hidden"}`}
+                key={`${itemId}-${index}-${row.startsAt}`}
                 itemId={itemId}
                 row={row}
                 canRelease={canReserve}
