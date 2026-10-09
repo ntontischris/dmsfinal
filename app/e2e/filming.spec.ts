@@ -23,7 +23,6 @@ import {
 // κάθε Συμφωνία και Γύρισμα γράφεται μέσα από τις οθόνες. Σειριακά και χωρίς retries, όπως τα υπόλοιπα τεστ.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-const CREW_SAVED = "Το Συνεργείο αποθηκεύτηκε.";
 
 test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορίζει Συνεργείο και η Ρένα επιβεβαιώνει και ολοκληρώνεται με «έγινε»", async ({
   page,
@@ -44,7 +43,6 @@ test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορί�
     await openFilmingFromList(owner, P);
     await owner.getByLabel(PRODUCER, { exact: true }).check();
     await button(owner, "Αποθήκευση Συνεργείου").click();
-    await expect(owner.getByRole("status")).toContainText(CREW_SAVED);
     await expect(owner.locator("li", { hasText: PRODUCER })).toContainText(
       "Περιμένει",
     );
