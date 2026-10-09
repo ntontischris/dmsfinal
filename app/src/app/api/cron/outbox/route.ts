@@ -5,6 +5,9 @@ import { isCronAuthorized } from "@/lib/email/outbox-trigger";
 import { runOutboxWorker } from "@/lib/email/worker";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// Το κλείδωμα της ουράς (5 λεπτά) πρέπει να ξεπερνά αυτό το όριο, αλλιώς μια αργή παρτίδα ξαναστέλνεται.
+export const maxDuration = 60;
+
 // Ο εργάτης της ουράς email: κάθε λεπτό (Vercel cron) και μετά από κάθε εγγραφή (σκούντημα).
 // Χωρίς CRON_SECRET στο περιβάλλον: 500· με λάθος ή λείπον Bearer: 401.
 export async function GET(request: NextRequest): Promise<NextResponse> {

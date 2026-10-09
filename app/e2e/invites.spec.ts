@@ -135,7 +135,8 @@ test("η ακυρωμένη πρόσκληση δεν δίνει πρόσβασ�
   await listItem(page, email)
     .getByRole("button", { name: "Ακύρωση", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Η πρόσκληση ακυρώθηκε");
+  // Το revalidation ξαναφορτώνει τη λίστα: ελέγχουμε τη λίστα, όχι το μήνυμα. Οι ακυρωμένες δεν μένουν σε αυτήν.
+  await expect(listItem(page, email)).toHaveCount(0);
 
   const context = await browser.newContext();
   const guest = await acceptInvite(context, email);
@@ -154,7 +155,8 @@ test("ο Ιδιοκτήτης προσκαλεί Χρήστη πελάτη κα�
   browser,
 }) => {
   const P = project();
-  const internalTitle = `Εσωτερική ${P} ${Date.now()}`;
+  // Όχι «Εσωτερική {project}»: αυτόν τον τίτλο τον ψάχνει το productions.spec.
+  const internalTitle = `Κρυφή Παραγωγή ${P} ${Date.now()}`;
   await internalProduction(internalTitle);
   const clientId = await clientForOwner(`Πελάτης Πρόσβασης ${P} ${Date.now()}`);
   const email = `client.${P}.${Date.now()}@example.com`;

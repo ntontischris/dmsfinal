@@ -6,7 +6,7 @@
 --  • Η πρόσβαση δίνεται μόνο με αποδοχή: η attach γράφει μόνο το user_id της πρόσκλησης, και η claim_invitation (ο ίδιος
 --    ο Χρήστης, με τον σύνδεσμο) γράφει τη συμμετοχή.
 --  • Το email δεν στέλνεται από τη βάση. Η ουρά email_outbox (και η agreement_outbox) διαβάζεται από τον worker με
---    κλείδωμα 2 λεπτών. Κάθε αποστολή καταγράφεται στο email_log μόνο με θέμα και κατάσταση.
+--    κλείδωμα 5 λεπτών (πάνω από το maxDuration του worker). Κάθε αποστολή καταγράφεται στο email_log μόνο με θέμα και κατάσταση.
 --  • Οι προσκλήσεις λήγουν σε 7 ημέρες. Η λήξη γράφεται στη στήλη status όταν τη διαβάζει κάποια συνάρτηση
 --    (authz.expire_invitations), ώστε ο περιορισμός «μία εκκρεμής ανά email» να μένει σωστός χωρίς cron.
 
@@ -72,7 +72,7 @@ create table public.email_outbox (
   attempts integer not null default 0,
   last_error text not null default '',
   provider_id text not null default '',
-  -- Κλείδωμα της παραλαβής: ο worker που πήρε τη γραμμή δεν την ξαναπαίρνει για 2 λεπτά.
+  -- Κλείδωμα της παραλαβής: ο worker που πήρε τη γραμμή δεν την ξαναπαίρνει για 5 λεπτά (πάνω από το maxDuration 60 s του route).
   locked_until timestamptz,
   created_at timestamptz not null default now(),
   created_by uuid,
@@ -475,7 +475,8 @@ begin
     from public.invitations i
    where i.email = v_email and i.status = 'pending' and i.client_id = v_client;
   if found then
-    return case when v_pending.user_id is null then v_pending.id end;
+    -- Και με γραμμένο λογαριασμό: αν απέτυχε η αποστολή, η επόμενη προσπάθεια ξαναστέλνει την ίδια πρόσκληση.
+    return v_pending.id;
   end if;
   perform authz.assert_invitable(v_email, 'client', v_client);
   insert into public.invitations (kind, email, name, locale, role_ids, client_id, invited_by)
@@ -652,11 +653,16 @@ begin
   end if;
   if v_inv.kind = 'team' then
     insert into public.team_users (user_id, name, email, language) values (auth.uid(), v_inv.name, v_inv.email, v_inv.locale);
-    insert into public.team_user_roles (user_id, role_id) select auth.uid(), r from unnest(v_inv.role_ids) as r;
+    -- Μόνο οι Ρόλοι που υπάρχουν ακόμα: ένας Ρόλος που σβήστηκε μετά την πρόσκληση δεν μπλοκάρει την είσοδο.
+    insert into public.team_user_roles (user_id, role_id)
+    select auth.uid(), r.id from public.roles r where r.id = any(v_inv.role_ids);
     perform authz.access_event('team_user_added', v_inv.id::text);
   else
     insert into public.client_users (client_id, user_id, name, role_id, invited_by, is_current)
-    values (v_inv.client_id, auth.uid(), v_inv.name, v_inv.role_ids[1], v_inv.invited_by,
+    values (v_inv.client_id, auth.uid(), v_inv.name,
+            coalesce((select r.id from public.roles r where r.id = v_inv.role_ids[1]),
+                     (select r.id from public.roles r where r.system_key = 'client_full')),
+            v_inv.invited_by,
             not exists (select 1 from public.client_users cu where cu.user_id = auth.uid() and cu.removed_at is null))
     on conflict (client_id, user_id) do update
       set name = excluded.name, role_id = excluded.role_id, invited_by = excluded.invited_by,
@@ -819,7 +825,7 @@ $$;
 
 -- ───────────── Ουρά email ─────────────
 
--- Ο worker (service role) παίρνει τα εκκρεμή μηνύματα. Κλειδώνει τη γραμμή για 2 λεπτά και ανεβάζει τον μετρητή.
+-- Ο worker (service role) παίρνει τα εκκρεμή μηνύματα. Κλειδώνει τη γραμμή για 5 λεπτά και ανεβάζει τον μετρητή.
 create function public.email_outbox_claim(p_limit integer default 20)
 returns table (id uuid, kind text, to_name text, to_email text, locale text, payload jsonb, attempts integer)
 language sql security definer set search_path = ''
@@ -832,7 +838,7 @@ as $$
      for update skip locked
   ), claimed as (
     update public.email_outbox o
-       set attempts = o.attempts + 1, locked_until = now() + interval '2 minutes'
+       set attempts = o.attempts + 1, locked_until = now() + interval '5 minutes'
       from picked where o.id = picked.id
     returning o.id as out_id, o.kind as out_kind, o.to_name as out_name, o.to_email as out_email,
               o.locale as out_locale, o.payload as out_payload, o.attempts as out_attempts, o.created_at as out_created
@@ -894,7 +900,7 @@ as $$
      for update skip locked
   ), claimed as (
     update public.agreement_outbox o
-       set attempts = o.attempts + 1, locked_until = now() + interval '2 minutes'
+       set attempts = o.attempts + 1, locked_until = now() + interval '5 minutes'
       from picked where o.id = picked.id
     returning o.*
   )

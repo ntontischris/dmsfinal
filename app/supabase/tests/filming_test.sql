@@ -87,16 +87,27 @@ update public.provision_kinds set measure = 'per_hour', default_hours = null whe
 update public.provision_kinds set measure = 'per_day', default_hours = null where code = 'video';
 
 -- Βοηθητικά των τεστ (ζουν μόνο μέσα στη συναλλαγή).
--- Ώρα Ελλάδας: η μέρα «σήμερα + n» στις «hh:mm».
+-- Η «μέρα 0» των τεστ: πέντε μέρες πριν από την 1η ενός μήνα που απέχει τουλάχιστον 7 μέρες. Οι Συμφωνίες ξεκινούν
+-- «μέρα 0 + 5», δηλαδή την 1η: η Περίοδος 1 είναι ολόκληρος μήνας (χωρίς αναλογία Παροχών που αλλάζει κάθε μέρα) και οι
+-- κρατήσεις «μέρα 0 + 4..22» μένουν μέσα της, μετά την προειδοποίηση και μέσα στον ορίζοντα των 60 ημερών, όποια μέρα κι αν τρέχει.
+create function public.t_base() returns date
+language sql stable
+as $$
+  select case
+    when (date_trunc('month', (now() at time zone 'Europe/Athens')::date) + interval '1 month')::date - (now() at time zone 'Europe/Athens')::date >= 7
+      then (date_trunc('month', (now() at time zone 'Europe/Athens')::date) + interval '1 month')::date - 5
+    else (date_trunc('month', (now() at time zone 'Europe/Athens')::date) + interval '2 months')::date - 5
+  end;
+$$;
+-- Ώρα Ελλάδας: η μέρα «μέρα 0 + n» στις «hh:mm».
 create function public.t_at(p_days integer, p_time time) returns timestamptz
 language sql stable
-as $$ select (((now() at time zone 'Europe/Athens')::date + p_days) + p_time) at time zone 'Europe/Athens'; $$;
--- Η μέρα «σήμερα + n» μέσα στην Περίοδο 1 της Συμφωνίας: κόβεται στη λήξη της Περιόδου, ώστε οι κρατήσεις να μένουν
--- στην ίδια Περίοδο όποιο μήνα κι αν τρέχει το τεστ (οι Περίοδοι είναι μηνιαίες).
+as $$ select ((public.t_base() + p_days) + p_time) at time zone 'Europe/Athens'; $$;
+-- Η μέρα «μέρα 0 + n» μέσα στην Περίοδο 1 της Συμφωνίας, κομμένη στη λήξη της Περιόδου.
 create function public.t_in_p1(p_agreement uuid, p_days integer, p_hour integer) returns timestamptz
 language sql stable security definer
 as $$
-  select ((least((now() at time zone 'Europe/Athens')::date + p_days, pe.ends)::timestamp + make_interval(hours => p_hour)) at time zone 'Europe/Athens')
+  select ((least(public.t_base() + p_days, pe.ends)::timestamp + make_interval(hours => p_hour)) at time zone 'Europe/Athens')
     from public.agreement_periods pe where pe.agreement_id = p_agreement and pe.n = 1;
 $$;
 -- Η δεύτερη μέρα της Περιόδου n της Συμφωνίας, στις 10:00.
@@ -120,7 +131,7 @@ select set_config('t.podcast', public.t_pk('podcast_episode')::text, true);
 
 -- A: μηνιαία, f1, τρεις μήνες, υπογραφή εκτός συστήματος με έναρξη σήμερα. Όροι: ειδοποίηση 24 ώρες, ακύρωση 48 ώρες.
 select set_config('t.a', public.agreement_create('00000000-0000-0000-0000-0000000000c1', 'monthly', 'Μηνιαίο Α')::text, true);
-select public.agreement_update_basics(current_setting('t.a')::uuid, 'Μηνιαίο Α', 'el', (now() at time zone 'Europe/Athens')::date + 5, (now() at time zone 'Europe/Athens')::date + 5, 3);
+select public.agreement_update_basics(current_setting('t.a')::uuid, 'Μηνιαίο Α', 'el', public.t_base() + 5, public.t_base() + 5, 3);
 select public.agreement_update_terms(current_setting('t.a')::uuid, 30, 'next_period', 0, 'new_opportunity', 0, 24, 48, true, true);
 select public.agreement_add_catalogue_line(current_setting('t.a')::uuid, '00000000-0000-0000-0000-0000000000d1', 1);
 select public.agreement_add_catalogue_line(current_setting('t.a')::uuid, '00000000-0000-0000-0000-0000000000d3', 4);
@@ -130,20 +141,20 @@ select public.agreement_sign_outside(current_setting('t.a')::uuid, (now() at tim
 
 -- B: εφάπαξ, f1, με μόνο shoot 1 (δεν έχει βίντεο). C: εφάπαξ, f2 (άλλος Πελάτης). D: μηνιαία με έναρξη πριν τον μήνα (used_provisions).
 select set_config('t.b', public.agreement_create('00000000-0000-0000-0000-0000000000c2', 'one_off', 'Εφάπαξ Β')::text, true);
-select public.agreement_update_basics(current_setting('t.b')::uuid, 'Εφάπαξ Β', 'el', (now() at time zone 'Europe/Athens')::date + 5, null, null);
+select public.agreement_update_basics(current_setting('t.b')::uuid, 'Εφάπαξ Β', 'el', public.t_base() + 5, null, null);
 select public.agreement_add_catalogue_line(current_setting('t.b')::uuid, '00000000-0000-0000-0000-0000000000d2', 1);
 select public.agreement_add_catalogue_line(current_setting('t.b')::uuid, '00000000-0000-0000-0000-0000000000d3', 4);
 select public.agreement_set_recipients(current_setting('t.b')::uuid, '[{"name":"Νικόλαος","email":"nikos@example.com","is_signatory":true}]'::jsonb);
 select public.agreement_sign_outside(current_setting('t.b')::uuid, (now() at time zone 'Europe/Athens')::date, 'Νικόλαος', (now() at time zone 'Europe/Athens')::date, 'b.pdf');
 
 select set_config('t.c', public.agreement_create('00000000-0000-0000-0000-0000000000c3', 'one_off', 'Εφάπαξ Γ')::text, true);
-select public.agreement_update_basics(current_setting('t.c')::uuid, 'Εφάπαξ Γ', 'el', (now() at time zone 'Europe/Athens')::date + 5, null, null);
+select public.agreement_update_basics(current_setting('t.c')::uuid, 'Εφάπαξ Γ', 'el', public.t_base() + 5, null, null);
 select public.agreement_add_catalogue_line(current_setting('t.c')::uuid, '00000000-0000-0000-0000-0000000000d2', 1);
 select public.agreement_set_recipients(current_setting('t.c')::uuid, '[{"name":"Κώστας Αρμύρας","email":"armyra@example.com","is_signatory":true}]'::jsonb);
 select public.agreement_sign_outside(current_setting('t.c')::uuid, (now() at time zone 'Europe/Athens')::date, 'Κώστας Αρμύρας', (now() at time zone 'Europe/Athens')::date, 'c.pdf');
 
 select set_config('t.d', public.agreement_create('00000000-0000-0000-0000-0000000000c4', 'monthly', 'Παλιό Δ')::text, true);
-select public.agreement_update_basics(current_setting('t.d')::uuid, 'Παλιό Δ', 'el', (now() at time zone 'Europe/Athens')::date + 5, (now() at time zone 'Europe/Athens')::date + 5, 3);
+select public.agreement_update_basics(current_setting('t.d')::uuid, 'Παλιό Δ', 'el', public.t_base() + 5, public.t_base() + 5, 3);
 select public.agreement_add_catalogue_line(current_setting('t.d')::uuid, '00000000-0000-0000-0000-0000000000d1', 1);
 select public.agreement_set_recipients(current_setting('t.d')::uuid, '[{"name":"Χρήστος","email":"christos@example.com","is_signatory":true}]'::jsonb);
 select public.agreement_sign_outside(
