@@ -5,6 +5,8 @@ import { report, walk } from "./lib/walk.mjs";
 // Kit (Blueprint κεφ. 10): τα χρώματα ζουν μόνο στα tokens του globals.css.
 // Απαγορεύονται χρώματα γραμμένα με το χέρι και η παλέτα του Tailwind (π.χ. bg-red-500).
 const TOKENS_FILE = "src/app/globals.css";
+// Τα email δεν διαβάζουν τα tokens του CSS· τα χρώματα του πρότυπου είναι inline και σταθερά εκεί.
+const EMAIL_TEMPLATES = /^src\/lib\/email\/templates\//;
 const RULES = [
   [/#[0-9a-fA-F]{3,8}\b(?![\w-])/, "χρώμα hex"],
   [/\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\(/, "χρώμα με συνάρτηση"],
@@ -15,7 +17,7 @@ const RULES = [
 export function findDesignViolations(files) {
   const violations = [];
   for (const file of files) {
-    if (file.path === TOKENS_FILE) continue;
+    if (file.path === TOKENS_FILE || EMAIL_TEMPLATES.test(file.path)) continue;
     file.text.split("\n").forEach((line, index) => {
       if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
       for (const [pattern, what] of RULES)

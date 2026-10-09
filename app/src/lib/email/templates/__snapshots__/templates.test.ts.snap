@@ -1,0 +1,229 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`τα πρότυπα email (el) > αντίγραφο υπογεγραμμένης 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Υπογεγραμμένη: Σποτ</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Η πρόταση «Σποτ» υπογράφηκε. Ο υπεύθυνος είναι Άννα.</p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Υπογεγραμμένη: Σποτ",
+  "text": "Υπογεγραμμένη: Σποτ
+
+Γεια σου Νίκος,
+Η πρόταση «Σποτ» υπογράφηκε. Ο υπεύθυνος είναι Άννα.
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > δοκιμαστικό email 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Δοκιμαστικό email</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Αν διαβάζεις αυτό, η αποστολή email του DMS λειτουργεί.</p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Devre Media · Δοκιμαστικό email",
+  "text": "Δοκιμαστικό email
+
+Αν διαβάζεις αυτό, η αποστολή email του DMS λειτουργεί.
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > κωδικός υπογραφής 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Κωδικός υπογραφής: Σποτ</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Ο κωδικός υπογραφής σου είναι: 123456. Ισχύει 10 λεπτά.</p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Κωδικός υπογραφής: Σποτ",
+  "text": "Κωδικός υπογραφής: Σποτ
+
+Γεια σου Νίκος,
+Ο κωδικός υπογραφής σου είναι: 123456. Ισχύει 10 λεπτά.
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > προσθήκη σε Πελάτη 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Πρόσβαση στον Πελάτη Acme</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Πρόσθεσαν τον λογαριασμό σου στον Πελάτη «Acme». Μπορείς να μπεις και να διαλέξεις τον Πελάτη από την κεφαλίδα.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Μπες στο σύστημα</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Devre Media · Πρόσβαση στον Πελάτη Acme",
+  "text": "Πρόσβαση στον Πελάτη Acme
+
+Γεια σου Νίκος,
+Πρόσθεσαν τον λογαριασμό σου στον Πελάτη «Acme». Μπορείς να μπεις και να διαλέξεις τον Πελάτη από την κεφαλίδα.
+
+Μπες στο σύστημα: https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&type=invite
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > πρόσκληση ομάδας 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Πρόσκληση στο DMS: Devre Media</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Μαρία,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Σε προσκάλεσαν να μπεις στο σύστημα της Devre Media.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Πάτα το κουμπί, όρισε τον κωδικό σου και μπες. Ο σύνδεσμος ισχύει 24 ώρες.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Μπες στο σύστημα</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Πρόσκληση στο DMS: Devre Media",
+  "text": "Πρόσκληση στο DMS: Devre Media
+
+Γεια σου Μαρία,
+Σε προσκάλεσαν να μπεις στο σύστημα της Devre Media.
+Πάτα το κουμπί, όρισε τον κωδικό σου και μπες. Ο σύνδεσμος ισχύει 24 ώρες.
+
+Μπες στο σύστημα: https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&type=invite
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > πρόσκληση πελάτη με όνομα πελάτη 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Πρόσκληση στο DMS: Acme</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Σε προσκάλεσαν να δουλεύεις με τον Πελάτη «Acme» στο σύστημα της Devre Media.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Πάτα το κουμπί, όρισε τον κωδικό σου και μπες. Ο σύνδεσμος ισχύει 24 ώρες.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Μπες στο σύστημα</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Πρόσκληση στο DMS: Acme",
+  "text": "Πρόσκληση στο DMS: Acme
+
+Γεια σου Νίκος,
+Σε προσκάλεσαν να δουλεύεις με τον Πελάτη «Acme» στο σύστημα της Devre Media.
+Πάτα το κουμπί, όρισε τον κωδικό σου και μπες. Ο σύνδεσμος ισχύει 24 ώρες.
+
+Μπες στο σύστημα: https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&type=invite
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > σύνδεσμος εισόδου 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Σύνδεσμος εισόδου</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Πάτα το κουμπί για να μπεις. Ο σύνδεσμος ισχύει 24 ώρες και μπορεί να χρησιμοποιηθεί μία φορά.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Συνέχεια</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Devre Media · Σύνδεσμος εισόδου",
+  "text": "Σύνδεσμος εισόδου
+
+Πάτα το κουμπί για να μπεις. Ο σύνδεσμος ισχύει 24 ώρες και μπορεί να χρησιμοποιηθεί μία φορά.
+
+Συνέχεια: https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&type=invite
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > σύνδεσμος πρότασης 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Πρόταση: Σποτ</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Σου στέλνουμε την πρόταση για έλεγχο και υπογραφή.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/p/tok" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες την πρόταση</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Πρόταση: Σποτ",
+  "text": "Πρόταση: Σποτ
+
+Γεια σου Νίκος,
+Σου στέλνουμε την πρόταση για έλεγχο και υπογραφή.
+
+Δες την πρόταση: https://dmsfinal-app.vercel.app/p/tok
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > αντίγραφο υπογεγραμμένης 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Signed: Σποτ</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">The proposal “Σποτ” was signed. The account manager is Άννα.</p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Signed: Σποτ",
+  "text": "Signed: Σποτ
+
+Hello Νίκος,
+The proposal “Σποτ” was signed. The account manager is Άννα.
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > δοκιμαστικό email 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Test email</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">If you can read this, sending email from DMS works.</p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Devre Media · Test email",
+  "text": "Test email
+
+If you can read this, sending email from DMS works.
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > κωδικός υπογραφής 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Signing code: Σποτ</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Your signing code is: 123456. It is valid for 10 minutes.</p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Signing code: Σποτ",
+  "text": "Signing code: Σποτ
+
+Hello Νίκος,
+Your signing code is: 123456. It is valid for 10 minutes.
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > προσθήκη σε Πελάτη 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Access to client Acme</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Your account was added to the client “Acme”. Sign in and choose the client from the header.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Open the system</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Devre Media · Access to client Acme",
+  "text": "Access to client Acme
+
+Hello Νίκος,
+Your account was added to the client “Acme”. Sign in and choose the client from the header.
+
+Open the system: https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&type=invite
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > πρόσκληση ομάδας 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Invitation to DMS: Devre Media</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Μαρία,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">You were invited to join the Devre Media system.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Press the button, set your password and sign in. The link is valid for 24 hours.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Open the system</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Invitation to DMS: Devre Media",
+  "text": "Invitation to DMS: Devre Media
+
+Hello Μαρία,
+You were invited to join the Devre Media system.
+Press the button, set your password and sign in. The link is valid for 24 hours.
+
+Open the system: https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&type=invite
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > πρόσκληση πελάτη με όνομα πελάτη 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Invitation to DMS: Acme</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">You were invited to work with the client “Acme” in the Devre Media system.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Press the button, set your password and sign in. The link is valid for 24 hours.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Open the system</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Invitation to DMS: Acme",
+  "text": "Invitation to DMS: Acme
+
+Hello Νίκος,
+You were invited to work with the client “Acme” in the Devre Media system.
+Press the button, set your password and sign in. The link is valid for 24 hours.
+
+Open the system: https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&type=invite
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > σύνδεσμος εισόδου 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Sign-in link</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Press the button to sign in. The link is valid for 24 hours and works once.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Continue</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Devre Media · Sign-in link",
+  "text": "Sign-in link
+
+Press the button to sign in. The link is valid for 24 hours and works once.
+
+Continue: https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&type=invite
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > σύνδεσμος πρότασης 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Proposal: Σποτ</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">We are sending you the proposal to review and sign.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/p/tok" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View the proposal</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Proposal: Σποτ",
+  "text": "Proposal: Σποτ
+
+Hello Νίκος,
+We are sending you the proposal to review and sign.
+
+View the proposal: https://dmsfinal-app.vercel.app/p/tok
+
+Devre Media · This message was sent by the company system.",
+}
+`;

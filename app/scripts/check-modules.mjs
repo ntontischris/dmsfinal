@@ -8,6 +8,17 @@ const IMPORT = /(?:import|export)[^"']*?from\s*["']([^"']+)["']|import\(\s*["'](
 
 const moduleOf = (path) => path.match(/^src\/modules\/([^/]+)\//)?.[1] ?? null;
 
+// Το service role (`@/lib/supabase/admin`) μπαίνει μόνο στα hooks, στα cron και στο module Πρόσβασης (ADR 0016).
+const ADMIN_IMPORT = "@/lib/supabase/admin";
+const ADMIN_ALLOWED = [/^src\/app\/api\/hooks\//, /^src\/app\/api\/cron\//, /^src\/modules\/access\//];
+const importsAdmin = (text) => [...text.matchAll(IMPORT)].some((match) => (match[1] ?? match[2]) === ADMIN_IMPORT);
+
+export function findAdminViolations(files) {
+  return files
+    .filter((file) => importsAdmin(file.text) && !ADMIN_ALLOWED.some((allowed) => allowed.test(file.path)))
+    .map((file) => `${file.path}: «${ADMIN_IMPORT}» (μόνο hooks, cron και Πρόσβαση)`);
+}
+
 export function findModuleViolations(files) {
   const violations = [];
   for (const file of files) {
@@ -25,5 +36,6 @@ export function findModuleViolations(files) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = fileURLToPath(new URL("..", import.meta.url));
-  report("check:modules", findModuleViolations(walk(root, [".ts", ".tsx"]).filter((f) => f.path.startsWith("src/"))));
+  const sources = walk(root, [".ts", ".tsx"]).filter((f) => f.path.startsWith("src/"));
+  report("check:modules", [...findModuleViolations(sources), ...findAdminViolations(sources)]);
 }
