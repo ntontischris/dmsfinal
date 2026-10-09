@@ -77,6 +77,9 @@ select u.id::uuid, r.id
   ) as u (id, role_name)
   join public.roles r on r.name = u.role_name and r.kind = 'team';
 
+-- Το id του Ρόλου «Κράτηση» διαβάζεται τώρα: οι Ρόλοι φαίνονται μόνο στην ομάδα, άρα ο Χρήστης πελάτη δεν τον βλέπει.
+select set_config('t.role_kraten', (select r.id::text from public.roles r where r.name = 'Κράτηση' and r.kind = 'client'), true);
+
 -- Πελάτες: f1 (Υπεύθυνος η Άννα, e3) · f2 (Υπεύθυνος ο Νίκος, e2).
 insert into public.clients (id, name, legal_name, city, afm, contact_name, contact_email, contact_phone, manager_id) values
   ('00000000-0000-0000-0000-0000000000f1', 'Κυψέλη Καφέ', '', 'Αθήνα', null, 'Μαρία Παπαδάκη', 'maria@kypseli.example.gr', '210 1111111', '00000000-0000-0000-0000-0000000000e3'),
@@ -318,7 +321,7 @@ select throws_ok(
 );
 select set_config('t.inv_ec', public.invitation_create_client(
   '00000000-0000-0000-0000-0000000000f1', 'Κράτηση', 'booker-invite@example.com', 'el',
-  (select r.id from public.roles r where r.name = 'Κράτηση' and r.kind = 'client')
+  current_setting('t.role_kraten')::uuid
 )::text, true);
 select ok(current_setting('t.inv_ec') is not null, 'Ο Συνάδελφος δίνει Ρόλο όσα έχει');
 

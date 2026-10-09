@@ -519,6 +519,7 @@ language plpgsql security definer set search_path = ''
 as $$
 declare
   v_team boolean := p_client is null;
+  v_viewer_is_team boolean := authz.is_team_user();
   v_result jsonb;
 begin
   if p_client is null then
@@ -538,12 +539,12 @@ begin
           'roles', coalesce((select jsonb_agg(jsonb_build_object('id', r.id, 'name', r.name) order by r.name)
                                from public.roles r where r.id = any (i.role_ids)), '[]'::jsonb),
           'client', case when c.id is null then null else jsonb_build_object('id', c.id, 'name', c.name) end,
-          'invitedBy', case when v_team and u.user_id is not null then jsonb_build_object('id', u.user_id, 'name', u.name) end,
+          'invitedBy', case when v_viewer_is_team and u.user_id is not null then jsonb_build_object('id', u.user_id, 'name', u.name) end,
           'createdAt', i.created_at,
           'expiresAt', i.expires_at,
           'status', i.status,
           'acceptedAt', i.accepted_at,
-          'existingUserId', case when v_team then (select au.id from auth.users au where lower(au.email) = i.email limit 1) end
+          'existingUserId', case when v_viewer_is_team then (select au.id from auth.users au where lower(au.email) = i.email limit 1) end
         ) as row_json,
         i.created_at as created
         from public.invitations i
