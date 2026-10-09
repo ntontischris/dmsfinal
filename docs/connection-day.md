@@ -172,37 +172,33 @@
 
 ---
 
-## Βήμα 8. Resend (αυτόματα email) και DNS
+## Βήμα 8. Αυτόματα email (Resend μέσω Send Email Hook)
 
-**Τι είναι:** το σύστημα στέλνει όλα τα email (προσκλήσεις, επαναφορά κωδικού, τιμολόγια, αυτοματισμοί) από **έναν** δρόμο, μέσω Resend, από `noreply@mail.devremedia.com`. Χρησιμοποιούμε **υποτομέα** (`mail.`) ώστε η φήμη των αυτόματων μηνυμάτων να μην αγγίξει το Gmail της εταιρείας.
+**Τι είναι:** όλα τα email του συστήματος (πρόσκληση, σύνδεσμος εισόδου, επαναφορά κωδικού, αποστολές Συμφωνιών) φεύγουν από **έναν** δρόμο: το Resend, από `Devre Media <noreply@devremedia.com>`. Η Supabase δεν στέλνει τίποτα μόνη της: όταν χρειάζεται email εισόδου, καλεί το σύστημα (**Send Email Hook**), και το σύστημα το στέλνει. **Όχι SMTP.** Ο υποτομέας `mail.` δεν χρειάζεται: το `devremedia.com` είναι ήδη **Verified** στο Resend.
 
-**Σημείωση:** η αποστολή από το DMS (ενιαίο σημείο αποστολής, Send Email Hook της Supabase) μπορεί να μην είναι ακόμα έτοιμη στον κώδικα. Μπορείς να στήσεις τώρα λογαριασμό και DNS· η ενεργοποίηση στο σύστημα γίνεται όταν το πει ο developer. Για τον πρώτο Ιδιοκτήτη (Βήμα 7) αρκεί το ενσωματωμένο email του Supabase.
+**Τι κάνεις:** μόνο ρυθμίσεις στο Vercel και στο Supabase. Κανένα DNS.
 
-### 8α. Λογαριασμός
-1. https://resend.com → **Sign up**. Ξεκίνα με το **Free** πλάνο (3.000 emails τον μήνα, 100 την ημέρα). Pro όταν πλησιάσεις τα ~70 την ημέρα.
-2. **Domains → Add Domain** → `mail.devremedia.com` → region ΕΕ (Ireland) αν προσφέρεται.
+### 8α. Vercel (`dmsfinal-app` → Settings → Environment Variables)
+Πρόσθεσε ή έλεγξε αυτές τις μεταβλητές, και μετά **Redeploy**. Οι τιμές δεν γράφονται πουθενά εκτός Vercel.
 
-### 8β. DNS εγγραφές (SiteGround)
-Το Resend δείχνει πίνακα με εγγραφές (τύπος, όνομα, τιμή): συνήθως MX και TXT (SPF) για το `send.mail`, TXT (DKIM) `resend._domainkey.mail`, και προαιρετικά TXT DMARC `_dmarc.mail`.
+| Όνομα | Τι είναι | Πού τη βρίσκεις |
+|---|---|---|
+| `RESEND_API_KEY` | Κλειδί αποστολής | Ήδη υπάρχει (Βήμα 8γ του παλιού οδηγού). |
+| `RESEND_FROM_EMAIL` | Αποστολέας | Ήδη υπάρχει· αν λείπει: `Devre Media <noreply@devremedia.com>`. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Κλειδί διαχειριστή της βάσης (παρακάμπτει τη RLS) | Supabase → Project Settings → API → `service_role`. Μόνο για **Production** και **Preview**. |
+| `SEND_EMAIL_HOOK_SECRET` | Μυστικό υπογραφής του Hook | Το δίνει η Supabase στο 8β (μορφή `v1,whsec_…`). |
+| `CRON_SECRET` | Μυστικό της ουράς email | Φτιάξ' το τυχαία (π.χ. 32 χαρακτήρες). Το Vercel Cron το στέλνει μόνο του. |
+| `EMAIL_ALLOWED_DOMAINS` | Προαιρετικό: μόνο αυτά τα domains παίρνουν email (π.χ. `devremedia.com`) | Στο Production **δεν** το βάζεις. Χρήσιμο μόνο για δοκιμές. |
 
-**Πού:** SiteGround → Site Tools → **Domain → DNS Zone Editor** → `devremedia.com`.
+### 8β. Supabase (Authentication)
+1. **Authentication → Hooks → Send Email Hook** → τύπος **HTTPS** → URL: `https://dmsfinal-app.vercel.app/api/hooks/send-email` → **Enable**.
+2. Η Supabase δείχνει το μυστικό (`v1,whsec_…`) **μία φορά**. Αντίγραψέ το στη μεταβλητή `SEND_EMAIL_HOOK_SECRET` του Vercel (8α). Μετά δεν ξαναφαίνεται: αν το χάσεις, φτιάξε νέο στο ίδιο μενού.
+3. **Authentication → Email → OTP expiry** → `86400` (24 ώρες, ώστε οι σύνδεσμοι πρόσκλησης να ζουν μία μέρα).
 
-**ΠΡΙΝ αγγίξεις οτιδήποτε:** κράτα αντίγραφο όλων των υπαρχουσών εγγραφών (screenshot ή εξαγωγή).
-
-**Κανόνες**
-- Πρόσθεσε **μόνο νέες** εγγραφές, **όλες στον υποτομέα `mail`**, ακριβώς όπως τις δίνει το Resend (αντιγραφή-επικόλληση).
-- **Μην αγγίξεις** τα MX του `devremedia.com` (Google Workspace, `smtp.google.com`). Η εταιρική αλληλογραφία δεν πρέπει να επηρεαστεί ποτέ.
-- **Μην αλλάξεις** τα A και CNAME του `devremedia.com` και του `www`: το site τρέχει ακόμη από το παλιό σύστημα μέχρι την ημέρα αλλαγής.
-- Αν ο editor προσθέτει μόνος του το `.devremedia.com` στο τέλος, γράψε μόνο το κομμάτι πριν από αυτό.
-
-**Επαλήθευση:** Resend → Domains → `mail.devremedia.com` → **Verify DNS Records**. Όλες οι εγγραφές **Verified** (πράσινες). Παίρνει από λίγα λεπτά έως μερικές ώρες.
-
-**Αν μείνει Pending/Failed:** περίμενε 1-2 ώρες και ξαναπάτα Verify. Έλεγξε ότι δεν υπάρχει διπλό `.devremedia.com.devremedia.com`, ότι οι τιμές TXT είναι ολόκληρες (ο DKIM είναι μακρύς) και ότι δεν πρόσθεσες εισαγωγικά.
-
-### 8γ. Κλειδί API (μόνο προς το Vercel)
-Resend → **API Keys → Create API Key** (*Sending access*, domain `mail.devremedia.com`). Το κλειδί (`re_…`) φαίνεται **μία φορά**. Επικόλλησέ το κατευθείαν στο Vercel → `dmsfinal-app` → **Settings → Environment Variables**, με το όνομα που θα σου δώσει ο developer, για **Production**, και μετά Redeploy. **Όχι** σε chat, repo ή αρχείο.
-
-**Αν το χάσεις:** Resend → API Keys → Delete και φτιάξε νέο.
+### 8γ. Έλεγχος
+- Ρυθμίσεις → **Ενσωματώσεις** → «Δοκιμαστικό email στον εαυτό μου» → στο Ιστορικό εμφανίζεται γραμμή **στάλθηκε** με το email σου.
+- Αν εμφανιστεί **απέτυχε** με «Resend 401/403»: το `RESEND_API_KEY` είναι λάθος ή δεν έχει δικαίωμα αποστολής από το `devremedia.com`.
+- Αν το Hook δεν τρέχει (ο Χρήστης δεν παίρνει email εισόδου και η Supabase δείχνει σφάλμα): έλεγξε ότι το URL του 8β είναι ακριβώς το παραπάνω και ότι το `SEND_EMAIL_HOOK_SECRET` είναι το ίδιο και στα δύο μέρη.
 
 ---
 
@@ -210,7 +206,7 @@ Resend → **API Keys → Create API Key** (*Sending access*, domain `mail.devre
 
 - [ ] Supabase region = ΕΕ (Ireland / Frankfurt) και Vercel function region = `dub1`.
 - [ ] Auth: «Allow new users to sign up» **off**, πάροχος **Email on**.
-- [ ] Redirect URLs και πρότυπα Invite / Reset με `token_hash` αποθηκεύτηκαν.
+- [ ] Redirect URLs αποθηκεύτηκαν. Το Send Email Hook είναι ενεργό (Βήμα 8β).
 - [ ] 3 secrets στο GitHub (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`).
 - [ ] Το `migrate` πέρασε και φαίνονται πίνακες στο Supabase.
 - [ ] Vercel: οι μεταβλητές Supabase υπάρχουν, έγινε Redeploy, το `/login` ανοίγει.

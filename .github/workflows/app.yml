@@ -48,6 +48,9 @@ jobs:
   # Από άκρη σε άκρη: τοπικό Supabase (βάση + είσοδος), φανταστικοί Χρήστες, η εφαρμογή σε production build, browser.
   e2e:
     runs-on: ubuntu-latest
+    env:
+      # Τοπική τιμή για το CI, όχι μυστικό: το σκούντημα της ουράς email την χρειάζεται στα τεστ.
+      CRON_SECRET: e2e-cron-secret
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
