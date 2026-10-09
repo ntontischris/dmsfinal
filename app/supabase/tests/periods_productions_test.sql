@@ -453,7 +453,7 @@ select throws_ok($$ select public.production_member_add(current_setting('t.pm2')
 select throws_ok($$ select public.production_member_add(current_setting('t.pm2')::uuid, '00000000-0000-0000-0000-0000000000e2') $$, 'P0001', 'Ο Χρήστης είναι ήδη μέλος της Παραγωγής', 'Το ίδιο Μέλος δεν μπαίνει δύο φορές');
 select throws_ok($$ select public.production_member_add(current_setting('t.pm2')::uuid, null) $$, 'P0001', 'Ο Χρήστης δεν βρέθηκε', 'Μέλος χωρίς Χρήστη απορρίπτεται');
 select throws_ok($$ select public.production_member_add(current_setting('t.pm2')::uuid, gen_random_uuid()) $$, 'P0001', 'Ο Χρήστης δεν βρέθηκε', 'Μέλος ανύπαρκτος Χρήστης απορρίπτεται');
-select throws_ok($$ select public.production_member_add(gen_random_uuid(), '00000000-0000-0000-0000-0000000000e2') $$, 'P0001', 'Η Παραγωγή δεν βρέθηκε', 'Μέλος σε ανύπαρκτη Παραγωγή απορρίπτεται');
+select throws_ok($$ select public.production_member_add(gen_random_uuid(), '00000000-0000-0000-0000-0000000000e2') $$, '42501', null, 'Μέλος σε ανύπαρκτη Παραγωγή απορρίπτεται (χωρίς να φαίνεται αν υπάρχει)');
 select throws_ok($$ select public.production_member_remove(current_setting('t.pm2')::uuid, '00000000-0000-0000-0000-0000000000e5') $$, 'P0001', 'Ο Υπεύθυνος δεν αφαιρείται· μεταβίβασε πρώτα την Παραγωγή', 'Ο Υπεύθυνος δεν αφαιρείται');
 select throws_ok($$ select public.production_member_remove(current_setting('t.pm2')::uuid, '00000000-0000-0000-0000-0000000000e4') $$, 'P0001', 'Ο Χρήστης δεν είναι μέλος της Παραγωγής', 'Αφαίρεση μη μέλους απορρίπτεται');
 
@@ -547,7 +547,7 @@ as $$ select 0; $$;
 
 -- Συμφωνία που έληξε (χωρίς triggers, όπως στην αλλαγή Όρου): το backfill της migration τη γεννά (Π2).
 set local session_replication_role = 'replica';
-update public.agreements set start_on = (now() at time zone 'Europe/Athens')::date, state = 'expired' where id = current_setting('t.a4')::uuid;
+update public.agreements set start_on = (now() at time zone 'Europe/Athens')::date, state = 'expired', path = 'signed', signed_at = now() where id = current_setting('t.a4')::uuid;
 set local session_replication_role = 'origin';
 do $$
 declare
