@@ -59,6 +59,7 @@ insert into public.roles (name, kind) values
   ('Κράτηση', 'client'), ('Συνάδελφος', 'client'), ('Χωρίς δικαιώματα', 'client');
 insert into public.role_permissions (role_id, permission, scope) values
   ((select r.id from public.roles r where r.name = 'Πελάτες μου' and r.kind = 'team'), 'access.clientUsers', 'mine'),
+  ((select r.id from public.roles r where r.name = 'Πελάτες μου' and r.kind = 'team'), 'clients.manage', 'mine'),
   ((select r.id from public.roles r where r.name = 'Τιμολόγια' and r.kind = 'team'), 'finance.invoices', 'all'),
   ((select r.id from public.roles r where r.name = 'Κράτηση' and r.kind = 'client'), 'c.book', 'all'),
   ((select r.id from public.roles r where r.name = 'Συνάδελφος' and r.kind = 'client'), 'c.colleagues', 'all'),
