@@ -102,11 +102,21 @@ const toHistory = (row: z.infer<typeof historyRow>): HistoryEntry => ({
 });
 
 // Η σελίδα αντικειμένου: ένα JSON αντικείμενο, με τα Πρότυπα και το Ίχνος του.
+const reservationSchema = z.object({
+  filmingId: z.string().nullable(),
+  startsAt: z.string(),
+  hours: z.number(),
+  state: z.enum(["pending", "scheduled", "done", "no_show", "cancelled", "rejected"]),
+  conflict: z.boolean(),
+});
+
 export const itemDetailSchema = itemRowFields
   .extend({
     updated_by_name: z.string().nullable(),
     templates: z.array(z.object({ id: z.string(), name: z.string() })),
     history: z.array(historyRow),
+    nextReservation: reservationSchema.nullable(),
+    reservations: z.array(reservationSchema),
   })
   .transform(
     (row): EquipmentItemDetail => ({
@@ -114,5 +124,7 @@ export const itemDetailSchema = itemRowFields
       updatedByName: row.updated_by_name,
       templates: row.templates,
       history: row.history.map(toHistory),
+      nextReservation: row.nextReservation,
+      reservations: row.reservations,
     }),
   );

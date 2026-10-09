@@ -2202,6 +2202,37 @@ begin
 end;
 $$;
 
+-- Υποψήφια μέλη Συνεργείου (E3, E7): ενεργοί Χρήστες ομάδας. Μόνο για filming.crew.
+create function public.filming_crew_candidates() returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform authz.require('filming.crew');
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('id', u.user_id, 'name', u.name) order by lower(u.name), u.user_id)
+      from public.team_users u
+     where u.is_active
+  ), '[]'::jsonb);
+end;
+$$;
+
+-- Υποψήφια αντικείμενα για Δέσμευση (E3): όσα δεν έχουν αποσυρθεί. Η διαθεσιμότητα ελέγχεται στη δέσμευση.
+create function public.filming_equipment_candidates() returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform authz.require('equipment.reserve');
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+             'id', i.id, 'name', i.name, 'code', i.code, 'status', i.status, 'categoryName', c.name
+           ) order by lower(i.name), i.id)
+      from public.equipment_items i
+      join public.equipment_categories c on c.id = i.category_id
+     where i.status <> 'retired'
+  ), '[]'::jsonb);
+end;
+$$;
+
 -- ───────────── Παραγωγή και Εξοπλισμός: οι οθόνες που επεκτείνονται ─────────────
 
 -- Σελίδα Παραγωγής (G2): + λίστα Γυρισμάτων της Παραγωγής όσα βλέπει ο Χρήστης.
@@ -2397,7 +2428,9 @@ revoke all on function
   public.equipment_item_reserve(uuid, uuid),
   public.equipment_item_release(uuid, uuid),
   public.filming_settings_view(),
-  public.filming_settings_save(jsonb)
+  public.filming_settings_save(jsonb),
+  public.filming_crew_candidates(),
+  public.filming_equipment_candidates()
   from public, anon, authenticated;
 
 grant execute on function
@@ -2431,7 +2464,9 @@ grant execute on function
   public.equipment_item_reserve(uuid, uuid),
   public.equipment_item_release(uuid, uuid),
   public.filming_settings_view(),
-  public.filming_settings_save(jsonb)
+  public.filming_settings_save(jsonb),
+  public.filming_crew_candidates(),
+  public.filming_equipment_candidates()
   to authenticated;
 
 -- Οι πίνακες είναι κλειστοί: διαβάζονται και γράφονται μόνο από τις συναρτήσεις παραπάνω.

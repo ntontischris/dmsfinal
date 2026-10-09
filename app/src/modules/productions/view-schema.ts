@@ -65,6 +65,16 @@ const historySchema = z.object({
   after: z.record(z.string(), z.unknown()).nullable(),
 });
 
+// Τα Γυρίσματα της Παραγωγής (G2): μόνο όσα βλέπει ο Χρήστης, από τη βάση.
+const filmingSchema = z.object({
+  id: z.string(),
+  startsAt: z.string(),
+  hours: z.number(),
+  state: z.string(),
+  isExtra: z.boolean(),
+  kind: z.string().nullable(),
+});
+
 const toBalance = (row: z.infer<typeof balanceSchema>): PeriodBalance => ({
   kindId: row.kind_id,
   code: row.code,
@@ -101,6 +111,7 @@ export const productionDetailSchema = cardSchema
     cancelledReason: z.string().nullable(),
     members: z.array(z.object({ userId: z.string(), name: z.string() })),
     history: z.array(historySchema),
+    filmings: z.array(filmingSchema),
     viewerCan: z.object({
       deliver: z.boolean(),
       reopen: z.boolean(),
@@ -121,6 +132,7 @@ export const productionDetailSchema = cardSchema
       members: row.members,
       history: row.history.map(toHistory),
       viewerCan: row.viewerCan,
+      filmings: row.filmings,
     }),
   );
 

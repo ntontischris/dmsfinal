@@ -266,6 +266,14 @@ for (const P of ["desktop", "mobile"]) {
     managerId: NIKOS,
     titles: [`Πρόταση Νίκου ${P}`],
   });
+  // Πελάτης με μία Ευκαιρία για το e2e/filming.spec.ts: η Συμφωνία του τεστ υπογράφεται εκτός συστήματος από τον Ιδιοκτήτη.
+  await seedProposalClient({
+    name: `Πελάτης Γυρισμάτων ${P}`,
+    email: `gyrismata.${P}@pelatis.example.gr`,
+    contactName: "Ελένη Γυρισμάτων",
+    managerId: ANNA,
+    titles: [`Γυρίσματα ${P}`],
+  });
   console.log(`seed: Συμφωνίες (${P})`);
 }
 

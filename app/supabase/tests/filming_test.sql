@@ -2,7 +2,7 @@
 -- Ίχνος (κεφ. 3, ADR 0007, 0010, 0015). Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή.
 -- Ώρες: όλα σχετικά με τη σημερινή μέρα (Ώρα Ελλάδας), ώστε το τεστ να περνά οποιαδήποτε μέρα τρέξει.
 begin;
-select plan(204);
+select plan(208);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος των Παραγωγών της Συμφωνίας Α) · e3 Πωλήσεις (Υπεύθυνος του Πελάτη f1)
@@ -718,6 +718,18 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 set local role authenticated;
 select throws_ok($$ select * from public.filmings $$, '42501', null, 'Ο πίνακας Γυρισμάτων δεν διαβάζεται απευθείας');
 select throws_ok($$ select * from public.filming_settings $$, '42501', null, 'Ο πίνακας Κανόνων δεν διαβάζεται απευθείας');
+reset role;
+
+-- Υποψήφιοι Συνεργείου και Εξοπλισμού (E3, E7): μόνο όσοι έχουν το Δικαίωμα.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e4","role":"authenticated"}', true);
+set local role authenticated;
+select throws_ok($$ select public.filming_crew_candidates() $$, '42501', null, 'Ο Λογιστής δεν βλέπει υποψήφια μέλη Συνεργείου');
+select throws_ok($$ select public.filming_equipment_candidates() $$, '42501', null, 'Ο Λογιστής δεν βλέπει υποψήφια αντικείμενα Εξοπλισμού');
+reset role;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
+set local role authenticated;
+select ok(jsonb_array_length(public.filming_crew_candidates()) >= 6, 'Ο Διαχειριστής βλέπει τους ενεργούς Χρήστες ομάδας για το Συνεργείο');
+select ok(jsonb_typeof(public.filming_equipment_candidates()) = 'array', 'Ο Διαχειριστής παίρνει τη λίστα υποψήφιων αντικειμένων');
 reset role;
 
 select * from finish();

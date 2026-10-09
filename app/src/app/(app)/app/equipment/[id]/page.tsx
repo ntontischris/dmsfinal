@@ -6,6 +6,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import { getViewer } from "@/modules/access";
 import {
+  ReservationsPanel,
+  filmingCaps,
+  listOpenFilmings,
+  openFilmingChoices,
+} from "@/modules/filming";
+import {
   ItemDangerPanel,
   ItemForm,
   ItemHistory,
@@ -42,9 +48,11 @@ export default async function EquipmentItemPage({
   const parsed = z.uuid().safeParse(id);
   if (!parsed.success) return <Missing />;
 
-  const [item, categories] = await Promise.all([
+  const filmings = filmingCaps(viewer);
+  const [item, categories, openFilmings] = await Promise.all([
     getItem(parsed.data),
     caps.canManage ? listCategories({ includeRetired: true }) : null,
+    filmings.canView && filmings.canReserve ? listOpenFilmings() : null,
   ]);
   if (!item.ok || (categories !== null && !categories.ok)) return <LoadError />;
   if (item.data === null) return <Missing />;
@@ -54,6 +62,10 @@ export default async function EquipmentItemPage({
       item={item.data}
       caps={caps}
       categories={categories?.ok ? categories.data : []}
+      reservations={{
+        canReserve: filmings.canReserve,
+        openFilmings: openFilmings?.ok ? openFilmingChoices(openFilmings.data) : [],
+      }}
     />
   );
 }
@@ -62,10 +74,12 @@ function ItemPage({
   item,
   caps,
   categories,
+  reservations,
 }: {
   item: EquipmentItemDetail;
   caps: EquipmentCaps;
   categories: readonly EquipmentCategory[];
+  reservations: { canReserve: boolean; openFilmings: Parameters<typeof ReservationsPanel>[0]["openFilmings"] };
 }) {
   return (
     <>
@@ -85,6 +99,13 @@ function ItemPage({
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <ItemDetailsPanel item={item} />
         <ItemStatusPanel item={item} canManage={caps.canManage} />
+        <ReservationsPanel
+          itemId={item.id}
+          reservations={item.reservations}
+          nextReservation={item.nextReservation}
+          openFilmings={reservations.openFilmings}
+          canReserve={reservations.canReserve}
+        />
         {caps.canManage && (
           <Panel label="Αλλαγή στοιχείων">
             <ItemForm

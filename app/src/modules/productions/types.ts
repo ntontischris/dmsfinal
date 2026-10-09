@@ -88,6 +88,7 @@ export interface ProductionDetail extends ProductionCard {
   members: ProductionMember[];
   history: ProductionHistoryEntry[];
   viewerCan: ProductionViewerCan;
+  filmings: ProductionFilming[];
 }
 
 export interface HistoryLine {
@@ -105,4 +106,14 @@ export interface ProductionsCaps {
 export interface OwnerCandidate {
   id: string;
   name: string;
+}
+
+// Τα Γυρίσματα της Παραγωγής όσα βλέπει ο Χρήστης (G2). Χωρίς Συνεργείο και σημειώσεις.
+export interface ProductionFilming {
+  id: string;
+  startsAt: string;
+  hours: number;
+  state: string;
+  isExtra: boolean;
+  kind: string | null;
 }
