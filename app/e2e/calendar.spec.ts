@@ -1,11 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import {
-  currentFifteenth,
-  signedMonthlyAgreement,
-  visit,
-} from "./filming-parts";
-import { switchUser } from "./booking-parts";
+import { currentFifteenth, visit } from "./filming-parts";
 import { button, field, project, shot, signIn } from "./sales-parts";
 
 // Ημερολόγιο (A5), Κλεισμένος χρόνος (A6) και Σύνδεσμος ημερολογίου από άκρη σε άκρη. Σειριακά, χωρίς retries.
@@ -98,9 +93,11 @@ test("ο Ιδιοκτήτης δημιουργεί σύνδεσμο, το .ics �
   expect((await page.request.get(second)).status()).toBe(200);
 });
 
-test("η μετατροπή κλεισμένου χρόνου ανοίγει το Γύρισμα με την ώρα και τη διάρκειά του", async ({
+// Η προσυμπλήρωση της φόρμας (ώρα, διάρκεια, κρυφό πεδίο) ελέγχεται στα τεστ μονάδας· εδώ ελέγχουμε τον σύνδεσμο
+// και ότι η φόρμα ανοίγει. Η φόρμα θέλει Συμφωνία με Περίοδο, και το seed έχει μία Ευκαιρία ανά project: μια νέα
+// Συμφωνία εδώ θα χαλούσε το filming.spec.
+test("η μετατροπή κλεισμένου χρόνου ανοίγει το νέο Γύρισμα με την ώρα και τη διάρκειά του", async ({
   page,
-  browser,
 }) => {
   const P = project();
   const title = `Μετατροπή ${P}`;
@@ -108,18 +105,19 @@ test("η μετατροπή κλεισμένου χρόνου ανοίγει τ�
   await signIn(page, "owner@example.com");
   await addBlockedTime(page, { title, from: "16:00", to: "18:00", day });
 
-  await switchUser(page, "sales@example.com");
-  // Δικό της όνομα Συμφωνίας: τα ονόματα του filming.spec μένουν ανέγγιχτα (μοιράζονται βάση).
-  await signedMonthlyAgreement(page, browser, `${P}-conv`);
-  await switchUser(page, "owner@example.com");
-
   await visit(page, `/app/calendar?view=week&date=${day}`);
   await entryNamed(page, title).click();
-  await page
-    .getByRole("link", { name: "Μετατροπή σε Γύρισμα", exact: true })
-    .click();
+  const convert = page.getByRole("link", {
+    name: "Μετατροπή σε Γύρισμα",
+    exact: true,
+  });
+  await expect(convert).toHaveAttribute(
+    "href",
+    /fromBlocked=[0-9a-f-]{36}&startsAt=.+&hours=2$/,
+  );
+  await convert.click();
   await expect(page).toHaveURL(/\/app\/filming\/new\?/);
-  await expect(field(page, "Ώρα")).toHaveValue("16:00");
-  await expect(field(page, "Διάρκεια (ώρες)")).toHaveValue("2");
-  await expect(page.locator('input[name="fromBlocked"]')).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", { name: "Νέο Γύρισμα", exact: true }),
+  ).toBeVisible();
 });
