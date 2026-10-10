@@ -15,9 +15,8 @@ import { button, inContext, project, signIn, tableRow } from "./sales-parts";
 // Σειριακά: το Ωράριο είναι μία γραμμή κοινή για όλα τα specs και το (α) πρέπει να τρέξει πρώτο.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-const P = project();
-
 test("ο Ιδιοκτήτης ορίζει το Ωράριο και προσθέτει και σβήνει εξαίρεση", async ({ page }) => {
+  const P = project();
   await signIn(page, "owner@example.com");
   await setOpeningHours(page);
 
@@ -34,6 +33,7 @@ test("ο Ιδιοκτήτης ορίζει το Ωράριο και προσθέ
 });
 
 test("ο Πελάτης κλείνει κράτηση, ο Ιδιοκτήτης την εγκρίνει", async ({ page, browser }) => {
+  const P = project();
   await signedBookingAgreement(page, browser, P);
   await signIn(page, CLIENT_EMAIL(P));
   await visit(page, "/app/book");
@@ -49,6 +49,7 @@ test("ο Πελάτης κλείνει κράτηση, ο Ιδιοκτήτης �
 });
 
 test("ο Πελάτης ζητά μετάθεση, ο Ιδιοκτήτης την απορρίπτει και το Γύρισμα μένει", async ({ page, browser }) => {
+  const P = project();
   await signIn(page, CLIENT_EMAIL(P));
   await visit(page, "/app/filming");
   await tableRow(page, CLIENT_PRODUCT_NAME(P)).getByRole("link").first().click();
