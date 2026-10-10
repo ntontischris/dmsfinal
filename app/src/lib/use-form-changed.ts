@@ -24,18 +24,18 @@ export function useFormChanged(
   useEffect(() => {
     const form = formRef.current;
     if (!form) return;
-    const refresh = () => {
+    const compare = () => {
       setIsChanged(serializeFormData(new FormData(form)) !== baselineRef.current);
     };
-    // Το reset γράφει τις προεπιλεγμένες τιμές μετά το γεγονός, γι' αυτό ελέγχουμε στο επόμενο tick.
-    const refreshAfterReset = () => setTimeout(refresh, 0);
-    form.addEventListener("input", refresh);
-    form.addEventListener("change", refresh);
-    form.addEventListener("reset", refreshAfterReset);
+    // Το React γράφει τα κρυφά πεδία και τις προεπιλογές του reset μετά το γεγονός, γι' αυτό ελέγχουμε στο επόμενο tick.
+    const compareAfterUpdate = () => setTimeout(compare, 0);
+    form.addEventListener("input", compareAfterUpdate);
+    form.addEventListener("change", compareAfterUpdate);
+    form.addEventListener("reset", compareAfterUpdate);
     return () => {
-      form.removeEventListener("input", refresh);
-      form.removeEventListener("change", refresh);
-      form.removeEventListener("reset", refreshAfterReset);
+      form.removeEventListener("input", compareAfterUpdate);
+      form.removeEventListener("change", compareAfterUpdate);
+      form.removeEventListener("reset", compareAfterUpdate);
     };
   }, [formRef]);
 

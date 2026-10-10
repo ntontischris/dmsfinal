@@ -46,7 +46,7 @@ test("η Διαχείριση συμπληρώνει τα στοιχεία, αλ
   await page.goto("/app/settings/company");
   const details = card(page, "Στοιχεία εταιρείας");
   await details.getByLabel("Επωνυμία").fill("Δοκιμαστικές Παραγωγές Ι.Κ.Ε.");
-  await details.getByLabel("Διακριτικός τίτλος").fill("Δοκιμή");
+  await details.getByLabel("Διακριτικός τίτλος").fill(`Δοκιμή ${test.info().project.name}`);
   await details.getByLabel("Διεύθυνση").fill("Οδός Δοκιμής 1, Αθήνα");
   await details.getByLabel("Τηλέφωνο").fill("2100000000");
   await details.getByLabel("Email εταιρείας").fill("info@example.com");
@@ -73,7 +73,7 @@ test("ο Ιδιοκτήτης συμπληρώνει φορολογικά και
   await tax.getByRole("button", { name: "Αποθήκευση" }).click();
   await expect(tax.getByRole("alert")).toContainText("Το ΑΦΜ δεν είναι έγκυρο");
   await tax.getByLabel("ΑΦΜ").fill("099999999");
-  await tax.getByLabel("ΔΟΥ").fill("Α΄ Αθηνών");
+  await tax.getByLabel("ΔΟΥ").fill(`Α΄ Αθηνών ${test.info().project.name}`);
   await tax.getByLabel("ΓΕΜΗ").fill("123456789000");
   await tax.getByRole("button", { name: "Αποθήκευση" }).click();
   await expect(tax.getByRole("status")).toContainText("Αποθηκεύτηκε");
