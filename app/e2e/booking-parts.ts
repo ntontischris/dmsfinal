@@ -35,25 +35,29 @@ export async function bookFirstFreeSlot(page: Page, options: { reschedule?: bool
 }
 
 // Ο Ιδιοκτήτης ορίζει το Ωράριο 08:00–20:00 για όλες τις μέρες, Χωρητικότητα 2, διάρκειες 2 και 3, βήμα 60.
+// Τα πεδία της φόρμας εδώ, όχι σε όλη τη σελίδα: η φόρμα των εξαιρέσεων έχει δικό της πεδίο «Χωρητικότητα».
 export async function setOpeningHours(page: Page): Promise<void> {
   await page.goto("/app/settings/filming", { waitUntil: "networkidle" });
+  const hoursForm = page.locator("form", {
+    has: page.getByRole("button", { name: "Αποθήκευση Ωραρίου", exact: true }),
+  });
   for (const dow of [1, 2, 3, 4, 5, 6, 7]) {
-    await page.locator(`input[name="open-${dow}"]`).check();
-    await page.locator(`input[name="from-${dow}"]`).fill(OPEN_FROM);
-    await page.locator(`input[name="to-${dow}"]`).fill(OPEN_TO);
+    await hoursForm.locator(`input[name="open-${dow}"]`).check();
+    await hoursForm.locator(`input[name="from-${dow}"]`).fill(OPEN_FROM);
+    await hoursForm.locator(`input[name="to-${dow}"]`).fill(OPEN_TO);
   }
-  await page.locator('input[name="capacity"]').fill("2");
-  await page.locator('select[name="stepMinutes"]').selectOption("60");
+  await hoursForm.locator('input[name="capacity"]').fill("2");
+  await hoursForm.locator('select[name="stepMinutes"]').selectOption("60");
   for (const hours of ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"]) {
-    await page.locator(`input[name="durations"][value="${hours}"]`).setChecked(hours === "2" || hours === "3");
+    await hoursForm.locator(`input[name="durations"][value="${hours}"]`).setChecked(hours === "2" || hours === "3");
   }
   await Promise.all([
     page.waitForResponse((response) => response.request().method() === "POST"),
-    page.getByRole("button", { name: "Αποθήκευση Ωραρίου", exact: true }).click(),
+    hoursForm.getByRole("button", { name: "Αποθήκευση Ωραρίου", exact: true }).click(),
   ]);
   await page.reload({ waitUntil: "networkidle" });
   await expect(page.locator('input[name="from-1"]')).toHaveValue(OPEN_FROM);
-  await expect(page.locator('input[name="capacity"]')).toHaveValue("2");
+  await expect(page.locator('input[name="capacity"]').first()).toHaveValue("2");
 }
 
 export const EXCEPTION_NOTE = (P: string): string => `e2e εξαίρεση ${P} ${Date.now()}`;
