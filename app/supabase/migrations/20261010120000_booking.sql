@@ -432,6 +432,7 @@ begin
     return 'period_not_open';
   end if;
   if not v_place.r_outside and authz.filming_available(p_agreement.id, v_place.r_period, p_kind)
+       + authz.filming_own_units(p_exclude, v_place.r_period)
        < authz.filming_need(p_agreement.id, v_place.r_period, p_kind, v_min, v_last) then
     return 'no_provision';
   end if;
