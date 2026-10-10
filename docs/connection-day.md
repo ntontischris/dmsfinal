@@ -29,7 +29,7 @@
 
 **Αν δεν είναι ΕΕ:** η περιοχή **δεν αλλάζει** σε υπάρχον project. Σταμάτα. Φτιάξε νέο project στο σωστό region (Dashboard → **New project**) και σβήσε το λάθος. Είναι άδειο, δεν χάνεις τίποτα.
 
-**Και στο Vercel:** Vercel dashboard → `dmsfinal-app` → **Settings → Functions → Function Region** → να γράφει **Dublin, Ireland (dub1)**. Είσαι σε Pro, οπότε πρέπει να εφαρμόζεται (στο Hobby αγνοείται σιωπηλά). Αν δεν αλλάζει, έλεγξε στο Settings → Billing ότι το team είναι όντως Pro.
+**Και στο Vercel:** η περιοχή `dub1` γράφεται στο `app/vercel.json`, δεν τη ρυθμίζεις με το χέρι. Ισχύει μόνο σε **Pro** (στο Hobby αγνοείται σιωπηλά). Επαλήθευση: Vercel → `dmsfinal-app` → **Settings → Functions** → **Dublin, Ireland (dub1)**. Αν γράφει `iad1` (Washington), έλεγξε στο **Settings → Billing** ότι το team είναι όντως Pro και κάνε Redeploy.
 
 ---
 
@@ -75,16 +75,9 @@
 
 **Θα δεις:** τις διευθύνσεις στη λίστα. Αν λείπει κάποια, ο σύνδεσμος του email θα δώσει «redirect URL not allowed».
 
-### 3γ. Πρότυπα email (Email Templates)
-**Πού:** Supabase → **Authentication → Emails** (ή Email Templates).
+### 3γ. Πρότυπα email: δεν τα αγγίζεις
 
-Τα δύο πρότυπα πρέπει να χρησιμοποιούν σύνδεσμο `token_hash` προς το `/auth/confirm`, όχι τον προεπιλεγμένο `{{ .ConfirmationURL }}`:
-- **Invite user:** `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite`
-- **Reset password:** `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
-
-Αντικατέστησε μόνο το `href` του συνδέσμου μέσα στο πρότυπο και πάτα **Save**.
-
-**Επαλήθευση:** γίνεται στο Βήμα 7. Αν ο σύνδεσμος στο email ξεκινά από `supabase.co` αντί για τη διεύθυνση της εφαρμογής, το πρότυπο δεν αποθηκεύτηκε.
+Τα email εισόδου (πρόσκληση, σύνδεσμος εισόδου, επαναφορά κωδικού) τα φτιάχνει και τα στέλνει η εφαρμογή μέσω του **Send Email Hook** (Βήμα 8). Με ενεργό το Hook η Supabase **δεν χρησιμοποιεί** τα δικά της πρότυπα, οπότε δεν χρειάζεται να τα αλλάξεις.
 
 ---
 
@@ -162,7 +155,7 @@
 **Επαλήθευση:** Supabase → **Table Editor** → `team_users`: **μία** γραμμή, με το email σου. Στον `team_user_roles`: ρόλος **Ιδιοκτήτης**. Στην εφαρμογή βλέπεις τα πάντα (Ρυθμίσεις κ.λπ.).
 
 **Αν αποτύχει**
-- *Δεν ήρθε email.* Το ενσωματωμένο email του Supabase έχει πολύ χαμηλό όριο (λίγα μηνύματα την ώρα) και πάει συχνά στα spam. Περίμενε, έλεγξε τα spam, μην στέλνεις 10 φορές.
+- *Δεν ήρθε email.* Έλεγξε ότι έγινε το Βήμα 8 (Hook ενεργό, μεταβλητές στο Vercel, Redeploy). Μετά: Resend → **Emails** (φαίνεται αν στάλθηκε) και Supabase → **Logs → Auth** (φαίνεται αν το Hook απάντησε σφάλμα). Έλεγξε τα spam και μην στέλνεις 10 φορές: υπάρχει όριο αποστολών (Βήμα 8β).
 - *Ο σύνδεσμος δίνει «redirect URL not allowed» ή «invalid / expired».* Έλεγξε 3β και 3γ. Μετά διέγραψε τον χρήστη (Authentication → Users → ⋯ → Delete user) και στείλε νέα πρόσκληση. Ο σύνδεσμος χρησιμοποιείται μία φορά.
 - *Μπήκες αλλά δεν είσαι Ιδιοκτήτης (δεν βλέπεις Ρυθμίσεις).* Κάποιος άλλος πρόλαβε να γίνει πρώτος. Κοίτα τον `team_users`. Αν υπάρχει άγνωστη γραμμή, **σταμάτα**, πες το στον developer και μην προσκαλέσεις κανέναν.
 - *Βλέπεις χρήστες `owner@example.com`, `admin@example.com` κ.λπ.* Είναι οι φανταστικοί των τεστ (`seed.mjs`) και **δεν πρέπει** να υπάρχουν στην πραγματική βάση (το script αρνείται να τρέξει εκτός τοπικού περιβάλλοντος). Σταμάτα και ειδοποίησε τον developer.
@@ -183,11 +176,11 @@
 
 | Όνομα | Τι είναι | Πού τη βρίσκεις |
 |---|---|---|
-| `RESEND_API_KEY` | Κλειδί αποστολής | Ήδη υπάρχει (Βήμα 8γ του παλιού οδηγού). |
+| `RESEND_API_KEY` | Κλειδί αποστολής | Resend → **API Keys** (δικαίωμα *Sending access*, μόνο για το `devremedia.com`). |
 | `RESEND_FROM_EMAIL` | Αποστολέας | Ήδη υπάρχει· αν λείπει: `Devre Media <noreply@devremedia.com>`. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Κλειδί διαχειριστή της βάσης (παρακάμπτει τη RLS) | Supabase → Project Settings → API → `service_role`. Μόνο για **Production** και **Preview**. |
 | `SEND_EMAIL_HOOK_SECRET` | Μυστικό υπογραφής του Hook | Το δίνει η Supabase στο 8β (μορφή `v1,whsec_…`). |
-| `CRON_SECRET` | Μυστικό της ουράς email | Φτιάξ' το τυχαία (π.χ. 32 χαρακτήρες). Το Vercel Cron το στέλνει μόνο του. |
+| `CRON_SECRET` | Μυστικό της ουράς email | Φτιάξ' το τυχαία (π.χ. 32 χαρακτήρες) από τον password manager. Μόνο **Production**. Το Vercel Cron το στέλνει μόνο του. |
 | `EMAIL_ALLOWED_DOMAINS` | Μόνο αυτά τα domains παίρνουν email (π.χ. `devremedia.com`) | Στο **Preview** είναι **υποχρεωτικό** (αλλιώς δεν στέλνεται τίποτα). Στο Production **δεν** το βάζεις. |
 | `APP_ORIGIN` | Προαιρετικό: η διεύθυνση της εφαρμογής για τους συνδέσμους στα email | Όχι απαραίτητο· χωρίς αυτό το Production χρησιμοποιεί τη διεύθυνση του Vercel (`dmsfinal-app.vercel.app`). |
 
@@ -195,8 +188,13 @@
 1. **Authentication → Hooks → Send Email Hook** → τύπος **HTTPS** → URL: `https://dmsfinal-app.vercel.app/api/hooks/send-email` → **Enable**.
 2. Η Supabase δείχνει το μυστικό (`v1,whsec_…`) **μία φορά**. Αντίγραψέ το στη μεταβλητή `SEND_EMAIL_HOOK_SECRET` του Vercel (8α). Μετά δεν ξαναφαίνεται: αν το χάσεις, φτιάξε νέο στο ίδιο μενού.
 3. **Authentication → Email → OTP expiry** → `86400` (24 ώρες, ώστε οι σύνδεσμοι πρόσκλησης να ζουν μία μέρα).
+4. **Authentication → Rate Limits → Email sent** (όσα email εισόδου επιτρέπονται την ώρα) → `30`. Το προεπιλεγμένο είναι λίγα την ώρα και μια σειρά προσκλήσεων θα κολλούσε. Αν το πεδίο δεν αλλάζει, σημείωσέ το και πες το στον developer· η δοκιμή του 8δ δείχνει αν φτάνει.
 
-### 8γ. Έλεγχος
+### 8γ. Vercel Pro: cron και όριο δαπάνης
+- **Cron:** το `app/vercel.json` τρέχει την ουρά email (`/api/cron/outbox`) **κάθε λεπτό**. Το Pro το επιτρέπει (το Hobby όχι). Επαλήθευση: Vercel → `dmsfinal-app` → **Settings → Cron Jobs** → φαίνεται το `/api/cron/outbox` με `* * * * *`. Το κόστος του είναι λίγα σεντ τον μήνα, μέσα στην πίστωση των $20 του Pro.
+- **Όριο δαπάνης:** Vercel → team → **Settings → Billing → Spend Management** → ειδοποίηση στα **$30**, σταμάτημα στα **$50**. Είναι ζώνη ασφαλείας για τα απρόβλεπτα (bug σε βρόχο, bots), όχι προϋπολογισμός.
+
+### 8δ. Έλεγχος
 - Ρυθμίσεις → **Ενσωματώσεις** → «Δοκιμαστικό email στον εαυτό μου» → στο Ιστορικό εμφανίζεται γραμμή **στάλθηκε** με το email σου.
 - Αν εμφανιστεί **απέτυχε** με «Resend 401/403»: το `RESEND_API_KEY` είναι λάθος ή δεν έχει δικαίωμα αποστολής από το `devremedia.com`.
 - Αν το Hook δεν τρέχει (ο Χρήστης δεν παίρνει email εισόδου και η Supabase δείχνει σφάλμα): έλεγξε ότι το URL του 8β είναι ακριβώς το παραπάνω και ότι το `SEND_EMAIL_HOOK_SECRET` είναι το ίδιο και στα δύο μέρη.
@@ -207,7 +205,9 @@
 
 - [ ] Supabase region = ΕΕ (Ireland / Frankfurt) και Vercel function region = `dub1`.
 - [ ] Auth: «Allow new users to sign up» **off**, πάροχος **Email on**.
-- [ ] Redirect URLs αποθηκεύτηκαν. Το Send Email Hook είναι ενεργό (Βήμα 8β).
+- [ ] Redirect URLs αποθηκεύτηκαν. Το Send Email Hook είναι ενεργό (Βήμα 8β), OTP expiry `86400`, όριο «Email sent» `30`.
+- [ ] Vercel Pro: functions σε `dub1`, cron `/api/cron/outbox` κάθε λεπτό, Spend Management ενεργό (Βήμα 8γ).
+- [ ] Το δοκιμαστικό email φαίνεται **στάλθηκε** στο Ιστορικό αποστολών (Βήμα 8δ).
 - [ ] 3 secrets στο GitHub (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`).
 - [ ] Το `migrate` πέρασε και φαίνονται πίνακες στο Supabase.
 - [ ] Vercel: οι μεταβλητές Supabase υπάρχουν, έγινε Redeploy, το `/login` ανοίγει.
@@ -220,5 +220,7 @@
 Σταμάτα στο βήμα που έσπασε, μην προχωρήσεις. Γράψε στον developer **ποιο βήμα** και **τι μήνυμα** βλέπεις (χωρίς κλειδιά, κωδικούς ή tokens). Αν κατά λάθος επικόλλησες μυστικό κάπου, θεώρησέ το καμένο: φτιάξε νέο (rotate) και σβήσε το παλιό.
 
 ## Αργότερα (όχι σήμερα)
+
+Μέχρι τότε η εφαρμογή μένει στο `dmsfinal-app.vercel.app`. Όταν περάσει στο `devremedia.com`, αλλάζουν μαζί: το **APP_ORIGIN** στο Vercel, το **Site URL** και τα **Redirect URLs** (3β) και το URL του **Send Email Hook** (8β) στη Supabase. Οι σύνδεσμοι που έχουν ήδη σταλεί λήγουν σε 24 ώρες, οπότε κάνε την αλλαγή εκτός ωραρίου.
 
 Η αλλαγή του `devremedia.com` στο νέο σύστημα (αρχείο φύλαξης της παλιάς βάσης, DNS στο SiteGround, redirects) είναι ξεχωριστή «Ημέρα αλλαγής», στο `docs/setup-and-cutover.md`, Φάση Γ. Το Google Calendar (service account) και το AI Gateway στήνονται επίσης αργότερα, με τον developer.
