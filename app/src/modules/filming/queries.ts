@@ -15,6 +15,7 @@ import type {
 } from "./types";
 import {
   bookingOptionsSchema,
+  blockedUserIdsSchema,
   candidatesSchema,
   crewTemplatesSchema,
   equipmentCandidatesSchema,
@@ -100,6 +101,17 @@ export async function listCrewCandidates(): Promise<ReadResult<NamedRef[]>> {
     "listCrewCandidates",
     supabase.rpc("filming_crew_candidates"),
     (data) => candidatesSchema.parse(data),
+  );
+}
+
+// Τα μέλη με κλεισμένο χρόνο που τέμνει το Γύρισμα (μόνο για προειδοποίηση στο Συνεργείο).
+export async function listCrewBlocked(startsAt: string, hours: number): Promise<ReadResult<string[]>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "listCrewBlocked",
+    supabase.rpc("filming_crew_blocked", { p_starts: startsAt, p_hours: hours }),
+    (data) => blockedUserIdsSchema.parse(data),
   );
 }
 

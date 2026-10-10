@@ -85,6 +85,7 @@ export const bookSchema = startsAtFields
     kindId: optionalUuid,
     location: optionalText(LOCATION_LIMIT),
     note: optionalText(REASON_LIMIT),
+    fromBlocked: optionalUuid.optional(),
   })
   .transform(({ date, time, ...rest }) => ({
     ...rest,
@@ -97,6 +98,7 @@ export const internalBookSchema = startsAtFields
     hours: hoursSchema,
     location: optionalText(LOCATION_LIMIT),
     note: optionalText(REASON_LIMIT),
+    fromBlocked: optionalUuid.optional(),
   })
   .transform(({ date, time, ...rest }) => ({
     ...rest,

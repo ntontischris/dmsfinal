@@ -20,6 +20,7 @@ import {
   listCrewCandidates,
   kindDefaultHours,
   listBookingOptions,
+  listCrewBlocked,
   listCrewTemplates,
   ReschedulePanel,
   checkSlot,
@@ -85,6 +86,7 @@ async function FilmingPageContent({
     equipmentTemplates,
     bookingOptions,
     newTimeCheck,
+    crewBlocked,
   ] = await Promise.all([
     canCrew ? listCrewCandidates() : null,
     canCrew ? listCrewTemplates() : null,
@@ -92,6 +94,7 @@ async function FilmingPageContent({
     canEquipment ? listTemplates() : null,
     card.viewerCan.reschedule ? listBookingOptions() : null,
     checksNewTime ? checkSlot(pending.startsAt, pending.hours, card.id) : null,
+    canCrew ? listCrewBlocked(card.startsAt, card.hours) : null,
   ]);
   if (
     (crewCandidates !== null && !crewCandidates.ok) ||
@@ -132,6 +135,7 @@ async function FilmingPageContent({
             card={card}
             candidates={crewCandidates?.ok ? crewCandidates.data : []}
             templates={crewTemplates?.ok ? crewTemplates.data : []}
+            blockedIds={crewBlocked?.ok ? crewBlocked.data : []}
           />
         )}
         {(canEquipment || card.equipment.length > 0) && (

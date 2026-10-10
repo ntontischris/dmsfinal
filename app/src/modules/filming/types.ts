@@ -125,6 +125,8 @@ export interface CrewMember {
   response: CrewResponse;
   reason: string | null;
   respondedAt: string | null;
+  // Έχει κλεισμένο χρόνο που τέμνει το Γύρισμα (μόνο προειδοποίηση).
+  isBlocked: boolean;
 }
 
 export interface EquipmentLine {

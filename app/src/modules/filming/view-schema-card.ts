@@ -63,6 +63,7 @@ const crewSchema = z.object({
   response: z.enum(CREW_RESPONSES),
   reason: z.string().nullable(),
   respondedAt: z.string().nullable(),
+  isBlocked: z.boolean(),
 });
 
 const historySchema = z.object({

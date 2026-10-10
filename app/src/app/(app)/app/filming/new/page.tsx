@@ -5,6 +5,7 @@ import {
   athensDate,
   filmingCaps,
   listBookingOptions,
+  parseBlockedPrefill,
 } from "@/modules/filming";
 import { listProductions } from "@/modules/productions";
 
@@ -15,7 +16,11 @@ export const metadata = { title: "Νέο Γύρισμα" };
 const EYEBROW = "E4 · Νέο Γύρισμα";
 
 // E4: κλείσιμο Γυρίσματος από την ομάδα για Συμφωνία με ενεργή Περίοδο. Η βάση ελέγχει τα πάντα.
-export default async function NewFilmingPage() {
+export default async function NewFilmingPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const viewer = await getViewer();
   const caps = filmingCaps(viewer);
   if (!caps.canBook)
@@ -32,6 +37,7 @@ export default async function NewFilmingPage() {
     caps.canBookInternal ? listProductions({ state: "open", internalOnly: true }) : null,
   ]);
   if (!options.ok) return <LoadError />;
+  const prefill = parseBlockedPrefill(await searchParams);
   const internal = productions?.ok
     ? productions.data.map((production) => ({ id: production.id, name: production.title }))
     : [];
@@ -39,7 +45,12 @@ export default async function NewFilmingPage() {
   return (
     <>
       <ScreenHeader eyebrow={EYEBROW} title="Νέο Γύρισμα" />
-      <NewFilmingForm options={options.data} productions={internal} today={athensDate(new Date())} />
+      <NewFilmingForm
+        options={options.data}
+        productions={internal}
+        today={athensDate(new Date())}
+        prefill={prefill}
+      />
     </>
   );
 }

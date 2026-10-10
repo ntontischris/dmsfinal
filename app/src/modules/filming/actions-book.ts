@@ -15,10 +15,10 @@ const BOOK_FAILED = "Το Γύρισμα δεν αποθηκεύτηκε. Δοκ
 
 export async function bookFilming(_: FormState, form: FormData): Promise<FormState> {
   const parsed = bookSchema.safeParse(
-    pick(form, ["agreementId", "date", "time", "hours", "kindId", "location", "note"]),
+    pick(form, ["agreementId", "date", "time", "hours", "kindId", "location", "note", "fromBlocked"]),
   );
   if (!parsed.success) return firstIssue(parsed.error);
-  const { agreementId, startsAt, hours, kindId, location, note } = parsed.data;
+  const { agreementId, startsAt, hours, kindId, location, note, fromBlocked } = parsed.data;
   const outcome = await callRpc("filming_create", {
     p_agreement: agreementId,
     p_starts_at: startsAt,
@@ -26,6 +26,7 @@ export async function bookFilming(_: FormState, form: FormData): Promise<FormSta
     p_kind: kindId,
     p_location: location,
     p_note: note,
+    p_from_blocked: fromBlocked ?? null,
   });
   if (!outcome.ok) return outcome.state;
   return redirectToFilming(outcome.data);
@@ -75,16 +76,17 @@ export async function withdrawRescheduleRequest(_: FormState, form: FormData): P
 // Γύρισμα της Εσωτερικής Παραγωγής: χωρίς Πελάτη και χωρίς Παροχή (μόνο για Εύρος «όλα»).
 export async function bookInternalFilming(_: FormState, form: FormData): Promise<FormState> {
   const parsed = internalBookSchema.safeParse(
-    pick(form, ["productionId", "date", "time", "hours", "location", "note"]),
+    pick(form, ["productionId", "date", "time", "hours", "location", "note", "fromBlocked"]),
   );
   if (!parsed.success) return firstIssue(parsed.error);
-  const { productionId, startsAt, hours, location, note } = parsed.data;
+  const { productionId, startsAt, hours, location, note, fromBlocked } = parsed.data;
   const outcome = await callRpc("filming_create_internal", {
     p_production: productionId,
     p_starts_at: startsAt,
     p_hours: hours,
     p_location: location,
     p_note: note,
+    p_from_blocked: fromBlocked ?? null,
   });
   if (!outcome.ok) return outcome.state;
   return redirectToFilming(outcome.data);

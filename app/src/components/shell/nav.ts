@@ -1,6 +1,6 @@
 // Η πλοήγηση της εφαρμογής: ενότητες με τα modules τους. Κάθε module προσθέτει εδώ τις οθόνες του όταν χτιστεί.
 // Ο κωδικός είναι αυτός του Blueprint (κεφ. 8), για να αντιστοιχίζεται με το prototype.
-// `requires`: ένα Δικαίωμα (ή περισσότερα, αρκεί ένα)· «owner» για ό,τι κάνει μόνο ο Ιδιοκτήτης· «team» για Χρήστη ομάδας.
+// `requires`: ένα Δικαίωμα (ή περισσότερα, αρκεί ένα)· «owner» για ό,τι κάνει μόνο ο Ιδιοκτήτης· «team» για Χρήστη ομάδας· «client» για Χρήστη πελάτη.
 
 export interface NavItem {
   code: string;
@@ -18,7 +18,10 @@ export interface NavSection {
 export const NAV: readonly NavSection[] = [
   {
     title: "Κοινά",
-    items: [{ code: "A1", label: "Σήμερα", href: "/app" }],
+    items: [
+      { code: "A1", label: "Σήμερα", href: "/app" },
+      { code: "A5", label: "Ημερολόγιο", href: "/app/calendar", requires: ["team", "client"] },
+    ],
   },
   {
     title: "Πελάτες και Πωλήσεις",
