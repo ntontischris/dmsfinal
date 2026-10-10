@@ -86,6 +86,18 @@ values (date_trunc('month', now() at time zone 'Europe/Athens')::date, 8800, 220
 update public.provision_kinds set measure = 'per_hour', default_hours = null where code = 'reel';
 update public.provision_kinds set measure = 'per_day', default_hours = null where code = 'video';
 
+-- Ωράριο κρατήσεων (C2): ανοιχτό όλες τις μέρες 00:00–24:00, Χωρητικότητα 20, βήμα 15, διάρκειες που καλύπτει το τεστ.
+-- Οι αργίες των επόμενων 400 ημερών ανοίγουν ως εξαίρεση, ώστε καμία μέρα εκτέλεσης να μην κλείνει.
+insert into public.booking_week (dow, is_open, opens, closes)
+select d, true, time '00:00', time '24:00' from generate_series(1, 7) d;
+update public.filming_settings
+   set capacity = 20, allowed_durations = '{0.5,1,1.5,2,3,4,12}', start_step_minutes = 15, booking_hours_set_at = now()
+ where id;
+insert into public.booking_exceptions (day, is_closed, note)
+select g::date, false, 'Αργία ανοιχτή για τα τεστ'
+  from generate_series((now() at time zone 'Europe/Athens')::date, (now() at time zone 'Europe/Athens')::date + 400, interval '1 day') g
+ where authz.is_holiday(g::date);
+
 -- Βοηθητικά των τεστ (ζουν μόνο μέσα στη συναλλαγή).
 -- Ώρα Ελλάδας: η μέρα «σήμερα + n» στις «hh:mm».
 create function public.t_at(p_days integer, p_time time) returns timestamptz
@@ -225,7 +237,7 @@ select ok(
   'Το Ίχνος καταγράφει τα έξι νέα Γυρίσματα'
 );
 select ok(not authz.audit_entity_allowed('filming_money'), 'Η άγνωστη οντότητα δεν καταγράφεται (default deny)');
-select is(authz.filming_slot_open(now(), 1), true, 'Το σημείο σύνδεσης ωραρίου (C2) είναι ανοιχτό για τώρα');
+select is(authz.filming_slot_open(date_trunc('hour', now()), 1), true, 'Το σημείο σύνδεσης ωραρίου (C2) είναι ανοιχτό για τώρα');
 select is(authz.user_blocked_at(gen_random_uuid(), now(), now()), false, 'Το σημείο σύνδεσης κλεισμένου χρόνου (C2) δεν μπλοκάρει ακόμα');
 select is(authz.production_has_work(current_setting('t.pb')::uuid), false, 'Η Παραγωγή χωρίς Γυρίσματα δεν έχει δουλειά');
 select is(authz.equipment_item_reserved(gen_random_uuid()), false, 'Χωρίς Γυρίσματα κανένα αντικείμενο δεν είναι δεσμευμένο');
