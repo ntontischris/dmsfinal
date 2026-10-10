@@ -285,6 +285,7 @@ begin
       raise exception 'Ο κλεισμένος χρόνος δεν αλλάζει άτομο' using errcode = 'P0001';
     end if;
     v_user := b.user_id;
+    perform authz.require_block_target(v_user);
   end if;
   if v_title is not null and length(v_title) > 120 then
     raise exception 'Ο τίτλος έχει έως 120 χαρακτήρες' using errcode = 'P0001';
@@ -730,15 +731,18 @@ language sql stable security definer set search_path = ''
 as $$
   select case
     when authz.user_is_team(p_user) then
-      exists (select 1 from public.filming_crew c where c.filming_id = f.id and c.user_id = p_user)
-      or coalesce(authz.user_scope(p_user, 'filming.view') = 'all', false)
-      or (coalesce(authz.user_scope(p_user, 'filming.view') = 'mine', false) and (
-            exists (select 1 from public.productions pr
-                     where pr.id = f.production_id
-                       and (pr.owner_id = p_user or exists (
-                             select 1 from public.production_members m
-                              where m.production_id = pr.id and m.user_id = p_user)))
-            or exists (select 1 from public.clients cl where cl.id = f.client_id and cl.manager_id = p_user)))
+      not exists (select 1 from public.filming_crew c
+                   where c.filming_id = f.id and c.user_id = p_user and c.response = 'declined')
+      and (
+        exists (select 1 from public.filming_crew c where c.filming_id = f.id and c.user_id = p_user)
+        or coalesce(authz.user_scope(p_user, 'filming.view') = 'all', false)
+        or (coalesce(authz.user_scope(p_user, 'filming.view') = 'mine', false) and (
+              exists (select 1 from public.productions pr
+                       where pr.id = f.production_id
+                         and (pr.owner_id = p_user or exists (
+                               select 1 from public.production_members m
+                                where m.production_id = pr.id and m.user_id = p_user)))
+              or exists (select 1 from public.clients cl where cl.id = f.client_id and cl.manager_id = p_user))))
     else f.client_id is not null and f.client_id = authz.client_id_of_user(p_user)
   end;
 $$;
@@ -761,24 +765,24 @@ as $$
   ), rows_all as (
     select 'filming-' || f.id::text || '@dms' as uid, f.starts_at, authz.filming_end(f.starts_at, f.hours) as ends_at,
            (case when f.state = 'pending' then '(αναμένει) ' else '' end) || coalesce(cl.name, pr.title) as summary,
-           f.location, f.client_note as description
+           f.location, f.client_note as description, false as all_day
       from public.filmings f
       join public.productions pr on pr.id = f.production_id
       left join public.clients cl on cl.id = f.client_id
       cross join window_range w
      where f.state in ('pending', 'scheduled', 'done', 'no_show')
-       and f.starts_at >= w.from_at and f.starts_at <= w.to_at
+       and authz.filming_end(f.starts_at, f.hours) > w.from_at and f.starts_at <= w.to_at
        and authz.calendar_feed_sees_filming(p_user, f)
     union all
     select 'blocked-' || b.id::text || '@dms', b.starts_at, b.ends_at,
-           coalesce(b.title, 'Κλεισμένος χρόνος'), null::text, null::text
+           coalesce(b.title, 'Κλεισμένος χρόνος'), null::text, null::text, b.all_day
       from public.blocked_times b
       cross join window_range w
-     where b.user_id = p_user and b.starts_at >= w.from_at and b.starts_at <= w.to_at
+     where b.user_id = p_user and b.ends_at > w.from_at and b.starts_at <= w.to_at
   )
   select coalesce(jsonb_agg(jsonb_build_object(
            'uid', r.uid, 'startsAt', r.starts_at, 'endsAt', r.ends_at, 'summary', r.summary,
-           'location', r.location, 'description', r.description
+           'location', r.location, 'description', r.description, 'allDay', r.all_day
          ) order by r.starts_at, r.uid), '[]'::jsonb)
     from rows_all r;
 $$;

@@ -101,6 +101,7 @@ const feedEventSchema = z.object({
   summary: z.string(),
   location: z.string().nullable(),
   description: z.string().nullable(),
+  allDay: z.boolean(),
 });
 
 export const feedSchema = z

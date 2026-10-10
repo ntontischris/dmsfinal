@@ -3,7 +3,7 @@
 -- Ημερομηνίες: η εβδομάδα 2027-01-04 έως 2027-01-10 (Ώρα Ελλάδας, +02:00 τον Ιανουάριο)· ο Σύνδεσμος χρησιμοποιεί
 -- «σήμερα + n» γιατί το feed κοιτάζει 30 μέρες πίσω έως 180 μπροστά.
 begin;
-select plan(94);
+select plan(104);
 -- ───────────── Βοηθητικά ─────────────
 -- Ώρα Ελλάδας: η μέρα «σήμερα + n» στις «hh:mm».
 create function public.t_day(p_days integer, p_time time) returns timestamptz
@@ -230,6 +230,7 @@ set local role authenticated;
 select set_config('t.be4', public.blocked_time_save(null, null, timestamptz '2027-01-05 10:00:00+02', timestamptz '2027-01-05 11:00:00+02', false, 'Ιατρικές')::text, true);
 select is(public.blocked_time_view(current_setting('t.be4')::uuid) ->> 'title', 'Ιατρικές', 'Ο Λογιστής βλέπει τον δικό του κλεισμένο χρόνο');
 select throws_ok($$ select public.blocked_time_view(current_setting('t.bt')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Ο Λογιστής δεν βλέπει κλεισμένο χρόνο άλλου');
+select throws_ok($$ select public.blocked_time_delete(current_setting('t.bt')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Ο Λογιστής δεν σβήνει κλεισμένο χρόνο άλλου χωρίς «Κλείνει χρόνο άλλων»');
 reset role;
 
 -- ───────────── Μετατροπή σε Γύρισμα ─────────────
@@ -311,6 +312,8 @@ select is(public.calendar_link_status() ->> 'exists', 'true', 'Μετά τη δ�
 select is(public.calendar_feed(current_setting('t.tok1')) ->> 'name', 'Μαρία Παπαδάκη', 'Το feed δίνει το όνομα του Χρήστη');
 select ok(position('(αναμένει) Κυψέλη Καφέ' in (public.calendar_feed(current_setting('t.tok1')))::text) > 0, 'Το αναμένει φαίνεται με «(αναμένει)» στον τίτλο');
 select ok(position(current_setting('t.fcx') in (public.calendar_feed(current_setting('t.tok1')))::text) = 0, 'Το ακυρωμένο Γύρισμα δεν μπαίνει στο feed');
+select ok(not exists (select 1 from jsonb_array_elements(public.calendar_feed(current_setting('t.tok1')) -> 'events') e where e ->> 'description' is not null), 'Το feed του Πελάτη δεν έχει εσωτερικό σημείωμα ή κείμενο συνεργείου');
+select ok(position('Γιώργος' in (public.calendar_feed(current_setting('t.tok1')))::text) = 0 and position('Κώστας' in (public.calendar_feed(current_setting('t.tok1')))::text) = 0, 'Το feed του Πελάτη δεν έχει ονόματα μελών του Συνεργείου');
 select set_config('t.tok2', public.calendar_link_renew(), true);
 select ok(public.calendar_feed(current_setting('t.tok1')) is null, 'Ο παλιός Σύνδεσμος σταματά μετά την ανανέωση');
 select ok(public.calendar_feed(current_setting('t.tok2')) is not null, 'Ο νέος Σύνδεσμος δουλεύει');
@@ -327,7 +330,20 @@ select set_config('t.tok3', public.calendar_link_renew(), true);
 select is(public.calendar_feed(current_setting('t.tok3')) ->> 'name', 'Πέτρος', 'Ο Σύνδεσμος ομάδας δίνει το όνομα του μέλους');
 select ok(position('Προσωπικό' in (public.calendar_feed(current_setting('t.tok3')))::text) > 0, 'Ο δικός μου κλεισμένος χρόνος μπαίνει στο feed με τον τίτλο');
 select ok(position('Άδεια' in (public.calendar_feed(current_setting('t.tok3')))::text) = 0, 'Ο κλεισμένος χρόνος άλλων δεν μπαίνει στο feed του μέλους');
+select set_config('t.bt_long', public.blocked_time_save(null, null, public.t_day(-40, time '10:00'), public.t_day(20, time '10:00'), false, 'Μακρύ')::text, true);
+select ok(position('Μακρύ' in (public.calendar_feed(current_setting('t.tok3')))::text) > 0, 'Κλεισμένος χρόνος που ξεκίνησε πριν από το παράθυρο και τελειώνει μετά μπαίνει στο feed');
+select set_config('t.bt_allday', public.blocked_time_save(null, null, public.t_day(4, time '12:00'), public.t_day(4, time '12:00'), true, 'Ολοήμερο')::text, true);
+select is((select e ->> 'allDay' from jsonb_array_elements(public.calendar_feed(current_setting('t.tok3')) -> 'events') e where e ->> 'summary' = 'Ολοήμερο'), 'true', 'Η μέρα ολόκληρη μπαίνει στο feed ως όλη μέρα');
 reset role;
+
+select public.t_as('00000000-0000-0000-0000-0000000000e4');
+set local role authenticated;
+select set_config('t.tok4', public.calendar_link_renew(), true);
+select ok(position(current_setting('t.f1') in (public.calendar_feed(current_setting('t.tok4')))::text) > 0, 'Το μέλος του Συνεργείου βλέπει το Γύρισμα στο feed του');
+reset role;
+update public.filming_crew set response = 'declined', reason = 'Δοκιμή', responded_at = now()
+ where filming_id = current_setting('t.f1')::uuid and user_id = '00000000-0000-0000-0000-0000000000e4';
+select ok(position(current_setting('t.f1') in (public.calendar_feed(current_setting('t.tok4')))::text) = 0, 'Το Γύρισμα που αρνήθηκε το μέλος δεν μπαίνει στο feed του');
 
 -- ───────────── Σταμάτημα: απενεργοποίηση, μπλοκάρισμα, αποθήκευση μόνο hash ─────────────
 select public.t_as('00000000-0000-0000-0000-0000000000e6');
@@ -336,6 +352,10 @@ select set_config('t.tok6', public.calendar_link_renew(), true);
 reset role;
 select lives_ok($$ update public.team_users set is_active = false where user_id = '00000000-0000-0000-0000-0000000000e3' $$, 'Η απενεργοποίηση του μέλους περνά');
 select ok(public.calendar_feed(current_setting('t.tok3')) is null, 'Απενεργοποιημένο μέλος δεν παίρνει feed');
+select public.t_as('00000000-0000-0000-0000-0000000000e1');
+set local role authenticated;
+select throws_ok($$ select public.blocked_time_save(current_setting('t.bt')::uuid, null, timestamptz '2027-01-05 10:00:00+02', timestamptz '2027-01-05 12:00:00+02', false, 'Ραντεβού γιατρού') $$, 'P0001', 'Ο Χρήστης ομάδας δεν βρέθηκε', 'Η αλλαγή κλεισμένου χρόνου ανενεργού μέλους απορρίπτεται');
+reset role;
 select lives_ok($$ update auth.users set banned_until = now() + interval '1 day' where id = '00000000-0000-0000-0000-0000000000e6' $$, 'Ο Πελάτης μπλοκάρεται');
 select ok(public.calendar_feed(current_setting('t.tok6')) is null, 'Μπλοκαρισμένος Χρήστης δεν παίρνει feed');
 select is((select token_hash from public.calendar_links where user_id = '00000000-0000-0000-0000-0000000000e6'), encode(sha256(convert_to(current_setting('t.tok6'), 'UTF8')), 'hex'), 'Αποθηκεύεται μόνο το sha256 του token');
@@ -347,6 +367,14 @@ set local role authenticated;
 select throws_ok($$ select public.calendar_view(date '2027-01-04', date '2027-01-10') $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Πελάτης με αρχειοθετημένο Πελάτη δεν βλέπει το Ημερολόγιο');
 select throws_ok($$ select public.calendar_link_renew() $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Πελάτης με αρχειοθετημένο Πελάτη δεν παίρνει Σύνδεσμο');
 reset role;
+
+select public.t_as('00000000-0000-0000-0000-0000000000e9');
+set local role authenticated;
+select set_config('t.tok9', public.calendar_link_renew(), true);
+reset role;
+select ok(public.calendar_feed(current_setting('t.tok9')) is not null, 'Ο Χρήστης πελάτη με ενεργή συμμετοχή παίρνει feed');
+update public.client_users set removed_at = now() where user_id = '00000000-0000-0000-0000-0000000000e9';
+select ok(public.calendar_feed(current_setting('t.tok9')) is null, 'Μετά την αφαίρεση της συμμετοχής το feed δεν δίνει τίποτα');
 
 select * from finish();
 rollback;

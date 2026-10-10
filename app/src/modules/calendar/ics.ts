@@ -1,9 +1,12 @@
 // Το αρχείο .ics του Συνδέσμου ημερολογίου (μόνο ανάγνωση). Χωρίς βιβλιοθήκη: RFC 5545 για ό,τι χρειάζεται εδώ.
 
+import { athensDate } from "@/modules/filming";
+
 export interface IcsEvent {
   uid: string;
   startsAt: string;
   endsAt: string;
+  allDay: boolean;
   summary: string;
   location: string | null;
   description: string | null;
@@ -56,12 +59,23 @@ export function foldLine(line: string): string[] {
 const optionalLine = (name: string, value: string | null): string[] =>
   value ? [`${name}:${escapeText(value)}`] : [];
 
+// Όλη μέρα: ημερομηνία Ώρας Ελλάδας, με τέλος αποκλειστικό (η βάση δίνει τα μεσάνυχτα της επόμενης μέρας).
+const timingLines = (event: IcsEvent): string[] =>
+  event.allDay
+    ? [
+        `DTSTART;VALUE=DATE:${athensDate(event.startsAt).replaceAll("-", "")}`,
+        `DTEND;VALUE=DATE:${athensDate(event.endsAt).replaceAll("-", "")}`,
+      ]
+    : [
+        `DTSTART:${formatUtc(event.startsAt)}`,
+        `DTEND:${formatUtc(event.endsAt)}`,
+      ];
+
 const eventLines = (event: IcsEvent, stamp: string): string[] => [
   "BEGIN:VEVENT",
   `UID:${escapeText(event.uid)}`,
   `DTSTAMP:${stamp}`,
-  `DTSTART:${formatUtc(event.startsAt)}`,
-  `DTEND:${formatUtc(event.endsAt)}`,
+  ...timingLines(event),
   `SUMMARY:${escapeText(event.summary)}`,
   ...optionalLine("LOCATION", event.location),
   ...optionalLine("DESCRIPTION", event.description),

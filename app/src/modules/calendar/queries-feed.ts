@@ -20,9 +20,15 @@ export async function getCalendarFeed(
       detectSessionInUrl: false,
     },
   });
-  return read(
-    "getCalendarFeed",
-    anonymous.rpc("calendar_feed", { p_token: token }),
-    (data) => feedSchema.parse(data),
-  );
+  try {
+    return await read(
+      "getCalendarFeed",
+      anonymous.rpc("calendar_feed", { p_token: token }),
+      (data) => feedSchema.parse(data),
+    );
+  } catch (error) {
+    // Η απάντηση της βάσης δεν έχει το σχήμα που περιμένουμε· το σχήμα μένει στα logs, όχι στον αναγνώστη.
+    console.error("getCalendarFeed: shape", error instanceof Error ? error.name : "unknown");
+    return { ok: false };
+  }
 }

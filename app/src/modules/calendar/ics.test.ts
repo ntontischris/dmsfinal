@@ -14,6 +14,7 @@ const eventOf = (overrides: Partial<IcsEvent> = {}): IcsEvent => ({
   uid: "filming-1@dmsfinal",
   startsAt: "2026-10-12T06:00:00Z",
   endsAt: "2026-10-12T09:00:00Z",
+  allDay: false,
   summary: "Γύρισμα",
   location: null,
   description: null,
@@ -92,6 +93,25 @@ describe("buildCalendarIcs", () => {
     );
     expect(text).toContain("SUMMARY:Γύρισμα\\; Αθήνα\\, πλατεία\r\n");
     expect(text).not.toContain("LOCATION:");
+  });
+
+  it("should write an all-day event as Athens dates with an exclusive end", () => {
+    const text = buildCalendarIcs(
+      {
+        name: null,
+        events: [
+          eventOf({
+            allDay: true,
+            startsAt: "2026-10-11T21:00:00Z",
+            endsAt: "2026-10-13T21:00:00Z",
+          }),
+        ],
+      },
+      NOW,
+    );
+    expect(text).toContain("DTSTART;VALUE=DATE:20261012\r\n");
+    expect(text).toContain("DTEND;VALUE=DATE:20261014\r\n");
+    expect(text).not.toContain("DTSTART:");
   });
 
   it("should use CRLF on every line", () => {
