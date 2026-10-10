@@ -92,6 +92,7 @@ export const NAV: readonly NavSection[] = [
     title: "Γυρίσματα",
     items: [
       { code: "E1", label: "Γυρίσματα", href: "/app/filming", requires: ["filming.view", "c.book"] },
+      { code: "E5", label: "Κράτηση", href: "/app/book", requires: "c.book" },
       { code: "E2", label: "Ουρά έγκρισης", href: "/app/filming/queue", requires: "filming.approve" },
       { code: "E6", label: "Τα Γυρίσματά μου", href: "/app/filming/mine", requires: "filming.view" },
       { code: "E7", label: "Πρότυπα Συνεργείου", href: "/app/filming/crew-templates", requires: "filming.crew" },

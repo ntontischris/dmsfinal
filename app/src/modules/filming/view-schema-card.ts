@@ -14,11 +14,19 @@ import {
 const state = z.enum(FILMING_STATES);
 const named = z.object({ id: z.string(), name: z.string() });
 
+export const pendingRescheduleSchema = z.object({
+  startsAt: z.string(),
+  hours: z.number(),
+  requestedAt: z.string(),
+});
+
 export const signalsSchema = z.object({
   equipmentConflict: z.boolean(),
   isExtra: z.boolean(),
   cancelRequest: z.boolean(),
   crewDeclined: z.boolean(),
+  slotProblem: z.string().nullable(),
+  pendingReschedule: pendingRescheduleSchema.nullable(),
 });
 
 export const rowSchema: z.ZodType<FilmingRow> = z.object({
@@ -138,6 +146,9 @@ const cardShape = z.object({
     decideCancel: z.boolean(),
     clientCancel: z.boolean(),
     requestCancel: z.boolean(),
+    decideReschedule: z.boolean(),
+    clientReschedule: z.boolean(),
+    clientWithdrawReschedule: z.boolean(),
   }),
 });
 

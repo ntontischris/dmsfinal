@@ -12,6 +12,7 @@ import {
   type MineEntry,
   type PendingEntry,
 } from "./types";
+import type { RescheduleRequestEntry } from "./booking-types";
 import { provisionSchema } from "./view-schema-card";
 
 // Σχήμα των JSON των υπόλοιπων RPC του module: ουρά έγκρισης, «Τα Γυρίσματά μου», επιλογές κράτησης,
@@ -44,10 +45,23 @@ const cancelRequestSchema: z.ZodType<CancelRequestEntry> = z.object({
   willBurn: z.boolean(),
 });
 
+const rescheduleRequestSchema: z.ZodType<RescheduleRequestEntry> = z.object({
+  id: z.string(),
+  startsAt: z.string(),
+  hours: z.number(),
+  newStartsAt: z.string(),
+  newHours: z.number(),
+  requestedAt: z.string(),
+  client: namedOrNull,
+  production,
+  slotProblem: z.string().nullable(),
+});
+
 export const queueSchema = z
   .object({
     pending: z.array(pendingSchema),
     cancelRequests: z.array(cancelRequestSchema),
+    rescheduleRequests: z.array(rescheduleRequestSchema),
   })
   .transform((queue): FilmingQueue => queue);
 

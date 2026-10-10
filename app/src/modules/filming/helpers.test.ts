@@ -116,7 +116,7 @@ describe("openFilmingChoices", () => {
       client: null,
       production: { id: "66666666-6666-4666-8666-666666666666", title: "Showreel" },
       crew: null,
-      signals: { equipmentConflict: false, isExtra: false, cancelRequest: false, crewDeclined: false },
+      signals: { equipmentConflict: false, isExtra: false, cancelRequest: false, crewDeclined: false, slotProblem: null, pendingReschedule: null },
     };
     expect(openFilmingChoices([row])).toEqual([
       { id: row.id, startsAt: row.startsAt, hours: 3, production: row.production },

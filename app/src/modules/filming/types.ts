@@ -1,6 +1,8 @@
 // Τύποι του module «Γυρίσματα» (E1–E4, E6, E7, Ρυθμίσεις, F2 Δεσμεύσεις, G2 λίστα). Τα JSON της βάσης έρχονται camelCase·
 // εδώ ό,τι γυρνά η βάση, χωρίς ποσά: οι Παροχές μετριούνται σε πλήθος ή ώρες.
 
+import type { PendingReschedule, RescheduleRequestEntry } from "./booking-types";
+
 export const FILMING_STATES = [
   "pending",
   "scheduled",
@@ -45,11 +47,17 @@ export interface NamedProduction {
   title: string;
 }
 
-export interface FilmingSignals {
+// Τα σήματα που φαίνονται ως ετικέτες στη λίστα (Σύγκρουση, Έξτρα, Αίτημα, «Δεν μπορώ»).
+export interface FilmingFlags {
   equipmentConflict: boolean;
   isExtra: boolean;
   cancelRequest: boolean;
   crewDeclined: boolean;
+}
+
+export interface FilmingSignals extends FilmingFlags {
+  slotProblem: string | null;
+  pendingReschedule: PendingReschedule | null;
 }
 
 // Μία γραμμή της λίστας (E1).
@@ -90,6 +98,7 @@ export interface CancelRequestEntry {
 export interface FilmingQueue {
   pending: PendingEntry[];
   cancelRequests: CancelRequestEntry[];
+  rescheduleRequests: RescheduleRequestEntry[];
 }
 
 export type ProvisionMeasure = "per_filming" | "per_hour" | "per_day";
@@ -147,6 +156,9 @@ export interface FilmingViewerCan {
   decideCancel: boolean;
   clientCancel: boolean;
   requestCancel: boolean;
+  decideReschedule: boolean;
+  clientReschedule: boolean;
+  clientWithdrawReschedule: boolean;
 }
 
 export interface FilmingPeriod {

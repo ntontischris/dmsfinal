@@ -1,10 +1,10 @@
 import { Badge, type Tone } from "@/components/ui/badge";
 
-import type { FilmingSignals } from "../types";
+import type { FilmingFlags } from "../types";
 
 // Τα σήματα μιας γραμμής: σύγκρουση, έξτρα, αίτημα ακύρωσης, «δεν μπορώ». Τόνος μόνο για όσα θέλουν προσοχή.
 
-const SIGNAL_TONE: Record<keyof FilmingSignals, Tone | undefined> = {
+const SIGNAL_TONE: Record<keyof FilmingFlags, Tone | undefined> = {
   equipmentConflict: "attention",
   isExtra: "strong",
   cancelRequest: "attention",
@@ -12,7 +12,7 @@ const SIGNAL_TONE: Record<keyof FilmingSignals, Tone | undefined> = {
 };
 
 interface SignalBadgesProps {
-  signals: readonly { key: keyof FilmingSignals; label: string }[];
+  signals: readonly { key: keyof FilmingFlags; label: string }[];
 }
 
 export function SignalBadges({ signals }: SignalBadgesProps) {

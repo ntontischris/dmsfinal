@@ -1,8 +1,12 @@
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
+  BookingExceptions,
+  BookingHolidays,
+  BookingHoursForm,
   FilmingRulesForm,
   filmingCaps,
+  getBookingHours,
   getFilmingSettings,
 } from "@/modules/filming";
 import { SettingsTabs } from "@/modules/settings";
@@ -25,8 +29,8 @@ export default async function FilmingSettingsPage() {
       </>
     );
 
-  const settings = await getFilmingSettings();
-  if (!settings.ok)
+  const [settings, hours] = await Promise.all([getFilmingSettings(), getBookingHours()]);
+  if (!settings.ok || !hours.ok)
     return (
       <Notice kind="error" title="Δεν φόρτωσαν οι Κανόνες">
         <p className="m-0">Τίποτα δεν χάθηκε. Δοκίμασε ξανά σε λίγο.</p>
@@ -38,6 +42,9 @@ export default async function FilmingSettingsPage() {
       <div className="grid gap-4">
         <SettingsTabs current="filming" />
         <FilmingRulesForm settings={settings.data} />
+        <BookingHoursForm view={hours.data} />
+        <BookingExceptions exceptions={hours.data.exceptions} />
+        <BookingHolidays holidays={hours.data.holidays} />
       </div>
     </>
   );

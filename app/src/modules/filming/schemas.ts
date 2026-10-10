@@ -7,13 +7,13 @@ import { FILMING_TABS } from "./types";
 // Η βάση ελέγχει ξανά· εδώ φαίνονται τα λάθη πριν φύγει το αίτημα. Οι ώρες έρχονται ως κείμενο (με κόμμα ή τελεία).
 
 const text = z.string().trim();
-const uuid = z.uuid("Κάτι δεν βρέθηκε. Δοκίμασε από την αρχή.");
-const REASON_LIMIT = 500;
+export const uuid = z.uuid("Κάτι δεν βρέθηκε. Δοκίμασε από την αρχή.");
+export const REASON_LIMIT = 500;
 const LOCATION_LIMIT = 200;
 
 const reason = text.max(REASON_LIMIT, "Ο λόγος είναι μέχρι 500 χαρακτήρες.");
 const requiredReason = (message: string) => reason.min(1, message);
-const optionalText = (limit: number) =>
+export const optionalText = (limit: number) =>
   text
     .max(limit, `Το κείμενο είναι μέχρι ${limit} χαρακτήρες.`)
     .transform((value) => value || null);

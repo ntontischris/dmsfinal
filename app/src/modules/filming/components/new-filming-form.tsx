@@ -18,6 +18,7 @@ import { MEASURE_LABELS } from "../labels";
 import type { BookingAgreement, BookingKind, NamedRef } from "../types";
 
 import { ActionForm } from "./action-form";
+import { DateTimeFields } from "./date-time-fields";
 import { DurationNotice } from "./duration-notice";
 import { MutedNote } from "./form-fields";
 
@@ -145,7 +146,7 @@ function ClientBookingForm({
           ))}
         </Select>
       </Field>
-      <DateTimeFields today={today} />
+      <DateTimeFields today={today} watchHours={hours} />
       <Field
         label="Διάρκεια (ώρες)"
         hint="2, 3 ή 4 ώρες, ή ελεύθερη τιμή από 0,5 έως 12 ανά μισή ώρα."
@@ -259,26 +260,6 @@ function InternalBookingForm({
   );
 }
 
-function DateTimeFields({ today }: { today: string }) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <Field label="Ημερομηνία">
-        <Input
-          name="date"
-          type="date"
-          required
-          defaultValue={today}
-          min={today}
-        />
-      </Field>
-      <Field label="Ώρα">
-        <Input name="time" type="time" required defaultValue="09:00" />
-      </Field>
-    </div>
-  );
-}
-
-// Το υπόλοιπο του είδους, χωρίς ποσά· αν τελείωσε, το Γύρισμα μπαίνει ως έξτρα (προειδοποίηση, όχι μπλοκ).
 // Το υπόλοιπο του είδους της τρέχουσας Περιόδου, χωρίς ποσά. Μια μέρα της επόμενης Περιόδου χρεώνεται σε εκείνη.
 function KindBalance({ kind }: { kind: BookingKind }) {
   const extra = isExtraBalance(kind.balance);

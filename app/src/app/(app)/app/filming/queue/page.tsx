@@ -1,6 +1,12 @@
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer } from "@/modules/access";
-import { QueueCancelRequests, QueuePending, filmingCaps, getQueue } from "@/modules/filming";
+import {
+  QueueCancelRequests,
+  QueuePending,
+  QueueRescheduleRequests,
+  filmingCaps,
+  getQueue,
+} from "@/modules/filming";
 
 import { LoadError, NoAccess } from "../filming-parts";
 
@@ -29,6 +35,7 @@ export default async function FilmingQueuePage() {
       <div className="grid gap-4">
         <QueuePending entries={queue.data.pending} />
         <QueueCancelRequests requests={queue.data.cancelRequests} />
+        <QueueRescheduleRequests requests={queue.data.rescheduleRequests} />
       </div>
     </>
   );
