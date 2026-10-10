@@ -26,7 +26,7 @@ export function ItemForm({ categories, item }: ItemFormProps) {
   return (
     <ActionForm
       action={item ? updateItem : createItem}
-      submitLabel={item ? "Αποθήκευση" : "Δημιουργία"}
+      onlyWhenChanged={Boolean(item)} submitLabel={item ? "Αποθήκευση" : "Δημιουργία"}
       pendingLabel={item ? "Αποθήκευση…" : "Δημιουργία…"}
       resetOnSuccess={!item}
     >

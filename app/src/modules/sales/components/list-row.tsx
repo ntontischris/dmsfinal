@@ -94,7 +94,7 @@ function LabelCell({ list, item }: { list: ListName; item: ListItem }) {
       {isRenaming && (
         <ActionForm
           action={renameListItem}
-          submitLabel="Αποθήκευση"
+          onlyWhenChanged submitLabel="Αποθήκευση"
           variant="default"
           size="sm"
         >

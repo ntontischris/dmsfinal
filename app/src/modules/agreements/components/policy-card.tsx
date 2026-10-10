@@ -17,7 +17,7 @@ export function PolicyCard({ defaults }: { defaults: AgreementDefaults }) {
           Ισχύει για νέες προτάσεις· οι υπάρχουσες Συμφωνίες κρατούν τις τιμές
           τους.
         </CardNote>
-        <ActionForm action={savePolicy} submitLabel="Αποθήκευση">
+        <ActionForm action={savePolicy} onlyWhenChanged submitLabel="Αποθήκευση">
           <Field label="Ελάχιστη προειδοποίηση (ώρες πριν)">
             <Input
               name="filmingNoticeHours"

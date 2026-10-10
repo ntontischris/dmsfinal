@@ -113,7 +113,7 @@ function MonthlyFields({
 function TermsForm(props: TermsFormProps) {
   const { agreementId, terms, baseline, isMonthly } = props;
   return (
-    <ActionForm action={updateTerms} submitLabel="Αποθήκευση όρων">
+    <ActionForm action={updateTerms} onlyWhenChanged submitLabel="Αποθήκευση όρων">
       <input type="hidden" name="agreementId" value={agreementId} />
       <input
         type="hidden"

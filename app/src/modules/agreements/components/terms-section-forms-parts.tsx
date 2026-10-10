@@ -107,7 +107,7 @@ export function MoneyTermsBlock({
       </ReadOnlyList>
     );
   return (
-    <ActionForm action={setMoneyTerms} submitLabel="Αποθήκευση έκπτωσης">
+    <ActionForm action={setMoneyTerms} onlyWhenChanged submitLabel="Αποθήκευση έκπτωσης">
       <input type="hidden" name="agreementId" value={agreementId} />
       <FieldGrid>
         <FieldWithHint

@@ -19,7 +19,7 @@ const INACTIVE_NOTE = "Ισχύει όταν έρθει το Ημερολόγι�
 // Ρυθμίσεις › Γυρίσματα: οι έντεκα Κανόνες του Γ7.
 export function FilmingRulesForm({ settings }: { settings: FilmingSettings }) {
   return (
-    <ActionForm action={saveFilmingSettings} submitLabel="Αποθήκευση Κανόνων" variant="primary">
+    <ActionForm action={saveFilmingSettings} onlyWhenChanged submitLabel="Αποθήκευση Κανόνων" variant="primary">
       <Panel label="Κρατήσεις">
         <div className="grid gap-4">
           <Checkbox name="bookingNeedsApproval" label="Η κράτηση του Πελάτη θέλει έγκριση" checked={settings.bookingNeedsApproval} />

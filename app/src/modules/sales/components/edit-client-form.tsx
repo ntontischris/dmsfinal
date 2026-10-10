@@ -9,7 +9,7 @@ import { NewClientFields } from "./new-client-fields";
 // Τα στοιχεία του Πελάτη. Το ΑΦΜ και το email ελέγχονται στη βάση (μοναδικά ανάμεσα στους ενεργούς Πελάτες).
 export function EditClientForm({ client }: { client: ClientDetail }) {
   return (
-    <ActionForm action={updateClient} submitLabel="Αποθήκευση">
+    <ActionForm action={updateClient} onlyWhenChanged submitLabel="Αποθήκευση">
       <input type="hidden" name="clientId" value={client.id} />
       <NewClientFields
         defaults={{

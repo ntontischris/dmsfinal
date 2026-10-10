@@ -206,7 +206,7 @@ export function MilestonesEditor({
       </div>
     );
   return (
-    <ActionForm action={setMilestones} submitLabel="Αποθήκευση δόσεων">
+    <ActionForm action={setMilestones} onlyWhenChanged submitLabel="Αποθήκευση δόσεων">
       <input type="hidden" name="agreementId" value={agreementId} />
       <Editor milestones={milestones} />
     </ActionForm>

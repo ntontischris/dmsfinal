@@ -28,7 +28,7 @@ export function SalesRoutingCard({
     !assignable.some((user) => user.userId === current);
   return (
     <Panel label="Νέες Ευκαιρίες από τη φόρμα">
-      <ActionForm action={saveFormRouting} submitLabel="Αποθήκευση">
+      <ActionForm action={saveFormRouting} onlyWhenChanged submitLabel="Αποθήκευση">
         <Field label="Νέες Ευκαιρίες από τη φόρμα πάνε σε" hint={HINT}>
           <Select name="value" defaultValue={current}>
             <option value="owner">{FORM_ROUTING_OWNER_LABEL}</option>

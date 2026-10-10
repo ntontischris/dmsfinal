@@ -99,7 +99,7 @@ function EditablePublic({ item }: { item: CatalogueItem }) {
   const [isPublic, setIsPublic] = useState(item.isPublic && !item.isRetired);
   const [showsPrice, setShowsPrice] = useState(item.showsPrice);
   return (
-    <ActionForm action={setPublic} submitLabel="Αποθήκευση">
+    <ActionForm action={setPublic} onlyWhenChanged submitLabel="Αποθήκευση">
       <input type="hidden" name="itemId" value={item.id} />
       <MutedNote>{INTRO}</MutedNote>
       <div className="grid gap-2">

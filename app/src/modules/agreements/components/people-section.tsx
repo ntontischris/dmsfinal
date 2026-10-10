@@ -125,7 +125,7 @@ function RecipientsEditor({ agreement }: { agreement: AgreementDetail }) {
   const handleRemove = (key: number) =>
     setRows((current) => current.filter((row) => row.key !== key));
   return (
-    <ActionForm action={setRecipients} submitLabel="Αποθήκευση παραληπτών">
+    <ActionForm action={setRecipients} onlyWhenChanged submitLabel="Αποθήκευση παραληπτών">
       <input type="hidden" name="agreementId" value={agreement.id} />
       <input type="hidden" name="recipients" value={serialize(rows)} />
       <ul className="m-0 grid list-none gap-2 p-0">

@@ -18,7 +18,7 @@ const OwnerOnly = () => <Badge tone="attention">Μόνο Ιδιοκτήτης</B
 export function DetailsCard({ company }: { company: CompanySettings }) {
   return (
     <Panel label="Στοιχεία εταιρείας">
-      <CardForm action={saveCompanyDetails} version={company.updated_at}>
+      <CardForm onlyWhenChanged action={saveCompanyDetails} version={company.updated_at}>
         <Field label="Επωνυμία">
           <Input name="legal_name" defaultValue={company.legal_name} />
         </Field>
@@ -74,7 +74,7 @@ export function TaxCard({
           Ιδιοκτήτης.
         </p>
       )}
-      <CardForm
+      <CardForm onlyWhenChanged
         action={saveTaxDetails}
         version={company.updated_at}
         isLocked={!isOwner}
@@ -129,7 +129,7 @@ export function AssistantCard({
   return (
     <Panel label="Βοηθός">
       <div className="grid gap-6">
-        <CardForm action={saveAssistantLimits} version={company.updated_at}>
+        <CardForm onlyWhenChanged action={saveAssistantLimits} version={company.updated_at}>
           <Field label="Μηνύματα ανά Συζήτηση" hint="Όριο του δημόσιου widget.">
             <Input
               name="widget_messages_per_conversation"
@@ -153,7 +153,7 @@ export function AssistantCard({
           <p className="m-0 flex flex-wrap items-center gap-2 text-sm font-semibold">
             Πλαφόν δαπάνης AI <OwnerOnly />
           </p>
-          <CardForm
+          <CardForm onlyWhenChanged
             action={saveAssistantCap}
             version={company.updated_at}
             isLocked={!isOwner}

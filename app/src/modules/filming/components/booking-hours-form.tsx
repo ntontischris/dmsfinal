@@ -34,7 +34,7 @@ export function BookingHoursForm({ view }: { view: BookingHoursView }) {
             <p className="m-0">Οι πελάτες δεν μπορούν να κλείσουν μέχρι να το αποθηκεύσεις.</p>
           </Notice>
         )}
-        <ActionForm action={saveBookingHours} submitLabel="Αποθήκευση Ωραρίου" variant="primary">
+        <ActionForm action={saveBookingHours} onlyWhenChanged={view.isSet} submitLabel="Αποθήκευση Ωραρίου" variant="primary">
           <div className="grid gap-2">
             <span className="kit-label">Εβδομαδιαίο πρόγραμμα</span>
             {week.map((day) => (

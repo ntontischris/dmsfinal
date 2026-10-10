@@ -109,7 +109,7 @@ function MonthForm({
     months.find((row) => row.month === month) ??
     months.find((row) => row.month === hint?.hourCostMonth);
   return (
-    <ActionForm action={saveCostMonth} submitLabel="Αποθήκευση μήνα">
+    <ActionForm action={saveCostMonth} onlyWhenChanged submitLabel="Αποθήκευση μήνα">
       <Field label="Μήνας">
         <Select
           name="month"

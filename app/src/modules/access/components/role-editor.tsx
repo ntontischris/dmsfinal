@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
+import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 
 import type { PermissionDef, RoleSummary } from "../queries";
@@ -80,6 +81,7 @@ interface RoleEditorProps {
 // N4: όνομα, περιγραφή και Δικαιώματα ενός Ρόλου. Ο Ιδιοκτήτης είναι κλειδωμένος: έχει πάντα «Όλα».
 export function RoleEditor({ role, permissions }: RoleEditorProps) {
   const { state, isPending: isSaving, onSubmit: action, formRef: actionRef } = useKeptForm(saveRole);
+  const isChanged = useFormChanged(actionRef, state.notice ? state : undefined);
   const areas = [...new Set(permissions.map((p) => p.area))];
   const holders = role.holders.length;
   return (
@@ -139,9 +141,11 @@ export function RoleEditor({ role, permissions }: RoleEditorProps) {
       {!role.isOwner && (
         <div className="grid justify-items-start gap-2">
           <FormMessage state={state} />
-          <Button variant="primary" type="submit" disabled={isSaving}>
-            {isSaving ? "Αποθήκευση…" : "Αποθήκευση"}
-          </Button>
+          {isChanged && (
+            <Button variant="primary" type="submit" disabled={isSaving}>
+              {isSaving ? "Αποθήκευση…" : "Αποθήκευση"}
+            </Button>
+          )}
           <p className="m-0 text-sm text-muted-foreground">
             Επηρεάζει {holders === 1 ? "1 Χρήστη" : `${holders} Χρήστες`}, από
             την επόμενη ενέργειά τους. Η αλλαγή γράφεται στο Ίχνος (πριν →

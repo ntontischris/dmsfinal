@@ -79,7 +79,7 @@ function RenameForm({ category }: { category: EquipmentCategory }) {
   return (
     <ActionForm
       action={renameCategory}
-      submitLabel="Μετονομασία"
+      onlyWhenChanged submitLabel="Μετονομασία"
       size="sm"
       variant="default"
     >

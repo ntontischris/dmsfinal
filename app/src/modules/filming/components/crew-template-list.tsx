@@ -74,7 +74,7 @@ function TemplateForm({
   return (
     <ActionForm
       action={saveCrewTemplate}
-      submitLabel={template ? "Αποθήκευση" : "Δημιουργία Προτύπου"}
+      onlyWhenChanged={Boolean(template)} submitLabel={template ? "Αποθήκευση" : "Δημιουργία Προτύπου"}
       variant="primary"
     >
       <input type="hidden" name="templateId" value={template?.id ?? ""} />

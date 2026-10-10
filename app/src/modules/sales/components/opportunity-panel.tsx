@@ -125,7 +125,7 @@ function WorkForm({
     (stage) => !stage.isRetired || stage.id === opportunity.stageId,
   );
   return (
-    <ActionForm action={updateOpportunity} submitLabel="Αποθήκευση">
+    <ActionForm action={updateOpportunity} onlyWhenChanged submitLabel="Αποθήκευση">
       <input type="hidden" name="opportunityId" value={opportunity.id} />
       <Field label="Τίτλος">
         <Input name="title" required defaultValue={opportunity.title} />
