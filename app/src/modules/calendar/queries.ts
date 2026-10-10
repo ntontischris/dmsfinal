@@ -1,6 +1,6 @@
 import { createSupabase } from "@/lib/supabase/server";
 
-import { read, type ReadResult } from "./read";
+import { missingWhenNotFound, read, type ReadResult } from "./read";
 import {
   blockedTimeViewSchema,
   calendarViewSchema,
@@ -30,7 +30,7 @@ export async function getBlockedTime(
   if (!supabase) return { ok: false };
   return read(
     "getBlockedTime",
-    supabase.rpc("blocked_time_view", { p_id: id }),
+    missingWhenNotFound(supabase.rpc("blocked_time_view", { p_id: id })),
     (data) => blockedTimeViewSchema.parse(data),
   );
 }
