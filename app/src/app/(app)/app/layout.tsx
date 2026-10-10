@@ -15,10 +15,11 @@ import {
   type Viewer,
 } from "@/modules/access";
 
-// «owner» και «team» δεν είναι Δικαιώματα· όλα τα άλλα ελέγχονται ως Δικαιώματα (ομάδας ή πελάτη).
+// «owner», «team» και «client» δεν είναι Δικαιώματα· όλα τα άλλα ελέγχονται ως Δικαιώματα (ομάδας ή πελάτη).
 const allowsRequirement = (viewer: Viewer, requirement: string): boolean => {
   if (requirement === "owner") return isOwner(viewer);
   if (requirement === "team") return viewer.status === "signed-in" && viewer.team !== null;
+  if (requirement === "client") return viewer.status === "signed-in" && viewer.team === null;
   return can(viewer, requirement);
 };
 
