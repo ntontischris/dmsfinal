@@ -36,7 +36,7 @@ select u.id::uuid, r.id
 
 
 -- ───────────── Κατάλογος και έτοιμοι Ρόλοι ─────────────
-select is((select count(*)::int from public.permissions where kind = 'team'), 39, 'Ο κατάλογος έχει 39 Δικαιώματα ομάδας');
+select is((select count(*)::int from public.permissions where kind = 'team'), 40, 'Ο κατάλογος έχει 40 Δικαιώματα ομάδας');
 select is((select count(*)::int from public.permissions where kind = 'client'), 9, 'Ο κατάλογος έχει 9 Δικαιώματα πελάτη');
 select is((select count(*)::int from public.roles where is_builtin), 6, 'Υπάρχουν 6 έτοιμοι Ρόλοι');
 
