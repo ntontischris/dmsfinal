@@ -3,7 +3,7 @@
 -- Ημερομηνίες: οι μέρες του Ωραρίου είναι 2027-01-04 (Δευτέρα) για τα σημεία του Ωραρίου, και «σήμερα + n» για την
 -- κατάσταση των ημερών (booking_days). Ώρα Ελλάδας (+02:00 τον Ιανουάριο).
 begin;
-select plan(177);
+select plan(179);
 
 -- ───────────── Βοηθητικά ─────────────
 -- Ώρα Ελλάδας: η μέρα «σήμερα + n» στις «hh:mm».
@@ -183,6 +183,8 @@ select lives_ok($$ select public.booking_exception_save((now() at time zone 'Eur
 select lives_ok($$ select public.booking_exception_save((now() at time zone 'Europe/Athens')::date + 4, false, null, null, null, null) $$, 'Η μέρα +4 ανοίγει ως εξαίρεση');
 select is(jsonb_array_length(public.booking_hours_view() -> 'exceptions'), 6, 'Η οθόνη δείχνει τις εξαιρέσεις από σήμερα και μετά');
 select is(jsonb_array_length(public.booking_hours_view() -> 'holidays'), 26, 'Η οθόνη δείχνει τις αργίες φέτος και του χρόνου');
+select is((select (h ->> 'isOpened')::boolean from jsonb_array_elements(public.booking_hours_view() -> 'holidays') h where h ->> 'day' = '2027-01-01'), true, 'Η αργία με εξαίρεση ανοίγματος φαίνεται ανοιγμένη (έχει «Κλείσιμο»)');
+select is((select (h ->> 'isOpened')::boolean from jsonb_array_elements(public.booking_hours_view() -> 'holidays') h where h ->> 'day' = '2027-03-25'), false, 'Η αργία χωρίς εξαίρεση δεν φαίνεται ανοιγμένη');
 
 -- ───────────── Ώρα: προβλήματα και χωρητικότητα (ομάδα και πελάτης) ─────────────
 select is(authz.slot_problem(timestamptz '2027-01-04 08:00:00+02', 1, null, true), 'Η ώρα είναι εκτός Ωραρίου', 'Έναρξη πριν το άνοιγμα είναι εκτός Ωραρίου');

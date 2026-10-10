@@ -48,18 +48,29 @@ function HolidayRow({ holiday }: { holiday: BookingHoliday }) {
         </span>
       </Td>
       <Td data-label="Ημερομηνία">{formatDate(`${holiday.day}T12:00:00Z`)}</Td>
-      <Td data-label="Κατάσταση">{holiday.isOpen ? "Ανοιχτή" : "Κλειστή"}</Td>
+      <Td data-label="Κατάσταση">{describeHoliday(holiday)}</Td>
       <Td data-label="Ενέργεια">
-        <ActionForm
-          action={toggleHolidayOpen}
-          submitLabel={holiday.isOpen ? "Κλείσιμο" : "Άνοιγμα"}
-          variant="default"
-          size="sm"
-        >
-          <input type="hidden" name="day" value={holiday.day} />
-          <input type="hidden" name="open" value={holiday.isOpen ? "false" : "true"} />
-        </ActionForm>
+        {holiday.isPast ? (
+          "—"
+        ) : (
+          <ActionForm
+            action={toggleHolidayOpen}
+            submitLabel={holiday.isOpened ? "Κλείσιμο" : "Άνοιγμα"}
+            variant="default"
+            size="sm"
+          >
+            <input type="hidden" name="day" value={holiday.day} />
+            <input type="hidden" name="open" value={holiday.isOpened ? "false" : "true"} />
+          </ActionForm>
+        )}
       </Td>
     </Tr>
   );
+}
+
+// Ανοιγμένη αργία σε μέρα που είναι κλειστή στο εβδομαδιαίο Ωράριο μένει χωρίς ώρες: το λέμε, για να μπουν ώρες στις Εξαιρέσεις.
+function describeHoliday(holiday: BookingHoliday): string {
+  if (holiday.isOpen) return "Ανοιχτή";
+  if (holiday.isOpened) return "Ανοιχτή, αλλά η μέρα είναι κλειστή στο Ωράριο: βάλε ώρες στις Εξαιρέσεις";
+  return "Κλειστή";
 }
