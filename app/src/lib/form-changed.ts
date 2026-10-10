@@ -3,6 +3,9 @@
 
 type FormEntry = readonly [name: string, value: string];
 
+// Το «version» των καρτών Εταιρείας αλλάζει όταν αποθηκεύεται άλλη κάρτα· δεν είναι αλλαγή του Χρήστη.
+const IGNORED_FIELDS = new Set(["version"]);
+
 function compareText(left: string, right: string): number {
   if (left === right) return 0;
   return left < right ? -1 : 1;
@@ -16,6 +19,7 @@ function compareEntries(left: FormEntry, right: FormEntry): number {
 export function serializeFormData(data: FormData): string {
   const entries: FormEntry[] = [];
   data.forEach((value, name) => {
+    if (IGNORED_FIELDS.has(name)) return;
     entries.push([name, typeof value === "string" ? value : value.name]);
   });
   return JSON.stringify(entries.sort(compareEntries));

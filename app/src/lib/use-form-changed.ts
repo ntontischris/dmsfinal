@@ -5,21 +5,26 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { serializeFormData } from "@/lib/form-changed";
 
 // Δείχνει αν η φόρμα διαφέρει από τις αποθηκευμένες τιμές. Η βάση γράφεται στη φόρτωση και μετά από κάθε
-// επιτυχία (όταν εμφανιστεί `rebaselineOn`), ώστε οι τρέχουσες τιμές να γίνουν οι νέες αποθηκευμένες.
-// Μια αποτυχία δεν αλλάζει τη βάση, άρα το κουμπί μένει ορατό.
+// επιτυχία (`lastSaved`, η κατάσταση με το μήνυμα επιτυχίας), ώστε οι τρέχουσες τιμές να γίνουν οι νέες αποθηκευμένες.
+// Μια αποτυχία δίνει `undefined` και δεν αγγίζει τη βάση, άρα το κουμπί μένει ορατό δίπλα στο λάθος.
 export function useFormChanged(
   formRef: RefObject<HTMLFormElement | null>,
-  rebaselineOn: unknown,
+  lastSaved: unknown,
 ): boolean {
   const [isChanged, setIsChanged] = useState(false);
   const baselineRef = useRef("");
 
   useEffect(() => {
     const form = formRef.current;
-    if (!form) return;
+    if (form) baselineRef.current = serializeFormData(new FormData(form));
+  }, [formRef]);
+
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form || lastSaved === undefined) return;
     baselineRef.current = serializeFormData(new FormData(form));
     setIsChanged(false);
-  }, [formRef, rebaselineOn]);
+  }, [formRef, lastSaved]);
 
   useEffect(() => {
     const form = formRef.current;
@@ -28,15 +33,11 @@ export function useFormChanged(
       setIsChanged(serializeFormData(new FormData(form)) !== baselineRef.current);
     };
     // Το React γράφει τα κρυφά πεδία και τις προεπιλογές του reset μετά το γεγονός, γι' αυτό ελέγχουμε στο επόμενο tick.
+    // Το «click» πιάνει τα κουμπιά που προσθέτουν ή αφαιρούν γραμμές (δόσεις, παραλήπτες, Παροχές) χωρίς input.
     const compareAfterUpdate = () => setTimeout(compare, 0);
-    form.addEventListener("input", compareAfterUpdate);
-    form.addEventListener("change", compareAfterUpdate);
-    form.addEventListener("reset", compareAfterUpdate);
-    return () => {
-      form.removeEventListener("input", compareAfterUpdate);
-      form.removeEventListener("change", compareAfterUpdate);
-      form.removeEventListener("reset", compareAfterUpdate);
-    };
+    const events = ["input", "change", "reset", "click"] as const;
+    events.forEach((name) => form.addEventListener(name, compareAfterUpdate));
+    return () => events.forEach((name) => form.removeEventListener(name, compareAfterUpdate));
   }, [formRef]);
 
   return isChanged;

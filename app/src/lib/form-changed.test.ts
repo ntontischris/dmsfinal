@@ -46,4 +46,10 @@ describe("serializeFormData", () => {
     other.append("logo", new File(["y"], "other.png", { type: "image/png" }));
     expect(serializeFormData(withFile)).not.toBe(serializeFormData(other));
   });
+
+  it("δεν μετράει ως αλλαγή το version της κάρτας", () => {
+    const before = serializeFormData(formDataOf([["name", "Devre"], ["version", "1"]]));
+    const after = serializeFormData(formDataOf([["name", "Devre"], ["version", "2"]]));
+    expect(after).toBe(before);
+  });
 });
