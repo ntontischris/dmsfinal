@@ -15,6 +15,7 @@ import {
   balanceText,
 } from "../helpers";
 import { MEASURE_LABELS } from "../labels";
+import type { NewFilmingPrefill } from "../blocked-prefill";
 import type { BookingAgreement, BookingKind, NamedRef } from "../types";
 
 import { ActionForm } from "./action-form";
@@ -26,6 +27,7 @@ export interface NewFilmingProps {
   options: readonly BookingAgreement[];
   productions: readonly NamedRef[];
   today: string;
+  prefill?: NewFilmingPrefill | null;
 }
 
 type Mode = "client" | "internal";
@@ -36,6 +38,7 @@ export function NewFilmingForm({
   options,
   productions,
   today,
+  prefill,
 }: NewFilmingProps) {
   const [mode, setMode] = useState<Mode>("client");
   return (
@@ -61,9 +64,9 @@ export function NewFilmingForm({
         </div>
       )}
       {mode === "client" ? (
-        <ClientBookingForm options={options} today={today} />
+        <ClientBookingForm options={options} today={today} prefill={prefill} />
       ) : (
-        <InternalBookingForm productions={productions} today={today} />
+        <InternalBookingForm productions={productions} today={today} prefill={prefill} />
       )}
     </div>
   );
@@ -72,9 +75,11 @@ export function NewFilmingForm({
 function ClientBookingForm({
   options,
   today,
+  prefill,
 }: {
   options: readonly BookingAgreement[];
   today: string;
+  prefill?: NewFilmingPrefill | null;
 }) {
   const clients = uniqueClients(options);
   const [clientId, setClientId] = useState(clients[0]?.id ?? "");
@@ -86,7 +91,7 @@ function ClientBookingForm({
     agreements.find((item) => item.id === agreementId) ?? agreements[0];
   const [kindId, setKindId] = useState(defaultKindId(agreement?.kinds ?? []));
   const kind = agreement?.kinds.find((item) => item.id === kindId);
-  const [hours, setHours] = useState(String(defaultHours(kind)));
+  const [hours, setHours] = useState(String(prefill?.hours ?? defaultHours(kind)));
 
   if (clients.length === 0) {
     return (
@@ -146,7 +151,7 @@ function ClientBookingForm({
           ))}
         </Select>
       </Field>
-      <DateTimeFields today={today} watchHours={hours} />
+      <DateTimeFields today={today} watchHours={hours} prefill={prefill} />
       <Field
         label="Διάρκεια (ώρες)"
         hint="2, 3 ή 4 ώρες, ή ελεύθερη τιμή από 0,5 έως 12 ανά μισή ώρα."
@@ -214,9 +219,11 @@ function ClientBookingForm({
 function InternalBookingForm({
   productions,
   today,
+  prefill,
 }: {
   productions: readonly NamedRef[];
   today: string;
+  prefill?: NewFilmingPrefill | null;
 }) {
   return (
     <ActionForm
@@ -236,7 +243,7 @@ function InternalBookingForm({
           ))}
         </Select>
       </Field>
-      <DateTimeFields today={today} />
+      <DateTimeFields today={today} prefill={prefill} />
       <Field label="Διάρκεια (ώρες)">
         <Input
           name="hours"
@@ -246,7 +253,7 @@ function InternalBookingForm({
           min="0.5"
           max="12"
           required
-          defaultValue={3}
+          defaultValue={prefill?.hours ?? 3}
         />
       </Field>
       <Field label="Πού">

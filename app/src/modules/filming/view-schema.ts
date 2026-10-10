@@ -126,6 +126,8 @@ export const crewTemplatesSchema = z.array(crewTemplateSchema);
 
 export const candidatesSchema = z.array(named);
 
+export const blockedUserIdsSchema = z.array(z.string());
+
 const equipmentCandidateSchema: z.ZodType<EquipmentCandidate> = z.object({
   id: z.string(),
   name: z.string(),

@@ -18,7 +18,10 @@ export interface NavSection {
 export const NAV: readonly NavSection[] = [
   {
     title: "Κοινά",
-    items: [{ code: "A1", label: "Σήμερα", href: "/app" }],
+    items: [
+      { code: "A1", label: "Σήμερα", href: "/app" },
+      { code: "A5", label: "Ημερολόγιο", href: "/app/calendar", requires: ["team", "c.book"] },
+    ],
   },
   {
     title: "Πελάτες και Πωλήσεις",

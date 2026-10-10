@@ -13,6 +13,7 @@ interface CrewPanelProps {
   card: FilmingCard;
   candidates: readonly NamedRef[];
   templates: readonly CrewTemplate[];
+  blockedIds: readonly string[];
 }
 
 const RESPONSE_TONE: Record<CrewMember["response"], Tone | undefined> = {
@@ -23,7 +24,7 @@ const RESPONSE_TONE: Record<CrewMember["response"], Tone | undefined> = {
 
 // Το Συνεργείο: ποιος απάντησε τι, ο ορισμός του (πολλαπλή επιλογή) και η εφαρμογή Προτύπου.
 // Η βάση ελέγχει επικάλυψη και Δικαίωμα· εδώ μόνο φαίνονται και στέλνονται τα πεδία.
-export function CrewPanel({ card, candidates, templates }: CrewPanelProps) {
+export function CrewPanel({ card, candidates, templates, blockedIds }: CrewPanelProps) {
   const current = card.crew.map((member) => member.userId);
   const canEdit = card.viewerCan.crew;
   return (
@@ -37,6 +38,7 @@ export function CrewPanel({ card, candidates, templates }: CrewPanelProps) {
               filmingId={card.id}
               candidates={candidates}
               current={current}
+              blockedIds={blockedIds}
             />
             {templates.length > 0 && (
               <ApplyTemplateForm filmingId={card.id} templates={templates} />
@@ -64,9 +66,10 @@ function CrewStatus({ members }: { members: readonly CrewMember[] }) {
               <span className="text-muted-foreground"> · {member.reason}</span>
             )}
           </span>
-          <Badge tone={RESPONSE_TONE[member.response]}>
-            {RESPONSE_LABELS[member.response]}
-          </Badge>
+          <span className="flex flex-wrap gap-2">
+            {member.isBlocked && <Badge tone="attention">Κλεισμένος χρόνος</Badge>}
+            <Badge tone={RESPONSE_TONE[member.response]}>{RESPONSE_LABELS[member.response]}</Badge>
+          </span>
         </li>
       ))}
     </ul>
@@ -77,10 +80,12 @@ function CrewSetForm({
   filmingId,
   candidates,
   current,
+  blockedIds,
 }: {
   filmingId: string;
   candidates: readonly NamedRef[];
   current: readonly string[];
+  blockedIds: readonly string[];
 }) {
   return (
     <ActionForm
@@ -92,8 +97,11 @@ function CrewSetForm({
       <input type="hidden" name="filmingId" value={filmingId} />
       <fieldset className="m-0 grid gap-2 border-0 p-0">
         <legend className="kit-label mb-1">Μέλη</legend>
+        {blockedIds.length > 0 && (
+          <MutedNote>Όσοι έχουν κλεισμένο χρόνο σε αυτή την ώρα μπορούν να μπουν· η προσθήκη δεν μπλοκάρεται.</MutedNote>
+        )}
         {candidates.map((candidate) => (
-          <label key={candidate.id} className="flex items-center gap-2 text-sm">
+          <label key={candidate.id} className="flex flex-wrap items-center gap-2 text-sm">
             <input
               type="checkbox"
               name="userId"
@@ -101,6 +109,7 @@ function CrewSetForm({
               defaultChecked={current.includes(candidate.id)}
             />
             {candidate.name}
+            {blockedIds.includes(candidate.id) && <Badge tone="attention">Κλεισμένος χρόνος</Badge>}
           </label>
         ))}
       </fieldset>
