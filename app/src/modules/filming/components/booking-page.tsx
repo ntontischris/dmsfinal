@@ -29,11 +29,13 @@ export async function BookingPage({
   if (!options.isSet) return <NotOpen />;
   const plan = planBooking(options, selection);
   if (!plan) return <NoProvision />;
-  const days = await listBookingDays(plan.agreement.id, plan.kind.id);
+  const excludeId = selection.reschedule ?? null;
+  const lookup = { agreementId: plan.agreement.id, kindId: plan.kind.id, excludeId };
+  const days = await listBookingDays(lookup);
   if (!days.ok) return <LoadFailed />;
   const slots =
     selection.day && plan.hours !== null
-      ? await listBookingSlots(plan.agreement.id, plan.kind.id, selection.day, plan.hours)
+      ? await listBookingSlots({ ...lookup, day: selection.day, hours: plan.hours })
       : null;
   if (slots && !slots.ok) return <LoadFailed />;
   const time = selection.time ?? "";

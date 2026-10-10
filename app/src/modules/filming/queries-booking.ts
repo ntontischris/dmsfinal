@@ -15,6 +15,12 @@ import {
   slotCheckSchema,
 } from "./view-schema-booking";
 
+interface BookingLookup {
+  agreementId: string;
+  kindId: string;
+  excludeId: string | null;
+}
+
 // Ανάγνωση των Κρατήσεων. Όλα περνούν από RPC· η βάση ελέγχει Δικαίωμα και κάθε μέρα και ώρα ξανά.
 
 export async function getBookingHours(): Promise<ReadResult<BookingHoursView>> {
@@ -37,26 +43,33 @@ export async function getBookingOptions(): Promise<ReadResult<BookingOptions>> {
   );
 }
 
-export async function listBookingDays(
-  agreementId: string,
-  kindId: string,
-): Promise<ReadResult<BookingDay[]>> {
+// Στην αλλαγή (excludeId) το ίδιο Γύρισμα δεν μετράει στη φόρτωση ούτε στην Παροχή του.
+export async function listBookingDays({
+  agreementId,
+  kindId,
+  excludeId,
+}: BookingLookup): Promise<ReadResult<BookingDay[]>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read(
     "listBookingDays",
-    supabase.rpc("booking_days", { p_agreement: agreementId, p_kind: kindId }),
+    supabase.rpc("booking_days", {
+      p_agreement: agreementId,
+      p_kind: kindId,
+      p_exclude: excludeId,
+    }),
     (data) => bookingDaysSchema.parse(data),
   );
 }
 
 // Οι ελεύθερες ώρες μιας μέρας, ως ISO στιγμές (η οθόνη τις εμφανίζει σε Ώρα Ελλάδας).
-export async function listBookingSlots(
-  agreementId: string,
-  kindId: string,
-  day: string,
-  hours: number,
-): Promise<ReadResult<string[]>> {
+export async function listBookingSlots({
+  agreementId,
+  kindId,
+  day,
+  hours,
+  excludeId,
+}: BookingLookup & { day: string; hours: number }): Promise<ReadResult<string[]>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read(
@@ -66,6 +79,7 @@ export async function listBookingSlots(
       p_kind: kindId,
       p_day: day,
       p_hours: hours,
+      p_exclude: excludeId,
     }),
     (data) => bookingSlotsSchema.parse(data),
   );
