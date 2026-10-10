@@ -22,10 +22,11 @@ test("ο Ιδιοκτήτης ορίζει το Ωράριο και προσθέ
 
   const note = EXCEPTION_NOTE(P);
   await visit(page, "/app/settings/filming");
-  await page.locator('input[name="day"]').fill("2099-03-02");
-  await page.locator('select[name="mode"]').selectOption("closed");
-  await page.locator('textarea[name="note"]').fill(note);
-  await button(page, "Προσθήκη εξαίρεσης").click();
+  const exceptionForm = page.locator("form", { has: button(page, "Προσθήκη εξαίρεσης") });
+  await exceptionForm.locator('input[name="day"]').fill("2099-03-02");
+  await exceptionForm.locator('select[name="mode"]').selectOption("closed");
+  await exceptionForm.locator('textarea[name="note"]').fill(note);
+  await button(exceptionForm, "Προσθήκη εξαίρεσης").click();
   await expect(page.getByText(note)).toBeVisible();
 
   await tableRow(page, note).getByRole("button", { name: "Διαγραφή", exact: true }).click();
