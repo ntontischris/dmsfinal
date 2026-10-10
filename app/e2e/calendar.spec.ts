@@ -46,20 +46,18 @@ async function addBlockedTime(
 async function issueLink(page: Page): Promise<string> {
   const panel = linkPanel(page);
   const address = panel.locator("code");
+  const renew = button(panel, "Ανανέωση συνδέσμου");
+  const create = button(panel, "Δημιουργία συνδέσμου");
+  // Η κατάσταση του συνδέσμου έρχεται με τη σελίδα· αποφασίζουμε μόνο αφού φανεί ένα από τα δύο.
+  await expect(renew.or(create)).toBeVisible();
   const previous = (await address.count()) > 0 ? await address.innerText() : "";
-  const hasLink =
-    (await panel
-      .getByRole("button", { name: "Ανανέωση συνδέσμου", exact: true })
-      .count()) > 0;
-  await panel
-    .getByRole("button", {
-      name: hasLink ? "Ανανέωση συνδέσμου" : "Δημιουργία συνδέσμου",
-      exact: true,
-    })
-    .click();
+  const hasLink = await renew.isVisible();
+  await (hasLink ? renew : create).click();
   if (hasLink) await button(panel, "Ανανέωση τώρα").click();
   await expect(address).toBeVisible();
   if (previous) await expect(address).not.toHaveText(previous);
+  // Πριν την επόμενη κλήση, η σελίδα πρέπει να δείχνει ότι υπάρχει σύνδεσμος (αλλιώς η απόφαση πάει σε παλιά κατάσταση).
+  await expect(renew).toBeVisible();
   return (await address.innerText()).trim();
 }
 
@@ -111,7 +109,8 @@ test("η μετατροπή κλεισμένου χρόνου ανοίγει τ�
   await addBlockedTime(page, { title, from: "16:00", to: "18:00", day });
 
   await switchUser(page, "sales@example.com");
-  await signedMonthlyAgreement(page, browser, P);
+  // Δικό της όνομα Συμφωνίας: τα ονόματα του filming.spec μένουν ανέγγιχτα (μοιράζονται βάση).
+  await signedMonthlyAgreement(page, browser, `${P}-conv`);
   await switchUser(page, "owner@example.com");
 
   await visit(page, `/app/calendar?view=week&date=${day}`);
