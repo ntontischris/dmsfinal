@@ -208,8 +208,9 @@ begin
   v_step := (select s.start_step_minutes * 60 from public.filming_settings s where s.id);
   v_first := ceil(extract(epoch from h.opens) / v_step)::integer * v_step;
   v_last := (extract(epoch from h.closes) - round(p_hours * 3600))::integer;
+  -- Ώρες σε τοπικό ρολόι· τη μέρα της αλλαγής ώρας τα δευτερόλεπτα από τα μεσάνυχτα δεν ταιριάζουν.
   return query
-    select (p_day::timestamp at time zone 'Europe/Athens') + make_interval(secs => g.sec)
+    select (p_day + make_interval(secs => g.sec)) at time zone 'Europe/Athens'
       from generate_series(v_first, v_last, v_step) as g(sec);
 end;
 $$;
@@ -251,7 +252,8 @@ declare
   s public.filming_settings;
   h record;
   v_day date;
-  v_day_start timestamptz;
+  v_opens timestamptz;
+  v_closes timestamptz;
   v_end timestamptz;
   v_minutes integer;
 begin
@@ -260,7 +262,6 @@ begin
   end if;
   select x.* into s from public.filming_settings x where x.id;
   v_day := (p_starts at time zone 'Europe/Athens')::date;
-  v_day_start := v_day::timestamp at time zone 'Europe/Athens';
   v_end := authz.filming_end(p_starts, p_hours);
   select * into h from authz.day_hours(v_day);
   if not h.is_open then
@@ -269,15 +270,16 @@ begin
       when 'not_set' then 'Το Ωράριο κρατήσεων δεν έχει οριστεί'
       else 'Η μέρα είναι κλειστή για κρατήσεις' end;
   end if;
-  if p_starts < v_day_start + make_interval(secs => extract(epoch from h.opens))
-     or v_end > v_day_start + make_interval(secs => extract(epoch from h.closes)) then
+  v_opens := (v_day + h.opens) at time zone 'Europe/Athens';
+  v_closes := (v_day + h.closes) at time zone 'Europe/Athens';
+  if p_starts < v_opens or v_end > v_closes then
     return 'Η ώρα είναι εκτός Ωραρίου';
   end if;
   if p_client then
     if not (p_hours = any (s.allowed_durations)) then
       return 'Η διάρκεια δεν επιτρέπεται';
     end if;
-    v_minutes := (extract(epoch from (p_starts - v_day_start)) / 60)::integer;
+    v_minutes := (extract(epoch from (p_starts at time zone 'Europe/Athens')::time) / 60)::integer;
     if v_minutes % s.start_step_minutes <> 0 then
       return 'Η ώρα έναρξης δεν ταιριάζει στο βήμα';
     end if;
@@ -392,7 +394,9 @@ as $$
 $$;
 
 -- Κατάσταση μιας μέρας για τον πελάτη: κλειστή ή αργία πρώτα· μετά νωρίς, εκτός Συμφωνίας, Περίοδος, Παροχή, γεμάτο.
-create function authz.booking_day_status(p_agreement public.agreements, p_kind uuid, p_day date) returns text
+create function authz.booking_day_status(
+  p_agreement public.agreements, p_kind uuid, p_day date, p_exclude uuid default null
+) returns text
 language plpgsql stable security definer set search_path = ''
 as $$
 declare
@@ -411,7 +415,7 @@ begin
     from unnest(s.allowed_durations) as d(dur)
    cross join lateral authz.day_candidates(p_day, d.dur) as c(slot_start);
   if v_last is null then
-    return 'full';
+    return 'closed';
   end if;
   if v_last <= now() + make_interval(hours => p_agreement.filming_notice_hours) then
     return 'too_soon';
@@ -434,7 +438,7 @@ begin
   if exists (
        select 1 from unnest(s.allowed_durations) as d(dur)
         cross join lateral authz.day_candidates(p_day, d.dur) as c(slot_start)
-       where authz.booking_problem(p_agreement.id, p_kind, c.slot_start, d.dur, null) is null) then
+       where authz.booking_problem(p_agreement.id, p_kind, c.slot_start, d.dur, p_exclude) is null) then
     return 'free';
   end if;
   return 'full';
@@ -680,7 +684,24 @@ begin
 end;
 $$;
 
-create function public.booking_days(p_agreement uuid, p_kind uuid) returns jsonb
+-- Η αλλαγή Γυρίσματος από τον πελάτη: το Γύρισμα πρέπει να είναι δικό του και της ίδιας Συμφωνίας. Αλλιώς 42501.
+create function authz.require_reschedule_filming(p_agreement uuid, p_filming uuid) returns void
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  if p_filming is null then
+    return;
+  end if;
+  if not authz.is_client_of_filming(p_filming) or not exists (
+       select 1 from public.filmings f
+         join public.productions pr on pr.id = f.production_id
+        where f.id = p_filming and pr.agreement_id = p_agreement) then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+end;
+$$;
+
+create function public.booking_days(p_agreement uuid, p_kind uuid, p_exclude uuid default null) returns jsonb
 language plpgsql security definer set search_path = ''
 as $$
 declare
@@ -692,6 +713,7 @@ begin
   a := authz.client_agreement(p_agreement);
   perform authz.require_agreement_bookable(a);
   perform authz.filming_check_kind(a.id, p_kind);
+  perform authz.require_reschedule_filming(a.id, p_exclude);
   select s.horizon_days into v_horizon from public.filming_settings s where s.id;
   return coalesce((
     select jsonb_agg(jsonb_build_object(
@@ -702,12 +724,14 @@ begin
         select x.ts::date as day
           from generate_series(v_today::timestamp, (v_today + v_horizon)::timestamp, interval '1 day') as x(ts)
       ) g
-     cross join lateral (select authz.booking_day_status(a, p_kind, g.day) as status) st
+     cross join lateral (select authz.booking_day_status(a, p_kind, g.day, p_exclude) as status) st
   ), '[]'::jsonb);
 end;
 $$;
 
-create function public.booking_slots(p_agreement uuid, p_kind uuid, p_day date, p_hours numeric) returns jsonb
+create function public.booking_slots(
+  p_agreement uuid, p_kind uuid, p_day date, p_hours numeric, p_exclude uuid default null
+) returns jsonb
 language plpgsql security definer set search_path = ''
 as $$
 declare
@@ -717,10 +741,11 @@ begin
   a := authz.client_agreement(p_agreement);
   perform authz.require_agreement_bookable(a);
   perform authz.filming_check_kind(a.id, p_kind);
+  perform authz.require_reschedule_filming(a.id, p_exclude);
   return coalesce((
     select jsonb_agg(to_jsonb(c.slot_start) order by c.slot_start)
       from authz.day_candidates(p_day, p_hours) as c(slot_start)
-     where authz.booking_problem(a.id, p_kind, c.slot_start, p_hours, null) is null
+     where authz.booking_problem(a.id, p_kind, c.slot_start, p_hours, p_exclude) is null
   ), '[]'::jsonb);
 end;
 $$;
@@ -774,6 +799,7 @@ declare
   v_id uuid;
 begin
   perform authz.require_client_permission('c.book');
+  perform pg_advisory_xact_lock(hashtext('dms.booking'));
   a := authz.client_agreement(p_agreement);
   perform authz.require_agreement_bookable(a);
   perform authz.require_filming_slot(p_starts_at, p_hours);
@@ -963,7 +989,8 @@ begin
            'newStartsAt', f.reschedule_starts_at, 'newHours', f.reschedule_hours, 'requestedAt', f.reschedule_requested_at,
            'client', (select jsonb_build_object('id', c.id, 'name', c.name) from public.clients c where c.id = f.client_id),
            'production', (select jsonb_build_object('id', pr.id, 'title', pr.title) from public.productions pr where pr.id = f.production_id),
-           'slotProblem', authz.slot_problem(f.reschedule_starts_at, f.reschedule_hours, f.id, true)
+           'slotProblem', case when f.reschedule_starts_at <= now() then 'Η νέα ώρα πέρασε'
+                               else authz.slot_problem(f.reschedule_starts_at, f.reschedule_hours, f.id, true) end
          ) order by f.reschedule_requested_at, f.id), '[]'::jsonb)
     into v_reschedules
     from public.filmings f
@@ -1104,6 +1131,7 @@ declare
 begin
   perform authz.require_client_permission('c.book');
   perform authz.filming_gate(p_id, authz.is_client_of_filming(p_id), 'c.book');
+  perform pg_advisory_xact_lock(hashtext('dms.booking'));
   select x.* into f from public.filmings x where x.id = p_id for update;
   if f.state <> 'scheduled' then
     raise exception 'Μόνο προγραμματισμένο Γύρισμα μετατίθεται από τον πελάτη' using errcode = 'P0001';
@@ -1172,11 +1200,15 @@ declare
 begin
   perform authz.require('filming.approve');
   perform authz.filming_gate(p_id, authz.can_approve_filming(), 'filming.approve');
+  perform pg_advisory_xact_lock(hashtext('dms.booking'));
   select x.* into f from public.filmings x where x.id = p_id for update;
   if f.reschedule_starts_at is null then
     raise exception 'Δεν υπάρχει αίτημα μετάθεσης για αυτό το Γύρισμα' using errcode = 'P0001';
   end if;
   if coalesce(p_accept, false) then
+    if f.reschedule_starts_at <= now() then
+      raise exception 'Η νέα ώρα πέρασε' using errcode = 'P0001';
+    end if;
     v_problem := authz.slot_problem(f.reschedule_starts_at, f.reschedule_hours, p_id, true);
     if v_problem is not null then
       raise exception '%', v_problem using errcode = 'P0001';
@@ -1331,7 +1363,8 @@ revoke all on function
   authz.is_holiday(date), authz.day_hours(date), authz.day_candidates(date, numeric),
   authz.slot_load(timestamptz, timestamptz, uuid), authz.slot_problem(timestamptz, numeric, uuid, boolean),
   authz.filming_own_units(uuid, uuid), authz.booking_problem(uuid, uuid, timestamptz, numeric, uuid),
-  authz.booking_day_label(text, integer), authz.booking_day_status(public.agreements, uuid, date),
+  authz.booking_day_label(text, integer), authz.booking_day_status(public.agreements, uuid, date, uuid),
+  authz.require_reschedule_filming(uuid, uuid),
   authz.parse_clock(text), authz.save_booking_week(jsonb), authz.check_exception(boolean, time, time, integer),
   authz.email_client_about(uuid, text, jsonb), authz.filming_move(uuid, timestamptz, numeric),
   authz.clear_reschedule_on_close(), authz.filming_slot_open(timestamptz, numeric)
@@ -1345,7 +1378,7 @@ revoke all on table public.booking_week, public.booking_exceptions from anon, au
 revoke all on function
   public.filming_slot_check(timestamptz, numeric, uuid), public.booking_hours_view(), public.booking_hours_save(jsonb),
   public.booking_exception_save(date, boolean, time, time, integer, text), public.booking_exception_delete(date),
-  public.booking_options(), public.booking_days(uuid, uuid), public.booking_slots(uuid, uuid, date, numeric),
+  public.booking_options(), public.booking_days(uuid, uuid, uuid), public.booking_slots(uuid, uuid, date, numeric, uuid),
   public.filming_client_reschedule(uuid, timestamptz, numeric), public.filming_client_reschedule_withdraw(uuid),
   public.filming_decide_reschedule(uuid, boolean, text)
   from public, anon;
@@ -1353,7 +1386,7 @@ revoke all on function
 grant execute on function
   public.filming_slot_check(timestamptz, numeric, uuid), public.booking_hours_view(), public.booking_hours_save(jsonb),
   public.booking_exception_save(date, boolean, time, time, integer, text), public.booking_exception_delete(date),
-  public.booking_options(), public.booking_days(uuid, uuid), public.booking_slots(uuid, uuid, date, numeric),
+  public.booking_options(), public.booking_days(uuid, uuid, uuid), public.booking_slots(uuid, uuid, date, numeric, uuid),
   public.filming_client_reschedule(uuid, timestamptz, numeric), public.filming_client_reschedule_withdraw(uuid),
   public.filming_decide_reschedule(uuid, boolean, text)
   to authenticated;

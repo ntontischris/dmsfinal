@@ -3,7 +3,7 @@
 -- Ημερομηνίες: οι μέρες του Ωραρίου είναι 2027-01-04 (Δευτέρα) για τα σημεία του Ωραρίου, και «σήμερα + n» για την
 -- κατάσταση των ημερών (booking_days). Ώρα Ελλάδας (+02:00 τον Ιανουάριο).
 begin;
-select plan(155);
+select plan(177);
 
 -- ───────────── Βοηθητικά ─────────────
 -- Ώρα Ελλάδας: η μέρα «σήμερα + n» στις «hh:mm».
@@ -295,6 +295,53 @@ select throws_ok($$ select public.filming_client_reschedule(current_setting('t.k
 select throws_ok($$ select public.booking_days(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Άλλος Πελάτης δεν βλέπει ημέρες της Συμφωνίας');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e9","role":"authenticated"}', true);
 select throws_ok($$ select public.filming_client_reschedule(current_setting('t.k1')::uuid, public.t_day(2, time '12:00'), 1) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Πελάτης χωρίς c.book δεν μετατίθεται');
+
+-- ───────────── Αλλαγή Γυρίσματος από τον πελάτη με Παροχή τελειωμένη, λήξη, κλειστή μέρα και αλλαγή ώρας ─────────────
+-- Η Παροχή της Συμφωνίας Α τελειώνει με Γυρίσματα της ομάδας σε μέρα +8· το Γύρισμα k1 του πελάτη μένει μέσα της.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select is(authz.filming_own_units(current_setting('t.k1')::uuid, null), 1::numeric, 'Το Γύρισμα του πελάτη μετράει μία Παροχή');
+do $$
+declare
+  v_left numeric;
+begin
+  loop
+    v_left := authz.filming_available(current_setting('t.a')::uuid, null, current_setting('t.shoot')::uuid);
+    exit when v_left <= 0;
+    perform public.filming_create(current_setting('t.a')::uuid, public.t_day(8, time '09:00'), 1, current_setting('t.shoot')::uuid, null, null);
+  end loop;
+end $$;
+select is(authz.filming_available(current_setting('t.a')::uuid, null, current_setting('t.shoot')::uuid), 0::numeric, 'Η Παροχή της Συμφωνίας Α τελείωσε');
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
+select is((select x ->> 'status' from jsonb_array_elements(public.booking_days(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid, current_setting('t.k1')::uuid)) x where (x ->> 'day')::date = (now() at time zone 'Europe/Athens')::date + 2), 'free', 'Η αλλαγή του δικού μου Γυρίσματος βλέπει ελεύθερη μέρα όταν η Παροχή έχει τελειώσει');
+select is((select x ->> 'label' from jsonb_array_elements(public.booking_days(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid, current_setting('t.k1')::uuid)) x where (x ->> 'day')::date = (now() at time zone 'Europe/Athens')::date + 2), 'Ελεύθερη', 'Η ίδια μέρα έχει την ετικέτα «Ελεύθερη» στην αλλαγή');
+select is((select x ->> 'status' from jsonb_array_elements(public.booking_days(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid)) x where (x ->> 'day')::date = (now() at time zone 'Europe/Athens')::date + 2), 'no_provision', 'Η κράτηση χωρίς αλλαγή βλέπει «Χωρίς Παροχή»');
+select is((select x ->> 'label' from jsonb_array_elements(public.booking_days(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid)) x where (x ->> 'day')::date = (now() at time zone 'Europe/Athens')::date + 2), 'Χωρίς Παροχή', 'Η ετικέτα «Χωρίς Παροχή» μένει χωρίς αλλαγή');
+select ok(jsonb_array_length(public.booking_slots(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid, (now() at time zone 'Europe/Athens')::date + 2, 1, current_setting('t.k1')::uuid)) > 0, 'Η αλλαγή βλέπει ώρες στη μέρα της');
+select is(jsonb_array_length(public.booking_slots(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid, (now() at time zone 'Europe/Athens')::date + 2, 1)), 0, 'Χωρίς αλλαγή η ίδια μέρα δεν έχει ώρες');
+select throws_ok($$ select public.booking_days(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid, current_setting('t.k3')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Αλλαγή με Γύρισμα άλλου πελάτη δεν βλέπει ημέρες');
+select throws_ok($$ select public.booking_slots(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid, (now() at time zone 'Europe/Athens')::date + 2, 1, current_setting('t.k3')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Αλλαγή με Γύρισμα άλλου πελάτη δεν βλέπει ώρες');
+select throws_ok($$ select public.filming_client_reschedule(current_setting('t.k1')::uuid, now() - interval '1 hour', 1) $$, 'P0001', 'Η κράτηση θέλει προειδοποίηση τουλάχιστον 24 ωρών', 'Αλλαγή σε ώρα που πέρασε απορρίπτεται');
+select lives_ok($$ select public.filming_client_reschedule(current_setting('t.k1')::uuid, public.t_day(2, time '09:00'), 1) $$, 'Ο πελάτης ζητά αλλαγή στις 09:00 με την Παροχή που ελευθερώνει το ίδιο Γύρισμα');
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+update public.filmings set reschedule_starts_at = now() - interval '1 hour' where id = current_setting('t.k1')::uuid;
+select throws_ok($$ select public.filming_decide_reschedule(current_setting('t.k1')::uuid, true, null) $$, 'P0001', 'Η νέα ώρα πέρασε', 'Η αποδοχή αλλαγής με ώρα που πέρασε απορρίπτεται');
+select is((select x ->> 'slotProblem' from jsonb_array_elements(public.filming_queue_view() -> 'rescheduleRequests') x where x ->> 'id' = current_setting('t.k1')), 'Η νέα ώρα πέρασε', 'Η ουρά δείχνει ότι η αλλαγή έχει περάσει');
+select lives_ok($$ select public.filming_decide_reschedule(current_setting('t.k1')::uuid, false, 'Πέρασε η ώρα') $$, 'Η απόρριψη της ληγμένης αλλαγής επιτρέπεται');
+
+-- Μέρα που χωράει μισή ώρα κλείνει για διάρκεια 1 ώρα: «Κλειστά», όχι «Γεμάτο».
+select lives_ok($$ select public.booking_exception_save((now() at time zone 'Europe/Athens')::date + 9, false, time '09:00', time '09:30', null, null) $$, 'Η μέρα +9 ανοίγει μόνο μισή ώρα');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
+select is((select x ->> 'status' from jsonb_array_elements(public.booking_days(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid)) x where (x ->> 'day')::date = (now() at time zone 'Europe/Athens')::date + 9), 'closed', 'Μέρα που δεν χωράει καμία διάρκεια είναι κλειστή');
+select is((select x ->> 'label' from jsonb_array_elements(public.booking_days(current_setting('t.a')::uuid, current_setting('t.shoot')::uuid)) x where (x ->> 'day')::date = (now() at time zone 'Europe/Athens')::date + 9), 'Κλειστά', 'Η κλειστή μέρα έχει την ετικέτα «Κλειστά»');
+
+-- Αλλαγή ώρας (DST): 2026-10-25 λήγει η θερινή ώρα. Το Ωράριο 08–20 μένει 08–20 τοπικά.
+insert into public.booking_exceptions (day, is_closed, opens, closes) values (date '2026-10-25', false, time '08:00', time '20:00');
+select is((select (min(c) at time zone 'Europe/Athens')::time from authz.day_candidates(date '2026-10-25', 1) c), time '08:00', 'Τη μέρα της αλλαγής ώρας η πρώτη ώρα είναι 08:00 τοπικά');
+select is((select (max(c) at time zone 'Europe/Athens')::time from authz.day_candidates(date '2026-10-25', 1) c), time '19:00', 'Τη μέρα της αλλαγής ώρας η τελευταία ώρα για 1 ώρα είναι 19:00 τοπικά');
+select ok(authz.slot_problem(timestamptz '2026-10-25 06:00:00+00', 1, null, true) is null, 'Τη μέρα της αλλαγής ώρας η 08:00 τοπικά χωράει');
+select is(authz.slot_problem(timestamptz '2026-10-25 05:30:00+00', 1, null, true), 'Η ώρα είναι εκτός Ωραρίου', 'Τη μέρα της αλλαγής ώρας η 07:30 τοπικά είναι εκτός Ωραρίου');
 
 -- ───────────── Κλειστοί πίνακες και βοηθητικές συναρτήσεις ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
