@@ -2,12 +2,9 @@
 
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
-import { FormMessage } from "@/components/ui/form-message";
-import { useFormChanged } from "@/lib/use-form-changed";
-import { useKeptForm } from "@/lib/use-kept-form";
 
+import { ActionForm } from "./action-form";
 import { saveBlockedTime } from "../actions-blocked";
 import type { BlockedFormFields } from "../blocked-form";
 import type { CalendarMember } from "../types";
@@ -70,12 +67,14 @@ export function BlockedTimeForm({
   people,
   personName,
 }: BlockedTimeFormProps) {
-  const { state, isPending, onSubmit, formRef } = useKeptForm(saveBlockedTime);
-  const isChanged = useFormChanged(formRef, state.notice ? state : undefined);
   const [allDay, setAllDay] = useState(values.allDay);
-  const showSubmit = id === null || isChanged;
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="grid max-w-xl gap-4">
+    <ActionForm
+      action={saveBlockedTime}
+      submitLabel="Αποθήκευση"
+      onlyWhenChanged={id !== null}
+      className="max-w-xl gap-4"
+    >
       {id && <input type="hidden" name="id" value={id} />}
       <PersonField
         people={people}
@@ -109,14 +108,6 @@ export function BlockedTimeForm({
       <Field label="Τίτλος" hint={TITLE_NOTE}>
         <Input name="title" maxLength={120} defaultValue={values.title} />
       </Field>
-      <FormMessage state={state} />
-      {showSubmit && (
-        <div>
-          <Button type="submit" variant="primary" disabled={isPending}>
-            {isPending ? "Αποθήκευση…" : "Αποθήκευση"}
-          </Button>
-        </div>
-      )}
-    </form>
+    </ActionForm>
   );
 }
