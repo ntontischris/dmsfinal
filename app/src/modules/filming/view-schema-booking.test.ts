@@ -24,7 +24,7 @@ const hoursView = {
   exceptions: [
     { day: "2026-12-24", isClosed: true, opens: null, closes: null, capacity: null, note: "Παραμονή" },
   ],
-  holidays: [{ day: "2026-03-25", name: "Εθνική εορτή", movable: false, isOpen: false }],
+  holidays: [{ day: "2026-03-25", name: "Εθνική εορτή", movable: false, isOpen: false, isOpened: false, isPast: false }],
 };
 
 describe("bookingHoursViewSchema", () => {

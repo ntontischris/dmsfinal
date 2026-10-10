@@ -35,6 +35,8 @@ const holidaySchema = z.object({
   name: z.string(),
   movable: z.boolean(),
   isOpen: z.boolean(),
+  isOpened: z.boolean(),
+  isPast: z.boolean(),
 });
 
 export const bookingHoursViewSchema: z.ZodType<BookingHoursView> = z.object({

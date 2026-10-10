@@ -42,6 +42,8 @@ export interface BookingHoliday {
   name: string;
   movable: boolean;
   isOpen: boolean;
+  isOpened: boolean;
+  isPast: boolean;
 }
 
 export interface BookingHoursView {
