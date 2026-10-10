@@ -8,6 +8,7 @@ import {
   bookFirstFreeSlot,
   setOpeningHours,
   signedBookingAgreement,
+  switchUser,
 } from "./booking-parts";
 import { button, inContext, project, signIn, tableRow } from "./sales-parts";
 
@@ -36,7 +37,7 @@ test("ο Ιδιοκτήτης ορίζει το Ωράριο και προσθέ
 test("ο Πελάτης κλείνει κράτηση, ο Ιδιοκτήτης την εγκρίνει", async ({ page, browser }) => {
   const P = project();
   await signedBookingAgreement(page, browser, P);
-  await signIn(page, CLIENT_EMAIL(P));
+  await switchUser(page, CLIENT_EMAIL(P));
   await visit(page, "/app/book");
   await bookFirstFreeSlot(page);
   await expect(page).toHaveURL(FILMING_URL);

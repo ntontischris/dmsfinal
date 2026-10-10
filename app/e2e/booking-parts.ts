@@ -26,6 +26,12 @@ export async function signedBookingAgreement(page: Page, browser: Browser, P: st
   });
 }
 
+// Αλλάζει Χρήστη στην ίδια σελίδα: «Έξοδος», μετά είσοδος με το άλλο email (το /login δεν φαίνεται όσο είσαι μέσα).
+export async function switchUser(page: Page, email: string): Promise<void> {
+  await page.getByRole("button", { name: "Έξοδος", exact: true }).click();
+  await signIn(page, email);
+}
+
 // Ο Πελάτης διαλέγει την πρώτη ελεύθερη μέρα, διάρκεια 2 ώρες και την πρώτη ελεύθερη ώρα, και επιβεβαιώνει.
 export async function bookFirstFreeSlot(page: Page, options: { reschedule?: boolean } = {}): Promise<void> {
   await page.locator('a[href*="day="]').first().click();
