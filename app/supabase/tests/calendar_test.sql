@@ -373,7 +373,7 @@ set local role authenticated;
 select set_config('t.tok9', public.calendar_link_renew(), true);
 reset role;
 select ok(public.calendar_feed(current_setting('t.tok9')) is not null, 'Ο Χρήστης πελάτη με ενεργή συμμετοχή παίρνει feed');
-update public.client_users set removed_at = now() where user_id = '00000000-0000-0000-0000-0000000000e9';
+update public.client_users set removed_at = now(), is_current = false where user_id = '00000000-0000-0000-0000-0000000000e9';
 select ok(public.calendar_feed(current_setting('t.tok9')) is null, 'Μετά την αφαίρεση της συμμετοχής το feed δεν δίνει τίποτα');
 
 select * from finish();
