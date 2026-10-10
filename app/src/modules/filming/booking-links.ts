@@ -12,15 +12,19 @@ export interface BookingSelection {
   reschedule?: string;
 }
 
-const optionalText = z.string().optional().catch(undefined);
+// Κάθε πεδίο του URL ελέγχεται· ό,τι δεν είναι έγκυρο αγνοείται (η σελίδα δεν σπάει).
+const optionalUuid = z.uuid().optional().catch(undefined);
+const optionalDay = z.iso.date().optional().catch(undefined);
+const optionalHours = z.string().regex(/^\d{1,2}(\.5)?$/).optional().catch(undefined);
+const optionalTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional().catch(undefined);
 
 export const bookingSelectionSchema = z.object({
-  agreement: optionalText,
-  kind: optionalText,
-  day: optionalText,
-  hours: optionalText,
-  time: optionalText,
-  reschedule: optionalText,
+  agreement: optionalUuid,
+  kind: optionalUuid,
+  day: optionalDay,
+  hours: optionalHours,
+  time: optionalTime,
+  reschedule: optionalUuid,
 });
 
 const KEYS: readonly (keyof BookingSelection)[] = [

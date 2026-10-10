@@ -52,15 +52,45 @@ describe("step helpers", () => {
   });
 });
 
+const AGREEMENT_ID = "123e4567-e89b-42d3-a456-426614174000";
+
 describe("bookingSelectionSchema", () => {
   it("should ignore repeated query values instead of failing the page", () => {
-    expect(bookingSelectionSchema.parse({ day: ["a", "b"], agreement: "a1" })).toEqual({
-      agreement: "a1",
+    expect(bookingSelectionSchema.parse({ day: ["a", "b"], agreement: AGREEMENT_ID })).toEqual({
+      agreement: AGREEMENT_ID,
       day: undefined,
       kind: undefined,
       hours: undefined,
       time: undefined,
       reschedule: undefined,
     });
+  });
+});
+
+describe("bookingSelectionSchema validation", () => {
+  it("should ignore malformed values instead of failing the page", () => {
+    expect(
+      bookingSelectionSchema.parse({
+        agreement: "not-a-uuid",
+        kind: "also-not",
+        day: "2026-13-45",
+        hours: "abc",
+        time: "25:99",
+        reschedule: "nope",
+      }),
+    ).toEqual({
+      agreement: undefined,
+      kind: undefined,
+      day: undefined,
+      hours: undefined,
+      time: undefined,
+      reschedule: undefined,
+    });
+  });
+
+  it("should keep well-formed values", () => {
+    expect(
+      bookingSelectionSchema.parse({ agreement: AGREEMENT_ID, day: "2026-10-12", hours: "1.5", time: "09:30" }),
+    ).toEqual({ agreement: AGREEMENT_ID, day: "2026-10-12", hours: "1.5", time: "09:30" });
   });
 });
