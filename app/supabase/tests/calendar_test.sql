@@ -330,7 +330,7 @@ select set_config('t.tok3', public.calendar_link_renew(), true);
 select is(public.calendar_feed(current_setting('t.tok3')) ->> 'name', 'Πέτρος', 'Ο Σύνδεσμος ομάδας δίνει το όνομα του μέλους');
 select ok(position('Προσωπικό' in (public.calendar_feed(current_setting('t.tok3')))::text) > 0, 'Ο δικός μου κλεισμένος χρόνος μπαίνει στο feed με τον τίτλο');
 select ok(position('Άδεια' in (public.calendar_feed(current_setting('t.tok3')))::text) = 0, 'Ο κλεισμένος χρόνος άλλων δεν μπαίνει στο feed του μέλους');
-select set_config('t.bt_long', public.blocked_time_save(null, null, public.t_day(-40, time '10:00'), public.t_day(20, time '10:00'), false, 'Μακρύ')::text, true);
+select set_config('t.bt_long', public.blocked_time_save(null, null, public.t_day(-40, time '10:00'), public.t_day(19, time '10:00'), false, 'Μακρύ')::text, true);
 select ok(position('Μακρύ' in (public.calendar_feed(current_setting('t.tok3')))::text) > 0, 'Κλεισμένος χρόνος που ξεκίνησε πριν από το παράθυρο και τελειώνει μετά μπαίνει στο feed');
 select set_config('t.bt_allday', public.blocked_time_save(null, null, public.t_day(4, time '12:00'), public.t_day(4, time '12:00'), true, 'Ολοήμερο')::text, true);
 select is((select e ->> 'allDay' from jsonb_array_elements(public.calendar_feed(current_setting('t.tok3')) -> 'events') e where e ->> 'summary' = 'Ολοήμερο'), 'true', 'Η μέρα ολόκληρη μπαίνει στο feed ως όλη μέρα');
