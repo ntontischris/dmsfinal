@@ -10,7 +10,7 @@ import type {
   BookingAgreement,
   BookingKind,
   FilmingHistoryEntry,
-  FilmingSignals,
+  FilmingFlags,
   FilmingState,
   OpenFilmingOption,
   FilmingRow,
@@ -32,9 +32,9 @@ export const stateTone = (state: FilmingState): Tone | undefined => {
 
 // Τα Σήματα της γραμμής, μόνο όσα ισχύουν, με τη σειρά που φαίνονται.
 export const activeSignals = (
-  signals: FilmingSignals,
-): { key: keyof FilmingSignals; label: string }[] =>
-  (Object.keys(SIGNAL_LABELS) as (keyof FilmingSignals)[])
+  signals: FilmingFlags,
+): { key: keyof FilmingFlags; label: string }[] =>
+  (Object.keys(SIGNAL_LABELS) as (keyof FilmingFlags)[])
     .filter((key) => signals[key])
     .map((key) => ({ key, label: SIGNAL_LABELS[key] }));
 

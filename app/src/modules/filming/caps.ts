@@ -7,7 +7,7 @@ import type { FilmingCaps } from "./types";
 // Κάθε ενέργεια της σελίδας την ξαναελέγχει η βάση· εδώ μόνο φαίνεται ή κρύβεται.
 
 export const filmingCaps = (viewer: Viewer): FilmingCaps => ({
-  canView: can(viewer, "filming.view"),
+  canView: can(viewer, "filming.view") || can(viewer, "c.book"),
   canApprove: can(viewer, "filming.approve"),
   canBook: can(viewer, "filming.book"),
   canCrew: can(viewer, "filming.crew"),

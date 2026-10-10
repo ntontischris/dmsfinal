@@ -9,6 +9,7 @@ import type { ProvisionMeasure } from "../types";
 
 import { ActionForm } from "./action-form";
 import { DurationNotice } from "./duration-notice";
+import { SlotWarning } from "./slot-warning";
 
 interface RescheduleFormProps {
   filmingId: string;
@@ -29,15 +30,17 @@ export function RescheduleForm({
   defaultHours,
 }: RescheduleFormProps) {
   const [hoursText, setHoursText] = useState(String(hours));
+  const [dateText, setDateText] = useState(date);
+  const [timeText, setTimeText] = useState(time);
   const parsedHours = Number(hoursText.replace(",", "."));
   return (
     <ActionForm action={rescheduleFilming} submitLabel="Μετάθεση" variant="default" size="sm">
       <input type="hidden" name="filmingId" value={filmingId} />
       <Field label="Ημερομηνία">
-        <Input name="date" type="date" required defaultValue={date} />
+        <Input name="date" type="date" required value={dateText} onChange={(event) => setDateText(event.target.value)} />
       </Field>
       <Field label="Ώρα">
-        <Input name="time" type="time" required defaultValue={time} />
+        <Input name="time" type="time" required value={timeText} onChange={(event) => setTimeText(event.target.value)} />
       </Field>
       <Field label="Ώρες">
         <Input
@@ -55,6 +58,7 @@ export function RescheduleForm({
       {measure !== null && (
         <DurationNotice hours={parsedHours} measure={measure} defaultHours={defaultHours} />
       )}
+      <SlotWarning date={dateText} time={timeText} hours={hoursText} filmingId={filmingId} />
     </ActionForm>
   );
 }

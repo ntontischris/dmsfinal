@@ -20,7 +20,7 @@ const rowJson = {
   client: { id: CLIENT_ID, name: "Ταβέρνα Αρμύρα" },
   production: { id: PRODUCTION_ID, title: "Οκτώβριος 2026" },
   crew: { confirmed: 1, total: 2 },
-  signals: { equipmentConflict: false, isExtra: true, cancelRequest: false, crewDeclined: false },
+  signals: { equipmentConflict: false, isExtra: true, cancelRequest: false, crewDeclined: false, slotProblem: null, pendingReschedule: null },
 };
 
 const cardJson = {
@@ -62,7 +62,7 @@ const cardJson = {
       after: { origin: "team" },
     },
   ],
-  signals: { equipmentConflict: false, isExtra: false, cancelRequest: false, crewDeclined: false },
+  signals: { equipmentConflict: false, isExtra: false, cancelRequest: false, crewDeclined: false, slotProblem: null, pendingReschedule: null },
   viewerCan: {
     approve: false,
     reject: false,
@@ -76,6 +76,9 @@ const cardJson = {
     decideCancel: false,
     clientCancel: false,
     requestCancel: false,
+    decideReschedule: false,
+    clientReschedule: false,
+    clientWithdrawReschedule: false,
   },
 };
 
@@ -135,6 +138,7 @@ describe("queueSchema", () => {
         },
       ],
       cancelRequests: [],
+      rescheduleRequests: [],
     });
     expect(queue.pending[0]?.waitingLong).toBe(true);
     expect(queue.pending[0]?.provision?.balance).toBe(1);
