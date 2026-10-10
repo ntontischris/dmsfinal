@@ -40,7 +40,7 @@ test("ο Πελάτης κλείνει κράτηση, ο Ιδιοκτήτης �
   await switchUser(page, CLIENT_EMAIL(P));
   await visit(page, "/app/book");
   await bookFirstFreeSlot(page);
-  await expect(page).toHaveURL(FILMING_URL);
+  await expect(page).toHaveURL(/\/app\/filming\/[0-9a-f-]{36}\?done=booked$/);
   await expect(page.getByText("Αναμένει έγκριση").first()).toBeVisible();
 
   await inContext(browser, "owner@example.com", async (owner) => {
