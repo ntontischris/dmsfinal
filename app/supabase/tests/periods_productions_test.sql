@@ -467,13 +467,12 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 select is(jsonb_array_length(public.productions_view()), 7, 'Η αφαίρεση κόβει αμέσως την πρόσβαση');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
 
--- ───────────── Πελάτης με σύνδεση (υπάρχει μόνο στο τεστ) ─────────────
+-- ───────────── Πελάτης με σύνδεση: ο e6 είναι Χρήστης πελάτη του f1 με Ρόλο «Πλήρης» ─────────────
 reset role;
-create or replace function authz.client_user_client_id() returns uuid
-language sql stable security definer set search_path = ''
-as $$ select current_setting('t.client_f1')::uuid; $$;
+insert into public.client_users (client_id, user_id, name, role_id, is_current)
+select '00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000e6', 'Μαρία Παπαδάκη', r.id, true
+  from public.roles r where r.name = 'Πλήρης' and r.kind = 'client';
 set local role authenticated;
-select set_config('t.client_f1', '00000000-0000-0000-0000-0000000000f1', true);
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
 select is(jsonb_array_length(public.productions_view()), current_setting('t.m1')::int + 8, 'Ο Πελάτης βλέπει μόνο τις Παραγωγές του');
 select is(jsonb_array_length(public.productions_view(null, true)), 0, 'Ο Πελάτης δεν βλέπει Εσωτερικές');

@@ -1,26 +1,20 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createSupabase } from "@/lib/supabase/server";
 
+import { claimOnEntry } from "./claim";
+import { appOrigin as origin } from "@/lib/app-origin";
 import { emailSchema, loginSchema, newPasswordSchema, safeNext, type FormState } from "./schemas";
 
 // Οι ενέργειες εισόδου (R9, R10). Κανένα μήνυμα δεν αποκαλύπτει αν υπάρχει λογαριασμός (κεφ. 9).
 
 const UNCONFIGURED: FormState = { error: "Η βάση δεν έχει συνδεθεί ακόμα. Δοκίμασε ξανά αργότερα." };
-const LINK_SENT = "Αν το email έχει λογαριασμό, σου στείλαμε σύνδεσμο. Ισχύει 1 ώρα.";
-
-async function origin(): Promise<string> {
-  const list = await headers();
-  const host = list.get("x-forwarded-host") ?? list.get("host") ?? "localhost:3000";
-  const proto = list.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
+const LINK_SENT = "Αν το email έχει λογαριασμό, σου στείλαμε σύνδεσμο. Ισχύει 24 ώρες.";
 
 const callbackUrl = async (next: string): Promise<string> =>
-  `${await origin()}/auth/callback?next=${encodeURIComponent(next)}`;
+  `${origin()}/auth/callback?next=${encodeURIComponent(next)}`;
 
 const firstError = (issues: readonly { message: string }[]): FormState => ({ error: issues[0]?.message });
 
@@ -36,8 +30,7 @@ export async function signInWithPassword(_: FormState, form: FormData): Promise<
     console.error("signInWithPassword", error.status, error.code);
     return { error: "Λάθος email ή κωδικός." };
   }
-  const { error: claimError } = await supabase.rpc("claim_first_owner");
-  if (claimError) console.error("claim_first_owner", claimError.message);
+  await claimOnEntry(supabase);
   redirect(safeNext(String(form.get("next") ?? "")));
 }
 
@@ -93,8 +86,7 @@ export async function setPassword(_: FormState, form: FormData): Promise<FormSta
     console.error("updateUser", error.message);
     return { error: "Ο σύνδεσμος έληξε ή ο κωδικός δεν έγινε δεκτός. Ζήτησε νέο σύνδεσμο." };
   }
-  const { error: claimError } = await supabase.rpc("claim_first_owner");
-  if (claimError) console.error("claim_first_owner", claimError.message);
+  await claimOnEntry(supabase);
   redirect("/app");
 }
 

@@ -48,6 +48,11 @@ jobs:
   # Από άκρη σε άκρη: τοπικό Supabase (βάση + είσοδος), φανταστικοί Χρήστες, η εφαρμογή σε production build, browser.
   e2e:
     runs-on: ubuntu-latest
+    env:
+      # Τοπική τιμή για το CI, όχι μυστικό: το σκούντημα της ουράς email την χρειάζεται στα τεστ.
+      CRON_SECRET: e2e-cron-secret
+      # Τοπική τιμή για το CI, όχι μυστικό: υπογράφει το δοκιμαστικό αίτημα του Send Email Hook.
+      SEND_EMAIL_HOOK_SECRET: 'v1,whsec_ZTJlLWhvb2stc2VjcmV0LW5vdC1hLWtleQ=='
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
