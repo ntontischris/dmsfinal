@@ -4,11 +4,37 @@ import type { Locale } from "../locale";
 
 import { invitationMessage, authLinkMessage } from "./auth-messages";
 import { proposalLinkMessage, signedCopyMessage, signingCodeMessage } from "./agreement-messages";
-import { clientAddedMessage, testMessage } from "./system-messages";
+import {
+  clientAddedMessage,
+  decisionMessage,
+  testMessage,
+  type DecisionInput,
+} from "./system-messages";
 
 const ORIGIN = "https://dmsfinal-app.vercel.app";
 const LINK = `${ORIGIN}/auth/confirm?token_hash=abc&type=invite`;
 const LOCALES: readonly Locale[] = ["el", "en"];
+
+const DECISION_CASES: readonly { name: string; input: Partial<DecisionInput> }[] = [
+  { name: "γύρισμα εγκρίθηκε", input: { kind: "filming_decision", decision: "approved" } },
+  { name: "γύρισμα απορρίφθηκε με αιτιολογία", input: { kind: "filming_decision", decision: "rejected", reason: "Κλειστό στούντιο" } },
+  { name: "μετάθεση εγκρίθηκε με προηγούμενη ώρα", input: { kind: "reschedule_decision", decision: "approved", previousStartsAt: "2026-10-12T09:00:00Z" } },
+  { name: "μετάθεση απορρίφθηκε", input: { kind: "reschedule_decision", decision: "rejected", reason: "Δεν υπάρχει συνεργείο" } },
+];
+
+// Το γύρισμα είναι 12 Οκτωβρίου 2026, 11:30 UTC, δηλαδή 14:30 ώρα Αθήνας.
+const decisionBase = (locale: Locale): DecisionInput => ({
+  locale,
+  origin: ORIGIN,
+  name: "Νίκος",
+  kind: "filming_decision",
+  filmingId: "f-42",
+  decision: "approved",
+  startsAt: "2026-10-12T11:30:00Z",
+  previousStartsAt: null,
+  hours: 2,
+  reason: null,
+});
 
 describe.each(LOCALES)("τα πρότυπα email (%s)", (locale) => {
   it("πρόσκληση ομάδας", () => {
@@ -47,10 +73,26 @@ describe.each(LOCALES)("τα πρότυπα email (%s)", (locale) => {
     ).toMatchSnapshot();
   });
 
+  it.each(DECISION_CASES)("απόφαση $name", ({ input }) => {
+    expect(decisionMessage({ ...decisionBase(locale), ...input })).toMatchSnapshot();
+  });
+
   it("αντίγραφο υπογεγραμμένης", () => {
     expect(
       signedCopyMessage({ locale, origin: ORIGIN, name: "Νίκος", agreementTitle: "Σποτ", managerName: "Άννα" }),
     ).toMatchSnapshot();
+  });
+});
+
+describe("η απόφαση γυρίσματος", () => {
+  it("γράφει την ώρα της Αθήνας και τη διάρκεια", () => {
+    const text = decisionMessage({ ...decisionBase("el") }).text;
+    expect(text).toContain("14:30");
+    expect(text).toContain("2 ώρες");
+  });
+
+  it("δείχνει το κουμπί προς το γύρισμα", () => {
+    expect(decisionMessage({ ...decisionBase("en") }).html).toContain(`${ORIGIN}/app/filming/f-42`);
   });
 });
 

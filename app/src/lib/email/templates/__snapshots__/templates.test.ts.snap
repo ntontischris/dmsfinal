@@ -13,6 +13,69 @@ Devre Media · Το μήνυμα στάλθηκε από το σύστημα τ�
 }
 `;
 
+exports[`τα πρότυπα email (el) > απόφαση 'γύρισμα απορρίφθηκε με αιτιολογία' 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Το Γύρισμά σου δεν εγκρίθηκε</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Το αίτημα γυρίσματος για Δευτέρα 12 Οκτωβρίου 2026 στις 14:30 δεν εγκρίθηκε.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Αιτιολογία: Κλειστό στούντιο</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/filming/f-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες το γύρισμα</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Devre Media · Το Γύρισμά σου δεν εγκρίθηκε",
+  "text": "Το Γύρισμά σου δεν εγκρίθηκε
+
+Γεια σου Νίκος,
+Το αίτημα γυρίσματος για Δευτέρα 12 Οκτωβρίου 2026 στις 14:30 δεν εγκρίθηκε.
+Αιτιολογία: Κλειστό στούντιο
+
+Δες το γύρισμα: https://dmsfinal-app.vercel.app/app/filming/f-42
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > απόφαση 'γύρισμα εγκρίθηκε' 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Το Γύρισμά σου εγκρίθηκε</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Το γύρισμα είναι προγραμματισμένο για Δευτέρα 12 Οκτωβρίου 2026 στις 14:30. Διάρκεια: 2 ώρες.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/filming/f-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες το γύρισμα</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Devre Media · Το Γύρισμά σου εγκρίθηκε",
+  "text": "Το Γύρισμά σου εγκρίθηκε
+
+Γεια σου Νίκος,
+Το γύρισμα είναι προγραμματισμένο για Δευτέρα 12 Οκτωβρίου 2026 στις 14:30. Διάρκεια: 2 ώρες.
+
+Δες το γύρισμα: https://dmsfinal-app.vercel.app/app/filming/f-42
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > απόφαση 'μετάθεση απορρίφθηκε' 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Η μετάθεση δεν εγκρίθηκε</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Η αίτηση μετάθεσης δεν εγκρίθηκε. Το γύρισμα μένει για Δευτέρα 12 Οκτωβρίου 2026 στις 14:30.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Αιτιολογία: Δεν υπάρχει συνεργείο</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/filming/f-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες το γύρισμα</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Devre Media · Η μετάθεση δεν εγκρίθηκε",
+  "text": "Η μετάθεση δεν εγκρίθηκε
+
+Γεια σου Νίκος,
+Η αίτηση μετάθεσης δεν εγκρίθηκε. Το γύρισμα μένει για Δευτέρα 12 Οκτωβρίου 2026 στις 14:30.
+Αιτιολογία: Δεν υπάρχει συνεργείο
+
+Δες το γύρισμα: https://dmsfinal-app.vercel.app/app/filming/f-42
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > απόφαση 'μετάθεση εγκρίθηκε με προηγούμενη ώρα' 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Η μετάθεση εγκρίθηκε</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Το γύρισμα μετατέθηκε για Δευτέρα 12 Οκτωβρίου 2026 στις 14:30. Διάρκεια: 2 ώρες.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Η προηγούμενη ώρα ήταν Δευτέρα 12 Οκτωβρίου 2026 στις 12:00.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/filming/f-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες το γύρισμα</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Devre Media · Η μετάθεση εγκρίθηκε",
+  "text": "Η μετάθεση εγκρίθηκε
+
+Γεια σου Νίκος,
+Το γύρισμα μετατέθηκε για Δευτέρα 12 Οκτωβρίου 2026 στις 14:30. Διάρκεια: 2 ώρες.
+Η προηγούμενη ώρα ήταν Δευτέρα 12 Οκτωβρίου 2026 στις 12:00.
+
+Δες το γύρισμα: https://dmsfinal-app.vercel.app/app/filming/f-42
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
 exports[`τα πρότυπα email (el) > δοκιμαστικό email 1`] = `
 {
   "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Δοκιμαστικό email</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Αν διαβάζεις αυτό, η αποστολή email του DMS λειτουργεί.</p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
@@ -122,6 +185,69 @@ exports[`τα πρότυπα email (en) > αντίγραφο υπογεγραμ�
 
 Hello Νίκος,
 The proposal “Σποτ” was signed. The account manager is Άννα.
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > απόφαση 'γύρισμα απορρίφθηκε με αιτιολογία' 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Your filming was not approved</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">The filming request for Monday 12 October 2026 at 14:30 was not approved.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Reason: Κλειστό στούντιο</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/filming/f-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View the filming</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Devre Media · Your filming was not approved",
+  "text": "Your filming was not approved
+
+Hello Νίκος,
+The filming request for Monday 12 October 2026 at 14:30 was not approved.
+Reason: Κλειστό στούντιο
+
+View the filming: https://dmsfinal-app.vercel.app/app/filming/f-42
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > απόφαση 'γύρισμα εγκρίθηκε' 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Your filming has been approved</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Your filming is scheduled for Monday 12 October 2026 at 14:30. Duration: 2 hours.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/filming/f-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View the filming</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Devre Media · Your filming has been approved",
+  "text": "Your filming has been approved
+
+Hello Νίκος,
+Your filming is scheduled for Monday 12 October 2026 at 14:30. Duration: 2 hours.
+
+View the filming: https://dmsfinal-app.vercel.app/app/filming/f-42
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > απόφαση 'μετάθεση απορρίφθηκε' 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Your reschedule was not approved</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">The reschedule request was not approved. The filming stays at Monday 12 October 2026 at 14:30.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Reason: Δεν υπάρχει συνεργείο</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/filming/f-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View the filming</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Devre Media · Your reschedule was not approved",
+  "text": "Your reschedule was not approved
+
+Hello Νίκος,
+The reschedule request was not approved. The filming stays at Monday 12 October 2026 at 14:30.
+Reason: Δεν υπάρχει συνεργείο
+
+View the filming: https://dmsfinal-app.vercel.app/app/filming/f-42
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > απόφαση 'μετάθεση εγκρίθηκε με προηγούμενη ώρα' 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Your reschedule was approved</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Your filming was moved to Monday 12 October 2026 at 14:30. Duration: 2 hours.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">The previous time was Monday 12 October 2026 at 12:00.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/filming/f-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View the filming</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Devre Media · Your reschedule was approved",
+  "text": "Your reschedule was approved
+
+Hello Νίκος,
+Your filming was moved to Monday 12 October 2026 at 14:30. Duration: 2 hours.
+The previous time was Monday 12 October 2026 at 12:00.
+
+View the filming: https://dmsfinal-app.vercel.app/app/filming/f-42
 
 Devre Media · This message was sent by the company system.",
 }

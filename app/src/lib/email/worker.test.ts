@@ -49,6 +49,23 @@ const outboxRow = (overrides: Partial<OutboxRow>): OutboxRow => ({
   ...overrides,
 });
 
+const decisionRow = (overrides: Partial<OutboxRow> = {}): OutboxRow =>
+  outboxRow({
+    kind: "filming_decision",
+    to_email: "client@example.com",
+    payload: {
+      filmingId: "f-42",
+      decision: "approved",
+      startsAt: "2026-10-12T11:30:00Z",
+      hours: 2,
+      reason: null,
+    },
+    ...overrides,
+  });
+
+const acceptingFetch = () =>
+  vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () => new Response("{}", { status: 200 }));
+
 const agreementRow = (overrides: Partial<AgreementRow>): AgreementRow => ({
   id: UUID,
   kind: "proposal_link",
@@ -108,6 +125,45 @@ describe("handleOutboxRow", () => {
     const { admin, calls } = fakeAdmin();
     await handleOutboxRow(admin, outboxRow({ kind: "test" }), ORIGIN);
     expect(doneCall(calls)?.args).toMatchObject({ p_ok: false, p_error: "Resend 500" });
+  });
+});
+
+describe("handleOutboxRow για αποφάσεις γυρίσματος", () => {
+  it("στέλνει την έγκριση γυρίσματος στον Πελάτη και κλείνει ως επιτυχημένη", async () => {
+    vi.stubEnv("RESEND_API_KEY", "k");
+    const fetchMock = acceptingFetch();
+    vi.stubGlobal("fetch", fetchMock);
+    const { admin, calls } = fakeAdmin();
+    await handleOutboxRow(admin, decisionRow(), ORIGIN);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0]?.[1]?.body)).toContain("client@example.com");
+    expect(doneCall(calls)?.args).toMatchObject({
+      p_ok: true,
+      p_subject: "Devre Media · Το Γύρισμά σου εγκρίθηκε",
+    });
+  });
+
+  it("κλείνει ως επιτυχημένη τη μετάθεση που απορρίφθηκε με το σωστό θέμα", async () => {
+    const { admin, calls } = fakeAdmin();
+    const row = decisionRow({
+      kind: "reschedule_decision",
+      payload: { filmingId: "f-42", decision: "rejected", startsAt: "2026-10-12T11:30:00Z", hours: 2, reason: "Κλειστό" },
+    });
+    await handleOutboxRow(admin, row, ORIGIN);
+    expect(doneCall(calls)?.args).toMatchObject({
+      p_ok: true,
+      p_subject: "Devre Media · Η μετάθεση δεν εγκρίθηκε",
+    });
+  });
+
+  it("δεν στέλνει και κλείνει ως αποτυχημένη όταν το payload δεν έχει σωστό σχήμα", async () => {
+    vi.stubEnv("RESEND_API_KEY", "k");
+    const fetchMock = acceptingFetch();
+    vi.stubGlobal("fetch", fetchMock);
+    const { admin, calls } = fakeAdmin();
+    await handleOutboxRow(admin, decisionRow({ payload: { filmingId: 42, decision: "maybe" } }), ORIGIN);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(doneCall(calls)?.args).toMatchObject({ p_ok: false, p_error: "Μη έγκυρο περιεχόμενο ειδοποίησης" });
   });
 });
 
