@@ -91,7 +91,6 @@ const DECISION_TITLES: Record<DecisionKind, Record<DecisionOutcome, BilingualTex
 const formatAthens = (locale: Locale, iso: string): string =>
   new Intl.DateTimeFormat(pick(locale, "el-GR", "en-GB"), {
     timeZone: "Europe/Athens",
-    weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
