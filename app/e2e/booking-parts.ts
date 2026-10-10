@@ -46,7 +46,7 @@ export async function bookFirstFreeSlot(page: Page, options: { reschedule?: bool
 export async function setOpeningHours(page: Page): Promise<void> {
   await page.goto("/app/settings/filming", { waitUntil: "networkidle" });
   const hoursForm = page.locator("form", {
-    has: page.getByRole("button", { name: "Αποθήκευση Ωραρίου", exact: true }),
+    has: page.locator('input[name="open-1"]'),
   });
   for (const dow of [1, 2, 3, 4, 5, 6, 7]) {
     await hoursForm.locator(`input[name="open-${dow}"]`).check();
@@ -58,10 +58,14 @@ export async function setOpeningHours(page: Page): Promise<void> {
   for (const hours of ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"]) {
     await hoursForm.locator(`input[name="durations"][value="${hours}"]`).setChecked(hours === "2" || hours === "3");
   }
-  await Promise.all([
-    page.waitForResponse((response) => response.request().method() === "POST"),
-    hoursForm.getByRole("button", { name: "Αποθήκευση Ωραρίου", exact: true }).click(),
-  ]);
+  const saveButton = hoursForm.getByRole("button", { name: "Αποθήκευση Ωραρίου", exact: true });
+  // Το κουμπί φαίνεται μόνο όταν κάτι άλλαξε· αν το Ωράριο είναι ήδη ό,τι θέλουμε, δεν υπάρχει τι να αποθηκευτεί.
+  if (await saveButton.isVisible()) {
+    await Promise.all([
+      page.waitForResponse((response) => response.request().method() === "POST"),
+      saveButton.click(),
+    ]);
+  }
   await page.reload({ waitUntil: "networkidle" });
   await expect(page.locator('input[name="from-1"]')).toHaveValue(OPEN_FROM);
   await expect(page.locator('input[name="capacity"]').first()).toHaveValue("2");

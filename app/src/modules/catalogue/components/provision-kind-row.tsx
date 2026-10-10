@@ -122,7 +122,7 @@ function KindCell({
       {isEditing && (
         <ActionForm
           action={updateKind}
-          submitLabel="Αποθήκευση"
+          onlyWhenChanged submitLabel="Αποθήκευση"
           variant="default"
           size="sm"
         >

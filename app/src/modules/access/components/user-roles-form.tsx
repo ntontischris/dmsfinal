@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
+import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 
 import type { RoleSummary } from "../queries";
@@ -23,6 +24,7 @@ export function UserRolesForm({
   locked,
 }: UserRolesFormProps) {
   const { state, isPending: isSaving, onSubmit: action, formRef: actionRef } = useKeptForm(setUserRoles);
+  const isChanged = useFormChanged(actionRef, state.notice ? state : undefined);
   return (
     <form ref={actionRef} onSubmit={action} className="grid gap-3">
       <input type="hidden" name="userId" value={userId} />
@@ -65,11 +67,13 @@ export function UserRolesForm({
         })}
       </ul>
       <FormMessage state={state} />
-      <div>
-        <Button variant="primary" type="submit" disabled={isSaving}>
-          {isSaving ? "Αποθήκευση…" : "Αποθήκευση Ρόλων"}
-        </Button>
-      </div>
+      {isChanged && (
+        <div>
+          <Button variant="primary" type="submit" disabled={isSaving}>
+            {isSaving ? "Αποθήκευση…" : "Αποθήκευση Ρόλων"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

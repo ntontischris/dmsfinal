@@ -97,7 +97,7 @@ function ScheduleForm({ agreement }: { agreement: AgreementDetail }) {
   return (
     <ActionForm
       action={updateBasics}
-      submitLabel="Αποθήκευση χρονοδιαγράμματος"
+      onlyWhenChanged submitLabel="Αποθήκευση χρονοδιαγράμματος"
     >
       <input type="hidden" name="agreementId" value={agreement.id} />
       <FieldGrid>

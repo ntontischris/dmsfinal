@@ -159,7 +159,7 @@ export function TermsCard({ defaults, set }: TermsCardProps) {
         />
         <CardNote>{HINT}</CardNote>
         {/* Το key είναι μόνο το σετ: αλλάζοντας καρτέλα η φόρμα ξαναφτιάχνεται· η αποθήκευση δεν την ξαναφτιάχνει. */}
-        <ActionForm key={set} action={saveTerms} submitLabel="Αποθήκευση">
+        <ActionForm key={set} action={saveTerms} onlyWhenChanged submitLabel="Αποθήκευση">
           <input type="hidden" name="set" value={set} />
           {set === "monthly" ? (
             <MonthlyFields defaults={defaults} />

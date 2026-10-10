@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
 import type { FormState } from "@/lib/form-state";
+import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 
 interface CardFormProps {
@@ -13,6 +14,7 @@ interface CardFormProps {
   isLocked?: boolean;
   submitLabel?: string;
   resetOnSuccess?: boolean; // για φόρμες «νέο …»: αδειάζει μετά την επιτυχία
+  onlyWhenChanged?: boolean; // κρύβει το κουμπί όσο δεν έχει αλλάξει τιμή από την τελευταία αποθήκευση
   children: ReactNode;
 }
 
@@ -23,9 +25,12 @@ export function CardForm({
   isLocked = false,
   submitLabel = "Αποθήκευση",
   resetOnSuccess = false,
+  onlyWhenChanged = false,
   children,
 }: CardFormProps) {
   const { state, isPending: isSaving, onSubmit: formAction, formRef: formActionRef } = useKeptForm(action, { resetOnSuccess });
+  const isChanged = useFormChanged(formActionRef, state.notice ? state : undefined);
+  const showSubmit = !isLocked && (!onlyWhenChanged || isChanged);
   return (
     <form ref={formActionRef} onSubmit={formAction} className="grid gap-3">
       {version && <input type="hidden" name="version" value={version} />}
@@ -36,7 +41,7 @@ export function CardForm({
         {children}
       </fieldset>
       <FormMessage state={state} />
-      {!isLocked && (
+      {showSubmit && (
         <div>
           <Button variant="primary" type="submit" disabled={isSaving}>
             {isSaving ? "Αποθήκευση…" : submitLabel}

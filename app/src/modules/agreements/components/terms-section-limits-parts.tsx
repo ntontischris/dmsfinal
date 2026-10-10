@@ -83,7 +83,7 @@ export function RevisionLimitsForm({
       </ul>
     );
   return (
-    <ActionForm action={setRevisionLimits} submitLabel="Αποθήκευση ορίων">
+    <ActionForm action={setRevisionLimits} onlyWhenChanged submitLabel="Αποθήκευση ορίων">
       <input type="hidden" name="agreementId" value={agreementId} />
       <LimitsFields limits={limits} />
       <MutedNote>

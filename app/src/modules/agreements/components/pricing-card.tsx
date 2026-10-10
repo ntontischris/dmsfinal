@@ -17,7 +17,7 @@ export function PricingCard({ defaults }: { defaults: AgreementDefaults }) {
           Ισχύει για νέες προτάσεις· οι υπάρχουσες Συμφωνίες κρατούν τις τιμές
           τους.
         </CardNote>
-        <ActionForm action={savePricing} submitLabel="Αποθήκευση">
+        <ActionForm action={savePricing} onlyWhenChanged submitLabel="Αποθήκευση">
           <Field label="Ισχύς πρότασης (μέρες)">
             <Input
               name="proposalValidityDays"

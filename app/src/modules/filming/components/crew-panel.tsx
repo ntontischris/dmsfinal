@@ -85,7 +85,7 @@ function CrewSetForm({
   return (
     <ActionForm
       action={setFilmingCrew}
-      submitLabel="Αποθήκευση Συνεργείου"
+      onlyWhenChanged submitLabel="Αποθήκευση Συνεργείου"
       variant="default"
       size="sm"
     >

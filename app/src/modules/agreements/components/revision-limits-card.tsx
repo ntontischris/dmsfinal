@@ -59,7 +59,7 @@ export function RevisionLimitsCard({ kinds }: RevisionLimitsCardProps) {
           Πόσοι γύροι αλλαγών ανήκουν σε κάθε Παροχή του πελάτη. Αφήνεις κενό
           όταν το είδος δεν έχει γύρους αλλαγών (χωρίς γύρους). {FORWARD_NOTE}
         </p>
-        <ActionForm action={saveRevisionLimits} submitLabel="Αποθήκευση">
+        <ActionForm action={saveRevisionLimits} onlyWhenChanged submitLabel="Αποθήκευση">
           <input type="hidden" name="limits" value={toField(active, draft)} />
           <Table>
             <thead>

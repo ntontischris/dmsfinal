@@ -142,7 +142,7 @@ export function ItemCostForm(props: ItemCostFormProps) {
       </div>
     );
   return (
-    <ActionForm action={setCost} submitLabel="Αποθήκευση">
+    <ActionForm action={setCost} onlyWhenChanged submitLabel="Αποθήκευση">
       <input type="hidden" name="itemId" value={item.id} />
       <Fields {...props} />
     </ActionForm>

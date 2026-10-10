@@ -89,7 +89,7 @@ export function ItemProvisionsForm({
       </div>
     );
   return (
-    <ActionForm action={setProvisions} submitLabel="Αποθήκευση">
+    <ActionForm action={setProvisions} onlyWhenChanged submitLabel="Αποθήκευση">
       <input type="hidden" name="itemId" value={item.id} />
       <MutedNote>{introFor(item)}</MutedNote>
       <ProvisionsEditor

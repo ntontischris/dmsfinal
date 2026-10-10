@@ -99,14 +99,16 @@ test("ο Ιδιοκτήτης αλλάζει έναν Κανόνα γυρισμ�
   await signIn(page, "owner@example.com");
   await visit(page, "/app/settings/filming");
   const rules = page.locator("form", {
-    has: page.getByRole("button", { name: "Αποθήκευση Κανόνων", exact: true }),
+    has: page.locator('input[name="horizonDays"]'),
   });
+  await expect(button(rules, "Αποθήκευση Κανόνων")).toHaveCount(0);
   const horizon = fieldOf(rules, "Ορίζοντας κρατήσεων (μέρες)");
   await horizon.fill("45");
   await button(rules, "Αποθήκευση Κανόνων").click();
   await expect(rules.getByRole("status")).toContainText(
     "Οι Κανόνες αποθηκεύτηκαν.",
   );
+  await expect(button(rules, "Αποθήκευση Κανόνων")).toHaveCount(0);
 
   await page.reload();
   await expect(fieldOf(rules, "Ορίζοντας κρατήσεων (μέρες)")).toHaveValue("45");

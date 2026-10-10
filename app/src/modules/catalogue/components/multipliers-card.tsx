@@ -56,7 +56,7 @@ export function MultipliersCard({
           τιμή τη γράφεις πάντα εσύ.
         </p>
         {canManage ? (
-          <ActionForm action={saveMultipliers} submitLabel="Αποθήκευση">
+          <ActionForm action={saveMultipliers} onlyWhenChanged submitLabel="Αποθήκευση">
             {FIELDS.map((item) => (
               <Field key={item.key} label={item.label}>
                 <Input

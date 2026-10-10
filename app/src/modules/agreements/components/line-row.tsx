@@ -171,7 +171,7 @@ function LineEditor({ line, agreement, kinds }: LineRowsProps) {
   const { can } = agreement;
   return (
     <div className="grid gap-4">
-      <ActionForm action={updateLine} submitLabel="Αποθήκευση γραμμής">
+      <ActionForm action={updateLine} onlyWhenChanged submitLabel="Αποθήκευση γραμμής">
         <input type="hidden" name="lineId" value={line.id} />
         <FieldGrid>
           <Field label="Ποσότητα">
@@ -203,7 +203,7 @@ function LineEditor({ line, agreement, kinds }: LineRowsProps) {
           {can.editCost && <CostFields line={line} />}
         </FieldGrid>
       </ActionForm>
-      <ActionForm action={setLineProvisions} submitLabel="Αποθήκευση Παροχών">
+      <ActionForm action={setLineProvisions} onlyWhenChanged submitLabel="Αποθήκευση Παροχών">
         <input type="hidden" name="lineId" value={line.id} />
         <ProvisionsEditor kinds={kinds} initial={line.provisions} />
       </ActionForm>

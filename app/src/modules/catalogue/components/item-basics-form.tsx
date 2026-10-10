@@ -145,7 +145,7 @@ export function ItemBasicsForm(props: ItemBasicsFormProps) {
       </div>
     );
   return (
-    <ActionForm action={updateItem} submitLabel="Αποθήκευση">
+    <ActionForm action={updateItem} onlyWhenChanged submitLabel="Αποθήκευση">
       <input type="hidden" name="itemId" value={item.id} />
       <Fields {...props} />
     </ActionForm>

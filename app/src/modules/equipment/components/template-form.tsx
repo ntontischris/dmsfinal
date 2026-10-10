@@ -37,7 +37,7 @@ export function TemplateForm({ items, template }: TemplateFormProps) {
   return (
     <ActionForm
       action={template ? updateTemplate : createTemplate}
-      submitLabel={template ? "Αποθήκευση" : "Δημιουργία"}
+      onlyWhenChanged={Boolean(template)} submitLabel={template ? "Αποθήκευση" : "Δημιουργία"}
       pendingLabel="Αποθήκευση…"
       resetOnSuccess={!template}
     >

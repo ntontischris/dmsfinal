@@ -92,7 +92,7 @@ function EquipmentSetForm({
   return (
     <ActionForm
       action={setFilmingEquipment}
-      submitLabel="Αποθήκευση Εξοπλισμού"
+      onlyWhenChanged submitLabel="Αποθήκευση Εξοπλισμού"
       variant="default"
       size="sm"
     >
