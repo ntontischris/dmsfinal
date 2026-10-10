@@ -2,7 +2,7 @@ import { expect, type Browser, type Page } from "@playwright/test";
 
 import { signOutsideSystem } from "./agreements-flows-parts";
 import { addCatalogueLine, draftProposal } from "./agreements-parts";
-import { inContext } from "./sales-parts";
+import { inContext, signIn } from "./sales-parts";
 
 // Βοηθητικά του e2e/booking.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές).
 // Ο Πελάτης κρατήσεων (seed) έχει ένα Χρήστη πελάτη με Ρόλο «Πλήρης»· η Συμφωνία του υπογράφεται μέσα από τις οθόνες.
@@ -17,6 +17,7 @@ export const OPEN_TO = "20:00";
 
 // Η Συμφωνία του Πελάτη κρατήσεων: μηνιαία, υπογραμμένη εκτός συστήματος από τον Ιδιοκτήτη.
 export async function signedBookingAgreement(page: Page, browser: Browser, P: string): Promise<void> {
+  await signIn(page, "sales@example.com");
   const agreementUrl = await draftProposal(page, { title: BOOKING_OPPORTUNITY(P), kind: "μηνιαία" });
   await addCatalogueLine(page, `Μηνιαία Παρουσία ${P}`);
   await inContext(browser, "owner@example.com", async (owner) => {
