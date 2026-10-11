@@ -31,12 +31,17 @@ export const opportunityTitle = (P: string): string => `Γυρίσματα ${P}`
 
 // Η ημέρα του Γυρίσματος: 15 του τρέχοντος μήνα (Ώρα Ελλάδας), μέσα στην τρέχουσα Περίοδο της Συμφωνίας.
 export function currentFifteenth(now: Date = new Date()): string {
+  return currentDay(15, now);
+}
+
+// Μια μέρα του τρέχοντος μήνα (Ώρα Ελλάδας), «ΕΕΕΕ-ΜΜ-ΗΗ».
+export function currentDay(day: number, now: Date = new Date()): string {
   const month = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Europe/Athens",
     year: "numeric",
     month: "2-digit",
   }).format(now);
-  return `${month}-15`;
+  return `${month}-${String(day).padStart(2, "0")}`;
 }
 
 // Η ροή της Συμφωνίας: η Άννα συντάσσει την πρόταση με μηνιαίο πακέτο, ο Ιδιοκτήτης την υπογράφει εκτός συστήματος.
@@ -63,13 +68,14 @@ export const startTimeOf = (P: string): string => (P === "mobile" ? "15:00" : "1
 export async function bookFilmingFromScreen(
   page: Page,
   P: string,
+  date: string = currentFifteenth(),
 ): Promise<void> {
   await visit(page, "/app/filming/new");
   const form = page.locator("form", {
     has: page.getByRole("button", { name: "Κλείσιμο Γυρίσματος", exact: true }),
   });
   await fieldOf(form, "Πελάτης").selectOption({ label: clientName(P) });
-  await fieldOf(form, "Ημερομηνία").fill(currentFifteenth());
+  await fieldOf(form, "Ημερομηνία").fill(date);
   await fieldOf(form, "Ώρα").fill(startTimeOf(P));
   await fieldOf(form, "Διάρκεια (ώρες)").fill("3");
   await button(form, "Κλείσιμο Γυρίσματος").click();

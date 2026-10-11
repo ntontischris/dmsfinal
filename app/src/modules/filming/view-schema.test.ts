@@ -51,6 +51,7 @@ const cardJson = {
   noShowAt: null,
   provision: null,
   crew: [],
+  sheet: null,
   equipment: [],
   history: [
     {

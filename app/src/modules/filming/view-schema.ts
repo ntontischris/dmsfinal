@@ -74,6 +74,8 @@ const mineSchema: z.ZodType<MineEntry> = z.object({
   note: z.string().nullable(),
   myResponse: z.enum(CREW_RESPONSES),
   myReason: z.string().nullable(),
+  myVersion: z.number().int().nullable(),
+  sheetVersion: z.number().int().nullable(),
   production,
   client: namedOrNull,
 });

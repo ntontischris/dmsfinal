@@ -69,6 +69,9 @@ function CrewStatus({ members }: { members: readonly CrewMember[] }) {
           <span className="flex flex-wrap gap-2">
             {member.isBlocked && <Badge tone="attention">Κλεισμένος χρόνος</Badge>}
             <Badge tone={RESPONSE_TONE[member.response]}>{RESPONSE_LABELS[member.response]}</Badge>
+            {member.version !== null && (
+              <span className="text-sm text-muted-foreground">(έκδοση {member.version})</span>
+            )}
           </span>
         </li>
       ))}
