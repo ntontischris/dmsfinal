@@ -463,6 +463,8 @@ as $$
     when 'email_log' then authz.is_owner()
     -- Κλεισμένος χρόνος: με τίτλο μόνο για όσους κλείνουν χρόνο άλλων
     when 'blocked_times' then authz.has('calendar.block_others')
+    when 'filming_sheets' then true
+    when 'filming_sheet_versions' then true
     when 'google_calendar' then authz.has('calendar.google')
     when 'google_deletions' then authz.has('calendar.google')
     else false
