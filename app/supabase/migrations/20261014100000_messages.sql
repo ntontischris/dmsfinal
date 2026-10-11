@@ -333,6 +333,7 @@ begin
          where t.user_id <> v_me and authz.message_mentionable(t.user_id)
       ), '[]'::jsonb) end,
     'readAt', v_read_at,
+    'editMinutes', authz.message_edit_minutes(),
     'messages', coalesce((
       select jsonb_agg(x.item order by x.created_at, x.id)
         from (

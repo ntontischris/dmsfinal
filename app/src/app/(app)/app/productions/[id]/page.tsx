@@ -3,13 +3,14 @@ import { z } from "zod";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
-import { getViewer } from "@/modules/access";
+import { getViewer, type Viewer } from "@/modules/access";
 import { costsCaps } from "@/modules/costs";
 import {
   ProductionDeliverables,
   deliverablesCaps,
   getDeliverableCandidates,
 } from "@/modules/deliverables";
+import { messagesCaps, threadHref } from "@/modules/messages";
 import {
   AgreementCard,
   HistoryPanel,
@@ -58,19 +59,28 @@ export default async function ProductionPage({
       production={production.data}
       showCosts={costsCaps(viewer).canView}
       canWorkDeliverables={canWorkDeliverables}
+      messagesHref={messagesHrefOf(viewer, production.data)}
     />
   );
 }
+
+// Το «Μηνύματα» της Παραγωγής ανοίγει τη Συνομιλία του Πελάτη με προεπιλεγμένη ετικέτα· μόνο για όσους έχουν «Συνομιλεί με πελάτη».
+const messagesHrefOf = (viewer: Viewer, production: ProductionDetail): string | null =>
+  production.client !== null && messagesCaps(viewer).canChat
+    ? threadHref(production.client.id, { production: production.id })
+    : null;
 
 // Οι λίστες υποψηφίων φορτώνουν μόνο όπου το Δικαίωμα τις θέλει (μεταβίβαση, Μέλη, Παραδοτέα).
 async function ProductionPageContent({
   production,
   showCosts,
   canWorkDeliverables,
+  messagesHref,
 }: {
   production: ProductionDetail;
   showCosts: boolean;
   canWorkDeliverables: boolean;
+  messagesHref: string | null;
 }) {
   const canTransfer = production.viewerCan.transfer;
   const canManage = production.viewerCan.members;
@@ -95,6 +105,11 @@ async function ProductionPageContent({
         >
           ← Παραγωγές
         </Link>
+        {messagesHref && (
+          <Link href={messagesHref} className={buttonVariants({ variant: "ghost" })}>
+            Μηνύματα
+          </Link>
+        )}
         {showCosts && (
           <Link
             href={`/app/productions/${production.id}/costs`}
