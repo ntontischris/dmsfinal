@@ -420,7 +420,9 @@ select is(
 );
 
 -- Χωρίς κανένα Κόστος ώρας τίποτα δεν σκάει: το πραγματικό και το κόστος ώρας μένουν κενά, η εκτίμηση μένει στο στιγμιότυπο.
+set local session_replication_role = 'replica';
 delete from public.cost_months;
+set local session_replication_role = 'origin';
 select ok(
   (production_cost_view(current_setting('t.p1')::uuid) -> 'actual' ->> 'cost') is null,
   'Χωρίς Κόστος ώρας το πραγματικό κόστος είναι κενό'
