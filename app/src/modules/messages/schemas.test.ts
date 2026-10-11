@@ -99,6 +99,9 @@ describe("uploadRequestSchema", () => {
       uploadRequestSchema.safeParse({ clientId: ID, productionId: "", files: Array(6).fill(file) }).success,
     ).toBe(false);
   });
+  it("δέχεται χωρίς ετικέτα (null)", () => {
+    expect(uploadRequestSchema.safeParse({ clientId: ID, productionId: null, files: [file] }).success).toBe(true);
+  });
   it("απορρίπτει κενή λίστα και μηδενικό μέγεθος", () => {
     expect(uploadRequestSchema.safeParse({ clientId: ID, productionId: "", files: [] }).success).toBe(false);
     expect(

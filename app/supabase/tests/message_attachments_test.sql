@@ -154,8 +154,8 @@ select throws_ok($$ select public.message_attachment_slots('00000000-0000-0000-0
 select throws_ok($$ select public.message_attachment_slots('00000000-0000-0000-0000-0000000000c1', '[{"name":"","mime":"application/pdf","size":1000}]') $$, 'P0001', null, 'Κενό όνομα απορρίπτεται');
 select lives_ok($$ select public.t_slots('s1', '00000000-0000-0000-0000-0000000000c1', '[{"name":"προσφορά.pdf","mime":"application/pdf","size":1000},{"name":"φωτό.png","mime":"image/png","size":2000}]') $$, 'Ο Ιδιοκτήτης παίρνει θέσεις για 2 αρχεία');
 select is(jsonb_array_length(current_setting('t.s1')::jsonb->'slots'), 2, 'Δύο θέσεις');
-select like(public.t_path('s1', 0), '00000000-0000-0000-0000-0000000000c1/%.pdf', 'Η διαδρομή έχει τον Πελάτη και επέκταση από το mime (pdf)');
-select like(public.t_path('s1', 1), '00000000-0000-0000-0000-0000000000c1/%.png', 'Η επέκταση ακολουθεί το mime (png)');
+select ok(public.t_path('s1', 0) ~ '^00000000-0000-0000-0000-0000000000c1/[0-9a-f-]{36}[.]pdf$', 'Η διαδρομή έχει τον Πελάτη και επέκταση από το mime (pdf)');
+select ok(public.t_path('s1', 1) ~ '^00000000-0000-0000-0000-0000000000c1/[0-9a-f-]{36}[.]png$', 'Η επέκταση ακολουθεί το mime (png)');
 
 -- ───────────── Αποστολή ─────────────
 select throws_ok(

@@ -45,7 +45,7 @@ export const sendSchema = z
 // Αίτημα για θέσεις ανεβάσματος: τα στοιχεία των αρχείων που διάλεξε ο χρήστης (όχι τα ίδια τα αρχεία).
 export const uploadRequestSchema = z.object({
   clientId: idSchema,
-  productionId: optionalIdSchema,
+  productionId: z.union([optionalIdSchema, z.null()]),
   files: z
     .array(z.object({ name: z.string().trim().min(1).max(200), mime: z.string(), size: z.number().int().min(1) }))
     .min(1)

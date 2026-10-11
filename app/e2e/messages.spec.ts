@@ -97,6 +97,7 @@ test("ο Ιδιοκτήτης στέλνει Μήνυμα με συνημμέν�
 
   // Επιλογή αρχείου: ανεβαίνει αμέσως, και η Αποστολή περιμένει να τελειώσει.
   const composer = page.getByRole("region", { name: COMPOSER });
+  await page.waitForLoadState("networkidle");
   await composer.getByLabel("Επισύναψη αρχείων").setInputFiles(PDF_FIXTURE);
   const chips = composer.getByRole("list", { name: "Συνημμένα" });
   await expect(chips).toContainText(PDF_NAME);
