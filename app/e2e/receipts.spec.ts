@@ -58,7 +58,7 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
   const methods = card(page, METHODS_CARD);
   await fieldOf(methods, "Νέος τρόπος").fill(METHOD);
   await button(methods, "Προσθήκη τρόπου").click();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(methods.getByRole("status")).toContainText(
     "Ο τρόπος αποθηκεύτηκε.",
   );
 
@@ -69,7 +69,7 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
   await expect(page.locator(PREVIEW)).toContainText("υπέρ του πελάτη");
   await fieldOf(form, "Τρόπος").selectOption({ label: METHOD });
   await button(form, "Καταχώρηση Είσπραξης").click();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(form.getByRole("status")).toContainText(
     "Η Είσπραξη καταχωρήθηκε.",
   );
 
@@ -80,7 +80,7 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
   await fieldOf(row, "Ποσό (€, με ΦΠΑ)").fill("450");
   await fieldOf(row, "Λόγος διόρθωσης (υποχρεωτικός)").fill("Λάθος ποσό");
   await button(row, "Αποθήκευση διόρθωσης").click();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(row.getByRole("status")).toContainText(
     "Η διόρθωση αποθηκεύτηκε.",
   );
 
@@ -89,7 +89,7 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
     "Καταχωρήθηκε δύο φορές",
   );
   await button(row, "Επιβεβαίωση διαγραφής").click();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(row.getByRole("status")).toContainText(
     "Η Είσπραξη διαγράφηκε.",
   );
   await expect(page.locator("tr", { hasText: CLIENT })).toContainText(
