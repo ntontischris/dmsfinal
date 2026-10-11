@@ -92,6 +92,18 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
     await expect(sheet.locator("li", { hasText: "Έκδοση 1 ·" })).toBeVisible();
     await expect(sheet.locator("li", { hasText: "Έκδοση 2 ·" })).toBeVisible();
   });
+
+  // Η έκδοση 2 μηδένισε τις απαντήσεις: η Ρένα (μέλος του Συνεργείου, χωρίς Δικαίωμα) επιβεβαιώνει την τρέχουσα έκδοση.
+  await inContext(browser, "production@example.com", async (producer) => {
+    await visit(producer, filmingUrl);
+    const sheet = sheetPanel(producer);
+    await expect(
+      sheet.getByText("Περιμένει απάντηση", { exact: true }),
+    ).toBeVisible();
+    await button(sheet, "Επιβεβαιώνω").click();
+    await expect(sheet.getByText("Επιβεβαίωσε", { exact: true })).toBeVisible();
+    await expect(button(sheet, "Επιβεβαιώνω")).toHaveCount(0);
+  });
 });
 
 // Προσθέτει μία λήψη στη φόρμα του Δελτίου (το πεδίο δεν έχει όνομα· το κουμπί είναι «Προσθήκη λήψης»).
