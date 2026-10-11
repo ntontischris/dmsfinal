@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σχετικές με το «σήμερα» (Ώρα Ελλάδας).
 -- Ο worker τρέχει ως service_role· η εφαρμογή ως Χρήστης με Δικαίωμα ή χωρίς.
 begin;
-select plan(73);
+select plan(90);
 
 -- ───────────── Βοηθητικά ─────────────
 
@@ -73,6 +73,8 @@ select throws_ok($$ select public.google_expire_deletions() $$, '42501', null, '
 select throws_ok($$ select public.google_mark_sync(true, null) $$, '42501', null, 'Ο ανώνυμος δεν σημειώνει συγχρονισμό');
 select throws_ok($$ select public.google_channel_check('c', 't') $$, '42501', null, 'Ο ανώνυμος δεν ελέγχει το κανάλι');
 select throws_ok($$ select public.google_view() $$, '42501', null, 'Ο ανώνυμος δεν βλέπει το Google');
+select throws_ok($$ select public.google_worker_acquire(90) $$, '42501', null, 'Ο ανώνυμος δεν κλειδώνει τον worker');
+select throws_ok($$ select public.google_request_pull() $$, '42501', null, 'Ο ανώνυμος δεν ζητά συγχρονισμό');
 reset role;
 
 select public.t_as('00000000-0000-0000-0000-0000000000e5');
@@ -195,6 +197,64 @@ select is(public.google_apply_change(public.t_event('ev-new-1', 'etag-n-2', publ
 select is((select starts_at from public.blocked_times where source = 'google' and user_id = '00000000-0000-0000-0000-0000000000e3' and starts_at = public.t_at(12, '13:00')), public.t_at(12, '13:00'), 'Η νέα ώρα του Κλεισμένου χρόνου αποθηκεύεται');
 select is(public.google_apply_change(public.t_event('ev-new-1', 'etag-n-3', public.t_at(12, '13:00'), public.t_at(12, '14:00'), 'cancelled', array['peter@example.com'], false))->>'action', 'blocked_deleted', 'Ακυρωμένος Κλεισμένος χρόνος από το Google σβήνεται');
 select is((select count(*)::int from public.blocked_times where source = 'google' and user_id = '00000000-0000-0000-0000-0000000000e3' and starts_at = public.t_at(12, '13:00')), 0, 'Ο Κλεισμένος χρόνος σβήστηκε από τη βάση');
+-- Τέλος των αλλαγών από το Google: η σημαία δεν μένει ανοιχτή για την υπόλοιπη συναλλαγή.
+select set_config('dms.google_apply', '', true);
+
+-- ───────────── Κοινό γεγονός, κλείδωμα και γραμμές που αντικαταστάθηκαν ─────────────
+select public.t_blocked('00000000-0000-0000-0000-00000000b004', '00000000-0000-0000-0000-0000000000e3', public.t_at(17, '09:00'), public.t_at(17, '10:00'));
+select is((select count(*)::int from public.google_outbox where entity_id = '00000000-0000-0000-0000-00000000b004' and done_at is null), 1, 'Μετά τις αλλαγές του Google η ουρά ξαναδουλεύει');
+
+-- Κοινό γεγονός με δύο μέλη (blueprint 04): αλλαγή ώρας γράφεται πίσω· διαγραφή ενός μέλους δεν σβήνει το γεγονός.
+insert into public.blocked_times (id, user_id, starts_at, ends_at, source) values
+  ('00000000-0000-0000-0000-00000000b008', '00000000-0000-0000-0000-0000000000e2', public.t_at(18, '09:00'), public.t_at(18, '10:00'), 'google'),
+  ('00000000-0000-0000-0000-00000000b009', '00000000-0000-0000-0000-0000000000e3', public.t_at(18, '09:00'), public.t_at(18, '10:00'), 'google');
+insert into public.google_links (entity, entity_id, event_id, etag) values
+  ('blocked', '00000000-0000-0000-0000-00000000b008', 'ev-shared-1', 'etag-s-1'),
+  ('blocked', '00000000-0000-0000-0000-00000000b009', 'ev-shared-1', 'etag-s-1');
+update public.blocked_times set starts_at = public.t_at(18, '11:00'), ends_at = public.t_at(18, '12:00')
+ where id = '00000000-0000-0000-0000-00000000b008';
+select is((select count(*)::int from public.google_outbox where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-00000000b008' and op = 'upsert' and done_at is null), 1, 'Αλλαγή ώρας σε Κλεισμένο χρόνο από το Google γράφεται πίσω στο Google');
+delete from public.blocked_times where id = '00000000-0000-0000-0000-00000000b008';
+select is((select count(*)::int from public.google_links where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-00000000b008'), 0, 'Διαγραφή ενός μέλους αφήνει μόνο τη δική του αντιστοίχιση');
+select is((select count(*)::int from public.google_outbox where entity_id = '00000000-0000-0000-0000-00000000b008' and done_at is null), 0, 'Διαγραφή ενός μέλους δεν στέλνει διαγραφή στο Google και κλείνει τις εκκρεμείς εγγραφές του');
+select is((select count(*)::int from public.google_links where event_id = 'ev-shared-1'), 1, 'Το κοινό γεγονός μένει αντιστοιχισμένο για το άλλο μέλος');
+delete from public.blocked_times where id = '00000000-0000-0000-0000-00000000b009';
+select is((select op from public.google_outbox where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-00000000b009' and done_at is null), 'delete', 'Διαγραφή του τελευταίου μέλους ζητά διαγραφή του γεγονότος στο Google');
+select is((select count(*)::int from public.google_links where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-00000000b009'), 1, 'Η αντιστοίχιση μένει ως την επιβεβαίωση του Google');
+
+-- Κλείδωμα του worker: ένας γύρος κάθε φορά.
+set local role service_role;
+select is(public.google_worker_acquire(90), true, 'Ο πρώτος γύρος του worker παίρνει το κλείδωμα');
+select is(public.google_worker_acquire(90), false, 'Ο δεύτερος γύρος βρίσκει κλειδωμένο τον worker');
+select public.google_worker_release();
+select is(public.google_worker_acquire(90), true, 'Μετά την αποδέσμευση ο επόμενος γύρος παίρνει το κλείδωμα');
+select public.google_worker_release();
+reset role;
+
+-- Γραμμή που αντικαταστάθηκε δεν γράφει το etag της.
+select public.t_filming('00000000-0000-0000-0000-00000000f00c', 17, '10:00', 'scheduled');
+insert into public.google_links (entity, entity_id, event_id, etag) values ('filming', '00000000-0000-0000-0000-00000000f00c', 'ev-f11', 'etag-f11-old');
+update public.filmings set starts_at = public.t_at(17, '11:00') where id = '00000000-0000-0000-0000-00000000f00c';
+set local role service_role;
+select public.google_outbox_done((select min(id) from public.google_outbox where entity_id = '00000000-0000-0000-0000-00000000f00c'), 'ev-f11', 'etag-f11-new', null);
+reset role;
+select is((select etag from public.google_links where entity = 'filming' and entity_id = '00000000-0000-0000-0000-00000000f00c'), 'etag-f11-old', 'Η αντικατεστημένη γραμμή δεν γράφει το etag της');
+
+-- Μόνιμο σφάλμα κλείνει τη γραμμή και καταγράφεται.
+select public.t_filming('00000000-0000-0000-0000-00000000f00d', 18, '10:00', 'scheduled');
+set local role service_role;
+select public.google_outbox_done((select id from public.google_outbox where entity_id = '00000000-0000-0000-0000-00000000f00d' and done_at is null), null, null, 'Google 404', true);
+reset role;
+select is((select count(*)::int from public.google_outbox where entity_id = '00000000-0000-0000-0000-00000000f00d' and done_at is null), 0, 'Μόνιμο σφάλμα κλείνει τη γραμμή της ουράς');
+select ok(exists (select 1 from public.google_activity where kind = 'sync_failed' and filming_id = '00000000-0000-0000-0000-00000000f00d'), 'Μόνιμο σφάλμα μπαίνει στα πρόσφατα');
+
+-- Ειδοποίηση καναλιού: ζητά pull, και επιτυχές pull καθαρίζει το αίτημα.
+set local role service_role;
+select public.google_request_pull();
+select is((public.google_state()->>'pullRequested')::boolean, true, 'Η ειδοποίηση ζητά pull');
+select public.google_mark_sync(true, null);
+select is((public.google_state()->>'pullRequested')::boolean, false, 'Επιτυχές pull καθαρίζει το αίτημα');
+reset role;
 
 -- ───────────── Διαγραφές από το Google ─────────────
 select public.t_as('00000000-0000-0000-0000-0000000000e1');

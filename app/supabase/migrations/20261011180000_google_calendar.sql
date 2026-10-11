@@ -33,7 +33,11 @@ create table public.google_calendar (
   channel_expires_at timestamptz,
   last_sync_at timestamptz,
   last_error text check (last_error is null or length(last_error) <= 500),
-  last_error_at timestamptz
+  last_error_at timestamptz,
+  -- Κλείδωμα: μόνο μία εκτέλεση του worker κάθε φορά (google_worker_acquire).
+  worker_until timestamptz,
+  -- Ειδοποίηση ότι υπάρχουν αλλαγές· το επόμενο cron κάνει το pull.
+  pull_requested boolean not null default false
 );
 
 insert into public.google_calendar (id) values (true);
@@ -85,7 +89,7 @@ create index google_deletions_open_idx on public.google_deletions (deadline_at) 
 create table public.google_activity (
   id bigserial primary key,
   at timestamptz not null default now(),
-  kind text not null check (kind in ('move_applied', 'move_rejected', 'new_event', 'blocked_changed', 'deletion_detected', 'restored')),
+  kind text not null check (kind in ('move_applied', 'move_rejected', 'new_event', 'blocked_changed', 'deletion_detected', 'restored', 'event_error', 'sync_failed')),
   filming_id uuid,
   blocked_id uuid,
   message text not null default '' check (length(message) <= 500)
@@ -319,19 +323,43 @@ begin
 end;
 $$;
 
+-- Διαγραφή Κλεισμένου χρόνου που ήρθε από το Google (blueprint 04, «Κλεισμένος χρόνος»): το άτομο φεύγει.
+-- Το γεγονός σβήνει από το Google μόνο όταν φύγει και το τελευταίο μέλος· αλλιώς μένει για τα υπόλοιπα.
+create function authz.google_release_blocked(b public.blocked_times) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_event text;
+begin
+  update public.google_outbox set done_at = now() where entity = 'blocked' and entity_id = b.id and done_at is null;
+  select l.event_id into v_event from public.google_links l where l.entity = 'blocked' and l.entity_id = b.id;
+  if v_event is null then
+    return;
+  end if;
+  if exists (select 1 from public.google_links l where l.entity = 'blocked' and l.event_id = v_event and l.entity_id <> b.id) then
+    delete from public.google_links where entity = 'blocked' and entity_id = b.id;
+    return;
+  end if;
+  -- Τελευταίο μέλος: η αντιστοίχιση φεύγει όταν το Google επιβεβαιώσει τη διαγραφή (google_outbox_done).
+  perform authz.google_queue('blocked', b.id, 'delete');
+end;
+$$;
+
 create function authz.google_blocked_changed() returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 begin
   if tg_op = 'DELETE' then
-    if old.source = 'google' then
+    if authz.google_applying() then
       delete from public.google_links where entity = 'blocked' and entity_id = old.id;
-    elsif not authz.google_applying() then
+    elsif old.source = 'google' then
+      perform authz.google_release_blocked(old);
+    else
       perform authz.google_queue('blocked', old.id, 'delete');
     end if;
     return null;
   end if;
-  if new.source <> 'dms' or authz.google_applying() then
+  if authz.google_applying() then
     return null;
   end if;
   if tg_op = 'INSERT' then
@@ -349,8 +377,10 @@ create trigger filmings_google_enqueue after insert or update on public.filmings
 create trigger blocked_times_google_enqueue after insert or update or delete on public.blocked_times
   for each row execute function authz.google_blocked_changed();
 
-create trigger google_calendar_audit after insert or update on public.google_calendar
-  for each row execute function authz.audit_row('id');
+create trigger google_calendar_audit after update on public.google_calendar
+  for each row
+  when ((old.calendar_id, old.shared_with) is distinct from (new.calendar_id, new.shared_with))
+  execute function authz.audit_row('id');
 
 create trigger google_deletions_audit after insert or update on public.google_deletions
   for each row execute function authz.audit_row('filming_id');
@@ -585,7 +615,8 @@ begin
   end if;
   update public.blocked_times
      set starts_at = v_starts, ends_at = v_ends, all_day = coalesce((p_event ->> 'allDay')::boolean, false)
-   where id = any (v_ids) and (starts_at, ends_at) is distinct from (v_starts, v_ends);
+   where id = any (v_ids)
+     and (starts_at, ends_at, all_day) is distinct from (v_starts, v_ends, coalesce((p_event ->> 'allDay')::boolean, false));
   get diagnostics v_rows = row_count;
   if v_rows = 0 then
     return jsonb_build_object('action', 'noop');
@@ -649,6 +680,8 @@ begin
   if coalesce(v_event_id, '') = '' then
     raise exception 'Το γεγονός δεν έχει αναγνωριστικό' using errcode = 'P0001';
   end if;
+  -- Κλείδωμα ανά γεγονός· η ανάγνωση των αντιστοιχίσεων γίνεται μετά, ώστε να βλέπει ό,τι έγραψε άλλος.
+  perform pg_advisory_xact_lock(hashtext('dms.google:' || v_event_id));
   select l.entity into v_known from public.google_links l where l.event_id = v_event_id limit 1;
   if v_known is null then
     return authz.google_apply_unknown(p_event);
@@ -673,6 +706,7 @@ as $$
     'calendarId', g.calendar_id, 'sharedWith', g.shared_with, 'syncToken', g.sync_token,
     'channelId', g.channel_id, 'channelResourceId', g.channel_resource_id, 'channelExpiresAt', g.channel_expires_at,
     'lastSyncAt', g.last_sync_at, 'lastError', g.last_error, 'lastErrorAt', g.last_error_at,
+    'pullRequested', g.pull_requested,
     'newEvent', s.google_new_event, 'deleteHours', s.google_delete_hours, 'writePending', s.google_write_pending)
     from public.google_calendar g, public.filming_settings s
    where g.id and s.id;
@@ -719,6 +753,7 @@ language sql security definer set search_path = ''
 as $$
   update public.google_calendar
      set last_sync_at = case when p_ok then now() else last_sync_at end,
+         pull_requested = case when p_ok then false else pull_requested end,
          last_error = case when p_ok then null else left(coalesce(p_error, ''), 500) end,
          last_error_at = case when p_ok then null else now() end
    where id;
@@ -765,7 +800,12 @@ end;
 $$;
 
 -- Αποτέλεσμα της κλήσης. Επιτυχία γράφει ή σβήνει την αντιστοίχιση (ακόμα κι αν η γραμμή έχει ήδη κλείσει)· αποτυχία κάνει οπισθοχώρηση.
-create function public.google_outbox_done(p_id bigint, p_event_id text, p_etag text, p_error text) returns void
+-- Γραμμή που έχει κλείσει ή αντικατασταθεί (superseded) δεν αλλάζει την αντιστοίχιση: αλλιώς θα έμενε
+-- παλιά ώρα ή παλιό etag στο Google χωρίς να το ξέρουμε. Η νεότερη γραμμή θα γράψει ξανά.
+-- Μόνιμο σφάλμα (400/403/404, p_permanent) κλείνει τη γραμμή και καταγράφεται· αλλιώς οπισθοχώρηση.
+create function public.google_outbox_done(p_id bigint, p_event_id text, p_etag text, p_error text,
+                                          p_permanent boolean default false)
+returns void
 language plpgsql security definer set search_path = ''
 as $$
 declare
@@ -773,7 +813,7 @@ declare
   v_error text := left(coalesce(p_error, ''), 500);
 begin
   select x.* into o from public.google_outbox x where x.id = p_id for update;
-  if not found then
+  if not found or o.done_at is not null then
     return;
   end if;
   if v_error = '' then
@@ -785,16 +825,67 @@ begin
       on conflict (entity, entity_id) do update
          set event_id = excluded.event_id, etag = excluded.etag, written_at = excluded.written_at;
     end if;
-    update public.google_outbox set done_at = coalesce(done_at, now()), last_error = '' where id = p_id;
+    update public.google_outbox set done_at = now(), last_error = '' where id = p_id;
     return;
   end if;
-  if o.done_at is not null then
+  if p_permanent then
+    update public.google_outbox set attempts = attempts + 1, last_error = v_error, done_at = now() where id = p_id;
+    perform authz.google_log('sync_failed', 'Εγγραφή στο Google απορρίφθηκε: ' || v_error,
+      case when o.entity = 'filming' then o.entity_id end,
+      case when o.entity = 'blocked' then o.entity_id end);
     return;
   end if;
   update public.google_outbox
      set attempts = attempts + 1, last_error = v_error,
          next_attempt_at = now() + make_interval(mins => authz.google_backoff_minutes(o.attempts + 1))
    where id = p_id;
+end;
+$$;
+
+-- Κλείδωμα του worker: ένας γύρος κάθε φορά. Αποτυχία (false) σημαίνει ότι τρέχει ήδη άλλος.
+create function public.google_worker_acquire(p_seconds integer) returns boolean
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_rows integer;
+begin
+  update public.google_calendar
+     set worker_until = now() + make_interval(secs => greatest(1, least(coalesce(p_seconds, 90), 600)))
+   where id and (worker_until is null or worker_until < now());
+  get diagnostics v_rows = row_count;
+  return v_rows = 1;
+end;
+$$;
+
+create function public.google_worker_release() returns void
+language sql security definer set search_path = ''
+as $$ update public.google_calendar set worker_until = null where id; $$;
+
+-- Ειδοποίηση καναλιού: ζητά pull στον επόμενο γύρο του cron (χωρίς να τρέξει ο worker μέσα στο webhook).
+create function public.google_request_pull() returns void
+language sql security definer set search_path = ''
+as $$ update public.google_calendar set pull_requested = true where id; $$;
+
+-- Καταγραφή σφάλματος ενός γεγονότος του Google (μόνο id και κατηγορία σφάλματος, χωρίς τιμές).
+create function public.google_note_event_error(p_event_id text, p_reason text) returns void
+language sql security definer set search_path = ''
+as $$
+  select authz.google_log('event_error',
+    left('Γεγονός του Google δεν εφαρμόστηκε (' || left(coalesce(p_event_id, ''), 80) || '): ' || left(coalesce(p_reason, ''), 200),
+         500),
+    null, null);
+$$;
+
+-- Κράτημα της «Πρόσφατα από το Google» για 90 μέρες.
+create function public.google_prune_activity() returns integer
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_rows integer;
+begin
+  delete from public.google_activity where at < now() - interval '90 days';
+  get diagnostics v_rows = row_count;
+  return v_rows;
 end;
 $$;
 
@@ -1013,7 +1104,7 @@ revoke all on function
   authz.google_view_summary(), authz.google_detect_deletion(public.filmings, jsonb),
   authz.google_move_problem(public.filmings, timestamptz, numeric), authz.google_reject_move(public.filmings, text),
   authz.google_apply_move(public.filmings, timestamptz, numeric), authz.google_apply_filming(jsonb),
-  authz.google_apply_blocked(jsonb), authz.google_apply_unknown(jsonb)
+  authz.google_apply_blocked(jsonb), authz.google_apply_unknown(jsonb), authz.google_release_blocked(public.blocked_times)
   from public, anon, authenticated;
 
 revoke all on function authz.google_filming_changed(), authz.google_blocked_changed() from public, anon, authenticated;
@@ -1023,15 +1114,17 @@ revoke all on function
   public.google_apply_change(jsonb), public.google_state(), public.google_set_calendar(text, text),
   public.google_set_channel(text, text, text, timestamptz), public.google_set_sync_token(text),
   public.google_mark_sync(boolean, text), public.google_channel_check(text, text),
-  public.google_outbox_claim(integer), public.google_outbox_done(bigint, text, text, text),
-  public.google_expire_deletions()
+  public.google_outbox_claim(integer), public.google_outbox_done(bigint, text, text, text, boolean),
+  public.google_expire_deletions(), public.google_worker_acquire(integer), public.google_worker_release(),
+  public.google_request_pull(), public.google_note_event_error(text, text), public.google_prune_activity()
   from public, anon, authenticated;
 grant execute on function
   public.google_apply_change(jsonb), public.google_state(), public.google_set_calendar(text, text),
   public.google_set_channel(text, text, text, timestamptz), public.google_set_sync_token(text),
   public.google_mark_sync(boolean, text), public.google_channel_check(text, text),
-  public.google_outbox_claim(integer), public.google_outbox_done(bigint, text, text, text),
-  public.google_expire_deletions()
+  public.google_outbox_claim(integer), public.google_outbox_done(bigint, text, text, text, boolean),
+  public.google_expire_deletions(), public.google_worker_acquire(integer), public.google_worker_release(),
+  public.google_request_pull(), public.google_note_event_error(text, text), public.google_prune_activity()
   to service_role;
 
 -- Συναρτήσεις της εφαρμογής: ο έλεγχος Δικαιώματος γίνεται μέσα τους.
