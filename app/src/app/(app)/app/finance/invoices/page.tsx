@@ -3,8 +3,9 @@ import Link from "next/link";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { buttonVariants } from "@/components/ui/button";
-import { AccessNotice, getViewer } from "@/modules/access";
+import { AccessNotice, getViewer, isClientViewer } from "@/modules/access";
 import {
+  CLIENT_INVOICES_NO_ACCESS_TEXT,
   INVOICES_CTA,
   INVOICES_EMPTY_TEXT,
   INVOICES_EMPTY_TITLE,
@@ -17,9 +18,11 @@ import {
   InvoiceFilterTabs,
   InvoiceTable,
   InvoiceTotals,
+  VoidedInvoicesCard,
   financeCaps,
   financeViewOf,
   getInvoices,
+  getVoidedInvoices,
   newInvoiceHref,
   parseInvoiceFilter,
 } from "@/modules/finance";
@@ -34,7 +37,9 @@ interface InvoicesPageProps {
 
 // I2: τα Τιμολόγια. Ο Χρήστης πελάτη με «Βλέπει Οικονομικά» βλέπει τη δική του όψη. Η ομάδα θέλει «Βλέπει Οικονομικά» και «Βλέπει ποσά»· η καταχώρηση θέλει «Καταχωρεί Τιμολόγια».
 // Το φίλτρο ζει στη διεύθυνση· η βάση αποφασίζει τι βλέπεις και υπολογίζει καταστάσεις και σύνολα.
-export default async function InvoicesPage({ searchParams }: InvoicesPageProps) {
+export default async function InvoicesPage({
+  searchParams,
+}: InvoicesPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
   if (financeViewOf(viewer) === "client") return <ClientInvoicesScreen />;
   const caps = financeCaps(viewer);
@@ -43,14 +48,21 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       <>
         <ScreenHeader eyebrow={INVOICES_EYEBROW} title={INVOICES_TITLE} />
         <AccessNotice viewer={viewer}>
-          <p className="m-0">{INVOICES_NO_ACCESS_TEXT}</p>
+          <p className="m-0">
+            {isClientViewer(viewer)
+              ? CLIENT_INVOICES_NO_ACCESS_TEXT
+              : INVOICES_NO_ACCESS_TEXT}
+          </p>
         </AccessNotice>
       </>
     );
   }
 
   const filter = parseInvoiceFilter(params.filter);
-  const invoices = await getInvoices(filter);
+  const [invoices, voided] = await Promise.all([
+    getInvoices(filter),
+    filter === "all" ? getVoidedInvoices() : Promise.resolve(null),
+  ]);
   if (!invoices.ok) {
     return (
       <>
@@ -67,7 +79,10 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
     <>
       <ScreenHeader eyebrow={INVOICES_EYEBROW} title={INVOICES_TITLE}>
         {caps.canRegisterInvoices && (
-          <Link href={newInvoiceHref()} className={buttonVariants({ variant: "primary" })}>
+          <Link
+            href={newInvoiceHref()}
+            className={buttonVariants({ variant: "primary" })}
+          >
             {INVOICES_CTA}
           </Link>
         )}
@@ -83,8 +98,9 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
             <p className="m-0">{INVOICES_EMPTY_TEXT}</p>
           </Notice>
         ) : (
-          <InvoiceTable rows={items} />
+          <InvoiceTable rows={items} canCorrect={caps.canRegisterInvoices} />
         )}
+        {voided?.ok === true && <VoidedInvoicesCard items={voided.data} />}
       </div>
     </>
   );
