@@ -223,12 +223,14 @@ select lives_ok($$ select public.deliverable_request_decide(current_setting('t.r
   'Ο Ιδιοκτήτης δέχεται το Αίτημα ως γύρο');
 select is(public.deliverable_view(current_setting('t.d1')::uuid) ->> 'state', 'changes_requested',
   'Το ξανανοιγμένο Παραδοτέο γράφει «χρειάζεται αλλαγές» για την ομάδα');
+select public.t_as('e6');
 select is(public.client_deliverable_view(current_setting('t.d1')::uuid) ->> 'state', 'in_progress',
   'Το ξανανοιγμένο Παραδοτέο φαίνεται στον πελάτη «σε εργασία»');
 select is(public.client_deliverable_view(current_setting('t.d1')::uuid) ->> 'roundsUsed', '2',
   'Το δεκτό γύρος μετράει στο όριο (μία Έκδοση και ένα Αίτημα)');
 select is(public.client_deliverable_view(current_setting('t.d1')::uuid) ->> 'overLimit', 'true',
   'Στο όριο ο επόμενος γύρος προειδοποιείται ως χρεώσιμος');
+select public.t_as('e1');
 select throws_ok($$ select public.deliverable_request_decide(current_setting('t.r1')::uuid, 'round', null) $$, 'P0001',
   'Το αίτημα έχει ήδη αποφασιστεί', 'Η απόφαση γράφεται μία φορά');
 
@@ -248,6 +250,7 @@ select lives_ok($$ select public.deliverable_request_decide(current_setting('t.r
   'Η Διαχείριση χρεώνει το Αίτημα');
 select is((select charge from public.deliverables where id = current_setting('t.d1')::uuid), 'included',
   'Η χρέωση του Παραδοτέου δεν αλλάζει με «χρεώνεται»');
+select public.t_as('e6');
 select is(public.client_deliverable_view(current_setting('t.d1')::uuid) ->> 'roundsUsed', '2',
   'Το «χρεώνεται» δεν μετράει γύρο');
 select is((select decision from public.deliverable_requests where id = current_setting('t.r2')::uuid), 'charged',
