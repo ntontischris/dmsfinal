@@ -49,6 +49,32 @@ alter table public.message_requests enable row level security;
 
 -- Ο υπεύθυνος ενός νέου Αιτήματος (Μ10): υπεύθυνος της Παραγωγής της ετικέτας, αλλιώς Υπεύθυνος Πελάτη, αλλιώς null.
 -- Μόνο ενεργό μέλος με πρόσβαση στη Συνομιλία (αλλιώς το Αίτημα θα έμενε αόρατο σε αυτόν).
+-- Βλέπει ο (άλλος) Χρήστης αυτό το Μήνυμα: ενεργό μέλος με «Συνομιλεί», και Εύρος «όλα», Υπεύθυνος Πελάτη
+-- ή owner/Μέλος της Παραγωγής της ετικέτας. Ίδιος κανόνας με το message_visible, για ανάθεση (Μ10).
+create function authz.message_visible_to(p_user uuid, p_message uuid) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select authz.message_mentionable(p_user) and exists (
+    select 1 from public.messages m
+     where m.id = p_message
+       and (authz.user_scope(p_user, 'messages.chat') = 'all'
+            or exists (select 1 from public.clients c where c.id = m.client_id and c.manager_id = p_user)
+            or exists (select 1 from public.productions p
+                        where p.id = m.production_id
+                          and (p.owner_id = p_user
+                               or exists (select 1 from public.production_members pm
+                                           where pm.production_id = p.id and pm.user_id = p_user)))));
+$$;
+
+-- Όσοι βλέπουν ολόκληρη τη Συνομιλία ενός Πελάτη (λίστα «Αλλαγή υπευθύνου»).
+create function authz.message_sees_all_of(p_user uuid, p_client uuid) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select authz.message_mentionable(p_user)
+     and (coalesce(authz.user_scope(p_user, 'messages.chat') = 'all', false)
+          or exists (select 1 from public.clients c where c.id = p_client and c.manager_id = p_user));
+$$;
+
 create function authz.request_assignee(p_message uuid) returns uuid
 language sql stable security definer set search_path = ''
 as $$
@@ -253,6 +279,9 @@ begin
   end if;
   if p_user is not null and not authz.message_mentionable(p_user) then
     raise exception 'Ο υπεύθυνος πρέπει να είναι ενεργό μέλος της ομάδας με πρόσβαση στη Συνομιλία' using errcode = 'P0001';
+  end if;
+  if p_user is not null and not authz.message_visible_to(p_user, p_message) then
+    raise exception 'Ο υπεύθυνος δεν βλέπει αυτό το Μήνυμα' using errcode = 'P0001';
   end if;
   if v_req.assignee_id is not distinct from p_user then
     return;
@@ -543,7 +572,7 @@ begin
     -- Όσοι μπορούν να αναλάβουν Αίτημα (και ο ίδιος ο χρήστης): μόνο για όσους μεταβιβάζουν.
     'assignable', case when v_team and authz.has('clients.transfer') then coalesce((
         select jsonb_agg(jsonb_build_object('id', t.user_id, 'name', t.name) order by t.name, t.user_id)
-          from public.team_users t where authz.message_mentionable(t.user_id)
+          from public.team_users t where authz.message_sees_all_of(t.user_id, p_client)
       ), '[]'::jsonb) end,
     'readAt', v_read_at,
     'editMinutes', authz.message_edit_minutes(),
@@ -814,8 +843,8 @@ as $$
     when 'receipts' then authz.has('finance.amounts')
     when 'billables' then authz.has('finance.amounts')
     when 'invoices' then authz.has('finance.amounts')
-    -- Αιτήματα Μηνυμάτων (#163): χωρίς κείμενο Μηνύματος, μόνο κατάσταση και κλείσιμο
-    when 'message_requests' then authz.has('audit.view')
+    -- Αιτήματα Μηνυμάτων (#163): το κλείσιμο έχει κείμενο προς τον πελάτη, άρα όπως τα Μηνύματα
+    when 'message_requests' then authz.has('audit.view') and authz.scope('messages.chat') = 'all'
     -- Μηνύματα (#160): περιέχουν κείμενο Συνομιλίας, άρα μόνο όσοι βλέπουν όλες τις Συνομιλίες
     when 'messages' then authz.has('audit.view') and authz.scope('messages.chat') = 'all'
     else false
@@ -825,6 +854,7 @@ $$;
 -- ───────────── Δικαιώματα ─────────────
 
 revoke all on function
+  authz.message_visible_to(uuid, uuid), authz.message_sees_all_of(uuid, uuid),
   authz.request_assignee(uuid), authz.request_days_open(timestamptz), authz.request_open_days(),
   authz.message_request_json(public.message_requests, boolean), authz.change_decision_visible(text, boolean),
   authz.thread_change_requests(uuid, boolean), authz.request_for_handling(uuid), authz.request_clean_text(text),

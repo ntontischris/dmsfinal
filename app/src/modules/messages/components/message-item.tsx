@@ -26,6 +26,14 @@ interface MessageItemProps {
   requestBox?: ReactNode;
 }
 
+// Γράφει ο θεατής στην ετικέτα του Μηνύματος (ίδιος κανόνας με το message_can_write): χωρίς ετικέτα θέλει «γενικά».
+const canWriteTag = (
+  productionId: string | null,
+  productions: readonly ThreadProduction[],
+  canWriteUntagged: boolean,
+): boolean =>
+  productionId === null ? canWriteUntagged : productions.some((production) => production.id === productionId);
+
 // Ένα Μήνυμα της Συνομιλίας: αποστολέας, ώρα, ετικέτα, κείμενο, ενδείξεις και ενέργειες.
 export function MessageItem({
   clientId,
@@ -96,7 +104,12 @@ export function MessageItem({
         productions={productions}
         canClearTag={canClearTag}
         canTag={isTeamViewer}
-        canMark={isTeamViewer && message.authorKind === "client" && message.request === null}
+        canMark={
+          isTeamViewer &&
+          message.authorKind === "client" &&
+          message.request === null &&
+          canWriteTag(message.productionId, productions, canClearTag)
+        }
       />
     </article>
   );

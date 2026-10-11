@@ -132,6 +132,12 @@ describe("resultLink", () => {
   it("should give nothing when there is no result", () => {
     expect(resultLink(null, null)).toBeNull();
   });
+  it("should not link a client to a filming page", () => {
+    expect(resultLink("filming", MESSAGE, false)).toBeNull();
+    expect(resultLink("deliverable", DELIVERABLE, false)?.href).toBe(
+      `/app/deliverables/${DELIVERABLE}`,
+    );
+  });
 });
 
 describe("client links", () => {

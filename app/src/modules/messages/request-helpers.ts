@@ -51,12 +51,15 @@ export interface ResultLink {
   label: string;
 }
 
-// Το αποτέλεσμα ενός αυτόματου κλεισίματος: Παραδοτέο ή Γύρισμα. Η ομάδα και ο πελάτης έχουν τις ίδιες διευθύνσεις (η σελίδα διαλέγει όψη).
+// Το αποτέλεσμα ενός αυτόματου κλεισίματος: Παραδοτέο ή Γύρισμα. Το Παραδοτέο έχει την ίδια διεύθυνση για ομάδα και πελάτη·
+// το Γύρισμα ο πελάτης το βλέπει μόνο με c.book, που η Συνομιλία δεν ξέρει, άρα χωρίς σύνδεσμο.
 export const resultLink = (
   kind: "deliverable" | "filming" | null,
   id: string | null,
+  isTeamViewer = true,
 ): ResultLink | null => {
   if (kind === null || id === null) return null;
+  if (kind === "filming" && !isTeamViewer) return null;
   return kind === "deliverable"
     ? { href: `${DELIVERABLES_PATH}/${id}`, label: OPEN_RESULT_DELIVERABLE }
     : { href: `${FILMING_PATH}/${id}`, label: OPEN_RESULT_FILMING };

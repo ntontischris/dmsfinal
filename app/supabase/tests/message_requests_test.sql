@@ -3,7 +3,7 @@
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι ημερομηνίες Συμφωνίας και Γυρίσματος είναι του 2027· το «ανοιχτό Χ μέρες»
 -- ελέγχεται μετακινώντας το declared_at στο παρελθόν.
 begin;
-select plan(169);
+select plan(178);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις (Υπεύθυνος του Α) · a4 Παραγωγή (Υπεύθυνος της Παραγωγής του Α) · a5 Παραγωγή (ξένος)
@@ -275,11 +275,19 @@ select public.t_as('a3');
 select throws_ok($$ select public.message_request_assign(current_setting('t.r5')::uuid, '00000000-0000-0000-0000-0000000000a1') $$, '42501', null, 'Χωρίς clients.transfer δεν μεταβιβάζεις');
 select public.t_as('b1');
 select throws_ok($$ select public.message_request_assign(current_setting('t.r5')::uuid, null) $$, '42501', null, 'Ο πελάτης δεν μεταβιβάζει');
+select throws_ok($$ select public.message_requests_view('open') $$, '42501', null, 'Ο πελάτης δεν βλέπει την ουρά της ομάδας');
+select throws_ok($$ select public.message_request_create_deliverable(current_setting('t.r5')::uuid, '{}') $$, '42501', null, 'Ο πελάτης δεν δημιουργεί Παραδοτέο από Αίτημα');
+select throws_ok($$ select public.message_request_create_filming(current_setting('t.r5')::uuid, '{}') $$, '42501', null, 'Ο πελάτης δεν δημιουργεί Γύρισμα από Αίτημα');
+select public.t_as('b3');
+select throws_ok($$ select public.message_send(jsonb_build_object('clientId', '00000000-0000-0000-0000-0000000000c1', 'body', 'ξένο', 'request', jsonb_build_object('kind', 'other'))) $$, '42501', null, 'Ο πελάτης Β δεν δηλώνει Αίτημα στον Πελάτη Α');
 select public.t_as('a2');
 select throws_ok($$ select public.message_request_assign(current_setting('t.r5')::uuid, null) $$, '42501', null, 'Ο Λογιστής δεν μεταβιβάζει');
 select public.t_as('a1');
 select throws_ok($$ select public.message_request_assign(current_setting('t.r5')::uuid, '00000000-0000-0000-0000-0000000000a2') $$, 'P0001', null, 'Νέος υπεύθυνος χωρίς πρόσβαση στη Συνομιλία (Λογιστής)');
 select throws_ok($$ select public.message_request_assign(current_setting('t.r5')::uuid, gen_random_uuid()) $$, 'P0001', null, 'Νέος υπεύθυνος που δεν είναι μέλος της ομάδας');
+select throws_ok($$ select public.message_request_assign(current_setting('t.r5')::uuid, '00000000-0000-0000-0000-0000000000a4') $$, 'P0001', 'Ο υπεύθυνος δεν βλέπει αυτό το Μήνυμα', 'Μέλος Παραγωγής δεν αναλαμβάνει Αίτημα χωρίς ετικέτα που δεν βλέπει');
+select ok(not (public.messages_thread('00000000-0000-0000-0000-0000000000c1')->'assignable' @> '[{"id":"00000000-0000-0000-0000-0000000000a4"}]'), 'Η λίστα «Αλλαγή υπευθύνου» έχει μόνο όσους βλέπουν όλη τη Συνομιλία');
+select ok(public.messages_thread('00000000-0000-0000-0000-0000000000c1')->'assignable' @> '[{"id":"00000000-0000-0000-0000-0000000000a3"}]', 'Ο Υπεύθυνος Πελάτη είναι στη λίστα');
 select lives_ok($$ select public.message_request_assign(current_setting('t.r5')::uuid, '00000000-0000-0000-0000-0000000000a1') $$, 'Μεταβίβαση σε ενεργό μέλος');
 select is(public.t_req('00000000-0000-0000-0000-0000000000c1', 'r5')->>'assigneeName', 'Γιώργος', 'Ο νέος υπεύθυνος φαίνεται');
 select lives_ok($$ select public.message_request_assign(current_setting('t.r5')::uuid, null) $$, 'Μεταβίβαση σε «Χωρίς υπεύθυνο»');
@@ -462,6 +470,11 @@ select throws_ok($$ select public.message_request_assign(current_setting('t.r9')
 -- ───────────── Ίχνος ─────────────
 select ok((select count(*) from public.audit_log where entity = 'message_requests' and action = 'insert') >= 8, 'Η δήλωση Αιτήματος γράφεται στο Ίχνος');
 select ok((select count(*) from public.audit_log where entity = 'message_requests' and action = 'update') >= 3, 'Το κλείσιμο και η μεταβίβαση γράφονται στο Ίχνος');
+
+select public.t_as('a5');
+select ok(not authz.audit_entity_allowed('message_requests'), 'Χωρίς audit.view και Εύρος «όλα» τα Αιτήματα δεν φαίνονται στο Ίχνος');
+select public.t_as('a1');
+select ok(authz.audit_entity_allowed('message_requests'), 'Ο Ιδιοκτήτης βλέπει τα Αιτήματα στο Ίχνος');
 
 select * from finish();
 rollback;

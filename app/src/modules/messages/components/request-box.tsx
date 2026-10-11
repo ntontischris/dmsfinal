@@ -35,8 +35,8 @@ interface RequestBoxProps {
   actions?: ReactNode;
 }
 
-function Closing({ request }: { request: MessageRequest }) {
-  const result = resultLink(request.resultKind, request.resultId);
+function Closing({ request, isTeamViewer }: { request: MessageRequest; isTeamViewer: boolean }) {
+  const result = resultLink(request.resultKind, request.resultId, isTeamViewer);
   return (
     <div className="grid gap-1 text-sm">
       {request.automatic && <p className="m-0 text-muted-foreground">{AUTO_CLOSED}</p>}
@@ -88,7 +88,7 @@ export function RequestBox({ request, isTeamViewer, isMine, actions }: RequestBo
           {request.declaredBy === "team" && ` · ${DECLARED_BY_TEAM}`}
         </p>
       )}
-      {!isOpen && <Closing request={request} />}
+      {!isOpen && <Closing request={request} isTeamViewer={isTeamViewer} />}
       {!isTeamViewer && isMine && (
         <p className="m-0 text-xs text-muted-foreground">{REQUEST_NOT_DELETABLE}</p>
       )}

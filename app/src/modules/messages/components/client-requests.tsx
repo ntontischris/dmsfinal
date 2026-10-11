@@ -24,7 +24,7 @@ const TONES: Record<ClientRequest["state"], Tone | undefined> = { open: "attenti
 // Η κατάσταση ενός Αιτήματος για τον πελάτη: σύνδεσμος και σχόλιο όταν ολοκληρώθηκε, «Απάντηση της ομάδας» όταν απορρίφθηκε.
 // Ποτέ υπεύθυνος ή μέρες.
 function StateBox({ item }: { item: ClientRequest }) {
-  const result = resultLink(item.resultKind, item.resultId);
+  const result = resultLink(item.resultKind, item.resultId, false);
   if (item.state === "open") return null;
   return (
     <div className="grid gap-1 rounded-md border bg-muted px-3 py-2 text-sm">
