@@ -19,6 +19,7 @@ import {
   rangeOf,
 } from "@/modules/calendar";
 import type { CalendarData, CalendarLinkStatus, LayerKey } from "@/modules/calendar";
+import { GoogleSyncCard, getGoogleView } from "@/modules/google";
 
 export const metadata = { title: "Ημερολόγιο" };
 
@@ -53,6 +54,7 @@ export default async function CalendarPage({
   ]);
   if (!view.ok) return <LoadNotice />;
   const data = view.data;
+  const googleView = data.google ? await getGoogleView() : null;
   const days = buildCalendarDays(
     data,
     datesOf(params.view, params.date),
@@ -98,6 +100,9 @@ export default async function CalendarPage({
           />
         </div>
         <aside className="grid content-start gap-4">
+          {data.google && googleView?.ok && (
+            <GoogleSyncCard view={googleView.data} stale={data.google.stale} />
+          )}
           <CalendarLinkPanel
             exists={link.ok && link.data.exists}
             createdLabel={createdLabel(link.ok ? link.data : null)}

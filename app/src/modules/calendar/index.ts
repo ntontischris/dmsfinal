@@ -25,6 +25,7 @@ export {
 export type {
   BlockedTime,
   CalendarData,
+  CalendarGoogle,
   CalendarLinkStatus,
   CalendarMember,
 } from "./types";
