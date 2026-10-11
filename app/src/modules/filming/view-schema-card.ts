@@ -7,6 +7,7 @@ import {
   type FilmingHistoryEntry,
   type FilmingRow,
 } from "./types";
+import { sheetSummarySchema } from "./view-schema-sheet";
 
 // Σχήμα των JSON της βάσης για τις λίστες και τη σελίδα Γυρίσματος (filmings_view, filming_view).
 // Τα κλειδιά έρχονται camelCase· ό,τι δεν ταιριάζει σπάει εδώ, δυνατά, και δεν φτάνει στην οθόνη.
@@ -63,6 +64,7 @@ const crewSchema = z.object({
   response: z.enum(CREW_RESPONSES),
   reason: z.string().nullable(),
   respondedAt: z.string().nullable(),
+  version: z.number().int().nullable(),
   isBlocked: z.boolean(),
 });
 
@@ -124,6 +126,7 @@ const cardShape = z.object({
   noShowAt: z.string().nullable(),
   provision: provisionSchema.nullable(),
   crew: z.array(crewSchema),
+  sheet: sheetSummarySchema,
   equipment: z.array(
     z.object({
       itemId: z.string(),

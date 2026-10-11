@@ -23,6 +23,7 @@ import {
   listCrewBlocked,
   listCrewTemplates,
   ReschedulePanel,
+  SheetSection,
   checkSlot,
   listEquipmentCandidates,
   type FilmingCard,
@@ -62,7 +63,10 @@ export default async function FilmingPage({
   if (!filming.ok) return <LoadError />;
   if (filming.data === null) return <Missing />;
   const done = doneSchema.parse((await searchParams).done);
-  return <FilmingPageContent card={filming.data} canBook={caps.canBook} done={done} />;
+  const viewerId = viewer.status === "signed-in" ? viewer.userId : null;
+  return (
+    <FilmingPageContent card={filming.data} canBook={caps.canBook} done={done} viewerId={viewerId} />
+  );
 }
 
 // Οι λίστες υποψηφίων φορτώνουν μόνο όπου το Δικαίωμα της κάρτας τις θέλει.
@@ -70,10 +74,12 @@ async function FilmingPageContent({
   card,
   canBook,
   done,
+  viewerId,
 }: {
   card: FilmingCard;
   canBook: boolean;
   done: "booked" | "rescheduled" | undefined;
+  viewerId: string | null;
 }) {
   const canCrew = card.viewerCan.crew;
   const canEquipment = card.viewerCan.equipment;
@@ -149,6 +155,7 @@ async function FilmingPageContent({
             }
           />
         )}
+        <SheetSection card={card} viewerId={viewerId} />
         <FilmingNotes card={card} />
         {card.history.length > 0 && <FilmingHistory card={card} />}
       </div>

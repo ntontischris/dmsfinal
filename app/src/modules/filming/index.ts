@@ -75,6 +75,7 @@ export { MineList } from "./components/mine-list";
 export { NewFilmingForm } from "./components/new-filming-form";
 export { OutcomePanel } from "./components/outcome-panel";
 export { ProvisionCard } from "./components/provision-card";
+export { SheetSection } from "./components/sheet-section";
 export { QueueCancelRequests } from "./components/queue-cancel-requests";
 export { QueuePending } from "./components/queue-pending";
 export { QueueRescheduleRequests } from "./components/queue-reschedule-requests";
