@@ -10,12 +10,15 @@ const IMPORT = /(?:import|export)[^"']*?from\s*["']([^"']+)["']|import\(\s*["'](
 const moduleOf = (path) => path.match(/^src\/modules\/([^/]+)\//)?.[1] ?? null;
 
 // Το service role (`@/lib/supabase/admin`) μπαίνει μόνο στα αρχεία που το έχουν ανάγκη (ADR 0016, ADR 0018):
-// τα routes του hook και του cron, τα deliver της ουράς, και οι ενέργειες πρόσβασης που χρειάζονται `auth.admin`.
+// τα routes του hook και του cron (και του Google), τα deliver της ουράς, και οι ενέργειες πρόσβασης που χρειάζονται `auth.admin`.
 // Ελέγχεται με την πραγματική διαδρομή (σχετικά imports, χωρίς επέκταση) και απορρίπτει dynamic import χωρίς σταθερή διαδρομή.
 const ADMIN_MODULE = "src/lib/supabase/admin";
 const ADMIN_FILES = new Set([
   "src/app/api/hooks/send-email/route.ts",
   "src/app/api/cron/outbox/route.ts",
+  "src/app/api/cron/google/route.ts",
+  "src/app/api/hooks/google-calendar/route.ts",
+  "src/modules/google/actions-setup.ts",
   "src/lib/email/deliver-outbox.ts",
   "src/lib/email/deliver-agreement.ts",
   "src/modules/access/provision.ts",
