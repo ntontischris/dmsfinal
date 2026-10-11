@@ -49,7 +49,7 @@ select o.id, o.client_id, o.title,
 insert into public.catalogue_items (id, kind, billing, name, name_en, unit, retired_at) values
   ('00000000-0000-0000-0000-0000000000d1', 'package', 'monthly', 'Μηνιαίο πακέτο (τεστ)', 'Monthly (test)', '', null),
   ('00000000-0000-0000-0000-0000000000d9', 'package', 'one_off', 'Εφάπαξ πακέτο (τεστ)', 'One-off (test)', '', null),
-  ('00000000-0000-0000-0000-0000000000d8', 'service', null, 'Έξτρα reel (τεστ)', 'Extra reel (test)', '', null);
+  ('00000000-0000-0000-0000-0000000000d8', 'service', null, 'Έξτρα reel (τεστ)', 'Extra reel (test)', 'ανά reel', null);
 insert into public.catalogue_item_amounts (item_id, price) values
   ('00000000-0000-0000-0000-0000000000d1', 1000),
   ('00000000-0000-0000-0000-0000000000d9', 2400),
