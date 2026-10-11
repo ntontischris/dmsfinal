@@ -2,7 +2,7 @@
 -- link που δεν ανοίγει, σχόλια χωρίς εσωτερικά, τελικά αρχεία, email ανά Χρήστη με «Εγκρίνει Παραδοτέα», κλειστοί πίνακες.
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Οι ημερομηνίες είναι ανεξάρτητες από τη μέρα εκτέλεσης.
 begin;
-select plan(79);
+select plan(80);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής 1) · e3 Πωλήσεις · e5 Διαχείριση
@@ -133,6 +133,8 @@ select is((select state from public.deliverable_versions
 
 -- ───────────── Ορατότητα ─────────────
 select public.t_as('e6');
+select ok(public.client_deliverables_view() -> 'awaitingYou' -> 0 ? 'productionId',
+  'η κάρτα του πελάτη δείχνει σε ποια Παραγωγή ανήκει (για τη σελίδα Παραγωγής)');
 select is(jsonb_array_length(public.client_deliverables_view() -> 'awaitingYou'), 1,
   'Περιμένουν εσένα: μόνο η σταλμένη Έκδοση');
 select is(jsonb_array_length(public.client_deliverables_view() -> 'periods'), 1,

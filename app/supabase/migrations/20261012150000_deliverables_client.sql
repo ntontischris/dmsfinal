@@ -264,6 +264,7 @@ language sql stable security definer set search_path = ''
 as $$
   select jsonb_build_object(
     'id', d.id,
+    'productionId', d.production_id,
     'title', d.title,
     'kind', (select k.label from public.provision_kinds k where k.id = d.kind_id),
     'state', authz.client_deliverable_state(d.id),
