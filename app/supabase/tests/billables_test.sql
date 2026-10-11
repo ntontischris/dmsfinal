@@ -43,7 +43,8 @@ select o.id, o.client_id, o.title,
     ('00000000-0000-0000-0000-0000000000c1'::uuid, '00000000-0000-0000-0000-0000000000f1'::uuid, 'Μηνιαίο Αθηνά'),
     ('00000000-0000-0000-0000-0000000000c2'::uuid, '00000000-0000-0000-0000-0000000000f1'::uuid, 'Εφάπαξ Αθηνά'),
     ('00000000-0000-0000-0000-0000000000c3'::uuid, '00000000-0000-0000-0000-0000000000f2'::uuid, 'Μηνιαίο Κίνηση'),
-    ('00000000-0000-0000-0000-0000000000c4'::uuid, '00000000-0000-0000-0000-0000000000f2'::uuid, 'Λυμένο Κίνηση')
+    ('00000000-0000-0000-0000-0000000000c4'::uuid, '00000000-0000-0000-0000-0000000000f2'::uuid, 'Λυμένο Κίνηση'),
+    ('00000000-0000-0000-0000-0000000000c5'::uuid, '00000000-0000-0000-0000-0000000000f1'::uuid, 'Πρόχειρο Αθηνά')
   ) as o (id, client_id, title);
 
 -- Μηνιαίο πακέτο 1.000 €, εφάπαξ πακέτο 2.400 €, και Υπηρεσία «έξτρα reel» 150 € που δίνει μόνο reel.
@@ -186,7 +187,7 @@ insert into public.catalogue_items (id, kind, billing, name, name_en, unit, reti
 insert into public.catalogue_item_amounts (item_id, price) values ('00000000-0000-0000-0000-0000000000d7', 260);
 insert into public.catalogue_item_costs (item_id, hours_shoot, hours_edit, direct_cost) values ('00000000-0000-0000-0000-0000000000d7', 0, 0, 0);
 insert into public.catalogue_item_provisions (item_id, kind_id, quantity) values ('00000000-0000-0000-0000-0000000000d7', public.t_pk('reel'), 2);
-select set_config('t.e', public.agreement_create('00000000-0000-0000-0000-0000000000c1', 'one_off', 'Πρόχειρο Αθηνά')::text, true);
+select set_config('t.e', public.agreement_create('00000000-0000-0000-0000-0000000000c5', 'one_off', 'Πρόχειρο Αθηνά')::text, true);
 select public.agreement_add_catalogue_line(current_setting('t.e')::uuid, '00000000-0000-0000-0000-0000000000d9', 1);
 select public.agreement_add_catalogue_line(current_setting('t.e')::uuid, '00000000-0000-0000-0000-0000000000d7', 1);
 select is(authz.billable_extra_price(current_setting('t.e')::uuid, public.t_pk('reel')), 130::numeric,
