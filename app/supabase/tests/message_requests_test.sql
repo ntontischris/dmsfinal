@@ -419,7 +419,7 @@ select public.t_as('a4');
 select throws_ok($$ select public.message_requests_view('unassigned') $$, '42501', null, 'Μέλος Παραγωγής δεν βλέπει «χωρίς υπεύθυνο»');
 select public.t_as('a1');
 select throws_ok($$ select public.message_requests_view('bogus') $$, 'P0001', null, 'Άγνωστη όψη');
-select is(jsonb_array_length(public.messages_thread('00000000-0000-0000-0000-0000000000c1')->'assignable'), 4, 'Όποιος μεταβιβάζει βλέπει ποιοι μπορούν να αναλάβουν (ενεργά μέλη με Συνομιλία)');
+select is(jsonb_array_length(public.messages_thread('00000000-0000-0000-0000-0000000000c1')->'assignable'), 2, 'Όποιος μεταβιβάζει βλέπει ποιοι μπορούν να αναλάβουν (όσοι βλέπουν όλη τη Συνομιλία: Ιδιοκτήτης, Υπεύθυνος Πελάτη)');
 select is(jsonb_array_length(public.message_requests_view('unassigned')->'items'), 2, '«Χωρίς υπεύθυνο»: r5 και pb (το r3 έχει κλείσει)');
 select is((public.message_requests_view('open')->'counts'->>'unassigned')::int, 2, 'Ο μετρητής «χωρίς υπεύθυνο»');
 select is(jsonb_array_length(public.message_requests_view('open')->'items'), 4, 'Όλα τα ανοιχτά: p1, r5, r10, pb');
