@@ -36,9 +36,8 @@ alter table public.deliverable_settings enable row level security;
 
 -- ───────────── Προθεσμία ανά είδος Παροχής ─────────────
 
--- Μόνο είδη πλήθους (measure is null)· το όριο αλλαγών (revision_limit) υπάρχει ήδη από τη Σύμβαση.
+-- Η προθεσμία ορίζεται μόνο για είδη πλήθους (measure is null)· το κρατά η deliverable_settings_save. Το όριο αλλαγών (revision_limit) υπάρχει ήδη.
 alter table public.provision_kinds add column deadline_days smallint check (deadline_days between 1 and 90);
-alter table public.provision_kinds add constraint provision_kinds_deadline_counts check (deadline_days is null or measure is null);
 
 -- Αρχικές τιμές χωρίς Ίχνος για την αρχική ρύθμιση (όπως τα υπόλοιπα seeds).
 alter table public.provision_kinds disable trigger provision_kinds_audit;
