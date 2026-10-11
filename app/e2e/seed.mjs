@@ -304,6 +304,16 @@ for (const P of ["desktop", "mobile"]) {
 }
 console.log("seed: Κρατήσεις");
 
+// ───────────── Παραδοτέα πελάτη: μία Παραγωγή του Πελάτη Κρατήσεων ανά project για το e2e/deliverables-client.spec.ts ─────────────
+// Χωρίς Συμφωνία (εφάπαξ χωρίς Περίοδο): το Παραδοτέο μπαίνει με «Χρεώνεται» ή «Χωρίς Παροχή» και δεν θέλει Συμφωνία.
+for (const P of ["desktop", "mobile"]) {
+  const { data: clientRow, error: clientError } = await admin
+    .from("clients").select("id").eq("name", `Πελάτης Κρατήσεων ${P}`).single();
+  if (clientError) throw clientError;
+  await insertRow("productions", { title: `Παραγωγή Πελάτη ${P}`, client_id: clientRow.id, owner_id: ids["owner@example.com"] });
+}
+console.log("seed: Παραδοτέα πελάτη");
+
 // ───────────── Εξοπλισμός: ένα αντικείμενο ανά project για το e2e/equipment.spec.ts ─────────────
 // Τα αντικείμενα μπαίνουν απευθείας με service role: το Πρότυπο της Παραγωγής δουλεύει πάνω σε αυτά.
 async function nameId(table, name) {
