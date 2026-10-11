@@ -168,7 +168,7 @@ select is(
                         'agreement_outbox')),
   19, 'RLS ενεργό σε όλους τους πίνακες των Συμφωνιών'
 );
-select is((select count(*)::int from authz.readiness_items()), 11, 'Ο Έλεγχος ετοιμότητας μένει με 11 γραμμές: οι Συμφωνίες δεν προσθέτουν εκκρεμότητα');
+select is((select count(*)::int from authz.readiness_items()), 12, 'Ο Έλεγχος ετοιμότητας μένει με 12 γραμμές: οι Συμφωνίες δεν προσθέτουν εκκρεμότητα');
 select is(
   (select count(*)::int from public.sales_loss_reasons where code = 'client_declined'), 0,
   'Ο Λόγος απώλειας «ο πελάτης απέρριψε» δεν υπάρχει ως την πρώτη απόρριψη'

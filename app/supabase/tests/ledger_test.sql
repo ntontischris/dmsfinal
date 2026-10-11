@@ -85,7 +85,7 @@ reset role;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.client_ledger_view(current_setting('t.b')::uuid) $$,
-  '42501', null, 'Ο Χρήστης πελάτη Β δεν βλέπει την Καρτέλα του Α'
+  '42501', null, 'Ο Χρήστης πελάτη Α δεν βλέπει την Καρτέλα του Β'
 );
 select throws_ok($$ select public.clients_with_finance() $$, '42501', null, 'Ο Χρήστης πελάτη δεν βλέπει τη λίστα Καρτελών της ομάδας');
 set local role authenticated;
