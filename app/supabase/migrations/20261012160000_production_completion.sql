@@ -67,8 +67,10 @@ as $$
   select coalesce(jsonb_agg(jsonb_build_object(
            'title', d.title,
            'finalFilesUrl', d.final_files_url,
+           -- Μόνο Έκδοση που είδε ο πελάτης (προτιμάται η εγκεκριμένη)· ποτέ εσωτερικό draft.
            'url', (select v.url from public.deliverable_versions v
-                    where v.deliverable_id = d.id order by v.number desc limit 1)
+                    where v.deliverable_id = d.id and v.sent_at is not null
+                    order by (v.state = 'approved') desc, v.number desc limit 1)
          ) order by d.created_at, d.id), '[]'::jsonb)
     from public.deliverables d
    where d.production_id = p_production and d.cancelled_at is null;
@@ -279,6 +281,7 @@ declare
   v_day integer;
   v_count integer := 0;
   v_today date := public.sales_today();
+  v_latest integer;
 begin
   for v_pending in
     select d.id as deliverable_id, v.number, (v.sent_at at time zone 'Europe/Athens')::date as sent_on
@@ -288,12 +291,14 @@ begin
      where v.state = 'awaiting_client' and v.sent_at is not null
        and d.cancelled_at is null and p.state = 'open' and p.client_id is not null
   loop
+    -- Ένα email ανά κλήση: μόνο για τη μεγαλύτερη ημέρα που πέρασε· οι μικρότερες γράφονται χωρίς email.
+    v_latest := (select max(x) from unnest(authz.deliverable_reminder_days()) x where x <= v_today - v_pending.sent_on);
     foreach v_day in array authz.deliverable_reminder_days() loop
       continue when v_today - v_pending.sent_on < v_day;
       insert into public.deliverable_reminders (deliverable_id, version_number, day)
       values (v_pending.deliverable_id, v_pending.number, v_day)
       on conflict do nothing;
-      if found then
+      if found and v_day = v_latest then
         perform authz.email_client_deliverable_reminder(v_pending.deliverable_id, v_pending.number, v_day);
         v_count := v_count + 1;
       end if;
@@ -589,7 +594,7 @@ revoke all on function
   public.production_task_add(uuid, text, uuid, date), public.production_task_update(uuid, text, uuid, date),
   public.production_task_toggle(uuid, boolean), public.production_task_delete(uuid),
   public.deliverable_reminders_enqueue()
-  from public, anon;
+  from public, anon, authenticated;
 
 grant execute on function
   public.production_task_add(uuid, text, uuid, date), public.production_task_update(uuid, text, uuid, date),

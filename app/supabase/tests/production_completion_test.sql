@@ -3,7 +3,7 @@
 -- Εργασίες Παραγωγής (CRUD, κλειστή Παραγωγή, κλειστοί πίνακες) και μεταφορά στον Υπεύθυνο όταν αφαιρείται Μέλος.
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(44);
+select plan(47);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής 1) · e3 Πωλήσεις · e5 Διαχείριση
@@ -237,6 +237,10 @@ select set_config('t.d5', public.deliverable_create(current_setting('t.pa1')::uu
 select public.deliverable_version_add(current_setting('t.d5')::uuid, 'https://vimeo.com/555', null);
 update public.deliverable_versions set sent_at = now() - interval '4 days'
  where deliverable_id = current_setting('t.d5')::uuid;
+set local role authenticated;
+select throws_ok('select public.deliverable_reminders_enqueue()', '42501', null,
+  'Συνδεδεμένος χρήστης δεν καλεί την ουρά υπενθυμίσεων');
+reset role;
 select is(public.deliverable_reminders_enqueue(), 1, 'Στις 4 μέρες στέλνεται η υπενθύμιση των 3 ημερών');
 select is(public.deliverable_reminders_enqueue(), 0, 'Η δεύτερη κλήση δεν ξαναστέλνει');
 update public.deliverable_versions set sent_at = now() - interval '8 days'
@@ -250,6 +254,16 @@ select is((select count(*)::int from public.email_outbox
 select is((select count(*)::int from public.deliverable_reminders
             where deliverable_id = current_setting('t.d3')::uuid), 0, 'Εγκεκριμένο Παραδοτέο δεν υπενθυμίζεται');
 select public.deliverable_cancel(current_setting('t.d5')::uuid, 'Άλλαξε η σειρά', 'returned');
+
+select set_config('t.d6', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid,
+  'Reel δέκα ημερών', null, null, null, null)::text, true);
+select public.deliverable_version_add(current_setting('t.d6')::uuid, 'https://vimeo.com/666', null);
+update public.deliverable_versions set sent_at = now() - interval '10 days'
+ where deliverable_id = current_setting('t.d6')::uuid;
+select is(public.deliverable_reminders_enqueue(), 1, 'Στις 10 μέρες φεύγει ένα μόνο email (των 7 ημερών)');
+select is((select count(*)::int from public.deliverable_reminders
+            where deliverable_id = current_setting('t.d6')::uuid), 2, 'Και οι δύο ημέρες σημειώνονται ως σταλμένες');
+select public.deliverable_cancel(current_setting('t.d6')::uuid, 'Τέλος τεστ', 'returned');
 
 select set_config('t.d4', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid,
   'Reel τρίτο', null, null, null, null)::text, true);
