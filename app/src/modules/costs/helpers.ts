@@ -40,6 +40,19 @@ export const signalLabels = (signals: CostSignals): string[] => [
   ...(signals.overrun ? [SIGNAL_LABELS.overrun] : []),
 ];
 
+export interface HoursPrefill {
+  shootHours: number;
+  editHours: number;
+  directCost: number;
+}
+
+// Τι δείχνει η φόρμα ωρών: ό,τι γράφτηκε· όπου δεν έχει γραφτεί ποτέ, η εκτίμηση. Έτσι ένα πρόχειρο δεν χάνεται στο reload.
+export const hoursPrefill = (row: CostRow): HoursPrefill => ({
+  shootHours: row.recorded.shootHours ?? row.estimate.shootHours,
+  editHours: row.recorded.editHours ?? row.estimate.editHours,
+  directCost: row.recorded.directCost ?? row.estimate.directCost,
+});
+
 export const estimateHours = (row: CostRow): number =>
   row.estimate.shootHours + row.estimate.editHours;
 

@@ -23,6 +23,12 @@ const actualSchema = z.object({
   suggestedShootHours: z.number(),
 });
 
+const recordedSchema = z.object({
+  shootHours: z.number().nullable(),
+  editHours: z.number().nullable(),
+  directCost: z.number().nullable(),
+});
+
 const rowSchema = z.object({
   productionId: z.string(),
   title: z.string(),
@@ -30,6 +36,7 @@ const rowSchema = z.object({
   state: z.enum(COST_STATES),
   estimate: estimateSchema,
   actual: actualSchema,
+  recorded: recordedSchema,
   hourCost: z.number().nullable(),
   hoursComplete: z.boolean(),
   signals: z.object({ lowMargin: z.boolean(), overrun: z.boolean() }),

@@ -25,6 +25,13 @@ export interface CostActual {
   suggestedShootHours: number;
 }
 
+// Τα ώρες και το άμεσο κόστος όπως γράφτηκαν (πρόχειρα ή επιβεβαιωμένα). Null = δεν έχουν γραφτεί ποτέ.
+export interface CostRecorded {
+  shootHours: number | null;
+  editHours: number | null;
+  directCost: number | null;
+}
+
 export interface CostSignals {
   lowMargin: boolean;
   overrun: boolean;
@@ -37,6 +44,7 @@ export interface CostRow {
   state: CostState;
   estimate: CostEstimate;
   actual: CostActual;
+  recorded: CostRecorded;
   hourCost: number | null;
   hoursComplete: boolean;
   signals: CostSignals;

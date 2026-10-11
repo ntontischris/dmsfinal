@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   decimalText,
   formatHours,
+  hoursPrefill,
   formatPercent,
   marginOf,
   signalLabels,
@@ -19,6 +20,7 @@ const row = (changes: Partial<{ price: number | null; cost: number }> = {}): Cos
     shootHours: 8, shootConfirmed: true, editHours: 14, editConfirmed: true,
     directCost: 0, cost: changes.cost ?? 220, suggestedShootHours: 8,
   },
+  recorded: { shootHours: null, editHours: null, directCost: null },
   hourCost: 10,
   hoursComplete: true,
   signals: { lowMargin: false, overrun: false },
@@ -61,5 +63,16 @@ describe("μορφοποίηση", () => {
   it("γράφει ποσοστό με ένα δεκαδικό και δεκαδικό με κόμμα στα πεδία", () => {
     expect(formatPercent(0.78)).toBe("78%");
     expect(decimalText(6.5)).toBe("6,5");
+  });
+});
+
+describe("ωρες φόρμας", () => {
+  it("δείχνει ό,τι γράφτηκε, ακόμα κι αν δεν έχει επιβεβαιωθεί", () => {
+    const draft = { ...row(), recorded: { shootHours: 8, editHours: null, directCost: null } };
+    expect(hoursPrefill(draft)).toEqual({ shootHours: 8, editHours: 14, directCost: 0 });
+  });
+
+  it("πέφτει στην εκτίμηση όπου δεν έχει γραφτεί ποτέ", () => {
+    expect(hoursPrefill(row())).toEqual({ shootHours: 6, editHours: 14, directCost: 0 });
   });
 });

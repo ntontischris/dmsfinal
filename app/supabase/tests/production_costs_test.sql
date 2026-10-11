@@ -2,7 +2,7 @@
 -- ομάδες της λίστας, Εσωτερική Παραγωγή, άρνηση ανά ρόλο, κλειστός πίνακας, Ίχνος (#144). Φανταστικοί Χρήστες και στοιχεία·
 -- όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σχετικές με τη σημερινή μέρα.
 begin;
-select plan(58);
+select plan(61);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης (κόστος: βλέπει και γράφει) · e2 Παραγωγή (Συνεργείο) · e3 Πωλήσεις (χωρίς κόστος)
@@ -222,6 +222,19 @@ select ok(
   'Η παραδομένη P1 χωρίς ώρες είναι στο «Θέλουν πραγματικές ώρες»'
 );
 select is(public.production_needs_hours_count(), 1::bigint, 'Ο μετρητής «Θέλουν ώρες» μετράει την P1');
+select lives_ok(
+  $$ select public.production_hours_set(current_setting('t.p1')::uuid, 8, 14, null, false, false) $$,
+  'Πρόχειρο γύρισμα 8 ώρες χωρίς επιβεβαίωση'
+);
+select is(
+  (select (production_cost_view(current_setting('t.p1')::uuid) -> 'recorded' ->> 'shootHours')::numeric), 8::numeric,
+  'Το καταχωρημένο γύρισμα μένει 8 ώρες, όπως γράφτηκε'
+);
+select is(
+  (select (production_cost_view(current_setting('t.p1')::uuid) -> 'actual' ->> 'shootHours')::numeric),
+  (select (production_cost_view(current_setting('t.p1')::uuid) -> 'estimate' ->> 'shootHours')::numeric),
+  'Χωρίς επιβεβαίωση η πραγματική ώρα μένει η εκτίμηση'
+);
 select lives_ok(
   $$ select public.production_hours_set(current_setting('t.p1')::uuid, 8, 14, null, true, false) $$,
   'Επιβεβαίωση μόνο των ωρών γυρίσματος'
