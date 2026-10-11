@@ -16,7 +16,7 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000e7', 'nikos@kypseli.example.gr'),
   ('00000000-0000-0000-0000-0000000000e8', 'kostas@other.example.gr'),
   ('00000000-0000-0000-0000-0000000000e9', 'lia@kypseli.example.gr'),
-  ('00000000-0000-0000-0000-0000000000e10', 'eva@gym.example.gr');
+  ('00000000-0000-0000-0000-0000000000ea', 'eva@gym.example.gr');
 insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000e1', 'Γιώργος', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000e2', 'Πέτρος', 'production@example.com'),
@@ -118,7 +118,7 @@ insert into public.client_users (client_id, user_id, name, role_id, is_current) 
 insert into public.client_users (client_id, user_id, name, role_id, is_current) values
   ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000e9', 'Λία Κρατήσεων',
    (select r.id from public.roles r where r.name = 'Μόνο κράτηση (τεστ)'), true),
-  ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000e10', 'Εύα Έγκρισης',
+  ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000ea', 'Εύα Έγκρισης',
    (select r.id from public.roles r where r.name = 'Μόνο έγκριση (τεστ)'), true);
 
 -- ───────────── Ομάδα: Παραδοτέα και Εκδόσεις ─────────────
@@ -362,7 +362,7 @@ select lives_ok($$ select public.deliverable_client_answer(current_setting('t.d6
   'Ζήτηση αλλαγών σε παραδομένη Παραγωγή την ξανανοίγει');
 select is((select state from public.productions where id = current_setting('t.pb1')::uuid), 'open',
   'Η ζήτηση αλλαγών του πελάτη ξανανοίγει την Παραγωγή');
-select public.t_as('e10');
+select public.t_as('ea');
 select lives_ok($$ select public.productions_view() $$,
   'Με μόνο «Εγκρίνει Παραδοτέα» βλέπει Παραγωγές του Πελάτη του');
 select lives_ok($$ select public.client_deliverables_view() $$,
