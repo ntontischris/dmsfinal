@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { fieldOf, openNewInternal, openProduction } from "./productions-parts";
+import { fieldOf, openNewInternal } from "./productions-parts";
 import { button, card, project, shot, signIn } from "./sales-parts";
 
 // Ολοκλήρωση Παραγωγής και Εργασίες (#143) από άκρη σε άκρη. Η Εσωτερική Παραγωγή φτιάχνεται εδώ, με όνομα του project,
@@ -72,7 +72,12 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
     page.getByText("Εγκρίθηκε", { exact: true }).first(),
   ).toBeVisible();
 
-  await openProduction(page, TITLE);
+  // Η παραδομένη Παραγωγή βγαίνει από την καρτέλα «Ανοιχτές»· ανοίγουμε την «Παραδομένες».
+  await page.goto("/app/productions?tab=delivered");
+  await page.getByRole("link", { name: TITLE, exact: true }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: TITLE, exact: true }),
+  ).toBeVisible();
   await expect(card(page, "Κατάσταση")).toContainText("Παραδόθηκε αυτόματα");
   await expect(
     card(page, "Εργασίες").getByRole("checkbox", { name: TASK }),
