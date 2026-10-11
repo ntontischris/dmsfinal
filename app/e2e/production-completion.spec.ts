@@ -20,6 +20,7 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   const DELIVERABLE = `Reel ${TITLE}`;
 
   await signIn(page, "owner@example.com");
+  await page.goto("/app/productions");
   const form = await openNewInternal(page);
   await fieldOf(form, "Τίτλος").fill(TITLE);
   await fieldOf(form, "Υπεύθυνος").selectOption({ label: OWNER_NAME });

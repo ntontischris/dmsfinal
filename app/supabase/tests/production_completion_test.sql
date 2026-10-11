@@ -219,8 +219,9 @@ select public.t_as('e1');
 select public.deliverable_cancel(current_setting('t.d2')::uuid, 'Αλλάζει το concept', 'returned');
 select is((select state from public.productions where id = current_setting('t.pa1')::uuid), 'open',
   'Η ακύρωση Παραδοτέου δεν παραδίδει την Παραγωγή');
-insert into public.filmings (production_id, starts_at, hours, origin, state)
-select current_setting('t.pa1')::uuid, now() + interval '2 days', 2, 'team', 'pending';
+insert into public.filmings (production_id, client_id, period_id, starts_at, hours, origin, state)
+select p.id, p.client_id, p.period_id, now() + interval '2 days', 2, 'team', 'pending'
+  from public.productions p where p.id = current_setting('t.pa1')::uuid;
 select set_config('t.d3', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid,
   'Reel τελικό', null, null, null, null)::text, true);
 select public.deliverable_version_add(current_setting('t.d3')::uuid, 'https://vimeo.com/333', null);
@@ -253,7 +254,8 @@ select public.deliverable_cancel(current_setting('t.d5')::uuid, 'Άλλαξε η
 select set_config('t.d4', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid,
   'Reel τρίτο', null, null, null, null)::text, true);
 select public.deliverable_version_add(current_setting('t.d4')::uuid, 'https://drive.google.com/file/d/d4', null);
-update public.filmings set state = 'done' where production_id = current_setting('t.pa1')::uuid;
+update public.filmings set state = 'done', done_at = now(), actual_hours = 2
+ where production_id = current_setting('t.pa1')::uuid;
 select public.t_as('e6');
 select public.deliverable_client_answer(current_setting('t.d4')::uuid, true, null);
 select public.t_as('e1');
