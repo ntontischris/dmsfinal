@@ -83,9 +83,7 @@ test("ο Ιδιοκτήτης φτιάχνει Παραδοτέο, το στέλ
     has: page.getByRole("button", { name: "Ενέκρινε", exact: true }),
   });
   await button(approve, "Ενέκρινε").click();
-  await expect(approve.getByRole("status")).toContainText(
-    "Το Παραδοτέο εγκρίθηκε.",
-  );
+  // Μετά την έγκριση η φόρμα φεύγει (δεν ζητιέται πια), γι' αυτό ελέγχουμε την κατάσταση, όχι το μήνυμα.
   await expect(
     page.getByText("Εγκρίθηκε", { exact: true }).first(),
   ).toBeVisible();
