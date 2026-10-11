@@ -5,13 +5,14 @@ import {
   bookFilmingFromScreen,
   currentDay,
   fieldOf,
-  signedMonthlyAgreement,
   visit,
 } from "./filming-parts";
 import { button, inContext, project, signIn } from "./sales-parts";
 
 // Δελτίο γυρίσματος (#136) από άκρη σε άκρη: ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία λήψη και βγάζει Έκδοση 2
 // με «Τι άλλαξε», και βλέπει το ιστορικό. Σειριακά και χωρίς retries, όπως το filming.spec.ts.
+// Κλείνει Γύρισμα κάτω από τη Συμφωνία που έχει ήδη υπογράψει το filming.spec.ts· δεν γράφει νέα, γιατί η Ευκαιρία
+// του seed παίρνει μία μόνο Συμφωνία.
 test.describe.configure({ mode: "serial", retries: 0 });
 
 // Το πάνελ «Δελτίο» της σελίδας του Γυρίσματος (ο τίτλος του πάνελ είναι h2 «Δελτίο»).
@@ -26,7 +27,6 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
 }) => {
   const P = project();
   await signIn(page, "sales@example.com");
-  await signedMonthlyAgreement(page, browser, P);
   await bookFilmingFromScreen(page, P, currentDay(20));
   const filmingUrl = page.url();
 
