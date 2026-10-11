@@ -11,12 +11,19 @@ export interface EmailEnv {
   isPreview: boolean;
 }
 
+// Συνημμένο αρχείο: το περιεχόμενο σε base64, όπως το θέλει το Resend.
+export interface EmailAttachment {
+  filename: string;
+  content: string;
+}
+
 export interface EmailMessage {
   to: string;
   toName: string;
   subject: string;
   html: string;
   text: string;
+  attachments?: readonly EmailAttachment[];
 }
 
 export type SendStatus = "sent" | "failed" | "suppressed";
@@ -105,6 +112,7 @@ async function postToResend(
       subject: message.subject,
       html: message.html,
       text: message.text,
+      ...(message.attachments?.length ? { attachments: message.attachments } : {}),
     }),
     signal: AbortSignal.timeout(options.timeoutMs ?? RESEND_TIMEOUT_MS),
   });

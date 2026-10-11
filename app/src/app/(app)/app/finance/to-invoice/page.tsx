@@ -42,7 +42,10 @@ export default async function ToInvoicePage() {
         <div className="mt-4 grid gap-4">
           <p className="m-0 text-sm text-muted-foreground">{BILLABLES_NOTE}</p>
           <ToInvoiceTotals view={billables.data} />
-          <ToInvoiceList clients={billables.data.clients} />
+          <ToInvoiceList
+            clients={billables.data.clients}
+            canRegisterInvoices={financeCaps(viewer).canRegisterInvoices}
+          />
         </div>
       )}
     </>

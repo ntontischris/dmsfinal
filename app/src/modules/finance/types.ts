@@ -37,6 +37,7 @@ export interface FinanceCaps {
   canView: boolean;
   canRegister: boolean;
   canManageMethods: boolean;
+  canRegisterInvoices: boolean;
 }
 
 export interface ClientOption {

@@ -15,7 +15,9 @@ const proposalHeaders = [
   { key: "Cache-Control", value: "no-store" },
 ];
 
+// Το PDF Τιμολογίου (έως 10 MB) ανεβαίνει μέσα από server action, οπότε το όριο σώματος ανεβαίνει λίγο πάνω από αυτό.
 const nextConfig: NextConfig = {
+  experimental: { serverActions: { bodySizeLimit: "11mb" } },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

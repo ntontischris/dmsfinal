@@ -15,6 +15,7 @@ interface ActionFormProps {
   onlyWhenChanged?: boolean; // κρύβει το κουμπί όσο δεν έχει αλλάξει τιμή από την τελευταία αποθήκευση
   resetOnSuccess?: boolean; // αδειάζει τη φόρμα μετά την επιτυχία (νέα εγγραφή), ώστε δεύτερο κλικ να μη διπλογράφει
   onSuccess?: () => void;
+  isDisabled?: boolean; // κρατά το κουμπί ανενεργό όσο λείπουν υποχρεωτικά πεδία
   children: ReactNode;
 }
 
@@ -25,6 +26,7 @@ export function ActionForm({
   onlyWhenChanged = false,
   resetOnSuccess = false,
   onSuccess,
+  isDisabled = false,
   children,
 }: ActionFormProps) {
   const { state, isPending, onSubmit, formRef } = useKeptForm(action, { resetOnSuccess });
@@ -39,7 +41,7 @@ export function ActionForm({
       <FormMessage state={state} />
       {showSubmit && (
         <div>
-          <Button type="submit" variant="primary" disabled={isPending}>
+          <Button type="submit" variant="primary" disabled={isPending || isDisabled}>
             {isPending ? "Αποθήκευση…" : submitLabel}
           </Button>
         </div>

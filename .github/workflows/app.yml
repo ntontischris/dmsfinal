@@ -67,8 +67,9 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.120.0
+      # Το storage-api μένει ενεργό: τα PDF των Τιμολογίων (#152) ανεβαίνουν σε ιδιωτικό bucket.
       - name: Τοπικό Supabase
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api,postgres-meta
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,postgres-meta
       - name: Στοιχεία σύνδεσης του τοπικού Supabase (δημόσιες προεπιλογές, όχι μυστικά)
         run: |
           eval "$(supabase status -o env)"

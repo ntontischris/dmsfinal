@@ -9,6 +9,7 @@ import {
   deliverableReminderFor,
   productionDeliveredFor,
 } from "./deliver-completion";
+import { INVOICE_KIND, invoiceMessageFor, type InvoiceBody } from "./deliver-invoice";
 import { isSheetKind, sheetMessageFor } from "./deliver-sheet";
 import { toLocale, type Locale } from "./locale";
 import { sendEmail, type SendOutcome } from "./send-email";
@@ -41,6 +42,7 @@ export const outboxRowSchema = z.object({
     "deliverable_version_sent",
     "production_delivered",
     "deliverable_reminder",
+    "invoice_registered",
   ]),
   to_name: z.string(),
   to_email: z.string(),
@@ -179,7 +181,7 @@ async function messageFor(
   admin: SupabaseClient,
   row: OutboxRow,
   origin: string,
-): Promise<EmailMessageBody | string> {
+): Promise<EmailMessageBody | InvoiceBody | string> {
   if (row.kind === "test")
     return testMessage({ locale: toLocale(row.locale), origin });
   if (row.kind === "invite_resend")
@@ -192,6 +194,7 @@ async function messageFor(
     return productionDeliveredFor(row, origin);
   if (row.kind === DELIVERABLE_REMINDER_KIND)
     return deliverableReminderFor(row, origin);
+  if (row.kind === INVOICE_KIND) return invoiceMessageFor(admin, row, origin);
   return clientAddedMessageFor(admin, row, origin);
 }
 

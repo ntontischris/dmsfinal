@@ -5,6 +5,7 @@ import type { Locale } from "../locale";
 import { invitationMessage, authLinkMessage } from "./auth-messages";
 import { proposalLinkMessage, signedCopyMessage, signingCodeMessage } from "./agreement-messages";
 import { deliverableVersionMessage } from "./deliverable-messages";
+import { invoiceRegisteredMessage } from "./invoice-messages";
 import { crewDeclinedMessage, sheetIssuedMessage } from "./sheet-messages";
 import {
   clientAddedMessage,
@@ -108,6 +109,36 @@ describe.each(LOCALES)("τα πρότυπα email (%s)", (locale) => {
         version: 2,
         roundsUsed: 1,
         roundsLimit: 2,
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it("καταχώρηση τιμολογίου με λήξη", () => {
+    expect(
+      invoiceRegisteredMessage({
+        locale,
+        origin: ORIGIN,
+        name: "Μαρία",
+        kind: "invoice",
+        number: "87",
+        issueDate: "2026-06-03",
+        dueDate: "2026-06-23",
+        total: 1612,
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it("καταχώρηση πιστωτικού χωρίς λήξη", () => {
+    expect(
+      invoiceRegisteredMessage({
+        locale,
+        origin: ORIGIN,
+        name: "Μαρία",
+        kind: "credit",
+        number: "Π-12",
+        issueDate: "2026-06-25",
+        dueDate: null,
+        total: 124,
       }),
     ).toMatchSnapshot();
   });

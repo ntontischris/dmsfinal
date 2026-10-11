@@ -120,6 +120,41 @@ Devre Media · Το μήνυμα στάλθηκε από το σύστημα τ�
 }
 `;
 
+exports[`τα πρότυπα email (el) > καταχώρηση πιστωτικού χωρίς λήξη 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Νέο πιστωτικό Π-12</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Μαρία,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Το πιστωτικό Π-12 καταχωρήθηκε. Το PDF επισυνάπτεται σε αυτό το μήνυμα.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Ημερομηνία έκδοσης: 25/06/2026</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Ποσό: 124,00 €</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/finance/invoices" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες τα Οικονομικά</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Νέο πιστωτικό Π-12",
+  "text": "Νέο πιστωτικό Π-12
+
+Γεια σου Μαρία,
+Το πιστωτικό Π-12 καταχωρήθηκε. Το PDF επισυνάπτεται σε αυτό το μήνυμα.
+Ημερομηνία έκδοσης: 25/06/2026
+Ποσό: 124,00 €
+
+Δες τα Οικονομικά: https://dmsfinal-app.vercel.app/app/finance/invoices
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`τα πρότυπα email (el) > καταχώρηση τιμολογίου με λήξη 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Νέο τιμολόγιο 87</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Μαρία,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Το τιμολόγιο 87 καταχωρήθηκε. Το PDF επισυνάπτεται σε αυτό το μήνυμα.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Ημερομηνία έκδοσης: 03/06/2026</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Ποσό: 1.612,00 €</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Λήξη: 23/06/2026</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/finance/invoices" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες τα Οικονομικά</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Νέο τιμολόγιο 87",
+  "text": "Νέο τιμολόγιο 87
+
+Γεια σου Μαρία,
+Το τιμολόγιο 87 καταχωρήθηκε. Το PDF επισυνάπτεται σε αυτό το μήνυμα.
+Ημερομηνία έκδοσης: 03/06/2026
+Ποσό: 1.612,00 €
+Λήξη: 23/06/2026
+
+Δες τα Οικονομικά: https://dmsfinal-app.vercel.app/app/finance/invoices
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
 exports[`τα πρότυπα email (el) > κωδικός υπογραφής 1`] = `
 {
   "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Κωδικός υπογραφής: Σποτ</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Ο κωδικός υπογραφής σου είναι: 123456. Ισχύει 10 λεπτά.</p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
@@ -340,6 +375,41 @@ exports[`τα πρότυπα email (en) > δοκιμαστικό email 1`] = `
   "text": "Test email
 
 If you can read this, sending email from DMS works.
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > καταχώρηση πιστωτικού χωρίς λήξη 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">New credit note Π-12</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Μαρία,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">The credit note Π-12 has been recorded. The PDF is attached to this message.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Issue date: 25/06/2026</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Amount: €124.00</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/finance/invoices" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View your finances</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "New credit note Π-12",
+  "text": "New credit note Π-12
+
+Hello Μαρία,
+The credit note Π-12 has been recorded. The PDF is attached to this message.
+Issue date: 25/06/2026
+Amount: €124.00
+
+View your finances: https://dmsfinal-app.vercel.app/app/finance/invoices
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > καταχώρηση τιμολογίου με λήξη 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">New invoice 87</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Μαρία,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">The invoice 87 has been recorded. The PDF is attached to this message.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Issue date: 03/06/2026</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Amount: €1,612.00</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Due date: 23/06/2026</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/finance/invoices" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View your finances</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "New invoice 87",
+  "text": "New invoice 87
+
+Hello Μαρία,
+The invoice 87 has been recorded. The PDF is attached to this message.
+Issue date: 03/06/2026
+Amount: €1,612.00
+Due date: 23/06/2026
+
+View your finances: https://dmsfinal-app.vercel.app/app/finance/invoices
 
 Devre Media · This message was sent by the company system.",
 }
