@@ -68,12 +68,17 @@ function TaskCheckbox({
 }) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<FormState>(INITIAL_FORM_STATE);
+  // Η τιμή που ζητήθηκε φαίνεται αμέσως· μετά την απάντηση της βάσης ξαναμπαίνει αυτή της Εργασίας.
+  const [pendingDone, setPendingDone] = useState<boolean | null>(null);
+  const isDone = pendingDone ?? task.done;
   const handleChange = (done: boolean) => {
     const form = new FormData();
     form.set("taskId", task.id);
     form.set("done", String(done));
+    setPendingDone(done);
     startTransition(async () => {
       setResult(await toggleProductionTask(INITIAL_FORM_STATE, form));
+      setPendingDone(null);
     });
   };
   return (
@@ -82,14 +87,12 @@ function TaskCheckbox({
         <input
           type="checkbox"
           className="size-4"
-          checked={task.done}
+          checked={isDone}
           disabled={disabled || isPending}
           onChange={(event) => handleChange(event.currentTarget.checked)}
         />
         <span
-          className={
-            task.done ? "text-muted-foreground line-through" : undefined
-          }
+          className={isDone ? "text-muted-foreground line-through" : undefined}
         >
           {task.title}
         </span>

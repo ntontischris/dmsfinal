@@ -219,8 +219,8 @@ select public.t_as('e1');
 select public.deliverable_cancel(current_setting('t.d2')::uuid, 'Αλλάζει το concept', 'returned');
 select is((select state from public.productions where id = current_setting('t.pa1')::uuid), 'open',
   'Η ακύρωση Παραδοτέου δεν παραδίδει την Παραγωγή');
-insert into public.filmings (production_id, client_id, period_id, starts_at, hours, origin, state)
-select p.id, p.client_id, p.period_id, now() + interval '2 days', 2, 'team', 'pending'
+insert into public.filmings (production_id, client_id, period_id, kind_id, starts_at, hours, origin, state)
+select p.id, p.client_id, p.period_id, current_setting('t.reel')::uuid, now() + interval '2 days', 2, 'team', 'pending'
   from public.productions p where p.id = current_setting('t.pa1')::uuid;
 select set_config('t.d3', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid,
   'Reel τελικό', null, null, null, null)::text, true);
