@@ -4,6 +4,7 @@ import type { Locale } from "../locale";
 
 import { invitationMessage, authLinkMessage } from "./auth-messages";
 import { proposalLinkMessage, signedCopyMessage, signingCodeMessage } from "./agreement-messages";
+import { crewDeclinedMessage, sheetIssuedMessage } from "./sheet-messages";
 import {
   clientAddedMessage,
   decisionMessage,
@@ -75,6 +76,38 @@ describe.each(LOCALES)("τα πρότυπα email (%s)", (locale) => {
 
   it.each(DECISION_CASES)("απόφαση $name", ({ input }) => {
     expect(decisionMessage({ ...decisionBase(locale), ...input })).toMatchSnapshot();
+  });
+
+  it("έκδοση Δελτίου γυρίσματος", () => {
+    expect(
+      sheetIssuedMessage({
+        locale,
+        origin: ORIGIN,
+        name: "Μαρία",
+        filmingId: "f-42",
+        version: 2,
+        startsAt: "2026-10-12T11:30:00Z",
+        hours: 3,
+        location: "Στούντιο Α",
+        production: "Σποτ",
+        change: "Άλλαξε η λήψη",
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it("«δεν μπορώ» του Συνεργείου", () => {
+    expect(
+      crewDeclinedMessage({
+        locale,
+        origin: ORIGIN,
+        name: "Νίκος",
+        filmingId: "f-42",
+        member: "Κώστας",
+        reason: "Αρρώστησα",
+        startsAt: "2026-10-12T11:30:00Z",
+        production: "Σποτ",
+      }),
+    ).toMatchSnapshot();
   });
 
   it("αντίγραφο υπογεγραμμένης", () => {
