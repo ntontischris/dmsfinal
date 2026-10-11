@@ -56,18 +56,19 @@ export async function signAsVisitor(anon: Page, team: Page) {
 }
 
 // «Υπογράφηκε εκτός συστήματος» με Έναρξη τον προηγούμενο μήνα: ζητά τι έχει ήδη καταναλωθεί και αν τιμολογήθηκε ο μήνας.
-export async function signOutsideSystem(owner: Page, P: string) {
+export async function signOutsideSystem(owner: Page, P: string, options: { invoiced?: boolean } = {}) {
   await button(owner, "Υπογράφηκε εκτός συστήματος").click();
   const actions = panel(owner, "Ενέργειες");
   await control(actions, "Αρχείο υπογραφής").fill(`symfonia-${P}.pdf`);
   await control(actions, "Ποιος υπέγραψε").fill(SIGNATORY);
   await control(actions, "Έναρξη").fill(previousMonthStart());
   await actions.getByLabel(/Έχουν ήδη καταναλωθεί · reels/).fill("3");
-  await actions
-    .getByRole("checkbox", {
-      name: "Ο τρέχων μήνας τιμολογήθηκε ήδη εκτός συστήματος",
-    })
-    .check();
+  if (options.invoiced ?? true)
+    await actions
+      .getByRole("checkbox", {
+        name: "Ο τρέχων μήνας τιμολογήθηκε ήδη εκτός συστήματος",
+      })
+      .check();
   await button(actions, "Καταχώριση υπογραφής").click();
   await expect(
     owner.getByText("Καταχωρίστηκε η υπογραφή εκτός συστήματος"),

@@ -86,7 +86,9 @@ select public.agreement_sign_outside(current_setting('t.a')::uuid, current_setti
   (date_trunc('month', current_setting('t.today')::date) - interval '1 month' + interval '14 days')::date, 'contract-a.pdf');
 
 select is(public.billables_generate(), 1, 'Υπογραφή καταγράφηκε τώρα με έναρξη τον προηγούμενο μήνα: χρεώνεται μόνο ο τρέχων μήνας');
+set session_replication_role = replica;
 update public.agreement_signatures set recorded_at = recorded_at - interval '1 month' where agreement_id = current_setting('t.a')::uuid;
+reset session_replication_role;
 select is(public.billables_generate(), 1, 'Με υπογραφή τον προηγούμενο μήνα χρεώνεται και η 1η Περίοδος (σύνολο 2)');
 select is(public.billables_generate(), 0, 'Η δεύτερη κλήση δεν γράφει τίποτα');
 select is(
