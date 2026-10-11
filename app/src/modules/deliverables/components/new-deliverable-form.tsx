@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Field, Input, Select } from "@/components/ui/field";
+import type { FormState } from "@/lib/form-state";
 
 import { createDeliverable } from "../actions-deliverable";
 import type { DeliverableCandidates, KindCandidate } from "../types";
@@ -11,21 +12,40 @@ import { ActionForm } from "./action-form";
 import { AssigneeSelect, FilmingSelect } from "./candidate-fields";
 import { TextArea } from "./form-fields";
 
+// Δημιουργία από Αίτημα Μηνύματος (Μ11): άλλη ενέργεια (δική του module) και το Αίτημα που κλείνει μαζί με τη δημιουργία.
+export interface FromRequest {
+  messageId: string;
+  action: (state: FormState, form: FormData) => Promise<FormState>;
+  submitLabel: string;
+}
+
 interface NewDeliverableFormProps {
   productionId: string;
   defaultTitle: string;
   isInternal: boolean;
   candidates: DeliverableCandidates;
+  fromRequest?: FromRequest;
 }
 
 // Νέο Παραδοτέο: είδος με υπόλοιπο, τίτλος, υπεύθυνος, Γύρισμα. Χωρίς υπόλοιπο, ζητά «χωρίς χρέωση» με λόγο ή «να αποφασιστεί».
-export function NewDeliverableForm({ productionId, defaultTitle, isInternal, candidates }: NewDeliverableFormProps) {
+export function NewDeliverableForm({
+  productionId,
+  defaultTitle,
+  isInternal,
+  candidates,
+  fromRequest,
+}: NewDeliverableFormProps) {
   const [kindId, setKindId] = useState(candidates.kinds[0]?.id ?? "");
   const kind = candidates.kinds.find((item) => item.id === kindId);
   const needsCharge = !isInternal && (kind?.balance ?? 0) <= 0;
   return (
-    <ActionForm action={createDeliverable} submitLabel="Δημιουργία" pendingLabel="Δημιουργία…">
+    <ActionForm
+      action={fromRequest?.action ?? createDeliverable}
+      submitLabel={fromRequest?.submitLabel ?? "Δημιουργία"}
+      pendingLabel="Δημιουργία…"
+    >
       <input type="hidden" name="productionId" value={productionId} />
+      {fromRequest && <input type="hidden" name="id" value={fromRequest.messageId} />}
       <Field label="Είδος">
         <Select name="kindId" value={kindId} onChange={(event) => setKindId(event.target.value)}>
           {candidates.kinds.map((item) => (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -21,7 +22,17 @@ interface MessageItemProps {
   productions: readonly ThreadProduction[];
   canClearTag: boolean;
   isTeamViewer: boolean;
+  // Το Αίτημα του Μηνύματος (J2/J3), όταν υπάρχει· φτιάχνεται από την οθόνη που ξέρει ποιος το βλέπει.
+  requestBox?: ReactNode;
 }
+
+// Γράφει ο θεατής στην ετικέτα του Μηνύματος (ίδιος κανόνας με το message_can_write): χωρίς ετικέτα θέλει «γενικά».
+const canWriteTag = (
+  productionId: string | null,
+  productions: readonly ThreadProduction[],
+  canWriteUntagged: boolean,
+): boolean =>
+  productionId === null ? canWriteUntagged : productions.some((production) => production.id === productionId);
 
 // Ένα Μήνυμα της Συνομιλίας: αποστολέας, ώρα, ετικέτα, κείμενο, ενδείξεις και ενέργειες.
 export function MessageItem({
@@ -30,6 +41,7 @@ export function MessageItem({
   productions,
   canClearTag,
   isTeamViewer,
+  requestBox,
 }: MessageItemProps) {
   const isInternal = message.internal === true;
   const mentions = message.mentions ?? [];
@@ -77,6 +89,7 @@ export function MessageItem({
         <p className="m-0 whitespace-pre-wrap break-words">{message.body}</p>
       )}
       {!message.deleted && <AttachmentList attachments={message.attachments} />}
+      {requestBox}
       {mentions.length > 0 && (
         <p className="m-0 text-sm text-muted-foreground">
           {MESSAGE_MENTIONS}:{" "}
@@ -91,6 +104,12 @@ export function MessageItem({
         productions={productions}
         canClearTag={canClearTag}
         canTag={isTeamViewer}
+        canMark={
+          isTeamViewer &&
+          message.authorKind === "client" &&
+          message.request === null &&
+          canWriteTag(message.productionId, productions, canClearTag)
+        }
       />
     </article>
   );

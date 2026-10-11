@@ -19,6 +19,10 @@ export async function bookFilming(_: FormState, form: FormData): Promise<FormSta
   );
   if (!parsed.success) return firstIssue(parsed.error);
   const { agreementId, startsAt, hours, kindId, location, note, fromBlocked } = parsed.data;
+  const request = z.uuid().safeParse(form.get("requestMessageId"));
+  if (request.success) {
+    return bookFromRequest(request.data, { agreementId, startsAt, hours, kindId, location, note, fromBlocked });
+  }
   const outcome = await callRpc("filming_create", {
     p_agreement: agreementId,
     p_starts_at: startsAt,
@@ -30,6 +34,14 @@ export async function bookFilming(_: FormState, form: FormData): Promise<FormSta
   });
   if (!outcome.ok) return outcome.state;
   return redirectToFilming(outcome.data);
+}
+
+// Κλείσιμο Γυρίσματος από Αίτημα Μηνύματος (Μ11): το Γύρισμα δημιουργείται και το Αίτημα κλείνει σε μία συναλλαγή της βάσης.
+async function bookFromRequest(messageId: string, fields: Record<string, unknown>): Promise<FormState> {
+  const outcome = await callRpc("message_request_create_filming", { p_message: messageId, p: fields });
+  if (!outcome.ok) return outcome.state;
+  const created = z.object({ id: z.uuid() }).safeParse(outcome.data);
+  return redirectToFilming(created.success ? created.data.id : null);
 }
 
 // Κράτηση από τον Πελάτη (E5, c.book). Η βάση ελέγχει Ωράριο, Χωρητικότητα, Παροχή και Συμφωνία· αν η Συμφωνία θέλει έγκριση μένει «αναμένει».

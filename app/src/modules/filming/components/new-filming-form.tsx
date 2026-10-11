@@ -16,6 +16,7 @@ import {
 } from "../helpers";
 import { MEASURE_LABELS } from "../labels";
 import type { NewFilmingPrefill } from "../blocked-prefill";
+import type { FilmingFromRequest } from "../request-prefill";
 import type { BookingAgreement, BookingKind, NamedRef } from "../types";
 
 import { ActionForm } from "./action-form";
@@ -28,6 +29,7 @@ export interface NewFilmingProps {
   productions: readonly NamedRef[];
   today: string;
   prefill?: NewFilmingPrefill | null;
+  fromRequest?: FilmingFromRequest | null;
 }
 
 type Mode = "client" | "internal";
@@ -39,11 +41,17 @@ export function NewFilmingForm({
   productions,
   today,
   prefill,
+  fromRequest,
 }: NewFilmingProps) {
   const [mode, setMode] = useState<Mode>("client");
   return (
     <div className="grid gap-4">
-      {productions.length > 0 && (
+      {fromRequest && (
+        <MutedNote>
+          Το Γύρισμα κλείνεται από ένα Αίτημα Μηνύματος: με την επιτυχία το Αίτημα κλείνει μόνο του.
+        </MutedNote>
+      )}
+      {productions.length > 0 && !fromRequest && (
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -63,8 +71,8 @@ export function NewFilmingForm({
           </Button>
         </div>
       )}
-      {mode === "client" ? (
-        <ClientBookingForm options={options} today={today} prefill={prefill} />
+      {mode === "client" || fromRequest ? (
+        <ClientBookingForm options={options} today={today} prefill={prefill} fromRequest={fromRequest} />
       ) : (
         <InternalBookingForm productions={productions} today={today} prefill={prefill} />
       )}
@@ -76,13 +84,16 @@ function ClientBookingForm({
   options,
   today,
   prefill,
+  fromRequest,
 }: {
   options: readonly BookingAgreement[];
   today: string;
   prefill?: NewFilmingPrefill | null;
+  fromRequest?: FilmingFromRequest | null;
 }) {
   const clients = uniqueClients(options);
-  const [clientId, setClientId] = useState(clients[0]?.id ?? "");
+  const requested = clients.find((client) => client.id === fromRequest?.clientId);
+  const [clientId, setClientId] = useState(requested?.id ?? clients[0]?.id ?? "");
   const agreements = options.filter(
     (agreement) => agreement.client.id === clientId,
   );
@@ -126,6 +137,7 @@ function ClientBookingForm({
       submitLabel="Κλείσιμο Γυρίσματος"
       variant="primary"
     >
+      {fromRequest && <input type="hidden" name="requestMessageId" value={fromRequest.messageId} />}
       <Field label="Πελάτης">
         <Select
           value={clientId}

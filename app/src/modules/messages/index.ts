@@ -22,7 +22,8 @@ export {
   THREAD_EYEBROW,
   THREAD_NO_ACCESS_TEXT,
 } from "./labels";
-export { ClientScreen } from "./components/client-screen";
+export { ClientScreen, parseClientTab, type ClientTab } from "./components/client-screen";
 export { getAttachmentLink } from "./queries";
 export { InboxScreen } from "./components/inbox-screen";
+export { parseRequestView } from "./request-helpers";
 export { ThreadScreen } from "./components/thread-screen";

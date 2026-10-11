@@ -6,6 +6,8 @@ export interface MessagesCaps {
   canChat: boolean;
   isClient: boolean;
   canOpenClient: boolean;
+  // «Μεταβιβάζει Υπεύθυνο»: βλέπει το «χωρίς υπεύθυνο» και αλλάζει υπεύθυνο Αιτημάτων.
+  canTransfer: boolean;
 }
 
 const isTeam = (viewer: Viewer): boolean =>
@@ -15,6 +17,7 @@ export const messagesCaps = (viewer: Viewer): MessagesCaps => ({
   canChat: isTeam(viewer) && can(viewer, "messages.chat"),
   isClient: isClientViewer(viewer),
   canOpenClient: isTeam(viewer) && can(viewer, "clients.view"),
+  canTransfer: isTeam(viewer) && can(viewer, "clients.transfer"),
 });
 
 // Ποια όψη των Μηνυμάτων βλέπει ο θεατής (όπως στα Οικονομικά): ομάδα (Εισερχόμενα), Χρήστης πελάτη με «Βλέπει Συνομιλία», ή καμία.

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
 
 import { deleteMessage, editMessage, setMessageTag } from "../actions";
+import { markRequest } from "../actions-requests";
 import {
   ACTION_CANCEL,
   ACTION_DELETE,
@@ -15,16 +16,20 @@ import {
   DELETE_WARNING,
   NO_TAG,
 } from "../labels";
+import { MARK_KIND_LABEL, MARK_REQUEST, MARK_SAVE, REQUEST_KIND_LABELS } from "../request-labels";
+import { REQUEST_KINDS } from "../view-schema";
 import type { ThreadMessage, ThreadProduction } from "../view-schema";
 import { ActionForm } from "./action-form";
 
-type Mode = "tag" | "edit" | "delete" | null;
+type Mode = "tag" | "edit" | "delete" | "request" | null;
 
 interface MessageActionsProps {
   message: ThreadMessage;
   productions: readonly ThreadProduction[];
   canClearTag: boolean;
   canTag: boolean;
+  // Μήνυμα πελάτη που δεν είναι ακόμα Αίτημα: η ομάδα μπορεί να το σημειώσει (Μ9).
+  canMark: boolean;
 }
 
 // Οι ενέργειες ενός Μηνύματος: Αλλαγή ετικέτας (ομάδα), Διόρθωση και Διαγραφή (ο αποστολέας). Η βάση ξαναελέγχει.
@@ -33,17 +38,23 @@ export function MessageActions({
   productions,
   canClearTag,
   canTag,
+  canMark,
 }: MessageActionsProps) {
   const [mode, setMode] = useState<Mode>(null);
   const close = useCallback(() => setMode(null), []);
   const toggle = (next: Exclude<Mode, null>) =>
     setMode(mode === next ? null : next);
   const showTag = canTag && (canClearTag || productions.length > 0);
-  if (message.deleted || (!showTag && !message.canEdit && !message.canDelete))
+  if (message.deleted || (!showTag && !canMark && !message.canEdit && !message.canDelete))
     return null;
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap gap-2">
+        {canMark && (
+          <Button size="sm" onClick={() => toggle("request")}>
+            {MARK_REQUEST}
+          </Button>
+        )}
         {showTag && (
           <Button size="sm" onClick={() => toggle("tag")}>
             {ACTION_TAG}
@@ -60,6 +71,21 @@ export function MessageActions({
           </Button>
         )}
       </div>
+      {mode === "request" && (
+        <ActionForm action={markRequest} submitLabel={MARK_SAVE} onSuccess={close}>
+          <input type="hidden" name="id" value={message.id} />
+          <Select name="kind" aria-label={MARK_KIND_LABEL} defaultValue="">
+            <option value="" disabled>
+              {MARK_KIND_LABEL}…
+            </option>
+            {REQUEST_KINDS.map((kind) => (
+              <option key={kind} value={kind}>
+                {REQUEST_KIND_LABELS[kind]}
+              </option>
+            ))}
+          </Select>
+        </ActionForm>
+      )}
       {mode === "tag" && (
         <ActionForm
           action={setMessageTag}

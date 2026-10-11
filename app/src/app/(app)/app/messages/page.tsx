@@ -9,14 +9,17 @@ import {
   INBOX_NO_ACCESS_TEXT,
   INBOX_TITLE,
   InboxScreen,
+  messagesCaps,
   messagesViewOf,
+  parseClientTab,
+  parseRequestView,
   parseTab,
 } from "@/modules/messages";
 
 export const metadata = { title: INBOX_TITLE };
 
 interface MessagesPageProps {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; view?: string }>;
 }
 
 // J1 για την ομάδα (Εισερχόμενα: «Συνομιλίες» και «Με ανέφεραν»), J3 για τον Χρήστη πελάτη με «Βλέπει Συνομιλία»,
@@ -30,7 +33,7 @@ export default async function MessagesPage({
     return (
       <>
         <ScreenHeader eyebrow={CLIENT_EYEBROW} title={CLIENT_TITLE} />
-        <ClientScreen />
+        <ClientScreen tab={parseClientTab(params.tab)} />
       </>
     );
   }
@@ -38,7 +41,11 @@ export default async function MessagesPage({
     <>
       <ScreenHeader eyebrow={INBOX_EYEBROW} title={INBOX_TITLE} />
       {view === "team" ? (
-        <InboxScreen tab={parseTab(params.tab)} />
+        <InboxScreen
+          tab={parseTab(params.tab)}
+          view={parseRequestView(params.view)}
+          canTransfer={messagesCaps(viewer).canTransfer}
+        />
       ) : (
         <AccessNotice viewer={viewer}>
           <p className="m-0">

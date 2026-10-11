@@ -4,6 +4,7 @@ import type { FormState } from "@/lib/form-state";
 
 import { callRpc, finishWith, firstIssue, pick } from "./action-support";
 import { removeFiles } from "./message-storage";
+import { CLIENT_REQUEST_SENT } from "./request-labels";
 import { deleteSchema, deletedSchema, editSchema, sendSchema, tagSchema } from "./schemas";
 
 // Μηνύματα (J2): κάθε ενέργεια είναι ένα RPC της βάσης. Η βάση ελέγχει Δικαίωμα, ορατότητα και παράθυρο διόρθωσης.
@@ -19,7 +20,7 @@ const removedPathsOf = (data: unknown): string[] => {
 };
 
 export async function sendMessage(_: FormState, form: FormData): Promise<FormState> {
-  const fields = pick(form, ["clientId", "productionId", "body"]);
+  const fields = pick(form, ["clientId", "productionId", "body", "requestKind"]);
   const parsed = sendSchema.safeParse({
     ...fields,
     internal: form.get("internal") === "on",
@@ -36,9 +37,10 @@ export async function sendMessage(_: FormState, form: FormData): Promise<FormSta
       internal: value.internal,
       mentions: value.mentions,
       attachments: value.attachments,
+      request: value.requestKind ? { kind: value.requestKind } : null,
     },
   });
-  return finishWith(outcome, SENT);
+  return finishWith(outcome, value.requestKind ? CLIENT_REQUEST_SENT : SENT);
 }
 
 export async function editMessage(_: FormState, form: FormData): Promise<FormState> {

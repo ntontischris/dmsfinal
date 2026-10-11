@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { ATTACHMENT_MAX_FILES, ERROR_TOO_MANY } from "./attachment-rules";
+import { REQUEST_KINDS } from "./view-schema";
 
 // Φόρμες των Μηνυμάτων. Τα όρια ταυτίζονται με της βάσης (1..4.000 χαρακτήρες, σύνδεσμοι μόνο https).
 
@@ -17,8 +18,14 @@ const bodyTextSchema = z
 
 export const bodySchema = bodyTextSchema.min(1, "Γράψε το Μήνυμα.");
 
-const idSchema = z.uuid("Άκυρο στοιχείο.");
-const optionalIdSchema = z.union([z.literal("").transform(() => null), idSchema]);
+export const idSchema = z.uuid("Άκυρο στοιχείο.");
+export const optionalIdSchema = z.union([z.literal("").transform(() => null), idSchema]);
+
+// Το είδος Αιτήματος που δηλώνει ο πελάτης τη στιγμή που γράφει· κενό = απλό Μήνυμα. Η «αλλαγή μετά την έγκριση» δεν δηλώνεται εδώ.
+const requestKindSchema = z.union([
+  z.literal("").transform(() => null),
+  z.enum(REQUEST_KINDS, "Διάλεξε είδος Αιτήματος."),
+]);
 
 // Η διαδρομή που έδωσε η βάση: <πελάτης>/<uuid>.<επέκταση>.
 const ATTACHMENT_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.[a-z]{3,4}$/;
@@ -33,6 +40,7 @@ export const sendSchema = z
     internal: z.boolean(),
     mentions: z.array(idSchema),
     attachments: z.array(attachmentPathSchema).max(ATTACHMENT_MAX_FILES, ERROR_TOO_MANY),
+    requestKind: requestKindSchema.default(null),
   })
   .refine((value) => value.internal || value.mentions.length === 0, {
     message: "Οι αναφορές επιτρέπονται μόνο σε Εσωτερικά Μηνύματα.",
