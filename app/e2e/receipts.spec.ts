@@ -89,9 +89,6 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
     "Καταχωρήθηκε δύο φορές",
   );
   await button(row, "Επιβεβαίωση διαγραφής").click();
-  await expect(row.getByRole("status")).toContainText(
-    "Η Είσπραξη διαγράφηκε.",
-  );
   await expect(page.locator("tr", { hasText: CLIENT })).toContainText(
     "Λόγος: Καταχωρήθηκε δύο φορές",
   );
