@@ -9,7 +9,17 @@ import {
   deliverableReminderFor,
   productionDeliveredFor,
 } from "./deliver-completion";
-import { INVOICE_KIND, invoiceMessageFor, type InvoiceBody } from "./deliver-invoice";
+import {
+  INVOICE_KIND,
+  invoiceMessageFor,
+  type InvoiceBody,
+} from "./deliver-invoice";
+import {
+  DIGEST_KIND,
+  REQUEST_CLOSED_KIND,
+  digestMessageFor,
+  requestClosedFor,
+} from "./deliver-messages";
 import { OVERDUE_KIND, overdueMessageFor } from "./deliver-overdue";
 import { isSheetKind, sheetMessageFor } from "./deliver-sheet";
 import { toLocale, type Locale } from "./locale";
@@ -45,6 +55,8 @@ export const outboxRowSchema = z.object({
     "deliverable_reminder",
     "invoice_registered",
     "invoice_overdue",
+    "message_digest",
+    "request_closed",
   ]),
   to_name: z.string(),
   to_email: z.string(),
@@ -198,6 +210,8 @@ async function messageFor(
     return deliverableReminderFor(row, origin);
   if (row.kind === INVOICE_KIND) return invoiceMessageFor(admin, row, origin);
   if (row.kind === OVERDUE_KIND) return overdueMessageFor(row, origin);
+  if (row.kind === DIGEST_KIND) return digestMessageFor(row, origin);
+  if (row.kind === REQUEST_CLOSED_KIND) return requestClosedFor(row, origin);
   return clientAddedMessageFor(admin, row, origin);
 }
 
