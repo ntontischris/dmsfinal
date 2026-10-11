@@ -20,8 +20,18 @@ export const NAV: readonly NavSection[] = [
     title: "Κοινά",
     items: [
       { code: "A1", label: "Σήμερα", href: "/app" },
-      { code: "A5", label: "Ημερολόγιο", href: "/app/calendar", requires: ["team", "client"] },
-      { code: "A7", label: "Διαγραφές από το Google", href: "/app/calendar/google-deletions", requires: "calendar.google" },
+      {
+        code: "A5",
+        label: "Ημερολόγιο",
+        href: "/app/calendar",
+        requires: ["team", "client"],
+      },
+      {
+        code: "A7",
+        label: "Διαγραφές από το Google",
+        href: "/app/calendar/google-deletions",
+        requires: "calendar.google",
+      },
     ],
   },
   {
@@ -91,6 +101,12 @@ export const NAV: readonly NavSection[] = [
         requires: ["productions.manage", "c.productions"],
       },
       {
+        code: "H1",
+        label: "Παραδοτέα",
+        href: "/app/deliverables",
+        requires: ["deliverables.work", "deliverables.review"],
+      },
+      {
         code: "G3",
         label: "Κόστος και ώρες",
         href: "/app/productions/costs",
@@ -101,11 +117,31 @@ export const NAV: readonly NavSection[] = [
   {
     title: "Γυρίσματα",
     items: [
-      { code: "E1", label: "Γυρίσματα", href: "/app/filming", requires: ["filming.view", "c.book"] },
+      {
+        code: "E1",
+        label: "Γυρίσματα",
+        href: "/app/filming",
+        requires: ["filming.view", "c.book"],
+      },
       { code: "E5", label: "Κράτηση", href: "/app/book", requires: "c.book" },
-      { code: "E2", label: "Ουρά έγκρισης", href: "/app/filming/queue", requires: "filming.approve" },
-      { code: "E6", label: "Τα Γυρίσματά μου", href: "/app/filming/mine", requires: "filming.view" },
-      { code: "E7", label: "Πρότυπα Συνεργείου", href: "/app/filming/crew-templates", requires: "filming.crew" },
+      {
+        code: "E2",
+        label: "Ουρά έγκρισης",
+        href: "/app/filming/queue",
+        requires: "filming.approve",
+      },
+      {
+        code: "E6",
+        label: "Τα Γυρίσματά μου",
+        href: "/app/filming/mine",
+        requires: "filming.view",
+      },
+      {
+        code: "E7",
+        label: "Πρότυπα Συνεργείου",
+        href: "/app/filming/crew-templates",
+        requires: "filming.crew",
+      },
     ],
   },
   {
@@ -145,7 +181,12 @@ export const NAV: readonly NavSection[] = [
   {
     title: "Ο Πελάτης μου",
     items: [
-      { code: "N3", label: "Συνάδελφοι", href: "/app/colleagues", requires: "c.colleagues" },
+      {
+        code: "N3",
+        label: "Συνάδελφοι",
+        href: "/app/colleagues",
+        requires: "c.colleagues",
+      },
     ],
   },
   {
@@ -196,8 +237,9 @@ export const NAV: readonly NavSection[] = [
 ];
 
 // Μόνο οι οθόνες που επιτρέπονται, και μόνο οι ενότητες που έχουν κάτι.
-const requirementsOf = (requires: string | readonly string[]): readonly string[] =>
-  typeof requires === "string" ? [requires] : requires;
+const requirementsOf = (
+  requires: string | readonly string[],
+): readonly string[] => (typeof requires === "string" ? [requires] : requires);
 
 export const visibleNav = (
   allows: (requirement: string) => boolean,
@@ -205,8 +247,7 @@ export const visibleNav = (
   NAV.map((section) => ({
     ...section,
     items: section.items.filter(
-      (item) =>
-        !item.requires || requirementsOf(item.requires).some(allows),
+      (item) => !item.requires || requirementsOf(item.requires).some(allows),
     ),
   })).filter((section) => section.items.length > 0);
 

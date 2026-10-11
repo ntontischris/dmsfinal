@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { deliverableCardsSchema } from "@/modules/deliverables";
+
 import {
   PERIOD_STATES,
   PRODUCTION_STATES,
@@ -21,7 +23,12 @@ const cardSchema = z.object({
   title: z.string(),
   client: z.object({ id: z.string(), name: z.string() }).nullable(),
   period: z
-    .object({ n: z.number(), starts: z.string(), ends: z.string(), state: periodState })
+    .object({
+      n: z.number(),
+      starts: z.string(),
+      ends: z.string(),
+      state: periodState,
+    })
     .nullable(),
   owner: z.object({ id: z.string().optional(), name: z.string() }).nullable(),
   state,
@@ -112,6 +119,7 @@ export const productionDetailSchema = cardSchema
     members: z.array(z.object({ userId: z.string(), name: z.string() })),
     history: z.array(historySchema),
     filmings: z.array(filmingSchema),
+    deliverables: deliverableCardsSchema,
     viewerCan: z.object({
       deliver: z.boolean(),
       reopen: z.boolean(),
@@ -120,21 +128,20 @@ export const productionDetailSchema = cardSchema
       members: z.boolean(),
     }),
   })
-  .transform(
-    (row): ProductionDetail => ({
-      ...toCard(row),
-      agreement: row.agreement,
-      balances: row.balances.map(toBalance),
-      deliveredAt: row.deliveredAt,
-      deliveredNote: row.deliveredNote,
-      cancelledAt: row.cancelledAt,
-      cancelledReason: row.cancelledReason,
-      members: row.members,
-      history: row.history.map(toHistory),
-      viewerCan: row.viewerCan,
-      filmings: row.filmings,
-    }),
-  );
+  .transform((row): ProductionDetail => ({
+    ...toCard(row),
+    agreement: row.agreement,
+    balances: row.balances.map(toBalance),
+    deliveredAt: row.deliveredAt,
+    deliveredNote: row.deliveredNote,
+    cancelledAt: row.cancelledAt,
+    cancelledReason: row.cancelledReason,
+    members: row.members,
+    history: row.history.map(toHistory),
+    viewerCan: row.viewerCan,
+    filmings: row.filmings,
+    deliverables: row.deliverables,
+  }));
 
 // Υποψήφιοι Υπεύθυνοι: id και όνομα των ενεργών Χρηστών με Δικαίωμα Παραγωγών.
 export const ownerCandidatesViewSchema = z.array(

@@ -6,6 +6,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { getViewer } from "@/modules/access";
 import { costsCaps } from "@/modules/costs";
 import {
+  ProductionDeliverables,
+  deliverablesCaps,
+  getDeliverableCandidates,
+} from "@/modules/deliverables";
+import {
   AgreementCard,
   HistoryPanel,
   MembersPanel,
@@ -43,26 +48,39 @@ export default async function ProductionPage({
   const production = await getProduction(parsed.data);
   if (!production.ok) return <LoadError />;
   if (production.data === null) return <Missing />;
+  const canWorkDeliverables = deliverablesCaps(viewer).canWork;
   return (
-    <ProductionPageContent production={production.data} showCosts={costsCaps(viewer).canView} />
+    <ProductionPageContent
+      production={production.data}
+      showCosts={costsCaps(viewer).canView}
+      canWorkDeliverables={canWorkDeliverables}
+    />
   );
 }
 
-// Οι λίστες υποψηφίων φορτώνουν μόνο όπου το Δικαίωμα τις θέλει (μεταβίβαση, Μέλη).
+// Οι λίστες υποψηφίων φορτώνουν μόνο όπου το Δικαίωμα τις θέλει (μεταβίβαση, Μέλη, Παραδοτέα).
 async function ProductionPageContent({
   production,
   showCosts,
+  canWorkDeliverables,
 }: {
   production: ProductionDetail;
   showCosts: boolean;
+  canWorkDeliverables: boolean;
 }) {
   const canTransfer = production.viewerCan.transfer;
   const canManage = production.viewerCan.members;
-  const [owners, members] = await Promise.all([
+  const [owners, members, deliverables] = await Promise.all([
     canTransfer ? listOwnerCandidates() : null,
     canManage ? listMemberCandidates() : null,
+    canWorkDeliverables ? getDeliverableCandidates(production.id) : null,
   ]);
-  if ((owners !== null && !owners.ok) || (members !== null && !members.ok)) return <LoadError />;
+  if (
+    (owners !== null && !owners.ok) ||
+    (members !== null && !members.ok) ||
+    (deliverables !== null && !deliverables.ok)
+  )
+    return <LoadError />;
 
   return (
     <>
@@ -85,6 +103,14 @@ async function ProductionPageContent({
           <MembersPanel production={production} candidates={members?.ok ? members.data : []} />
         )}
         <ProductionFilmings filmings={production.filmings} />
+        <ProductionDeliverables
+          productionId={production.id}
+          productionTitle={production.title}
+          client={production.client?.name ?? null}
+          isInternal={production.client === null}
+          cards={production.deliverables}
+          candidates={deliverables?.ok ? deliverables.data : null}
+        />
         {canManage && <HistoryPanel history={production.history} />}
       </div>
     </>
