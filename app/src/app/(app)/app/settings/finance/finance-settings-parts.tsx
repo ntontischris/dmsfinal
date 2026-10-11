@@ -23,8 +23,10 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
 // Όλα όσα διαβάζει η σελίδα, μαζί: αν κάτι δεν φορτώσει, δεν δείχνουμε μισές Ρυθμίσεις.
 export async function FinanceSettingsContent({
   canManage,
+  canManageMethods,
 }: {
   canManage: boolean;
+  canManageMethods: boolean;
 }) {
   const [months, hint, changes, methods] = await Promise.all([
     listCostMonths(),
@@ -33,7 +35,7 @@ export async function FinanceSettingsContent({
     listPaymentMethods(),
   ]);
   // Χωρίς γραμμή από το cost_hint ο θεατής δεν «Βλέπει κόστος»· εδώ η σελίδα έχει ήδη περάσει αυτόν τον έλεγχο.
-  if (!months.ok || !hint.ok || !hint.data || !methods.ok)
+  if (!months.ok || !hint.ok || !hint.data)
     return (
       <Notice kind="error" title="Δεν φόρτωσαν οι Ρυθμίσεις">
         <p className="m-0">Τίποτα δεν χάθηκε. Δοκίμασε ξανά σε λίγο.</p>
@@ -52,7 +54,8 @@ export async function FinanceSettingsContent({
         overrunPercent={hint.data.overrunPercent}
         canManage={canManage}
       />
-      <PaymentMethodsCard methods={methods.data} canManage={canManage} />
+      {/* Οι Τρόποι είσπραξης έχουν δικό τους Δικαίωμα· αν δεν φορτώσουν, μένει η υπόλοιπη σελίδα. */}
+      {methods.ok && <PaymentMethodsCard methods={methods.data} canManage={canManageMethods} />}
       <p className="m-0 text-sm text-muted-foreground">
         Έξοδα ανά κατηγορία και όριο Υπέρβασης κόστους έρχονται με τα modules Οικονομικά και Παραγωγές.
       </p>

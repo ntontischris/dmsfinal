@@ -170,7 +170,7 @@ as $$
 declare
   v_rows jsonb;
 begin
-  if not (authz.has('finance.view') or authz.has('finance.receipts')) then
+  if not (authz.has('finance.view') or authz.has('finance.receipts') or authz.has('settings.manage')) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   select coalesce(jsonb_agg(
@@ -183,7 +183,8 @@ begin
 end;
 $$;
 
--- Προσθήκη (p_id null) ή μετονομασία. Το ίδιο Δικαίωμα με τις υπόλοιπες αλλαγές της σελίδας Ρυθμίσεων › Οικονομικά.
+-- Προσθήκη (p_id null) ή μετονομασία. Οι Τρόποι είσπραξης ανήκουν σε όποιον «Διαχειρίζεται Ρυθμίσεις» (blueprint 07).
+-- Η μετονομασία αλλάζει την ετικέτα και στις παλιές Εισπράξεις (διαβάζεται ζωντανά): είναι το ίδιο μέσο πληρωμής.
 create function public.payment_method_save(p_id uuid, p_label text) returns uuid
 language plpgsql security definer set search_path = ''
 as $$
@@ -191,8 +192,7 @@ declare
   v_label text := btrim(coalesce(p_label, ''));
   v_id uuid;
 begin
-  perform authz.require('finance.cost');
-  perform authz.require('finance.costManage');
+  perform authz.require('settings.manage');
   if char_length(v_label) not between 1 and 60 then
     raise exception 'Γράψε ονομασία τρόπου από 1 έως 60 χαρακτήρες' using errcode = 'P0001';
   end if;
@@ -223,8 +223,7 @@ create function public.payment_method_retire(p_id uuid) returns void
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  perform authz.require('finance.cost');
-  perform authz.require('finance.costManage');
+  perform authz.require('settings.manage');
   update public.payment_methods m
      set retired_at = now(), updated_at = now(), updated_by = auth.uid()
    where m.id = p_id and m.retired_at is null;
@@ -240,8 +239,7 @@ as $$
 declare
   v_label text;
 begin
-  perform authz.require('finance.cost');
-  perform authz.require('finance.costManage');
+  perform authz.require('settings.manage');
   select m.label into v_label from public.payment_methods m where m.id = p_id and m.retired_at is not null;
   if not found then
     raise exception 'Ο τρόπος δεν βρέθηκε ή είναι ενεργός' using errcode = 'P0001';
@@ -300,6 +298,10 @@ begin
   if p_method is distinct from v_before.method_id then
     perform authz.require_active_method(p_method);
   end if;
+  if (p_received_on, p_amount, p_method, btrim(coalesce(p_note, '')))
+     is not distinct from (v_before.received_on, v_before.amount, v_before.method_id, v_before.note) then
+    raise exception 'Δεν άλλαξε τίποτα στην Είσπραξη' using errcode = 'P0001';
+  end if;
   update public.receipts r
      set received_on = p_received_on, amount = p_amount, method_id = p_method,
          note = btrim(coalesce(p_note, '')), updated_at = now(), updated_by = auth.uid()
@@ -341,7 +343,10 @@ declare
   v_rows jsonb;
 begin
   perform authz.require('finance.view');
-  perform authz.require('finance.amounts');
+  -- Λίστα όλων των Πελατών: θέλει «Βλέπει ποσά» με Εύρος «όλα».
+  if authz.scope('finance.amounts') is distinct from 'all' then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
   select coalesce(jsonb_agg(
            jsonb_build_object(
              'id', r.id,
@@ -377,16 +382,19 @@ as $$
 begin
   perform authz.require('finance.receipts');
   perform authz.require_client_exists(p_client);
-  perform authz.receipt_check_input(p_amount, current_date, '');
+  perform authz.receipt_check_input(p_amount, date '2000-01-01', '');
   return authz.receipt_allocation(p_client, p_amount);
 end;
 $$;
 
 -- ───────────── Ίχνος ─────────────
 
-create trigger payment_methods_audit after insert or update on public.payment_methods
+create trigger payment_methods_audit after insert on public.payment_methods
   for each row execute function authz.audit_row('id');
-create trigger receipts_audit after insert or update on public.receipts
+create trigger payment_methods_audit_update after update on public.payment_methods
+  for each row when (old.* is distinct from new.*) execute function authz.audit_row('id');
+-- Οι διορθώσεις και οι διαγραφές γράφουν δικό τους γεγονός με λόγο· το trigger κρατά μόνο τη δημιουργία.
+create trigger receipts_audit after insert on public.receipts
   for each row execute function authz.audit_row('id');
 
 -- Ολόκληρη η λίστα (default deny): ό,τι προστίθεται εδώ είναι ρητό.

@@ -21,6 +21,7 @@ export function ReceiptActions({ row, methods }: ReceiptActionsProps) {
           <ActionForm
             action={correctReceipt}
             submitLabel="Αποθήκευση διόρθωσης"
+            onlyWhenChanged
           >
             <input type="hidden" name="id" value={row.id} />
             <Field label="Ποσό (€, με ΦΠΑ)">

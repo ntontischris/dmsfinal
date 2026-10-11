@@ -27,6 +27,11 @@ describe("csvCell", () => {
     expect(csvCell("=SUM(A1)")).toBe("'=SUM(A1)");
     expect(csvCell("-10")).toBe("'-10");
   });
+
+  it("προστατεύει από tab και CR στην αρχή και βάζει εισαγωγικά σε CR", () => {
+    expect(csvCell("\tcmd")).toBe("'\tcmd");
+    expect(csvCell("α\rβ")).toBe('"α\rβ"');
+  });
 });
 
 describe("receiptsToCsv", () => {

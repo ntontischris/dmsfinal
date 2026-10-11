@@ -2,11 +2,11 @@
 -- αποσυρμένος Τρόπος, προεπισκόπηση χωρίς Τιμολόγια, Τρόποι (Δικαίωμα κόστους), κλειστοί πίνακες.
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σταθερές.
 begin;
-select plan(31);
+select plan(35);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης (γράφει) · a2 Λογιστής (μόνο ανάγνωση) · a3 Πωλήσεις (χωρίς Εισπράξεις)
--- a4 Διαχείριση (καταχωρεί Εισπράξεις, δεν αλλάζει Τρόπους) · a6 Πελάτης χωρίς ομάδα
+-- a4 Διαχείριση (καταχωρεί Εισπράξεις, αλλάζει Τρόπους ως «Διαχειρίζεται Ρυθμίσεις») · a6 Πελάτης χωρίς ομάδα
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'accountant@example.com'),
@@ -51,6 +51,10 @@ reset role;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a6","role":"authenticated"}', true);
 set local role authenticated;
 select throws_ok($$ select public.receipts_view() $$, '42501', null, 'Ο Πελάτης δεν βλέπει τις Εισπράξεις');
+select throws_ok(
+  $$ select public.receipt_register(current_setting('t.client')::uuid, date '2026-10-05', 100, current_setting('t.bank')::uuid, '') $$,
+  '42501', null, 'Ο Πελάτης δεν καταχωρεί Εισπράξεις'
+);
 reset role;
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a3","role":"authenticated"}', true);
@@ -66,10 +70,15 @@ select throws_ok(
   '42501', null, 'Ο Λογιστής δεν καταχωρεί Εισπράξεις'
 );
 select lives_ok($$ select public.receipts_view(current_setting('t.client')::uuid) $$, 'Ο Λογιστής διαβάζει τις Εισπράξεις');
+select throws_ok(
+  $$ select public.receipt_delete('00000000-0000-0000-0000-00000000dead', 'λόγος') $$,
+  '42501', null, 'Ο Λογιστής παίρνει 42501 και για ανύπαρκτη Είσπραξη (χωρίς oracle ύπαρξης)'
+);
 
 -- Ο κλειστός πίνακας δεν διαβάζεται από authenticated.
 set local role authenticated;
 select throws_ok($$ select * from public.receipts $$, '42501', null, 'Ο κλειστός πίνακας των Εισπράξεων δεν διαβάζεται');
+select throws_ok($$ select * from public.payment_methods $$, '42501', null, 'Ο κλειστός πίνακας των Τρόπων δεν διαβάζεται');
 reset role;
 
 -- ───────────── Καταχώρηση, λίστα και Τρόποι ─────────────
@@ -126,6 +135,10 @@ select lives_ok(
   $$ select public.receipt_correct(current_setting('t.r1')::uuid, date '2026-10-05', 320, current_setting('t.bank')::uuid, 'Προκαταβολή', 'Λάθος ποσό') $$,
   'Η διόρθωση με λόγο γίνεται'
 );
+select throws_ok(
+  $$ select public.receipt_correct(current_setting('t.r1')::uuid, date '2026-10-05', 320, current_setting('t.bank')::uuid, 'Προκαταβολή', 'Ξανά') $$,
+  'P0001', 'Δεν άλλαξε τίποτα στην Είσπραξη', 'Η διόρθωση χωρίς αλλαγή δεν γράφει τίποτα'
+);
 select is(
   (select (x->>'amount')::numeric from jsonb_array_elements(public.receipts_view(current_setting('t.client')::uuid)) x
     where x->>'id' = current_setting('t.r1')),
@@ -162,11 +175,12 @@ select is(
 );
 
 -- ───────────── Τρόποι: ποιος αλλάζει ─────────────
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a4","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.payment_method_save(null, 'Επιταγή') $$,
-  '42501', null, 'Η Διαχείριση δεν προσθέτει τρόπους (μόνο όσοι διαχειρίζονται κόστος)'
+  '42501', null, 'Ο Λογιστής δεν προσθέτει τρόπους (μόνο όσοι διαχειρίζονται Ρυθμίσεις)'
 );
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a4","role":"authenticated"}', true);
 select lives_ok($$ select public.payment_methods_view() $$, 'Η Διαχείριση βλέπει τους Τρόπους');
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);

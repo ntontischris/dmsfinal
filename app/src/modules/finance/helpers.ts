@@ -5,10 +5,10 @@ import type { ReceiptRow } from "./types";
 
 const CSV_HEADER = ["Ημερομηνία", "Πελάτης", "Ποσό", "Τρόπος", "Σημείωση", "Καταχώρησε", "Κατάσταση"];
 
-// Κελί CSV: εισαγωγικά όταν χρειάζεται, και προστασία από τύπους (=, +, -, @) στο Excel.
+// Κελί CSV: εισαγωγικά όταν χρειάζεται, και προστασία από τύπους (=, +, -, @, tab, CR) στο Excel (OWASP).
 export const csvCell = (value: string): string => {
-  const guarded = /^[=+\-@]/.test(value) ? `'${value}` : value;
-  return /[",\n;]/.test(guarded) ? `"${guarded.replace(/"/g, '""')}"` : guarded;
+  const guarded = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  return /[",;\r\n]/.test(guarded) ? `"${guarded.replace(/"/g, '""')}"` : guarded;
 };
 
 const rowCells = (row: ReceiptRow): string[] => [

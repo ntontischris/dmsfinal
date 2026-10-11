@@ -26,7 +26,15 @@ export function ReceiptForm({ clients, methods }: ReceiptFormProps) {
   const activeMethods = methods.filter((method) => !method.retired);
   return (
     <Panel label="Νέα Είσπραξη">
-      <ActionForm action={registerReceipt} submitLabel="Καταχώρηση Είσπραξης">
+      <ActionForm
+        action={registerReceipt}
+        submitLabel="Καταχώρηση Είσπραξης"
+        resetOnSuccess
+        onSuccess={() => {
+          setClientId("");
+          setAmount("");
+        }}
+      >
         <Field label="Πελάτης">
           <Select name="clientId" value={clientId} onChange={(event) => setClientId(event.target.value)}>
             <option value="">Διάλεξε Πελάτη</option>
