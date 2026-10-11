@@ -36,8 +36,9 @@ export default async function ProductionsPage({
 
   const parsed = listFilterSchema.safeParse(query);
   const filter = parsed.success ? parsed.data : DEFAULT_FILTER;
+  const internalOnly = caps.isClient ? false : filter.internal;
   const [productions, candidates] = await Promise.all([
-    listProductions({ state: tabState(filter.tab), internalOnly: filter.internal }),
+    listProductions({ state: tabState(filter.tab), internalOnly }),
     caps.canCreateInternal ? listOwnerCandidates() : null,
   ]);
   if (!productions.ok || (candidates !== null && !candidates.ok)) return <LoadError />;
@@ -52,8 +53,9 @@ export default async function ProductionsPage({
       <ProductionList
         productions={productions.data}
         tab={filter.tab}
-        internalOnly={filter.internal}
+        internalOnly={internalOnly}
         hoursCount={count}
+        showInternal={!caps.isClient}
       />
     </>
   );

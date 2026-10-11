@@ -25,6 +25,7 @@ import {
   type ProductionDetail,
 } from "@/modules/productions";
 
+import { ClientProductionScreen } from "../client-production-screen";
 import { LoadError, Missing, NoAccess } from "../productions-parts";
 
 export const metadata = { title: "Παραγωγή" };
@@ -48,6 +49,7 @@ export default async function ProductionPage({
   const production = await getProduction(parsed.data);
   if (!production.ok) return <LoadError />;
   if (production.data === null) return <Missing />;
+  if (caps.isClient) return <ClientProductionScreen production={production.data} />;
   const canWorkDeliverables = deliverablesCaps(viewer).canWork;
   return (
     <ProductionPageContent

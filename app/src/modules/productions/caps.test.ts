@@ -16,6 +16,7 @@ describe("productionsCaps", () => {
     expect(productionsCaps({ status: "anonymous" })).toEqual({
       canView: false,
       canCreateInternal: false,
+      isClient: false,
     });
   });
 
@@ -23,6 +24,7 @@ describe("productionsCaps", () => {
     expect(productionsCaps(viewerWith({ "productions.manage": "mine" }))).toEqual({
       canView: true,
       canCreateInternal: false,
+      isClient: false,
     });
   });
 
@@ -30,6 +32,7 @@ describe("productionsCaps", () => {
     expect(productionsCaps(viewerWith({ "productions.manage": "all" }))).toEqual({
       canView: true,
       canCreateInternal: true,
+      isClient: false,
     });
   });
 
@@ -37,6 +40,18 @@ describe("productionsCaps", () => {
     expect(productionsCaps(viewerWith({ "equipment.view": "all" }))).toEqual({
       canView: false,
       canCreateInternal: false,
+      isClient: false,
     });
+  });
+
+  it("should open the client view of the productions to a client user", () => {
+    const client: Viewer = {
+      status: "signed-in",
+      userId: "44444444-4444-4444-8444-444444444444",
+      email: "client@example.com",
+      team: null,
+      clientGrants: { "c.productions": "all" },
+    };
+    expect(productionsCaps(client)).toEqual({ canView: true, canCreateInternal: false, isClient: true });
   });
 });
