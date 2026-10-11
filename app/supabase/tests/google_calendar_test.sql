@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σχετικές με το «σήμερα» (Ώρα Ελλάδας).
 -- Ο worker τρέχει ως service_role· η εφαρμογή ως Χρήστης με Δικαίωμα ή χωρίς.
 begin;
-select plan(90);
+select plan(95);
 
 -- ───────────── Βοηθητικά ─────────────
 
@@ -221,6 +221,24 @@ select is((select count(*)::int from public.google_links where event_id = 'ev-sh
 delete from public.blocked_times where id = '00000000-0000-0000-0000-00000000b009';
 select is((select op from public.google_outbox where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-00000000b009' and done_at is null), 'delete', 'Διαγραφή του τελευταίου μέλους ζητά διαγραφή του γεγονότος στο Google');
 select is((select count(*)::int from public.google_links where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-00000000b009'), 1, 'Η αντιστοίχιση μένει ως την επιβεβαίωση του Google');
+
+-- Μετακίνηση από το Google σε Γύρισμα με Δελτίο και αυτόματη αποστολή: η βάση βγάζει έκδοση 2 χωρίς χρήστη
+-- (auth.uid() είναι null στον worker), και δεν σπάει.
+update public.filming_settings set sheet_sending = 'auto' where id;
+select public.t_filming('00000000-0000-0000-0000-00000000f00e', 19, '10:00', 'scheduled');
+insert into public.filming_crew (filming_id, user_id) values ('00000000-0000-0000-0000-00000000f00e', '00000000-0000-0000-0000-0000000000e3');
+select authz.sheet_issue('00000000-0000-0000-0000-00000000f00e', null);
+insert into public.google_links (entity, entity_id, event_id, etag) values ('filming', '00000000-0000-0000-0000-00000000f00e', 'ev-f12', 'etag-f12-1');
+select set_config('t.sheet_move', public.google_apply_change(public.t_event('ev-f12', 'etag-f12-2', public.t_at(19, '12:00'), public.t_at(19, '14:00'), 'confirmed', '{}', false))::text, true);
+select is(current_setting('t.sheet_move')::jsonb->>'action', 'move_applied', 'Μετακίνηση από το Google σε Γύρισμα με Δελτίο περνά χωρίς χρήστη');
+select is((select count(*)::int from public.filming_sheet_versions where filming_id = '00000000-0000-0000-0000-00000000f00e' and version = 2), 1, 'Η μετακίνηση βγάζει αυτόματα έκδοση 2 του Δελτίου');
+select ok((select issued_by is null from public.filming_sheet_versions where filming_id = '00000000-0000-0000-0000-00000000f00e' and version = 2), 'Η έκδοση της μετακίνησης από το Google δεν έχει εκδότη Χρήστη');
+
+-- Μετακίνηση που το DMS απορρίπτει με P0001 (Γύρισμα κλεισμένο: το filming_move δεν μετακινεί): επιστρέφει επαναφορά, χωρίς έκδοση.
+select set_config('t.reject', authz.google_apply_move((select x from public.filmings x where x.id = '00000000-0000-0000-0000-00000000f001'), public.t_at(20, '09:00'), 2)::text, true);
+select is(current_setting('t.reject')::jsonb->>'action', 'move_rejected', 'Μετακίνηση που το DMS απορρίπτει με P0001 επιστρέφει επαναφορά');
+select is((select count(*)::int from public.filming_sheet_versions where filming_id = '00000000-0000-0000-0000-00000000f001'), 0, 'Η απορριφθείσα μετακίνηση δεν βγάζει έκδοση Δελτίου');
+select set_config('dms.google_apply', '', true);
 
 -- Κλείδωμα του worker: ένας γύρος κάθε φορά.
 set local role service_role;
