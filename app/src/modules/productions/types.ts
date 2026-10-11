@@ -1,6 +1,8 @@
 // Τύποι του module «Παραγωγές» (G1, G2). Τα JSON της βάσης έρχονται σε snake_case· εδώ camelCase.
 // Κανένα ποσό ούτε κόστος: οι Παροχές μετριούνται σε πλήθος, το υπόλοιπο είναι αριθμός Παροχών.
 
+import type { DeliverableCard } from "@/modules/deliverables";
+
 export const PRODUCTION_STATES = ["open", "delivered", "cancelled"] as const;
 export type ProductionState = (typeof PRODUCTION_STATES)[number];
 
@@ -89,6 +91,7 @@ export interface ProductionDetail extends ProductionCard {
   history: ProductionHistoryEntry[];
   viewerCan: ProductionViewerCan;
   filmings: ProductionFilming[];
+  deliverables: DeliverableCard[]; // μόνο για την ομάδα· ο πελάτης παίρνει []
 }
 
 export interface HistoryLine {

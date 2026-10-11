@@ -5,6 +5,11 @@ import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer } from "@/modules/access";
 import {
+  ProductionDeliverables,
+  deliverablesCaps,
+  getDeliverableCandidates,
+} from "@/modules/deliverables";
+import {
   AgreementCard,
   HistoryPanel,
   MembersPanel,
@@ -42,35 +47,70 @@ export default async function ProductionPage({
   const production = await getProduction(parsed.data);
   if (!production.ok) return <LoadError />;
   if (production.data === null) return <Missing />;
-  return <ProductionPageContent production={production.data} />;
+  const canWorkDeliverables = deliverablesCaps(viewer).canWork;
+  return (
+    <ProductionPageContent
+      production={production.data}
+      canWorkDeliverables={canWorkDeliverables}
+    />
+  );
 }
 
-// Οι λίστες υποψηφίων φορτώνουν μόνο όπου το Δικαίωμα τις θέλει (μεταβίβαση, Μέλη).
-async function ProductionPageContent({ production }: { production: ProductionDetail }) {
+// Οι λίστες υποψηφίων φορτώνουν μόνο όπου το Δικαίωμα τις θέλει (μεταβίβαση, Μέλη, Παραδοτέα).
+async function ProductionPageContent({
+  production,
+  canWorkDeliverables,
+}: {
+  production: ProductionDetail;
+  canWorkDeliverables: boolean;
+}) {
   const canTransfer = production.viewerCan.transfer;
   const canManage = production.viewerCan.members;
-  const [owners, members] = await Promise.all([
+  const [owners, members, deliverables] = await Promise.all([
     canTransfer ? listOwnerCandidates() : null,
     canManage ? listMemberCandidates() : null,
+    canWorkDeliverables ? getDeliverableCandidates(production.id) : null,
   ]);
-  if ((owners !== null && !owners.ok) || (members !== null && !members.ok)) return <LoadError />;
+  if (
+    (owners !== null && !owners.ok) ||
+    (members !== null && !members.ok) ||
+    (deliverables !== null && !deliverables.ok)
+  )
+    return <LoadError />;
 
   return (
     <>
       <ScreenHeader eyebrow={EYEBROW} title={production.title}>
-        <Link href="/app/productions" className={buttonVariants({ variant: "ghost" })}>
+        <Link
+          href="/app/productions"
+          className={buttonVariants({ variant: "ghost" })}
+        >
           ← Παραγωγές
         </Link>
       </ScreenHeader>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <StatePanel production={production} />
-        <OwnerPanel production={production} candidates={owners?.ok ? owners.data : []} />
+        <OwnerPanel
+          production={production}
+          candidates={owners?.ok ? owners.data : []}
+        />
         <AgreementCard agreement={production.agreement} />
         <PeriodCard period={production.period} balances={production.balances} />
         {(canManage || production.members.length > 0) && (
-          <MembersPanel production={production} candidates={members?.ok ? members.data : []} />
+          <MembersPanel
+            production={production}
+            candidates={members?.ok ? members.data : []}
+          />
         )}
         <ProductionFilmings filmings={production.filmings} />
+        <ProductionDeliverables
+          productionId={production.id}
+          productionTitle={production.title}
+          client={production.client?.name ?? null}
+          isInternal={production.client === null}
+          cards={production.deliverables}
+          candidates={deliverables?.ok ? deliverables.data : null}
+        />
         {canManage && <HistoryPanel history={production.history} />}
       </div>
     </>

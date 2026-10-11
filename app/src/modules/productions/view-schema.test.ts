@@ -51,6 +51,7 @@ const detailJson = {
     },
   ],
   filmings: [],
+  deliverables: [],
   viewerCan: {
     deliver: true,
     reopen: false,
