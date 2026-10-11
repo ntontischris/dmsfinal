@@ -1,5 +1,11 @@
 import { createSupabase } from "@/lib/supabase/server";
 
+import {
+  parseInvoiceDetail,
+  parseVoidedInvoices,
+  type InvoiceDetail,
+  type VoidedItem,
+} from "./invoice-detail-schema";
 import { signedInvoicePdfUrl } from "./invoice-storage";
 import { read, type ReadResult } from "./read";
 import {
@@ -34,6 +40,30 @@ export async function getInvoiceContext(
     "getInvoiceContext",
     supabase.rpc("invoice_draft_context", { p_client: clientId }),
     parseInvoiceContext,
+  );
+}
+
+// Η σελίδα διόρθωσης (I3 με ?invoice=): στοιχεία, Ίχνος (όποιος το δικαιούται) και τι επιτρέπεται.
+export async function getInvoiceDetail(
+  invoiceId: string,
+): Promise<ReadResult<InvoiceDetail>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "getInvoiceDetail",
+    supabase.rpc("invoice_detail", { p_id: invoiceId }),
+    parseInvoiceDetail,
+  );
+}
+
+// Η κάρτα «Ακυρωμένες καταχωρίσεις» του I2.
+export async function getVoidedInvoices(): Promise<ReadResult<VoidedItem[]>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "getVoidedInvoices",
+    supabase.rpc("invoices_voided_view"),
+    parseVoidedInvoices,
   );
 }
 

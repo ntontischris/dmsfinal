@@ -44,7 +44,7 @@ select is(
   (select done from public.readiness() where item = 'company_details'), true,
   'Τα στοιχεία εταιρείας φεύγουν από τα «εκκρεμεί» μόλις συμπληρωθούν'
 );
-select is((select count(*)::int from public.readiness()), 11, 'Ο Έλεγχος ετοιμότητας έχει 11 γραμμές');
+select is((select count(*)::int from public.readiness()), 12, 'Ο Έλεγχος ετοιμότητας έχει 12 γραμμές');
 
 -- ───────────── Ιδιοκτήτης ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);

@@ -89,7 +89,7 @@ select is((select count(*)::int from public.catalogue_items), 0, 'Ο Κατάλ�
 select is((select done from authz.readiness_items() where item = 'catalogue'), false, 'Κατάλογος: εκκρεμεί όσο δεν υπάρχει στοιχείο');
 select is((select note from authz.readiness_items() where item = 'catalogue'), null, 'Η γραμμή «catalogue» δεν περιμένει πια module');
 select is((select done from authz.readiness_items() where item = 'costs'), false, 'Κόστος ώρας: εκκρεμεί όσο δεν υπάρχει μήνας');
-select is((select count(*)::int from authz.readiness_items()), 11, 'Ο Έλεγχος ετοιμότητας έχει ακόμα 11 γραμμές');
+select is((select count(*)::int from authz.readiness_items()), 12, 'Ο Έλεγχος ετοιμότητας έχει 12 γραμμές');
 
 set local role authenticated;
 

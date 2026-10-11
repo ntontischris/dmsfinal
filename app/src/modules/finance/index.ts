@@ -1,5 +1,11 @@
 // Module «Οικονομικά»: Προς τιμολόγηση (I1, #151), Τιμολόγια και Καταχώρηση (I2, I3, #152) και Εισπράξεις (I4, #150). Έξω φαίνεται μόνο ό,τι χρειάζονται οι σελίδες.
-export type { ClientOption, FinanceCaps, PaymentMethod, ReceiptPreview, ReceiptRow } from "./types";
+export type {
+  ClientOption,
+  FinanceCaps,
+  PaymentMethod,
+  ReceiptPreview,
+  ReceiptRow,
+} from "./types";
 export { financeCaps, financeViewOf } from "./caps";
 export type { FinanceView } from "./caps";
 export {
@@ -46,8 +52,16 @@ export {
   INVOICE_NEW_TITLE,
 } from "./invoices-labels";
 export { newInvoiceHref, parseInvoiceFilter } from "./invoices-helpers";
-export { getInvoiceContext, getInvoicePdfLink, getInvoices } from "./invoices-queries";
-export type { InvoiceContext, InvoiceFilter, InvoicesView } from "./invoices-view-schema";
+export {
+  getInvoiceContext,
+  getInvoicePdfLink,
+  getInvoices,
+} from "./invoices-queries";
+export type {
+  InvoiceContext,
+  InvoiceFilter,
+  InvoicesView,
+} from "./invoices-view-schema";
 export { InvoiceClientPicker } from "./components/invoice-client-picker";
 export { InvoiceCsvButton } from "./components/invoice-csv-button";
 export { InvoiceFilterTabs } from "./components/invoice-filter-tabs";
@@ -55,6 +69,10 @@ export { InvoiceRegisterForm } from "./components/invoice-register-form";
 export { InvoiceTable } from "./components/invoice-table";
 export { InvoiceTotals } from "./components/invoice-totals";
 export { athensToday } from "./money";
+export { INVOICE_DETAIL_ERROR } from "./invoice-corrections-labels";
+export { getInvoiceDetail, getVoidedInvoices } from "./invoices-queries";
+export { InvoiceCorrectionScreen } from "./components/invoice-correction-screen";
+export { VoidedInvoicesCard } from "./components/voided-invoices-card";
 export {
   CLIENT_INVOICES_EMPTY_TEXT,
   CLIENT_INVOICES_EMPTY_TITLE,
@@ -72,7 +90,11 @@ export {
   LEDGER_TITLE,
 } from "./ledger-labels";
 export { clientParam } from "./ledger-helpers";
-export { getClientInvoices, getLedger, listLedgerClients } from "./ledger-queries";
+export {
+  getClientInvoices,
+  getLedger,
+  listLedgerClients,
+} from "./ledger-queries";
 export { ClientInvoiceTable } from "./components/client-invoice-table";
 export { LedgerBody } from "./components/ledger-body";
 export { LedgerBackLink, LedgerClients } from "./components/ledger-clients";

@@ -35,6 +35,11 @@ export const READINESS: Readonly<Record<string, ReadinessInfo>> = {
     who: "Όποιος «Διαχειρίζεται κόστος»",
     href: "/app/settings/finance",
   },
+  payment_methods: {
+    label: "Τρόποι είσπραξης: τουλάχιστον ένας ενεργός",
+    who: "Όποιος «Διαχειρίζεται Ρυθμίσεις»",
+    href: "/app/settings/finance",
+  },
   knowledge: { label: "Άρθρα Γνώσης", who: "Όποιος διαχειρίζεται τη Γνώση" },
   legal_texts: {
     label: "Νομικά κείμενα, ελεγμένα από δικηγόρο",

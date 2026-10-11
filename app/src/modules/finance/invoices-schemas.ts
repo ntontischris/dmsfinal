@@ -21,7 +21,7 @@ export const PDF_FILE_MESSAGE = "Ανέβασε το PDF του Τιμολογί
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-const moneyField = (message: string, min: number) =>
+export const moneyField = (message: string, min: number) =>
   z.string().transform((value, ctx) => {
     const amount = parseReceiptAmount(value);
     if (amount === undefined || amount < min || amount > MAX_AMOUNT) {

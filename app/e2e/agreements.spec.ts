@@ -273,13 +273,13 @@ test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις π
   );
 });
 
-test("ο Έλεγχος ετοιμότητας μένει στις 11 γραμμές χωρίς γραμμή για τις Συμφωνίες", async ({
+test("ο Έλεγχος ετοιμότητας μένει στις 12 γραμμές χωρίς γραμμή για τις Συμφωνίες", async ({
   page,
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/readiness");
   const list = card(page, "Πριν το άνοιγμα σε πελάτες");
-  await expect(list.getByRole("listitem")).toHaveCount(11);
+  await expect(list.getByRole("listitem")).toHaveCount(12);
   await expect(
     list.getByRole("listitem").filter({ hasText: /Συμφωνί/ }),
   ).toHaveCount(0);
