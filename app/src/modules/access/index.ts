@@ -3,6 +3,7 @@
 export {
   can,
   getViewer,
+  isClientViewer,
   isOwner,
   type TeamMember,
   type Viewer,

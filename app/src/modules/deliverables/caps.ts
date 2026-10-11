@@ -13,5 +13,6 @@ export const deliverablesCaps = (viewer: Viewer): DeliverablesCaps => {
     canReview,
     canQueue: canWork || canReview,
     canSeeCharges: can(viewer, "finance.cost"),
+    canSeeAmounts: can(viewer, "finance.amounts"),
   };
 };

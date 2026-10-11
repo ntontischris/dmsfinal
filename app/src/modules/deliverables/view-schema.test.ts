@@ -60,6 +60,8 @@ const detail = {
   },
   pendingCharge: false,
   history: [],
+  requests: [],
+  finalFilesUrl: null,
 };
 
 describe("deliverableCardSchema", () => {
@@ -76,6 +78,26 @@ describe("deliverableDetailSchema", () => {
   it("should refuse a version whose link is not https", () => {
     const plain = { ...detail, versions: [{ ...version, url: "http://drive.google.com/x" }] };
     expect(deliverableDetailSchema.safeParse(plain).success).toBe(false);
+  });
+
+  it("should read an open request after approval", () => {
+    const parsed = deliverableDetailSchema.parse({
+      ...detail,
+      requests: [
+        {
+          id: "66666666-6666-4666-8666-666666666666",
+          body: "Άλλαξε το τέλος",
+          createdAt: "2026-10-11T07:00:00+00:00",
+          createdByName: "Νίκος",
+          decision: null,
+          decidedAt: null,
+          decidedByName: null,
+          decisionNote: null,
+          newDeliverableId: null,
+        },
+      ],
+    });
+    expect(parsed.requests[0]).toMatchObject({ decision: null, createdByName: "Νίκος" });
   });
 
   it("should camelize the history of the trail", () => {

@@ -4,6 +4,7 @@ import {
   CANCEL_OUTCOMES,
   CHARGES,
   DELIVERABLE_STATES,
+  REQUEST_DECISIONS,
   VERSION_STATES,
 } from "./types";
 
@@ -91,12 +92,26 @@ const historySchema = z.object({
 });
 
 // Η σελίδα του Παραδοτέου (H2): η κάρτα, οι Εκδόσεις, τα δικαιώματα, η χρέωση και το Ίχνος (snake_case, εδώ camelCase).
+const requestSchema = z.object({
+  id: z.string(),
+  body: z.string(),
+  createdAt: z.string(),
+  createdByName: z.string().nullable(),
+  decision: z.enum(REQUEST_DECISIONS).nullable(),
+  decidedAt: z.string().nullable(),
+  decidedByName: z.string().nullable(),
+  decisionNote: z.string().nullable(),
+  newDeliverableId: z.string().nullable(),
+});
+
 export const deliverableDetailSchema = deliverableCardSchema
   .extend({
     versions: z.array(versionSchema),
     can: canSchema,
     pendingCharge: z.boolean(),
     history: z.array(historySchema),
+    requests: z.array(requestSchema),
+    finalFilesUrl: z.string().nullable(),
   })
   .transform((row) => ({
     ...row,
