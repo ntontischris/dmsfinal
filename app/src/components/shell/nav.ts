@@ -115,7 +115,12 @@ export const NAV: readonly NavSection[] = [
         code: "H1",
         label: "Παραδοτέα",
         href: "/app/deliverables",
-        requires: ["deliverables.work", "deliverables.review", "c.productions", "c.approve"],
+        requires: [
+          "deliverables.work",
+          "deliverables.review",
+          "c.productions",
+          "c.approve",
+        ],
       },
       {
         code: "G3",
@@ -226,6 +231,12 @@ export const NAV: readonly NavSection[] = [
         label: "Συνάδελφοι",
         href: "/app/colleagues",
         requires: "c.colleagues",
+      },
+      {
+        code: "J3",
+        label: "Μηνύματα",
+        href: "/app/messages",
+        requires: "c.chatRead",
       },
       {
         code: "I5",

@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/field";
 
 import { deleteMessage, editMessage, setMessageTag } from "../actions";
 import {
+  ACTION_CANCEL,
   ACTION_DELETE,
   ACTION_EDIT,
   ACTION_SAVE,
@@ -98,6 +99,11 @@ export function MessageActions({
             rows={3}
             className="w-full rounded-sm border border-input bg-background px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
           />
+          <div>
+            <Button size="sm" variant="ghost" onClick={close}>
+              {ACTION_CANCEL}
+            </Button>
+          </div>
         </ActionForm>
       )}
       {mode === "delete" && (

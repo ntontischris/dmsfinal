@@ -76,6 +76,17 @@ const mentionItemSchema = z.object({
 
 const mentionsSchema = z.object({ items: z.array(mentionItemSchema) });
 
+const clientContextSchema = z.object({
+  clientId: z.string(),
+  canWrite: z.boolean(),
+  editMinutes: z.number(),
+  digestMinutes: z.number(),
+});
+
+export type ClientContext = z.infer<typeof clientContextSchema>;
+export const parseClientContext = (data: unknown): ClientContext =>
+  clientContextSchema.parse(data);
+
 export type InboxItem = z.infer<typeof inboxItemSchema>;
 export type Inbox = z.infer<typeof inboxSchema>;
 export type ThreadMessage = z.infer<typeof messageSchema>;

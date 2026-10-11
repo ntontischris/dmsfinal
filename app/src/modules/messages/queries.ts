@@ -2,10 +2,12 @@ import { createSupabase } from "@/lib/supabase/server";
 
 import { read, type ReadResult } from "./read";
 import {
+  parseClientContext,
   parseInbox,
   parseMentions,
   parseThread,
   parseWritableClients,
+  type ClientContext,
   type Inbox,
   type MentionItem,
   type Thread,
@@ -45,4 +47,17 @@ export async function getThread(clientId: string): Promise<ThreadResult> {
     return { ok: false };
   }
   return { ok: true, data: parseThread(data) };
+}
+
+// Ο Πελάτης του Χρήστη πελάτη και τα λεπτά της σύνοψης αδιάβαστων. 42501 = δεν έχει Συνομιλία (null).
+export async function getClientContext(): Promise<ReadResult<ClientContext | null>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  const { data, error } = await supabase.rpc("messages_client_context");
+  if (error?.code === "42501") return { ok: true, data: null };
+  if (error) {
+    console.error("getClientContext:", error.message);
+    return { ok: false };
+  }
+  return { ok: true, data: parseClientContext(data) };
 }

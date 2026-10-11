@@ -1,5 +1,10 @@
 // Module «Μηνύματα» (J, #160): Εισερχόμενα (J1) και Συνομιλία ομάδας (J2). Έξω φαίνεται μόνο ό,τι χρειάζονται οι σελίδες.
-export { messagesCaps, type MessagesCaps } from "./caps";
+export {
+  messagesCaps,
+  messagesViewOf,
+  type MessagesCaps,
+  type MessagesView,
+} from "./caps";
 export {
   MESSAGES_PATH,
   parseFilter,
@@ -8,11 +13,15 @@ export {
   threadHref,
 } from "./helpers";
 export {
+  CLIENT_EYEBROW,
+  CLIENT_NO_ACCESS_TEXT,
+  CLIENT_TITLE,
   INBOX_EYEBROW,
   INBOX_NO_ACCESS_TEXT,
   INBOX_TITLE,
   THREAD_EYEBROW,
   THREAD_NO_ACCESS_TEXT,
 } from "./labels";
+export { ClientScreen } from "./components/client-screen";
 export { InboxScreen } from "./components/inbox-screen";
 export { ThreadScreen } from "./components/thread-screen";

@@ -98,3 +98,28 @@ export const editWindowNote = (minutes: number): string =>
 export const unreadBadge = (count: number): string => `${count} αδιάβαστα`;
 export const tabLabel = (name: string, count: number): string =>
   `${name} (${count})`;
+
+// Η Συνομιλία του πελάτη (J3).
+export const CLIENT_EYEBROW = "J3 · Μηνύματα";
+export const CLIENT_TITLE = "Μηνύματα";
+export const CLIENT_ERROR_TITLE = "Τα Μηνύματα δεν φόρτωσαν";
+export const CLIENT_ERROR_TEXT = "Δεν χάθηκε τίποτα. Δοκίμασε ξανά σε λίγο.";
+export const CLIENT_TABS_LABEL = "Μηνύματα";
+export const CLIENT_TAB_CONVERSATION = "Συνομιλία";
+export const CLIENT_EMPTY_TITLE = "Καμία συζήτηση ακόμα";
+export const CLIENT_EMPTY_TEXT = "Γράψε το πρώτο σου Μήνυμα στην ομάδα";
+export const CLIENT_NO_ACCESS_TEXT =
+  "Τα Μηνύματα φαίνονται σε Χρήστες πελάτη με το Δικαίωμα «Βλέπει Συνομιλία».";
+export const CLIENT_READONLY_NOTE =
+  "Έχεις μόνο «Βλέπει Συνομιλία»: διαβάζεις, αλλά δεν γράφεις ούτε δηλώνεις Αιτήματα. Ζήτα το Δικαίωμα από τον διαχειριστή του λογαριασμού σας.";
+export const CLIENT_COMPOSER_TEXT = "Μήνυμα προς την ομάδα";
+export const CLIENT_COMPOSER_TAG = "Για ποια Παραγωγή;";
+export const CLIENT_NO_TAG = "Γενικά, χωρίς Παραγωγή";
+export const CLIENT_NOTES_TITLE = "Ειδοποιήσεις";
+export const clientEditFooter = (minutes: number): string =>
+  `Διορθώνεις ένα Μήνυμα για ${minutes} λεπτά.`;
+export const clientDigestNote = (minutes: number): string =>
+  `Παίρνεις ειδοποίηση μέσα στο DMS για κάθε νέο Μήνυμα της ομάδας. Αν μείνουν αδιάβαστα για ${minutes} λεπτά, έρχεται ένα μόνο συγκεντρωτικό email με κουμπί «Απάντησε στο DMS». Η απάντηση στο ίδιο το email δεν φτάνει στην ομάδα.`;
+export const CLIENT_VIDEO_NOTE =
+  "Σχόλια πάνω στο video γράφονται στο Παραδοτέο, όχι εδώ.";
+export const ACTION_CANCEL = "Ακύρωση";
