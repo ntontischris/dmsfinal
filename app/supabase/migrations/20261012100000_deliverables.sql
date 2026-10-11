@@ -670,6 +670,21 @@ begin
 end;
 $$;
 
+-- Αποφάσεις χρέωσης που περιμένουν (H1, μόνο finance.cost): ανοιχτές Παραγωγές, charge 'pending', μη ακυρωμένα.
+create function public.deliverables_pending_charges() returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform authz.require('finance.cost');
+  return (
+    select coalesce(jsonb_agg(authz.deliverable_card(d.id) order by d.created_at, d.id), '[]'::jsonb)
+      from public.deliverables d
+      join public.productions p on p.id = d.production_id
+     where d.charge = 'pending' and d.cancelled_at is null and p.state = 'open'
+  );
+end;
+$$;
+
 -- Υποψήφια για νέο Παραδοτέο σε μια Παραγωγή: είδη πλήθους με υπόλοιπο, υπεύθυνοι, Γυρίσματα.
 create function public.deliverable_candidates(p_production uuid) returns jsonb
 language plpgsql security definer set search_path = ''
@@ -1055,7 +1070,7 @@ revoke all on function
 
 -- Οι RPC της εφαρμογής: ο έλεγχος Δικαιώματος γίνεται μέσα τους.
 revoke all on function
-  public.deliverables_queue_view(text), public.deliverable_view(uuid), public.deliverable_candidates(uuid),
+  public.deliverables_queue_view(text), public.deliverables_pending_charges(), public.deliverable_view(uuid), public.deliverable_candidates(uuid),
   public.deliverable_create(uuid, uuid, text, uuid, uuid, text, text), public.deliverable_update(uuid, text, uuid, uuid),
   public.deliverable_version_add(uuid, text, text), public.deliverable_version_send(uuid),
   public.deliverable_version_return(uuid, text), public.deliverable_approve_internal(uuid),
@@ -1063,7 +1078,7 @@ revoke all on function
   public.deliverable_comment_add(uuid, integer, text, integer, boolean), public.deliverable_charge_decide(uuid, text, text)
   from public, anon;
 grant execute on function
-  public.deliverables_queue_view(text), public.deliverable_view(uuid), public.deliverable_candidates(uuid),
+  public.deliverables_queue_view(text), public.deliverables_pending_charges(), public.deliverable_view(uuid), public.deliverable_candidates(uuid),
   public.deliverable_create(uuid, uuid, text, uuid, uuid, text, text), public.deliverable_update(uuid, text, uuid, uuid),
   public.deliverable_version_add(uuid, text, text), public.deliverable_version_send(uuid),
   public.deliverable_version_return(uuid, text), public.deliverable_approve_internal(uuid),

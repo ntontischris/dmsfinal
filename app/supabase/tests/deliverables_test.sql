@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες Γυρισμάτων και Περιόδων το 2027, ώστε το τεστ
 -- να περνά οποιαδήποτε μέρα τρέξει. Οι προθεσμίες από «σήμερα» ελέγχονται με την ίδια συνάρτηση, όχι με σταθερή ημερομηνία.
 begin;
-select plan(94);
+select plan(96);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής της Περιόδου 1) · e3 Πωλήσεις (χωρίς Παραδοτέα)
@@ -438,6 +438,17 @@ select is(
 select is(
   (select b.r_balance from authz.one_off_balance_row(current_setting('t.ao')::uuid, public.t_pk('reel')) b), 2::numeric,
   'Μετά την ακύρωση Παραγωγής, οι Παροχές της Συμφωνίας επιστρέφουν'
+);
+
+-- ───────────── Αποφάσεις χρέωσης για την ουρά (H1) ─────────────
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}', true);
+select throws_ok(
+  $$ select public.deliverables_pending_charges() $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς finance.cost δεν βλέπονται οι εκκρεμείς χρεώσεις'
+);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
+select ok(
+  exists (select 1 from jsonb_array_elements(public.deliverables_pending_charges()) x where x->>'id' = current_setting('t.d5')),
+  'Η Διαχείριση βλέπει το Παραδοτέο με χρέωση σε εκκρεμότητα'
 );
 
 select * from finish();
