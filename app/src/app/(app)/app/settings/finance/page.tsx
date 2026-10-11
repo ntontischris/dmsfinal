@@ -1,6 +1,7 @@
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { AccessNotice, getViewer } from "@/modules/access";
 import { catalogueCaps } from "@/modules/catalogue";
+import { financeCaps } from "@/modules/finance";
 import { SettingsTabs } from "@/modules/settings";
 
 import { FinanceSettingsContent } from "./finance-settings-parts";
@@ -31,7 +32,10 @@ export default async function FinanceSettingsPage() {
       {header}
       <div className="grid gap-4">
         <SettingsTabs current="finance" />
-        <FinanceSettingsContent canManage={caps.canManageCost} />
+        <FinanceSettingsContent
+          canManage={caps.canManageCost}
+          canManageMethods={financeCaps(viewer).canManageMethods}
+        />
       </div>
     </>
   );
