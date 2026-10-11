@@ -14,5 +14,7 @@ export async function GET(_request: Request, context: RouteContext): Promise<Nex
   if (!z.uuid().safeParse(id).success) return new NextResponse(null, { status: 404 });
   const link = await getInvoicePdfLink(id);
   if (!link.ok) return new NextResponse(null, { status: link.status === 403 ? 404 : link.status });
-  return NextResponse.redirect(link.url, 307);
+  const response = NextResponse.redirect(link.url, 307);
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }

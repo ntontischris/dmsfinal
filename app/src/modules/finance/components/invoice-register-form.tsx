@@ -60,7 +60,7 @@ export function InvoiceRegisterForm({
         <Panel label="Βήμα 1: Ανέβασμα PDF">
           <Field
             label="PDF του Τιμολογίου"
-            hint="Έως 10 MB. Τα στοιχεία τα γράφεις στο επόμενο βήμα."
+            hint="Έως 4 MB. Τα στοιχεία τα γράφεις στο επόμενο βήμα."
           >
             <Input
               name="pdf"

@@ -67,7 +67,11 @@ async function registerWithBase(
   const { data, error } = await supabase.rpc("invoice_register", {
     p: payloadOf(values, path),
   });
-  if (error) return { ok: false, state: { error: messageOf(error) } };
+  if (error) {
+    // Σβήνουμε το PDF μόνο όταν η βάση απέρριψε ρητά· σε χαμένη απάντηση το Τιμολόγιο ίσως καταχωρήθηκε.
+    if (error.code === "P0001" || error.code === "42501") await removeInvoicePdf(path);
+    return { ok: false, state: { error: messageOf(error) } };
+  }
   const parsed = registeredSchema.safeParse(data);
   if (!parsed.success) return { ok: false, state: { error: REGISTER_FAILED_TEXT } };
   return { ok: true, value: parsed.data.id };
@@ -99,10 +103,7 @@ export async function registerInvoice(
   const stored = await uploadInvoicePdf(slot.value, pdf.value);
   if (!stored.ok) return { error: stored.error };
   const registered = await registerWithBase(supabase, parsed.data, slot.value);
-  if (!registered.ok) {
-    await removeInvoicePdf(slot.value);
-    return registered.state;
-  }
+  if (!registered.ok) return registered.state;
   revalidatePath("/app", "layout");
   after(() => kickOutbox());
   return { notice: `Καταχωρήθηκε το ${parsed.data.number}.` };

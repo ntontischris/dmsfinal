@@ -74,7 +74,7 @@ begin
      where table_schema = 'storage' and table_name = 'buckets' and column_name = 'allowed_mime_types'
   ) then
     insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-    values ('invoices', 'invoices', false, 10485760, array['application/pdf'])
+    values ('invoices', 'invoices', false, 4194304, array['application/pdf'])
     on conflict (id) do nothing;
   else
     insert into storage.buckets (id, name, public) values ('invoices', 'invoices', false)
@@ -262,7 +262,7 @@ begin
 end;
 $$;
 
--- Η διαδρομή του PDF για λήψη. Ομάδα με finance.view + finance.amounts: ναι. Χρήστης πελάτη με c.finance: μόνο του Πελάτη του
+-- Η διαδρομή του PDF για λήψη. Ομάδα με finance.view + finance.amounts (Εύρος «όλα»): ναι. Χρήστης πελάτη με c.finance: μόνο του Πελάτη του
 -- και μη ακυρωμένο. Αλλιώς 42501, με το ίδιο μήνυμα και για ανύπαρκτο Τιμολόγιο (χωρίς oracle ύπαρξης).
 create function public.invoice_pdf_path(p_id uuid) returns text
 language plpgsql stable security definer set search_path = ''
@@ -270,7 +270,7 @@ as $$
 declare
   v_path text;
 begin
-  if authz.has('finance.view') and authz.has('finance.amounts') then
+  if authz.has('finance.view') and authz.scope('finance.amounts') = 'all' then
     select i.pdf_path into v_path from public.invoices i where i.id = p_id;
     if not found then
       raise exception 'Το Τιμολόγιο δεν βρέθηκε' using errcode = 'P0001';
@@ -357,6 +357,9 @@ begin
   if v_path is null or v_path !~ '^pending/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.pdf$' then
     raise exception 'Το PDF δεν ανέβηκε σωστά. Ανέβασέ το ξανά.' using errcode = 'P0001';
   end if;
+  if not exists (select 1 from storage.objects o where o.bucket_id = 'invoices' and o.name = v_path) then
+    raise exception 'Το PDF δεν ανέβηκε σωστά. Ανέβασέ το ξανά.' using errcode = 'P0001';
+  end if;
   select c.afm into v_afm from public.clients c where c.id = v_client;
   if v_pdf_tax is not null and v_afm is not null and v_pdf_tax <> v_afm and not v_confirmed then
     raise exception 'Το ΑΦΜ στο PDF (%) διαφέρει από το ΑΦΜ του Πελάτη (%). Επιβεβαίωσε ότι είναι σωστό.', v_pdf_tax, v_afm
@@ -414,6 +417,9 @@ declare
 begin
   perform authz.require('finance.invoices');
   perform authz.require('finance.amounts');
+  if authz.scope('finance.amounts') is distinct from 'all' then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
   select c.name, c.afm into v_name, v_afm from public.clients c where c.id = p_client;
   if not found then
     raise exception 'Ο Πελάτης δεν βρέθηκε' using errcode = 'P0001';
@@ -518,6 +524,9 @@ declare
 begin
   perform authz.require('finance.view');
   perform authz.require('finance.amounts');
+  if authz.scope('finance.amounts') is distinct from 'all' then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
   return (
     with items as (
       select o.client_id, o.client_name, o.days_open, o.open_amount, o.billable_on, o.id,

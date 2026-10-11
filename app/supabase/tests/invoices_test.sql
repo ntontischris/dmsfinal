@@ -4,7 +4,7 @@
 -- Οι ημερομηνίες είναι σταθερές (2026), εκτός από ένα Τιμολόγιο που εκδίδεται «σήμερα» για τον Τζίρο μήνα· ένα άλλο έχει
 -- ημερομηνίες του 2099 ώστε να μην είναι ποτέ ληξιπρόθεσμο.
 begin;
-select plan(75);
+select plan(76);
 
 -- ───────────── Χρήστες ─────────────
 -- i1 Ιδιοκτήτης · i2 Λογιστής (ανάγνωση) · i3 Πωλήσεις · i4 Διαχείριση (χωρίς «Καταχωρεί Τιμολόγια»)
@@ -56,6 +56,19 @@ select set_config('t.b', '00000000-0000-0000-0000-0000000000c2', true);
 select set_config('t.c', '00000000-0000-0000-0000-0000000000c3', true);
 select set_config('t.bank', (select m.id::text from public.payment_methods m where m.label = 'Τραπεζική κατάθεση'), true);
 
+-- Βοηθητικό των τεστ: «ανεβάζει» ένα PDF (γραμμή στο storage.objects) και επιστρέφει τη διαδρομή του.
+create function public.t_pdf() returns text
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_path text := 'pending/' || gen_random_uuid()::text || '.pdf';
+begin
+  insert into storage.objects (bucket_id, name) values ('invoices', v_path);
+  return v_path;
+end;
+$$;
+grant execute on function public.t_pdf() to authenticated;
+
 -- Βοηθητικό των τεστ: καταχωρεί Τιμολόγιο με τυχαίο PDF και επιστρέφει το id.
 create function public.t_reg(
   p_client uuid, p_kind text, p_number text, p_issue date, p_net numeric, p_vat numeric, p_total numeric,
@@ -66,7 +79,7 @@ as $$
   select (public.invoice_register(jsonb_build_object(
     'clientId', p_client, 'kind', p_kind, 'number', p_number, 'issueDate', p_issue,
     'net', p_net, 'vat', p_vat, 'total', p_total, 'creditFor', p_credit,
-    'pdfPath', 'pending/' || gen_random_uuid()::text || '.pdf'
+    'pdfPath', public.t_pdf()
   ))->>'id')::uuid;
 $$;
 
@@ -133,6 +146,12 @@ select throws_ok(
        'net', 10, 'vat', 2.4, 'total', 12.4, 'pdfPath', 'pending/../secret.pdf')) $$,
   'P0001', null, 'Διαδρομή με ../ απορρίπτεται'
 );
+select throws_ok(
+  $$ select public.invoice_register(jsonb_build_object(
+       'clientId', current_setting('t.a'), 'kind', 'invoice', 'number', 'X-1', 'issueDate', '2026-06-03',
+       'net', 10, 'vat', 2.4, 'total', 12.4, 'pdfPath', 'pending/' || gen_random_uuid()::text || '.pdf')) $$,
+  'P0001', null, 'Διαδρομή χωρίς ανεβασμένο PDF απορρίπτεται'
+);
 
 -- ───────────── Συμφωνία και Τιμολογητέα του Α ─────────────
 insert into public.opportunities (id, client_id, title, stage_id, source_id, manager_id, next_step, next_step_due)
@@ -171,7 +190,7 @@ select is(
 select set_config('t.inv1', (public.invoice_register(jsonb_build_object(
   'clientId', current_setting('t.a'), 'kind', 'invoice', 'number', '87', 'issueDate', '2026-06-03',
   'net', 1300, 'vat', 312, 'total', 1612, 'pdfTaxId', '123456789',
-  'pdfPath', 'pending/' || gen_random_uuid()::text || '.pdf'))->>'id'), true);
+  'pdfPath', public.t_pdf()))->>'id'), true);
 select is(
   (select i.due_date from public.invoices i where i.id = current_setting('t.inv1')::uuid), date '2026-06-23',
   'Η λήξη = έκδοση + 20 μέρες πληρωμής της Συμφωνίας'
@@ -227,14 +246,14 @@ select throws_ok(
   $$ select public.invoice_register(jsonb_build_object(
        'clientId', current_setting('t.c'), 'kind', 'invoice', 'number', 'C-1', 'issueDate', '2026-07-10',
        'net', 400, 'vat', 0, 'total', 400, 'pdfTaxId', '111111111',
-       'pdfPath', 'pending/' || gen_random_uuid()::text || '.pdf')) $$,
+       'pdfPath', public.t_pdf())) $$,
   'P0001', null, 'Άλλο ΑΦΜ στο PDF χωρίς επιβεβαίωση δεν καταχωρείται'
 );
 select lives_ok(
   $$ select public.invoice_register(jsonb_build_object(
        'clientId', current_setting('t.c'), 'kind', 'invoice', 'number', 'C-1', 'issueDate', '2026-07-10',
        'net', 400, 'vat', 0, 'total', 400, 'pdfTaxId', '111111111', 'taxIdConfirmed', true,
-       'pdfPath', 'pending/' || gen_random_uuid()::text || '.pdf')) $$,
+       'pdfPath', public.t_pdf())) $$,
   'Με επιβεβαίωση το άλλο ΑΦΜ περνά'
 );
 select set_config('t.c1', (select i.id::text from public.invoices i where i.client_id = current_setting('t.c')::uuid and i.number = 'C-1'), true);

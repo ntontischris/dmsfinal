@@ -5,7 +5,7 @@ import { parseReceiptAmount } from "./money";
 
 // Έλεγχος της φόρμας Καταχώρησης στο όριο του server. Η βάση ελέγχει ξανά (P0001)· εδώ πιάνουμε πρώτα τα προφανή.
 
-export const PDF_MAX_BYTES = 10 * 1024 * 1024;
+export const PDF_MAX_BYTES = 4 * 1024 * 1024;
 
 const MAX_AMOUNT = 9_999_999.99;
 const AMOUNT_MESSAGE = "Γράψε ποσό σε ευρώ, π.χ. 1300 ή 1300,50.";
@@ -17,7 +17,7 @@ const NUMBER_MESSAGE = "Γράψε αριθμό από 1 έως 40 χαρακτ�
 const MARK_MESSAGE = "Ο ΜΑΡΚ έχει μόνο ψηφία (έως 20).";
 const CREDIT_MESSAGE = "Διάλεξε το Τιμολόγιο που διορθώνει το πιστωτικό.";
 
-export const PDF_FILE_MESSAGE = "Ανέβασε το PDF του Τιμολογίου (έως 10 MB).";
+export const PDF_FILE_MESSAGE = "Ανέβασε το PDF του Τιμολογίου (έως 4 MB).";
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -92,7 +92,7 @@ export const invoiceFormKeys = [
   "taxIdConfirmed",
 ] as const;
 
-// Το αρχείο της φόρμας: PDF, όχι κενό, έως 10 MB. Επιστρέφει μήνυμα λάθους ή null.
+// Το αρχείο της φόρμας: PDF, όχι κενό, έως 4 MB. Επιστρέφει μήνυμα λάθους ή null.
 export const pdfFileProblem = (file: unknown): string | null => {
   if (!(file instanceof File) || file.size === 0 || file.size > PDF_MAX_BYTES)
     return PDF_FILE_MESSAGE;
