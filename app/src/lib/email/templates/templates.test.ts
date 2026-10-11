@@ -5,7 +5,7 @@ import type { Locale } from "../locale";
 import { invitationMessage, authLinkMessage } from "./auth-messages";
 import { proposalLinkMessage, signedCopyMessage, signingCodeMessage } from "./agreement-messages";
 import { deliverableVersionMessage } from "./deliverable-messages";
-import { invoiceRegisteredMessage } from "./invoice-messages";
+import { invoiceOverdueMessage, invoiceRegisteredMessage } from "./invoice-messages";
 import { crewDeclinedMessage, sheetIssuedMessage } from "./sheet-messages";
 import {
   clientAddedMessage,
@@ -139,6 +139,34 @@ describe.each(LOCALES)("τα πρότυπα email (%s)", (locale) => {
         issueDate: "2026-06-25",
         dueDate: null,
         total: 124,
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it("ληξιπρόθεσμο τιμολόγιο με στοιχεία πληρωμής", () => {
+    expect(
+      invoiceOverdueMessage({
+        locale,
+        origin: ORIGIN,
+        name: "Πάνος",
+        number: "B-1",
+        dueDate: "2026-06-17",
+        remaining: 740,
+        payment: { holder: "Εταιρεία Δοκιμής", bank: "Τράπεζα Δοκιμής", iban: "GR1601101250000000012300695" },
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it("ληξιπρόθεσμο τιμολόγιο χωρίς στοιχεία πληρωμής", () => {
+    expect(
+      invoiceOverdueMessage({
+        locale,
+        origin: ORIGIN,
+        name: "Πάνος",
+        number: "B-1",
+        dueDate: "2026-06-17",
+        remaining: 740,
+        payment: null,
       }),
     ).toMatchSnapshot();
   });

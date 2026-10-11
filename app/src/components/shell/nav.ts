@@ -135,6 +135,12 @@ export const NAV: readonly NavSection[] = [
         href: "/app/finance/receipts",
         requires: "finance.view",
       },
+      {
+        code: "I5",
+        label: "Καρτέλα Πελάτη",
+        href: "/app/finance/ledger",
+        requires: "finance.view",
+      },
     ],
   },
   {
@@ -209,6 +215,18 @@ export const NAV: readonly NavSection[] = [
         label: "Συνάδελφοι",
         href: "/app/colleagues",
         requires: "c.colleagues",
+      },
+      {
+        code: "I5",
+        label: "Οικονομικά",
+        href: "/app/finance/ledger",
+        requires: "c.finance",
+      },
+      {
+        code: "I2",
+        label: "Τιμολόγια",
+        href: "/app/finance/invoices",
+        requires: "c.finance",
       },
     ],
   },

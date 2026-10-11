@@ -10,6 +10,7 @@ import {
   productionDeliveredFor,
 } from "./deliver-completion";
 import { INVOICE_KIND, invoiceMessageFor, type InvoiceBody } from "./deliver-invoice";
+import { OVERDUE_KIND, overdueMessageFor } from "./deliver-overdue";
 import { isSheetKind, sheetMessageFor } from "./deliver-sheet";
 import { toLocale, type Locale } from "./locale";
 import { sendEmail, type SendOutcome } from "./send-email";
@@ -43,6 +44,7 @@ export const outboxRowSchema = z.object({
     "production_delivered",
     "deliverable_reminder",
     "invoice_registered",
+    "invoice_overdue",
   ]),
   to_name: z.string(),
   to_email: z.string(),
@@ -195,6 +197,7 @@ async function messageFor(
   if (row.kind === DELIVERABLE_REMINDER_KIND)
     return deliverableReminderFor(row, origin);
   if (row.kind === INVOICE_KIND) return invoiceMessageFor(admin, row, origin);
+  if (row.kind === OVERDUE_KIND) return overdueMessageFor(row, origin);
   return clientAddedMessageFor(admin, row, origin);
 }
 

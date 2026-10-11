@@ -18,10 +18,13 @@ import {
   InvoiceTable,
   InvoiceTotals,
   financeCaps,
+  financeViewOf,
   getInvoices,
   newInvoiceHref,
   parseInvoiceFilter,
 } from "@/modules/finance";
+
+import { ClientInvoicesScreen } from "./client-screen";
 
 export const metadata = { title: INVOICES_TITLE };
 
@@ -29,10 +32,11 @@ interface InvoicesPageProps {
   searchParams: Promise<{ filter?: string }>;
 }
 
-// I2: τα Τιμολόγια. Θέλει «Βλέπει Οικονομικά» και «Βλέπει ποσά»· η καταχώρηση θέλει «Καταχωρεί Τιμολόγια».
+// I2: τα Τιμολόγια. Ο Χρήστης πελάτη με «Βλέπει Οικονομικά» βλέπει τη δική του όψη. Η ομάδα θέλει «Βλέπει Οικονομικά» και «Βλέπει ποσά»· η καταχώρηση θέλει «Καταχωρεί Τιμολόγια».
 // Το φίλτρο ζει στη διεύθυνση· η βάση αποφασίζει τι βλέπεις και υπολογίζει καταστάσεις και σύνολα.
 export default async function InvoicesPage({ searchParams }: InvoicesPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  if (financeViewOf(viewer) === "client") return <ClientInvoicesScreen />;
   const caps = financeCaps(viewer);
   if (!caps.canView) {
     return (

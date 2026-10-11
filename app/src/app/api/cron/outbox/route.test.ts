@@ -68,6 +68,7 @@ describe("GET /api/cron/outbox", () => {
       sent: 3,
       reminders: { queued: 1 },
       billables: { generated: 1 },
+      overdue: { queued: 1 },
     });
   });
 
@@ -85,6 +86,7 @@ describe("GET /api/cron/outbox", () => {
       sent: 3,
       reminders: { error: "Οι υπενθυμίσεις δεν μπήκαν στην ουρά." },
       billables: { generated: 0 },
+      overdue: { queued: 0 },
     });
   });
 
@@ -102,6 +104,25 @@ describe("GET /api/cron/outbox", () => {
       sent: 3,
       reminders: { queued: 0 },
       billables: { error: "Τα Τιμολογητέα δεν γεννήθηκαν." },
+      overdue: { queued: 0 },
+    });
+  });
+
+  it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει η ουρά ληξιπρόθεσμων", async () => {
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "invoice_overdue_enqueue"
+        ? { data: null, error: { message: "boom" } }
+        : { data: 0, error: null },
+    );
+
+    const response = await GET(request(`Bearer ${SECRET}`));
+
+    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({
+      sent: 3,
+      reminders: { queued: 0 },
+      billables: { generated: 0 },
+      overdue: { error: "Τα ληξιπρόθεσμα δεν μπήκαν στην ουρά." },
     });
   });
 });
