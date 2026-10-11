@@ -12,7 +12,8 @@ export const deliverablesCaps = (viewer: Viewer): DeliverablesCaps => {
     canWork,
     canReview,
     canQueue: canWork || canReview,
-    canSeeCharges: can(viewer, "finance.cost"),
+    // Η ουρά «Χρεώνεται» είναι για όλες τις Παραγωγές: θέλει «Βλέπει ποσά» με Εύρος «όλα» (όπως η βάση).
+    canSeeCharges: viewer.status === "signed-in" && viewer.team?.permissions["finance.amounts"] === "all",
     canSeeAmounts: can(viewer, "finance.amounts"),
   };
 };

@@ -1,8 +1,9 @@
 -- Τιμολογητέα (Iβ, #151): γεννήτρια (μηνιαία, δόσεις, έξτρα, ρήτρα λύσης), δικαιώματα και «Προς τιμολόγηση».
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Οι ημερομηνίες είναι σχετικές με το «σήμερα» της Αθήνας:
 -- η μηνιαία Συμφωνία αρχίζει στις 15 του προηγούμενου μήνα, οπότε η 2η Περίοδος είναι ο τρέχων μήνας.
+-- Περίοδοι πριν από τον μήνα καταγραφής της υπογραφής δεν χρεώνονται· για να χρεωθεί η 1η, η υπογραφή «πάει» έναν μήνα πίσω.
 begin;
-select plan(26);
+select plan(30);
 
 -- ───────────── Χρήστες, Πελάτες, Κατάλογος ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (χωρίς ποσά) · e3 Πωλήσεις (χωρίς Οικονομικά) · e4 Λογιστής (ανάγνωση) · e6 χωρίς ομάδα
@@ -84,13 +85,15 @@ select public.agreement_set_recipients(current_setting('t.a')::uuid, '[{"name":"
 select public.agreement_sign_outside(current_setting('t.a')::uuid, current_setting('t.today')::date, 'Μαρία Παπαδάκη',
   (date_trunc('month', current_setting('t.today')::date) - interval '1 month' + interval '14 days')::date, 'contract-a.pdf');
 
-select is(public.billables_generate(), 2, 'Μηνιαία με 3 Περιόδους, με τον τρέχοντα μήνα τη 2η: η γεννήτρια γράφει 2');
+select is(public.billables_generate(), 1, 'Υπογραφή καταγράφηκε τώρα με έναρξη τον προηγούμενο μήνα: χρεώνεται μόνο ο τρέχων μήνας');
+update public.agreement_signatures set recorded_at = recorded_at - interval '1 month' where agreement_id = current_setting('t.a')::uuid;
+select is(public.billables_generate(), 1, 'Με υπογραφή τον προηγούμενο μήνα χρεώνεται και η 1η Περίοδος (σύνολο 2)');
 select is(public.billables_generate(), 0, 'Η δεύτερη κλήση δεν γράφει τίποτα');
 select is(
   (select min(b.net) from public.billables b where b.agreement_id = current_setting('t.a')::uuid),
   round(900 * (extract(day from (date_trunc('month', current_setting('t.today')::date) - interval '1 day')) - 14)
         / extract(day from (date_trunc('month', current_setting('t.today')::date) - interval '1 day')), 2),
-  'Η σπασμένη πρώτη Περίοδος είναι αναλογική (17/31 της εκπτωμένης τιμής στον Μάρτιο)'
+  'Η σπασμένη πρώτη Περίοδος είναι αναλογική (μέρες από τις 15 έως το τέλος του μήνα)'
 );
 select is(
   (select max(b.net) from public.billables b where b.agreement_id = current_setting('t.a')::uuid),
@@ -104,10 +107,10 @@ select public.agreement_add_catalogue_line(current_setting('t.b')::uuid, '000000
 select public.agreement_set_recipients(current_setting('t.b')::uuid, '[{"name":"Νίκος Κίνης","email":"nikos@example.com","is_signatory":true}]'::jsonb);
 select public.agreement_sign_outside(current_setting('t.b')::uuid, current_setting('t.today')::date, 'Νίκος Κίνης',
   (date_trunc('month', current_setting('t.today')::date) - interval '1 month' + interval '14 days')::date, 'contract-b.pdf', '[]'::jsonb, true);
-select is(public.billables_generate(), 1, 'Τον τρέχοντα μήνα «τιμολογήθηκε εκτός»: η Περίοδος δεν γεννά Τιμολογητέο, η προηγούμενη ναι');
+select is(public.billables_generate(), 0, 'Ο τρέχων μήνας «τιμολογήθηκε εκτός» και ο προηγούμενος είναι πριν την υπογραφή: τίποτα');
 select is(
-  (select count(*)::int from public.billables b where b.agreement_id = current_setting('t.b')::uuid), 1,
-  'Η Συμφωνία με τιμολογημένο μήνα έχει μόνο το Τιμολογητέο του προηγούμενου μήνα'
+  (select count(*)::int from public.billables b where b.agreement_id = current_setting('t.b')::uuid), 0,
+  'Η μεταφερμένη Συμφωνία με τιμολογημένο μήνα δεν έχει Τιμολογητέο'
 );
 
 -- ───────────── Εφάπαξ Συμφωνία: δόση υπογραφής, έξτρα, δόση παράδοσης ─────────────
@@ -175,6 +178,22 @@ select is(
   150::numeric, 'Η ρήτρα λύσης είναι 150 €'
 );
 
+-- ───────────── Τιμή έξτρα: γραμμή Υπηρεσίας της Συμφωνίας, ανά μονάδα· ποτέ Πακέτο ─────────────
+insert into public.catalogue_items (id, kind, billing, name, name_en, unit, retired_at) values
+  ('00000000-0000-0000-0000-0000000000d7', 'service', null, 'Δύο reels (τεστ)', 'Two reels (test)', 'ανά δύο', null);
+insert into public.catalogue_item_amounts (item_id, price) values ('00000000-0000-0000-0000-0000000000d7', 260);
+insert into public.catalogue_item_costs (item_id, hours_shoot, hours_edit, direct_cost) values ('00000000-0000-0000-0000-0000000000d7', 0, 0, 0);
+insert into public.catalogue_item_provisions (item_id, kind_id, quantity) values ('00000000-0000-0000-0000-0000000000d7', public.t_pk('reel'), 2);
+select set_config('t.e', public.agreement_create('00000000-0000-0000-0000-0000000000c1', 'one_off', 'Πρόχειρο Αθηνά')::text, true);
+select public.agreement_add_catalogue_line(current_setting('t.e')::uuid, '00000000-0000-0000-0000-0000000000d9', 1);
+select public.agreement_add_catalogue_line(current_setting('t.e')::uuid, '00000000-0000-0000-0000-0000000000d7', 1);
+select is(authz.billable_extra_price(current_setting('t.e')::uuid, public.t_pk('reel')), 130::numeric,
+  'Το έξτρα reel παίρνει την τιμή της γραμμής Υπηρεσίας ανά reel (260 € ÷ 2)');
+select is(authz.billable_extra_price(current_setting('t.e')::uuid, public.t_pk('shoot')), null::numeric,
+  'Η γραμμή Πακέτου δεν δίνει ποτέ τιμή έξτρα');
+select is(authz.billable_extra_price(current_setting('t.a')::uuid, public.t_pk('reel')), null::numeric,
+  'Δύο Υπηρεσίες Καταλόγου για reel: η τιμή είναι ασαφής και δεν γεννιέται Τιμολογητέο');
+
 -- ───────────── Δικαιώματα: γεννήτρια μόνο service_role ─────────────
 set local role anon;
 select throws_ok($$ select public.billables_generate() $$, '42501', null, 'Ο ανώνυμος δεν τρέχει τη γεννήτρια');
@@ -207,14 +226,16 @@ select throws_ok($$ select count(*) from public.billables $$, '42501', null, 'Ο
 reset role;
 
 -- ───────────── Ο Λογιστής διαβάζει τα σωστά αθροίσματα ─────────────
+select set_config('t.sum', (select sum(b.net)::text from public.billables b), true);
+select set_config('t.count', (select count(*)::text from public.billables b), true);
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e4","role":"authenticated"}', true);
 set local role authenticated;
 select is(
-  (public.billables_view()->>'total')::numeric, (select sum(b.net) from public.billables b),
+  (public.billables_view()->>'total')::numeric, current_setting('t.sum')::numeric,
   'Ο Λογιστής βλέπει σύνολο ανοιχτών Τιμολογητέων ίσο με το άθροισμα (καμία κάλυψη)'
 );
 select is(
-  (public.billables_view()->>'count')::int, (select count(*)::int from public.billables b),
+  (public.billables_view()->>'count')::int, current_setting('t.count')::int,
   'Το πλήθος του «Προς τιμολόγηση» ταιριάζει με τις γραμμές'
 );
 select ok(

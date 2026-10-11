@@ -63,25 +63,27 @@ as $$
   end;
 $$;
 
--- Τιμή έξτρα Παροχής: η πρώτη γραμμή της Συμφωνίας με αυτή την Παροχή, αλλιώς η μοναδική Υπηρεσία Καταλόγου
--- που δίνει μόνο αυτή την Παροχή. Αλλιώς null: δεν γεννιέται Τιμολογητέο (ασαφής τιμή).
+-- Τιμή μίας μονάδας έξτρα Παροχής: γραμμή Υπηρεσίας (όχι Πακέτο) της Συμφωνίας που δίνει ΜΟΝΟ αυτή την Παροχή,
+-- τιμή ÷ ποσότητα Παροχής ανά μονάδα γραμμής· αλλιώς η μοναδική Υπηρεσία Καταλόγου που δίνει μόνο αυτή την Παροχή.
+-- Αλλιώς null: δεν γεννιέται Τιμολογητέο (ασαφής τιμή).
 create function authz.billable_extra_price(p_agreement uuid, p_kind uuid) returns numeric
 language sql stable security definer set search_path = ''
 as $$
   select coalesce(
-    (select la.unit_price
+    (select round(la.unit_price / lp.quantity, 2)
        from public.agreement_lines l
        join public.agreement_line_provisions lp on lp.line_id = l.id and lp.kind_id = p_kind
        join public.agreement_line_amounts la on la.line_id = l.id
-      where l.agreement_id = p_agreement
+      where l.agreement_id = p_agreement and l.line_kind = 'service'
+        and not exists (select 1 from public.agreement_line_provisions o where o.line_id = l.id and o.kind_id <> p_kind)
       order by l.position
       limit 1),
-    (select case when count(*) = 1 then min(ca.price) end
+    (select case when count(*) = 1 then round(min(ca.price / cp.quantity), 2) end
        from public.catalogue_items ci
        join public.catalogue_item_amounts ca on ca.item_id = ci.id
+       join public.catalogue_item_provisions cp on cp.item_id = ci.id and cp.kind_id = p_kind
       where ci.kind = 'service' and ci.retired_at is null
-        and exists (select 1 from public.catalogue_item_provisions cp where cp.item_id = ci.id and cp.kind_id = p_kind)
-        and not exists (select 1 from public.catalogue_item_provisions cp where cp.item_id = ci.id and cp.kind_id <> p_kind))
+        and not exists (select 1 from public.catalogue_item_provisions o where o.item_id = ci.id and o.kind_id <> p_kind))
   );
 $$;
 
@@ -99,6 +101,9 @@ as $$
       cross join lateral (select round(authz.production_period_price(a.id, p.id), 2) as net) x
      where a.kind = 'monthly' and a.state in ('signed', 'active', 'expired')
        and p.starts <= p_today and x.net > 0
+       -- Καμία Περίοδος πριν από τον μήνα καταγραφής της υπογραφής (μεταφορά πελάτη με παλιά έναρξη).
+       and p.starts >= (select date_trunc('month', s.recorded_at at time zone 'Europe/Athens')::date
+                          from public.agreement_signatures s where s.agreement_id = a.id)
        and not exists (
          select 1 from public.agreement_signatures s
           where s.agreement_id = a.id and s.month_invoiced
@@ -117,13 +122,20 @@ as $$
     select o.client_id, a.id, 'milestone', m.id,
            'Δόση ' || authz.milestone_text(m.trigger) || ' '
              || trim(trailing '.' from trim(trailing '0' from m.percent::text)) || '%',
-           p_today, round(f.price * m.percent / 100, 2)
+           p_today, x.net
       from public.agreement_milestones m
       join public.agreements a on a.id = m.agreement_id and a.kind = 'one_off' and a.state in ('signed', 'active', 'expired')
       join public.opportunities o on o.id = a.opportunity_id
       cross join lateral authz.agreement_figures(a.id) f
+      -- Η τελευταία δόση παίρνει το υπόλοιπο, ώστε οι δόσεις να αθροίζουν ακριβώς την τιμή (χωρίς λεπτά από στρογγύλεμα).
+      cross join lateral (select case
+          when m.position = (select max(m2.position) from public.agreement_milestones m2 where m2.agreement_id = a.id)
+            then round(f.price * (select sum(m3.percent) from public.agreement_milestones m3 where m3.agreement_id = a.id) / 100, 2)
+                 - coalesce((select sum(round(f.price * m4.percent / 100, 2)) from public.agreement_milestones m4
+                              where m4.agreement_id = a.id and m4.position <> m.position), 0)
+          else round(f.price * m.percent / 100, 2) end as net) x
      where authz.milestone_reached(a.id, m.trigger, m.due_on, p_today)
-       and round(f.price * m.percent / 100, 2) > 0
+       and x.net > 0
     on conflict (reason, source_id) do nothing
     returning 1
   )
@@ -158,7 +170,7 @@ as $$
       join public.productions pr on pr.id = d.production_id and pr.agreement_id is not null
       join public.agreements a on a.id = pr.agreement_id and a.state in ('signed', 'active', 'expired')
       cross join lateral (select authz.billable_extra_price(a.id, d.kind_id) as net) x
-     where r.decision = 'charged' and x.net > 0
+     where r.decision = 'charged' and d.cancelled_at is null and x.net > 0
     on conflict (reason, source_id) do nothing
     returning 1
   )
@@ -200,8 +212,27 @@ as $$
   select count(*)::integer from ins;
 $$;
 
+-- Η ουρά αποφάσεων χρέωσης ακολουθεί την ίδια την απόφαση (Π2): finance.amounts αντί για finance.cost.
+-- Είναι λίστα όλων των Παραγωγών, άρα θέλει Εύρος «όλα» (οι Πωλήσεις βλέπουν ποσά μόνο «με αφορά»).
+create or replace function public.deliverables_pending_charges() returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if authz.scope('finance.amounts') is distinct from 'all' then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+  return (
+    select coalesce(jsonb_agg(authz.deliverable_card(d.id) order by d.created_at, d.id), '[]'::jsonb)
+      from public.deliverables d
+      join public.productions p on p.id = d.production_id
+     where d.charge = 'pending' and d.cancelled_at is null and p.state = 'open'
+  );
+end;
+$$;
+
 -- Το cron (service_role) καλεί τη γεννήτρια πριν από τον worker. Επιστρέφει πόσα Τιμολογητέα γράφτηκαν.
--- Λυμένη Συμφωνία: δεν γεννά Περίοδο (δεν υπάρχει ημερομηνία λύσης στο σχήμα)· μόνο τη ρήτρα της.
+-- Λυμένη Συμφωνία: μόνο η ρήτρα της. Καμία ροή δεν βάζει ακόμη 'dissolved'· όταν μπει η Λύση (με ημερομηνία),
+-- οι γεννήτριες πρέπει να δέχονται και Περιόδους/έξτρα πριν από τη λύση.
 create function public.billables_generate() returns integer
 language plpgsql security definer set search_path = ''
 as $$

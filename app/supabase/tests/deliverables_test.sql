@@ -444,7 +444,7 @@ select is(
 -- ───────────── Αποφάσεις χρέωσης για την ουρά (H1) ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}', true);
 select throws_ok(
-  $$ select public.deliverables_pending_charges() $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς finance.cost δεν βλέπονται οι εκκρεμείς χρεώσεις'
+  $$ select public.deliverables_pending_charges() $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς finance.amounts σε όλο το Εύρος δεν βλέπονται οι εκκρεμείς χρεώσεις'
 );
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 select ok(

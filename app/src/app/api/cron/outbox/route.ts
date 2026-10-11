@@ -15,17 +15,12 @@ export const maxDuration = 60;
 // Χωρίς CRON_SECRET στο περιβάλλον: 500· με λάθος ή λείπον Bearer: 401.
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
-  if (!secret)
-    return NextResponse.json({ error: "cron not configured" }, { status: 500 });
+  if (!secret) return NextResponse.json({ error: "cron not configured" }, { status: 500 });
   if (!isCronAuthorized(request.headers.get("authorization"), secret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const admin = createAdminClient();
-  if (!admin)
-    return NextResponse.json(
-      { error: "service role missing" },
-      { status: 500 },
-    );
+  if (!admin) return NextResponse.json({ error: "service role missing" }, { status: 500 });
   const reminders = await enqueueDeliverableReminders(admin);
   const billables = await generateBillables(admin);
   const summary = await runOutboxWorker(admin, appOrigin());

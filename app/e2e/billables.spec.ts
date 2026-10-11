@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
 
-import { clientName, signedMonthlyAgreement, visit } from "./filming-parts";
+import { clientName, opportunityTitle, signedMonthlyAgreement, visit } from "./filming-parts";
 import { inContext, project, shot, signIn } from "./sales-parts";
 
 // Προς τιμολόγηση (I1) από άκρη σε άκρη. Η Συμφωνία γράφεται από τις οθόνες· το cron της ουράς δεν τρέχει μέσα στο e2e,
@@ -13,16 +13,38 @@ const TO_INVOICE_LINK = /Προς τιμολόγηση$/;
 const NO_ACCESS_TEXT = "Το «Προς τιμολόγηση» το βλέπουν μόνο όσοι";
 const NOT_A_DEBT_TEXT = "Τα Τιμολογητέα δεν είναι οφειλή";
 
-async function runBillablesGenerator(): Promise<void> {
+function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key)
     throw new Error(
       "Λείπει το NEXT_PUBLIC_SUPABASE_URL ή το SUPABASE_SERVICE_ROLE_KEY",
     );
-  const { error } = await createClient(url, key, {
-    auth: { persistSession: false },
-  }).rpc("billables_generate");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+// Η υπογραφή εκτός συστήματος δηλώνει τον τρέχοντα μήνα «τιμολογημένο» και Περίοδοι πριν από τον μήνα καταγραφής δεν
+// χρεώνονται. Η καταγραφή «πάει» έναν μήνα πίσω, ώστε η Περίοδος του προηγούμενου μήνα να γεννήσει Τιμολογητέο.
+async function backdateSignature(P: string): Promise<void> {
+  const admin = serviceClient();
+  const { data, error } = await admin
+    .from("agreements")
+    .select("id, opportunities!inner(title)")
+    .eq("opportunities.title", opportunityTitle(P))
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+  if (error) throw error;
+  const monthAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
+  const { error: updateError } = await admin
+    .from("agreement_signatures")
+    .update({ recorded_at: monthAgo })
+    .eq("agreement_id", data.id);
+  if (updateError) throw updateError;
+}
+
+async function runBillablesGenerator(): Promise<void> {
+  const { error } = await serviceClient().rpc("billables_generate");
   if (error) throw error;
 }
 
@@ -33,6 +55,7 @@ test("ο Ιδιοκτήτης βλέπει το Τιμολογητέο της υ
   const P = project();
   await signIn(page, "sales@example.com");
   await signedMonthlyAgreement(page, browser, P);
+  await backdateSignature(P);
   await runBillablesGenerator();
 
   await inContext(browser, "owner@example.com", async (owner) => {
