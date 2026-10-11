@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { Select } from "@/components/ui/field";
 
 import { sendMessage } from "../actions";
+import { useAttachmentUploads } from "../use-attachment-uploads";
 import {
   CLIENT_COMPOSER_TAG,
   CLIENT_COMPOSER_TEXT,
@@ -17,6 +18,7 @@ import {
 } from "../labels";
 import type { ThreadProduction } from "../view-schema";
 import { ActionForm } from "./action-form";
+import { AttachmentPicker } from "./attachment-picker";
 
 interface ClientComposerProps {
   clientId: string;
@@ -26,7 +28,12 @@ interface ClientComposerProps {
 // Ο συντάκτης του πελάτη: μόνο προς την ομάδα, με προαιρετική ετικέτα από τις Παραγωγές του. Χωρίς Εσωτερικά και αναφορές.
 export function ClientComposer({ clientId, productions }: ClientComposerProps) {
   const router = useRouter();
-  const handleSent = useCallback(() => router.refresh(), [router]);
+  const uploads = useAttachmentUploads();
+  const resetUploads = uploads.reset;
+  const handleSent = useCallback(() => {
+    resetUploads();
+    router.refresh();
+  }, [router, resetUploads]);
   return (
     <section
       aria-label={COMPOSER_LABEL}
@@ -38,6 +45,7 @@ export function ClientComposer({ clientId, productions }: ClientComposerProps) {
         submitLabel={COMPOSER_SEND}
         pendingLabel={COMPOSER_SENDING}
         resetOnSuccess
+        isDisabled={uploads.isUploading}
         onSuccess={handleSent}
       >
         <input type="hidden" name="clientId" value={clientId} />
@@ -46,9 +54,14 @@ export function ClientComposer({ clientId, productions }: ClientComposerProps) {
           aria-label={CLIENT_COMPOSER_TEXT}
           placeholder={COMPOSER_PLACEHOLDER}
           maxLength={4000}
-          required
+          required={uploads.paths.length === 0}
           rows={4}
           className="w-full rounded-sm border border-input bg-background px-3 py-1.5 text-sm text-foreground hover:border-border-strong focus:border-primary focus:outline-none"
+        />
+        <AttachmentPicker
+          uploads={uploads}
+          clientId={clientId}
+          productionId={null}
         />
         <label className="grid max-w-md gap-1.5">
           <span className="kit-label">{CLIENT_COMPOSER_TAG}</span>

@@ -119,6 +119,10 @@ begin
   if jsonb_array_length(p_files) > 5 then
     raise exception 'Έως 5 αρχεία ανά Μήνυμα' using errcode = 'P0001';
   end if;
+  -- Όριο ανοιχτών θέσεων ανά Χρήστη (λήγουν σε 24 ώρες), ώστε να μη γεμίζει το Storage με επαναλαμβανόμενες κλήσεις.
+  if (select count(*) from public.message_attachment_slots s where s.user_id = auth.uid()) + jsonb_array_length(p_files) > 20 then
+    raise exception 'Πολλά αρχεία σε αναμονή. Στείλε ή περίμενε λίγο και ξαναδοκίμασε' using errcode = 'P0001';
+  end if;
   for v_file in select * from jsonb_array_elements(p_files) loop
     v_name := btrim(coalesce(v_file->>'name', ''));
     v_mime := coalesce(v_file->>'mime', '');
@@ -145,12 +149,15 @@ end;
 $$;
 
 -- Θέσεις που δόθηκαν και δεν χρησιμοποιήθηκαν πριν από το p_before: σβήνονται και επιστρέφονται, για να σβηστούν τα αρχεία.
--- Μόνο για το cron (service_role).
+-- Μόνο για το cron (service_role). Έως 500 ανά κλήση· τα υπόλοιπα στην επόμενη.
 create function public.message_attachment_slots_expired(p_before timestamptz) returns jsonb
 language sql security definer set search_path = ''
 as $$
   with gone as (
-    delete from public.message_attachment_slots s where s.created_at < p_before returning s.path
+    delete from public.message_attachment_slots s
+     where s.path in (select x.path from public.message_attachment_slots x
+                       where x.created_at < p_before order by x.created_at limit 500)
+    returning s.path
   )
   select coalesce(jsonb_agg(g.path order by g.path), '[]'::jsonb) from gone g;
 $$;
@@ -297,10 +304,10 @@ begin
     raise exception 'Η αναφορά γίνεται μόνο σε άλλα ενεργά μέλη της ομάδας με πρόσβαση στη Συνομιλία' using errcode = 'P0001';
   end if;
 
-  if p->'attachments' is not null and jsonb_typeof(p->'attachments') <> 'array' then
+  if p->'attachments' is not null and jsonb_typeof(p->'attachments') not in ('array', 'null') then
     raise exception 'Το αρχείο δεν ανέβηκε σωστά' using errcode = 'P0001';
   end if;
-  v_paths := coalesce((select array_agg(distinct x) from jsonb_array_elements_text(coalesce(p->'attachments', '[]'::jsonb)) x), '{}');
+  v_paths := coalesce((select array_agg(distinct x) from jsonb_array_elements_text(coalesce(nullif(p->'attachments', 'null'::jsonb), '[]'::jsonb)) x), '{}');
   if cardinality(v_paths) > 5 then
     raise exception 'Έως 5 αρχεία ανά Μήνυμα' using errcode = 'P0001';
   end if;
@@ -321,7 +328,9 @@ begin
          select 1 from storage.objects o
           where o.bucket_id = 'message-attachments' and o.name = v_path
             and (o.metadata->>'size' is null or (o.metadata->>'size') !~ '^[0-9]+$'
-                 or (o.metadata->>'size')::bigint <= 10485760)) then
+                 or (o.metadata->>'size')::bigint <= 10485760)
+            -- Ο τύπος που δηλώθηκε στο ανέβασμα πρέπει να είναι αυτός της θέσης.
+            and (o.metadata->>'mimetype' is null or o.metadata->>'mimetype' = v_slot.mime)) then
       raise exception 'Το αρχείο δεν ανέβηκε σωστά' using errcode = 'P0001';
     end if;
   end loop;
@@ -330,8 +339,12 @@ begin
   values (v_client, v_production, auth.uid(), case when v_team then 'team' else 'client' end, v_body, v_internal, v_mentions)
   returning id into v_id;
 
+  -- Το μέγεθος από το Storage όταν υπάρχει (όχι αυτό που δήλωσε ο browser).
   insert into public.message_attachments (message_id, path, name, mime, size)
-  select v_id, s.path, s.name, s.mime, s.size from public.message_attachment_slots s
+  select v_id, s.path, s.name, s.mime,
+         coalesce(case when (o.metadata->>'size') ~ '^[0-9]{1,9}$' then (o.metadata->>'size')::integer end, s.size)
+    from public.message_attachment_slots s
+    left join storage.objects o on o.bucket_id = 'message-attachments' and o.name = s.path
    where s.path = any (v_paths) order by s.created_at, s.path;
   delete from public.message_attachment_slots s where s.path = any (v_paths);
   return jsonb_build_object('id', v_id);

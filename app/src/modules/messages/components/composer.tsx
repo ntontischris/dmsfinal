@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
@@ -62,6 +62,8 @@ export function Composer({
   const initialTag = defaultTagOf(productions, canWriteUntagged, defaultProduction);
   const uploads = useAttachmentUploads();
   const resetUploads = uploads.reset;
+  // Η προεπιλογή της πρώτης απόδοσης: η ανανέωση των 20″ δεν ξαναπυροδοτεί το handleSent.
+  const initialTagRef = useRef(initialTag);
   const [tag, setTag] = useState(initialTag);
   const [isInternal, setInternal] = useState(false);
   const [mentions, setMentions] = useState<readonly string[]>([]);
@@ -70,10 +72,10 @@ export function Composer({
   const handleSent = useCallback(() => {
     setInternal(false);
     setMentions([]);
-    setTag(initialTag);
+    setTag(initialTagRef.current);
     resetUploads();
     router.refresh();
-  }, [router, initialTag, resetUploads]);
+  }, [router, resetUploads]);
 
   const addMention = (id: string) => {
     if (id !== "" && !mentions.includes(id)) setMentions([...mentions, id]);

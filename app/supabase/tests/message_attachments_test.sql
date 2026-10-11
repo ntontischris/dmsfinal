@@ -1,7 +1,7 @@
 -- Μηνύματα Jγ #162: Συνημμένα. Θέσεις ανεβάσματος, αποστολή με συνημμένα, λήψη με έλεγχο ορατότητας, διαγραφή και καθάρισμα.
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Τα αρχεία «ανεβαίνουν» με γραμμή στο storage.objects (όπως το t_pdf των Τιμολογίων).
 begin;
-select plan(56);
+select plan(61);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις (Υπεύθυνος του Α) · a4 Παραγωγή (Μέλος της Π1) · a5 Παραγωγή (Μέλος της Π2)
@@ -244,6 +244,26 @@ select public.t_as('b1');
 select throws_ok($$ select public.message_attachment_path(current_setting('t.att1')::uuid) $$, '42501', null, 'Μετά τη διαγραφή ούτε ο πελάτης παίρνει συνημμένο');
 select public.t_as('a1');
 select is((public.message_delete(current_setting('t.m2')::uuid))->'removedPaths', jsonb_build_array(public.t_path('s2')), 'Διαγραφή Μηνύματος με ένα συνημμένο');
+
+-- ───────────── Τύπος, πραγματικό μέγεθος, όριο θέσεων ─────────────
+select public.t_as('a1');
+select public.t_slots('smime', '00000000-0000-0000-0000-0000000000c1', public.t_files(1));
+insert into storage.objects (bucket_id, name, metadata)
+values ('message-attachments', public.t_path('smime'), '{"size":1000,"mimetype":"image/png"}');
+select throws_ok(
+  format($$ select public.t_send('00000000-0000-0000-0000-0000000000c1', 'x', array[%L]) $$, public.t_path('smime')),
+  'P0001', 'Το αρχείο δεν ανέβηκε σωστά', 'Αρχείο με άλλο τύπο από τη θέση απορρίπτεται');
+select public.t_slots('sreal', '00000000-0000-0000-0000-0000000000c1', public.t_files(1));
+insert into storage.objects (bucket_id, name, metadata)
+values ('message-attachments', public.t_path('sreal'), '{"size":4321,"mimetype":"application/pdf"}');
+select lives_ok(
+  format($$ select public.t_send('00000000-0000-0000-0000-0000000000c1', 'Με αρχείο', array[%L]) $$, public.t_path('sreal')),
+  'Αρχείο με τον τύπο της θέσης γίνεται δεκτό');
+select is((select size from public.message_attachments where path = public.t_path('sreal')), 4321, 'Γράφεται το μέγεθος του Storage, όχι αυτό που δηλώθηκε');
+select throws_ok(
+  $$ select public.message_attachment_slots('00000000-0000-0000-0000-0000000000c1', public.t_files(5)) from generate_series(1, 5) $$,
+  'P0001', 'Πολλά αρχεία σε αναμονή. Στείλε ή περίμενε λίγο και ξαναδοκίμασε', 'Όριο 20 ανοιχτών θέσεων ανά Χρήστη');
+select lives_ok($$ select public.message_send('{"clientId":"00000000-0000-0000-0000-0000000000c1","body":"Χωρίς αρχεία","attachments":null}') $$, 'attachments: null σημαίνει χωρίς συνημμένα');
 
 -- ───────────── Καθάρισμα θέσεων που έληξαν ─────────────
 insert into public.message_attachment_slots (path, client_id, user_id, name, mime, size, created_at) values

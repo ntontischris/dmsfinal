@@ -45,7 +45,12 @@ export async function requestAttachmentUploads(
     p_production: productionId,
   });
   if (error) return failure(messageOf(error));
-  const slots = slotsSchema.parse(data).slots;
+  const parsedSlots = slotsSchema.safeParse(data);
+  if (!parsedSlots.success) {
+    console.error("requestAttachmentUploads: unexpected slots payload");
+    return failure(UPLOAD_UNAVAILABLE_TEXT);
+  }
+  const slots = parsedSlots.data.slots;
   const urls = await createUploadUrls(slots.map((slot) => slot.path));
   if (!urls.ok) return failure(UPLOAD_UNAVAILABLE_TEXT);
   const tokens = new Map(
