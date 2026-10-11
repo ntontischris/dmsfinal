@@ -94,5 +94,15 @@ export const can = (viewer: Viewer, permission: string): boolean =>
   viewer.status === "signed-in" &&
   (viewer.team?.permissions[permission] !== undefined || viewer.clientGrants?.[permission] !== undefined);
 
+// Βλέπει τις Παραγωγές και τα Παραδοτέα του Πελάτη του: «Βλέπει Παραγωγές» ή «Εγκρίνει Παραδοτέα» (ίδιο με τη βάση).
+export const canSeeClientWork = (viewer: Viewer): boolean =>
+  can(viewer, "c.productions") || can(viewer, "c.approve");
+
+// Ο Χρήστης πελάτη: συνδεδεμένος χωρίς Μέλος ομάδας, με τουλάχιστον ένα Δικαίωμα πελάτη.
+export const isClientViewer = (viewer: Viewer): boolean =>
+  viewer.status === "signed-in" &&
+  viewer.team === null &&
+  Object.keys(viewer.clientGrants ?? {}).length > 0;
+
 export const isOwner = (viewer: Viewer): boolean =>
   viewer.status === "signed-in" && viewer.team?.isOwner === true;

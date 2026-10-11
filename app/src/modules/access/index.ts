@@ -2,7 +2,9 @@
 // Προσκλήσεις, Χρήστες πελάτη (N2, N3), Ενσωματώσεις (O8). Έξω φαίνεται μόνο ό,τι εξάγεται εδώ.
 export {
   can,
+  canSeeClientWork,
   getViewer,
+  isClientViewer,
   isOwner,
   type TeamMember,
   type Viewer,

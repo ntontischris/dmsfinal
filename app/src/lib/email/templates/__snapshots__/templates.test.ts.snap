@@ -133,6 +133,22 @@ Devre Media · Το μήνυμα στάλθηκε από το σύστημα τ�
 }
 `;
 
+exports[`τα πρότυπα email (el) > νέα Έκδοση Παραδοτέου για έγκριση 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Νέα Έκδοση για έγκριση · Reel 1</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Η Έκδοση 2 του Παραδοτέου «Reel 1» είναι έτοιμη για την Παραγωγή «Σποτ».</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γύροι αλλαγών: 1 από 2.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/deliverables/d-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες και απάντησε</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Νέα Έκδοση για έγκριση · Reel 1",
+  "text": "Νέα Έκδοση για έγκριση · Reel 1
+
+Γεια σου Νίκος,
+Η Έκδοση 2 του Παραδοτέου «Reel 1» είναι έτοιμη για την Παραγωγή «Σποτ».
+Γύροι αλλαγών: 1 από 2.
+
+Δες και απάντησε: https://dmsfinal-app.vercel.app/app/deliverables/d-42
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
 exports[`τα πρότυπα email (el) > προσθήκη σε Πελάτη 1`] = `
 {
   "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Πρόσβαση στον Πελάτη Acme</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Πρόσθεσαν τον λογαριασμό σου στον Πελάτη «Acme». Μπορείς να μπεις και να διαλέξεις τον Πελάτη από την κεφαλίδα.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/auth/confirm?token_hash=abc&#38;type=invite" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Μπες στο σύστημα</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
@@ -337,6 +353,22 @@ exports[`τα πρότυπα email (en) > κωδικός υπογραφής 1`] 
 
 Hello Νίκος,
 Your signing code is: 123456. It is valid for 10 minutes.
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`τα πρότυπα email (en) > νέα Έκδοση Παραδοτέου για έγκριση 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">New version for approval · Reel 1</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Νίκος,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Version 2 of the deliverable “Reel 1” for the production “Σποτ” is ready.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Change rounds: 1 of 2.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/deliverables/d-42" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View and respond</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "New version for approval · Reel 1",
+  "text": "New version for approval · Reel 1
+
+Hello Νίκος,
+Version 2 of the deliverable “Reel 1” for the production “Σποτ” is ready.
+Change rounds: 1 of 2.
+
+View and respond: https://dmsfinal-app.vercel.app/app/deliverables/d-42
 
 Devre Media · This message was sent by the company system.",
 }

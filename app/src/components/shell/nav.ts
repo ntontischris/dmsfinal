@@ -98,13 +98,13 @@ export const NAV: readonly NavSection[] = [
         code: "G1",
         label: "Παραγωγές",
         href: "/app/productions",
-        requires: ["productions.manage", "c.productions"],
+        requires: ["productions.manage", "c.productions", "c.approve"],
       },
       {
         code: "H1",
         label: "Παραδοτέα",
         href: "/app/deliverables",
-        requires: ["deliverables.work", "deliverables.review"],
+        requires: ["deliverables.work", "deliverables.review", "c.productions", "c.approve"],
       },
       {
         code: "G3",

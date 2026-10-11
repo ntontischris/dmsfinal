@@ -104,6 +104,7 @@ export interface HistoryLine {
 export interface ProductionsCaps {
   canView: boolean;
   canCreateInternal: boolean;
+  isClient: boolean;
 }
 
 export interface OwnerCandidate {

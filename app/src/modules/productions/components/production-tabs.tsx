@@ -10,13 +10,14 @@ interface ProductionTabsProps {
   tab: ProductionTab | "hours";
   internalOnly: boolean;
   hoursCount: number | null; // null = το κόστος δεν φαίνεται σε αυτόν τον θεατή, η καρτέλα κρύβεται
+  showInternal: boolean; // ο Πελάτης δεν βλέπει τις Εσωτερικές
 }
 
 const listHref = (tab: ProductionTab, internalOnly: boolean): string =>
   `/app/productions?tab=${tab}${internalOnly ? "&internal=1" : ""}`;
 
 // Οι καρτέλες και το φίλτρο «Εσωτερικές» ζουν στη διεύθυνση: η σελίδα δείχνει ό,τι ζητά το URL.
-export function ProductionTabs({ tab, internalOnly, hoursCount }: ProductionTabsProps) {
+export function ProductionTabs({ tab, internalOnly, hoursCount, showInternal }: ProductionTabsProps) {
   const isHours = tab === "hours";
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -46,7 +47,7 @@ export function ProductionTabs({ tab, internalOnly, hoursCount }: ProductionTabs
           </Link>
         )}
       </nav>
-      {!isHours && (
+      {!isHours && showInternal && (
         <Link
           href={listHref(tab, !internalOnly)}
           aria-pressed={internalOnly}

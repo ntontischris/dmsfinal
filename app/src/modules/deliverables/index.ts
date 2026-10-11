@@ -1,4 +1,4 @@
-// Module «Παραδοτέα» (H1 ουρά, H2 σελίδα, ενότητα της G2). Έξω φαίνεται μόνο ό,τι εξάγεται εδώ·
+// Module «Παραδοτέα» (H1 ουρά, H2 σελίδα, H3/H4 όψη πελάτη, ενότητα της G2). Έξω φαίνεται μόνο ό,τι εξάγεται εδώ·
 // τα actions μένουν μέσα (τα εισάγουν τα components με σχετική διαδρομή).
 export type {
   AssigneeCandidate,
@@ -7,6 +7,7 @@ export type {
   DeliverableCandidates,
   DeliverableCard,
   DeliverableDetail,
+  DeliverableRequest,
   DeliverableState,
   DeliverablesCaps,
   FilmingCandidate,
@@ -14,6 +15,13 @@ export type {
   QueueView,
 } from "./types";
 export { QUEUE_VIEWS } from "./types";
+export type {
+  ClientDeliverableCard,
+  ClientDeliverableDetail,
+  ClientDeliverablesView,
+  ClientPeriodGroup,
+  ClientProvision,
+} from "./client-types";
 export { deliverablesCaps } from "./caps";
 export { parseQueueView, queueViewsOf } from "./helpers";
 export { queueFilterSchema } from "./schemas";
@@ -25,6 +33,10 @@ export {
   listDeliverableQueue,
   listPendingCharges,
 } from "./queries";
+export { getClientDeliverable, listClientDeliverables } from "./client-queries";
+export { clientCardsOf, roundsText } from "./client-helpers";
+export { ClientDetailView } from "./components/client-detail-view";
+export { ClientCardList, ClientQueueView } from "./components/client-queue-view";
 export { ChargeDecisionsPanel } from "./components/charge-decisions-panel";
 export { DeliverableDetailView } from "./components/deliverable-detail";
 export { ProductionDeliverables } from "./components/production-deliverables";

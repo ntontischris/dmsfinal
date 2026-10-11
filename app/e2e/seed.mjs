@@ -304,6 +304,29 @@ for (const P of ["desktop", "mobile"]) {
 }
 console.log("seed: Κρατήσεις");
 
+// ───────────── Παραδοτέα πελάτη: Πελάτης με Χρήστη πελάτη για το e2e/deliverables-client.spec.ts ─────────────
+// Η Παραγωγή του Πελάτη βγαίνει από μια μηνιαία Συμφωνία που υπογράφεται μέσα από τις οθόνες του τεστ.
+for (const P of ["desktop", "mobile"]) {
+  const clientName = `Πελάτης Παραδοτέων ${P}`;
+  await seedProposalClient({
+    name: clientName,
+    email: `paradota.${P}@pelatis.example.gr`,
+    contactName: "Ελένη Παραδοτέων",
+    managerId: ANNA,
+    titles: [`Παραδοτέα ${P}`],
+  });
+  const { data: clientRow, error: clientError } = await admin.from("clients").select("id").eq("name", clientName).single();
+  if (clientError) throw clientError;
+  const { data: created, error: userError } = await admin.auth.admin.createUser({
+    email: `deliv.${P}@example.com`, password: PASSWORD, email_confirm: true,
+  });
+  if (userError) throw userError;
+  await insertPlain("client_users", {
+    client_id: clientRow.id, user_id: created.user.id, name: "Ελένη Παραδοτέων", role_id: fullClientRole.id, is_current: true,
+  });
+}
+console.log("seed: Παραδοτέα πελάτη");
+
 // ───────────── Εξοπλισμός: ένα αντικείμενο ανά project για το e2e/equipment.spec.ts ─────────────
 // Τα αντικείμενα μπαίνουν απευθείας με service role: το Πρότυπο της Παραγωγής δουλεύει πάνω σε αυτά.
 async function nameId(table, name) {

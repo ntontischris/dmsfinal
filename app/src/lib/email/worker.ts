@@ -15,16 +15,45 @@ export interface WorkerSummary {
   agreement: number;
 }
 
-const outboxRowsSchema = z.array(outboxRowSchema);
 const agreementRowsSchema = z.array(agreementRowSchema);
+const outboxIdSchema = z.object({ id: z.string() });
+const INVALID_OUTBOX_ROW = "Μη έγκυρη γραμμή ειδοποίησης";
 
 async function processOutbox(admin: SupabaseClient, origin: string): Promise<number> {
   const { data, error } = await admin.rpc("email_outbox_claim", { p_limit: BATCH });
   if (error) return logAndCount("email_outbox_claim", error.message);
-  const rows = outboxRowsSchema.safeParse(data ?? []);
-  if (!rows.success) return logAndCount("email_outbox_claim", "σχήμα μη έγκυρο");
-  for (const row of rows.data) await handleOutboxRow(admin, row, origin);
-  return rows.data.length;
+  const items: unknown[] = Array.isArray(data) ? data : [];
+  for (const item of items) await handleRawOutboxRow(admin, item, origin);
+  return items.length;
+}
+
+// Μία κακή γραμμή (άγνωστο είδος, λάθος payload) δεν ρίχνει την παρτίδα: κλείνει ως αποτυχημένη, οι άλλες στέλνονται.
+async function handleRawOutboxRow(admin: SupabaseClient, item: unknown, origin: string): Promise<void> {
+  const parsed = outboxRowSchema.safeParse(item);
+  if (parsed.success) return handleOutboxRow(admin, parsed.data, origin);
+  console.error("email_outbox_claim", "γραμμή με μη έγκυρο σχήμα");
+  const id = outboxIdSchema.safeParse(item);
+  if (id.success) await markOutboxDone(admin, id.data.id, false, "", INVALID_OUTBOX_ROW, "");
+}
+
+async function markOutboxDone(
+  admin: SupabaseClient,
+  id: string,
+  ok: boolean,
+  subject: string,
+  error: string,
+  providerId: string,
+  suppressed = false,
+): Promise<void> {
+  const { error: doneError } = await admin.rpc("email_outbox_done", {
+    p_outbox: id,
+    p_ok: ok,
+    p_subject: subject,
+    p_error: error,
+    p_provider_id: providerId,
+    p_suppressed: suppressed,
+  });
+  if (doneError) console.error("email_outbox_done", doneError.message);
 }
 
 export async function handleOutboxRow(admin: SupabaseClient, row: OutboxRow, origin: string): Promise<void> {
@@ -33,14 +62,15 @@ export async function handleOutboxRow(admin: SupabaseClient, row: OutboxRow, ori
     return null;
   });
   const outcome = delivery?.outcome ?? { status: "failed" as const, providerId: "", error: "Η αποστολή απέτυχε" };
-  await admin.rpc("email_outbox_done", {
-    p_outbox: row.id,
-    p_ok: outcome.status === "sent",
-    p_subject: delivery?.subject ?? "",
-    p_error: outcome.error,
-    p_provider_id: outcome.providerId,
-    p_suppressed: outcome.status === "suppressed",
-  });
+  await markOutboxDone(
+    admin,
+    row.id,
+    outcome.status === "sent",
+    delivery?.subject ?? "",
+    outcome.error,
+    outcome.providerId,
+    outcome.status === "suppressed",
+  );
 }
 
 async function processAgreements(admin: SupabaseClient, origin: string): Promise<number> {

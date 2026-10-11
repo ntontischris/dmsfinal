@@ -803,7 +803,7 @@ select throws_ok($$ select public.filming_new_options() $$, '42501', 'Δεν έ�
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 select ok(jsonb_array_length(public.production_view(current_setting('t.pa1')::uuid) -> 'filmings') >= 1, 'Η σελίδα Παραγωγής δείχνει τα Γυρίσματά της');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
-select ok(jsonb_array_length(public.production_view(current_setting('t.pa1')::uuid) -> 'filmings') >= 1, 'Ο Πελάτης βλέπει τα Γυρίσματα της Παραγωγής του');
+select throws_ok($$ select public.production_view(current_setting('t.pa1')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Με μόνο «Κράτηση» ο Πελάτης δεν βλέπει την Παραγωγή του (Π1)');
 select throws_ok($$ select public.production_view(current_setting('t.pc')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Ο Πελάτης δεν βλέπει Παραγωγή άλλου Πελάτη');
 
 -- ───────────── Εφάπαξ, υπογραφή με καταναλωμένες Παροχές, Ίχνος και κλειστοί πίνακες ─────────────

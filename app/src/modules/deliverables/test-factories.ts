@@ -1,4 +1,4 @@
-import type { DeliverableCan, DeliverableCard } from "./types";
+import type { DeliverableCan, DeliverableCard, DeliverableDetail } from "./types";
 
 // Δεδομένα των τεστ: ένα Παραδοτέο και τα δικαιώματά του, με τιμές που αλλάζουν μόνο όσα ζητά το τεστ.
 
@@ -40,5 +40,16 @@ export const canFactory = (overrides: Partial<DeliverableCan> = {}): Deliverable
   comment: false,
   decideCharge: false,
   edit: false,
+  ...overrides,
+});
+
+export const detailFactory = (overrides: Partial<DeliverableDetail> = {}): DeliverableDetail => ({
+  ...cardFactory(),
+  versions: [],
+  can: canFactory(),
+  pendingCharge: false,
+  history: [],
+  requests: [],
+  finalFilesUrl: null,
   ...overrides,
 });

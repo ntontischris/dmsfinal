@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
-import { getViewer } from "@/modules/access";
+import { getViewer, isClientViewer } from "@/modules/access";
 import {
   DeliverableDetailView,
   deliverablesCaps,
@@ -11,6 +11,7 @@ import {
   getDeliverableCandidates,
 } from "@/modules/deliverables";
 
+import { ClientDetailScreen } from "../client-screens";
 import { LoadError, Missing, NoAccess } from "../page-parts";
 
 export const metadata = { title: "Παραδοτέο" };
@@ -24,11 +25,13 @@ export default async function DeliverablePage({
   params: Promise<{ id: string }>;
 }) {
   const viewer = await getViewer();
-  const caps = deliverablesCaps(viewer);
-  if (!caps.canQueue) return <NoAccess viewer={viewer} />;
-
   const { id } = await params;
   const parsed = z.uuid().safeParse(id);
+  if (isClientViewer(viewer)) {
+    return parsed.success ? <ClientDetailScreen viewer={viewer} id={parsed.data} /> : <Missing />;
+  }
+  const caps = deliverablesCaps(viewer);
+  if (!caps.canQueue) return <NoAccess viewer={viewer} />;
   if (!parsed.success) return <Missing />;
 
   const detail = await getDeliverable(parsed.data);
@@ -49,6 +52,7 @@ export default async function DeliverablePage({
         <DeliverableDetailView
           detail={detail.data}
           candidates={candidates?.ok ? candidates.data : null}
+          canSeeAmounts={caps.canSeeAmounts}
         />
       </div>
     </>

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AgreementRow } from "./deliver-agreement";
 import type { OutboxRow } from "./deliver-outbox";
-import { handleAgreementRow, handleOutboxRow } from "./worker";
+import { handleAgreementRow, handleOutboxRow, runOutboxWorker } from "./worker";
 
 const ORIGIN = "https://dmsfinal-app.vercel.app";
 const UUID = "7d1f2a3e-4b5c-4d6e-8f70-123456789abc";
@@ -193,5 +193,41 @@ describe("handleAgreementRow", () => {
     const { admin, calls } = fakeAdmin();
     await handleAgreementRow(admin, agreementRow({ kind: "signed_copy" }), ORIGIN);
     expect(doneCall(calls)?.args).toMatchObject({ p_ok: false, p_error: "Resend 422" });
+  });
+});
+
+describe("runOutboxWorker με κακή γραμμή", () => {
+  const BAD_ID = "11111111-2222-4333-8444-555555555555";
+  const GOOD_ID = "66666666-7777-4888-8999-aaaaaaaaaaaa";
+
+  it("κλείνει την κακή γραμμή ως αποτυχημένη και στέλνει την καλή", async () => {
+    const badRow = { id: BAD_ID, kind: "άγνωστο_είδος", to_name: "Νίκος", to_email: "nikos@example.com", locale: "el", payload: {}, attempts: 1 };
+    const goodRow = outboxRow({ id: GOOD_ID, kind: "test" });
+    const { admin, calls } = fakeAdmin({ email_outbox_claim: [badRow, goodRow] });
+    const summary = await runOutboxWorker(admin, ORIGIN);
+    const dones = calls.filter((call) => call.name === "email_outbox_done");
+    expect(summary.outbox).toBe(2);
+    expect(dones).toHaveLength(2);
+    expect(dones[0]?.args).toMatchObject({ p_outbox: BAD_ID, p_ok: false, p_error: "Μη έγκυρη γραμμή ειδοποίησης" });
+    expect(dones[1]?.args).toMatchObject({ p_outbox: GOOD_ID, p_ok: true });
+  });
+});
+
+describe("handleOutboxRow για Νέα Έκδοση", () => {
+  it("στέλνει το email της Έκδοσης και κλείνει ως επιτυχημένη", async () => {
+    vi.stubEnv("RESEND_API_KEY", "k");
+    const fetchMock = acceptingFetch();
+    vi.stubGlobal("fetch", fetchMock);
+    const { admin, calls } = fakeAdmin();
+    const row = outboxRow({
+      kind: "deliverable_version_sent",
+      to_email: "client@example.com",
+      payload: { deliverableId: UUID, title: "Reel 1", production: "Σποτ", version: 2, roundsUsed: 1, roundsLimit: 2 },
+    });
+    await handleOutboxRow(admin, row, ORIGIN);
+    expect(doneCall(calls)?.args).toMatchObject({
+      p_ok: true,
+      p_subject: "Νέα Έκδοση για έγκριση · Reel 1",
+    });
   });
 });

@@ -1,5 +1,5 @@
 import { ScreenHeader } from "@/components/shell/screen-header";
-import { getViewer } from "@/modules/access";
+import { getViewer, isClientViewer } from "@/modules/access";
 import {
   ChargeDecisionsPanel,
   QueueTable,
@@ -12,6 +12,7 @@ import {
   queueViewsOf,
 } from "@/modules/deliverables";
 
+import { ClientQueueScreen } from "./client-screens";
 import { LoadError, NoAccess } from "./page-parts";
 
 export const metadata = { title: "Παραδοτέα" };
@@ -26,6 +27,7 @@ export default async function DeliverablesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
+  if (isClientViewer(viewer)) return <ClientQueueScreen viewer={viewer} />;
   const caps = deliverablesCaps(viewer);
   if (!caps.canQueue) return <NoAccess viewer={viewer} />;
 

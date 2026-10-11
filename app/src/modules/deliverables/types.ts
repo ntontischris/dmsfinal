@@ -104,11 +104,29 @@ export interface DeliverableHistoryEntry {
   after: Record<string, unknown> | null;
 }
 
+export const REQUEST_DECISIONS = ["round", "charged", "new_deliverable"] as const;
+export type RequestDecision = (typeof REQUEST_DECISIONS)[number];
+
+// Αίτημα αλλαγής μετά την έγκριση (H2). Ανοιχτό όσο δεν έχει `decision`.
+export interface DeliverableRequest {
+  id: string;
+  body: string;
+  createdAt: string;
+  createdByName: string | null;
+  decision: RequestDecision | null;
+  decidedAt: string | null;
+  decidedByName: string | null;
+  decisionNote: string | null;
+  newDeliverableId: string | null;
+}
+
 export interface DeliverableDetail extends DeliverableCard {
   versions: DeliverableVersion[];
   can: DeliverableCan;
   pendingCharge: boolean;
   history: DeliverableHistoryEntry[];
+  requests: DeliverableRequest[];
+  finalFilesUrl: string | null;
 }
 
 export interface KindCandidate {
@@ -141,4 +159,5 @@ export interface DeliverablesCaps {
   canReview: boolean;
   canQueue: boolean;
   canSeeCharges: boolean;
+  canSeeAmounts: boolean;
 }

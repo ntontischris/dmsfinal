@@ -13,7 +13,7 @@ export async function NeedsHoursView({ hoursCount }: { hoursCount: number }) {
     <>
       <ScreenHeader eyebrow={EYEBROW} title="Παραγωγές" />
       <div className="grid gap-4">
-        <ProductionTabs tab="hours" internalOnly={false} hoursCount={hoursCount} />
+        <ProductionTabs tab="hours" internalOnly={false} hoursCount={hoursCount} showInternal />
         {rows.ok ? (
           <CostList rows={rows.data} emptyText="Καμία Παραγωγή δεν περιμένει ώρες." />
         ) : (

@@ -9,7 +9,7 @@ import type { ProductionFilming } from "../types";
 import { MutedNote } from "./form-fields";
 
 // Οι κατάστασεις των Γυρισμάτων όπως φαίνονται εδώ (ίδιες με τη λίστα Γυρισμάτων).
-const FILMING_STATE_LABELS: Readonly<Record<string, string>> = {
+export const FILMING_STATE_LABELS: Readonly<Record<string, string>> = {
   pending: "Αναμένει έγκριση",
   scheduled: "Προγραμματισμένο",
   done: "Έγινε",

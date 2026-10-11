@@ -23,6 +23,7 @@ export {
   listProductions,
 } from "./queries";
 export { AgreementCard } from "./components/agreement-card";
+export { ClientProductionView } from "./components/client-production-view";
 export { HistoryPanel } from "./components/history-panel";
 export { MembersPanel } from "./components/members-panel";
 export { NewInternalDetails } from "./components/new-internal-details";
