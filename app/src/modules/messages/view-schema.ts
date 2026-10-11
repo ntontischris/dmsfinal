@@ -78,6 +78,8 @@ const mentionsSchema = z.object({ items: z.array(mentionItemSchema) });
 
 const clientContextSchema = z.object({
   clientId: z.string(),
+  canWrite: z.boolean(),
+  editMinutes: z.number(),
   digestMinutes: z.number(),
 });
 

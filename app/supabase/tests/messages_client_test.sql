@@ -1,7 +1,7 @@
 -- Μηνύματα Jβ #161: ο Χρήστης πελάτη. Ο Πελάτης του, Δικαιώματα ανάγνωσης και γραφής, ετικέτες μόνο από τις Παραγωγές του,
 -- κανένα Εσωτερικό, διόρθωση και διαγραφή μόνο των δικών του. Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(31);
+select plan(37);
 
 -- a1 Ιδιοκτήτης · a2 Λογιστής · b1 Χρήστης πελάτη Α «Πλήρης» · b2 Α μόνο «Βλέπει Συνομιλία» · b3 Β «Πλήρης» · b4 Α χωρίς Συνομιλία
 insert into auth.users (id, email) values
@@ -92,6 +92,14 @@ select is(public.messages_client_context()->>'clientId', '00000000-0000-0000-000
 select public.t_as('b3');
 select is(public.messages_client_context()->>'clientId', '00000000-0000-0000-0000-0000000000c2', 'Ο πελάτης Β παίρνει τον Πελάτη Β');
 select is((public.messages_client_context()->>'digestMinutes')::int, 15, 'Το πλαίσιο δίνει τα λεπτά σύνοψης της ρύθμισης');
+select public.t_as('b1');
+select is((public.messages_client_context()->>'canWrite')::boolean, true, 'Με c.chatWrite: το πλαίσιο λέει ότι γράφει');
+select is((public.messages_client_context()->>'editMinutes')::int, 15, 'Το πλαίσιο δίνει τα λεπτά διόρθωσης της ρύθμισης');
+set local role authenticated;
+select is(public.messages_client_context()->>'clientId', '00000000-0000-0000-0000-0000000000c1', 'Ως authenticated: το πλαίσιο εκτελείται');
+reset role;
+select public.t_as('b2');
+select is((public.messages_client_context()->>'canWrite')::boolean, false, 'Μόνο c.chatRead: το πλαίσιο λέει ότι δεν γράφει');
 
 -- ───────────── Μηνύματα της ομάδας ─────────────
 select public.t_as('a1');
@@ -116,6 +124,8 @@ select ok(not exists (
 select ok(not exists (
   select 1 from jsonb_array_elements(public.t_thread('00000000-0000-0000-0000-0000000000c1')->'messages') x
    where x ? 'internal' or x ? 'mentions'), 'Τα Μηνύματα του πελάτη δεν έχουν internal ούτε mentions');
+select is(public.t_thread('00000000-0000-0000-0000-0000000000c1')->'client'->>'managerName', null, 'Ο πελάτης δεν βλέπει τον Υπεύθυνο');
+select is(jsonb_typeof(public.t_thread('00000000-0000-0000-0000-0000000000c1')->'mentionable'), 'null', 'Ο πελάτης δεν έχει λίστα αναφορών');
 select throws_ok($$ select public.messages_thread('00000000-0000-0000-0000-0000000000c2') $$, '42501', null, 'Ο πελάτης Α δεν βλέπει τη Συνομιλία του Β');
 select public.t_as('b3');
 select throws_ok($$ select public.messages_thread('00000000-0000-0000-0000-0000000000c1') $$, '42501', null, 'Ο πελάτης Β δεν βλέπει τη Συνομιλία του Α');

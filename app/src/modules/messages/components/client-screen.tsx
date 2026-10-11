@@ -22,8 +22,6 @@ import { ClientComposer } from "./client-composer";
 import { MessageItem } from "./message-item";
 import { ReadAtScope } from "./new-mark";
 
-const DEFAULT_EDIT_MINUTES = 15;
-
 function LoadError() {
   return (
     <Notice kind="error" title={CLIENT_ERROR_TITLE}>
@@ -32,16 +30,19 @@ function LoadError() {
   );
 }
 
-function EmptyConversation() {
+// «Γράψε το πρώτο σου Μήνυμα» μόνο σε όποιον μπορεί να γράψει.
+function EmptyConversation({ canWrite }: { canWrite: boolean }) {
   return (
     <Notice kind="empty" title={CLIENT_EMPTY_TITLE}>
-      <p className="m-0">{CLIENT_EMPTY_TEXT}</p>
+      {canWrite && <p className="m-0">{CLIENT_EMPTY_TEXT}</p>}
     </Notice>
   );
 }
 
 function ClientMessages({ thread }: { thread: Thread }) {
-  if (thread.messages.length === 0) return <EmptyConversation />;
+  if (thread.messages.length === 0) {
+    return <EmptyConversation canWrite={thread.canWrite} />;
+  }
   return (
     <ReadAtScope readAt={thread.readAt}>
       <div className="grid gap-3">
@@ -101,6 +102,8 @@ function Composer({
       />
     );
   }
+  // Η σημείωση «μόνο Βλέπει Συνομιλία» μόνο όταν λείπει το Δικαίωμα (όχι π.χ. σε αρχειοθετημένο Πελάτη).
+  if (context.canWrite) return null;
   return (
     <p className="m-0 rounded-md border bg-muted px-4 py-3 text-sm">
       {CLIENT_READONLY_NOTE}
@@ -127,11 +130,17 @@ export async function ClientScreen() {
       <AutoRefresh />
       <div className="grid gap-4">
         <Tabs />
-        {thread ? <ClientMessages thread={thread} /> : <EmptyConversation />}
+        {thread ? (
+          <ClientMessages thread={thread} />
+        ) : (
+          <EmptyConversation canWrite={false} />
+        )}
         <Composer context={context.data} thread={thread} />
-        <p className="m-0 text-sm text-muted-foreground">
-          {clientEditFooter(thread?.editMinutes ?? DEFAULT_EDIT_MINUTES)}
-        </p>
+        {thread?.canWrite && (
+          <p className="m-0 text-sm text-muted-foreground">
+            {clientEditFooter(thread.editMinutes)}
+          </p>
+        )}
         <Notes digestMinutes={context.data.digestMinutes} />
       </div>
     </>

@@ -124,5 +124,8 @@ test("ο πελάτης γράφει με ετικέτα Παραγωγής, η 
   await expect(fixed).toContainText("διορθώθηκε");
   await fixed.getByRole("button", { name: "Διαγραφή" }).first().click();
   await fixed.getByRole("button", { name: "Διαγραφή" }).last().click();
-  await expect(page.getByText("Το Μήνυμα διαγράφηκε.").first()).toBeVisible();
+  await expect(
+    page.locator("article").filter({ hasText: "Το Μήνυμα διαγράφηκε." }),
+  ).toBeVisible();
+  await expect(page.locator("article", { hasText: question })).toHaveCount(0);
 });

@@ -6,8 +6,17 @@ const ID = "7c0c4d6e-2f3a-4b5c-8d9e-0a1b2c3d4e5f";
 
 describe("parseClientContext", () => {
   it("should read the client id and the digest minutes", () => {
-    expect(parseClientContext({ clientId: ID, digestMinutes: 15 })).toEqual({
+    expect(
+      parseClientContext({
+        clientId: ID,
+        canWrite: true,
+        editMinutes: 15,
+        digestMinutes: 15,
+      }),
+    ).toEqual({
       clientId: ID,
+      canWrite: true,
+      editMinutes: 15,
       digestMinutes: 15,
     });
   });
@@ -43,6 +52,7 @@ describe("parseThread for a client user", () => {
           deleted: false,
           canEdit: true,
           canDelete: true,
+          attachments: [],
         },
       ],
     });
