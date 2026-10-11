@@ -56,7 +56,7 @@ test("ο Ιδιοκτήτης φτιάχνει Παραδοτέο, το στέλ
     "Η νέα Έκδοση προστέθηκε.",
   );
   const version = page.locator("article", { hasText: "Έκδοση 1" });
-  await expect(version.locator("header")).toContainText("Αναμένει πελάτη");
+  await expect(version.locator("header")).toContainText("Αναμένει εσωτερικό έλεγχο");
 
   const comment = version.locator("form", {
     has: page.getByRole("button", { name: "Σχόλιο", exact: true }),
@@ -71,10 +71,10 @@ test("ο Ιδιοκτήτης φτιάχνει Παραδοτέο, το στέλ
   await page.goto("/app/deliverables");
   await page
     .getByRole("navigation", { name: "Καρτέλες Παραδοτέων" })
-    .getByRole("link", { name: "Στον πελάτη", exact: true })
+    .getByRole("link", { name: "Προς έλεγχο", exact: true })
     .click();
   await expect(tableRow(page, DELIVERABLE)).toBeVisible();
-  await shot(page, "h1-client-tab");
+  await shot(page, "h1-review-tab");
 
   await tableRow(page, DELIVERABLE)
     .getByRole("link", { name: DELIVERABLE, exact: true })
