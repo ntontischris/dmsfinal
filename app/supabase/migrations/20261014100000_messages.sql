@@ -32,6 +32,8 @@ create table public.messages (
 
 create index messages_client_created_idx on public.messages (client_id, created_at);
 create index messages_production_idx on public.messages (production_id) where production_id is not null;
+-- «Με ανέφεραν»: αναζήτηση με mentions @> array[χρήστης].
+create index messages_mentions_idx on public.messages using gin (mentions) where is_internal;
 
 -- «Ως πού διάβασα» ανά (Χρήστη, Πελάτη). Κανείς δεν βλέπει τι διάβασαν οι άλλοι.
 create table public.message_reads (
@@ -208,11 +210,14 @@ language plpgsql stable security definer set search_path = ''
 as $$
 declare
   v_me uuid := auth.uid();
+  v_all boolean;
 begin
   perform authz.require_team_chat();
+  -- Εύρος «όλα»: όλα είναι ορατά, χωρίς έλεγχο ανά γραμμή.
+  v_all := coalesce(authz.scope('messages.chat') = 'all', false);
   return (
     with vis as (
-      select m.* from public.messages m where authz.message_visible(m)
+      select m.* from public.messages m where v_all or authz.message_visible(m)
     ),
     last_msg as (
       select distinct on (v.client_id) v.client_id, v.created_at, v.body, v.is_internal, v.deleted_at
@@ -241,7 +246,7 @@ begin
       'mentionsUnread', (
         select count(*) from vis v
           left join public.message_reads r on r.user_id = v_me and r.client_id = v.client_id
-         where v.is_internal and v_me = any (v.mentions) and v.author_id <> v_me and v.deleted_at is null
+         where v.is_internal and v.mentions @> array[v_me] and v.author_id <> v_me and v.deleted_at is null
            and v.created_at > coalesce(r.read_at, '-infinity'::timestamptz)
       )
     )
@@ -259,7 +264,7 @@ begin
       from public.clients c
      where authz.message_can_write(c.id, null)
         or exists (select 1 from public.productions p
-                    where p.client_id = c.id and authz.message_can_write(c.id, p.id))
+                    where p.client_id = c.id and p.state <> 'cancelled' and authz.message_can_write(c.id, p.id))
   ), '[]'::jsonb);
 end;
 $$;
@@ -280,7 +285,7 @@ begin
                authz.message_author_name(m.author_kind, m.author_id, m.client_id) as author_name
           from public.messages m
           join public.clients c on c.id = m.client_id
-         where m.is_internal and v_me = any (m.mentions) and m.deleted_at is null
+         where m.is_internal and m.mentions @> array[v_me] and m.deleted_at is null
            and authz.message_visible(m)
          order by m.created_at desc, m.id desc
          limit 100
@@ -457,7 +462,10 @@ declare
 begin
   perform authz.require_team_chat();
   v_row := authz.message_for_edit(p_id);
-  if not authz.message_can_write(v_row.client_id, p_production) then
+  -- Όποιος βλέπει το Μήνυμα μόνο λόγω @αναφοράς δεν το μετακινεί: θα το έδειχνε σε άλλους.
+  if not (authz.message_sees_all(v_row.client_id)
+          or (v_row.production_id is not null and authz.production_involved(v_row.production_id)))
+     or not authz.message_can_write(v_row.client_id, p_production) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   if v_row.deleted_at is not null then
@@ -474,16 +482,19 @@ begin
 end;
 $$;
 
-create function public.messages_mark_read(p_client uuid) returns void
+-- p_until: το νεότερο Μήνυμα που φάνηκε (όχι «τώρα»), ώστε ό,τι γράφτηκε μετά να μένει αδιάβαστο. Ο δείκτης δεν γυρίζει πίσω.
+create function public.messages_mark_read(p_client uuid, p_until timestamptz default null) returns void
 language plpgsql security definer set search_path = ''
 as $$
+declare
+  v_at timestamptz := least(coalesce(p_until, clock_timestamp()), clock_timestamp());
 begin
   if not exists (select 1 from public.messages m where m.client_id = p_client and authz.message_visible(m)) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   insert into public.message_reads (user_id, client_id, read_at)
-  values (auth.uid(), p_client, clock_timestamp())
-  on conflict (user_id, client_id) do update set read_at = excluded.read_at;
+  values (auth.uid(), p_client, v_at)
+  on conflict (user_id, client_id) do update set read_at = greatest(public.message_reads.read_at, excluded.read_at);
 end;
 $$;
 
@@ -607,13 +618,13 @@ revoke all on function
 revoke all on function
   public.messages_inbox(), public.messages_writable_clients(), public.messages_mentions(),
   public.messages_thread(uuid), public.message_send(jsonb), public.message_edit(uuid, text),
-  public.message_delete(uuid), public.message_set_tag(uuid, uuid), public.messages_mark_read(uuid)
+  public.message_delete(uuid), public.message_set_tag(uuid, uuid), public.messages_mark_read(uuid, timestamptz)
   from public, anon;
 
 grant execute on function
   public.messages_inbox(), public.messages_writable_clients(), public.messages_mentions(),
   public.messages_thread(uuid), public.message_send(jsonb), public.message_edit(uuid, text),
-  public.message_delete(uuid), public.message_set_tag(uuid, uuid), public.messages_mark_read(uuid)
+  public.message_delete(uuid), public.message_set_tag(uuid, uuid), public.messages_mark_read(uuid, timestamptz)
   to authenticated;
 
 -- Οι πίνακες είναι κλειστοί: διαβάζονται και γράφονται μόνο από τις συναρτήσεις παραπάνω.

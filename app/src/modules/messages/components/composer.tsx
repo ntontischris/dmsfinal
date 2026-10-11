@@ -90,9 +90,10 @@ export function Composer({
       >
         <input type="hidden" name="clientId" value={clientId} />
         {isInternal && <input type="hidden" name="internal" value="on" />}
-        {mentions.map((id) => (
-          <input key={id} type="hidden" name="mentions" value={id} />
-        ))}
+        {isInternal &&
+          mentions.map((id) => (
+            <input key={id} type="hidden" name="mentions" value={id} />
+          ))}
         <div
           role="group"
           aria-label={COMPOSER_RECIPIENT}

@@ -5,6 +5,7 @@ import {
   filterMessages,
   formatWhen,
   isNewMessage,
+  newestAt,
   parseFilter,
   parseProduction,
   parseTab,
@@ -89,6 +90,18 @@ describe("formatWhen", () => {
   });
   it("προσθέτει έτος όταν δεν είναι φέτος", () => {
     expect(formatWhen("2025-12-31T10:00:00Z", now)).toBe("31/12/2025 12:00");
+  });
+});
+
+describe("newestAt", () => {
+  it("δίνει το νεότερο Μήνυμα όποια κι αν είναι η σειρά", () => {
+    expect(
+      newestAt([
+        message({ at: "2026-10-12T08:00:00Z" }),
+        message({ at: "2026-10-12T10:00:00Z" }),
+        message({ at: "2026-10-12T09:00:00Z" }),
+      ]),
+    ).toBe("2026-10-12T10:00:00Z");
   });
 });
 

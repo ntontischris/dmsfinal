@@ -2,7 +2,7 @@ import { Notice } from "@/components/ui/notice";
 
 import {
   filterMessages,
-  isNewMessage,
+  newestAt,
   productionChips,
   type MessageFilters,
 } from "../helpers";
@@ -23,6 +23,7 @@ import type { Thread } from "../view-schema";
 import { AutoRefresh } from "./auto-refresh";
 import { Composer } from "./composer";
 import { MessageItem } from "./message-item";
+import { ReadAtScope } from "./new-mark";
 import { ThreadFilters } from "./thread-filters";
 import { ThreadHeader } from "./thread-header";
 
@@ -58,7 +59,6 @@ function MessageList({
           key={message.id}
           clientId={thread.client.id}
           message={message}
-          isNew={isNewMessage(message, thread.readAt)}
           productions={thread.productions}
           canClearTag={thread.canWriteUntagged}
           isTeamViewer
@@ -117,7 +117,7 @@ export async function ThreadScreen({
       </Notice>
     );
   }
-  if (thread.messages.length > 0) await markThreadReadAfterRender(clientId);
+  if (thread.messages.length > 0) await markThreadReadAfterRender(clientId, newestAt(thread.messages));
   return (
     <>
       <AutoRefresh />
@@ -135,7 +135,9 @@ export async function ThreadScreen({
         </p>
       )}
       <div className="grid gap-4">
-        <MessageList thread={thread} filters={filters} />
+        <ReadAtScope readAt={thread.readAt}>
+          <MessageList thread={thread} filters={filters} />
+        </ReadAtScope>
         <ComposerArea thread={thread} production={filters.production} />
       </div>
       <p className="mt-6 text-sm text-muted-foreground">{THREAD_FOOTER}</p>

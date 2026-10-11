@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 
 import { formatWhen, threadHref } from "../helpers";
@@ -9,16 +8,15 @@ import {
   MESSAGE_EDITED,
   MESSAGE_INTERNAL,
   MESSAGE_MENTIONS,
-  MESSAGE_NEW,
   MESSAGE_TO_CLIENT,
 } from "../labels";
 import type { ThreadMessage, ThreadProduction } from "../view-schema";
 import { MessageActions } from "./message-actions";
+import { NewMark } from "./new-mark";
 
 interface MessageItemProps {
   clientId: string;
   message: ThreadMessage;
-  isNew: boolean;
   productions: readonly ThreadProduction[];
   canClearTag: boolean;
   isTeamViewer: boolean;
@@ -28,7 +26,6 @@ interface MessageItemProps {
 export function MessageItem({
   clientId,
   message,
-  isNew,
   productions,
   canClearTag,
   isTeamViewer,
@@ -53,7 +50,7 @@ export function MessageItem({
         <time className="text-muted-foreground" dateTime={message.at}>
           {formatWhen(message.at)}
         </time>
-        {isNew && <Badge tone="strong">{MESSAGE_NEW}</Badge>}
+        <NewMark message={message} />
       </header>
       {isInternal && (
         <p className="m-0 text-sm font-semibold text-primary">

@@ -2,7 +2,7 @@
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Η μόνη εξάρτηση από την ώρα είναι το παράθυρο διόρθωσης,
 -- που ελέγχεται μετακινώντας το created_at στο παρελθόν.
 begin;
-select plan(101);
+select plan(108);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις (Υπεύθυνος του Α) · a4 Παραγωγή (Μέλος της Π1) · a5 Παραγωγή (Μέλος της Π2)
@@ -294,6 +294,32 @@ select public.t_as('a3');
 set local role authenticated;
 select is((select count(*)::int from public.audit_log where entity = 'messages'), 0, 'Χωρίς «Βλέπει ίχνος» δεν φαίνονται Μηνύματα στο Ίχνος');
 reset role;
+
+-- ───────────── Μόνο λόγω @αναφοράς: καμία μετακίνηση ─────────────
+-- Ο Πέτρος γίνεται Μέλος της Π1· το m2 (Εσωτερικό χωρίς ετικέτα) το βλέπει μόνο λόγω αναφοράς.
+set local session_replication_role = replica;
+insert into public.production_members (production_id, user_id) values
+  ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000a5');
+reset session_replication_role;
+select public.t_as('a5');
+select throws_ok($$ select public.message_set_tag(current_setting('t.m2')::uuid, '00000000-0000-0000-0000-0000000000f1') $$, '42501', null, 'Όποιος βλέπει μόνο λόγω @αναφοράς δεν αλλάζει ετικέτα');
+select throws_ok($$ select public.message_delete(current_setting('t.m1')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Διαγραφή μη ορατού: 42501');
+select throws_ok($$ select public.message_delete(gen_random_uuid()) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Διαγραφή ανύπαρκτου: το ίδιο 42501');
+select throws_ok($$ select public.message_set_tag(gen_random_uuid(), '00000000-0000-0000-0000-0000000000f1') $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Ετικέτα σε ανύπαρκτο: το ίδιο 42501');
+
+-- ───────────── Δείκτης ανάγνωσης μέχρι ό,τι φάνηκε ─────────────
+select public.t_as('a3');
+select public.messages_mark_read('00000000-0000-0000-0000-0000000000c1');
+select public.messages_mark_read('00000000-0000-0000-0000-0000000000c1', '2000-01-01'::timestamptz);
+select is((public.messages_inbox()->'items'->0->>'unread')::int, 0, 'Ο δείκτης ανάγνωσης δεν γυρίζει πίσω');
+select set_config('t.cut', clock_timestamp()::text, true);
+select public.t_as('a1');
+select public.t_msg('m10', '{"clientId":"00000000-0000-0000-0000-0000000000c1","body":"Γράφτηκε μετά τη φόρτωση"}');
+select public.t_as('a3');
+select public.messages_mark_read('00000000-0000-0000-0000-0000000000c1', current_setting('t.cut')::timestamptz);
+select is((public.messages_inbox()->'items'->0->>'unread')::int, 1, 'Ό,τι γράφτηκε μετά το p_until μένει αδιάβαστο');
+select public.messages_mark_read('00000000-0000-0000-0000-0000000000c1', '2999-01-01'::timestamptz);
+select is((public.messages_inbox()->'items'->0->>'unread')::int, 0, 'Το p_until στο μέλλον κόβεται στο «τώρα»');
 
 -- ───────────── Αφαίρεση Μέλους ─────────────
 delete from public.production_members where user_id = '00000000-0000-0000-0000-0000000000a4';

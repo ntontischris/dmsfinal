@@ -73,6 +73,14 @@ export const isNewMessage = (
   return Date.parse(message.at) > Date.parse(readAt);
 };
 
+// Το νεότερο Μήνυμα που φάνηκε: μέχρι εκεί σημειώνεται η ανάγνωση (όχι «τώρα»). Καλείται με τουλάχιστον ένα Μήνυμα.
+export const newestAt = (messages: readonly ThreadMessage[]): string =>
+  messages.reduce(
+    (newest, message) =>
+      Date.parse(message.at) > Date.parse(newest) ? message.at : newest,
+    messages[0]?.at ?? new Date(0).toISOString(),
+  );
+
 export interface MessageFilters {
   filter: ThreadFilter;
   production?: string;
