@@ -14,7 +14,11 @@ interface SheetResponsesProps {
 }
 
 // Η απάντηση του μέλους στην τρέχουσα έκδοση: «Επιβεβαιώνω» ή «Δεν μπορώ» με λόγο.
-export function SheetResponses({ filmingId, member, currentVersion }: SheetResponsesProps) {
+export function SheetResponses({
+  filmingId,
+  member,
+  currentVersion,
+}: SheetResponsesProps) {
   const isAnswered = member.version === currentVersion;
   return (
     <div className="grid gap-3">
@@ -24,14 +28,24 @@ export function SheetResponses({ filmingId, member, currentVersion }: SheetRespo
         </Badge>
         <span className="text-muted-foreground">Έκδοση {currentVersion}</span>
       </p>
-      {member.response !== "confirmed" && (
-        <ActionForm action={respondToCrew} submitLabel="Επιβεβαιώνω" variant="default" size="sm">
+      {(member.response !== "confirmed" || !isAnswered) && (
+        <ActionForm
+          action={respondToCrew}
+          submitLabel="Επιβεβαιώνω"
+          variant="default"
+          size="sm"
+        >
           <input type="hidden" name="filmingId" value={filmingId} />
           <input type="hidden" name="response" value="confirmed" />
         </ActionForm>
       )}
-      {member.response !== "declined" && (
-        <ActionForm action={respondToCrew} submitLabel="Δεν μπορώ" variant="danger" size="sm">
+      {(member.response !== "declined" || !isAnswered) && (
+        <ActionForm
+          action={respondToCrew}
+          submitLabel="Δεν μπορώ"
+          variant="danger"
+          size="sm"
+        >
           <input type="hidden" name="filmingId" value={filmingId} />
           <input type="hidden" name="response" value="declined" />
           <Field label="Λόγος (υποχρεωτικός)">

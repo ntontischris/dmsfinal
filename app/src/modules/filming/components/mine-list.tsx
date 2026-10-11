@@ -59,7 +59,9 @@ function MineRow({ entry }: { entry: MineEntry }) {
               {`Δελτίο έκδοση ${entry.sheetVersion}`}
             </Badge>
           )}
-          {awaitsAnswer(entry) && <Badge tone="attention">Περιμένει απάντηση</Badge>}
+          {awaitsAnswer(entry) && (
+            <Badge tone="attention">Περιμένει απάντηση</Badge>
+          )}
         </span>
       </Td>
       <Td data-label="Πελάτης και Παραγωγή">
@@ -77,7 +79,7 @@ function MineRow({ entry }: { entry: MineEntry }) {
       <Td data-label="Η απάντησή σου">
         <div className="grid gap-3">
           <Badge>{RESPONSE_LABELS[entry.myResponse]}</Badge>
-          {entry.myResponse !== "confirmed" && (
+          {(entry.myResponse !== "confirmed" || awaitsAnswer(entry)) && (
             <ActionForm
               action={respondToCrew}
               submitLabel="Επιβεβαιώνω"
@@ -88,7 +90,7 @@ function MineRow({ entry }: { entry: MineEntry }) {
               <input type="hidden" name="response" value="confirmed" />
             </ActionForm>
           )}
-          {entry.myResponse !== "declined" && (
+          {(entry.myResponse !== "declined" || awaitsAnswer(entry)) && (
             <ActionForm
               action={respondToCrew}
               submitLabel="Δεν μπορώ"

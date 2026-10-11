@@ -21,7 +21,13 @@ interface SheetPanelProps {
 }
 
 // Το Δελτίο γυρίσματος (ομάδα· όχι πελάτης): η κεφαλίδα της έκδοσης, η επεξεργασία ή η ανάγνωση, η έκδοση και το ιστορικό.
-export function SheetPanel({ filmingId, sheet, crew, viewerId, canRespond }: SheetPanelProps) {
+export function SheetPanel({
+  filmingId,
+  sheet,
+  crew,
+  viewerId,
+  canRespond,
+}: SheetPanelProps) {
   const me = crew.find((member) => member.userId === viewerId) ?? null;
   const currentVersion = sheet.current?.version ?? null;
   return (
@@ -29,14 +35,27 @@ export function SheetPanel({ filmingId, sheet, crew, viewerId, canRespond }: She
       <div className="grid gap-4">
         <SheetHeader sheet={sheet} />
         {sheet.canEdit ? (
-          <SheetEditor filmingId={filmingId} shots={sheet.shots} crewNote={sheet.crewNote} />
+          <SheetEditor
+            filmingId={filmingId}
+            shots={sheet.shots}
+            crewNote={sheet.crewNote}
+          />
         ) : (
           <SheetReadonly sheet={sheet} />
         )}
-        {canRespond && me && !sheet.canEdit && currentVersion !== null && (
-          <SheetResponses filmingId={filmingId} member={me} currentVersion={currentVersion} />
+        {canRespond && me && currentVersion !== null && (
+          <SheetResponses
+            filmingId={filmingId}
+            member={me}
+            currentVersion={currentVersion}
+          />
         )}
-        {sheet.canIssue && <SheetIssueForm filmingId={filmingId} currentVersion={currentVersion} />}
+        {sheet.canIssue && (
+          <SheetIssueForm
+            filmingId={filmingId}
+            currentVersion={currentVersion}
+          />
+        )}
         <SheetHistory versions={sheet.versions} />
       </div>
     </Panel>
@@ -46,10 +65,13 @@ export function SheetPanel({ filmingId, sheet, crew, viewerId, canRespond }: She
 // «Έκδοση N · ώρα · ποιος»· αν υπάρχουν αλλαγές μετά από αυτήν, σχετικό σήμα.
 function SheetHeader({ sheet }: { sheet: SheetView }) {
   const current = sheet.current;
-  if (current === null) return <p className="m-0 text-sm text-muted-foreground">Δεν έχει εκδοθεί</p>;
+  if (current === null)
+    return (
+      <p className="m-0 text-sm text-muted-foreground">Δεν έχει εκδοθεί</p>
+    );
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
-      <span>{`Έκδοση ${current.version} · ${formatDateTime(current.issuedAt)} · ${current.issuedBy ?? "—"}`}</span>
+      <span>{`Έκδοση ${current.version} · ${formatDateTime(current.issuedAt)} · ${current.issuedBy ?? "Αυτόματα"}`}</span>
       {sheet.hasChanges && (
         <Badge tone="attention">{`Υπάρχουν αλλαγές από την έκδοση ${current.version}`}</Badge>
       )}
