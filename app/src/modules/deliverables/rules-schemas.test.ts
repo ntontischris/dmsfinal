@@ -7,7 +7,7 @@ import {
 } from "./rules-schemas";
 
 const KIND_ID = "11111111-1111-4111-8111-111111111111";
-const baseRules = { internalReview: true, changesDays: 2, reminderDays: "3, 7" };
+const baseRules = { internalReview: true, changesDays: "2", reminderDays: "3, 7" };
 
 describe("formatReminderDays", () => {
   it("should show reminder days as a comma-separated line", () => {
@@ -51,24 +51,36 @@ describe("rulesFormSchema", () => {
   });
 
   it("should accept zero changes days and reject more than thirty", () => {
-    expect(rulesFormSchema.safeParse({ ...baseRules, changesDays: 0 }).success).toBe(true);
-    expect(rulesFormSchema.safeParse({ ...baseRules, changesDays: 31 }).success).toBe(false);
+    expect(rulesFormSchema.safeParse({ ...baseRules, changesDays: "0" }).success).toBe(true);
+    expect(rulesFormSchema.safeParse({ ...baseRules, changesDays: "31" }).success).toBe(false);
+  });
+
+  it("should reject empty changes days instead of reading them as zero", () => {
+    const result = rulesFormSchema.safeParse({ ...baseRules, changesDays: "" });
+    expect(result.success).toBe(false);
+    expect(result.success ? "" : result.error.issues[0]?.message).toBe(
+      "Οι μέρες αλλαγών είναι ακέραιος αριθμός από 0 έως 30.",
+    );
+  });
+
+  it("should reject changes days that are not a number, with a Greek message", () => {
+    const result = rulesFormSchema.safeParse({ ...baseRules, changesDays: "abc" });
+    expect(result.success ? "" : result.error.issues[0]?.message).toBe(
+      "Οι μέρες αλλαγών είναι ακέραιος αριθμός από 0 έως 30.",
+    );
   });
 });
 
 describe("kindRowSchema", () => {
-  it("should accept a deadline with no revision limit", () => {
-    const row = { id: KIND_ID, deadlineDays: 5, revisionLimit: null };
-    expect(kindRowSchema.safeParse(row).success).toBe(true);
+  it("should accept a deadline in working days", () => {
+    expect(kindRowSchema.safeParse({ id: KIND_ID, deadlineDays: "5" }).success).toBe(true);
   });
 
   it("should reject a deadline above 90 working days", () => {
-    const row = { id: KIND_ID, deadlineDays: 91, revisionLimit: 2 };
-    expect(kindRowSchema.safeParse(row).success).toBe(false);
+    expect(kindRowSchema.safeParse({ id: KIND_ID, deadlineDays: "91" }).success).toBe(false);
   });
 
-  it("should reject a revision limit above 20", () => {
-    const row = { id: KIND_ID, deadlineDays: 5, revisionLimit: 21 };
-    expect(kindRowSchema.safeParse(row).success).toBe(false);
+  it("should reject an empty deadline instead of reading it as zero", () => {
+    expect(kindRowSchema.safeParse({ id: KIND_ID, deadlineDays: "" }).success).toBe(false);
   });
 });

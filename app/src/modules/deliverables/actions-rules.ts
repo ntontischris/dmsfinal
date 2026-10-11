@@ -20,15 +20,11 @@ type KindRows =
   | { success: true; rows: KindRowInput[] }
   | { success: false; error: string };
 
-// Κάθε είδος της φόρμας: «kindId» (κρυφό) και τα πεδία «deadline-<id>», «limit-<id>». Κενό όριο = κανένας γύρος.
-const readKindRow = (form: FormData, id: string): unknown => {
-  const limit = text(form, `limit-${id}`);
-  return {
-    id,
-    deadlineDays: Number(text(form, `deadline-${id}`)),
-    revisionLimit: limit === "" ? null : Number(limit),
-  };
-};
+// Κάθε είδος της φόρμας: «kindId» (κρυφό) και το πεδίο «deadline-<id>». Το όριο αλλαγών δεν αποθηκεύεται εδώ.
+const readKindRow = (form: FormData, id: string): unknown => ({
+  id,
+  deadlineDays: text(form, `deadline-${id}`),
+});
 
 function parseKindRows(form: FormData): KindRows {
   const rows: KindRowInput[] = [];
@@ -50,7 +46,7 @@ export async function saveDeliverableRules(
 ): Promise<FormState> {
   const parsed = rulesFormSchema.safeParse({
     internalReview: checked(form, "internalReview"),
-    changesDays: Number(text(form, "changesDays")),
+    changesDays: text(form, "changesDays"),
     reminderDays: text(form, "reminderDays"),
   });
   if (!parsed.success) return firstIssue(parsed.error);

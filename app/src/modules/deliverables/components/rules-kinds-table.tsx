@@ -1,8 +1,10 @@
+import Link from "next/link";
+
 import { Input } from "@/components/ui/field";
 
 import type { DeliverableRuleKind } from "../rules-types";
 
-// Ανά είδος Παροχής: προθεσμία σε εργάσιμες και όριο αλλαγών. Το κενό όριο σημαίνει καμία αλλαγή.
+// Ανά είδος Παροχής: η προθεσμία σε εργάσιμες αλλάζει εδώ. Το όριο αλλαγών το αλλάζουν οι Ρυθμίσεις › Συμφωνίες.
 export function RulesKindsTable({
   kinds,
 }: {
@@ -11,21 +13,30 @@ export function RulesKindsTable({
   if (kinds.length === 0)
     return <p className="m-0 text-sm text-muted-foreground">Δεν υπάρχουν είδη πλήθους.</p>;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-md text-left text-sm">
-        <thead>
-          <tr className="text-muted-foreground">
-            <th className="py-2 pr-3 font-medium">Είδος</th>
-            <th className="py-2 pr-3 font-medium">Προθεσμία (εργάσιμες)</th>
-            <th className="py-2 font-medium">Όριο αλλαγών</th>
-          </tr>
-        </thead>
-        <tbody>
-          {kinds.map((kind) => (
-            <KindRow key={kind.id} kind={kind} />
-          ))}
-        </tbody>
-      </table>
+    <div className="grid gap-3">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-md text-left text-sm">
+          <thead>
+            <tr className="text-muted-foreground">
+              <th className="py-2 pr-3 font-medium">Είδος</th>
+              <th className="py-2 pr-3 font-medium">Προθεσμία (εργάσιμες)</th>
+              <th className="py-2 font-medium">Όριο αλλαγών</th>
+            </tr>
+          </thead>
+          <tbody>
+            {kinds.map((kind) => (
+              <KindRow key={kind.id} kind={kind} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="m-0 text-sm text-muted-foreground">
+        Το όριο αλλαγών αλλάζει από{" "}
+        <Link href="/app/settings/agreements" className="text-primary underline">
+          Ρυθμίσεις › Συμφωνίες
+        </Link>
+        .
+      </p>
     </div>
   );
 }
@@ -49,14 +60,7 @@ function KindRow({ kind }: { kind: DeliverableRuleKind }) {
         />
       </td>
       <td className="py-2">
-        <Input
-          aria-label={`Όριο αλλαγών ${kind.label}`}
-          name={`limit-${kind.id}`}
-          type="number"
-          min={1}
-          max={20}
-          defaultValue={kind.revisionLimit ?? ""}
-        />
+        <span className="tabular-nums">{kind.revisionLimit ?? "Χωρίς γύρους"}</span>
       </td>
     </tr>
   );

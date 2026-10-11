@@ -141,12 +141,14 @@ begin
 end;
 $$;
 
--- Ένα είδος Παροχής πλήθους: προθεσμία 1–90 μέρες και όριο αλλαγών 1–20 (ή κανένα, null).
+-- Ένα είδος Παροχής πλήθους: μόνο η προθεσμία (1–90 εργάσιμες). Το όριο αλλαγών αλλάζει από Συμφωνίες.
+-- Γράφει μόνο όταν η τιμή αλλάζει (όπως το agreements_save_revision_limits).
 create function authz.save_deliverable_kind(p_kind jsonb) returns void
 language plpgsql security definer set search_path = ''
 as $$
 declare
   k public.provision_kinds;
+  v_deadline smallint;
 begin
   if coalesce(jsonb_typeof(p_kind), '') <> 'object' or coalesce(jsonb_typeof(p_kind -> 'id'), '') <> 'string' then
     raise exception 'Μη έγκυρο είδος Παροχής στους Κανόνες Παραδοτέων' using errcode = 'P0001';
@@ -156,11 +158,9 @@ begin
   if not found then
     raise exception 'Το είδος δεν μετράει σε πλήθος ή έχει αποσυρθεί' using errcode = 'P0001';
   end if;
-  update public.provision_kinds x set
-    deadline_days = authz.deliverable_int(p_kind, 'deadlineDays', coalesce(k.deadline_days, 5)::integer, 1, 90)::smallint,
-    revision_limit = case when jsonb_typeof(p_kind -> 'revisionLimit') = 'null' then null
-                          else authz.deliverable_int(p_kind, 'revisionLimit', k.revision_limit::integer, 1, 20)::smallint end
-   where x.id = k.id;
+  v_deadline := authz.deliverable_int(p_kind, 'deadlineDays', coalesce(k.deadline_days, 5)::integer, 1, 90)::smallint;
+  update public.provision_kinds x set deadline_days = v_deadline
+   where x.id = k.id and x.deadline_days is distinct from v_deadline;
 end;
 $$;
 
@@ -236,24 +236,31 @@ begin
 end;
 $$;
 
--- Μερική ενημέρωση. Οι Κανόνες Παραδοτέων αποθηκεύονται μαζί με τα είδη Παροχής τους (kinds).
+-- Μερική ενημέρωση. Τα είδη (kinds) δίνουν μόνο την προθεσμία· το όριο αλλαγών το έχουν οι Ρυθμίσεις › Συμφωνίες.
 create function public.deliverable_settings_save(p_settings jsonb) returns void
 language plpgsql security definer set search_path = ''
 as $$
 declare
   s public.deliverable_settings;
   v jsonb := coalesce(p_settings, '{}'::jsonb);
+  v_internal boolean;
+  v_changes integer;
+  v_reminders integer[];
 begin
   perform authz.require('settings.manage');
   if jsonb_typeof(v) <> 'object' then
     raise exception 'Οι Κανόνες Παραδοτέων θέλουν αντικείμενο' using errcode = 'P0001';
   end if;
   select x.* into s from public.deliverable_settings x where x.id;
-  update public.deliverable_settings x set
-    internal_review = authz.deliverable_bool(v, 'internalReview', s.internal_review),
-    changes_days = authz.deliverable_int(v, 'changesDays', s.changes_days, 0, 30),
-    reminder_days = authz.deliverable_days(v, 'reminderDays', s.reminder_days)
-   where x.id;
+  v_internal := authz.deliverable_bool(v, 'internalReview', s.internal_review);
+  v_changes := authz.deliverable_int(v, 'changesDays', s.changes_days, 0, 30);
+  v_reminders := authz.deliverable_days(v, 'reminderDays', s.reminder_days);
+  -- Χωρίς αλλαγή στις τιμές της γραμμής δεν γράφεται ούτε Ίχνος.
+  if (v_internal, v_changes, v_reminders) is distinct from (s.internal_review, s.changes_days, s.reminder_days) then
+    update public.deliverable_settings x set
+      internal_review = v_internal, changes_days = v_changes, reminder_days = v_reminders
+     where x.id;
+  end if;
   if v ? 'kinds' then
     perform authz.save_deliverable_kinds(v -> 'kinds');
   end if;
@@ -282,7 +289,8 @@ create trigger deliverable_settings_guard before delete on public.deliverable_se
 create trigger deliverable_settings_audit after insert or delete on public.deliverable_settings
   for each row execute function authz.audit_row('id');
 create trigger deliverable_settings_audit_update after update on public.deliverable_settings
-  for each row when (old.* is distinct from new.*) execute function authz.audit_row('id');
+  for each row when ((old.internal_review, old.changes_days, old.reminder_days) is distinct from (new.internal_review, new.changes_days, new.reminder_days))
+  execute function authz.audit_row('id');
 
 -- ───────────── Δικαιώματα ─────────────
 

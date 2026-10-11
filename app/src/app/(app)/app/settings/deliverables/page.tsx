@@ -24,18 +24,18 @@ export default async function DeliverableSettingsPage() {
     );
 
   const rules = await getDeliverableRules();
-  if (!rules.ok)
-    return (
-      <Notice kind="error" title="Δεν φόρτωσαν οι Κανόνες">
-        <p className="m-0">Τίποτα δεν χάθηκε. Δοκίμασε ξανά σε λίγο.</p>
-      </Notice>
-    );
   return (
     <>
       {header}
       <div className="grid gap-4">
         <SettingsTabs current="deliverables" />
-        <DeliverableRulesForm rules={rules.data} />
+        {rules.ok ? (
+          <DeliverableRulesForm rules={rules.data} />
+        ) : (
+          <Notice kind="error" title="Δεν φόρτωσαν οι Κανόνες">
+            <p className="m-0">Τίποτα δεν χάθηκε. Δοκίμασε ξανά σε λίγο.</p>
+          </Notice>
+        )}
       </div>
     </>
   );

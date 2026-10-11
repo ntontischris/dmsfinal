@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες 2027, ώστε οι προθεσμίες να είναι σταθερές.
 -- να περνά οποιαδήποτε μέρα τρέξει. Οι προθεσμίες από «σήμερα» ελέγχονται με την ίδια συνάρτηση, όχι με σταθερή ημερομηνία.
 begin;
-select plan(46);
+select plan(49);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής της Περιόδου 1) · e3 Πωλήσεις (χωρίς Παραδοτέα)
@@ -91,6 +91,12 @@ select set_config('t.pi', public.production_create_internal('Εσωτερική 
 
 -- Αποθήκευση και επικυρώσεις.
 select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 0, "reminderDays": [2, 5, 9]}'::jsonb) $$, 'Οι Κανόνες αποθηκεύονται (0 μέρες αλλαγών, υπενθυμίσεις 2, 5, 9)');
+select set_config('t.audit0', (select count(*)::text from public.audit_log where entity = 'deliverable_settings'), true);
+select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 0}'::jsonb) $$, 'Αποθήκευση χωρίς αλλαγή περνά');
+select is((select count(*)::text from public.audit_log where entity = 'deliverable_settings'), current_setting('t.audit0'), 'Αποθήκευση χωρίς αλλαγή δεν γράφει Ίχνος');
+select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 1}'::jsonb) $$, 'Αλλαγή μίας μέρας αποθηκεύεται');
+select is((select count(*)::int from public.audit_log where entity = 'deliverable_settings') - current_setting('t.audit0')::int, 1, 'Η αλλαγή γράφει ένα Ίχνος');
+select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 0}'::jsonb) $$, 'Η μέρα αλλαγών επιστρέφει στο 0');
 select is(authz.deliverable_changes_days(), 0, 'Η μέρα αλλαγών διαβάζεται από τη ρύθμιση');
 select is(authz.deliverable_reminder_days(), '{2,5,9}'::integer[], 'Οι υπενθυμίσεις διαβάζονται από τη ρύθμιση');
 select throws_ok($$ select public.deliverable_settings_save('{"changesDays": 31}'::jsonb) $$, 'P0001', 'Η τιμή είναι εκτός ορίων στους Κανόνες Παραδοτέων', 'Μέρες αλλαγών πάνω από 30 απορρίπτονται');
@@ -112,13 +118,10 @@ select is(public.deliverable_settings_view() -> 'defaults' -> 'reminderDays', '[
 
 -- Προθεσμία και όριο ανά είδος.
 select lives_ok($$ select public.deliverable_settings_save(jsonb_build_object('kinds', jsonb_build_array(
-  jsonb_build_object('id', current_setting('t.reel'), 'deadlineDays', 3, 'revisionLimit', 4)))) $$, 'Το reel παίρνει 3 εργάσιμες και 4 γύρους');
+  jsonb_build_object('id', current_setting('t.reel'), 'deadlineDays', 3)))) $$, 'Το reel παίρνει 3 εργάσιμες');
 select is((select k ->> 'deadlineDays' from jsonb_array_elements(public.deliverable_settings_view() -> 'kinds') k where k ->> 'id' = current_setting('t.reel')), '3', 'Η προθεσμία του reel αποθηκεύεται');
-select is((select k ->> 'revisionLimit' from jsonb_array_elements(public.deliverable_settings_view() -> 'kinds') k where k ->> 'id' = current_setting('t.reel')), '4', 'Το όριο του reel αποθηκεύεται');
+select is((select k ->> 'revisionLimit' from jsonb_array_elements(public.deliverable_settings_view() -> 'kinds') k where k ->> 'id' = current_setting('t.reel')), '2', 'Το όριο του reel μένει του Συμφωνιών (η οθόνη το δείχνει μόνο)');
 select is((select k ->> 'deadlineDays' from jsonb_array_elements(public.deliverable_settings_view() -> 'kinds') k where k ->> 'id' = current_setting('t.video')), '10', 'Η αποθήκευση του reel δεν αλλάζει το βίντεο');
-select lives_ok($$ select public.deliverable_settings_save(jsonb_build_object('kinds', jsonb_build_array(
-  jsonb_build_object('id', current_setting('t.photo'), 'revisionLimit', null)))) $$, 'Η φωτογραφία χάνει τους γύρους αλλαγών');
-select is((select k -> 'revisionLimit' from jsonb_array_elements(public.deliverable_settings_view() -> 'kinds') k where k ->> 'id' = current_setting('t.photo')), 'null'::jsonb, 'Η φωτογραφία δείχνει χωρίς γύρους');
 select throws_ok($$ select public.deliverable_settings_save('{"kinds":[{"id":"00000000-0000-0000-0000-00000000ffff","deadlineDays":3}]}'::jsonb) $$, 'P0001', 'Το είδος δεν μετράει σε πλήθος ή έχει αποσυρθεί', 'Άγνωστο είδος απορρίπτεται');
 select throws_ok($$ select public.deliverable_settings_save(jsonb_build_object('kinds', jsonb_build_array(jsonb_build_object('id', current_setting('t.reel'), 'deadlineDays', 0)))) $$, 'P0001', 'Η τιμή είναι εκτός ορίων στους Κανόνες Παραδοτέων', 'Προθεσμία 0 μέρες απορρίπτεται');
 select is(authz.deliverable_kind_days(current_setting('t.video')::uuid), 10, 'Η προθεσμία βίντεο διαβάζεται από το είδος');
@@ -161,8 +164,9 @@ select '00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-00000000
        (select s.id from public.sales_stages s where s.code = 'proposal'),
        (select s.id from public.sales_sources s where s.code = 'phone'),
        '00000000-0000-0000-0000-0000000000e3', 'Πρόταση', (now() at time zone 'Europe/Athens')::date + 3;
+update public.provision_kinds set revision_limit = 4 where id = current_setting('t.reel')::uuid;
 select set_config('t.a2', public.agreement_create('00000000-0000-0000-0000-0000000000c2', 'monthly', 'Νέα τεστ')::text, true);
-select is((select r.rounds::integer from public.agreement_revision_limits r where r.agreement_id = current_setting('t.a2')::uuid and r.kind_id = current_setting('t.reel')::uuid), 4, 'Η νέα Συμφωνία παίρνει το νέο όριο αλλαγών');
+select is((select r.rounds::integer from public.agreement_revision_limits r where r.agreement_id = current_setting('t.a2')::uuid and r.kind_id = current_setting('t.reel')::uuid), 4, 'Η νέα Συμφωνία παίρνει το όριο των Συμφωνιών');
 select is((select r.rounds::integer from public.agreement_revision_limits r where r.agreement_id = current_setting('t.a')::uuid and r.kind_id = current_setting('t.reel')::uuid), 2, 'Η υπάρχουσα Συμφωνία κρατά το δικό της όριο');
 
 select * from finish();
