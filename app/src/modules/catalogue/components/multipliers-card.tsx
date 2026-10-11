@@ -10,6 +10,7 @@ import { ActionForm } from "./action-form";
 
 interface MultipliersCardProps {
   multipliers: Multipliers;
+  overrunPercent: number;
   canManage: boolean;
 }
 
@@ -19,10 +20,12 @@ const FIELDS = [
   { key: "max", name: "max", label: "Μέγιστη (×)" },
 ] as const;
 
+const OVERRUN_FIELD = { name: "overrunPercent", label: "Ποσοστό υπέρβασης (%)" } as const;
+
 // Το κόμμα είναι ο δεκαδικός του ελληνικού πληκτρολογίου, γι' αυτό τα πεδία είναι κειμένου.
 const decimalText = (value: number): string => String(value).replace(".", ",");
 
-function ReadOnlyValues({ multipliers }: { multipliers: Multipliers }) {
+function ReadOnlyValues({ multipliers, overrunPercent }: { multipliers: Multipliers; overrunPercent: number }) {
   return (
     <div className="grid gap-2 text-sm">
       <dl className="m-0 grid gap-2">
@@ -34,6 +37,10 @@ function ReadOnlyValues({ multipliers }: { multipliers: Multipliers }) {
             </dd>
           </div>
         ))}
+        <div className="flex flex-wrap gap-x-3">
+          <dt className="kit-label">{OVERRUN_FIELD.label}</dt>
+          <dd className="m-0 tabular-nums">{formatPercent(overrunPercent / 100)}</dd>
+        </div>
       </dl>
       <p className="m-0 text-muted-foreground">
         Αλλάζουν μόνο από όποιον «Διαχειρίζεται κόστος».
@@ -45,6 +52,7 @@ function ReadOnlyValues({ multipliers }: { multipliers: Multipliers }) {
 // O6 · Εύρος τιμής: οι τρεις πολλαπλασιαστές. Το Ελάχιστο περιθώριο βγαίνει από τον μικρότερο (ADR 0017).
 export function MultipliersCard({
   multipliers,
+  overrunPercent,
   canManage,
 }: MultipliersCardProps) {
   return (
@@ -67,9 +75,17 @@ export function MultipliersCard({
                 />
               </Field>
             ))}
+            <Field label={OVERRUN_FIELD.label}>
+              <Input
+                name={OVERRUN_FIELD.name}
+                inputMode="decimal"
+                required
+                defaultValue={decimalText(overrunPercent)}
+              />
+            </Field>
           </ActionForm>
         ) : (
-          <ReadOnlyValues multipliers={multipliers} />
+          <ReadOnlyValues multipliers={multipliers} overrunPercent={overrunPercent} />
         )}
         <p className="m-0 text-sm">
           Ελάχιστο περιθώριο:{" "}

@@ -90,6 +90,12 @@ export const NAV: readonly NavSection[] = [
         href: "/app/productions",
         requires: ["productions.manage", "c.productions"],
       },
+      {
+        code: "G3",
+        label: "Κόστος και ώρες",
+        href: "/app/productions/costs",
+        requires: "finance.cost",
+      },
     ],
   },
   {

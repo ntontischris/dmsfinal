@@ -7,15 +7,17 @@ import { TAB_LABELS } from "../labels";
 import { PRODUCTION_TABS, type ProductionTab } from "../types";
 
 interface ProductionTabsProps {
-  tab: ProductionTab;
+  tab: ProductionTab | "hours";
   internalOnly: boolean;
+  hoursCount: number | null; // null = το κόστος δεν φαίνεται σε αυτόν τον θεατή, η καρτέλα κρύβεται
 }
 
 const listHref = (tab: ProductionTab, internalOnly: boolean): string =>
   `/app/productions?tab=${tab}${internalOnly ? "&internal=1" : ""}`;
 
 // Οι καρτέλες και το φίλτρο «Εσωτερικές» ζουν στη διεύθυνση: η σελίδα δείχνει ό,τι ζητά το URL.
-export function ProductionTabs({ tab, internalOnly }: ProductionTabsProps) {
+export function ProductionTabs({ tab, internalOnly, hoursCount }: ProductionTabsProps) {
+  const isHours = tab === "hours";
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <nav aria-label="Καρτέλες Παραγωγών" className="flex flex-wrap gap-2">
@@ -34,16 +36,27 @@ export function ProductionTabs({ tab, internalOnly }: ProductionTabsProps) {
             </Link>
           );
         })}
-      </nav>
-      <Link
-        href={listHref(tab, !internalOnly)}
-        aria-pressed={internalOnly}
-        className={cn(
-          buttonVariants({ variant: internalOnly ? "primary" : "ghost", size: "sm" }),
+        {hoursCount !== null && (
+          <Link
+            href="/app/productions?tab=hours"
+            aria-current={isHours ? "page" : undefined}
+            className={cn(buttonVariants({ variant: isHours ? "primary" : "default", size: "sm" }))}
+          >
+            Θέλουν ώρες ({hoursCount})
+          </Link>
         )}
-      >
-        Εσωτερικές
-      </Link>
+      </nav>
+      {!isHours && (
+        <Link
+          href={listHref(tab, !internalOnly)}
+          aria-pressed={internalOnly}
+          className={cn(
+            buttonVariants({ variant: internalOnly ? "primary" : "ghost", size: "sm" }),
+          )}
+        >
+          Εσωτερικές
+        </Link>
+      )}
     </div>
   );
 }

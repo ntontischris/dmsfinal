@@ -10,6 +10,7 @@ const MIN_DEFAULT_HOURS = 0.5;
 const MAX_DEFAULT_HOURS = 24;
 const MAX_PRODUCTIVE_HOURS = 10_000;
 const MAX_MULTIPLIER = 20;
+const MAX_OVERRUN_PERCENT = 500;
 const MULTIPLIER_ORDER =
   "Οι πολλαπλασιαστές ξεκινούν από 1 και ανεβαίνουν: ελάχιστη, στόχος, μέγιστη.";
 const MULTIPLIER_NUMBER = "Γράψε πολλαπλασιαστή, π.χ. 1,3.";
@@ -120,8 +121,14 @@ const multiplier = number(MULTIPLIER_NUMBER).refine(
   MULTIPLIER_ORDER,
 );
 
+// Το ποσοστό υπέρβασης (G3): πόσο πάνω από την εκτίμηση ωρών πέφτει το σήμα «Υπέρβαση». Προεπιλογή 20.
+const overrunPercent = number("Γράψε ποσοστό, π.χ. 20.").refine(
+  (value) => value >= 0 && value <= MAX_OVERRUN_PERCENT,
+  "Το ποσοστό υπέρβασης είναι από 0 έως 500.",
+);
+
 export const saveMultipliersSchema = z
-  .object({ min: multiplier, target: multiplier, max: multiplier })
+  .object({ min: multiplier, target: multiplier, max: multiplier, overrunPercent })
   .refine(
     (v) =>
       v.min >= 1 &&

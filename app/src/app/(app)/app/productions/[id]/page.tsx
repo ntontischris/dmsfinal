@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer } from "@/modules/access";
+import { costsCaps } from "@/modules/costs";
 import {
   AgreementCard,
   HistoryPanel,
@@ -42,11 +43,19 @@ export default async function ProductionPage({
   const production = await getProduction(parsed.data);
   if (!production.ok) return <LoadError />;
   if (production.data === null) return <Missing />;
-  return <ProductionPageContent production={production.data} />;
+  return (
+    <ProductionPageContent production={production.data} showCosts={costsCaps(viewer).canView} />
+  );
 }
 
 // Οι λίστες υποψηφίων φορτώνουν μόνο όπου το Δικαίωμα τις θέλει (μεταβίβαση, Μέλη).
-async function ProductionPageContent({ production }: { production: ProductionDetail }) {
+async function ProductionPageContent({
+  production,
+  showCosts,
+}: {
+  production: ProductionDetail;
+  showCosts: boolean;
+}) {
   const canTransfer = production.viewerCan.transfer;
   const canManage = production.viewerCan.members;
   const [owners, members] = await Promise.all([
@@ -61,6 +70,11 @@ async function ProductionPageContent({ production }: { production: ProductionDet
         <Link href="/app/productions" className={buttonVariants({ variant: "ghost" })}>
           ← Παραγωγές
         </Link>
+        {showCosts && (
+          <Link href={`/app/productions/${production.id}/costs`} className={buttonVariants({ variant: "ghost" })}>
+            Κόστος και ώρες
+          </Link>
+        )}
       </ScreenHeader>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <StatePanel production={production} />
