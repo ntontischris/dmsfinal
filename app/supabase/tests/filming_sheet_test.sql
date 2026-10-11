@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σταθερές (Ιανουάριος 2027, Ώρα Ελλάδας)
 -- ώστε το τεστ να περνά οποιαδήποτε μέρα τρέξει. Γύρισματα εσωτερικής Παραγωγής (χωρίς Συμφωνία).
 begin;
-select plan(63);
+select plan(67);
 
 -- ───────────── Βοηθητικά ─────────────
 create function public.t_as(p_user uuid) returns void
@@ -174,6 +174,13 @@ select public.t_as('00000000-0000-0000-0000-0000000000e1');
 select lives_ok($$ select public.filming_reschedule('00000000-0000-0000-0000-0000000000a4', timestamptz '2027-01-08 10:00:00+02', 2) $$, 'Μετακίνηση Γυρίσματος χωρίς έκδοση');
 select is((select response from public.filming_crew where filming_id = '00000000-0000-0000-0000-0000000000a4' and user_id = '00000000-0000-0000-0000-0000000000e7'), 'pending', 'Χωρίς έκδοση η μετακίνηση μηδενίζει τις απαντήσεις');
 select is((select count(*)::int from public.filming_sheet_versions where filming_id = '00000000-0000-0000-0000-0000000000a4'), 0, 'Χωρίς έκδοση δεν βγαίνει νέα έκδοση');
+
+-- ───────────── Τα Γυρίσματά μου: έκδοση και απάντηση ─────────────
+select public.t_as('00000000-0000-0000-0000-0000000000e7');
+select is((select x ->> 'sheetVersion' from jsonb_array_elements(public.filming_mine_view()) x where x ->> 'id' = '00000000-0000-0000-0000-0000000000a1'), '4', 'Τα Γυρίσματά μου δείχνουν την τρέχουσα έκδοση του Δελτίου');
+select is((select x ->> 'myVersion' from jsonb_array_elements(public.filming_mine_view()) x where x ->> 'id' = '00000000-0000-0000-0000-0000000000a1'), null, 'Χωρίς απάντηση στην τρέχουσα έκδοση, η έκδοση της απάντησης είναι κενή');
+select lives_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a1', 'confirmed', null) $$, 'Το μέλος επιβεβαιώνει την έκδοση 4');
+select is((select x ->> 'myVersion' from jsonb_array_elements(public.filming_mine_view()) x where x ->> 'id' = '00000000-0000-0000-0000-0000000000a1'), '4', 'Η απάντηση φέρνει την έκδοση 4 στα Γυρίσματά μου');
 
 -- ───────────── Ίχνος ─────────────
 select ok(authz.audit_entity_allowed('filming_sheets') and authz.audit_entity_allowed('filming_sheet_versions'), 'Το Ίχνος βλέπει τα Δελτία χωρίς ποσά');
