@@ -21,13 +21,15 @@ const sheetPanel = (page: Page): Locator =>
     has: page.getByRole("heading", { name: "Δελτίο", exact: true }),
   });
 
-// Η φόρμα του πάνελ που έχει το κουμπί· κάθε φόρμα έχει το δικό της μήνυμα (role=status).
-// Η φόρμα βρίσκεται από το κουμπί της (πρόγονός του), γιατί το `has` ενός `form` ψάχνει απογόνους του,
-// όχι προγόνους, οπότε η `section` του πάνελ δεν βρίσκεται μέσα στη φόρμα και δεν ταιριάζει ποτέ.
-const formWith = (scope: Locator, name: string): Locator =>
-  scope
-    .getByRole("button", { name, exact: true })
-    .locator("xpath=ancestor::form");
+// Η φόρμα του πάνελ βρίσκεται από ένα στοιχείο της (πρόγονός του)· κάθε φόρμα έχει το δικό της μήνυμα (role=status).
+// Το `has` ενός `form` ψάχνει απογόνους του, όχι προγόνους, οπότε δεν δουλεύει με τη `section` του πάνελ.
+// Το κουμπί της επεξεργασίας κρύβεται μετά την αποθήκευση (`onlyWhenChanged`), γι' αυτό η φόρμα της βρίσκεται από το πεδίο.
+const formOf = (anchor: Locator): Locator =>
+  anchor.locator("xpath=ancestor::form");
+const editorForm = (sheet: Locator): Locator =>
+  formOf(sheet.getByRole("textbox", { name: "Νέα λήψη" }));
+const issueForm = (sheet: Locator): Locator =>
+  formOf(sheet.getByRole("button", { name: "Έκδοση Δελτίου", exact: true }));
 
 test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία λήψη και βγάζει Έκδοση 2 με το ιστορικό", async ({
   page,
@@ -49,13 +51,13 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
     ).toBeVisible();
     await addShot(sheet, "Είσοδος");
     await addShot(sheet, "Πάγκος");
-    const editor = formWith(sheet, "Αποθήκευση Δελτίου");
+    const editor = editorForm(sheet);
     await button(editor, "Αποθήκευση Δελτίου").click();
     await expect(editor.getByRole("status")).toContainText(
       "Το Δελτίο αποθηκεύτηκε.",
     );
 
-    const issue = formWith(sheet, "Έκδοση Δελτίου");
+    const issue = issueForm(sheet);
     await button(issue, "Έκδοση Δελτίου").click();
     await expect(issue.getByRole("status")).toContainText(
       "Εκδόθηκε η έκδοση 1",
@@ -71,13 +73,13 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
     await sheet
       .getByRole("textbox", { name: "Κείμενο λήψης 2" })
       .fill("Πάγκος κοντά");
-    const editor = formWith(sheet, "Αποθήκευση Δελτίου");
+    const editor = editorForm(sheet);
     await button(editor, "Αποθήκευση Δελτίου").click();
     await expect(editor.getByRole("status")).toContainText(
       "Το Δελτίο αποθηκεύτηκε.",
     );
 
-    const issue = formWith(sheet, "Έκδοση Δελτίου");
+    const issue = issueForm(sheet);
     await fieldOf(issue, "Τι άλλαξε").fill("Άλλαξε η δεύτερη λήψη");
     await button(issue, "Έκδοση Δελτίου").click();
     await expect(issue.getByRole("status")).toContainText(
