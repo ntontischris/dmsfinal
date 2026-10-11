@@ -7,6 +7,7 @@ const HINT: CostHint = {
   hourCostMonth: "2026-10-01",
   hourCost: 40,
   multipliers: { min: 1.3, target: 1.6, max: 2 },
+  overrunPercent: 20,
 };
 
 const item = (changes: Partial<CatalogueItem> = {}): CatalogueItem => ({

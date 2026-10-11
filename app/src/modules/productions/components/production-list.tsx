@@ -14,6 +14,7 @@ interface ProductionListProps {
   productions: readonly ProductionCard[];
   tab: ProductionTab;
   internalOnly: boolean;
+  hoursCount: number | null;
 }
 
 const EMPTY_TEXT: Readonly<Record<ProductionTab, string>> = {
@@ -23,10 +24,10 @@ const EMPTY_TEXT: Readonly<Record<ProductionTab, string>> = {
 };
 
 // G1: η λίστα των Παραγωγών με καρτέλες και φίλτρο Εσωτερικών. Η βάση φιλτράρει· εδώ μόνο εμφανίζεται.
-export function ProductionList({ productions, tab, internalOnly }: ProductionListProps) {
+export function ProductionList({ productions, tab, internalOnly, hoursCount }: ProductionListProps) {
   return (
     <div className="grid gap-4">
-      <ProductionTabs tab={tab} internalOnly={internalOnly} />
+      <ProductionTabs tab={tab} internalOnly={internalOnly} hoursCount={hoursCount} />
       {productions.length === 0 ? (
         <Notice kind="empty" title="Καμία Παραγωγή εδώ">
           <p className="m-0">{EMPTY_TEXT[tab]}</p>

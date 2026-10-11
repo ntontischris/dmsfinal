@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες Γυρισμάτων και Περιόδων το 2027, ώστε το τεστ
 -- να περνά οποιαδήποτε μέρα τρέξει. Οι προθεσμίες από «σήμερα» ελέγχονται με την ίδια συνάρτηση, όχι με σταθερή ημερομηνία.
 begin;
-select plan(113);
+select plan(116);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής της Περιόδου 1) · e3 Πωλήσεις (χωρίς Παραδοτέα)
@@ -537,6 +537,12 @@ select throws_ok(
   $$ select public.deliverable_comment_add(current_setting('t.o1')::uuid, 1, 'Σχόλιο', null, false) $$,
   'P0001', 'Η Παραγωγή δεν είναι ανοιχτή', 'Σε κλειστή Παραγωγή δεν σχολιάζεται'
 );
+
+-- Το Ίχνος μετά τη συγχώνευση με το main: κόστος της Παραγωγής και Παραδοτέα μαζί.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select ok(authz.audit_entity_allowed('production_costs'), 'Το Ίχνος καταγράφει το κόστος της Παραγωγής για τον Ιδιοκτήτη');
+select ok(authz.audit_entity_allowed('deliverables'), 'Το Ίχνος καταγράφει τα Παραδοτέα μετά τη συγχώνευση');
+select ok(authz.audit_entity_allowed('deliverable_versions') and authz.audit_entity_allowed('deliverable_comments'), 'Το Ίχνος καταγράφει Εκδόσεις και σχόλια μετά τη συγχώνευση');
 
 select * from finish();
 rollback;

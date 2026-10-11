@@ -57,6 +57,7 @@ export interface CostHint {
   hourCostMonth: string | null; // YYYY-MM-01 του μήνα που ισχύει, null αν δεν έχει οριστεί ακόμα Κόστος ώρας
   hourCost: number | null;
   multipliers: Multipliers;
+  overrunPercent: number; // Ποσοστό υπέρβασης (G3), από τις Ρυθμίσεις
 }
 export interface CostMonth {
   month: string; // YYYY-MM-01

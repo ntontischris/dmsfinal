@@ -550,6 +550,7 @@ as $$
     when 'catalogue_item_costs' then authz.has('finance.cost')
     when 'cost_months' then authz.has('finance.cost')
     when 'cost_settings' then authz.has('finance.cost')
+    when 'production_costs' then authz.has('finance.cost')
     when 'catalogue_item_amounts' then authz.has('finance.amounts')
     -- Πρόσβαση και Ρυθμίσεις
     when 'roles' then true
@@ -621,7 +622,7 @@ as $$
     when 'filming_sheet_versions' then true
     when 'google_calendar' then authz.has('calendar.google')
     when 'google_deletions' then authz.has('calendar.google')
-    -- Παραδοτέα: χωρίς ποσά
+    -- Παραδοτέα (#140): χωρίς ποσά
     when 'deliverables' then true
     when 'deliverable_versions' then true
     when 'deliverable_comments' then true

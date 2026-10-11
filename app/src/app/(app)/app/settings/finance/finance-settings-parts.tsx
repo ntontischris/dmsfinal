@@ -16,6 +16,7 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   multiplier_min: "Ελάχιστη (×)",
   multiplier_target: "Στόχος (×)",
   multiplier_max: "Μέγιστη (×)",
+  overrun_percent: "Ποσοστό υπέρβασης",
 };
 
 // Όλα όσα διαβάζει η σελίδα, μαζί: αν κάτι δεν φορτώσει, δεν δείχνουμε μισές Ρυθμίσεις.
@@ -46,6 +47,7 @@ export async function FinanceSettingsContent({
       />
       <MultipliersCard
         multipliers={hint.data.multipliers}
+        overrunPercent={hint.data.overrunPercent}
         canManage={canManage}
       />
       <p className="m-0 text-sm text-muted-foreground">

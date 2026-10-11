@@ -223,13 +223,14 @@ export async function saveMultipliers(
   form: FormData,
 ): Promise<FormState> {
   const parsed = saveMultipliersSchema.safeParse(
-    pick(form, ["min", "target", "max"]),
+    pick(form, ["min", "target", "max", "overrunPercent"]),
   );
   if (!parsed.success) return firstIssue(parsed.error);
   const outcome = await callRpc("cost_save_multipliers", {
     p_min: parsed.data.min,
     p_target: parsed.data.target,
     p_max: parsed.data.max,
+    p_overrun_percent: parsed.data.overrunPercent,
   });
   return finishWith(
     outcome,

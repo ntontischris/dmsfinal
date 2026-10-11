@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer } from "@/modules/access";
+import { costsCaps } from "@/modules/costs";
 import {
   ProductionDeliverables,
   deliverablesCaps,
@@ -51,6 +52,7 @@ export default async function ProductionPage({
   return (
     <ProductionPageContent
       production={production.data}
+      showCosts={costsCaps(viewer).canView}
       canWorkDeliverables={canWorkDeliverables}
     />
   );
@@ -59,9 +61,11 @@ export default async function ProductionPage({
 // Οι λίστες υποψηφίων φορτώνουν μόνο όπου το Δικαίωμα τις θέλει (μεταβίβαση, Μέλη, Παραδοτέα).
 async function ProductionPageContent({
   production,
+  showCosts,
   canWorkDeliverables,
 }: {
   production: ProductionDetail;
+  showCosts: boolean;
   canWorkDeliverables: boolean;
 }) {
   const canTransfer = production.viewerCan.transfer;
@@ -81,26 +85,22 @@ async function ProductionPageContent({
   return (
     <>
       <ScreenHeader eyebrow={EYEBROW} title={production.title}>
-        <Link
-          href="/app/productions"
-          className={buttonVariants({ variant: "ghost" })}
-        >
+        <Link href="/app/productions" className={buttonVariants({ variant: "ghost" })}>
           ← Παραγωγές
         </Link>
+        {showCosts && (
+          <Link href={`/app/productions/${production.id}/costs`} className={buttonVariants({ variant: "ghost" })}>
+            Κόστος και ώρες
+          </Link>
+        )}
       </ScreenHeader>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <StatePanel production={production} />
-        <OwnerPanel
-          production={production}
-          candidates={owners?.ok ? owners.data : []}
-        />
+        <OwnerPanel production={production} candidates={owners?.ok ? owners.data : []} />
         <AgreementCard agreement={production.agreement} />
         <PeriodCard period={production.period} balances={production.balances} />
         {(canManage || production.members.length > 0) && (
-          <MembersPanel
-            production={production}
-            candidates={members?.ok ? members.data : []}
-          />
+          <MembersPanel production={production} candidates={members?.ok ? members.data : []} />
         )}
         <ProductionFilmings filmings={production.filmings} />
         <ProductionDeliverables
