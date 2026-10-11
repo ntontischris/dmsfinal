@@ -73,3 +73,67 @@ export function invoiceRegisteredMessage(input: InvoiceRegisteredInput): EmailMe
   });
   return { subject, ...rendered };
 }
+
+// Μήνυμα «Ληξιπρόθεσμο τιμολόγιο» (#153, Π14): μία φορά ανά Τιμολόγιο, στους Χρήστες πελάτη με «Βλέπει Οικονομικά».
+export interface OverduePayment {
+  holder: string;
+  bank: string;
+  iban: string;
+}
+
+export interface InvoiceOverdueInput {
+  locale: Locale;
+  origin: string;
+  name: string;
+  number: string;
+  dueDate: string;
+  remaining: number;
+  payment: OverduePayment | null;
+}
+
+const LEDGER_PATH = "/app/finance/ledger";
+
+const paymentParagraphs = (locale: Locale, payment: OverduePayment | null): string[] =>
+  payment
+    ? [
+        pick(
+          locale,
+          `Στοιχεία πληρωμής: ${payment.holder}, ${payment.bank}, IBAN ${payment.iban}`,
+          `Payment details: ${payment.holder}, ${payment.bank}, IBAN ${payment.iban}`,
+        ),
+      ]
+    : [];
+
+export function invoiceOverdueMessage(input: InvoiceOverdueInput): EmailMessageBody {
+  const { locale } = input;
+  const subject = pick(
+    locale,
+    `Ληξιπρόθεσμο τιμολόγιο ${input.number}`,
+    `Overdue invoice ${input.number}`,
+  );
+  const rendered = renderShell({
+    locale,
+    origin: input.origin,
+    heading: subject,
+    paragraphs: [
+      pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
+      pick(
+        locale,
+        `Το τιμολόγιο ${input.number} είναι ληξιπρόθεσμο.`,
+        `Invoice ${input.number} is overdue.`,
+      ),
+      pick(
+        locale,
+        `Υπόλοιπο: ${formatTotal(locale, input.remaining)}`,
+        `Balance: ${formatTotal(locale, input.remaining)}`,
+      ),
+      pick(locale, `Λήξη: ${formatDay(input.dueDate)}`, `Due date: ${formatDay(input.dueDate)}`),
+      ...paymentParagraphs(locale, input.payment),
+    ],
+    action: {
+      label: pick(locale, "Δες την Καρτέλα σου", "View your ledger"),
+      url: `${input.origin}${LEDGER_PATH}`,
+    },
+  });
+  return { subject, ...rendered };
+}

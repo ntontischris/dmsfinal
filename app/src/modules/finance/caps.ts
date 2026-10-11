@@ -1,4 +1,4 @@
-import { can, type Viewer } from "@/modules/access";
+import { can, isClientViewer, type Viewer } from "@/modules/access";
 
 import type { FinanceCaps } from "./types";
 
@@ -14,3 +14,11 @@ export const financeCaps = (viewer: Viewer): FinanceCaps => ({
   canManageMethods: can(viewer, "settings.manage"),
   canRegisterInvoices: can(viewer, "finance.invoices"),
 });
+
+// Ποια όψη των Οικονομικών βλέπει ο θεατής (όπως στα Παραδοτέα): ομάδα (με ποσά), Χρήστης πελάτη με «Βλέπει Οικονομικά», ή καμία.
+export type FinanceView = "team" | "client" | "none";
+
+export const financeViewOf = (viewer: Viewer): FinanceView => {
+  if (isClientViewer(viewer)) return can(viewer, "c.finance") ? "client" : "none";
+  return financeCaps(viewer).canView ? "team" : "none";
+};

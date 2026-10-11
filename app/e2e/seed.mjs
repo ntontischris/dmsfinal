@@ -326,6 +326,26 @@ for (const P of ["desktop", "mobile"]) {
   });
 }
 console.log("seed: Παραδοτέα πελάτη");
+// ───────────── Καρτέλα: Πελάτης με Χρήστη πελάτη «Πλήρης» για το e2e/ledger.spec.ts ─────────────
+for (const P of ["desktop", "mobile"]) {
+  const clientId = await insertRow("clients", {
+    name: `Πελάτης Καρτέλας ${P}`,
+    city: "Αθήνα",
+    contact_name: "Κατερίνα Καρτέλα",
+    contact_email: `ledger-contact.${P}@pelatis.example.gr`,
+    contact_phone: "",
+    manager_id: ANNA,
+  });
+  const { data: created, error: userError } = await admin.auth.admin.createUser({
+    email: `ledger.${P}@example.com`, password: PASSWORD, email_confirm: true,
+  });
+  if (userError) throw userError;
+  await insertPlain("client_users", {
+    client_id: clientId, user_id: created.user.id, name: "Κατερίνα Καρτέλα", role_id: fullClientRole.id, is_current: true,
+  });
+}
+console.log("seed: Καρτέλα πελάτη");
+
 
 // ───────────── Εξοπλισμός: ένα αντικείμενο ανά project για το e2e/equipment.spec.ts ─────────────
 // Τα αντικείμενα μπαίνουν απευθείας με service role: το Πρότυπο της Παραγωγής δουλεύει πάνω σε αυτά.

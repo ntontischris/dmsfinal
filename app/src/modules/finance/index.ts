@@ -1,6 +1,7 @@
 // Module «Οικονομικά»: Προς τιμολόγηση (I1, #151), Τιμολόγια και Καταχώρηση (I2, I3, #152) και Εισπράξεις (I4, #150). Έξω φαίνεται μόνο ό,τι χρειάζονται οι σελίδες.
 export type { ClientOption, FinanceCaps, PaymentMethod, ReceiptPreview, ReceiptRow } from "./types";
-export { financeCaps } from "./caps";
+export { financeCaps, financeViewOf } from "./caps";
+export type { FinanceView } from "./caps";
 export {
   METHODS_TITLE,
   RECEIPTS_EYEBROW,
@@ -54,3 +55,24 @@ export { InvoiceRegisterForm } from "./components/invoice-register-form";
 export { InvoiceTable } from "./components/invoice-table";
 export { InvoiceTotals } from "./components/invoice-totals";
 export { athensToday } from "./money";
+export {
+  CLIENT_INVOICES_EMPTY_TEXT,
+  CLIENT_INVOICES_EMPTY_TITLE,
+  CLIENT_INVOICES_EYEBROW,
+  CLIENT_INVOICES_NO_ACCESS_TEXT,
+  LEDGER_BACK,
+  LEDGER_CLIENTS_EMPTY_TEXT,
+  LEDGER_CLIENTS_EMPTY_TITLE,
+  LEDGER_CLIENTS_LABEL,
+  LEDGER_ERROR_TEXT,
+  LEDGER_ERROR_TITLE,
+  LEDGER_EYEBROW,
+  LEDGER_NO_ACCESS_TEXT,
+  LEDGER_PICK_TEXT,
+  LEDGER_TITLE,
+} from "./ledger-labels";
+export { clientParam } from "./ledger-helpers";
+export { getClientInvoices, getLedger, listLedgerClients } from "./ledger-queries";
+export { ClientInvoiceTable } from "./components/client-invoice-table";
+export { LedgerBody } from "./components/ledger-body";
+export { LedgerBackLink, LedgerClients } from "./components/ledger-clients";
