@@ -1,5 +1,6 @@
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer } from "@/modules/access";
+import { costsCaps, countNeedsHours } from "@/modules/costs";
 import {
   NewInternalDetails,
   ProductionList,
@@ -10,6 +11,7 @@ import {
   tabState,
 } from "@/modules/productions";
 
+import { NeedsHoursView } from "./needs-hours-view";
 import { LoadError, NoAccess } from "./productions-parts";
 
 export const metadata = { title: "Παραγωγές" };
@@ -27,7 +29,12 @@ export default async function ProductionsPage({
   const caps = productionsCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} eyebrow={EYEBROW} />;
 
-  const parsed = listFilterSchema.safeParse(await searchParams);
+  const query = await searchParams;
+  const hoursCount = costsCaps(viewer).canView ? await countNeedsHours() : null;
+  const count = hoursCount?.ok ? hoursCount.data : null;
+  if (query.tab === "hours" && count !== null) return <NeedsHoursView hoursCount={count} />;
+
+  const parsed = listFilterSchema.safeParse(query);
   const filter = parsed.success ? parsed.data : DEFAULT_FILTER;
   const [productions, candidates] = await Promise.all([
     listProductions({ state: tabState(filter.tab), internalOnly: filter.internal }),
@@ -42,7 +49,12 @@ export default async function ProductionsPage({
           <NewInternalDetails candidates={candidates?.ok ? candidates.data : []} />
         )}
       </ScreenHeader>
-      <ProductionList productions={productions.data} tab={filter.tab} internalOnly={filter.internal} />
+      <ProductionList
+        productions={productions.data}
+        tab={filter.tab}
+        internalOnly={filter.internal}
+        hoursCount={count}
+      />
     </>
   );
 }
