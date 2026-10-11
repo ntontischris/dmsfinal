@@ -10,7 +10,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // Το ίδιο cron με την ουρά email, κάθε λεπτό. Χωρίς CRON_SECRET: 500· με λάθος ή λείπον Bearer: 401.
 // Χωρίς στοιχεία λογαριασμού Google ή ημερολόγιο: 200 με «skipped» και καμία κλήση στο Google.
 export const maxDuration = 60;
-const ROUND_BUDGET_MS = 50_000;
+// Μέσα στα 60 δευτερόλεπτα του maxDuration μένουν 15 για να κλείσει ο γύρος και να αφεθεί το κλείδωμα.
+const ROUND_BUDGET_MS = 45_000;
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;

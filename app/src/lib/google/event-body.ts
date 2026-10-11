@@ -10,6 +10,7 @@ export function toGoogleEventBody(event: QueuedEvent, origin: string): GoogleEve
         end: { dateTime: event.end, timeZone: GOOGLE_TIME_ZONE },
       };
   return {
+    status: "confirmed",
     summary: event.summary,
     description: event.description ? `${origin}${event.description}` : "",
     location: event.location,

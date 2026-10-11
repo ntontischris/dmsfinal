@@ -48,4 +48,14 @@ describe("POST /api/hooks/google-calendar", () => {
     expect((await POST(notification(headers))).status).toBe(200);
     expect(rpc).toHaveBeenCalledWith("google_channel_check", { p_channel_id: CHANNEL, p_token: TOKEN });
   });
+  it("asks for a pull on a change notification and answers 200 without running the worker", async () => {
+    rpc.mockResolvedValueOnce({ data: true, error: null }).mockResolvedValueOnce({ data: null, error: null });
+    const headers = {
+      "x-goog-channel-id": CHANNEL,
+      "x-goog-channel-token": TOKEN,
+      "x-goog-resource-state": "exists",
+    };
+    expect((await POST(notification(headers))).status).toBe(200);
+    expect(rpc).toHaveBeenLastCalledWith("google_request_pull", {});
+  });
 });

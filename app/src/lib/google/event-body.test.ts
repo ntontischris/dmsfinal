@@ -18,6 +18,7 @@ const timedEvent = (overrides: Partial<QueuedEvent> = {}): QueuedEvent => ({
 describe("toGoogleEventBody", () => {
   it("writes a timed event in Europe/Athens with the app link in the description", () => {
     expect(toGoogleEventBody(timedEvent(), ORIGIN)).toEqual({
+      status: "confirmed",
       summary: "(αναμένει) Ακρόπολη",
       description: "https://dmsfinal-app.vercel.app/app/filming/f-1",
       location: "Πλάκα",

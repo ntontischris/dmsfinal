@@ -46,6 +46,8 @@ export const parseGoogleEvent = (raw: unknown): GoogleEvent | null => {
 
 // Το σώμα που στέλνουμε για εισαγωγή ή ενημέρωση. Ο τίτλος δεν έχει θέση εδώ όταν δεν χρειάζεται.
 export interface GoogleEventBody {
+  id?: string;
+  status: "confirmed";
   summary: string;
   description: string;
   location: string;
@@ -91,5 +93,6 @@ export const googleStateSchema = z.object({
   newEvent: z.enum(["blocked", "none"]),
   deleteHours: z.number(),
   writePending: z.boolean(),
+  pullRequested: z.boolean(),
 });
 export type GoogleState = z.infer<typeof googleStateSchema>;

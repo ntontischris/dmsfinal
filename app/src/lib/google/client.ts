@@ -39,7 +39,6 @@ export interface GoogleCalendarApi {
 export interface ChangesQuery {
   calendarId: string;
   syncToken?: string;
-  timeMin?: string;
   pageToken?: string;
 }
 
@@ -115,12 +114,11 @@ export function createGoogleCalendarApi(config: GoogleConfig): GoogleCalendarApi
   };
 }
 
-// Ο αυξητικός συγχρονισμός (syncToken) ή η πλήρης ανάγνωση από μια ημερομηνία (timeMin)· ποτέ και τα δύο.
+// Ο αυξητικός συγχρονισμός (syncToken) ή η πλήρης ανάγνωση (χωρίς όριο ημερομηνίας, ώστε να έρθει nextSyncToken).
 // Τα επαναλαμβανόμενα μένουν «master» (singleEvents=false)· η διαγραφή έρχεται ως status cancelled.
 export function changesUrl(query: ChangesQuery): string {
   const params = new URLSearchParams({ singleEvents: "false", showDeleted: "true", maxResults: "250" });
   if (query.syncToken) params.set("syncToken", query.syncToken);
-  if (query.timeMin) params.set("timeMin", query.timeMin);
   if (query.pageToken) params.set("pageToken", query.pageToken);
   return `${eventsPath(query.calendarId)}?${params.toString()}`;
 }
