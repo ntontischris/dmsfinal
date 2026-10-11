@@ -76,7 +76,8 @@ test("ο Ιδιοκτήτης ανεβάζει, ο πελάτης ζητά αλ�
 
   // 2. Ο πελάτης βλέπει το Παραδοτέο στο «Περιμένουν εσένα» και ζητά αλλαγές με σημείωση.
   await switchUser(page, CLIENT_EMAIL(P));
-  await page.getByRole("navigation", { name: "Οθόνες" }).getByRole("link", { name: "Παραδοτέα", exact: true }).click();
+  // Η ετικέτα της πλοήγησης έχει τον κωδικό μπροστά (H1 Παραδοτέα)·
+  await page.getByRole("navigation", { name: "Οθόνες" }).getByRole("link", { name: /Παραδοτέα$/ }).click();
   const waiting = page.locator("section", { hasText: "Περιμένουν εσένα" });
   await expect(waiting.getByRole("link", { name: DELIVERABLE, exact: true })).toBeVisible();
   await shot(page, "h3-client-waiting");
