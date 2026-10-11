@@ -2,6 +2,7 @@
 // εδώ ό,τι γυρνά η βάση, χωρίς ποσά: οι Παροχές μετριούνται σε πλήθος ή ώρες.
 
 import type { PendingReschedule, RescheduleRequestEntry } from "./booking-types";
+import type { SheetSummary } from "./sheet-types";
 
 export const FILMING_STATES = [
   "pending",
@@ -125,6 +126,8 @@ export interface CrewMember {
   response: CrewResponse;
   reason: string | null;
   respondedAt: string | null;
+  // Η έκδοση του Δελτίου της απάντησης (κενό αν δεν έχει απαντήσει σε έκδοση).
+  version: number | null;
   // Έχει κλεισμένο χρόνο που τέμνει το Γύρισμα (μόνο προειδοποίηση).
   isBlocked: boolean;
 }
@@ -203,6 +206,7 @@ export interface FilmingCard {
   noShowAt: string | null;
   provision: ProvisionBalance | null;
   crew: CrewMember[];
+  sheet: SheetSummary | null;
   equipment: EquipmentLine[];
   history: FilmingHistoryEntry[];
   signals: FilmingSignals;
@@ -219,6 +223,8 @@ export interface MineEntry {
   note: string | null;
   myResponse: CrewResponse;
   myReason: string | null;
+  myVersion: number | null;
+  sheetVersion: number | null;
   production: NamedProduction;
   client: NamedRef | null;
 }

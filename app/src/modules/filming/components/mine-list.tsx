@@ -8,6 +8,10 @@ import { NO_CLIENT_LABEL, RESPONSE_LABELS, STATE_LABELS } from "../labels";
 import { formatDateTime, formatHours, stateTone } from "../helpers";
 import type { MineEntry } from "../types";
 
+// Περιμένει απάντηση όταν υπάρχει Δελτίο και το μέλος δεν έχει απαντήσει στην τρέχουσα έκδοση.
+const awaitsAnswer = (entry: MineEntry): boolean =>
+  entry.sheetVersion !== null && entry.myVersion !== entry.sheetVersion;
+
 import { ActionForm } from "./action-form";
 import { MutedNote } from "./form-fields";
 
@@ -50,6 +54,12 @@ function MineRow({ entry }: { entry: MineEntry }) {
           <Badge tone={stateTone(entry.state)}>
             {STATE_LABELS[entry.state]}
           </Badge>
+          {entry.sheetVersion !== null && (
+            <Badge tone={awaitsAnswer(entry) ? "attention" : undefined}>
+              {`Δελτίο έκδοση ${entry.sheetVersion}`}
+            </Badge>
+          )}
+          {awaitsAnswer(entry) && <Badge tone="attention">Περιμένει απάντηση</Badge>}
         </span>
       </Td>
       <Td data-label="Πελάτης και Παραγωγή">
