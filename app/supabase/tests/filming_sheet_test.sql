@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σταθερές (Ιανουάριος 2027, Ώρα Ελλάδας)
 -- ώστε το τεστ να περνά οποιαδήποτε μέρα τρέξει. Γύρισματα εσωτερικής Παραγωγής (χωρίς Συμφωνία).
 begin;
-select plan(67);
+select plan(82);
 
 -- ───────────── Βοηθητικά ─────────────
 create function public.t_as(p_user uuid) returns void
@@ -73,12 +73,16 @@ reset role;
 select public.t_as('00000000-0000-0000-0000-0000000000e6');
 set local role authenticated;
 select throws_ok($$ select public.filming_sheet_view('00000000-0000-0000-0000-0000000000a1') $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Ο πελάτης δεν βλέπει το Δελτίο');
+select throws_ok($$ select public.filming_sheet_save('00000000-0000-0000-0000-0000000000a1', '[]'::jsonb, null) $$, '42501', null, 'Ο πελάτης δεν αποθηκεύει το Δελτίο');
+select throws_ok($$ select public.filming_sheet_issue('00000000-0000-0000-0000-0000000000a1', null) $$, '42501', null, 'Ο πελάτης δεν εκδίδει το Δελτίο');
 reset role;
+select is(authz.filming_sheet_summary('00000000-0000-0000-0000-0000000000a1'), null, 'Ο πελάτης δεν βλέπει σύνοψη Δελτίου στο E3');
 
 select public.t_as('00000000-0000-0000-0000-0000000000e8');
 set local role authenticated;
 select throws_ok($$ select public.filming_sheet_view('00000000-0000-0000-0000-0000000000a1') $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χρήστης ομάδας εκτός Συνεργείου δεν βλέπει το Δελτίο');
 select throws_ok($$ select public.filming_sheet_save('00000000-0000-0000-0000-0000000000a1', '[]'::jsonb, null) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χρήστης ομάδας εκτός Συνεργείου δεν αποθηκεύει το Δελτίο');
+select throws_ok($$ select public.filming_sheet_issue('00000000-0000-0000-0000-0000000000a1', null) $$, '42501', null, 'Χρήστης ομάδας εκτός Συνεργείου δεν εκδίδει το Δελτίο');
 reset role;
 
 select public.t_as('00000000-0000-0000-0000-0000000000e4');
@@ -181,6 +185,38 @@ select is((select x ->> 'sheetVersion' from jsonb_array_elements(public.filming_
 select is((select x ->> 'myVersion' from jsonb_array_elements(public.filming_mine_view()) x where x ->> 'id' = '00000000-0000-0000-0000-0000000000a1'), null, 'Χωρίς απάντηση στην τρέχουσα έκδοση, η έκδοση της απάντησης είναι κενή');
 select lives_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a1', 'confirmed', null) $$, 'Το μέλος επιβεβαιώνει την έκδοση 4');
 select is((select x ->> 'myVersion' from jsonb_array_elements(public.filming_mine_view()) x where x ->> 'id' = '00000000-0000-0000-0000-0000000000a1'), '4', 'Η απάντηση φέρνει την έκδοση 4 στα Γυρίσματά μου');
+
+-- ───────────── Κανόνας κλειστός: η 2η έκδοση δεν μηδενίζει ─────────────
+update public.filming_settings set change_resets_confirmations = false, sheet_sending = 'manual' where id;
+insert into public.filmings (id, production_id, starts_at, hours, origin, state) values
+  ('00000000-0000-0000-0000-0000000000a5', '00000000-0000-0000-0000-0000000000b1', timestamptz '2027-01-11 09:00:00+02', 2, 'team', 'scheduled');
+insert into public.filming_crew (filming_id, user_id) values ('00000000-0000-0000-0000-0000000000a5', '00000000-0000-0000-0000-0000000000e7');
+select public.t_as('00000000-0000-0000-0000-0000000000e2');
+select is(public.filming_sheet_issue('00000000-0000-0000-0000-0000000000a5', null), 1, 'Το νέο Γύρισμα βγάζει έκδοση 1');
+select public.t_as('00000000-0000-0000-0000-0000000000e7');
+select lives_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a5', 'confirmed', null) $$, 'Το μέλος επιβεβαιώνει την έκδοση 1 του νέου Γυρίσματος');
+select public.t_as('00000000-0000-0000-0000-0000000000e1');
+select lives_ok($$ select public.filming_reschedule('00000000-0000-0000-0000-0000000000a5', timestamptz '2027-01-11 11:00:00+02', 2) $$, 'Η μετακίνηση με χειροκίνητη αποστολή περνά');
+select public.t_as('00000000-0000-0000-0000-0000000000e2');
+select is(public.filming_sheet_issue('00000000-0000-0000-0000-0000000000a5', 'Άλλαξε η ώρα'), 2, 'Η έκδοση 2 βγαίνει με περιγραφή');
+select is((select response from public.filming_crew where filming_id = '00000000-0000-0000-0000-0000000000a5' and user_id = '00000000-0000-0000-0000-0000000000e7'), 'confirmed', 'Με κλειστό Κανόνα η έκδοση 2 δεν μηδενίζει τις απαντήσεις');
+
+-- ───────────── Ξανασώσιμο Συνεργείου με αυτόματη αποστολή ─────────────
+select lives_ok($$ select public.filming_sheet_save('00000000-0000-0000-0000-0000000000a5', jsonb_build_array(jsonb_build_object('text', 'Είσοδος')), null) $$, 'Αλλαγή λήψης χωρίς νέα έκδοση');
+select is(public.filming_sheet_view('00000000-0000-0000-0000-0000000000a5') ->> 'hasChanges', 'true', 'Η λήψη αφήνει το Δελτίο με αλλαγές');
+update public.filming_settings set sheet_sending = 'auto' where id;
+select lives_ok($$ select public.filming_crew_set('00000000-0000-0000-0000-0000000000a5', array['00000000-0000-0000-0000-0000000000e7']::uuid[]) $$, 'Ορισμός του ίδιου Συνεργείου ξανά με αυτόματη αποστολή');
+select is((select count(*)::int from public.filming_sheet_versions where filming_id = '00000000-0000-0000-0000-0000000000a5'), 2, 'Ο ίδιος ορισμός Συνεργείου ξανά δεν βγάζει έκδοση');
+
+-- ───────────── «Δεν μπορώ» σε έκδοση χωρίς εκδότη ομάδας ─────────────
+insert into public.filmings (id, production_id, starts_at, hours, origin, state) values
+  ('00000000-0000-0000-0000-0000000000a6', '00000000-0000-0000-0000-0000000000b1', timestamptz '2027-01-12 09:00:00+02', 2, 'team', 'scheduled');
+insert into public.filming_crew (filming_id, user_id) values ('00000000-0000-0000-0000-0000000000a6', '00000000-0000-0000-0000-0000000000e7');
+insert into public.filming_sheet_versions (filming_id, version, issued_by, change, snapshot) values
+  ('00000000-0000-0000-0000-0000000000a6', 1, null, null, '{}'::jsonb);
+select public.t_as('00000000-0000-0000-0000-0000000000e7');
+select lives_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a6', 'declined', 'Ταξίδι') $$, 'Το μέλος λέει «δεν μπορώ» σε έκδοση που δεν έγινε από Χρήστη ομάδας');
+select is((select count(*)::int from public.email_outbox where kind = 'crew_declined' and to_email = 'owner@example.com' and payload ->> 'filmingId' = '00000000-0000-0000-0000-0000000000a6'), 1, '«Δεν μπορώ» πηγαίνει στον ιδιοκτήτη της Παραγωγής όταν δεν υπάρχει εκδότης ομάδας');
 
 -- ───────────── Ίχνος ─────────────
 select ok(authz.audit_entity_allowed('filming_sheets') and authz.audit_entity_allowed('filming_sheet_versions'), 'Το Ίχνος βλέπει τα Δελτία χωρίς ποσά');

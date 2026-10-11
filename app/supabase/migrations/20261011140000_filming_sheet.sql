@@ -54,8 +54,12 @@ $$;
 create trigger filming_sheet_versions_immutable before update or delete on public.filming_sheet_versions
   for each row execute function authz.guard_sheet_version();
 
-create trigger filming_sheets_audit after insert or update or delete on public.filming_sheets
+create trigger filming_sheets_audit after insert or delete on public.filming_sheets
   for each row execute function authz.audit_row('filming_id');
+create trigger filming_sheets_audit_update after update on public.filming_sheets
+  for each row
+  when ((to_jsonb(old) - 'updated_at' - 'updated_by') is distinct from (to_jsonb(new) - 'updated_at' - 'updated_by'))
+  execute function authz.audit_row('filming_id');
 create trigger filming_sheet_versions_audit after insert on public.filming_sheet_versions
   for each row execute function authz.audit_row('filming_id');
 
@@ -144,7 +148,7 @@ $$;
 
 -- Έως 100 λήψεις, κείμενο 1 έως 300 χαρακτήρες, σειρά όπως δόθηκε. Άκυρο ή κενό id παίρνει νέο.
 create function authz.normalize_shots(p_shots jsonb) returns jsonb
-language plpgsql stable set search_path = ''
+language plpgsql volatile set search_path = ''
 as $$
 declare
   v_shots jsonb := coalesce(p_shots, '[]'::jsonb);
@@ -205,7 +209,7 @@ begin
   end if;
   v_snapshot := authz.sheet_snapshot(p_filming);
   insert into public.filming_sheet_versions (filming_id, version, issued_by, change, snapshot)
-  values (p_filming, v_version, auth.uid(), v_change, v_snapshot);
+  values (p_filming, v_version, case when authz.is_team_user() then auth.uid() end, v_change, v_snapshot);
   select coalesce(s.change_resets_confirmations, false) and v_version > 1 into v_reset
     from public.filming_settings s where s.id;
   if v_reset then
@@ -224,10 +228,12 @@ end;
 $$;
 
 -- Καλείται μετά από αλλαγή πού, πότε ή ποιοι. Χωρίς έκδοση δεν κάνει τίποτα. Με 'auto' βγάζει νέα έκδοση αν άλλαξε το στιγμιότυπο.
+-- Κλειδώνει το Γύρισμα πριν ελέγξει τις αλλαγές, ώστε δύο ταυτόχρονες αλλαγές να μη βγάλουν δύο ίδιες εκδόσεις.
 create function authz.sheet_changed(p_filming uuid, p_change text) returns void
 language plpgsql security definer set search_path = ''
 as $$
 begin
+  perform 1 from public.filmings f where f.id = p_filming for update;
   if not authz.sheet_has_changes(p_filming) then
     return;
   end if;
@@ -252,7 +258,6 @@ begin
   perform authz.filming_gate(p_id, authz.can_crew_filming(p_id), 'filming.crew');
   perform authz.require_open_filming(p_id);
   perform authz.filming_crew_write(p_id, p_user_ids, false);
-  perform authz.sheet_changed(p_id, 'Άλλαξε το Συνεργείο');
 end;
 $$;
 
@@ -272,13 +277,12 @@ begin
   v_result := authz.filming_crew_write(p_id, array(
     select m.user_id from public.crew_template_members m where m.template_id = p_template
   ), true);
-  perform authz.sheet_changed(p_id, 'Άλλαξε το Συνεργείο');
   return v_result;
 end;
 $$;
 
--- Η απάντηση του μέλους γράφει και την τρέχουσα έκδοση. «Δεν μπορώ» στέλνει email στον εκδότη της τελευταίας έκδοσης
--- (ή στον δημιουργό του Γυρίσματος, αν δεν υπάρχει έκδοση). Το Γύρισμα δεν αλλάζει.
+-- Η απάντηση του μέλους γράφει και την τρέχουσα έκδοση. «Δεν μπορώ» στέλνει email στον τελευταίο εκδότη Χρήστη ομάδας
+-- (ή στον ιδιοκτήτη της Παραγωγής, αν καμία έκδοση δεν έγινε από Χρήστη ομάδας). Το Γύρισμα δεν αλλάζει.
 create or replace function public.filming_crew_respond(p_id uuid, p_response text, p_reason text) returns void
 language plpgsql security definer set search_path = ''
 as $$
@@ -287,6 +291,7 @@ declare
   v_member text;
   v_starts timestamptz;
   v_production text;
+  v_owner uuid;
   v_recipient uuid;
 begin
   if not authz.is_team_user() then
@@ -311,14 +316,15 @@ begin
   if p_response = 'declined' then
     perform authz.filming_event(p_id, 'crew_declined', jsonb_build_object('user_id', auth.uid(), 'reason', v_reason));
     select u.name into v_member from public.team_users u where u.user_id = auth.uid();
-    select f.starts_at, pr.title into v_starts, v_production
+    select f.starts_at, pr.title, pr.owner_id into v_starts, v_production, v_owner
       from public.filmings f join public.productions pr on pr.id = f.production_id
      where f.id = p_id;
     select coalesce(
-             (select v.issued_by from public.filming_sheet_versions v where v.filming_id = p_id order by v.version desc limit 1),
-             f.created_by)
-      into v_recipient
-      from public.filmings f where f.id = p_id;
+             (select v.issued_by from public.filming_sheet_versions v
+               where v.filming_id = p_id and authz.user_is_team(v.issued_by)
+               order by v.version desc limit 1),
+             v_owner)
+      into v_recipient;
     perform authz.email_team_user(v_recipient, 'crew_declined', jsonb_build_object(
       'filmingId', p_id, 'member', v_member, 'reason', v_reason, 'startsAt', v_starts, 'production', v_production
     ));
@@ -646,7 +652,23 @@ begin
     end if;
     perform authz.filming_event(p_filming, 'crew_changed',
       jsonb_build_object('added', to_jsonb(v_added), 'removed', to_jsonb(v_removed)));
+    -- Μόνο πραγματική αλλαγή μέλους βγάζει έκδοση (όχι ο ίδιος ορισμός Συνεργείου ξανά).
+    perform authz.sheet_changed(p_filming, 'Άλλαξε το Συνεργείο');
   end if;
   return jsonb_build_object('skipped', v_skipped);
 end;
 $$;
+
+-- ───────────── Δικαιώματα εκτέλεσης των βοηθητικών ─────────────
+
+-- Οι βοηθητικές authz καλούνται μόνο από RPC με security definer· ο ρόλος της εφαρμογής δεν τις καλεί.
+revoke all on function
+  authz.guard_sheet_version(),
+  authz.sheet_snapshot(uuid),
+  authz.sheet_has_changes(uuid),
+  authz.filming_sheet_summary(uuid),
+  authz.email_team_user(uuid, text, jsonb),
+  authz.normalize_shots(jsonb),
+  authz.sheet_issue(uuid, text),
+  authz.sheet_changed(uuid, text)
+  from public, anon, authenticated;
