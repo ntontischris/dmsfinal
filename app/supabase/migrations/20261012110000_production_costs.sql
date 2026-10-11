@@ -90,6 +90,29 @@ begin
 end;
 $$;
 
+-- Μερίδιο Περιόδου (1 για εφάπαξ και για Εσωτερική)· η μερική Περίοδος παίρνει το κλάσμα της, όπως η τιμή.
+create function authz.production_period_share(p_agreement uuid, p_period uuid) returns numeric
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce((
+    select r.share
+      from public.agreements a
+      cross join lateral authz.agreement_period_rows(a.start_on, a.duration_months) r
+      join public.agreement_periods ap on ap.id = p_period and r.n + 1 = ap.n
+     where a.id = p_agreement and a.kind = 'monthly'
+  ), 1);
+$$;
+
+-- Ώρες και άμεσο κόστος της Περιόδου: το σύνολο της Συμφωνίας επί το μερίδιο της Περιόδου (ώρες σε 1 δεκαδικό).
+create function authz.production_period_hours(p_agreement uuid, p_period uuid)
+returns table (shoot_hours numeric, edit_hours numeric, direct_cost numeric)
+language sql stable security definer set search_path = ''
+as $$
+  select round(e.shoot_hours * s.share, 1), round(e.edit_hours * s.share, 1), round(e.direct_cost * s.share, 2)
+    from authz.agreement_estimate(p_agreement) e
+    cross join lateral (select authz.production_period_share(p_agreement, p_period) as share) s;
+$$;
+
 -- Κάθε νέα Παραγωγή παίρνει τη γραμμή της. Εσωτερική (χωρίς Συμφωνία): μηδενική εκτίμηση και χωρίς τιμή.
 create function authz.snapshot_production_cost() returns trigger
 language plpgsql security definer set search_path = ''
@@ -101,12 +124,12 @@ begin
   select new.id, e.shoot_hours, e.edit_hours, e.direct_cost,
          case when new.agreement_id is not null then authz.production_period_price(new.agreement_id, new.period_id) end,
          (select h.hour_cost from authz.current_hour_cost() h)
-    from authz.agreement_estimate(new.agreement_id) e;
+    from authz.production_period_hours(new.agreement_id, new.period_id) e;
   return null;
 end;
 $$;
 
--- Παραγωγές που υπάρχουν ήδη παίρνουν γραμμή, με την εκτίμηση των γραμμών της Συμφωνίας τους.
+-- Παραγωγές που υπάρχουν ήδη παίρνουν γραμμή, με την εκτίμηση της Περιόδου τους.
 insert into public.production_costs (
   production_id, estimate_shoot_hours, estimate_edit_hours, estimate_direct_cost, estimate_price, estimate_hour_cost
 )
@@ -114,7 +137,7 @@ select p.id, e.shoot_hours, e.edit_hours, e.direct_cost,
        case when p.agreement_id is not null then authz.production_period_price(p.agreement_id, p.period_id) end,
        (select h.hour_cost from authz.current_hour_cost() h)
   from public.productions p
- cross join lateral authz.agreement_estimate(p.agreement_id) e;
+ cross join lateral authz.production_period_hours(p.agreement_id, p.period_id) e;
 
 -- ───────────── Υπολογισμοί ─────────────
 
@@ -488,7 +511,8 @@ $$;
 
 -- Βοηθητικές: μόνο τα triggers και οι άλλες συναρτήσεις του module τις καλούν (τρέχουν με τα δικά τους δικαιώματα).
 revoke all on function
-  authz.agreement_estimate(uuid), authz.production_period_price(uuid, uuid), authz.snapshot_production_cost(),
+  authz.agreement_estimate(uuid), authz.production_period_price(uuid, uuid),
+  authz.production_period_share(uuid, uuid), authz.production_period_hours(uuid, uuid), authz.snapshot_production_cost(),
   authz.stamp_production_cost(),
   authz.production_suggested_shoot_hours(uuid), authz.production_cost_row(uuid), authz.production_cost_group(jsonb),
   authz.require_cost_amounts(numeric, numeric, numeric)
