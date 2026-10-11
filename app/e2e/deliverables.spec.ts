@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { fieldOf, openProduction } from "./productions-parts";
+import { fieldOf, openNewInternal } from "./productions-parts";
 import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
 
-// Παραδοτέα (H1, H2, ενότητα της G2) από άκρη σε άκρη. Το «Showreel {project}» είναι Εσωτερική Παραγωγή του seed
-// (Υπεύθυνος ο Ιδιοκτήτης), άρα το Παραδοτέο δεν θέλει Παροχή και ο Ιδιοκτήτης είναι ελεγκτής.
+// Παραδοτέα (H1, H2, ενότητα της G2) από άκρη σε άκρη. Η Εσωτερική Παραγωγή φτιάχνεται εδώ (Υπεύθυνος ο Ιδιοκτήτης),
+// άρα το Παραδοτέο δεν θέλει Παροχή και ο Ιδιοκτήτης είναι ελεγκτής. Δεν χρησιμοποιεί την «Showreel» του seed: η έγκριση
+// του μοναδικού της Παραδοτέου την παραδίδει αυτόματα (#143) και τα τεστ της Παραγωγής την θέλουν ανοιχτή.
 // Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
 test.describe.configure({ retries: 0 });
 
@@ -17,14 +18,23 @@ test("ο Ιδιοκτήτης φτιάχνει Παραδοτέο, το στέλ
   page,
 }) => {
   const P = project();
-  const PRODUCTION = `Showreel ${P}`;
+  const PRODUCTION = `Παραδοτέα ${P}`;
   const DELIVERABLE = `Reel ${P}`;
 
   await signIn(page, "owner@example.com");
   const nav = page.getByRole("navigation", { name: "Οθόνες" });
   await expect(nav.getByRole("link", { name: /Παραδοτέα$/ })).toBeVisible();
 
-  await openProduction(page, PRODUCTION);
+  await page.goto("/app/productions");
+  const newProduction = await openNewInternal(page);
+  await fieldOf(newProduction, "Τίτλος").fill(PRODUCTION);
+  await fieldOf(newProduction, "Υπεύθυνος").selectOption({
+    label: "Γιώργος Ιδιοκτήτης",
+  });
+  await button(newProduction, "Δημιουργία").click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: PRODUCTION, exact: true }),
+  ).toBeVisible();
   const deliverables = card(page, "Παραδοτέα");
   await page.getByText("Νέο Παραδοτέο", { exact: true }).click();
   const create = page.locator("details", {
@@ -56,7 +66,9 @@ test("ο Ιδιοκτήτης φτιάχνει Παραδοτέο, το στέλ
     "Η νέα Έκδοση προστέθηκε.",
   );
   const version = page.locator("article", { hasText: "Έκδοση 1" });
-  await expect(version.locator("header")).toContainText("Αναμένει εσωτερικό έλεγχο");
+  await expect(version.locator("header")).toContainText(
+    "Αναμένει εσωτερικό έλεγχο",
+  );
 
   const comment = version.locator("form", {
     has: page.getByRole("button", { name: "Σχόλιο", exact: true }),

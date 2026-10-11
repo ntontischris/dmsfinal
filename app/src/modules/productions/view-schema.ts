@@ -72,6 +72,17 @@ const historySchema = z.object({
   after: z.record(z.string(), z.unknown()).nullable(),
 });
 
+// Οι Εργασίες της Παραγωγής (G2): μόνο για την ομάδα (ο πελάτης παίρνει λίστα κενή).
+const taskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  assigneeId: z.string().nullable(),
+  assigneeName: z.string().nullable(),
+  dueDate: z.string().nullable(),
+  isLate: z.boolean(),
+  done: z.boolean(),
+});
+
 // Τα Γυρίσματα της Παραγωγής (G2): μόνο όσα βλέπει ο Χρήστης, από τη βάση.
 const filmingSchema = z.object({
   id: z.string(),
@@ -120,6 +131,8 @@ export const productionDetailSchema = cardSchema
     history: z.array(historySchema),
     filmings: z.array(filmingSchema),
     deliverables: deliverableCardsSchema,
+    tasks: z.array(taskSchema),
+    autoDelivered: z.boolean(),
     viewerCan: z.object({
       deliver: z.boolean(),
       reopen: z.boolean(),
@@ -141,6 +154,8 @@ export const productionDetailSchema = cardSchema
     viewerCan: row.viewerCan,
     filmings: row.filmings,
     deliverables: row.deliverables,
+    tasks: row.tasks,
+    autoDelivered: row.autoDelivered,
   }));
 
 // Υποψήφιοι Υπεύθυνοι: id και όνομα των ενεργών Χρηστών με Δικαίωμα Παραγωγών.

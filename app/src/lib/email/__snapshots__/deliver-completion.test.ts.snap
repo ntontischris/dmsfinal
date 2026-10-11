@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`deliverableReminderFor > should match the stored message snapshot 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Waiting for your answer: Reel Καφέ</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Maria,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Version 2 of the deliverable “Reel Καφέ” for the production “Μηνιαίο καφέ” is waiting for your answer.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">It was sent 3 days ago.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/deliverables/9a8b7c6d-5e4f-4a3b-8c2d-1234567890ab" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View and respond</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Waiting for your answer: Reel Καφέ",
+  "text": "Waiting for your answer: Reel Καφέ
+
+Hello Maria,
+Version 2 of the deliverable “Reel Καφέ” for the production “Μηνιαίο καφέ” is waiting for your answer.
+It was sent 3 days ago.
+
+View and respond: https://dmsfinal-app.vercel.app/app/deliverables/9a8b7c6d-5e4f-4a3b-8c2d-1234567890ab
+
+Devre Media · This message was sent by the company system.",
+}
+`;

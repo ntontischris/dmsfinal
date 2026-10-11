@@ -3,6 +3,12 @@ import { z } from "zod";
 
 import { accessLinkFor } from "./access-link";
 import { deliverableMessageFor, DELIVERABLE_KIND } from "./deliver-deliverable";
+import {
+  DELIVERABLE_REMINDER_KIND,
+  PRODUCTION_DELIVERED_KIND,
+  deliverableReminderFor,
+  productionDeliveredFor,
+} from "./deliver-completion";
 import { isSheetKind, sheetMessageFor } from "./deliver-sheet";
 import { toLocale, type Locale } from "./locale";
 import { sendEmail, type SendOutcome } from "./send-email";
@@ -33,6 +39,8 @@ export const outboxRowSchema = z.object({
     "sheet_issued",
     "crew_declined",
     "deliverable_version_sent",
+    "production_delivered",
+    "deliverable_reminder",
   ]),
   to_name: z.string(),
   to_email: z.string(),
@@ -180,6 +188,10 @@ async function messageFor(
     return decisionMessageFor(row, row.kind, origin);
   if (isSheetKind(row.kind)) return sheetMessageFor(row, origin);
   if (row.kind === DELIVERABLE_KIND) return deliverableMessageFor(row, origin);
+  if (row.kind === PRODUCTION_DELIVERED_KIND)
+    return productionDeliveredFor(row, origin);
+  if (row.kind === DELIVERABLE_REMINDER_KIND)
+    return deliverableReminderFor(row, origin);
   return clientAddedMessageFor(admin, row, origin);
 }
 

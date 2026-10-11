@@ -33,3 +33,4 @@ export { ProductionFilmings } from "./components/production-filmings";
 export { ProductionList } from "./components/production-list";
 export { ProductionTabs } from "./components/production-tabs";
 export { StatePanel } from "./components/state-panel";
+export { TasksPanel } from "./components/tasks-panel";

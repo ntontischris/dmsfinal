@@ -18,6 +18,7 @@ import {
   PeriodCard,
   ProductionFilmings,
   StatePanel,
+  TasksPanel,
   getProduction,
   listMemberCandidates,
   listOwnerCandidates,
@@ -49,7 +50,8 @@ export default async function ProductionPage({
   const production = await getProduction(parsed.data);
   if (!production.ok) return <LoadError />;
   if (production.data === null) return <Missing />;
-  if (caps.isClient) return <ClientProductionScreen production={production.data} />;
+  if (caps.isClient)
+    return <ClientProductionScreen production={production.data} />;
   const canWorkDeliverables = deliverablesCaps(viewer).canWork;
   return (
     <ProductionPageContent
@@ -87,24 +89,40 @@ async function ProductionPageContent({
   return (
     <>
       <ScreenHeader eyebrow={EYEBROW} title={production.title}>
-        <Link href="/app/productions" className={buttonVariants({ variant: "ghost" })}>
+        <Link
+          href="/app/productions"
+          className={buttonVariants({ variant: "ghost" })}
+        >
           ← Παραγωγές
         </Link>
         {showCosts && (
-          <Link href={`/app/productions/${production.id}/costs`} className={buttonVariants({ variant: "ghost" })}>
+          <Link
+            href={`/app/productions/${production.id}/costs`}
+            className={buttonVariants({ variant: "ghost" })}
+          >
             Κόστος και ώρες
           </Link>
         )}
       </ScreenHeader>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <StatePanel production={production} />
-        <OwnerPanel production={production} candidates={owners?.ok ? owners.data : []} />
+        <OwnerPanel
+          production={production}
+          candidates={owners?.ok ? owners.data : []}
+        />
         <AgreementCard agreement={production.agreement} />
         <PeriodCard period={production.period} balances={production.balances} />
         {(canManage || production.members.length > 0) && (
-          <MembersPanel production={production} candidates={members?.ok ? members.data : []} />
+          <MembersPanel
+            production={production}
+            candidates={members?.ok ? members.data : []}
+          />
         )}
         <ProductionFilmings filmings={production.filmings} />
+        <TasksPanel
+          production={production}
+          candidates={members?.ok ? members.data : []}
+        />
         <ProductionDeliverables
           productionId={production.id}
           productionTitle={production.title}
