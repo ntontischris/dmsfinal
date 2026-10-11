@@ -1,5 +1,6 @@
 import { createSupabase } from "@/lib/supabase/server";
 
+import { signedDownloadUrl } from "./message-storage";
 import { read, type ReadResult } from "./read";
 import {
   parseClientContext,
@@ -60,4 +61,21 @@ export async function getClientContext(): Promise<ReadResult<ClientContext | nul
     return { ok: false };
   }
   return { ok: true, data: parseClientContext(data) };
+}
+
+export type AttachmentLinkResult = { ok: true; url: string } | { ok: false; status: 404 | 500 };
+
+// Η βάση αποφασίζει ποιος παίρνει το συνημμένο (message_attachment_path). Κάθε άρνηση φαίνεται «δεν βρέθηκε» προς τα έξω.
+export async function getAttachmentLink(attachmentId: string): Promise<AttachmentLinkResult> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false, status: 500 };
+  const { data, error } = await supabase.rpc("message_attachment_path", { p_id: attachmentId });
+  if (error) {
+    if (error.code === "42501" || error.code === "P0001") return { ok: false, status: 404 };
+    console.error("getAttachmentLink:", error.message);
+    return { ok: false, status: 500 };
+  }
+  if (typeof data !== "string") return { ok: false, status: 404 };
+  const url = await signedDownloadUrl(data);
+  return url ? { ok: true, url } : { ok: false, status: 404 };
 }

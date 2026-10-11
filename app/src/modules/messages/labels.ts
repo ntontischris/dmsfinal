@@ -123,3 +123,13 @@ export const clientDigestNote = (minutes: number): string =>
 export const CLIENT_VIDEO_NOTE =
   "Σχόλια πάνω στο video γράφονται στο Παραδοτέο, όχι εδώ.";
 export const ACTION_CANCEL = "Ακύρωση";
+export const ATTACH_BUTTON = "Επισύναψη";
+export const ATTACH_INPUT_LABEL = "Επισύναψη αρχείων";
+export const ATTACH_HINT =
+  "Εικόνες, PDF και έγγραφα Office, έως 5 αρχεία των 10 MB. Βίντεο: στείλε το ως link.";
+export const ATTACH_LIST_LABEL = "Συνημμένα";
+export const ATTACH_UPLOADING = "ανεβαίνει…";
+export const ATTACH_FAILED = "δεν ανέβηκε";
+export const ATTACH_REMOVE = "Αφαίρεση";
+export const ATTACH_ONLY_PREVIEW = "Συνημμένο αρχείο";
+export const ATTACH_WAIT_SEND = "Περίμενε να ανεβούν τα αρχεία.";

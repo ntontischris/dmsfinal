@@ -1,3 +1,4 @@
+import { ATTACH_ONLY_PREVIEW } from "./labels";
 import type { InboxItem, ThreadMessage } from "./view-schema";
 
 // Καθαρά βοηθητικά των Μηνυμάτων: κείμενα γραμμών, φίλτρα, σήμα «νέο», διευθύνσεις.
@@ -31,7 +32,11 @@ const PREVIEW_LIMIT = 90;
 export const previewLine = (item: InboxItem): string => {
   if (item.lastDeleted || item.preview === null) return DELETED_PREVIEW;
   const text =
-    item.preview.length >= PREVIEW_LIMIT ? `${item.preview}…` : item.preview;
+    item.preview === ""
+      ? ATTACH_ONLY_PREVIEW
+      : item.preview.length >= PREVIEW_LIMIT
+        ? `${item.preview}…`
+        : item.preview;
   return item.lastInternal ? `Εσωτερικό: ${text}` : text;
 };
 
@@ -124,6 +129,9 @@ export interface ThreadLinkOptions {
 }
 
 export const MESSAGES_PATH = "/app/messages";
+
+// Η λήψη ενός συνημμένου: η διαδρομή ελέγχει ορατότητα και κάνει redirect σε προσωρινό σύνδεσμο.
+export const attachmentHref = (attachmentId: string): string => `${MESSAGES_PATH}/attachments/${attachmentId}`;
 
 export const threadHref = (
   clientId: string,
