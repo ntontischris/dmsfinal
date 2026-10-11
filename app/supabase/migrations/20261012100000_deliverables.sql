@@ -633,7 +633,26 @@ begin
 end;
 $$;
 
--- Σελίδα Παραδοτέου (H2): κάρτα, Εκδόσεις με σχόλια, Περιθώριο, ενέργειες και απόφαση χρέωσης.
+-- Ίχνος του Παραδοτέου: οι εγγραφές του Παραδοτέου, των Εκδόσεων και των σχολίων του (κλειδί το deliverable_id).
+create function authz.deliverable_history(p_deliverable uuid) returns jsonb
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce(jsonb_agg(h.entry order by h.at desc, h.id desc), '[]'::jsonb)
+    from (
+      select a.id, a.at, jsonb_build_object(
+          'at', a.at, 'action', a.action, 'entity', a.entity,
+          'actor_name', hu.name, 'before', a.before, 'after', a.after
+        ) as entry
+        from public.audit_log a
+        left join public.team_users hu on hu.user_id = a.actor_id
+       where a.entity in ('deliverables', 'deliverable_versions', 'deliverable_comments')
+         and a.entity_id = p_deliverable::text
+       order by a.at desc, a.id desc
+       limit 100
+    ) h;
+$$;
+
+-- Σελίδα Παραδοτέου (H2): κάρτα, Εκδόσεις με σχόλια, Περιθώριο, ενέργειες, απόφαση χρέωσης και Ίχνος.
 create function public.deliverable_view(p_id uuid) returns jsonb
 language plpgsql security definer set search_path = ''
 as $$
@@ -645,7 +664,8 @@ begin
   return v_card || jsonb_build_object(
     'versions', authz.deliverable_versions_json(p_id),
     'can', authz.deliverable_viewer_can(p_id),
-    'pendingCharge', v_card->>'charge' = 'pending'
+    'pendingCharge', v_card->>'charge' = 'pending',
+    'history', authz.deliverable_history(p_id)
   );
 end;
 $$;
@@ -1030,7 +1050,7 @@ revoke all on function
   authz.require_production_scope(uuid, text), authz.deliverable_gate(uuid, text), authz.require_deliverable_view(uuid),
   authz.check_deliverable_filming(uuid, uuid), authz.check_deliverable_assignee(uuid, uuid),
   authz.deliverable_units(uuid, uuid, uuid, text), authz.deliverable_card(uuid), authz.deliverable_versions_json(uuid),
-  authz.deliverable_viewer_can(uuid), authz.deliverables_fill_deadlines()
+  authz.deliverable_viewer_can(uuid), authz.deliverable_history(uuid), authz.deliverables_fill_deadlines()
   from public, anon, authenticated;
 
 -- Οι RPC της εφαρμογής: ο έλεγχος Δικαιώματος γίνεται μέσα τους.
