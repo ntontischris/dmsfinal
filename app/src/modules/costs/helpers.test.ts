@@ -6,6 +6,7 @@ import {
   hoursPrefill,
   formatPercent,
   marginOf,
+  moneyText,
   signalLabels,
 } from "./helpers";
 import type { CostRow } from "./types";
@@ -35,6 +36,11 @@ describe("περιθώριο", () => {
     expect(marginOf(row({ price: null }))).toBeNull();
   });
 
+  it("είναι null χωρίς Κόστος ώρας, αντί για αριθμό που δεν υπάρχει", () => {
+    const withoutHourCost = row();
+    expect(marginOf({ ...withoutHourCost, actual: { ...withoutHourCost.actual, cost: null } })).toBeNull();
+  });
+
   it("μένει σωστό όταν η τιμή είναι μηδέν", () => {
     expect(marginOf(row({ price: 0 }))).toEqual({ amount: -220, percent: 0 });
   });
@@ -55,6 +61,10 @@ describe("σήματα", () => {
 });
 
 describe("μορφοποίηση", () => {
+  it("δείχνει «—» για ποσό που λείπει", () => {
+    expect(moneyText(null)).toBe("—");
+  });
+
   it("γράφει ώρα στον ενικό και ώρες στον πληθυντικό", () => {
     expect(formatHours(1)).toBe("1 ώρα");
     expect(formatHours(14)).toBe("14 ώρες");

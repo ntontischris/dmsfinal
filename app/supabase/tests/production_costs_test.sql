@@ -2,7 +2,7 @@
 -- ομάδες της λίστας, Εσωτερική Παραγωγή, άρνηση ανά ρόλο, κλειστός πίνακας, Ίχνος (#144). Φανταστικοί Χρήστες και στοιχεία·
 -- όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σχετικές με τη σημερινή μέρα.
 begin;
-select plan(61);
+select plan(76);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης (κόστος: βλέπει και γράφει) · e2 Παραγωγή (Συνεργείο) · e3 Πωλήσεις (χωρίς κόστος)
@@ -208,6 +208,10 @@ select is(
   (select production_cost_view(current_setting('t.p1')::uuid) -> 'can' ->> 'edit'), 'false',
   'Η Διαχείριση βλέπει την Παραγωγή χωρίς δικαίωμα επεξεργασίας'
 );
+select lives_ok(
+  $$ select public.production_costs_view('rest') $$,
+  'Η Διαχείριση διαβάζει τις ομάδες του κόστους χωρίς να γράφει'
+);
 set local role authenticated;
 select throws_ok($$ select * from public.production_costs $$, '42501', null, 'Ο κλειστός πίνακας δεν διαβάζεται από authenticated');
 reset role;
@@ -314,6 +318,28 @@ select is(
   'Με όριο 50% η ίδια Παραγωγή δεν είναι υπέρβαση'
 );
 
+-- Χαμηλό περιθώριο χωρίς ολοκληρωμένες ώρες δεν πάει στην «Υπέρβαση»: η εφάπαξ P-PA3 είναι ανοιχτή και χωρίς επιβεβαίωση.
+select lives_ok(
+  $$ select public.production_hours_set(current_setting('t.pa3')::uuid, 4, 6, null, false, false) $$,
+  'Πρόχειρες ώρες της εφάπαξ Παραγωγής'
+);
+select lives_ok(
+  $$ select public.cost_save_multipliers(5.01, 5.50, 6.00, 50) $$, 'Ελάχιστος πολλαπλασιαστής 5,01'
+);
+select ok(
+  (select (production_cost_view(current_setting('t.pa3')::uuid) -> 'signals' ->> 'lowMargin')::boolean),
+  'Κόστος 100 € με τιμή 500 €: χαμηλό περιθώριο'
+);
+select ok(
+  not (select exists (
+     select 1 from jsonb_array_elements(public.production_costs_view('overrun')) e
+      where e ->> 'productionId' = current_setting('t.pa3'))),
+  'Χωρίς ολοκληρωμένες ώρες το χαμηλό περιθώριο δεν πάει στην ομάδα Υπέρβαση'
+);
+select lives_ok(
+  $$ select public.cost_save_multipliers(1.30, 1.60, 2.00, 50) $$, 'Επιστροφή στους πολλαπλασιαστές 1,30 / 1,60 / 2,00'
+);
+
 -- ───────────── Ανοιχτό Γύρισμα: επιβεβαίωση μπλοκάρεται ─────────────
 select throws_ok(
   $$ select public.production_hours_set(current_setting('t.p2')::uuid, 6, 14, null, true, true) $$,
@@ -345,6 +371,14 @@ select throws_ok(
   'P0001', 'Η εκτίμηση γράφεται μόνο σε Εσωτερική Παραγωγή', 'Η εκτίμηση της Συμφωνίας είναι στιγμιότυπο'
 );
 select lives_ok(
+  $$ select public.production_hours_set(current_setting('t.pi')::uuid, 30, 30, null, true, true) $$,
+  'Ώρες Εσωτερικής χωρίς εκτίμηση'
+);
+select is(
+  (select (production_cost_view(current_setting('t.pi')::uuid) -> 'signals' ->> 'overrun')::boolean), false,
+  'Χωρίς εκτίμηση ωρών δεν υπάρχει υπέρβαση'
+);
+select lives_ok(
   $$ select public.production_estimate_set(current_setting('t.pi')::uuid, 5, 3, 100) $$,
   'Η Εσωτερική Παραγωγή παίρνει εκτίμηση'
 );
@@ -357,6 +391,15 @@ select ok(
   'Εσωτερική: χωρίς τιμή, άρα χωρίς χαμηλό περιθώριο'
 );
 select lives_ok($$ select public.production_cancel(current_setting('t.pi')::uuid, 'Δοκιμή') $$, 'Ακύρωση της Εσωτερικής');
+select throws_ok(
+  $$ select public.production_hours_set(current_setting('t.pi')::uuid, 1, 1, null, false, false) $$,
+  'P0001', 'Η Παραγωγή είναι ακυρωμένη', 'Οι ώρες δεν γράφονται σε ακυρωμένη Παραγωγή'
+);
+select throws_ok(
+  $$ select public.production_estimate_set(current_setting('t.pi')::uuid, 1, 1, 1) $$,
+  'P0001', 'Η Παραγωγή είναι ακυρωμένη', 'Η εκτίμηση δεν γράφεται σε ακυρωμένη Παραγωγή'
+);
+
 select ok(
   not (select exists (
      select 1 from jsonb_array_elements(public.production_costs_view('rest')) e
@@ -366,6 +409,31 @@ select ok(
 select throws_ok(
   $$ select public.production_costs_view('άγνωστη') $$, 'P0001', 'Άγνωστη ομάδα κόστους', 'Άγνωστη ομάδα απορρίπτεται'
 );
+
+-- Ένας νεότερος μήνας Κόστους δεν αλλάζει το πραγματικό κόστος μιας Παραγωγής που ανήκει σε παλαιότερο μήνα.
+select set_config('t.p1_cost', (production_cost_view(current_setting('t.p1')::uuid) -> 'actual' ->> 'cost'), true);
+insert into public.cost_months (month, expenses_total, productive_hours)
+values ((date_trunc('month', now() at time zone 'Europe/Athens') + interval '3 months')::date, 6600, 220);
+select is(
+  (select (production_cost_view(current_setting('t.p1')::uuid) -> 'actual' ->> 'cost')::numeric),
+  current_setting('t.p1_cost')::numeric, 'Νεότερος μήνας Κόστους δεν αλλάζει το πραγματικό κόστος της P1'
+);
+
+-- Χωρίς κανένα Κόστος ώρας τίποτα δεν σκάει: το πραγματικό και το κόστος ώρας μένουν κενά, η εκτίμηση μένει στο στιγμιότυπο.
+delete from public.cost_months;
+select ok(
+  (production_cost_view(current_setting('t.p1')::uuid) -> 'actual' ->> 'cost') is null,
+  'Χωρίς Κόστος ώρας το πραγματικό κόστος είναι κενό'
+);
+select ok(
+  (production_cost_view(current_setting('t.p1')::uuid) ->> 'hourCost') is null,
+  'Χωρίς Κόστος ώρας το κόστος ώρας είναι κενό'
+);
+select is(
+  (select (production_cost_view(current_setting('t.p1')::uuid) -> 'estimate' ->> 'cost')::numeric),
+  200::numeric, 'Η εκτίμηση μένει στο στιγμιότυπο της Συμφωνίας'
+);
+select lives_ok($$ select public.production_costs_view('rest') $$, 'Η λίστα κόστους δεν σπάει χωρίς Κόστος ώρας');
 
 -- ───────────── Ίχνος ─────────────
 select is(

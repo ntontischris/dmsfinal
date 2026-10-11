@@ -8,6 +8,7 @@ import {
   formatMoney,
   formatPercent,
   marginOf,
+  moneyText,
 } from "../helpers";
 import type { CostRow } from "../types";
 
@@ -20,10 +21,10 @@ export function CostSummary({ row }: { row: CostRow }) {
     <Panel label="Κόστος">
       <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 p-4 text-sm">
         <Item label="Εκτίμηση ωρών" value={formatHours(estimateHours(row))} />
-        <Item label="Εκτίμηση κόστους" value={formatMoney(row.estimate.cost)} />
+        <Item label="Εκτίμηση κόστους" value={moneyText(row.estimate.cost)} />
         <Item label="Πραγματικές ώρες" value={formatHours(actualHours(row))} />
-        <Item label="Πραγματικό κόστος" value={formatMoney(row.actual.cost)} />
-        <Item label="Κόστος ώρας" value={row.hourCost === null ? NO_VALUE_LABEL : formatMoney(row.hourCost)} />
+        <Item label="Πραγματικό κόστος" value={moneyText(row.actual.cost)} />
+        <Item label="Κόστος ώρας" value={moneyText(row.hourCost)} />
         <Item label="Τιμή" value={row.estimate.price === null ? NO_VALUE_LABEL : formatMoney(row.estimate.price)} />
         <Item
           label="Περιθώριο"

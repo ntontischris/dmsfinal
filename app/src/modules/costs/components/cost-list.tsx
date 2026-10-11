@@ -11,6 +11,7 @@ import {
   formatMoney,
   formatPercent,
   marginOf,
+  moneyText,
 } from "../helpers";
 import type { CostRow } from "../types";
 
@@ -71,10 +72,10 @@ function CostTableRow({ row }: { row: CostRow }) {
       </Td>
       <Td data-label="Πελάτης">{row.client ?? INTERNAL_LABEL}</Td>
       <Td data-label="Εκτίμηση" isNumeric>
-        {formatHours(estimateHours(row))} · {formatMoney(row.estimate.cost)}
+        {formatHours(estimateHours(row))} · {moneyText(row.estimate.cost)}
       </Td>
       <Td data-label="Πραγματικό" isNumeric>
-        {formatHours(actualHours(row))} · {formatMoney(row.actual.cost)}
+        {formatHours(actualHours(row))} · {moneyText(row.actual.cost)}
       </Td>
       <Td data-label="Περιθώριο" isNumeric>
         {margin ? `${formatMoney(margin.amount)} (${formatPercent(margin.percent)})` : NO_VALUE_LABEL}
@@ -97,11 +98,11 @@ function CostCard({ row }: { row: CostRow }) {
       <dl className="m-0 grid grid-cols-2 gap-2 text-sm">
         <dt className="text-muted-foreground">Εκτίμηση</dt>
         <dd className="m-0 text-right tabular-nums">
-          {formatHours(estimateHours(row))} · {formatMoney(row.estimate.cost)}
+          {formatHours(estimateHours(row))} · {moneyText(row.estimate.cost)}
         </dd>
         <dt className="text-muted-foreground">Πραγματικό</dt>
         <dd className="m-0 text-right tabular-nums">
-          {formatHours(actualHours(row))} · {formatMoney(row.actual.cost)}
+          {formatHours(actualHours(row))} · {moneyText(row.actual.cost)}
         </dd>
         <dt className="text-muted-foreground">Περιθώριο</dt>
         <dd className="m-0 text-right tabular-nums">

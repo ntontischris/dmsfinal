@@ -12,7 +12,7 @@ export interface CostEstimate {
   editHours: number;
   directCost: number;
   price: number | null; // null = Εσωτερική Παραγωγή
-  cost: number;
+  cost: number | null; // null = δεν υπάρχει Κόστος ώρας
 }
 
 export interface CostActual {
@@ -21,7 +21,7 @@ export interface CostActual {
   editHours: number;
   editConfirmed: boolean;
   directCost: number;
-  cost: number;
+  cost: number | null; // null = δεν υπάρχει Κόστος ώρας για τον μήνα της Παραγωγής
   suggestedShootHours: number;
 }
 

@@ -5,8 +5,11 @@
 --  • Το στιγμιότυπο της εκτίμησης γράφεται μία φορά, όταν η Παραγωγή γεννιέται (από τις γραμμές της Συμφωνίας· η Εσωτερική
 --    μένει μηδενική, έως ότου γραφτεί με το χέρι). Η Συμφωνία δεν αλλάζει μετά την υπογραφή, άρα ούτε η εκτίμηση.
 --  • Πραγματικό: ό,τι έχει επιβεβαιωθεί· για ό,τι λείπει, η εκτίμηση. Κόστος = (ώρες γυρίσματος + μοντάζ) × Κόστος ώρας + άμεσο.
---  • Κόστος ώρας: του πιο πρόσφατου μήνα που ισχύει σήμερα (authz.current_hour_cost)· αλλιώς το στιγμιότυπο της εκτίμησης.
---    Χωρίς Κόστος ώρας δεν κρίνεται το χαμηλό περιθώριο.
+--  • Κόστος ώρας: η εκτίμηση παίρνει το στιγμιότυπο της Συμφωνίας (agreement_costs, ή τον τρέχοντα μήνα)· το πραγματικό
+--    παίρνει τον τελευταίο μήνα Κόστους ≤ του μήνα της Παραγωγής (Περίοδος, ή μήνας παράδοσης, αλλιώς τρέχων). Έτσι δεν
+--    αλλάζει το παρελθόν. Χωρίς Κόστος ώρας το κόστος είναι null («—»), ποτέ μηδέν.
+--  • Υπέρβαση ωρών: μόνο όταν υπάρχει εκτίμηση ωρών. Το χαμηλό περιθώριο μπαίνει στην ομάδα «Υπέρβαση» μόνο όταν
+--    οι ώρες είναι ολοκληρωμένες.
 --  • Σήματα είναι ενδείξεις, ποτέ φραγμοί (ADR 0017).
 --  • Ο πίνακας είναι κλειστός για την εφαρμογή (RLS χωρίς policies, χωρίς grants)· διαβάζεται και γράφεται μόνο από τα
 --    public.production_* RPC, που ελέγχουν το Δικαίωμα στο σώμα τους (security definer, search_path = '').
@@ -113,7 +116,28 @@ as $$
     cross join lateral (select authz.production_period_share(p_agreement, p_period) as share) s;
 $$;
 
--- Κάθε νέα Παραγωγή παίρνει τη γραμμή της. Εσωτερική (χωρίς Συμφωνία): μηδενική εκτίμηση και χωρίς τιμή.
+-- Μήνας του πραγματικού κόστους: της Περιόδου (μηνιαία), του παραδομένου (εφάπαξ, Εσωτερική), αλλιώς του τρέχοντος.
+create function authz.production_cost_month(p_production uuid) returns date
+language sql stable security definer set search_path = ''
+as $$
+  select case
+    when p.period_id is not null then (select date_trunc('month', ap.starts)::date from public.agreement_periods ap where ap.id = p.period_id)
+    when p.state = 'delivered' then date_trunc('month', p.delivered_at at time zone 'Europe/Athens')::date
+    else authz.athens_month_start()
+  end
+  from public.productions p where p.id = p_production;
+$$;
+
+-- Κόστος ώρας του πιο πρόσφατου μήνα Κόστους που δεν είναι μεταγενέστερος του δοθέντος μήνα· null αν δεν υπάρχει.
+create function authz.hour_cost_at(p_month date) returns numeric
+language sql stable security definer set search_path = ''
+as $$
+  select cm.hour_cost from public.cost_months cm
+   where cm.month <= p_month order by cm.month desc limit 1;
+$$;
+
+-- Κάθε νέα Παραγωγή παίρνει τη γραμμή της. Το κόστος ώρας της εκτίμησης είναι το στιγμιότυπο της Συμφωνίας (ή ο τρέχων
+-- μήνας αν λείπει). Εσωτερική (χωρίς Συμφωνία): μηδενική εκτίμηση και χωρίς τιμή.
 create function authz.snapshot_production_cost() returns trigger
 language plpgsql security definer set search_path = ''
 as $$
@@ -123,19 +147,23 @@ begin
   )
   select new.id, e.shoot_hours, e.edit_hours, e.direct_cost,
          case when new.agreement_id is not null then authz.production_period_price(new.agreement_id, new.period_id) end,
-         (select h.hour_cost from authz.current_hour_cost() h)
+         coalesce(
+           (select ac.hour_cost from public.agreement_costs ac where ac.agreement_id = new.agreement_id),
+           (select h.hour_cost from authz.current_hour_cost() h))
     from authz.production_period_hours(new.agreement_id, new.period_id) e;
   return null;
 end;
 $$;
 
--- Παραγωγές που υπάρχουν ήδη παίρνουν γραμμή, με την εκτίμηση της Περιόδου τους.
+-- Παραγωγές που υπάρχουν ήδη παίρνουν γραμμή, με την εκτίμηση της Περιόδου τους και το στιγμιότυπο της Συμφωνίας.
 insert into public.production_costs (
   production_id, estimate_shoot_hours, estimate_edit_hours, estimate_direct_cost, estimate_price, estimate_hour_cost
 )
 select p.id, e.shoot_hours, e.edit_hours, e.direct_cost,
        case when p.agreement_id is not null then authz.production_period_price(p.agreement_id, p.period_id) end,
-       (select h.hour_cost from authz.current_hour_cost() h)
+       coalesce(
+         (select ac.hour_cost from public.agreement_costs ac where ac.agreement_id = p.agreement_id),
+         (select h.hour_cost from authz.current_hour_cost() h))
   from public.productions p
  cross join lateral authz.production_period_hours(p.agreement_id, p.period_id) e;
 
@@ -153,12 +181,13 @@ as $$
 $$;
 
 -- Η γραμμή κόστους μιας Παραγωγής (JSON). Ένας μόνο ορισμός· η λίστα και η σελίδα τον καλούν.
+-- Το `recorded` είναι ό,τι γράφτηκε (πρόχειρο ή επιβεβαιωμένο)· το `actual` είναι ό,τι μετράει τώρα.
 create function authz.production_cost_row(p_production uuid) returns jsonb
 language sql stable security definer set search_path = ''
 as $$
   with base as (
     select p.id, p.title, p.state, cl.name as client_name, pc.*,
-           coalesce((select h.hour_cost from authz.current_hour_cost() h), pc.estimate_hour_cost) as hour_cost,
+           authz.hour_cost_at(authz.production_cost_month(p.id)) as hour_cost,
            (select s.multiplier_min from public.cost_settings s where s.id) as multiplier_min,
            (select s.overrun_percent from public.cost_settings s where s.id) as overrun_percent
       from public.productions p
@@ -173,13 +202,16 @@ as $$
       from base b
   ), priced as (
     select a.*,
-           round((a.estimate_shoot_hours + a.estimate_edit_hours) * a.hour_cost + a.estimate_direct_cost, 2) as est_cost,
+           round((a.estimate_shoot_hours + a.estimate_edit_hours) * a.estimate_hour_cost + a.estimate_direct_cost, 2) as est_cost,
            round((a.act_shoot + a.act_edit) * a.hour_cost + a.act_direct, 2) as act_cost
       from actual a
   ), flagged as (
     select r.*,
-           (r.estimate_price is not null and r.act_cost is not null and r.estimate_price < r.act_cost * r.multiplier_min)
-             as low_margin
+           coalesce(r.estimate_price is not null and r.act_cost is not null
+                    and r.estimate_price < r.act_cost * r.multiplier_min, false) as low_margin,
+           (r.estimate_shoot_hours + r.estimate_edit_hours) > 0
+             and (r.act_shoot + r.act_edit) > (r.estimate_shoot_hours + r.estimate_edit_hours) * (1 + r.overrun_percent / 100)
+             as hours_over
       from priced r
   )
   select jsonb_build_object(
@@ -195,25 +227,37 @@ as $$
       'editHours', f.act_edit, 'editConfirmed', f.edit_confirmed_at is not null,
       'directCost', f.act_direct, 'cost', f.act_cost,
       'suggestedShootHours', authz.production_suggested_shoot_hours(f.id)),
+    'recorded', jsonb_build_object('shootHours', f.shoot_hours, 'editHours', f.edit_hours, 'directCost', f.direct_cost),
     'hourCost', f.hour_cost,
     'hoursComplete', f.shoot_confirmed_at is not null and f.edit_confirmed_at is not null,
-    'signals', jsonb_build_object(
-      'lowMargin', f.low_margin,
-      'overrun', (f.act_shoot + f.act_edit) > (f.estimate_shoot_hours + f.estimate_edit_hours) * (1 + f.overrun_percent / 100)
-                 or f.low_margin)
+    'signals', jsonb_build_object('lowMargin', f.low_margin, 'overrun', f.hours_over)
   )
   from flagged f;
 $$;
 
--- Ομάδα της οθόνης G3: πρώτα όσες θέλουν πραγματικές ώρες, μετά τα σήματα υπέρβασης, και οι υπόλοιπες.
+-- Ομάδα της οθόνης G3: πρώτα όσες θέλουν πραγματικές ώρες, μετά η υπέρβαση (ώρες, ή χαμηλό περιθώριο με ολοκληρωμένες
+-- ώρες), και οι υπόλοιπες.
 create function authz.production_cost_group(p_row jsonb) returns text
 language sql immutable set search_path = ''
 as $$
   select case
     when p_row ->> 'state' = 'delivered' and not coalesce((p_row ->> 'hoursComplete')::boolean, false) then 'needs_hours'
-    when coalesce((p_row #>> '{signals,overrun}')::boolean, false) then 'overrun'
+    when coalesce((p_row #>> '{signals,overrun}')::boolean, false)
+      or (coalesce((p_row #>> '{signals,lowMargin}')::boolean, false)
+          and coalesce((p_row ->> 'hoursComplete')::boolean, false)) then 'overrun'
     else 'rest'
   end;
+$$;
+
+-- Μια Παραγωγή που ακυρώθηκε δεν παίρνει πια ώρες ή εκτίμηση.
+create function authz.require_production_not_cancelled(p_production uuid) returns void
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  if exists (select 1 from public.productions p where p.id = p_production and p.state = 'cancelled') then
+    raise exception 'Η Παραγωγή είναι ακυρωμένη' using errcode = 'P0001';
+  end if;
+end;
 $$;
 
 -- Ώρες και άμεσο κόστος: τα null μένουν όπως είναι· κάθε τιμή εκτός ορίων σταματά την αποθήκευση.
@@ -304,6 +348,7 @@ begin
   if not authz.can_manage_cost() then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
+  perform authz.require_production_not_cancelled(p_production);
   perform authz.require_cost_amounts(p_shoot_hours, p_edit_hours, p_direct_cost);
   if (coalesce(p_confirm_shoot, false) and p_shoot_hours is null)
      or (coalesce(p_confirm_edit, false) and p_edit_hours is null) then
@@ -338,6 +383,7 @@ begin
   if not authz.can_manage_cost() then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
+  perform authz.require_production_not_cancelled(p_production);
   if p_shoot_hours is null or p_edit_hours is null or p_direct_cost is null then
     raise exception 'Γράψε τις ώρες και το άμεσο κόστος της εκτίμησης' using errcode = 'P0001';
   end if;

@@ -1,4 +1,4 @@
-import { SIGNAL_LABELS } from "./labels";
+import { NO_VALUE_LABEL, SIGNAL_LABELS } from "./labels";
 import type { CostRow, CostSignals } from "./types";
 
 // Μορφοποίηση και κρίσεις του module, καθαρές συναρτήσεις. Τα σήματα τα κρίνει η βάση· εδώ μόνο φαίνονται.
@@ -11,6 +11,10 @@ export const formatMoney = (amount: number): string => MONEY.format(amount);
 
 export const formatHours = (hours: number): string =>
   `${HOURS.format(hours)} ${hours === 1 ? "ώρα" : "ώρες"}`;
+
+// Ποσό που μπορεί να λείπει (χωρίς Κόστος ώρας): «—», ποτέ μηδέν που θα έμοιαζε με πραγματικό κόστος.
+export const moneyText = (amount: number | null): string =>
+  amount === null ? NO_VALUE_LABEL : formatMoney(amount);
 
 export const formatHoursValue = (hours: number): string => HOURS.format(hours);
 
@@ -25,11 +29,12 @@ export interface Margin {
   percent: number;
 }
 
-// Περιθώριο = τιμή − πραγματικό κόστος. Null για Εσωτερική (δεν έχει τιμή)· ποτέ μηδέν που θα έμοιαζε με κέρδος.
+// Περιθώριο = τιμή − πραγματικό κόστος. Null για Εσωτερική (δεν έχει τιμή) ή χωρίς Κόστος ώρας· ποτέ μηδέν που θα έμοιαζε με κέρδος.
 export const marginOf = (row: CostRow): Margin | null => {
   const price = row.estimate.price;
-  if (price === null) return null;
-  const amount = Math.round((price - row.actual.cost) * 100) / 100;
+  const cost = row.actual.cost;
+  if (price === null || cost === null) return null;
+  const amount = Math.round((price - cost) * 100) / 100;
   return { amount, percent: price === 0 ? 0 : amount / price };
 };
 

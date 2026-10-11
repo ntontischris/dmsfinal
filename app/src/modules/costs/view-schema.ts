@@ -10,7 +10,7 @@ const estimateSchema = z.object({
   editHours: z.number(),
   directCost: z.number(),
   price: z.number().nullable(),
-  cost: z.number(),
+  cost: z.number().nullable(),
 });
 
 const actualSchema = z.object({
@@ -19,7 +19,7 @@ const actualSchema = z.object({
   editHours: z.number(),
   editConfirmed: z.boolean(),
   directCost: z.number(),
-  cost: z.number(),
+  cost: z.number().nullable(),
   suggestedShootHours: z.number(),
 });
 
