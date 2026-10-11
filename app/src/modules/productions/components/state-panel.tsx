@@ -14,7 +14,9 @@ export function StatePanel({ production }: { production: ProductionDetail }) {
     <Panel label="Κατάσταση">
       <div className="grid gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={stateTone(production.state)}>{STATE_LABELS[production.state]}</Badge>
+          <Badge tone={stateTone(production.state)}>
+            {STATE_LABELS[production.state]}
+          </Badge>
           <StateNote production={production} />
         </div>
         <StateActions production={production} />
@@ -27,7 +29,8 @@ function StateNote({ production }: { production: ProductionDetail }) {
   if (production.state === "delivered" && production.deliveredAt)
     return (
       <span className="text-sm">
-        Παραδόθηκε {formatDateTime(production.deliveredAt)}
+        {production.autoDelivered ? "Παραδόθηκε αυτόματα" : "Παραδόθηκε"}{" "}
+        {formatDateTime(production.deliveredAt)}
         {production.deliveredNote && `: ${production.deliveredNote}`}
       </span>
     );

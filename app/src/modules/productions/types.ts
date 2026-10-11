@@ -92,6 +92,19 @@ export interface ProductionDetail extends ProductionCard {
   viewerCan: ProductionViewerCan;
   filmings: ProductionFilming[];
   deliverables: DeliverableCard[]; // μόνο για την ομάδα· ο πελάτης παίρνει []
+  tasks: ProductionTask[]; // μόνο για την ομάδα· ο πελάτης παίρνει []
+  autoDelivered: boolean; // παραδόθηκε αυτόματα μετά την τελευταία έγκριση
+}
+
+// Μια Εργασία της Παραγωγής (G2): απλή, με έναν υπεύθυνο και προαιρετική προθεσμία.
+export interface ProductionTask {
+  id: string;
+  title: string;
+  assigneeId: string | null;
+  assigneeName: string | null;
+  dueDate: string | null; // YYYY-MM-DD
+  isLate: boolean;
+  done: boolean;
 }
 
 export interface HistoryLine {
