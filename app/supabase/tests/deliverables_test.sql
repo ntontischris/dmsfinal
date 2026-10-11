@@ -282,7 +282,7 @@ select throws_ok(
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_charge_decide(current_setting('t.d2')::uuid, 'charged', null) $$,
-  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς finance.cost δεν αποφασίζεται χρέωση'
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς finance.amounts δεν αποφασίζεται χρέωση'
 );
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 select throws_ok(
