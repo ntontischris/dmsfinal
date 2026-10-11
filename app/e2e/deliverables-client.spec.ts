@@ -42,7 +42,8 @@ async function addVersion(page: Page, link: string): Promise<void> {
 
 async function openClientDeliverable(page: Page, title: string): Promise<void> {
   await page.goto("/app/deliverables");
-  await page.getByRole("link", { name: title, exact: true }).click();
+  // Το Παραδοτέο φαίνεται και στο «Περιμένουν εσένα» και στην Παραγωγή του· ο πρώτος σύνδεσμος οδηγεί στο ίδιο.
+  await page.getByRole("link", { name: title, exact: true }).first().click();
   await expect(page).toHaveURL(DELIVERABLE_URL);
   await expect(page.getByRole("heading", { level: 1, name: title, exact: true })).toBeVisible();
 }
