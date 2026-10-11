@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 
-import { NO_REMINDER_TEXT } from "../labels";
-import { reminderText } from "../helpers";
+import { NO_REMINDER_TEXT } from "../billables-labels";
+import { reminderText } from "../billables-helpers";
 
 interface ToInvoiceRemindersProps {
   days: readonly number[];

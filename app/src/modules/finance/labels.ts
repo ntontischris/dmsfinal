@@ -1,33 +1,15 @@
-// Ελληνικά κείμενα του «Προς τιμολόγηση» (I1), κατά το prototype.
+// Ελληνικά κείμενα του module, όπως στο prototype (I4).
 
-export const BILLABLES_TITLE = "Προς τιμολόγηση";
-export const BILLABLES_EYEBROW = "I1 · Οικονομικά";
-export const BILLABLES_NOTE =
-  "Τα Τιμολογητέα δεν είναι οφειλή· ο πελάτης δεν τα βλέπει.";
-export const BILLABLES_EMPTY_TITLE = "Δεν περιμένει τίποτα για τιμολόγηση";
-export const BILLABLES_EMPTY_TEXT =
-  "Όλα τα Τιμολογητέα έχουν καλυφθεί από Τιμολόγια.";
-export const BILLABLES_ERROR_TITLE = "Δεν φορτώθηκε: το «Προς τιμολόγηση»";
-export const BILLABLES_ERROR_TEXT = "Τίποτα δεν χάθηκε. Δοκίμασε ξανά σε λίγο.";
-export const BILLABLES_NO_ACCESS_TEXT =
-  "Το «Προς τιμολόγηση» το βλέπουν μόνο όσοι βλέπουν Οικονομικά και ποσά.";
-
-export const REASON_LABELS: Readonly<Record<string, string>> = {
-  period: "Περίοδος",
-  milestone: "Δόση",
-  extra_deliverable: "Έξτρα Παραδοτέο",
-  extra_revision: "Έξτρα αναθεώρηση",
-  extra_filming: "Έξτρα Γύρισμα",
-  dissolution_fee: "Ρήτρα λύσης",
-};
-
-export const NO_REMINDER_TEXT = "—";
-
-export const COLUMN_LABELS = {
-  date: "Ημερομηνία",
-  agreement: "Συμφωνία",
-  reason: "Λόγος",
-  net: "Ποσό (καθαρό)",
-  days: "Μέρες ανοιχτό",
-  reminders: "Υπενθύμιση",
-} as const;
+export const RECEIPTS_TITLE = "Εισπράξεις";
+export const RECEIPTS_EYEBROW = "I4 · Οικονομικά";
+export const RECEIPT_EMPTY_TITLE = "Καμία Είσπραξη";
+export const RECEIPT_EMPTY_TEXT = "Δεν έχει καταχωρηθεί Είσπραξη ακόμη.";
+export const RECEIPT_NOTE =
+  "Οι τρόποι είσπραξης αλλάζουν στις Ρυθμίσεις › Οικονομικά. Η διόρθωση και η διαγραφή θέλουν λόγο και γράφονται στο ίχνος.";
+export const RECEIPT_NO_ACCESS =
+  "Οι Εισπράξεις είναι για την ομάδα και τον Λογιστή.";
+export const RECEIPT_LOAD_ERROR = "Δεν φόρτωσαν οι Εισπράξεις";
+export const METHODS_TITLE = "Τρόποι είσπραξης";
+export const METHODS_NOTE =
+  "Ένας τρόπος που έχει χρησιμοποιηθεί δεν διαγράφεται· αποσύρεται, και οι παλιές Εισπράξεις κρατούν τον τρόπο τους.";
+export const CSV_LABEL = "Εξαγωγή CSV";

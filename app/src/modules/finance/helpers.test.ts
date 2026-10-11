@@ -1,99 +1,46 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  daysText,
-  reasonText,
-  reminderText,
-  sortClientsByOldest,
-  sortItemsByDate,
-} from "./helpers";
-import type { BillableClient, BillableItem } from "./view-schema";
+import { csvCell, receiptsToCsv } from "./helpers";
+import type { ReceiptRow } from "./types";
 
-function client(overrides: Partial<BillableClient>): BillableClient {
-  return {
-    clientId: "c",
-    clientName: "Πελάτης",
-    open: 0,
-    count: 0,
-    oldestDays: 0,
-    beyond: 0,
-    items: [],
-    ...overrides,
-  };
-}
+const ROW: ReceiptRow = {
+  id: "6f1c2f1e-3b0a-4d6e-9d52-0a1b2c3d4e5f",
+  clientId: "0b8c7d6e-5f4a-4b3c-8d2e-1f0a9b8c7d6e",
+  clientName: "Κυψέλη Καφέ",
+  receivedOn: "2026-10-05",
+  amount: 300,
+  methodId: "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+  methodLabel: "Τραπεζική κατάθεση",
+  note: "Προκαταβολή",
+  createdByName: "Γιώργος",
+  deleted: false,
+  deleteReason: null,
+  canEdit: true,
+};
 
-function item(overrides: Partial<BillableItem>): BillableItem {
-  return {
-    id: "b",
-    billableOn: "2027-03-01",
-    agreementId: "a",
-    agreementTitle: "Συμφωνία",
-    reason: "period",
-    label: "Περίοδος",
-    net: 100,
-    open: 100,
-    daysOpen: 0,
-    reminders: [],
-    ...overrides,
-  };
-}
-
-describe("daysText", () => {
-  it("should use the singular for exactly one day", () => {
-    expect(daysText(1)).toBe("1 μέρα");
+describe("csvCell", () => {
+  it("βάζει εισαγωγικά σε κείμενο με ελληνικό ερωτηματικό ή κόμμα", () => {
+    expect(csvCell('λέξη "μία", δύο')).toBe('"λέξη ""μία"", δύο"');
   });
 
-  it("should use the plural for zero and for many days", () => {
-    expect(daysText(0)).toBe("0 μέρες");
-    expect(daysText(14)).toBe("14 μέρες");
+  it("προστατεύει από τύπους που ξεκινούν με =, +, -, @", () => {
+    expect(csvCell("=SUM(A1)")).toBe("'=SUM(A1)");
+    expect(csvCell("-10")).toBe("'-10");
+  });
+
+  it("προστατεύει από tab και CR στην αρχή και βάζει εισαγωγικά σε CR", () => {
+    expect(csvCell("\tcmd")).toBe("'\tcmd");
+    expect(csvCell("α\rβ")).toBe('"α\rβ"');
   });
 });
 
-describe("reminderText", () => {
-  it("should show the reminder day in short form", () => {
-    expect(reminderText(7)).toBe("7 μ.");
-    expect(reminderText(14)).toBe("14 μ.");
-  });
-});
-
-describe("reasonText", () => {
-  it("should translate a known reason and keep an unknown one as it is", () => {
-    expect(reasonText("dissolution_fee")).toBe("Ρήτρα λύσης");
-    expect(reasonText("something_new")).toBe("something_new");
-  });
-});
-
-describe("sortClientsByOldest", () => {
-  it("should put the client with the oldest open billable first", () => {
-    const sorted = sortClientsByOldest([
-      client({ clientName: "Νέος", oldestDays: 2 }),
-      client({ clientName: "Παλιός", oldestDays: 30 }),
-    ]);
-
-    expect(sorted.map((c) => c.clientName)).toEqual(["Παλιός", "Νέος"]);
-  });
-
-  it("should order equally old clients by name and leave the input untouched", () => {
-    const input = [
-      client({ clientName: "Ζ", oldestDays: 5 }),
-      client({ clientName: "Α", oldestDays: 5 }),
-    ];
-
-    expect(sortClientsByOldest(input).map((c) => c.clientName)).toEqual([
-      "Α",
-      "Ζ",
-    ]);
-    expect(input.map((c) => c.clientName)).toEqual(["Ζ", "Α"]);
-  });
-});
-
-describe("sortItemsByDate", () => {
-  it("should order lines by their billable date, oldest first", () => {
-    const sorted = sortItemsByDate([
-      item({ id: "b2", billableOn: "2027-04-01" }),
-      item({ id: "b1", billableOn: "2027-03-01" }),
-    ]);
-
-    expect(sorted.map((i) => i.id)).toEqual(["b1", "b2"]);
+describe("receiptsToCsv", () => {
+  it("γράφει επικεφαλίδα, ελληνικό BOM και την κατάσταση της διαγραφής", () => {
+    const deleted: ReceiptRow = { ...ROW, deleted: true, deleteReason: "Διπλή" };
+    const csv = receiptsToCsv([ROW, deleted]);
+    expect(csv.startsWith("﻿Ημερομηνία;Πελάτης;Ποσό;Τρόπος;Σημείωση;Καταχώρησε;Κατάσταση")).toBe(true);
+    expect(csv).toContain("05/10/2026");
+    expect(csv).toContain("Ενεργή");
+    expect(csv).toContain("Διαγράφηκε: Διπλή");
   });
 });

@@ -415,6 +415,8 @@ as $$
     when 'deliverable_requests' then true
     -- Εργασίες Παραγωγής (#143): χωρίς ποσά
     when 'production_tasks' then true
+    when 'payment_methods' then true
+    when 'receipts' then authz.has('finance.amounts')
     when 'billables' then authz.has('finance.amounts')
     else false
   end;

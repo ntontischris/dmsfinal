@@ -1,43 +1,28 @@
-import { REASON_LABELS } from "./labels";
-import type { BillableClient, BillableItem } from "./view-schema";
+import { formatReceiptDate, formatReceiptMoney } from "./money";
+import type { ReceiptRow } from "./types";
 
-// Μορφοποίηση και ταξινόμηση του «Προς τιμολόγηση», καθαρές συναρτήσεις. Οι κρίσεις (ανοιχτό, μέρες) τις κάνει η βάση.
+// Καθαρές συναρτήσεις της λίστας: η εξαγωγή CSV γίνεται στον browser από τα δεδομένα της σελίδας.
 
-const MONEY = new Intl.NumberFormat("el-GR", {
-  style: "currency",
-  currency: "EUR",
-});
+const CSV_HEADER = ["Ημερομηνία", "Πελάτης", "Ποσό", "Τρόπος", "Σημείωση", "Καταχώρησε", "Κατάσταση"];
 
-export const formatMoney = (amount: number): string => MONEY.format(amount);
+// Κελί CSV: εισαγωγικά όταν χρειάζεται, και προστασία από τύπους (=, +, -, @, tab, CR) στο Excel (OWASP).
+export const csvCell = (value: string): string => {
+  const guarded = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  return /[",;\r\n]/.test(guarded) ? `"${guarded.replace(/"/g, '""')}"` : guarded;
+};
 
-export const daysText = (days: number): string =>
-  days === 1 ? "1 μέρα" : `${days} μέρες`;
+const rowCells = (row: ReceiptRow): string[] => [
+  formatReceiptDate(row.receivedOn),
+  row.clientName,
+  formatReceiptMoney(row.amount),
+  row.methodLabel,
+  row.note,
+  row.createdByName,
+  row.deleted ? `Διαγράφηκε: ${row.deleteReason ?? ""}` : "Ενεργή",
+];
 
-// Σήμα υπενθύμισης: «7 μ.» και «14 μ.», μόνο για ό,τι έχει ήδη περάσει.
-export const reminderText = (day: number): string => `${day} μ.`;
-
-export const reasonText = (reason: string): string =>
-  REASON_LABELS[reason] ?? reason;
-
-// Πελάτες: οι παλαιότεροι ανοιχτοί πρώτα, ίσες μέρες με το όνομα. Γραμμές: κατά ημερομηνία.
-export const sortClientsByOldest = (
-  clients: readonly BillableClient[],
-): BillableClient[] =>
-  [...clients].sort(
-    (a, b) =>
-      b.oldestDays - a.oldestDays ||
-      a.clientName.localeCompare(b.clientName, "el"),
-  );
-
-export const sortItemsByDate = (
-  items: readonly BillableItem[],
-): BillableItem[] =>
-  [...items].sort(
-    (a, b) =>
-      a.billableOn.localeCompare(b.billableOn) || a.id.localeCompare(b.id),
-  );
-
-// Ημερομηνία της γραμμής (ημέρα, χωρίς ζώνη): η UTC μεσάνυχτα κρατά την ίδια μέρα σε κάθε περιβάλλον.
-const DATE = new Intl.DateTimeFormat("el-GR", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" });
-
-export const formatBillableDate = (isoDay: string): string => DATE.format(new Date(`${isoDay}T00:00:00Z`));
+// Το BOM κάνει το Excel να διαβάζει σωστά τα ελληνικά.
+export const receiptsToCsv = (rows: readonly ReceiptRow[]): string => {
+  const lines = [CSV_HEADER, ...rows.map(rowCells)].map((cells) => cells.map(csvCell).join(";"));
+  return `﻿${lines.join("\r\n")}`;
+};

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseBillablesView } from "./view-schema";
+import { parseBillablesView } from "./billables-view-schema";
 
 // Φτιάχνει μία γραμμή «Προς τιμολόγηση» με προεπιλογές που μπορεί να αλλάξει κάθε τεστ.
 function billableItem(overrides: Record<string, unknown> = {}) {

@@ -1,5 +1,5 @@
-import { formatMoney } from "../helpers";
-import type { BillablesView } from "../view-schema";
+import { formatMoney } from "../billables-helpers";
+import type { BillablesView } from "../billables-view-schema";
 
 interface ToInvoiceTotalsProps {
   view: BillablesView;

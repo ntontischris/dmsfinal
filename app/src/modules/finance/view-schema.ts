@@ -1,39 +1,39 @@
 import { z } from "zod";
 
-// Σχήμα του JSON του billables_view («Προς τιμολόγηση»). Ό,τι δεν ταιριάζει σπάει εδώ, δυνατά, και δεν φτάνει στην οθόνη.
+import type { PaymentMethod, ReceiptPreview, ReceiptRow } from "./types";
 
-const billableItemSchema = z.object({
+// Σχήμα των JSON των RPC του module (receipts_view, payment_methods_view, receipt_preview).
+// Ό,τι δεν ταιριάζει σπάει εδώ, δυνατά, και δεν φτάνει στην οθόνη.
+
+const receiptSchema = z.object({
   id: z.string(),
-  billableOn: z.string(),
-  agreementId: z.string(),
-  agreementTitle: z.string(),
-  reason: z.string(),
-  label: z.string(),
-  net: z.number(),
-  open: z.number(),
-  daysOpen: z.number(),
-  reminders: z.array(z.number()),
-});
-
-const billableClientSchema = z.object({
   clientId: z.string(),
   clientName: z.string(),
-  open: z.number(),
-  count: z.number(),
-  oldestDays: z.number(),
-  beyond: z.number(),
-  items: z.array(billableItemSchema),
+  receivedOn: z.string(),
+  amount: z.number(),
+  methodId: z.string(),
+  methodLabel: z.string(),
+  note: z.string(),
+  createdByName: z.string(),
+  deleted: z.boolean(),
+  deleteReason: z.string().nullable(),
+  can: z.object({ edit: z.boolean() }),
 });
 
-export const billablesViewSchema = z.object({
-  total: z.number(),
-  count: z.number(),
-  clients: z.array(billableClientSchema),
+const methodSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  retired: z.boolean(),
 });
 
-export type BillableItem = z.infer<typeof billableItemSchema>;
-export type BillableClient = z.infer<typeof billableClientSchema>;
-export type BillablesView = z.infer<typeof billablesViewSchema>;
+const previewSchema = z.object({
+  settles: z.array(z.object({ invoiceId: z.string(), number: z.string(), amount: z.number() })),
+  surplus: z.number(),
+});
 
-export const parseBillablesView = (data: unknown): BillablesView =>
-  billablesViewSchema.parse(data);
+export const parseReceipts = (data: unknown): ReceiptRow[] =>
+  z.array(receiptSchema).parse(data).map(({ can, ...row }) => ({ ...row, canEdit: can.edit }));
+
+export const parseMethods = (data: unknown): PaymentMethod[] => z.array(methodSchema).parse(data);
+
+export const parsePreview = (data: unknown): ReceiptPreview => previewSchema.parse(data);

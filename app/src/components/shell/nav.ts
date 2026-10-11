@@ -115,6 +115,23 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Οικονομικά",
+    items: [
+      {
+        code: "I1",
+        label: "Προς τιμολόγηση",
+        href: "/app/finance/to-invoice",
+        requires: "finance.view",
+      },
+      {
+        code: "I4",
+        label: "Εισπράξεις",
+        href: "/app/finance/receipts",
+        requires: "finance.view",
+      },
+    ],
+  },
+  {
     title: "Γυρίσματα",
     items: [
       {
@@ -186,17 +203,6 @@ export const NAV: readonly NavSection[] = [
         label: "Συνάδελφοι",
         href: "/app/colleagues",
         requires: "c.colleagues",
-      },
-    ],
-  },
-  {
-    title: "Οικονομικά",
-    items: [
-      {
-        code: "I1",
-        label: "Προς τιμολόγηση",
-        href: "/app/finance/to-invoice",
-        requires: "finance.view",
       },
     ],
   },

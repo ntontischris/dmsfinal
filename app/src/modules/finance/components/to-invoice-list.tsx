@@ -1,8 +1,8 @@
 import { Notice } from "@/components/ui/notice";
 
-import { BILLABLES_EMPTY_TEXT, BILLABLES_EMPTY_TITLE } from "../labels";
-import { sortClientsByOldest } from "../helpers";
-import type { BillableClient } from "../view-schema";
+import { BILLABLES_EMPTY_TEXT, BILLABLES_EMPTY_TITLE } from "../billables-labels";
+import { sortClientsByOldest } from "../billables-helpers";
+import type { BillableClient } from "../billables-view-schema";
 
 import { ToInvoiceClient } from "./to-invoice-client";
 

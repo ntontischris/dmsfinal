@@ -1,15 +1,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Table, Td, Th, Tr } from "@/components/ui/table";
 
-import { COLUMN_LABELS } from "../labels";
+import { COLUMN_LABELS } from "../billables-labels";
 import {
   daysText,
   formatBillableDate,
   formatMoney,
   reasonText,
   sortItemsByDate,
-} from "../helpers";
-import type { BillableClient, BillableItem } from "../view-schema";
+} from "../billables-helpers";
+import type { BillableClient, BillableItem } from "../billables-view-schema";
 
 import { ToInvoiceReminders } from "./to-invoice-reminders";
 

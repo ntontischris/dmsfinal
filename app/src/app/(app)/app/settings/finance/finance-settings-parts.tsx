@@ -6,6 +6,7 @@ import {
   getCostHint,
   listCostMonths,
 } from "@/modules/catalogue";
+import { PaymentMethodsCard, listPaymentMethods } from "@/modules/finance";
 import { RecentChanges, recentChanges } from "@/modules/settings";
 
 const FIELD_LABELS: Readonly<Record<string, string>> = {
@@ -22,13 +23,16 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
 // Όλα όσα διαβάζει η σελίδα, μαζί: αν κάτι δεν φορτώσει, δεν δείχνουμε μισές Ρυθμίσεις.
 export async function FinanceSettingsContent({
   canManage,
+  canManageMethods,
 }: {
   canManage: boolean;
+  canManageMethods: boolean;
 }) {
-  const [months, hint, changes] = await Promise.all([
+  const [months, hint, changes, methods] = await Promise.all([
     listCostMonths(),
     getCostHint(),
     recentChanges(["cost_months", "cost_settings"]),
+    listPaymentMethods(),
   ]);
   // Χωρίς γραμμή από το cost_hint ο θεατής δεν «Βλέπει κόστος»· εδώ η σελίδα έχει ήδη περάσει αυτόν τον έλεγχο.
   if (!months.ok || !hint.ok || !hint.data)
@@ -50,9 +54,10 @@ export async function FinanceSettingsContent({
         overrunPercent={hint.data.overrunPercent}
         canManage={canManage}
       />
+      {/* Οι Τρόποι είσπραξης έχουν δικό τους Δικαίωμα· αν δεν φορτώσουν, μένει η υπόλοιπη σελίδα. */}
+      {methods.ok && <PaymentMethodsCard methods={methods.data} canManage={canManageMethods} />}
       <p className="m-0 text-sm text-muted-foreground">
-        Έξοδα ανά κατηγορία, όριο Υπέρβασης κόστους και Τρόποι είσπραξης έρχονται
-        με τα modules Οικονομικά και Παραγωγές.
+        Έξοδα ανά κατηγορία και όριο Υπέρβασης κόστους έρχονται με τα modules Οικονομικά και Παραγωγές.
       </p>
       {changes.ok && (
         <RecentChanges
