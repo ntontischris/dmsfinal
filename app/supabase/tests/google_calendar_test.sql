@@ -91,7 +91,7 @@ reset role;
 -- ───────────── Ουρά: πότε μπαίνει μια εγγραφή ─────────────
 -- Χωρίς ημερολόγιο (calendar_id) τίποτα δεν μπαίνει στην ουρά.
 select public.t_filming('00000000-0000-0000-0000-00000000f001', 3, '10:00', 'pending');
-select public.t_blocked('00000000-0000-0000-0000-0000000000b001', '00000000-0000-0000-0000-0000000000e2', public.t_at(2, '09:00'), public.t_at(2, '10:00'));
+select public.t_blocked('00000000-0000-0000-0000-00000000b001', '00000000-0000-0000-0000-0000000000e2', public.t_at(2, '09:00'), public.t_at(2, '10:00'));
 select is((select count(*)::int from public.google_outbox), 0, 'Χωρίς ημερολόγιο η ουρά μένει άδεια');
 
 update public.google_calendar set calendar_id = 'cal-devre@group.calendar.google.com', shared_with = 'owner@example.com' where id;
@@ -113,8 +113,8 @@ select is((select op from public.google_outbox where entity_id = '00000000-0000-
 update public.filming_settings set google_write_pending = true where id;
 
 -- Κλεισμένος χρόνος της ομάδας μπαίνει στην ουρά.
-select public.t_blocked('00000000-0000-0000-0000-0000000000b002', '00000000-0000-0000-0000-0000000000e2', public.t_at(5, '09:00'), public.t_at(5, '10:00'));
-select is((select op from public.google_outbox where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-0000000000b002' and done_at is null), 'upsert', 'Κλεισμένος χρόνος της ομάδας μπαίνει στην ουρά');
+select public.t_blocked('00000000-0000-0000-0000-00000000b002', '00000000-0000-0000-0000-0000000000e2', public.t_at(5, '09:00'), public.t_at(5, '10:00'));
+select is((select op from public.google_outbox where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-00000000b002' and done_at is null), 'upsert', 'Κλεισμένος χρόνος της ομάδας μπαίνει στην ουρά');
 
 -- Αλλαγή που ήρθε από το Google δεν ξαναγράφεται στο Google.
 select public.t_filming('00000000-0000-0000-0000-00000000f003', 6, '10:00', 'pending');
@@ -128,7 +128,7 @@ select is((select count(*)::int from public.google_outbox where entity_id = '000
 update public.google_outbox set done_at = now() where done_at is null;
 select public.t_filming('00000000-0000-0000-0000-00000000f004', 7, '10:00', 'pending');
 update public.filmings set internal_note = 'Μυστική σημείωση' where id = '00000000-0000-0000-0000-00000000f004';
-select public.t_blocked('00000000-0000-0000-0000-0000000000b003', '00000000-0000-0000-0000-0000000000e2', public.t_at(8, '09:00'), public.t_at(8, '10:00'));
+select public.t_blocked('00000000-0000-0000-0000-00000000b003', '00000000-0000-0000-0000-0000000000e2', public.t_at(8, '09:00'), public.t_at(8, '10:00'));
 
 set local role service_role;
 select set_config('t.claim', public.google_outbox_claim(100)::text, true);
@@ -151,7 +151,7 @@ select ok(
      from public.google_outbox where id = (current_setting('t.claim')::jsonb->1->>'id')::bigint),
   'Η αποτυχία κάνει οπισθοχώρηση ενός λεπτού'
 );
-select is((select count(*)::int from public.google_links where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-0000000000b003'), 0, 'Η αποτυχία δεν γράφει αντιστοίχιση');
+select is((select count(*)::int from public.google_links where entity = 'blocked' and entity_id = '00000000-0000-0000-0000-00000000b003'), 0, 'Η αποτυχία δεν γράφει αντιστοίχιση');
 
 -- ───────────── Αλλαγές από το Google ─────────────
 -- Ίδιο etag: τίποτα.
