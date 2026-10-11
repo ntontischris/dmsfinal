@@ -254,13 +254,13 @@ describe("saveCostMonthSchema", () => {
 describe("saveMultipliersSchema", () => {
   it("δέχεται σωστή σειρά, και «1,3» γίνεται 1.3", () => {
     expect(
-      saveMultipliersSchema.parse({ min: "1,3", target: "1,6", max: "2" }),
-    ).toEqual({ min: 1.3, target: 1.6, max: 2 });
+      saveMultipliersSchema.parse({ min: "1,3", target: "1,6", max: "2", overrunPercent: "25" }),
+    ).toEqual({ min: 1.3, target: 1.6, max: 2, overrunPercent: 25 });
   });
 
   it("δέχεται ίσες τιμές και ελάχιστη ακριβώς 1", () => {
     expect(
-      saveMultipliersSchema.safeParse({ min: "1", target: "1", max: "1" })
+      saveMultipliersSchema.safeParse({ min: "1", target: "1", max: "1", overrunPercent: "20" })
         .success,
     ).toBe(true);
   });
@@ -270,6 +270,7 @@ describe("saveMultipliersSchema", () => {
       min: "1,5",
       target: "1,2",
       max: "2",
+      overrunPercent: "20",
     });
     expect(firstMessage(result)).toBe(
       "Οι πολλαπλασιαστές ξεκινούν από 1 και ανεβαίνουν: ελάχιστη, στόχος, μέγιστη.",
@@ -278,11 +279,18 @@ describe("saveMultipliersSchema", () => {
 
   it("απορρίπτει ελάχιστη κάτω από 1 και μέγιστη πάνω από 20", () => {
     expect(
-      saveMultipliersSchema.safeParse({ min: "0,9", target: "1,5", max: "2" })
+      saveMultipliersSchema.safeParse({ min: "0,9", target: "1,5", max: "2", overrunPercent: "20" })
         .success,
     ).toBe(false);
     expect(
-      saveMultipliersSchema.safeParse({ min: "1,3", target: "1,6", max: "21" })
+      saveMultipliersSchema.safeParse({ min: "1,3", target: "1,6", max: "21", overrunPercent: "20" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("απορρίπτει ποσοστό υπέρβασης πάνω από 500", () => {
+    expect(
+      saveMultipliersSchema.safeParse({ min: "1,3", target: "1,6", max: "2", overrunPercent: "501" })
         .success,
     ).toBe(false);
   });
@@ -290,7 +298,7 @@ describe("saveMultipliersSchema", () => {
   it("απορρίπτει μηδέν, αρνητικό και ό,τι δεν είναι αριθμός", () => {
     for (const min of ["0", "-1", "x", ""]) {
       expect(
-        saveMultipliersSchema.safeParse({ min, target: "1,6", max: "2" })
+        saveMultipliersSchema.safeParse({ min, target: "1,6", max: "2", overrunPercent: "20" })
           .success,
       ).toBe(false);
     }

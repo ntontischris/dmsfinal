@@ -110,6 +110,7 @@ const hintSchema = z.array(
     multiplier_min: z.coerce.number(),
     multiplier_target: z.coerce.number(),
     multiplier_max: z.coerce.number(),
+    overrun_percent: z.coerce.number(),
   }),
 );
 
@@ -125,6 +126,7 @@ const parseHint = (data: unknown): CostHint | null => {
       target: row.multiplier_target,
       max: row.multiplier_max,
     },
+    overrunPercent: row.overrun_percent,
   };
 };
 
