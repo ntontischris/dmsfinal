@@ -21,6 +21,10 @@ const sheetPanel = (page: Page): Locator =>
     has: page.getByRole("heading", { name: "Δελτίο", exact: true }),
   });
 
+// Η φόρμα του πάνελ που έχει το κουμπί· κάθε φόρμα έχει το δικό της μήνυμα (role=status).
+const formWith = (scope: Locator, name: string): Locator =>
+  scope.locator("form", { has: scope.getByRole("button", { name, exact: true }) });
+
 test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία λήψη και βγάζει Έκδοση 2 με το ιστορικό", async ({
   page,
   browser,
@@ -36,48 +40,33 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
     await button(owner, "Αποθήκευση Συνεργείου").click();
 
     const sheet = sheetPanel(owner);
-    await expect(
-      sheet.getByText("Δεν έχει εκδοθεί", { exact: true }),
-    ).toBeVisible();
+    await expect(sheet.getByText("Δεν έχει εκδοθεί", { exact: true })).toBeVisible();
     await addShot(sheet, "Είσοδος");
     await addShot(sheet, "Πάγκος");
-    await button(sheet, "Αποθήκευση Δελτίου").click();
-    await expect(sheet.getByRole("status")).toContainText(
-      "Το Δελτίο αποθηκεύτηκε.",
-    );
+    const editor = formWith(sheet, "Αποθήκευση Δελτίου");
+    await button(editor, "Αποθήκευση Δελτίου").click();
+    await expect(editor.getByRole("status")).toContainText("Το Δελτίο αποθηκεύτηκε.");
 
-    await button(sheet, "Έκδοση Δελτίου").click();
-    await expect(sheet.getByRole("status")).toContainText(
-      "Εκδόθηκε η έκδοση 1",
-    );
-    await expect(
-      sheet.getByText("Έκδοση 1 ·", { exact: false }).first(),
-    ).toBeVisible();
+    const issue = formWith(sheet, "Έκδοση Δελτίου");
+    await button(issue, "Έκδοση Δελτίου").click();
+    await expect(issue.getByRole("status")).toContainText("Εκδόθηκε η έκδοση 1");
+    await expect(sheet.getByText("Έκδοση 1 ·", { exact: false }).first()).toBeVisible();
   });
 
   await inContext(browser, "owner@example.com", async (owner) => {
     await visit(owner, filmingUrl);
     const sheet = sheetPanel(owner);
-    await sheet
-      .getByRole("textbox", { name: "Κείμενο λήψης 2" })
-      .fill("Πάγκος κοντά");
-    await button(sheet, "Αποθήκευση Δελτίου").click();
-    await expect(sheet.getByRole("status")).toContainText(
-      "Το Δελτίο αποθηκεύτηκε.",
-    );
+    await sheet.getByRole("textbox", { name: "Κείμενο λήψης 2" }).fill("Πάγκος κοντά");
+    const editor = formWith(sheet, "Αποθήκευση Δελτίου");
+    await button(editor, "Αποθήκευση Δελτίου").click();
+    await expect(editor.getByRole("status")).toContainText("Το Δελτίο αποθηκεύτηκε.");
 
-    const issue = sheet.locator("form", {
-      has: owner.getByRole("button", { name: "Έκδοση Δελτίου", exact: true }),
-    });
+    const issue = formWith(sheet, "Έκδοση Δελτίου");
     await fieldOf(issue, "Τι άλλαξε").fill("Άλλαξε η δεύτερη λήψη");
     await button(issue, "Έκδοση Δελτίου").click();
-    await expect(sheet.getByRole("status")).toContainText(
-      "Εκδόθηκε η έκδοση 2",
-    );
+    await expect(issue.getByRole("status")).toContainText("Εκδόθηκε η έκδοση 2");
 
-    await expect(
-      sheet.locator("li", { hasText: "Άλλαξε η δεύτερη λήψη" }),
-    ).toBeVisible();
+    await expect(sheet.locator("li", { hasText: "Άλλαξε η δεύτερη λήψη" })).toBeVisible();
     await expect(sheet.locator("li", { hasText: "Έκδοση 1 ·" })).toBeVisible();
     await expect(sheet.locator("li", { hasText: "Έκδοση 2 ·" })).toBeVisible();
   });
