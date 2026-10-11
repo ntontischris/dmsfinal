@@ -76,8 +76,8 @@ select is(authz.add_working_days(date '2027-03-26', 1), date '2027-03-29', 'Μί
 select is(authz.deliverable_kind_days(public.t_pk('reel')), 5, 'Το reel έχει προθεσμία 5 εργάσιμων');
 select is(authz.deliverable_kind_days(public.t_pk('video')), 10, 'Το βίντεο έχει προθεσμία 10 εργάσιμων');
 select is(authz.deliverable_host('https://www.youtube.com/watch?v=abc'), 'youtube.com', 'Το YouTube είναι επιτρεπτό host');
-select throws_ok($$ select authz.deliverable_host('http://drive.google.com/file/d/abc') $$, 'P0001', 'Χωρίς https το link απορρίπτεται');
-select throws_ok($$ select authz.deliverable_host('https://example.com/video') $$, 'P0001', 'Άγνωστο host απορρίπτεται');
+select throws_ok($$ select authz.deliverable_host('http://drive.google.com/file/d/abc') $$, 'P0001', 'Το link θέλει https', 'Χωρίς https το link απορρίπτεται');
+select throws_ok($$ select authz.deliverable_host('https://example.com/video') $$, 'P0001', 'Το link δεν είναι από επιτρεπτή πλατφόρμα', 'Άγνωστο host απορρίπτεται');
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
 
@@ -117,26 +117,26 @@ select is(
 set local role anon;
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid, 'Ανώνυμο', null, null, null, null) $$,
-  '42501', 'Ο ανώνυμος χρήστης δεν δημιουργεί Παραδοτέο'
+  '42501', 'permission denied for function deliverable_create', 'Ο ανώνυμος χρήστης δεν δημιουργεί Παραδοτέο'
 );
 reset role;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid, 'Πωλήσεις', null, null, null, null) $$,
-  '42501', 'Χρήστης χωρίς deliverables.work δεν δημιουργεί Παραδοτέο'
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χρήστης χωρίς deliverables.work δεν δημιουργεί Παραδοτέο'
 );
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid, 'Πελάτης', null, null, null, null) $$,
-  '42501', 'Πελάτης δεν δημιουργεί Παραδοτέο'
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Πελάτης δεν δημιουργεί Παραδοτέο'
 );
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa2')::uuid, current_setting('t.reel')::uuid, 'Ξένη Παραγωγή', null, null, null, null) $$,
-  '42501', 'Η Παραγωγή «mine» δεν δέχεται Παραδοτέο σε ξένη Παραγωγή'
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Η Παραγωγή «mine» δεν δέχεται Παραδοτέο σε ξένη Παραγωγή'
 );
 set local role authenticated;
-select throws_ok($$ select count(*) from public.deliverables $$, '42501', 'Ο πίνακας Παραδοτέων δεν διαβάζεται από την εφαρμογή');
+select throws_ok($$ select count(*) from public.deliverables $$, '42501', 'permission denied for table deliverables', 'Ο πίνακας Παραδοτέων δεν διαβάζεται από την εφαρμογή');
 reset role;
 
 -- ───────────── Δημιουργία και Παροχές ─────────────
@@ -155,11 +155,11 @@ select is(
 );
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.photo')::uuid, 'Φωτογραφίες', null, null, null, null) $$,
-  'P0001', 'Χωρίς υπόλοιπο και χωρίς χρέωση δεν δημιουργείται Παραδοτέο'
+  'P0001', 'Χωρίς υπόλοιπο Παροχής θέλει «χωρίς χρέωση» με λόγο ή «χρεώνεται»', 'Χωρίς υπόλοιπο και χωρίς χρέωση δεν δημιουργείται Παραδοτέο'
 );
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.photo')::uuid, 'Φωτογραφίες', null, null, 'free', null) $$,
-  'P0001', '«Χωρίς χρέωση» θέλει λόγο'
+  'P0001', 'Χωρίς υπόλοιπο Παροχής θέλει «χωρίς χρέωση» με λόγο ή «χρεώνεται»', '«Χωρίς χρέωση» θέλει λόγο'
 );
 select set_config('t.d2', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.photo')::uuid,
   'Φωτογραφίες', null, null, 'pending', null)::text, true);
@@ -180,15 +180,15 @@ select is(
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa2')::uuid, current_setting('t.video')::uuid, 'Άλλη Παραγωγή', null, current_setting('t.f')::uuid, 'pending', null) $$,
-  'P0001', 'Το Γύρισμα πρέπει να είναι της ίδιας Παραγωγής'
+  'P0001', 'Το Γύρισμα δεν ανήκει στην Παραγωγή', 'Το Γύρισμα πρέπει να είναι της ίδιας Παραγωγής'
 );
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.shoot')::uuid, 'Γύρισμα', null, null, null, null) $$,
-  'P0001', 'Το γύρισμα (ανά Γύρισμα) δεν είναι είδος Παραδοτέου'
+  'P0001', 'Το είδος δεν μετράει σε πλήθος', 'Το γύρισμα (ανά Γύρισμα) δεν είναι είδος Παραδοτέου'
 );
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.photo')::uuid, '   ', null, null, 'pending', null) $$,
-  'P0001', 'Το Παραδοτέο θέλει τίτλο'
+  'P0001', 'Το Παραδοτέο θέλει τίτλο έως 200 χαρακτήρες', 'Το Παραδοτέο θέλει τίτλο'
 );
 update public.filmings set state = 'done', actual_hours = 2, done_at = now()
  where id = current_setting('t.f')::uuid;
@@ -202,7 +202,7 @@ select set_config('t.di', public.deliverable_create(current_setting('t.pi')::uui
 select is((select d.charge from public.deliverables d where d.id = current_setting('t.di')::uuid), 'free', 'Εσωτερική Παραγωγή: χωρίς χρέωση χωρίς λόγο');
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pa2')::uuid, current_setting('t.video')::uuid, 'Γύρισμα αλλού', null, current_setting('t.f')::uuid, 'pending', null) $$,
-  'P0001', 'Γύρισμα άλλης Παραγωγής δεν δεσμεύεται'
+  'P0001', 'Το Γύρισμα δεν ανήκει στην Παραγωγή', 'Γύρισμα άλλης Παραγωγής δεν δεσμεύεται'
 );
 
 -- ───────────── Ενημέρωση ─────────────
@@ -212,7 +212,7 @@ select is((select d.title from public.deliverables d where d.id = current_settin
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_update(current_setting('t.d1')::uuid, 'Κλοπή', null, null) $$,
-  '42501', 'Χρήστης χωρίς Δικαίωμα δεν ενημερώνει Παραδοτέο'
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χρήστης χωρίς Δικαίωμα δεν ενημερώνει Παραδοτέο'
 );
 
 -- ───────────── Εκδόσεις: μη ελεγκτής, ελεγκτής, επιστροφή ─────────────
@@ -221,15 +221,15 @@ select is(public.deliverable_version_add(current_setting('t.d1')::uuid, 'https:/
 select is(authz.deliverable_state(current_setting('t.d1')::uuid), 'in_review', 'Έκδοση από μη ελεγκτή πάει σε εσωτερικό έλεγχο');
 select throws_ok(
   $$ select public.deliverable_version_send(current_setting('t.d1')::uuid) $$,
-  '42501', 'Ο μη ελεγκτής δεν στέλνει στον πελάτη'
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Ο μη ελεγκτής δεν στέλνει στον πελάτη'
 );
 select throws_ok(
   $$ select public.deliverable_version_add(current_setting('t.d1')::uuid, 'https://example.com/x', null) $$,
-  'P0001', 'Άγνωστο host δεν γίνεται Έκδοση'
+  'P0001', 'Το link δεν είναι από επιτρεπτή πλατφόρμα', 'Άγνωστο host δεν γίνεται Έκδοση'
 );
 select throws_ok(
   $$ select public.deliverable_version_add(current_setting('t.d1')::uuid, 'http://drive.google.com/x', null) $$,
-  'P0001', 'Χωρίς https δεν γίνεται Έκδοση'
+  'P0001', 'Το link θέλει https', 'Χωρίς https δεν γίνεται Έκδοση'
 );
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 select public.deliverable_version_send(current_setting('t.d1')::uuid);
@@ -266,34 +266,34 @@ select is(
 );
 select throws_ok(
   $$ select public.deliverable_comment_add(current_setting('t.d1')::uuid, 4, 'Εκτός ορίων', 90000, false) $$,
-  'P0001', 'Ο χρόνος σχολίου έξω από τις 24 ώρες απορρίπτεται'
+  'P0001', 'Ο χρόνος του σχολίου είναι εκτός ορίων', 'Ο χρόνος σχολίου έξω από τις 24 ώρες απορρίπτεται'
 );
 select throws_ok(
   $$ select public.deliverable_comment_add(current_setting('t.d1')::uuid, 9, 'Ανύπαρκτη Έκδοση', null, false) $$,
-  'P0001', 'Σχόλιο σε ανύπαρκτη Έκδοση απορρίπτεται'
+  'P0001', 'Η Έκδοση δεν βρέθηκε', 'Σχόλιο σε ανύπαρκτη Έκδοση απορρίπτεται'
 );
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_approve_internal(current_setting('t.d1')::uuid) $$,
-  'P0001', 'Η εσωτερική έγκριση μόνο σε Εσωτερική Παραγωγή'
+  'P0001', 'Μόνο Εσωτερική Παραγωγή εγκρίνεται εσωτερικά', 'Η εσωτερική έγκριση μόνο σε Εσωτερική Παραγωγή'
 );
 
 -- ───────────── Χρέωση ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_charge_decide(current_setting('t.d2')::uuid, 'charged', null) $$,
-  '42501', 'Χωρίς finance.cost δεν αποφασίζεται χρέωση'
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς finance.cost δεν αποφασίζεται χρέωση'
 );
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 select throws_ok(
   $$ select public.deliverable_charge_decide(current_setting('t.d2')::uuid, 'free', null) $$,
-  'P0001', '«Χωρίς χρέωση» θέλει λόγο στην απόφαση'
+  'P0001', 'Το «χωρίς χρέωση» θέλει λόγο', '«Χωρίς χρέωση» θέλει λόγο στην απόφαση'
 );
 select public.deliverable_charge_decide(current_setting('t.d2')::uuid, 'charged', null);
 select is((select d.charge from public.deliverables d where d.id = current_setting('t.d2')::uuid), 'charged', 'Η απόφαση «χρεώνεται» καταγράφεται');
 select throws_ok(
   $$ select public.deliverable_charge_decide(current_setting('t.d3')::uuid, 'charged', null) $$,
-  'P0001', 'Η χρέωση που έχει αποφασιστεί δεν αλλάζει ξανά'
+  'P0001', 'Η χρέωση έχει ήδη αποφασιστεί', 'Η χρέωση που έχει αποφασιστεί δεν αλλάζει ξανά'
 );
 
 -- ───────────── Ακύρωση ─────────────
@@ -304,7 +304,7 @@ select throws_ok(
 );
 select throws_ok(
   $$ select public.deliverable_cancel(current_setting('t.d4')::uuid, 'Λάθος', 'χάθηκε') $$,
-  'P0001', 'Η ακύρωση θέλει έγκυρο outcome'
+  'P0001', 'Η ακύρωση θέλει «καταναλώθηκε» ή «επιστρέφει»', 'Η ακύρωση θέλει έγκυρο outcome'
 );
 select public.deliverable_cancel(current_setting('t.d4')::uuid, 'Αλλαγή σχεδίου', 'returned');
 select is(
@@ -313,19 +313,19 @@ select is(
 );
 select throws_ok(
   $$ select public.deliverable_update(current_setting('t.d4')::uuid, 'Ακυρωμένο', null, null) $$,
-  'P0001', 'Ακυρωμένο Παραδοτέο δεν ενημερώνεται'
+  'P0001', 'Το Παραδοτέο έχει ακυρωθεί', 'Ακυρωμένο Παραδοτέο δεν ενημερώνεται'
 );
 
 -- ───────────── Ουρές, σελίδα, Παραγωγή ─────────────
-select throws_ok($$ select public.deliverables_queue_view('review') $$, '42501', 'Η ουρά ελέγχου θέλει deliverables.review');
-select throws_ok($$ select public.deliverables_queue_view('άγνωστη') $$, 'P0001', 'Άγνωστη ουρά απορρίπτεται');
+select throws_ok($$ select public.deliverables_queue_view('review') $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Η ουρά ελέγχου θέλει deliverables.review');
+select throws_ok($$ select public.deliverables_queue_view('άγνωστη') $$, 'P0001', 'Άγνωστη ουρά Παραδοτέων', 'Άγνωστη ουρά απορρίπτεται');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
 select ok(
   exists (select 1 from jsonb_array_elements(public.deliverables_queue_view('mine')) x where x->>'id' = current_setting('t.d2')),
   'Η ουρά «Για μένα» του Πέτρου έχει το δικό του Παραδοτέο'
 );
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
-select throws_ok($$ select public.deliverable_view(current_setting('t.d1')::uuid) $$, '42501', 'Ο πελάτης δεν βλέπει τη σελίδα Παραδοτέου');
+select throws_ok($$ select public.deliverable_view(current_setting('t.d1')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Ο πελάτης δεν βλέπει τη σελίδα Παραδοτέου');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
 select is(
   jsonb_array_length(public.deliverable_view(current_setting('t.d1')::uuid)->'versions'), 4,
@@ -336,7 +336,7 @@ select is(
   'Ο μη ελεγκτής δεν βλέπει «Στείλε»'
 );
 select throws_ok(
-  $$ select public.deliverable_candidates(current_setting('t.pa2')::uuid) $$, '42501', 'Χωρίς Δικαίωμα σε Παραγωγή δεν ζητάμε υποψηφίους'
+  $$ select public.deliverable_candidates(current_setting('t.pa2')::uuid) $$, '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς Δικαίωμα σε Παραγωγή δεν ζητάμε υποψηφίους'
 );
 select is(jsonb_array_length(public.deliverable_candidates(current_setting('t.pa1')::uuid)->'kinds'), 4, 'Οι υποψήφιοι είδη είναι τα είδη πλήθους');
 select is(authz.production_has_work(current_setting('t.pa2')::uuid), false, 'Η Παραγωγή 2 δεν έχει δουλειά');
@@ -358,12 +358,12 @@ select throws_ok(
 );
 select throws_ok(
   $$ select public.deliverable_version_add(current_setting('t.i1')::uuid, 'https://drive.google.com/file/d/late', null) $$,
-  'P0001', 'Το εγκεκριμένο Παραδοτέο δεν δέχεται νέα Έκδοση'
+  'P0001', 'Το Παραδοτέο δεν δέχεται νέα Έκδοση', 'Το εγκεκριμένο Παραδοτέο δεν δέχεται νέα Έκδοση'
 );
 select is(authz.production_has_work(current_setting('t.pi')::uuid), true, 'Εγκεκριμένο Παραδοτέο κάνει την Παραγωγή να έχει δουλειά');
 select throws_ok(
   $$ select public.production_cancel(current_setting('t.pi')::uuid, 'Λόγος') $$,
-  'P0001', 'Παραγωγή με εγκεκριμένο Παραδοτέο δεν ακυρώνεται'
+  'P0001', 'Η Παραγωγή έχει δουλειά και δεν ακυρώνεται', 'Παραγωγή με εγκεκριμένο Παραδοτέο δεν ακυρώνεται'
 );
 
 -- ───────────── Κλείσιμο: ακύρωση με «καταναλώθηκε» ─────────────
