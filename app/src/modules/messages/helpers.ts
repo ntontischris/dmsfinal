@@ -3,7 +3,7 @@ import type { InboxItem, ThreadMessage } from "./view-schema";
 
 // Καθαρά βοηθητικά των Μηνυμάτων: κείμενα γραμμών, φίλτρα, σήμα «νέο», διευθύνσεις.
 
-export const INBOX_TABS = ["conversations", "mentions"] as const;
+export const INBOX_TABS = ["conversations", "requests", "mentions"] as const;
 export type InboxTab = (typeof INBOX_TABS)[number];
 
 export const parseTab = (value: string | undefined): InboxTab =>

@@ -540,6 +540,11 @@ begin
           from public.team_users t
          where t.user_id <> v_me and authz.message_mentionable(t.user_id)
       ), '[]'::jsonb) end,
+    -- Όσοι μπορούν να αναλάβουν Αίτημα (και ο ίδιος ο χρήστης): μόνο για όσους μεταβιβάζουν.
+    'assignable', case when v_team and authz.has('clients.transfer') then coalesce((
+        select jsonb_agg(jsonb_build_object('id', t.user_id, 'name', t.name) order by t.name, t.user_id)
+          from public.team_users t where authz.message_mentionable(t.user_id)
+      ), '[]'::jsonb) end,
     'readAt', v_read_at,
     'editMinutes', authz.message_edit_minutes(),
     'changeRequests', authz.thread_change_requests(p_client, v_team),

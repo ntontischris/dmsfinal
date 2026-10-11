@@ -17,11 +17,14 @@ import {
   UNREAD_NOTE,
   tabLabel,
 } from "../labels";
-import { getInbox, getMentions, getWritableClients } from "../queries";
+import { getInbox, getMentions, getRequestsView, getWritableClients } from "../queries";
+import { allowedView, type RequestView } from "../request-helpers";
+import { TAB_REQUESTS } from "../request-labels";
 import type { Inbox } from "../view-schema";
 import { ConversationList } from "./conversation-list";
 import { MentionList } from "./mention-list";
 import { NewMessage } from "./new-message";
+import { RequestsTab } from "./requests-tab";
 
 function LoadError() {
   return (
@@ -31,13 +34,18 @@ function LoadError() {
   );
 }
 
-// Οι καρτέλες των Εισερχομένων. Η καρτέλα «Αιτήματα» (Jδ) μπαίνει εδώ ως τρίτη επιλογή.
-function tabOptions(inbox: Inbox, current: InboxTab): SegmentedOption[] {
+// Οι καρτέλες των Εισερχομένων. Το «Αιτήματα (N)» είναι τα ανοιχτά Αιτήματα που έχεις αναλάβει (null αν δεν φόρτωσε).
+function tabOptions(inbox: Inbox, requestsMine: number | null, current: InboxTab): SegmentedOption[] {
   return [
     {
       label: tabLabel(TAB_CONVERSATIONS, unreadTotal(inbox.items)),
       href: MESSAGES_PATH,
       isCurrent: current === "conversations",
+    },
+    {
+      label: requestsMine === null ? TAB_REQUESTS : tabLabel(TAB_REQUESTS, requestsMine),
+      href: `${MESSAGES_PATH}?tab=requests`,
+      isCurrent: current === "requests",
     },
     {
       label: tabLabel(TAB_MENTIONS, inbox.mentionsUnread),
@@ -83,18 +91,33 @@ async function MentionsTab() {
 }
 
 // J1: τα Εισερχόμενα της ομάδας. Οι μετρητές των καρτελών είναι αδιάβαστα δικά σου (Μ3).
-export async function InboxScreen({ tab }: { tab: InboxTab }) {
-  const inbox = await getInbox();
+interface InboxScreenProps {
+  tab: InboxTab;
+  view: RequestView;
+  canTransfer: boolean;
+}
+
+export async function InboxScreen({ tab, view, canTransfer }: InboxScreenProps) {
+  const shownView = allowedView(view, canTransfer);
+  // Οι μετρητές των Αιτημάτων είναι ίδιοι σε κάθε όψη· στις άλλες καρτέλες αρκεί η «για μένα».
+  const [inbox, requests] = await Promise.all([
+    getInbox(),
+    getRequestsView(tab === "requests" ? shownView : "mine"),
+  ]);
   if (!inbox.ok) return <LoadError />;
+  const requestsMine = requests.ok ? requests.data.counts.mine : null;
   return (
     <div className="grid gap-4">
-      <Tabs label={INBOX_TABS_LABEL} options={tabOptions(inbox.data, tab)} />
+      <Tabs label={INBOX_TABS_LABEL} options={tabOptions(inbox.data, requestsMine, tab)} />
       <div>
-        {tab === "mentions" ? (
-          <MentionsTab />
-        ) : (
-          <ConversationsTab inbox={inbox.data} />
-        )}
+        {tab === "mentions" && <MentionsTab />}
+        {tab === "conversations" && <ConversationsTab inbox={inbox.data} />}
+        {tab === "requests" &&
+          (requests.ok ? (
+            <RequestsTab data={requests.data} view={shownView} canTransfer={canTransfer} />
+          ) : (
+            <LoadError />
+          ))}
       </div>
     </div>
   );

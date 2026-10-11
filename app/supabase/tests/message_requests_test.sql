@@ -3,7 +3,7 @@
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι ημερομηνίες Συμφωνίας και Γυρίσματος είναι του 2027· το «ανοιχτό Χ μέρες»
 -- ελέγχεται μετακινώντας το declared_at στο παρελθόν.
 begin;
-select plan(167);
+select plan(169);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις (Υπεύθυνος του Α) · a4 Παραγωγή (Υπεύθυνος της Παραγωγής του Α) · a5 Παραγωγή (ξένος)
@@ -406,10 +406,12 @@ select is((select count(*)::int from jsonb_array_elements(public.message_request
 -- ───────────── Ουρά ομάδας (J1) ─────────────
 select public.t_as('a3');
 select throws_ok($$ select public.message_requests_view('unassigned') $$, '42501', null, 'Χωρίς clients.transfer δεν βλέπεις «χωρίς υπεύθυνο»');
+select is(jsonb_typeof(public.messages_thread('00000000-0000-0000-0000-0000000000c1')->'assignable'), 'null', 'Χωρίς clients.transfer δεν υπάρχει λίστα υπευθύνων');
 select public.t_as('a4');
 select throws_ok($$ select public.message_requests_view('unassigned') $$, '42501', null, 'Μέλος Παραγωγής δεν βλέπει «χωρίς υπεύθυνο»');
 select public.t_as('a1');
 select throws_ok($$ select public.message_requests_view('bogus') $$, 'P0001', null, 'Άγνωστη όψη');
+select is(jsonb_array_length(public.messages_thread('00000000-0000-0000-0000-0000000000c1')->'assignable'), 4, 'Όποιος μεταβιβάζει βλέπει ποιοι μπορούν να αναλάβουν (ενεργά μέλη με Συνομιλία)');
 select is(jsonb_array_length(public.message_requests_view('unassigned')->'items'), 2, '«Χωρίς υπεύθυνο»: r5 και pb (το r3 έχει κλείσει)');
 select is((public.message_requests_view('open')->'counts'->>'unassigned')::int, 2, 'Ο μετρητής «χωρίς υπεύθυνο»');
 select is(jsonb_array_length(public.message_requests_view('open')->'items'), 4, 'Όλα τα ανοιχτά: p1, r5, r10, pb');

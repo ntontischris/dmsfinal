@@ -19,11 +19,15 @@ import {
 } from "../labels";
 import { markThreadReadAfterRender } from "../mark-read";
 import { getThread } from "../queries";
+import { sideRequestsOf, timelineOf } from "../request-helpers";
 import type { Thread } from "../view-schema";
 import { AutoRefresh } from "./auto-refresh";
+import { ChangeRequestItem } from "./change-request-item";
 import { Composer } from "./composer";
 import { MessageItem } from "./message-item";
 import { ReadAtScope } from "./new-mark";
+import { TeamRequestBox, loadCandidates, type CandidatesByProduction } from "./request-slot";
+import { RequestsSide } from "./requests-side";
 import { ThreadFilters } from "./thread-filters";
 import { ThreadHeader } from "./thread-header";
 
@@ -36,14 +40,19 @@ interface ThreadScreenProps {
 function MessageList({
   thread,
   filters,
+  candidates,
 }: {
   thread: Thread;
   filters: MessageFilters;
+  candidates: CandidatesByProduction;
 }) {
-  const shown = filterMessages(thread.messages, filters);
-  if (shown.length === 0) {
-    const isFiltered =
-      filters.production !== undefined || filters.filter !== "all";
+  const isFiltered = filters.production !== undefined || filters.filter !== "all";
+  // Οι αλλαγές μετά την έγκριση δεν έχουν ετικέτα Μηνύματος: φαίνονται μόνο χωρίς φίλτρο (Μ12).
+  const entries = timelineOf(
+    filterMessages(thread.messages, filters),
+    isFiltered ? [] : thread.changeRequests,
+  );
+  if (entries.length === 0) {
     return isFiltered ? (
       <Notice kind="empty" title={FILTER_EMPTY_TITLE} />
     ) : (
@@ -54,16 +63,21 @@ function MessageList({
   }
   return (
     <div className="grid gap-3">
-      {shown.map((message) => (
-        <MessageItem
-          key={message.id}
-          clientId={thread.client.id}
-          message={message}
-          productions={thread.productions}
-          canClearTag={thread.canWriteUntagged}
-          isTeamViewer
-        />
-      ))}
+      {entries.map((entry) =>
+        entry.type === "change" ? (
+          <ChangeRequestItem key={entry.change.id} change={entry.change} isTeamViewer />
+        ) : (
+          <MessageItem
+            key={entry.message.id}
+            clientId={thread.client.id}
+            message={entry.message}
+            productions={thread.productions}
+            canClearTag={thread.canWriteUntagged}
+            isTeamViewer
+            requestBox={<TeamRequestBox thread={thread} message={entry.message} candidates={candidates} />}
+          />
+        ),
+      )}
     </div>
   );
 }
@@ -118,6 +132,7 @@ export async function ThreadScreen({
     );
   }
   if (thread.messages.length > 0) await markThreadReadAfterRender(clientId, newestAt(thread.messages));
+  const candidates = await loadCandidates(thread);
   return (
     <>
       <AutoRefresh />
@@ -136,9 +151,10 @@ export async function ThreadScreen({
       )}
       <div className="grid gap-4">
         <ReadAtScope readAt={thread.readAt}>
-          <MessageList thread={thread} filters={filters} />
+          <MessageList thread={thread} filters={filters} candidates={candidates} />
         </ReadAtScope>
         <ComposerArea thread={thread} production={filters.production} />
+        <RequestsSide items={sideRequestsOf(thread.messages, thread.changeRequests)} />
       </div>
       <p className="mt-6 text-sm text-muted-foreground">{THREAD_FOOTER}</p>
     </>

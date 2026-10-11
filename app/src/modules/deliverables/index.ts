@@ -39,6 +39,7 @@ export { ClientDetailView } from "./components/client-detail-view";
 export { ClientCardList, ClientQueueView } from "./components/client-queue-view";
 export { ChargeDecisionsPanel } from "./components/charge-decisions-panel";
 export { DeliverableDetailView } from "./components/deliverable-detail";
+export { NewDeliverableForm, type FromRequest } from "./components/new-deliverable-form";
 export { ProductionDeliverables } from "./components/production-deliverables";
 export { DeliverableRulesForm } from "./components/rules-form";
 export { QueueTable } from "./components/queue-table";

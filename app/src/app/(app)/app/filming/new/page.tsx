@@ -6,6 +6,7 @@ import {
   filmingCaps,
   listBookingOptions,
   parseBlockedPrefill,
+  parseFromRequest,
 } from "@/modules/filming";
 import { listProductions } from "@/modules/productions";
 
@@ -37,7 +38,9 @@ export default async function NewFilmingPage({
     caps.canBookInternal ? listProductions({ state: "open", internalOnly: true }) : null,
   ]);
   if (!options.ok) return <LoadError />;
-  const prefill = parseBlockedPrefill(await searchParams);
+  const query = await searchParams;
+  const prefill = parseBlockedPrefill(query);
+  const fromRequest = parseFromRequest(query);
   const internal = productions?.ok
     ? productions.data.map((production) => ({ id: production.id, name: production.title }))
     : [];
@@ -50,6 +53,7 @@ export default async function NewFilmingPage({
         productions={internal}
         today={athensDate(new Date())}
         prefill={prefill}
+        fromRequest={fromRequest}
       />
     </>
   );

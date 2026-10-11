@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Viewer } from "@/modules/access";
 
-import { messagesViewOf } from "./caps";
+import { messagesCaps, messagesViewOf } from "./caps";
 
 const USER = "44444444-4444-4444-8444-444444444444";
 
@@ -56,5 +56,21 @@ describe("messagesViewOf", () => {
 
   it("should give nothing to an anonymous visitor", () => {
     expect(messagesViewOf({ status: "anonymous" })).toBe("none");
+  });
+});
+
+describe("messagesCaps canTransfer", () => {
+  it("should let a team member with clients.transfer reassign requests", () => {
+    expect(
+      messagesCaps(teamViewer({ "messages.chat": "all", "clients.transfer": "all" })).canTransfer,
+    ).toBe(true);
+  });
+
+  it("should not let a team member without clients.transfer reassign requests", () => {
+    expect(messagesCaps(teamViewer({ "messages.chat": "all" })).canTransfer).toBe(false);
+  });
+
+  it("should not let a client user reassign requests", () => {
+    expect(messagesCaps(clientViewer({ "c.chatRead": "all" })).canTransfer).toBe(false);
   });
 });

@@ -46,6 +46,7 @@ const message = (patch: Partial<ThreadMessage> = {}): ThreadMessage => ({
   canEdit: false,
   canDelete: false,
   attachments: [],
+  request: null,
   ...patch,
 });
 

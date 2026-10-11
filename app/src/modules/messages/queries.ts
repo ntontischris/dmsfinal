@@ -4,13 +4,17 @@ import { signedDownloadUrl } from "./message-storage";
 import { read, type ReadResult } from "./read";
 import {
   parseClientContext,
+  parseClientRequests,
   parseInbox,
   parseMentions,
+  parseRequestsView,
   parseThread,
   parseWritableClients,
   type ClientContext,
+  type ClientRequests,
   type Inbox,
   type MentionItem,
+  type RequestsView,
   type Thread,
   type WritableClient,
 } from "./view-schema";
@@ -61,6 +65,22 @@ export async function getClientContext(): Promise<ReadResult<ClientContext | nul
     return { ok: false };
   }
   return { ok: true, data: parseClientContext(data) };
+}
+
+export type RequestsViewName = "mine" | "open" | "unassigned" | "closed";
+
+// Η καρτέλα Αιτημάτων της ομάδας. Μόνο Αιτήματα σε Μηνύματα που βλέπει ο χρήστης· η «χωρίς υπεύθυνο» θέλει clients.transfer.
+export async function getRequestsView(view: RequestsViewName): Promise<ReadResult<RequestsView>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("getRequestsView", supabase.rpc("message_requests_view", { p_view: view }), parseRequestsView);
+}
+
+// Η καρτέλα Αιτημάτων του Χρήστη πελάτη: τα Αιτήματα του Πελάτη του και οι αλλαγές μετά την έγκριση.
+export async function getClientRequests(): Promise<ReadResult<ClientRequests>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("getClientRequests", supabase.rpc("client_requests_view"), parseClientRequests);
 }
 
 export type AttachmentLinkResult = { ok: true; url: string } | { ok: false; status: 404 | 500 };
