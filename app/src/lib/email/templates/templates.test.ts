@@ -4,6 +4,7 @@ import type { Locale } from "../locale";
 
 import { invitationMessage, authLinkMessage } from "./auth-messages";
 import { proposalLinkMessage, signedCopyMessage, signingCodeMessage } from "./agreement-messages";
+import { deliverableVersionMessage } from "./deliverable-messages";
 import { crewDeclinedMessage, sheetIssuedMessage } from "./sheet-messages";
 import {
   clientAddedMessage,
@@ -95,6 +96,22 @@ describe.each(LOCALES)("τα πρότυπα email (%s)", (locale) => {
     ).toMatchSnapshot();
   });
 
+  it("νέα Έκδοση Παραδοτέου για έγκριση", () => {
+    expect(
+      deliverableVersionMessage({
+        locale,
+        origin: ORIGIN,
+        name: "Νίκος",
+        deliverableId: "d-42",
+        title: "Reel 1",
+        production: "Σποτ",
+        version: 2,
+        roundsUsed: 1,
+        roundsLimit: 2,
+      }),
+    ).toMatchSnapshot();
+  });
+
   it("«δεν μπορώ» του Συνεργείου", () => {
     expect(
       crewDeclinedMessage({
@@ -143,5 +160,31 @@ describe("ασφάλεια των προτύπων", () => {
     expect(invitationMessage({ locale: "el", origin: ORIGIN, name: "Μαρία", link: LINK, kind: "team" }).text).toContain(
       "24 ώρες",
     );
+  });
+});
+
+describe("η Νέα Έκδοση Παραδοτέου", () => {
+  const input = {
+    locale: "el" as const,
+    origin: ORIGIN,
+    name: "Νίκος",
+    deliverableId: "d-42",
+    title: "Reel 1",
+    production: "Σποτ",
+    version: 2,
+    roundsUsed: 1,
+    roundsLimit: null,
+  };
+
+  it("δείχνει το κουμπί προς το Παραδοτέο", () => {
+    expect(deliverableVersionMessage(input).html).toContain(`${ORIGIN}/app/deliverables/d-42`);
+  });
+
+  it("δεν γράφει γύρους όταν δεν υπάρχει όριο", () => {
+    expect(deliverableVersionMessage(input).text).not.toContain("Γύροι");
+  });
+
+  it("γράφει γύρους από όριο όταν υπάρχει", () => {
+    expect(deliverableVersionMessage({ ...input, roundsLimit: 2 }).text).toContain("1 από 2");
   });
 });

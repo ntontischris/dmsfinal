@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { accessLinkFor } from "./access-link";
+import { deliverableMessageFor, DELIVERABLE_KIND } from "./deliver-deliverable";
 import { isSheetKind, sheetMessageFor } from "./deliver-sheet";
 import { toLocale, type Locale } from "./locale";
 import { sendEmail, type SendOutcome } from "./send-email";
@@ -31,6 +32,7 @@ export const outboxRowSchema = z.object({
     "reschedule_decision",
     "sheet_issued",
     "crew_declined",
+    "deliverable_version_sent",
   ]),
   to_name: z.string(),
   to_email: z.string(),
@@ -177,6 +179,7 @@ async function messageFor(
   if (isDecisionKind(row.kind))
     return decisionMessageFor(row, row.kind, origin);
   if (isSheetKind(row.kind)) return sheetMessageFor(row, origin);
+  if (row.kind === DELIVERABLE_KIND) return deliverableMessageFor(row, origin);
   return clientAddedMessageFor(admin, row, origin);
 }
 
