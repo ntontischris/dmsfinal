@@ -346,6 +346,20 @@ for (const P of ["desktop", "mobile"]) {
 }
 console.log("seed: Καρτέλα πελάτη");
 
+// ───────────── Μηνύματα: Πελάτης για το e2e/messages.spec.ts ─────────────
+// Χωρίς Χρήστη πελάτη (η όψη πελάτη έρχεται στο Jβ)· ο Ιδιοκτήτης γράφει σε κάθε Πελάτη.
+for (const P of ["desktop", "mobile"]) {
+  await insertRow("clients", {
+    name: `Πελάτης Μηνυμάτων ${P}`,
+    city: "Αθήνα",
+    contact_name: "Μαρίνα Μηνύματα",
+    contact_email: `messages-contact.${P}@pelatis.example.gr`,
+    contact_phone: "",
+    manager_id: ANNA,
+  });
+}
+console.log("seed: Μηνύματα");
+
 
 // ───────────── Εξοπλισμός: ένα αντικείμενο ανά project για το e2e/equipment.spec.ts ─────────────
 // Τα αντικείμενα μπαίνουν απευθείας με service role: το Πρότυπο της Παραγωγής δουλεύει πάνω σε αυτά.

@@ -35,6 +35,17 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Επικοινωνία",
+    items: [
+      {
+        code: "J1",
+        label: "Εισερχόμενα",
+        href: "/app/messages",
+        requires: "messages.chat",
+      },
+    ],
+  },
+  {
     title: "Πελάτες και Πωλήσεις",
     items: [
       {
