@@ -82,8 +82,9 @@ test("ο Ιδιοκτήτης διορθώνει τη λήξη και μετά �
   await page.locator("summary", { hasText: "Ακύρωση καταχώρισης" }).click();
   await fieldOf(page, "Λόγος ακύρωσης (υποχρεωτικός)").fill(VOID_REASON);
   await page.getByRole("button", { name: "Επιβεβαίωση ακύρωσης" }).click();
+  // Μετά την ακύρωση η φόρμα φεύγει και η σελίδα δείχνει την ακυρωμένη καταχώριση με τον λόγο.
   await expect(
-    page.getByRole("status").filter({ hasText: "Η καταχώριση ακυρώθηκε" }),
+    page.getByRole("heading", { name: "Η καταχώριση είναι ακυρωμένη" }),
   ).toBeVisible();
 
   await page.goto(INVOICES_PATH);
