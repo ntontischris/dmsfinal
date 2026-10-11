@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σχετικές με το «σήμερα» (Ώρα Ελλάδας).
 -- Ο worker τρέχει ως service_role· η εφαρμογή ως Χρήστης με Δικαίωμα ή χωρίς.
 begin;
-select plan(72);
+select plan(73);
 
 -- ───────────── Βοηθητικά ─────────────
 
@@ -252,6 +252,7 @@ select is(jsonb_array_length(public.google_deletions_view()), 1, 'Η οθόνη 
 select is(public.google_deletions_view()->0->>'title', 'Εσωτερική Παραγωγή', 'Η διαγραφή δείχνει τον τίτλο του Γυρίσματος');
 select is((public.google_view()->>'connected')::boolean, true, 'Η κάρτα Google δείχνει ότι το ημερολόγιο είναι συνδεδεμένο');
 select ok(jsonb_array_length(public.google_view()->'activity') > 0, 'Η κάρτα Google δείχνει τα πρόσφατα από το Google');
+select is(public.google_view()->'rules'->>'deleteHours', '12', 'Η οθόνη Ρυθμίσεων βλέπει τους Κανόνες του Google');
 select ok((public.calendar_view(current_date - 1, current_date + 1)->'google') ? 'stale', 'Το Ημερολόγιο δείχνει την κατάσταση Google στον Ιδιοκτήτη');
 select ok(public.google_resync_all() >= 1, 'Η ξαναγραφή επιστρέφει πόσα μπήκαν στην ουρά');
 reset role;

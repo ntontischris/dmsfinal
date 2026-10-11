@@ -10,6 +10,7 @@ import {
   getFilmingSettings,
 } from "@/modules/filming";
 import { SettingsTabs } from "@/modules/settings";
+import { GoogleRulesForm, getGoogleView } from "@/modules/google";
 
 import { Notice } from "@/components/ui/notice";
 
@@ -29,7 +30,7 @@ export default async function FilmingSettingsPage() {
       </>
     );
 
-  const [settings, hours] = await Promise.all([getFilmingSettings(), getBookingHours()]);
+  const [settings, hours, google] = await Promise.all([getFilmingSettings(), getBookingHours(), getGoogleView()]);
   if (!settings.ok || !hours.ok)
     return (
       <Notice kind="error" title="Δεν φόρτωσαν οι Κανόνες">
@@ -45,6 +46,7 @@ export default async function FilmingSettingsPage() {
         <BookingHoursForm view={hours.data} />
         <BookingExceptions exceptions={hours.data.exceptions} />
         <BookingHolidays holidays={hours.data.holidays} />
+        {google.ok && <GoogleRulesForm rules={google.data.rules} />}
       </div>
     </>
   );

@@ -30,6 +30,7 @@ const teamData = (overrides: Partial<CalendarData> = {}): CalendarData => ({
   canBlockOthers: false,
   canBook: true,
   team: [],
+  google: null,
   ...overrides,
 });
 

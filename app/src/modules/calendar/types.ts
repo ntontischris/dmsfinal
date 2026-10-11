@@ -38,6 +38,14 @@ export interface CalendarMember {
   name: string;
 }
 
+// Η κατάσταση του Google στην Οθόνη Ημερολογίου (μόνο για calendar.google· αλλιώς null).
+export interface CalendarGoogle {
+  connected: boolean;
+  pendingWrites: number;
+  lastSyncAt: string | null;
+  stale: boolean;
+}
+
 // Η ομάδα βλέπει τα πάντα του Ρόλου της· ο Πελάτης μόνο τα δικά του Γυρίσματα και τις μέρες.
 export interface CalendarData {
   isTeam: boolean;
@@ -48,6 +56,7 @@ export interface CalendarData {
   canBlockOthers: boolean;
   canBook: boolean;
   team: CalendarMember[];
+  google: CalendarGoogle | null;
 }
 
 // Ένας κλεισμένος χρόνος όπως τον δίνει το blocked_time_view (A6).

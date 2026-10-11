@@ -845,6 +845,9 @@ begin
     'pendingWrites', v_pending,
     'oldestPendingAt', v_oldest,
     'pendingDeletions', v_open,
+    'rules', (select jsonb_build_object('newEvent', s.google_new_event, 'deleteHours', s.google_delete_hours,
+                                        'writePending', s.google_write_pending)
+                from public.filming_settings s where s.id),
     'activity', coalesce((
       select jsonb_agg(jsonb_build_object('at', a.at, 'kind', a.kind, 'message', a.message, 'filmingId', a.filming_id)
                        order by a.at desc, a.id desc)

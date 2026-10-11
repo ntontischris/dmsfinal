@@ -2,6 +2,8 @@ import { ScreenHeader } from "@/components/shell/screen-header";
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import { getDefaults } from "@/modules/agreements";
+import { GoogleSettingsCard, getGoogleView } from "@/modules/google";
+import { isGoogleConfigured } from "@/lib/google/config";
 import {
   AccessNotice,
   EmailLogList,
@@ -27,7 +29,7 @@ export default async function IntegrationsPage() {
       </>
     );
 
-  const [defaults, log] = await Promise.all([getDefaults(), listEmailLog(20)]);
+  const [defaults, log, google] = await Promise.all([getDefaults(), listEmailLog(20), getGoogleView()]);
   const connected = defaults.ok && defaults.data.emailSenderConnected;
   return (
     <>
@@ -49,6 +51,11 @@ export default async function IntegrationsPage() {
             <TestEmailForm />
           </div>
         </Panel>
+        <GoogleSettingsCard
+          configured={isGoogleConfigured()}
+          view={google.ok ? google.data : null}
+          ownerEmail={viewer.status === "signed-in" ? viewer.email : ""}
+        />
         <Panel label="Τελευταίες αποστολές" aside="20" isFlush>
           {log.ok ? (
             <EmailLogList rows={log.data} />

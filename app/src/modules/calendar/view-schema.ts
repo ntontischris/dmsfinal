@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { BlockedTime, CalendarData, CalendarLinkStatus } from "./types";
+import type { BlockedTime, CalendarData, CalendarGoogle, CalendarLinkStatus } from "./types";
 
 // Τα JSON των RPC του Ημερολογίου, όπως έρχονται από τη βάση. Ό,τι δεν ταιριάζει δεν φτάνει στην οθόνη.
 
@@ -41,6 +41,15 @@ const clientDaySchema = z.object({ day: z.string(), status: z.string() });
 
 const memberSchema = z.object({ userId: z.string(), name: z.string() });
 
+const googleSchema: z.ZodType<CalendarGoogle | null> = z
+  .object({
+    connected: z.boolean(),
+    pendingWrites: z.number(),
+    lastSyncAt: z.string().nullable(),
+    stale: z.boolean(),
+  })
+  .nullable();
+
 const teamViewSchema = z
   .object({
     filmings: z.array(filmingSchema),
@@ -50,6 +59,7 @@ const teamViewSchema = z
     canBlockOthers: z.boolean(),
     canBook: z.boolean(),
     team: z.array(memberSchema),
+    google: googleSchema,
   })
   .transform((view): CalendarData => ({ ...view, isTeam: true }));
 
@@ -58,6 +68,7 @@ const clientViewSchema = z
     filmings: z.array(filmingSchema),
     days: z.array(clientDaySchema),
     canBook: z.boolean(),
+    google: googleSchema,
   })
   .transform(
     (view): CalendarData => ({
@@ -69,6 +80,7 @@ const clientViewSchema = z
       canBlockOthers: false,
       canBook: view.canBook,
       team: [],
+      google: view.google,
     }),
   );
 
