@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες Γυρισμάτων και Περιόδων το 2027, ώστε το τεστ
 -- να περνά οποιαδήποτε μέρα τρέξει. Οι προθεσμίες από «σήμερα» ελέγχονται με την ίδια συνάρτηση, όχι με σταθερή ημερομηνία.
 begin;
-select plan(83);
+select plan(92);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής της Περιόδου 1) · e3 Πωλήσεις (χωρίς Παραδοτέα)
@@ -376,6 +376,59 @@ select is(
 select is(
   (select b.reserved from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), 0::numeric,
   'Ακυρωμένο Παραδοτέο δεν μένει δεσμευμένο'
+);
+
+-- ───────────── Εφάπαξ Συμφωνία: Παροχή σε επίπεδο Συμφωνίας, ακύρωση Παραγωγής ─────────────
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+insert into public.catalogue_items (id, kind, billing, name, name_en, unit, retired_at) values
+  ('00000000-0000-0000-0000-0000000000d9', 'package', 'one_off', 'Εφάπαξ πακέτο reel (τεστ)', 'One-off reel (test)', '', null);
+insert into public.catalogue_item_amounts (item_id, price) values ('00000000-0000-0000-0000-0000000000d9', 300);
+insert into public.catalogue_item_provisions (item_id, kind_id, quantity) values ('00000000-0000-0000-0000-0000000000d9', public.t_pk('reel'), 2);
+insert into public.opportunities (id, client_id, title, stage_id, source_id, manager_id, next_step, next_step_due)
+select '00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000f1', 'Εφάπαξ εκδήλωση',
+       (select s.id from public.sales_stages s where s.code = 'proposal'),
+       (select s.id from public.sales_sources s where s.code = 'phone'),
+       '00000000-0000-0000-0000-0000000000e3', 'Πρόταση', (now() at time zone 'Europe/Athens')::date + 3;
+select set_config('t.ao', public.agreement_create('00000000-0000-0000-0000-0000000000c2', 'one_off', 'Εφάπαξ τεστ')::text, true);
+select public.agreement_update_basics(current_setting('t.ao')::uuid, 'Εφάπαξ τεστ', 'el', (now() at time zone 'Europe/Athens')::date + 5, null, null);
+select public.agreement_add_catalogue_line(current_setting('t.ao')::uuid, '00000000-0000-0000-0000-0000000000d9', 1);
+select public.agreement_set_recipients(current_setting('t.ao')::uuid, '[{"name":"Μαρία Παπαδάκη","email":"maria@example.com","is_signatory":true}]'::jsonb);
+select public.agreement_sign_outside(current_setting('t.ao')::uuid, (now() at time zone 'Europe/Athens')::date, 'Μαρία Παπαδάκη', (now() at time zone 'Europe/Athens')::date, 'one-off.pdf');
+select set_config('t.pao', (select pr.id::text from public.productions pr where pr.agreement_id = current_setting('t.ao')::uuid and pr.period_id is null), true);
+
+select is(
+  (select b.r_balance from authz.one_off_balance_row(current_setting('t.ao')::uuid, public.t_pk('reel')) b), 2::numeric,
+  'Η εφάπαξ Συμφωνία δίνει 2 reel'
+);
+select set_config('t.o1', public.deliverable_create(current_setting('t.pao')::uuid, public.t_pk('reel'),
+  'Εφάπαξ reel 1', null, null, null, null)::text, true);
+select is((select d.charge from public.deliverables d where d.id = current_setting('t.o1')::uuid), 'included', 'Το εφάπαξ Παραδοτέο παίρνει Παροχή της Συμφωνίας');
+select is(
+  (select b.r_balance from authz.one_off_balance_row(current_setting('t.ao')::uuid, public.t_pk('reel')) b), 1::numeric,
+  'Το εφάπαξ Παραδοτέο μειώνει το υπόλοιπο της Συμφωνίας'
+);
+select set_config('t.o2', public.deliverable_create(current_setting('t.pao')::uuid, public.t_pk('reel'),
+  'Εφάπαξ reel 2', null, null, null, null)::text, true);
+select is((select d.charge from public.deliverables d where d.id = current_setting('t.o2')::uuid), 'included', 'Το δεύτερο εφάπαξ Παραδοτέο, με το τελευταίο υπόλοιπο, παίρνει Παροχή');
+select throws_ok(
+  $$ select public.deliverable_create(current_setting('t.pao')::uuid, public.t_pk('reel'), 'Εφάπαξ reel 3', null, null, null, null) $$,
+  'P0001', 'Χωρίς υπόλοιπο Παροχής θέλει «χωρίς χρέωση» με λόγο ή «χρεώνεται»', 'Χωρίς υπόλοιπο εφάπαξ Συμφωνίας δεν δημιουργείται Παραδοτέο'
+);
+select lives_ok(
+  $$ select public.production_cancel(current_setting('t.pao')::uuid, 'Η εκδήλωση ακυρώθηκε') $$,
+  'Η εφάπαξ Παραγωγή με ανοιχτά Παραδοτέα ακυρώνεται'
+);
+select is(
+  (select d.cancel_outcome from public.deliverables d where d.id = current_setting('t.o1')::uuid), 'returned',
+  'Η ακύρωση Παραγωγής επιστρέφει τα ανοιχτά Παραδοτέα'
+);
+select is(
+  (select d.cancel_reason from public.deliverables d where d.id = current_setting('t.o2')::uuid), 'Ακυρώθηκε η Παραγωγή',
+  'Ο λόγος του ακυρωμένου Παραδοτέου είναι «Ακυρώθηκε η Παραγωγή»'
+);
+select is(
+  (select b.r_balance from authz.one_off_balance_row(current_setting('t.ao')::uuid, public.t_pk('reel')) b), 2::numeric,
+  'Μετά την ακύρωση Παραγωγής, οι Παροχές της Συμφωνίας επιστρέφουν'
 );
 
 select * from finish();

@@ -303,14 +303,17 @@ begin
 end;
 $$;
 
--- Μονάδες που καταναλώνει (used) ή δεσμεύει (reserved) ένα Παραδοτέο πλήθους στην Περίοδο. Μόνο charge 'included'.
+-- Μονάδες που καταναλώνει (used) ή δεσμεύει (reserved) ένα Παραδοτέο πλήθους. Μόνο charge 'included'.
+-- Περίοδος (p_period) ή, για εφάπαξ, η Συμφωνία με p_period null (όπως στα Γυρίσματα, authz.kind_filmings).
 -- Δεσμευμένα: μη ακυρωμένα και μη εγκεκριμένα. Καταναλωμένα: εγκεκριμένα, ή ακυρωμένα με outcome 'consumed'.
-create function authz.deliverable_units(p_period uuid, p_kind uuid, p_stage text) returns numeric
+create function authz.deliverable_units(p_agreement uuid, p_period uuid, p_kind uuid, p_stage text) returns numeric
 language sql stable security definer set search_path = ''
 as $$
   select count(*)::numeric
     from public.deliverables d
-   where d.period_id = p_period
+    join public.productions pr on pr.id = d.production_id
+   where pr.agreement_id = p_agreement
+     and (case when p_period is not null then d.period_id = p_period else d.period_id is null end)
      and d.kind_id = p_kind
      and d.charge = 'included'
      and case
@@ -453,7 +456,7 @@ begin
     );
   end if;
   return (select count(*)::numeric from authz.kind_filmings(p_agreement, p_period, p_kind, p_stage) f)
-         + authz.deliverable_units(p_period, p_kind, p_stage);
+         + authz.deliverable_units(p_agreement, p_period, p_kind, p_stage);
 end;
 $$;
 
@@ -708,8 +711,8 @@ begin
   if v_production.client_id is null then
     v_charge := 'free';
     v_reason := null;
-  elsif v_production.period_id is not null and coalesce((
-          select b.balance from authz.period_balance(v_production.period_id, p_kind) b), 0) > 0 then
+  elsif v_production.agreement_id is not null and coalesce(
+          authz.filming_available(v_production.agreement_id, v_production.period_id, p_kind), 0) > 0 then
     v_charge := 'included';
     v_reason := null;
   elsif p_charge = 'pending' then
@@ -984,6 +987,39 @@ begin
 end;
 $$;
 
+-- ───────────── Ακύρωση Παραγωγής (τελευταίος ορισμός) ─────────────
+
+-- Ακύρωση με λόγο, μόνο όσο δεν έγινε δουλειά (Π8). Τα ανοιχτά Παραδοτέα (μη εγκεκριμένα, μη ακυρωμένα)
+-- ακυρώνονται με outcome 'returned' ώστε η Παροχή να επιστρέψει στην Περίοδο.
+create or replace function public.production_cancel(p_production uuid, p_reason text) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_reason text := nullif(trim(coalesce(p_reason, '')), '');
+  v_state text;
+begin
+  perform authz.production_writable(p_production);
+  if v_reason is null then
+    raise exception 'Η ακύρωση θέλει λόγο' using errcode = 'P0001';
+  end if;
+  select p.state into v_state from public.productions p where p.id = p_production for update;
+  if v_state <> 'open' then
+    raise exception 'Μόνο ανοιχτή Παραγωγή ακυρώνεται' using errcode = 'P0001';
+  end if;
+  if authz.production_has_work(p_production) then
+    raise exception 'Η Παραγωγή έχει δουλειά και δεν ακυρώνεται' using errcode = 'P0001';
+  end if;
+  update public.deliverables d
+     set cancelled_at = now(), cancelled_by = auth.uid(),
+         cancel_reason = 'Ακυρώθηκε η Παραγωγή', cancel_outcome = 'returned'
+   where d.production_id = p_production and d.cancelled_at is null and d.approved_at is null;
+  update public.productions p
+     set state = 'cancelled', cancelled_at = now(), cancelled_by = auth.uid(), cancelled_reason = v_reason
+   where p.id = p_production;
+  perform authz.production_event(p_production, 'cancelled', jsonb_build_object('reason', v_reason));
+end;
+$$;
+
 -- ───────────── Δικαιώματα ─────────────
 
 -- Όλα τα νέα authz κλειστά· οι RPC τρέχουν ως ιδιοκτήτης και τα καλούν μέσα τους.
@@ -993,7 +1029,7 @@ revoke all on function
   authz.deliverable_host(text), authz.deliverable_in_scope(uuid, text), authz.production_in_scope(uuid, text),
   authz.require_production_scope(uuid, text), authz.deliverable_gate(uuid, text), authz.require_deliverable_view(uuid),
   authz.check_deliverable_filming(uuid, uuid), authz.check_deliverable_assignee(uuid, uuid),
-  authz.deliverable_units(uuid, uuid, text), authz.deliverable_card(uuid), authz.deliverable_versions_json(uuid),
+  authz.deliverable_units(uuid, uuid, uuid, text), authz.deliverable_card(uuid), authz.deliverable_versions_json(uuid),
   authz.deliverable_viewer_can(uuid), authz.deliverables_fill_deadlines()
   from public, anon, authenticated;
 
