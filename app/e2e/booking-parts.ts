@@ -28,7 +28,10 @@ export async function signedBookingAgreement(page: Page, browser: Browser, P: st
 
 // Αλλάζει Χρήστη στην ίδια σελίδα: «Έξοδος», μετά είσοδος με το άλλο email (το /login δεν φαίνεται όσο είσαι μέσα).
 export async function switchUser(page: Page, email: string): Promise<void> {
+  // Η έξοδος είναι ενέργεια στον server και περιμένει σειρά πίσω από κάθε ανανέωση της σελίδας που τρέχει·
+  // αν η φόρμα εισόδου ανοίξει πριν τελειώσει, η έξοδος ακυρώνεται και ο χρήστης μένει συνδεδεμένος.
   await page.getByRole("button", { name: "Έξοδος", exact: true }).click();
+  await page.waitForURL(/\/login/);
   await signIn(page, email);
 }
 
