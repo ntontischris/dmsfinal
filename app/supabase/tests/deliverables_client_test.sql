@@ -2,7 +2,7 @@
 -- link που δεν ανοίγει, σχόλια χωρίς εσωτερικά, τελικά αρχεία, email ανά Χρήστη με «Εγκρίνει Παραδοτέα», κλειστοί πίνακες.
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Οι ημερομηνίες είναι ανεξάρτητες από τη μέρα εκτέλεσης.
 begin;
-select plan(80);
+select plan(115);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής 1) · e3 Πωλήσεις · e5 Διαχείριση
@@ -14,7 +14,9 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000e5', 'manager@example.com'),
   ('00000000-0000-0000-0000-0000000000e6', 'maria@kypseli.example.gr'),
   ('00000000-0000-0000-0000-0000000000e7', 'nikos@kypseli.example.gr'),
-  ('00000000-0000-0000-0000-0000000000e8', 'kostas@other.example.gr');
+  ('00000000-0000-0000-0000-0000000000e8', 'kostas@other.example.gr'),
+  ('00000000-0000-0000-0000-0000000000e9', 'lia@kypseli.example.gr'),
+  ('00000000-0000-0000-0000-0000000000e10', 'eva@gym.example.gr');
 insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000e1', 'Γιώργος', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000e2', 'Πέτρος', 'production@example.com'),
@@ -60,6 +62,13 @@ insert into public.roles (name, description, kind, is_owner, is_builtin) values
   ('Μόνο προβολή (τεστ)', 'Τεστ: Χρήστης πελάτη χωρίς έγκριση.', 'client', false, false);
 insert into public.role_permissions (role_id, permission, scope)
 select r.id, 'c.productions', 'all' from public.roles r where r.name = 'Μόνο προβολή (τεστ)';
+insert into public.roles (name, description, kind, is_owner, is_builtin) values
+  ('Μόνο κράτηση (τεστ)', 'Τεστ: Χρήστης πελάτη μόνο με Κράτηση.', 'client', false, false),
+  ('Μόνο έγκριση (τεστ)', 'Τεστ: Χρήστης πελάτη μόνο με έγκριση Παραδοτέων.', 'client', false, false);
+insert into public.role_permissions (role_id, permission, scope)
+select r.id, 'c.book', 'all' from public.roles r where r.name = 'Μόνο κράτηση (τεστ)';
+insert into public.role_permissions (role_id, permission, scope)
+select r.id, 'c.approve', 'all' from public.roles r where r.name = 'Μόνο έγκριση (τεστ)';
 
 -- Βοηθητικά των τεστ: ο κωδικός ενός είδους Παροχής· αλλαγή Χρήστη με το κωδικό του (τα δύο τελευταία ψηφία).
 create function public.t_pk(p_code text) returns uuid
@@ -106,6 +115,11 @@ insert into public.client_users (client_id, user_id, name, role_id, is_current) 
    (select r.id from public.roles r where r.name = 'Μόνο προβολή (τεστ)'), true),
   ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000e8', 'Κώστας Αρμύρας',
    (select r.id from public.roles r where r.name = 'Πλήρης' and r.kind = 'client'), true);
+insert into public.client_users (client_id, user_id, name, role_id, is_current) values
+  ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000e9', 'Λία Κρατήσεων',
+   (select r.id from public.roles r where r.name = 'Μόνο κράτηση (τεστ)'), true),
+  ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000e10', 'Εύα Έγκρισης',
+   (select r.id from public.roles r where r.name = 'Μόνο έγκριση (τεστ)'), true);
 
 -- ───────────── Ομάδα: Παραδοτέα και Εκδόσεις ─────────────
 select public.t_as('e1');
@@ -322,6 +336,104 @@ select is(public.client_deliverable_view(current_setting('t.d1')::uuid) ->> 'fin
 select public.t_as('e3');
 select throws_ok($$ select public.deliverable_final_files_set(current_setting('t.d1')::uuid, 'https://vimeo.com/3') $$, '42501', null,
   'Πωλήσεις δεν ορίζουν τελικά αρχεία');
+
+-- ───────────── Πρόσβαση: Χρήστες πελάτη με λιγότερα Δικαιώματα (Π1, Π2) ─────────────
+select public.t_as('e9');
+select throws_ok($$ select public.productions_view() $$, '42501', null,
+  'Με μόνο «Κρατά Γύρισμα» δεν βλέπει Παραγωγές');
+select throws_ok($$ select public.production_view(current_setting('t.pa1')::uuid) $$, '42501', null,
+  'Με μόνο «Κρατά Γύρισμα» δεν ανοίγει Παραγωγή του Πελάτη του');
+select public.t_as('e8');
+select throws_ok($$ select public.production_view(current_setting('t.pa1')::uuid) $$, '42501', null,
+  'Πελάτης 2 δεν ανοίγει Παραγωγή του Πελάτη 1');
+select public.t_as('e6');
+select lives_ok($$ select public.production_view(current_setting('t.pa1')::uuid) $$,
+  'Ο Χρήστης πελάτη με «Πλήρης» ανοίγει Παραγωγή του Πελάτη του');
+
+select public.t_as('e1');
+select set_config('t.d6', public.deliverable_create(current_setting('t.pb1')::uuid, current_setting('t.reel')::uuid,
+  'Reel Γυμναστηρίου', null, null, null, null)::text, true);
+select is(public.deliverable_version_add(current_setting('t.d6')::uuid, 'https://drive.google.com/file/d/gym1', null), 1,
+  'Έκδοση του Γυμναστηρίου περιμένει τον πελάτη του');
+select lives_ok($$ select public.production_deliver(current_setting('t.pb1')::uuid, 'Παραδόθηκε στον πελάτη') $$,
+  'Η Παραγωγή του Γυμναστηρίου παραδίδεται');
+select public.t_as('e8');
+select lives_ok($$ select public.deliverable_client_answer(current_setting('t.d6')::uuid, false, 'Αλλαγή στο τέλος') $$,
+  'Ζήτηση αλλαγών σε παραδομένη Παραγωγή την ξανανοίγει');
+select is((select state from public.productions where id = current_setting('t.pb1')::uuid), 'open',
+  'Η ζήτηση αλλαγών του πελάτη ξανανοίγει την Παραγωγή');
+select public.t_as('e10');
+select lives_ok($$ select public.productions_view() $$,
+  'Με μόνο «Εγκρίνει Παραδοτέα» βλέπει Παραγωγές του Πελάτη του');
+select lives_ok($$ select public.client_deliverables_view() $$,
+  'Με μόνο «Εγκρίνει Παραδοτέα» βλέπει τη λίστα Παραδοτέων');
+select lives_ok($$ select public.client_deliverable_view(current_setting('t.d6')::uuid) $$,
+  'Με μόνο «Εγκρίνει Παραδοτέα» ανοίγει Παραδοτέο του Πελάτη του');
+select throws_ok($$ select public.client_deliverable_view(current_setting('t.d1')::uuid) $$, '42501', null,
+  'Με μόνο «Εγκρίνει Παραδοτέα» δεν ανοίγει Παραδοτέο άλλου Πελάτη');
+
+-- Άγνωστο id και σελίδα της ομάδας: ο πελάτης παίρνει πάντα 42501
+select public.t_as('e6');
+select throws_ok($$ select public.client_deliverable_view('00000000-0000-0000-0000-00000000dead'::uuid) $$, '42501', null,
+  'Άγνωστο Παραδοτέο δίνει 42501 στον πελάτη (χωρίς ύπαρξη)');
+select throws_ok($$ select public.deliverable_client_answer('00000000-0000-0000-0000-00000000dead'::uuid, true, null) $$, '42501', null,
+  'Η απάντηση σε άγνωστο Παραδοτέο δίνει 42501');
+select throws_ok($$ select public.deliverable_request_change('00000000-0000-0000-0000-00000000dead'::uuid, 'Αίτημα') $$, '42501', null,
+  'Το αίτημα σε άγνωστο Παραδοτέο δίνει 42501');
+select throws_ok($$ select public.deliverable_report_link('00000000-0000-0000-0000-00000000dead'::uuid, 1) $$, '42501', null,
+  'Το «link δεν ανοίγει» σε άγνωστο Παραδοτέο δίνει 42501');
+select throws_ok($$ select public.deliverable_view(current_setting('t.d1')::uuid) $$, '42501', null,
+  'Ο πελάτης δεν βλέπει τη σελίδα της ομάδας (H2)');
+
+-- ───────────── Ιστορικό έγκρισης, ξανάνοιγμα και τελικά αρχεία (Π4) ─────────────
+select public.t_as('e1');
+select set_config('t.d5', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid,
+  'Reel πέμπτο', null, null, null, null)::text, true);
+select is(public.deliverable_version_add(current_setting('t.d5')::uuid, 'https://drive.google.com/file/d/h1', null), 1,
+  'Η πρώτη Έκδοση του πέμπτου Παραδοτέου πάει στον πελάτη');
+select public.t_as('e6');
+select lives_ok($$ select public.deliverable_client_answer(current_setting('t.d5')::uuid, true, null) $$,
+  'Ο πελάτης εγκρίνει την πρώτη Έκδοση του πέμπτου');
+select public.t_as('e1');
+select lives_ok($$ select public.deliverable_final_files_set(current_setting('t.d5')::uuid, 'https://vimeo.com/h-final-1') $$,
+  'Η ομάδα ορίζει τελικά αρχεία μετά την πρώτη έγκριση');
+select public.t_as('e6');
+select set_config('t.r5', public.deliverable_request_change(current_setting('t.d5')::uuid, 'Αλλαγή μουσικής')::text, true);
+select public.t_as('e1');
+select throws_ok($$ select public.deliverable_cancel(current_setting('t.d5')::uuid, 'Λόγος', 'consumed') $$, 'P0001', null,
+  'Το εγκεκριμένο Παραδοτέο δεν ακυρώνεται');
+select lives_ok($$ select public.deliverable_request_decide(current_setting('t.r5')::uuid, 'round', 'Δεκτό ως γύρος') $$,
+  'Η ομάδα δέχεται το Αίτημα ως γύρο');
+select is(public.deliverable_view(current_setting('t.d5')::uuid) ->> 'state', 'changes_requested',
+  'Το ξανανοιγμένο Παραδοτέο γράφει «χρειάζεται αλλαγές» για την ομάδα');
+select isnt((select approved_at from public.deliverables where id = current_setting('t.d5')::uuid), null,
+  'Το ιστορικό της έγκρισης μένει μετά το ξανάνοιγμα');
+select ok(authz.deliverable_reopened(current_setting('t.d5')::uuid),
+  'Το Παραδοτέο με δεκτό γύρο μετά την έγκριση είναι ξανανοιγμένο');
+select throws_ok($$ select public.deliverable_cancel(current_setting('t.d5')::uuid, 'Λόγος', 'returned') $$, 'P0001', null,
+  'Ξανανοιγμένο εγκεκριμένο Παραδοτέο δεν ακυρώνεται');
+select is((select final_files_url from public.deliverables where id = current_setting('t.d5')::uuid), null,
+  'Το ξανάνοιγμα καθαρίζει τα τελικά αρχεία');
+select public.t_as('e6');
+select is(public.client_deliverable_view(current_setting('t.d5')::uuid) ->> 'state', 'in_progress',
+  'Ο πελάτης βλέπει το ξανανοιγμένο Παραδοτέο «σε εργασία»');
+select is(public.client_deliverable_view(current_setting('t.d5')::uuid) ->> 'finalFilesUrl', 'https://drive.google.com/file/d/h1',
+  'Μέχρι τη νέα έγκριση ο πελάτης βλέπει την εγκεκριμένη Έκδοση, όχι τα παλιά τελικά αρχεία');
+select public.t_as('e1');
+select is(public.deliverable_version_add(current_setting('t.d5')::uuid, 'https://drive.google.com/file/d/h2', null), 2,
+  'Νέα Έκδοση μετά το ξανάνοιγμα');
+select public.t_as('e6');
+select lives_ok($$ select public.deliverable_client_answer(current_setting('t.d5')::uuid, true, null) $$,
+  'Ο πελάτης εγκρίνει τη δεύτερη Έκδοση του πέμπτου');
+select is(public.client_deliverable_view(current_setting('t.d5')::uuid) ->> 'finalFilesUrl', 'https://drive.google.com/file/d/h2',
+  'Μετά τη νέα έγκριση ο πελάτης βλέπει το link της νέας Έκδοσης, όχι τα παλιά τελικά αρχεία');
+select public.t_as('e1');
+select is(public.deliverable_view(current_setting('t.d5')::uuid) ->> 'state', 'approved',
+  'Μετά τη νέα έγκριση η κατάσταση γράφει «εγκρίθηκε»');
+select ok(authz.production_has_work(current_setting('t.pa1')::uuid),
+  'Παραγωγή με Παραδοτέο που εγκρίθηκε ποτέ έχει δουλειά');
+select throws_ok($$ select public.production_cancel(current_setting('t.pa1')::uuid, 'Λόγος') $$, 'P0001', null,
+  'Η Παραγωγή με εγκεκριμένο Παραδοτέο δεν ακυρώνεται');
 
 -- ───────────── Αποστολή, email και κλειστοί πίνακες ─────────────
 select public.t_as('e1');

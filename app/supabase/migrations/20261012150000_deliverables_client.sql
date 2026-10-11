@@ -65,22 +65,34 @@ $$;
 
 -- ───────────── Κατάσταση και κάρτα (ξαναγράφονται) ─────────────
 
--- Εγκεκριμένη Έκδοση που ξανάνοιξε από Αίτημα (approved_at null) γίνεται «χρειάζεται αλλαγές» για την ομάδα.
+-- Ξανάνοιγμα (Π4): ένα Αίτημα «δεκτό ως γύρος» ή «χρεώνεται» που αποφασίστηκε μετά την τελευταία έγκριση.
+-- Το approved_at μένει (ιστορικό έγκρισης)· μηδενίζεται μόνο με νέα έγκριση, δηλαδή όταν δεν υπάρχει νεότερο Αίτημα.
+create function authz.deliverable_reopened(p_deliverable uuid) returns boolean
+language sql stable set search_path = ''
+as $$
+  select exists (
+    select 1 from public.deliverables d
+     where d.id = p_deliverable and d.approved_at is not null
+       and exists (select 1 from public.deliverable_requests r
+                    where r.deliverable_id = d.id and r.decision in ('round', 'charged')
+                      and r.decided_at > d.approved_at)
+  );
+$$;
+
+-- Κατάσταση για την ομάδα. Ξανανοιγμένο (με εγκεκριμένη τελευταία Έκδοση) γράφει «χρειάζεται αλλαγές».
 create or replace function authz.deliverable_state(p_deliverable uuid) returns text
 language sql stable set search_path = ''
 as $$
   select case
            when d.cancelled_at is not null then 'cancelled'
-           when d.approved_at is null
-                and (select v.state from public.deliverable_versions v
-                      where v.deliverable_id = d.id order by v.number desc limit 1) = 'approved' then 'changes_requested'
-           else coalesce((
-             select v.state from public.deliverable_versions v
-              where v.deliverable_id = d.id
-              order by v.number desc limit 1
-           ), 'draft')
+           when authz.deliverable_reopened(d.id) and l.state = 'approved' then 'changes_requested'
+           else coalesce(l.state, 'draft')
          end
     from public.deliverables d
+    left join lateral (
+      select v.state from public.deliverable_versions v
+       where v.deliverable_id = d.id order by v.number desc limit 1
+    ) l on true
    where d.id = p_deliverable;
 $$;
 
@@ -185,6 +197,7 @@ create function authz.reopen_production_for_work(p_production uuid) returns void
 language plpgsql security definer set search_path = ''
 as $$
 begin
+  perform 1 from public.productions p where p.id = p_production for update;
   if exists (select 1 from public.productions p where p.id = p_production and p.state = 'delivered') then
     update public.productions p
        set state = 'open', delivered_at = null, delivered_by = null, delivered_note = null
@@ -222,6 +235,18 @@ $$;
 -- ───────────── Χρήστης πελάτη: βοηθητικές ─────────────
 
 -- Ο Χρήστης πελάτη βλέπει το Παραδοτέο: Παραγωγή του Πελάτη του, όχι Εσωτερική. Αλλιώς 42501 (χωρίς oracle ύπαρξης).
+-- Βλέπει τα Παραδοτέα του Πελάτη όποιος έχει «Βλέπει Παραγωγές» ή «Εγκρίνει Παραδοτέα». Αλλιώς 42501.
+create function authz.require_client_reader() returns void
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  if authz.client_user_client_id() is null
+     or not (authz.client_user_has('c.productions') or authz.client_user_has('c.approve')) then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+end;
+$$;
+
 create function authz.require_client_deliverable_visible(p_deliverable uuid) returns void
 language plpgsql stable security definer set search_path = ''
 as $$
@@ -249,7 +274,7 @@ as $$
            when d.cancelled_at is not null then 'cancelled'
            when exists (select 1 from public.deliverable_versions v
                          where v.deliverable_id = d.id and v.state = 'awaiting_client') then 'awaiting_you'
-           when d.approved_at is not null then 'approved'
+           when d.approved_at is not null and not authz.deliverable_reopened(d.id) then 'approved'
            when (select v.state from public.deliverable_versions v
                   where v.deliverable_id = d.id order by v.number desc limit 1) = 'changes_requested' then 'changes_requested'
            else 'in_progress'
@@ -374,6 +399,7 @@ begin
     'comment', v_approve and v_open and v_sent,
     'reportLink', (v_approve or authz.client_user_has('c.productions')) and v_sent,
     'requestChange', v_approve and v_open and v_approved and not v_has_open_request
+                     and not authz.deliverable_reopened(p_deliverable)
   );
 end;
 $$;
@@ -567,7 +593,7 @@ declare
   v_groups jsonb;
   v_awaiting jsonb;
 begin
-  perform authz.require_client_permission('c.productions');
+  perform authz.require_client_reader();
   select coalesce(jsonb_agg(authz.client_group_json(g.period_id, g.production_id, g.cards)
                             order by g.starts nulls last, g.production_id), '[]'::jsonb)
     into v_groups
@@ -607,7 +633,7 @@ declare
   v_title text;
   v_card jsonb;
 begin
-  perform authz.require_client_permission('c.productions');
+  perform authz.require_client_reader();
   perform authz.require_client_deliverable_visible(p_id);
   select p.client_id, p.title into v_client, v_title
     from public.deliverables d join public.productions p on p.id = d.production_id
@@ -662,7 +688,7 @@ begin
     update public.deliverable_versions v
        set state = 'approved', answered_at = now(), answered_by = auth.uid(), answer_note = v_note
      where v.deliverable_id = p_id and v.number = v_awaiting;
-    update public.deliverables d set approved_at = now(), approved_by = auth.uid() where d.id = p_id;
+    update public.deliverables d set approved_at = clock_timestamp(), approved_by = auth.uid() where d.id = p_id;
     return;
   end if;
   if v_note is null then
@@ -674,6 +700,7 @@ begin
   update public.deliverables d
      set deadline = authz.add_working_days(public.sales_today(), authz.deliverable_changes_days())
    where d.id = p_id;
+  perform authz.reopen_production_for_work(v_row.production_id);
 end;
 $$;
 
@@ -738,7 +765,7 @@ begin
   perform authz.require_client_permission('c.approve');
   perform authz.require_client_deliverable_visible(p_id);
   select * into v_row from public.deliverables d where d.id = p_id for update;
-  if v_row.approved_at is null then
+  if v_row.approved_at is null or authz.deliverable_reopened(p_id) then
     raise exception 'Μόνο εγκεκριμένο Παραδοτέο ζητά αλλαγή μετά την έγκριση' using errcode = 'P0001';
   end if;
   if exists (select 1 from public.deliverable_requests r where r.deliverable_id = p_id and r.decision is null) then
@@ -799,15 +826,15 @@ begin
   end if;
   perform authz.reopen_production_for_work(v_row.production_id);
   if p_decision = 'new_deliverable' then
-    v_new := public.deliverable_create(v_row.production_id, v_row.kind_id, v_row.title, v_row.assignee_id, null, 'pending', null);
+    v_new := public.deliverable_create(v_row.production_id, v_row.kind_id, v_row.title, null, null, 'pending', null);
   else
     update public.deliverables d
-       set approved_at = null, approved_by = null,
+       set final_files_url = null,
            deadline = authz.add_working_days(public.sales_today(), authz.deliverable_changes_days())
      where d.id = v_deliverable;
   end if;
   update public.deliverable_requests r
-     set decision = p_decision, decided_at = now(), decided_by = auth.uid(),
+     set decision = p_decision, decided_at = clock_timestamp(), decided_by = auth.uid(),
          decision_note = v_note, new_deliverable_id = v_new
    where r.id = p_request;
 end;
@@ -822,7 +849,7 @@ declare
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.work');
   perform 1 from public.deliverables d where d.id = p_id for update;
-  if not exists (select 1 from public.deliverables d where d.id = p_id and d.approved_at is not null) then
+  if authz.deliverable_state(p_id) <> 'approved' then
     raise exception 'Τα τελικά αρχεία ορίζονται μόνο σε εγκεκριμένο Παραδοτέο' using errcode = 'P0001';
   end if;
   if v_url is not null then
@@ -832,11 +859,56 @@ begin
 end;
 $$;
 
+-- ───────────── Χρήστης πελάτη: πρόσβαση στις Παραγωγές και ακύρωση (τελευταίοι ορισμοί) ─────────────
+
+-- Βλέπει Παραγωγές η ομάδα με «productions.manage», ή ο Χρήστης πελάτη με «Βλέπει Παραγωγές» ή «Εγκρίνει Παραδοτέα».
+-- Ο Χρήστης πελάτη χωρίς κανένα από τα δύο παίρνει 42501 (με c.book μόνο δεν βλέπει Παραγωγές).
+create or replace function authz.require_production_viewer() returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if authz.is_team_user() then
+    perform authz.require('productions.manage');
+  elsif not (authz.client_user_has('c.productions') or authz.client_user_has('c.approve')) then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+end;
+$$;
+
+-- Ακύρωση (τελευταίος ορισμός): ό,τι έχει εγκριθεί ποτέ δεν ακυρώνεται, ούτε όταν ξανανοίγει με αίτημα.
+create or replace function public.deliverable_cancel(p_id uuid, p_reason text, p_outcome text) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_reason text := nullif(trim(coalesce(p_reason, '')), '');
+begin
+  perform authz.deliverable_gate(p_id, 'deliverables.work');
+  perform authz.require_deliverable_open(p_id);
+  perform 1 from public.deliverables d where d.id = p_id for update;
+  if v_reason is null then
+    raise exception 'Η ακύρωση θέλει λόγο' using errcode = 'P0001';
+  end if;
+  if p_outcome not in ('consumed', 'returned') then
+    raise exception 'Η ακύρωση θέλει «καταναλώθηκε» ή «επιστρέφει»' using errcode = 'P0001';
+  end if;
+  if authz.deliverable_state(p_id) = 'cancelled' then
+    raise exception 'Το Παραδοτέο έχει ήδη ακυρωθεί' using errcode = 'P0001';
+  end if;
+  if exists (select 1 from public.deliverables d where d.id = p_id and d.approved_at is not null) then
+    raise exception 'Το εγκεκριμένο Παραδοτέο δεν ακυρώνεται' using errcode = 'P0001';
+  end if;
+  update public.deliverables d
+     set cancelled_at = now(), cancelled_by = auth.uid(), cancel_reason = v_reason, cancel_outcome = p_outcome
+   where d.id = p_id;
+end;
+$$;
+
 -- ───────────── Δικαιώματα ─────────────
 
 -- Οι νέοι βοηθοί κλειστοί· οι RPC τρέχουν ως ιδιοκτήτης και τους καλούν μέσα τους.
 revoke all on function
   authz.deliverable_rounds_used(uuid), authz.deliverable_requests_json(uuid), authz.reopen_production_for_work(uuid),
+  authz.deliverable_reopened(uuid), authz.require_client_reader(),
   authz.email_client_deliverable_version(uuid, integer), authz.require_client_deliverable_visible(uuid),
   authz.client_user_name(uuid, uuid), authz.client_deliverable_state(uuid), authz.client_deliverable_card(uuid),
   authz.client_provisions(uuid), authz.client_group_json(uuid, uuid, jsonb), authz.client_versions_json(uuid, uuid),
