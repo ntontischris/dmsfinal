@@ -4,7 +4,7 @@ import { formatMoney } from "../billables-helpers";
 import { VOIDED_NOTE, VOIDED_TITLE } from "../invoice-corrections-labels";
 import type { VoidedItem } from "../invoice-detail-schema";
 import { KIND_LABELS } from "../invoices-labels";
-import { formatReceiptDate } from "../money";
+import { athensToday, formatReceiptDate } from "../money";
 
 interface VoidedInvoicesCardProps {
   items: readonly VoidedItem[];
@@ -25,7 +25,7 @@ export function VoidedInvoicesCard({ items }: VoidedInvoicesCardProps) {
             {formatReceiptDate(item.issueDate)}
             <span className="block text-xs text-muted-foreground">
               Λόγος: {item.reason} ({item.voidedBy ?? "—"},{" "}
-              {formatReceiptDate(item.voidedAt.slice(0, 10))})
+              {formatReceiptDate(athensToday(new Date(item.voidedAt)))})
             </span>
           </li>
         ))}

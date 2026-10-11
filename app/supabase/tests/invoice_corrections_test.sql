@@ -2,7 +2,7 @@
 -- πολλά μερικά πιστωτικά ως το σύνολο, ακύρωση (λόγος, πιστωτικά, Καρτέλα, κατανομή), ειδοποίηση ληξιπρόθεσμου χωρίς παραλήπτη.
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σταθερές (2026).
 begin;
-select plan(53);
+select plan(57);
 
 -- ───────────── Χρήστες ─────────────
 -- i1 Ιδιοκτήτης · i2 Λογιστής (ανάγνωση) · i3 Πωλήσεις · i4 Διαχείριση (χωρίς «Καταχωρεί Τιμολόγια»)
@@ -14,8 +14,10 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a4', 'admin@example.com'),
   ('00000000-0000-0000-0000-0000000000b1', 'k1@client-a.example.gr'),
   ('00000000-0000-0000-0000-0000000000b2', 'k2@client-a.example.gr'),
-  ('00000000-0000-0000-0000-0000000000b3', 'k3@client-b.example.gr');
+  ('00000000-0000-0000-0000-0000000000b3', 'k3@client-b.example.gr'),
+  ('00000000-0000-0000-0000-0000000000a5', 'viewer@example.com');
 insert into public.team_users (user_id, name, email) values
+  ('00000000-0000-0000-0000-0000000000a5', 'Θέμης', 'viewer@example.com'),
   ('00000000-0000-0000-0000-0000000000a1', 'Γιώργος', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'Ελένη', 'accountant@example.com'),
   ('00000000-0000-0000-0000-0000000000a3', 'Άννα', 'sales@example.com'),
@@ -35,6 +37,16 @@ insert into public.clients (id, name, afm, contact_name, contact_email, manager_
   ('00000000-0000-0000-0000-0000000000c1', 'Πελάτης Α', '123456789', 'Μαρία Παπαδάκη', 'a@example.com', '00000000-0000-0000-0000-0000000000a3'),
   ('00000000-0000-0000-0000-0000000000c2', 'Πελάτης Β', '987654321', 'Νίκος Κίνης', 'b@example.com', '00000000-0000-0000-0000-0000000000a3'),
   ('00000000-0000-0000-0000-0000000000c3', 'Πελάτης Γ', '555555555', 'Ελένη Γεωργίου', 'c@example.com', '00000000-0000-0000-0000-0000000000a3');
+
+-- Ρόλος ομάδας με Οικονομικά και ποσά, χωρίς «Βλέπει Ίχνος» (a5).
+insert into public.roles (name, description, kind, is_owner, is_builtin) values
+  ('Οικονομικά χωρίς Ίχνος (τεστ)', 'Τεστ: βλέπει ποσά, όχι Ίχνος.', 'team', false, false);
+insert into public.role_permissions (role_id, permission, scope)
+select r.id, p.permission, 'all'
+  from public.roles r, (values ('finance.view'), ('finance.amounts')) as p (permission)
+ where r.name = 'Οικονομικά χωρίς Ίχνος (τεστ)';
+insert into public.team_user_roles (user_id, role_id)
+select '00000000-0000-0000-0000-0000000000a5'::uuid, r.id from public.roles r where r.name = 'Οικονομικά χωρίς Ίχνος (τεστ)';
 
 -- Ρόλος πελάτη χωρίς «Βλέπει Οικονομικά».
 insert into public.roles (name, description, kind, is_owner, is_builtin) values
@@ -102,6 +114,8 @@ select set_config('t.mails', (select count(*)::text from public.email_outbox), t
 set local role anon;
 select throws_ok($$ select public.invoice_correct(current_setting('t.i1')::uuid, '{"number":"X"}'::jsonb, null) $$, '42501', null, 'Ο ανώνυμος δεν διορθώνει');
 select throws_ok($$ select public.invoice_void(current_setting('t.i1')::uuid, 'λόγος') $$, '42501', null, 'Ο ανώνυμος δεν ακυρώνει');
+select throws_ok($$ select public.invoice_detail(current_setting('t.i1')::uuid) $$, '42501', null, 'Ο ανώνυμος δεν βλέπει τη σελίδα καταχώρισης');
+select throws_ok($$ select public.invoices_voided_view() $$, '42501', null, 'Ο ανώνυμος δεν βλέπει τις ακυρωμένες');
 reset role;
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}', true);
@@ -140,6 +154,9 @@ select is(jsonb_array_length(public.invoice_detail(current_setting('t.i1')::uuid
 select is(public.invoice_detail(current_setting('t.i1')::uuid)->'trail'->1->>'action', 'corrected', 'Η δεύτερη γραμμή είναι η διόρθωση');
 select is(public.invoice_detail(current_setting('t.i1')::uuid)->'trail'->1->>'reason', 'λάθος ποσό', 'Το Ίχνος κρατά τον λόγο');
 select is(jsonb_array_length(public.invoice_detail(current_setting('t.i1')::uuid)->'trail'->1->'changes'), 3, 'Ίχνος: καθαρό, ΦΠΑ και σύνολο παλιό → νέο');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a5","role":"authenticated"}', true);
+select is(jsonb_array_length(public.invoice_detail(current_setting('t.i1')::uuid)->'trail'), 0, 'Χωρίς «Βλέπει Ίχνος» το Ίχνος είναι κενό');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
 select is(public.invoice_detail(current_setting('t.i1')::uuid)->'trail'->0->>'byName', 'Γιώργος', 'Ίχνος: ποιος καταχώρισε');
 select throws_ok(
   $$ select public.invoice_correct(current_setting('t.i1')::uuid, '{"total":992}'::jsonb, null) $$,
@@ -189,6 +206,11 @@ select set_config('t.i3', public.t_reg(current_setting('t.a')::uuid, 'invoice', 
 select set_config('t.mails', (select count(*)::text from public.email_outbox), true);
 select lives_ok($$ select public.invoice_void(current_setting('t.i2')::uuid, 'διπλή καταχώριση') $$, 'Ακύρωση του A-2 μετά τα πιστωτικά');
 select is((select count(*)::text from public.email_outbox), current_setting('t.mails'), 'Η ακύρωση δεν στέλνει email');
+select is(
+  (select count(*)::int from public.email_outbox o
+    where o.status = 'pending' and o.payload ->> 'invoiceId' = current_setting('t.i2')),
+  0, 'Η ακύρωση σταματά τα email του Τιμολογίου που περίμεναν στην ουρά'
+);
 select is(
   (select count(*)::int from jsonb_array_elements(public.invoices_view('all')->'items') x where x->>'id' = current_setting('t.i2')),
   0, 'Το ακυρωμένο φεύγει από τη λίστα Τιμολογίων'

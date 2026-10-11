@@ -77,9 +77,9 @@ begin
     v_number := case when p ? 'number' then btrim(coalesce(p ->> 'number', '')) else v_before.number end;
     v_issue := case when p ? 'issueDate' then nullif(p ->> 'issueDate', '')::date else v_before.issue_date end;
     v_due := case when p ? 'dueDate' then nullif(p ->> 'dueDate', '')::date else v_before.due_date end;
-    v_net := case when p ? 'net' then nullif(p ->> 'net', '')::numeric else v_before.net end;
-    v_vat := case when p ? 'vat' then nullif(p ->> 'vat', '')::numeric else v_before.vat end;
-    v_total := case when p ? 'total' then nullif(p ->> 'total', '')::numeric else v_before.total end;
+    v_net := case when p ? 'net' then round(nullif(p ->> 'net', '')::numeric, 2) else v_before.net end;
+    v_vat := case when p ? 'vat' then round(nullif(p ->> 'vat', '')::numeric, 2) else v_before.vat end;
+    v_total := case when p ? 'total' then round(nullif(p ->> 'total', '')::numeric, 2) else v_before.total end;
     v_mark := case when p ? 'mark' then nullif(btrim(coalesce(p ->> 'mark', '')), '') else v_before.mark end;
   exception when others then
     raise exception 'Τα στοιχεία της διόρθωσης δεν είναι έγκυρα. Έλεγξε τα πεδία.' using errcode = 'P0001';
@@ -162,6 +162,11 @@ begin
      set voided_at = now(), voided_by = auth.uid(), void_reason = v_reason
    where i.id = p_id
   returning i.* into v_after;
+  -- Τα email που περιμένουν ακόμα (π.χ. PDF σε λάθος Πελάτη) δεν φεύγουν.
+  update public.email_outbox o
+     set status = 'cancelled', handled_at = now()
+   where o.status = 'pending' and o.kind in ('invoice_registered', 'invoice_overdue')
+     and o.payload ->> 'invoiceId' = p_id::text;
   perform authz.invoice_event(p_id, 'voided', to_jsonb(v_before), to_jsonb(v_after), v_reason, '[]'::jsonb);
 end;
 $$;
