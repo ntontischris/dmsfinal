@@ -32,16 +32,20 @@ describe("deliverablesCaps", () => {
     });
   });
 
-  it("should let a reviewer with cost rights see the pending charges", () => {
+  it("should let a reviewer who sees all amounts see the pending charges", () => {
     expect(
-      deliverablesCaps(viewerWith({ "deliverables.review": "all", "finance.cost": "all" })),
+      deliverablesCaps(viewerWith({ "deliverables.review": "all", "finance.amounts": "all" })),
     ).toEqual({
       canWork: false,
       canReview: true,
       canQueue: true,
       canSeeCharges: true,
-      canSeeAmounts: false,
+      canSeeAmounts: true,
     });
+  });
+
+  it("should hide the pending charges from someone who sees only their own amounts", () => {
+    expect(deliverablesCaps(viewerWith({ "finance.amounts": "mine" })).canSeeCharges).toBe(false);
   });
 
   it("should show the client view to a client user only", () => {

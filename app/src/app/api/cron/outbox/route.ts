@@ -4,6 +4,7 @@ import { appOrigin } from "@/lib/app-origin";
 import { isCronAuthorized } from "@/lib/email/outbox-trigger";
 import { enqueueDeliverableReminders } from "@/lib/email/reminders-enqueue";
 import { runOutboxWorker } from "@/lib/email/worker";
+import { generateBillables } from "@/lib/finance/billables-generate";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Το κλείδωμα της ουράς (5 λεπτά) πρέπει να ξεπερνά αυτό το όριο, αλλιώς μια αργή παρτίδα ξαναστέλνεται.
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const admin = createAdminClient();
   if (!admin) return NextResponse.json({ error: "service role missing" }, { status: 500 });
   const reminders = await enqueueDeliverableReminders(admin);
+  const billables = await generateBillables(admin);
   const summary = await runOutboxWorker(admin, appOrigin());
-  return NextResponse.json({ ...summary, reminders });
+  return NextResponse.json({ ...summary, reminders, billables });
 }

@@ -118,6 +118,12 @@ export const NAV: readonly NavSection[] = [
     title: "Οικονομικά",
     items: [
       {
+        code: "I1",
+        label: "Προς τιμολόγηση",
+        href: "/app/finance/to-invoice",
+        requires: "finance.view",
+      },
+      {
         code: "I4",
         label: "Εισπράξεις",
         href: "/app/finance/receipts",

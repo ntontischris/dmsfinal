@@ -67,11 +67,16 @@ describe("GET /api/cron/outbox", () => {
     expect(await response.json()).toEqual({
       sent: 3,
       reminders: { queued: 1 },
+      billables: { generated: 1 },
     });
   });
 
   it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει η ουρά υπενθυμίσεων", async () => {
-    mocks.rpc.mockResolvedValue({ data: null, error: { message: "boom" } });
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "deliverable_reminders_enqueue"
+        ? { data: null, error: { message: "boom" } }
+        : { data: 0, error: null },
+    );
 
     const response = await GET(request(`Bearer ${SECRET}`));
 
@@ -79,6 +84,24 @@ describe("GET /api/cron/outbox", () => {
     expect(await response.json()).toEqual({
       sent: 3,
       reminders: { error: "Οι υπενθυμίσεις δεν μπήκαν στην ουρά." },
+      billables: { generated: 0 },
+    });
+  });
+
+  it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει η γεννήτρια Τιμολογητέων", async () => {
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "billables_generate"
+        ? { data: null, error: { message: "boom" } }
+        : { data: 0, error: null },
+    );
+
+    const response = await GET(request(`Bearer ${SECRET}`));
+
+    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({
+      sent: 3,
+      reminders: { queued: 0 },
+      billables: { error: "Τα Τιμολογητέα δεν γεννήθηκαν." },
     });
   });
 });

@@ -13,7 +13,7 @@ interface ChargeDecisionFormProps {
   deliverableId: string;
 }
 
-// Η απόφαση χρέωσης (μόνο finance.cost): «Χρεώνεται» ή «Χωρίς χρέωση» με λόγο. Η βάση ξαναελέγχει.
+// Η απόφαση χρέωσης (μόνο finance.amounts): «Χρεώνεται» ή «Χωρίς χρέωση» με λόγο. Η βάση ξαναελέγχει.
 export function ChargeDecisionForm({ deliverableId }: ChargeDecisionFormProps) {
   const [charge, setCharge] = useState("charged");
   return (
