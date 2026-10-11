@@ -53,11 +53,18 @@ export const createSchema = z
       });
   });
 
+// Η προθεσμία είναι ημερομηνία YYYY-MM-DD· κενό = να μείνει όπως είναι.
+const optionalDate = z
+  .union([z.literal(""), z.iso.date("Η προθεσμία θέλει ημερομηνία.")])
+  .optional()
+  .transform((value) => (value ? value : null));
+
 export const updateSchema = z.object({
   deliverableId: z.uuid(),
   title,
   assigneeId: optionalUuid,
   filmingId: optionalUuid,
+  deadline: optionalDate,
 });
 
 export const versionAddSchema = z.object({

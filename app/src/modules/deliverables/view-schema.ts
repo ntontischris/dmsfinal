@@ -57,7 +57,7 @@ const commentSchema = z.object({
 
 const versionSchema = z.object({
   number: z.number(),
-  url: z.string(),
+  url: z.url().refine((value) => value.startsWith("https://"), "Το link θέλει https."),
   host: z.string(),
   state: versionState,
   note: z.string().nullable(),

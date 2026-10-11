@@ -35,7 +35,7 @@ export async function createDeliverable(_: FormState, form: FormData): Promise<F
 
 export async function updateDeliverable(_: FormState, form: FormData): Promise<FormState> {
   const parsed = updateSchema.safeParse(
-    pick(form, ["deliverableId", "title", "assigneeId", "filmingId"]),
+    pick(form, ["deliverableId", "title", "assigneeId", "filmingId", "deadline"]),
   );
   if (!parsed.success) return firstIssue(parsed.error);
   const value = parsed.data;
@@ -44,6 +44,7 @@ export async function updateDeliverable(_: FormState, form: FormData): Promise<F
     p_title: value.title,
     p_assignee: value.assigneeId,
     p_filming: value.filmingId,
+    p_deadline: value.deadline,
   });
   return finishWith(outcome, "Τα στοιχεία αποθηκεύτηκαν.");
 }

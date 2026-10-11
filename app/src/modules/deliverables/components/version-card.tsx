@@ -40,7 +40,7 @@ function VersionFacts({ version }: { version: DeliverableVersion }) {
     <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
       <dt className="text-muted-foreground">Link</dt>
       <dd className="m-0 break-all">
-        <a href={version.url} target="_blank" rel="noopener">
+        <a href={version.url} target="_blank" rel="noopener noreferrer">
           {version.url}
         </a>{" "}
         <Badge>{version.host}</Badge>

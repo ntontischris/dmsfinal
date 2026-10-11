@@ -4,6 +4,7 @@ import {
   cancelSchema,
   chargeDecisionSchema,
   commentSchema,
+  updateSchema,
   createSchema,
   versionAddSchema,
 } from "./schemas";
@@ -85,5 +86,24 @@ describe("chargeDecisionSchema", () => {
 
   it("should accept a charge without a reason", () => {
     expect(chargeDecisionSchema.safeParse({ deliverableId: DELIVERABLE_ID, charge: "charged" }).success).toBe(true);
+  });
+});
+
+describe("updateSchema", () => {
+  const base = { deliverableId: DELIVERABLE_ID, title: "Reel Μαρτίου" };
+
+  it("should read an empty deadline as keep the current one", () => {
+    const parsed = updateSchema.safeParse({ ...base, deadline: "" });
+    expect(parsed.success && parsed.data.deadline).toBeNull();
+  });
+
+  it("should accept a calendar date as the new deadline", () => {
+    const parsed = updateSchema.safeParse({ ...base, deadline: "2027-05-10" });
+    expect(parsed.success && parsed.data.deadline).toBe("2027-05-10");
+  });
+
+  it("should refuse a deadline that is not a date", () => {
+    const result = updateSchema.safeParse({ ...base, deadline: "10/05/2027" });
+    expect(messageOf(result)).toBe("Η προθεσμία θέλει ημερομηνία.");
   });
 });

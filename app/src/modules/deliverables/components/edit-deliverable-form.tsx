@@ -24,6 +24,9 @@ export function EditDeliverableForm({ card, candidates }: EditDeliverableFormPro
       <Field label="Υπεύθυνος">
         <AssigneeSelect assignees={candidates.assignees} defaultValue={card.assigneeId} />
       </Field>
+      <Field label="Προθεσμία" hint="Κενό: μένει όπως είναι.">
+        <Input name="deadline" type="date" defaultValue={card.deadline ?? ""} />
+      </Field>
       <Field label="Γύρισμα">
         <FilmingSelect filmings={candidates.filmings} defaultValue={card.filmingId} />
       </Field>
