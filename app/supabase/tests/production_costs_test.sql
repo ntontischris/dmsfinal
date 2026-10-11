@@ -2,7 +2,7 @@
 -- ομάδες της λίστας, Εσωτερική Παραγωγή, άρνηση ανά ρόλο, κλειστός πίνακας, Ίχνος (#144). Φανταστικοί Χρήστες και στοιχεία·
 -- όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σχετικές με τη σημερινή μέρα.
 begin;
-select plan(55);
+select plan(57);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης (κόστος: βλέπει και γράφει) · e2 Παραγωγή (Συνεργείο) · e3 Πωλήσεις (χωρίς κόστος)
@@ -36,7 +36,8 @@ select o.id::uuid, o.client::uuid, o.title, (select s.id from public.sales_stage
        (select s.id from public.sales_sources s where s.code = 'phone'), o.manager::uuid, 'Πρόταση', (now() at time zone 'Europe/Athens')::date + 3
   from (values
     ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000f1', 'Μηνιαίο δημόσιο', '00000000-0000-0000-0000-0000000000e3'),
-    ('00000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-0000000000f1', 'Εγκαίνια', '00000000-0000-0000-0000-0000000000e3')
+    ('00000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-0000000000f1', 'Εγκαίνια', '00000000-0000-0000-0000-0000000000e3'),
+    ('00000000-0000-0000-0000-0000000000c4', '00000000-0000-0000-0000-0000000000f1', 'Μηνιαίο με έκπτωση', '00000000-0000-0000-0000-0000000000e3')
   ) as o (id, client, title, manager);
 
 -- Κατάλογος: μηνιαίο πακέτο (ώρες 6 + 14, τιμή 1.000 €), εφάπαξ πακέτο (ώρες 4 + 6, τιμή 500 €). Κόστος ώρας του μήνα: 10 €.
@@ -52,11 +53,21 @@ values (date_trunc('month', now() at time zone 'Europe/Athens')::date, 2200, 220
 
 -- ───────────── Συμφωνίες: a1 μηνιαία, a3 εφάπαξ (υπογραφή εκτός συστήματος) ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+-- Έναρξη την 1η του επόμενου μήνα: κάθε Περίοδος είναι πλήρης, άρα η τιμή της είναι η πλήρης τιμή ή η εκπτωτική.
+select set_config('t.start', (date_trunc('month', now() at time zone 'Europe/Athens') + interval '1 month')::date::text, true);
 select set_config('t.a1', public.agreement_create('00000000-0000-0000-0000-0000000000c1', 'monthly', 'Μηνιαίο δημόσιο')::text, true);
-select public.agreement_update_basics(current_setting('t.a1')::uuid, 'Μηνιαίο δημόσιο', 'el', (now() at time zone 'Europe/Athens')::date + 5, null, 6);
+select public.agreement_update_basics(current_setting('t.a1')::uuid, 'Μηνιαίο δημόσιο', 'el', current_setting('t.start')::date, null, 6);
 select public.agreement_add_catalogue_line(current_setting('t.a1')::uuid, '00000000-0000-0000-0000-0000000000d1', 1);
 select public.agreement_set_recipients(current_setting('t.a1')::uuid, '[{"name":"Μαρία Παπαδάκη","email":"maria@example.com","is_signatory":true}]'::jsonb);
-select public.agreement_sign_outside(current_setting('t.a1')::uuid, (now() at time zone 'Europe/Athens')::date, 'Μαρία Παπαδάκη', (now() at time zone 'Europe/Athens')::date + 5, 'contract-a1.pdf');
+select public.agreement_sign_outside(current_setting('t.a1')::uuid, (now() at time zone 'Europe/Athens')::date, 'Μαρία Παπαδάκη', current_setting('t.start')::date, 'contract-a1.pdf');
+
+-- a4: μηνιαία με έκπτωση 10% για τους δύο πρώτους μήνες.
+select set_config('t.a4', public.agreement_create('00000000-0000-0000-0000-0000000000c4', 'monthly', 'Μηνιαίο με έκπτωση')::text, true);
+select public.agreement_update_basics(current_setting('t.a4')::uuid, 'Μηνιαίο με έκπτωση', 'el', current_setting('t.start')::date, null, 6);
+select public.agreement_add_catalogue_line(current_setting('t.a4')::uuid, '00000000-0000-0000-0000-0000000000d1', 1);
+select public.agreement_set_money_terms(current_setting('t.a4')::uuid, 10, 2, 0);
+select public.agreement_set_recipients(current_setting('t.a4')::uuid, '[{"name":"Μαρία Παπαδάκη","email":"maria@example.com","is_signatory":true}]'::jsonb);
+select public.agreement_sign_outside(current_setting('t.a4')::uuid, (now() at time zone 'Europe/Athens')::date, 'Μαρία Παπαδάκη', current_setting('t.start')::date, 'contract-a4.pdf');
 
 select set_config('t.a3', public.agreement_create('00000000-0000-0000-0000-0000000000c3', 'one_off', 'Εγκαίνια')::text, true);
 select public.agreement_update_basics(current_setting('t.a3')::uuid, 'Εγκαίνια', 'el', (now() at time zone 'Europe/Athens')::date + 5, null, null);
@@ -115,6 +126,20 @@ select is(
 select ok(
   (select count(*) from public.productions where agreement_id = current_setting('t.a1')::uuid) > 0,
   'Η μηνιαία Συμφωνία γέννησε Παραγωγές'
+);
+select is(
+  (select count(*)::int from public.productions p
+     join public.production_costs pc on pc.production_id = p.id
+    where p.agreement_id = current_setting('t.a4')::uuid and pc.estimate_price = 900),
+  2, 'Οι δύο πρώτοι μήνες με έκπτωση πληρώνουν 900 €'
+);
+select ok(
+  (select pc.estimate_price = 1000
+     from public.productions p
+     join public.production_costs pc on pc.production_id = p.id
+     join public.agreement_periods ap on ap.id = p.period_id
+    where p.agreement_id = current_setting('t.a4')::uuid and ap.n = 3),
+  'Ο τρίτος μήνας πληρώνει την κανονική τιμή'
 );
 select ok(
   (select pc.estimate_shoot_hours = 4 and pc.estimate_edit_hours = 6 and pc.estimate_price = 500 and pc.estimate_hour_cost = 10

@@ -48,19 +48,46 @@ alter table public.production_costs enable row level security;
 -- ───────────── Εκτίμηση και στιγμιότυπο ─────────────
 
 -- Σύνολο γραμμών Συμφωνίας: ώρες και άμεσο κόστος ανά Περίοδο (μηνιαία) ή συνολικά (εφάπαξ), όπως το estimated_cost.
--- Η τιμή είναι η λίστα (χωρίς έκπτωση)· η έκπτωση ανήκει στη Συμφωνία.
 create function authz.agreement_estimate(p_agreement uuid)
-returns table (shoot_hours numeric, edit_hours numeric, direct_cost numeric, price numeric)
+returns table (shoot_hours numeric, edit_hours numeric, direct_cost numeric)
 language sql stable security definer set search_path = ''
 as $$
   select coalesce(sum(l.quantity * lc.hours_shoot), 0),
          coalesce(sum(l.quantity * lc.hours_edit), 0),
-         coalesce(sum(l.quantity * lc.direct_cost), 0),
-         coalesce(sum(l.quantity * la.unit_price), 0)
+         coalesce(sum(l.quantity * lc.direct_cost), 0)
     from public.agreement_lines l
     left join public.agreement_line_costs lc on lc.line_id = l.id
-    left join public.agreement_line_amounts la on la.line_id = l.id
    where l.agreement_id = p_agreement;
+$$;
+
+-- Τιμή που πληρώνει ο Πελάτης για μία Περίοδο, όπως το agreement_view: οι πρώτες discount_months Περίοδοι (n από 0)
+-- με την εκπτωμένη τιμή, και κάθε Περίοδος επί το μερίδιό της (μερική Περίοδος). Εφάπαξ: το σύνολο με την έκπτωση της Συμφωνίας.
+create function authz.production_period_price(p_agreement uuid, p_period uuid) returns numeric
+language plpgsql stable security definer set search_path = ''
+as $$
+declare
+  a public.agreements;
+  v_list numeric;
+  v_pct numeric := 0;
+  v_months integer := 0;
+  v_n integer;
+  v_share numeric;
+begin
+  select * into a from public.agreements x where x.id = p_agreement;
+  select coalesce(sum(l.quantity * la.unit_price), 0) into v_list
+    from public.agreement_lines l join public.agreement_line_amounts la on la.line_id = l.id
+   where l.agreement_id = p_agreement;
+  select coalesce(m.discount_percent, 0), coalesce(m.discount_months, 0) into v_pct, v_months
+    from public.agreement_amounts m where m.agreement_id = p_agreement;
+  if a.kind = 'one_off' then
+    return round(v_list * (1 - v_pct / 100), 2);
+  end if;
+  select r.n, r.share into v_n, v_share
+    from authz.agreement_period_rows(a.start_on, a.duration_months) r
+    join public.agreement_periods ap on ap.id = p_period and r.n + 1 = ap.n;
+  return round(
+    (case when v_n < v_months then round(v_list * (1 - v_pct / 100), 2) else v_list end) * v_share, 2);
+end;
 $$;
 
 -- Κάθε νέα Παραγωγή παίρνει τη γραμμή της. Εσωτερική (χωρίς Συμφωνία): μηδενική εκτίμηση και χωρίς τιμή.
@@ -72,7 +99,7 @@ begin
     production_id, estimate_shoot_hours, estimate_edit_hours, estimate_direct_cost, estimate_price, estimate_hour_cost
   )
   select new.id, e.shoot_hours, e.edit_hours, e.direct_cost,
-         case when new.agreement_id is not null then e.price end,
+         case when new.agreement_id is not null then authz.production_period_price(new.agreement_id, new.period_id) end,
          (select h.hour_cost from authz.current_hour_cost() h)
     from authz.agreement_estimate(new.agreement_id) e;
   return null;
@@ -84,7 +111,7 @@ insert into public.production_costs (
   production_id, estimate_shoot_hours, estimate_edit_hours, estimate_direct_cost, estimate_price, estimate_hour_cost
 )
 select p.id, e.shoot_hours, e.edit_hours, e.direct_cost,
-       case when p.agreement_id is not null then e.price end,
+       case when p.agreement_id is not null then authz.production_period_price(p.agreement_id, p.period_id) end,
        (select h.hour_cost from authz.current_hour_cost() h)
   from public.productions p
  cross join lateral authz.agreement_estimate(p.agreement_id) e;
@@ -461,7 +488,8 @@ $$;
 
 -- Βοηθητικές: μόνο τα triggers και οι άλλες συναρτήσεις του module τις καλούν (τρέχουν με τα δικά τους δικαιώματα).
 revoke all on function
-  authz.agreement_estimate(uuid), authz.snapshot_production_cost(), authz.stamp_production_cost(),
+  authz.agreement_estimate(uuid), authz.production_period_price(uuid, uuid), authz.snapshot_production_cost(),
+  authz.stamp_production_cost(),
   authz.production_suggested_shoot_hours(uuid), authz.production_cost_row(uuid), authz.production_cost_group(jsonb),
   authz.require_cost_amounts(numeric, numeric, numeric)
   from public, anon, authenticated;
