@@ -8,10 +8,11 @@ import { ToInvoiceClient } from "./to-invoice-client";
 
 interface ToInvoiceListProps {
   clients: readonly BillableClient[];
+  canRegisterInvoices: boolean;
 }
 
 // Η λίστα «Προς τιμολόγηση»: ένας Πελάτης ανά κάρτα, οι παλαιότεροι πρώτα.
-export function ToInvoiceList({ clients }: ToInvoiceListProps) {
+export function ToInvoiceList({ clients, canRegisterInvoices }: ToInvoiceListProps) {
   if (clients.length === 0) {
     return (
       <Notice kind="empty" title={BILLABLES_EMPTY_TITLE}>
@@ -22,7 +23,7 @@ export function ToInvoiceList({ clients }: ToInvoiceListProps) {
   return (
     <div className="grid gap-3">
       {sortClientsByOldest(clients).map((client) => (
-        <ToInvoiceClient key={client.clientId} client={client} />
+        <ToInvoiceClient key={client.clientId} client={client} canRegisterInvoices={canRegisterInvoices} />
       ))}
     </div>
   );

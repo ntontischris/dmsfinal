@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Table, Td, Th, Tr } from "@/components/ui/table";
 
 import { COLUMN_LABELS } from "../billables-labels";
@@ -10,15 +13,18 @@ import {
   sortItemsByDate,
 } from "../billables-helpers";
 import type { BillableClient, BillableItem } from "../billables-view-schema";
+import { newInvoiceHref } from "../invoices-helpers";
+import { INVOICES_CTA } from "../invoices-labels";
 
 import { ToInvoiceReminders } from "./to-invoice-reminders";
 
 interface ToInvoiceClientProps {
   client: BillableClient;
+  canRegisterInvoices: boolean;
 }
 
 // Κάρτα ανά Πελάτη: η σύνοψη ανοίγει τον πίνακα των Τιμολογητέων του (κάρτες στο κινητό).
-export function ToInvoiceClient({ client }: ToInvoiceClientProps) {
+export function ToInvoiceClient({ client, canRegisterInvoices }: ToInvoiceClientProps) {
   const items = sortItemsByDate(client.items);
   return (
     <details className="rounded-md border bg-card">
@@ -28,13 +34,22 @@ export function ToInvoiceClient({ client }: ToInvoiceClientProps) {
           {formatMoney(client.open)} προς τιμολόγηση
         </span>
         <span className="text-sm text-muted-foreground">
-          {client.count} Τιμολογητέα · παλαιότερο {daysText(client.oldestDays)}
+          {client.count} Τιμολογητέα
+          {client.count > 0 && ` · παλαιότερο ${daysText(client.oldestDays)}`}
         </span>
         {client.beyond > 0 && (
           <Badge tone="attention">
             τιμολογήθηκε πέρα από τα Τιμολογητέα κατά{" "}
             {formatMoney(client.beyond)}
           </Badge>
+        )}
+        {canRegisterInvoices && (
+          <Link
+            href={newInvoiceHref(client.clientId)}
+            className={buttonVariants({ variant: "primary", size: "sm" })}
+          >
+            {INVOICES_CTA}
+          </Link>
         )}
       </summary>
       <div className="hidden p-3 pt-0 md:block">

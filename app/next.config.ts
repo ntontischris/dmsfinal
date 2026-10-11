@@ -15,7 +15,9 @@ const proposalHeaders = [
   { key: "Cache-Control", value: "no-store" },
 ];
 
+// Το PDF Τιμολογίου (έως 4 MB) ανεβαίνει μέσα από server action· το Vercel κόβει σώματα πάνω από 4,5 MB.
 const nextConfig: NextConfig = {
+  experimental: { serverActions: { bodySizeLimit: "5mb" } },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

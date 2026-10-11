@@ -12,4 +12,5 @@ export const financeCaps = (viewer: Viewer): FinanceCaps => ({
     viewer.team?.permissions["finance.amounts"] === "all",
   canRegister: can(viewer, "finance.receipts"),
   canManageMethods: can(viewer, "settings.manage"),
+  canRegisterInvoices: can(viewer, "finance.invoices"),
 });
