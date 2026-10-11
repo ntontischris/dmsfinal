@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες Γυρισμάτων και Περιόδων το 2027, ώστε το τεστ
 -- να περνά οποιαδήποτε μέρα τρέξει. Οι προθεσμίες από «σήμερα» ελέγχονται με την ίδια συνάρτηση, όχι με σταθερή ημερομηνία.
 begin;
-select plan(92);
+select plan(93);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής της Περιόδου 1) · e3 Πωλήσεις (χωρίς Παραδοτέα)
@@ -413,6 +413,11 @@ select is((select d.charge from public.deliverables d where d.id = current_setti
 select throws_ok(
   $$ select public.deliverable_create(current_setting('t.pao')::uuid, public.t_pk('reel'), 'Εφάπαξ reel 3', null, null, null, null) $$,
   'P0001', 'Χωρίς υπόλοιπο Παροχής θέλει «χωρίς χρέωση» με λόγο ή «χρεώνεται»', 'Χωρίς υπόλοιπο εφάπαξ Συμφωνίας δεν δημιουργείται Παραδοτέο'
+);
+select is(
+  (select (k->>'balance')::numeric from jsonb_array_elements(public.deliverable_candidates(current_setting('t.pao')::uuid)->'kinds') k
+    where k->>'id' = current_setting('t.reel')) , 0::numeric,
+  'Η εφάπαξ Παραγωγή δείχνει το υπόλοιπο της Συμφωνίας στα είδη'
 );
 select lives_ok(
   $$ select public.production_cancel(current_setting('t.pao')::uuid, 'Η εκδήλωση ακυρώθηκε') $$,

@@ -655,15 +655,15 @@ create function public.deliverable_candidates(p_production uuid) returns jsonb
 language plpgsql security definer set search_path = ''
 as $$
 declare
-  v_period uuid;
+  v_production public.productions;
 begin
   perform authz.require_production_scope(p_production, 'deliverables.work');
-  select p.period_id into v_period from public.productions p where p.id = p_production;
+  select * into v_production from public.productions p where p.id = p_production;
   return jsonb_build_object(
     'kinds', (
       select coalesce(jsonb_agg(jsonb_build_object(
                'id', k.id, 'label', k.label, 'unit', k.unit,
-               'balance', (select b.balance from authz.period_balance(v_period, k.id) b)
+               'balance', authz.filming_available(v_production.agreement_id, v_production.period_id, k.id)
              ) order by k.sort, k.id), '[]'::jsonb)
         from public.provision_kinds k
        where k.measure is null and k.retired_at is null
