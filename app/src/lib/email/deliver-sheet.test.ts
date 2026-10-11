@@ -5,7 +5,10 @@ import { sheetMessageFor, type SheetRow } from "./deliver-sheet";
 const ORIGIN = "https://dmsfinal-app.vercel.app";
 const FILMING_ID = "f-42";
 
-const issuedRow = (payload: Record<string, unknown>, locale = "el"): SheetRow => ({
+const issuedRow = (
+  payload: Record<string, unknown>,
+  locale = "el",
+): SheetRow => ({
   kind: "sheet_issued",
   to_name: "Μαρία",
   locale,
@@ -21,10 +24,13 @@ const issuedRow = (payload: Record<string, unknown>, locale = "el"): SheetRow =>
   },
 });
 
-const declinedRow = (payload: Record<string, unknown>): SheetRow => ({
+const declinedRow = (
+  payload: Record<string, unknown>,
+  locale = "el",
+): SheetRow => ({
   kind: "crew_declined",
   to_name: "Νίκος",
-  locale: "el",
+  locale,
   payload: {
     filmingId: FILMING_ID,
     member: "Κώστας",
@@ -40,7 +46,9 @@ describe("το email της έκδοσης του Δελτίου", () => {
     const message = sheetMessageFor(issuedRow({}), ORIGIN);
     expect(typeof message).toBe("object");
     if (typeof message === "string") return;
-    expect(message.subject).toBe("Δελτίο γυρίσματος · Σποτ Καλοκαιριού · 12 Οκτωβρίου");
+    expect(message.subject).toBe(
+      "Δελτίο γυρίσματος · Σποτ Καλοκαιριού · 12 Οκτωβρίου",
+    );
   });
 
   it("γράφει την ώρα της Αθήνας και την αλλαγή", () => {
@@ -57,7 +65,27 @@ describe("το email της έκδοσης του Δελτίου", () => {
   });
 
   it("αποτυγχάνει όταν το payload δεν έχει σωστό σχήμα", () => {
-    expect(sheetMessageFor(issuedRow({ version: 0 }), ORIGIN)).toBe("Μη έγκυρο περιεχόμενο ειδοποίησης");
+    expect(sheetMessageFor(issuedRow({ version: 0 }), ORIGIN)).toBe(
+      "Μη έγκυρο περιεχόμενο ειδοποίησης",
+    );
+  });
+
+  it("μεταφράζει την αιτία αυτόματης έκδοσης για αγγλικό λογαριασμό", () => {
+    const message = sheetMessageFor(
+      issuedRow({ change: "Άλλαξε το Συνεργείο" }, "en"),
+      ORIGIN,
+    );
+    if (typeof message === "string") throw new Error(message);
+    expect(message.text).toContain("What changed: The crew changed");
+  });
+
+  it("κρατά ελληνική την αιτία για ελληνικό λογαριασμό", () => {
+    const message = sheetMessageFor(
+      issuedRow({ change: "Άλλαξε το Συνεργείο" }),
+      ORIGIN,
+    );
+    if (typeof message === "string") throw new Error(message);
+    expect(message.text).toContain("Τι άλλαξε: Άλλαξε το Συνεργείο");
   });
 });
 
@@ -65,13 +93,24 @@ describe("το email «δεν μπορώ» του Συνεργείου", () => {
   it("έχει θέμα με το μέλος, την παραγωγή και την ημέρα", () => {
     const message = sheetMessageFor(declinedRow({}), ORIGIN);
     if (typeof message === "string") throw new Error(message);
-    expect(message.subject).toBe("Κώστας δεν μπορεί στο Γύρισμα Σποτ Καλοκαιριού 12 Οκτωβρίου");
+    expect(message.subject).toBe(
+      "Κώστας δεν μπορεί στο Γύρισμα Σποτ Καλοκαιριού 12 Οκτωβρίου",
+    );
     expect(message.text).toContain("Λόγος: Αρρώστησα");
   });
 
-  it("αποτυγχάνει όταν λείπει η παραγωγή", () => {
-    expect(sheetMessageFor(declinedRow({ production: undefined }), ORIGIN)).toBe(
-      "Μη έγκυρο περιεχόμενο ειδοποίησης",
+  it("γράφει «A crew member» στα αγγλικά όταν λείπει το όνομα του μέλους", () => {
+    const message = sheetMessageFor(
+      declinedRow({ member: null }, "en"),
+      ORIGIN,
     );
+    if (typeof message === "string") throw new Error(message);
+    expect(message.subject).toContain("A crew member cannot attend");
+  });
+
+  it("αποτυγχάνει όταν λείπει η παραγωγή", () => {
+    expect(
+      sheetMessageFor(declinedRow({ production: undefined }), ORIGIN),
+    ).toBe("Μη έγκυρο περιεχόμενο ειδοποίησης");
   });
 });
