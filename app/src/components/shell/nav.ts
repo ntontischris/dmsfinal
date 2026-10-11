@@ -115,6 +115,17 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Οικονομικά",
+    items: [
+      {
+        code: "I4",
+        label: "Εισπράξεις",
+        href: "/app/finance/receipts",
+        requires: "finance.view",
+      },
+    ],
+  },
+  {
     title: "Γυρίσματα",
     items: [
       {
