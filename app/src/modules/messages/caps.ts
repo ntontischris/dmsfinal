@@ -16,3 +16,12 @@ export const messagesCaps = (viewer: Viewer): MessagesCaps => ({
   isClient: isClientViewer(viewer),
   canOpenClient: isTeam(viewer) && can(viewer, "clients.view"),
 });
+
+// Ποια όψη των Μηνυμάτων βλέπει ο θεατής (όπως στα Οικονομικά): ομάδα (Εισερχόμενα), Χρήστης πελάτη με «Βλέπει Συνομιλία», ή καμία.
+export type MessagesView = "team" | "client" | "none";
+
+export const messagesViewOf = (viewer: Viewer): MessagesView => {
+  if (isClientViewer(viewer))
+    return can(viewer, "c.chatRead") ? "client" : "none";
+  return messagesCaps(viewer).canChat ? "team" : "none";
+};

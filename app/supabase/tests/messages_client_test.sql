@@ -1,7 +1,7 @@
 -- Μηνύματα Jβ #161: ο Χρήστης πελάτη. Ο Πελάτης του, Δικαιώματα ανάγνωσης και γραφής, ετικέτες μόνο από τις Παραγωγές του,
 -- κανένα Εσωτερικό, διόρθωση και διαγραφή μόνο των δικών του. Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(30);
+select plan(31);
 
 -- a1 Ιδιοκτήτης · a2 Λογιστής · b1 Χρήστης πελάτη Α «Πλήρης» · b2 Α μόνο «Βλέπει Συνομιλία» · b3 Β «Πλήρης» · b4 Α χωρίς Συνομιλία
 insert into auth.users (id, email) values
@@ -74,23 +74,24 @@ as $$ select public.messages_thread(p_client::uuid); $$;
 
 -- ───────────── Ο Πελάτης του ─────────────
 set local role anon;
-select throws_ok($$ select public.messages_my_client() $$, '42501', null, 'Ο ανώνυμος δεν έχει Πελάτη');
+select throws_ok($$ select public.messages_client_context() $$, '42501', null, 'Ο ανώνυμος δεν έχει Πελάτη');
 reset role;
 
 select public.t_as('a1');
-select throws_ok($$ select public.messages_my_client() $$, '42501', null, 'Η ομάδα δεν είναι Χρήστης πελάτη');
+select throws_ok($$ select public.messages_client_context() $$, '42501', null, 'Η ομάδα δεν είναι Χρήστης πελάτη');
 select public.t_as('a2');
-select throws_ok($$ select public.messages_my_client() $$, '42501', null, 'Ο Λογιστής δεν είναι Χρήστης πελάτη');
+select throws_ok($$ select public.messages_client_context() $$, '42501', null, 'Ο Λογιστής δεν είναι Χρήστης πελάτη');
 select public.t_as('b4');
-select throws_ok($$ select public.messages_my_client() $$, '42501', null, 'Χρήστης πελάτη χωρίς c.chatRead δεν έχει Συνομιλία');
+select throws_ok($$ select public.messages_client_context() $$, '42501', null, 'Χρήστης πελάτη χωρίς c.chatRead δεν έχει Συνομιλία');
 select throws_ok($$ select public.messages_thread('00000000-0000-0000-0000-0000000000c1') $$, '42501', null, 'Χωρίς c.chatRead: 42501 στη Συνομιλία');
 select throws_ok($$ select public.message_send('{"clientId":"00000000-0000-0000-0000-0000000000c1","body":"x"}') $$, '42501', null, 'Χωρίς c.chatWrite: 42501 στην αποστολή');
 select public.t_as('b1');
-select is(public.messages_my_client(), '00000000-0000-0000-0000-0000000000c1'::uuid, 'Ο πελάτης Α παίρνει τον Πελάτη Α');
+select is(public.messages_client_context()->>'clientId', '00000000-0000-0000-0000-0000000000c1', 'Ο πελάτης Α παίρνει τον Πελάτη Α');
 select public.t_as('b2');
-select is(public.messages_my_client(), '00000000-0000-0000-0000-0000000000c1'::uuid, 'Ο πελάτης μόνο ανάγνωσης παίρνει τον Πελάτη του');
+select is(public.messages_client_context()->>'clientId', '00000000-0000-0000-0000-0000000000c1', 'Ο πελάτης μόνο ανάγνωσης παίρνει τον Πελάτη του');
 select public.t_as('b3');
-select is(public.messages_my_client(), '00000000-0000-0000-0000-0000000000c2'::uuid, 'Ο πελάτης Β παίρνει τον Πελάτη Β');
+select is(public.messages_client_context()->>'clientId', '00000000-0000-0000-0000-0000000000c2', 'Ο πελάτης Β παίρνει τον Πελάτη Β');
+select is((public.messages_client_context()->>'digestMinutes')::int, 15, 'Το πλαίσιο δίνει τα λεπτά σύνοψης της ρύθμισης');
 
 -- ───────────── Μηνύματα της ομάδας ─────────────
 select public.t_as('a1');
