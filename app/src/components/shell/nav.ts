@@ -104,7 +104,12 @@ export const NAV: readonly NavSection[] = [
         code: "H1",
         label: "Παραδοτέα",
         href: "/app/deliverables",
-        requires: ["deliverables.work", "deliverables.review", "c.productions", "c.approve"],
+        requires: [
+          "deliverables.work",
+          "deliverables.review",
+          "c.productions",
+          "c.approve",
+        ],
       },
       {
         code: "G3",
@@ -186,6 +191,17 @@ export const NAV: readonly NavSection[] = [
         label: "Συνάδελφοι",
         href: "/app/colleagues",
         requires: "c.colleagues",
+      },
+    ],
+  },
+  {
+    title: "Οικονομικά",
+    items: [
+      {
+        code: "I1",
+        label: "Προς τιμολόγηση",
+        href: "/app/finance/to-invoice",
+        requires: "finance.view",
       },
     ],
   },
