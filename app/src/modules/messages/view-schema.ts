@@ -29,6 +29,13 @@ const productionOptionSchema = z.object({
 
 export const MESSAGE_AUTHOR_KINDS = ["team", "client"] as const;
 
+const attachmentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  mime: z.string(),
+  size: z.number(),
+});
+
 const messageSchema = z.object({
   id: z.string(),
   at: z.string(),
@@ -46,6 +53,7 @@ const messageSchema = z.object({
   deleted: z.boolean(),
   canEdit: z.boolean(),
   canDelete: z.boolean(),
+  attachments: z.array(attachmentSchema),
 });
 
 const threadSchema = z.object({
@@ -89,6 +97,7 @@ export const parseClientContext = (data: unknown): ClientContext =>
 
 export type InboxItem = z.infer<typeof inboxItemSchema>;
 export type Inbox = z.infer<typeof inboxSchema>;
+export type MessageAttachment = z.infer<typeof attachmentSchema>;
 export type ThreadMessage = z.infer<typeof messageSchema>;
 export type Thread = z.infer<typeof threadSchema>;
 export type ThreadProduction = z.infer<typeof productionOptionSchema>;

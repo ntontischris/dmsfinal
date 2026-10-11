@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
@@ -25,7 +25,9 @@ import {
   editWindowNote,
 } from "../labels";
 import type { ThreadProduction, WritableClient } from "../view-schema";
+import { useAttachmentUploads } from "../use-attachment-uploads";
 import { ActionForm } from "./action-form";
+import { AttachmentPicker } from "./attachment-picker";
 
 interface ComposerProps {
   clientId: string;
@@ -47,7 +49,7 @@ const defaultTagOf = (
   return canWriteUntagged ? "" : (productions[0]?.id ?? "");
 };
 
-// Ο συντάκτης: «Προς πελάτη» ή «Εσωτερικό Μήνυμα» (με προειδοποίηση και αναφορές), ετικέτα, αποστολή. Χωρίς συνημμένα (Jγ).
+// Ο συντάκτης: «Προς πελάτη» ή «Εσωτερικό Μήνυμα» (με προειδοποίηση και αναφορές), ετικέτα, αποστολή. Με συνημμένα (Jγ): ανεβαίνουν απευθείας στο Storage και στέλνονται οι διαδρομές τους.
 export function Composer({
   clientId,
   productions,
@@ -57,6 +59,12 @@ export function Composer({
   editMinutes,
 }: ComposerProps) {
   const router = useRouter();
+  const initialTag = defaultTagOf(productions, canWriteUntagged, defaultProduction);
+  const uploads = useAttachmentUploads();
+  const resetUploads = uploads.reset;
+  // Η προεπιλογή της πρώτης απόδοσης: η ανανέωση των 20″ δεν ξαναπυροδοτεί το handleSent.
+  const initialTagRef = useRef(initialTag);
+  const [tag, setTag] = useState(initialTag);
   const [isInternal, setInternal] = useState(false);
   const [mentions, setMentions] = useState<readonly string[]>([]);
 
@@ -64,8 +72,10 @@ export function Composer({
   const handleSent = useCallback(() => {
     setInternal(false);
     setMentions([]);
+    setTag(initialTagRef.current);
+    resetUploads();
     router.refresh();
-  }, [router]);
+  }, [router, resetUploads]);
 
   const addMention = (id: string) => {
     if (id !== "" && !mentions.includes(id)) setMentions([...mentions, id]);
@@ -86,6 +96,7 @@ export function Composer({
         submitLabel={COMPOSER_SEND}
         pendingLabel={COMPOSER_SENDING}
         resetOnSuccess
+        isDisabled={uploads.isUploading}
         onSuccess={handleSent}
       >
         <input type="hidden" name="clientId" value={clientId} />
@@ -125,11 +136,8 @@ export function Composer({
           <span className="kit-label">{COMPOSER_TAG}</span>
           <Select
             name="productionId"
-            defaultValue={defaultTagOf(
-              productions,
-              canWriteUntagged,
-              defaultProduction,
-            )}
+            defaultValue={initialTag}
+            onChange={(event) => setTag(event.target.value)}
           >
             {canWriteUntagged && <option value="">{NO_TAG}</option>}
             {productions.map((production) => (
@@ -144,9 +152,14 @@ export function Composer({
           aria-label={COMPOSER_LABEL}
           placeholder={COMPOSER_PLACEHOLDER}
           maxLength={4000}
-          required
+          required={uploads.paths.length === 0}
           rows={4}
           className="w-full rounded-sm border border-input bg-background px-3 py-1.5 text-sm text-foreground hover:border-border-strong focus:border-primary focus:outline-none"
+        />
+        <AttachmentPicker
+          uploads={uploads}
+          clientId={clientId}
+          productionId={tag === "" ? null : tag}
         />
         {mentionable.length > 0 && (
           <div className="grid gap-2">

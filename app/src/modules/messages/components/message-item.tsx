@@ -11,6 +11,7 @@ import {
   MESSAGE_TO_CLIENT,
 } from "../labels";
 import type { ThreadMessage, ThreadProduction } from "../view-schema";
+import { AttachmentList } from "./attachment-list";
 import { MessageActions } from "./message-actions";
 import { NewMark } from "./new-mark";
 
@@ -75,6 +76,7 @@ export function MessageItem({
       ) : (
         <p className="m-0 whitespace-pre-wrap break-words">{message.body}</p>
       )}
+      {!message.deleted && <AttachmentList attachments={message.attachments} />}
       {mentions.length > 0 && (
         <p className="m-0 text-sm text-muted-foreground">
           {MESSAGE_MENTIONS}:{" "}

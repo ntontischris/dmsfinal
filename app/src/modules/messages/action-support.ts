@@ -25,15 +25,15 @@ export const firstIssue = (error: z.ZodError): FormState => ({
 export const pick = (form: FormData, keys: readonly string[]): Record<string, string> =>
   Object.fromEntries(keys.map((key) => [key, String(form.get(key) ?? "")]));
 
-type RpcOutcome = { ok: true } | { ok: false; state: FormState };
+export type RpcOutcome = { ok: true; data: unknown } | { ok: false; state: FormState };
 
 // Μία κλήση RPC: η βάση αποφασίζει το Δικαίωμα, εδώ μεταφράζεται η άρνηση.
 export async function callRpc(name: string, args: Record<string, unknown>): Promise<RpcOutcome> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false, state: { error: UNCONFIGURED_TEXT } };
-  const { error } = await supabase.rpc(name, args);
+  const { data, error } = await supabase.rpc(name, args);
   if (error) return { ok: false, state: { error: messageOf(error) } };
-  return { ok: true };
+  return { ok: true, data };
 }
 
 // Επιτυχία: φρεσκάρει τις οθόνες και δίνει το μήνυμα· αποτυχία: το μήνυμα λάθους όπως ήρθε.

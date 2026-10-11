@@ -75,3 +75,56 @@ test("η καρτέλα «Με ανέφεραν» δείχνει κενή κατ
   await page.goto(`${INBOX_PATH}?tab=mentions`);
   await expect(page.getByText("Κανείς δεν σε ανέφερε")).toBeVisible();
 });
+
+// Συνημμένα (#162): ο Ιδιοκτήτης στέλνει Μήνυμα μόνο με ένα PDF (ανεβαίνει απευθείας στο Storage), το βλέπει στο νήμα,
+// ο σύνδεσμος λήψης κάνει redirect σε προσωρινό σύνδεσμο, και μετά τη διαγραφή του Μηνύματος δεν υπάρχει λήψη.
+const PDF_FIXTURE = "e2e/fixtures/sample-invoice.pdf";
+const PDF_NAME = "sample-invoice.pdf";
+
+test("ο Ιδιοκτήτης στέλνει Μήνυμα με συνημμένο PDF, το κατεβάζει και το διαγράφει", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const P = project();
+
+  await signIn(page, "owner@example.com");
+  await page.goto(INBOX_PATH);
+  await page
+    .getByLabel("Νέο Μήνυμα προς")
+    .selectOption({ label: CLIENT_NAME(P) });
+  await page.getByRole("link", { name: "Νέο Μήνυμα", exact: true }).click();
+  await expect(page).toHaveURL(/\/app\/messages\/[0-9a-f-]{36}$/);
+
+  // Επιλογή αρχείου: ανεβαίνει αμέσως, και η Αποστολή περιμένει να τελειώσει.
+  const composer = page.getByRole("region", { name: COMPOSER });
+  await page.waitForLoadState("networkidle");
+  await composer.getByLabel("Επισύναψη αρχείων").setInputFiles(PDF_FIXTURE);
+  const chips = composer.getByRole("list", { name: "Συνημμένα" });
+  await expect(chips).toContainText(PDF_NAME);
+  await expect(chips).not.toContainText("ανεβαίνει…");
+  await composer.getByRole("button", { name: "Αποστολή" }).click();
+  await expect(composer.getByRole("status")).toContainText(SENT_NOTICE);
+
+  // Το Μήνυμα φαίνεται στο νήμα με το συνημμένο.
+  const article = page.locator("article", {
+    has: page.getByRole("link", { name: PDF_NAME }),
+  });
+  await expect(article).toHaveCount(1);
+  const href = await article
+    .getByRole("link", { name: PDF_NAME })
+    .getAttribute("href");
+  expect(href).toMatch(/\/app\/messages\/attachments\/[0-9a-f-]{36}$/);
+
+  // Η λήψη απαντά με redirect σε προσωρινό σύνδεσμο του Storage.
+  const download = await page.request.get(href ?? "", { maxRedirects: 0 });
+  expect(download.status()).toBe(307);
+  expect(download.headers()["location"]).toContain("message-attachments");
+  expect(download.headers()["cache-control"]).toBe("no-store");
+
+  // Διαγραφή του Μηνύματος: χάνεται η λήψη.
+  await article.getByRole("button", { name: "Διαγραφή" }).first().click();
+  await article.getByRole("button", { name: "Διαγραφή" }).last().click();
+  await expect(page.getByRole("link", { name: PDF_NAME })).toHaveCount(0);
+  const afterDelete = await page.request.get(href ?? "", { maxRedirects: 0 });
+  expect(afterDelete.status()).toBe(404);
+});

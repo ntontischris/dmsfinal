@@ -6,13 +6,14 @@ import { enqueueOverdueInvoices } from "@/lib/email/overdue-enqueue";
 import { enqueueDeliverableReminders } from "@/lib/email/reminders-enqueue";
 import { runOutboxWorker } from "@/lib/email/worker";
 import { generateBillables } from "@/lib/finance/billables-generate";
+import { cleanExpiredAttachmentSlots } from "@/lib/messages/attachments-cleanup";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Το κλείδωμα της ουράς (5 λεπτά) πρέπει να ξεπερνά αυτό το όριο, αλλιώς μια αργή παρτίδα ξαναστέλνεται.
 export const maxDuration = 60;
 
 // Ο εργάτης της ουράς email: κάθε λεπτό (Vercel cron) και μετά από κάθε εγγραφή (σκούντημα).
-// Πρώτα μπαίνουν στην ουρά οι υπενθυμίσεις πελατών (#143), τα Τιμολογητέα (#151) και τα ληξιπρόθεσμα (#153)· σφάλμα τους δεν σταματά τον εργάτη.
+// Πρώτα μπαίνουν στην ουρά οι υπενθυμίσεις πελατών (#143), τα Τιμολογητέα (#151), τα ληξιπρόθεσμα (#153) και το καθάρισμα συνημμένων (#162)· σφάλμα τους δεν σταματά τον εργάτη.
 // Χωρίς CRON_SECRET στο περιβάλλον: 500· με λάθος ή λείπον Bearer: 401.
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const reminders = await enqueueDeliverableReminders(admin);
   const billables = await generateBillables(admin);
   const overdue = await enqueueOverdueInvoices(admin);
+  const attachments = await cleanExpiredAttachmentSlots(admin);
   const summary = await runOutboxWorker(admin, appOrigin());
-  return NextResponse.json({ ...summary, reminders, billables, overdue });
+  return NextResponse.json({ ...summary, reminders, billables, overdue, attachments });
 }

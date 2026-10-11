@@ -16,6 +16,8 @@ const MESSAGES_PATH = "/app/messages";
 const NAV_MESSAGES_LINK = /Μηνύματα$/;
 const SENT_NOTICE = "Το Μήνυμα στάλθηκε.";
 const COMPOSER = "Νέο Μήνυμα";
+const PDF_FIXTURE = "e2e/fixtures/sample-invoice.pdf";
+const PDF_NAME = "sample-invoice.pdf";
 
 // Υπογράφει τη μηνιαία Συμφωνία του Πελάτη Συνομιλίας: ο Πωλητής τη συντάσσει, ο Ιδιοκτήτης την καταχωρίζει.
 async function signedChatAgreement(
@@ -72,11 +74,18 @@ test("ο πελάτης γράφει με ετικέτα Παραγωγής, η 
   expect(productionTitle).toBeTruthy();
   await tag.selectOption({ index: 1 });
   await composer.getByLabel("Μήνυμα προς την ομάδα").fill(question);
+  // Και ο πελάτης επισυνάπτει αρχείο (Jγ): ανεβαίνει αμέσως, η Αποστολή περιμένει.
+  await page.waitForLoadState("networkidle");
+  await composer.getByLabel("Επισύναψη αρχείων").setInputFiles(PDF_FIXTURE);
+  const chips = composer.getByRole("list", { name: "Συνημμένα" });
+  await expect(chips).toContainText(PDF_NAME);
+  await expect(chips).not.toContainText("ανεβαίνει…");
   await composer.getByRole("button", { name: "Αποστολή" }).click();
   await expect(composer.getByRole("status")).toContainText(SENT_NOTICE);
   const sent = page.locator("article", { hasText: question });
   await expect(sent).toBeVisible();
   await expect(sent).toContainText(productionTitle ?? "");
+  await expect(sent.getByRole("link", { name: PDF_NAME })).toBeVisible();
   await expect(sent.getByRole("button", { name: "Διόρθωση" })).toBeVisible();
   await expect(sent.getByRole("button", { name: "Διαγραφή" })).toBeVisible();
 

@@ -45,6 +45,7 @@ const message = (patch: Partial<ThreadMessage> = {}): ThreadMessage => ({
   deleted: false,
   canEdit: false,
   canDelete: false,
+  attachments: [],
   ...patch,
 });
 
@@ -65,6 +66,9 @@ describe("previewLine", () => {
     expect(previewLine(item({ lastInternal: true }))).toBe(
       "Εσωτερικό: Καλημέρα",
     );
+  });
+  it("δείχνει σταθερό κείμενο όταν το Μήνυμα έχει μόνο συνημμένα", () => {
+    expect(previewLine(item({ preview: "" }))).toBe("Συνημμένο αρχείο");
   });
   it("δείχνει σταθερό κείμενο για διαγραμμένο", () => {
     expect(previewLine(item({ lastDeleted: true, preview: null }))).toBe(

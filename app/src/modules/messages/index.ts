@@ -23,5 +23,6 @@ export {
   THREAD_NO_ACCESS_TEXT,
 } from "./labels";
 export { ClientScreen } from "./components/client-screen";
+export { getAttachmentLink } from "./queries";
 export { InboxScreen } from "./components/inbox-screen";
 export { ThreadScreen } from "./components/thread-screen";
