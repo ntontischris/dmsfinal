@@ -32,7 +32,7 @@ export function DeliverableDetailView({ detail, candidates, canSeeAmounts }: Del
           <ActionPanel detail={detail} candidates={candidates} />
           {detail.can.decideCharge && detail.pendingCharge && <ChargePanel deliverableId={detail.id} />}
           <RequestsPanel requests={detail.requests} canSeeAmounts={canSeeAmounts} />
-          {detail.approvedAt !== null && detail.can.edit && (
+          {detail.state === "approved" && detail.can.edit && (
             <FinalFilesPanel deliverableId={detail.id} finalFilesUrl={detail.finalFilesUrl} />
           )}
           <HistoryPanel history={detail.history} />

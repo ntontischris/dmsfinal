@@ -83,7 +83,8 @@ function VersionsPanel({ detail }: ClientDetailViewProps) {
 }
 
 function AfterApprovalPanel({ detail }: ClientDetailViewProps) {
-  const hasFinal = detail.state === "approved" && detail.finalFilesUrl !== null;
+  // Τα τελικά αρχεία μένουν ορατά μέχρι τη νέα έγκριση (ξανάνοιγμα δεν τα κρύβει).
+  const hasFinal = detail.finalFilesUrl !== null;
   const showsRequest = detail.can.requestChange || detail.openRequest !== null;
   if (!hasFinal && !showsRequest) return null;
   return (

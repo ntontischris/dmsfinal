@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
-import { AccessNotice, can, type Viewer } from "@/modules/access";
+import { AccessNotice, canSeeClientWork, type Viewer } from "@/modules/access";
 import {
   ClientDetailView,
   ClientQueueView,
@@ -29,7 +29,7 @@ function ClientNoAccess({ viewer, eyebrow }: { viewer: Viewer; eyebrow: string }
 }
 
 export async function ClientQueueScreen({ viewer }: { viewer: Viewer }) {
-  if (!can(viewer, "c.productions")) return <ClientNoAccess viewer={viewer} eyebrow={QUEUE_EYEBROW} />;
+  if (!canSeeClientWork(viewer)) return <ClientNoAccess viewer={viewer} eyebrow={QUEUE_EYEBROW} />;
   const result = await listClientDeliverables();
   return (
     <>
@@ -40,7 +40,7 @@ export async function ClientQueueScreen({ viewer }: { viewer: Viewer }) {
 }
 
 export async function ClientDetailScreen({ viewer, id }: { viewer: Viewer; id: string }) {
-  if (!can(viewer, "c.productions")) return <ClientNoAccess viewer={viewer} eyebrow={DETAIL_EYEBROW} />;
+  if (!canSeeClientWork(viewer)) return <ClientNoAccess viewer={viewer} eyebrow={DETAIL_EYEBROW} />;
   const result = await getClientDeliverable(id);
   if (!result.ok) return <LoadError />;
   if (result.data === null) return <Missing />;

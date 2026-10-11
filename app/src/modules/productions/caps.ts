@@ -1,4 +1,4 @@
-import { can, isClientViewer, type Viewer } from "@/modules/access";
+import { can, canSeeClientWork, isClientViewer, type Viewer } from "@/modules/access";
 
 import type { ProductionsCaps } from "./types";
 
@@ -8,7 +8,7 @@ import type { ProductionsCaps } from "./types";
 
 // Ο Χρήστης πελάτη βλέπει τις Παραγωγές του Πελάτη του, σε όψη πελάτη (χωρίς Εσωτερικές και ό,τι εσωτερικό).
 export const productionsCaps = (viewer: Viewer): ProductionsCaps => ({
-  canView: can(viewer, "productions.manage") || can(viewer, "c.productions"),
+  canView: can(viewer, "productions.manage") || canSeeClientWork(viewer),
   canCreateInternal:
     viewer.status === "signed-in" &&
     viewer.team?.permissions["productions.manage"] === "all",
