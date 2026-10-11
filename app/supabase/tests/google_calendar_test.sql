@@ -229,6 +229,8 @@ select public.t_filming('00000000-0000-0000-0000-00000000f00e', 19, '10:00', 'sc
 insert into public.filming_crew (filming_id, user_id) values ('00000000-0000-0000-0000-00000000f00e', '00000000-0000-0000-0000-0000000000e3');
 select authz.sheet_issue('00000000-0000-0000-0000-00000000f00e', null);
 insert into public.google_links (entity, entity_id, event_id, etag) values ('filming', '00000000-0000-0000-0000-00000000f00e', 'ev-f12', 'etag-f12-1');
+-- Ο worker δεν έχει συνεδρία: τα claims της προηγούμενης ενότητας καθαρίζονται, ώστε auth.uid() να είναι null.
+select set_config('request.jwt.claims', '{}', true);
 select set_config('t.sheet_move', public.google_apply_change(public.t_event('ev-f12', 'etag-f12-2', public.t_at(19, '12:00'), public.t_at(19, '14:00'), 'confirmed', '{}', false))::text, true);
 select is(current_setting('t.sheet_move')::jsonb->>'action', 'move_applied', 'Μετακίνηση από το Google σε Γύρισμα με Δελτίο περνά χωρίς χρήστη');
 select is((select count(*)::int from public.filming_sheet_versions where filming_id = '00000000-0000-0000-0000-00000000f00e' and version = 2), 1, 'Η μετακίνηση βγάζει αυτόματα έκδοση 2 του Δελτίου');
