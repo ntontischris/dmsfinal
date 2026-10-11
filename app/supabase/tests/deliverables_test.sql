@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες Γυρισμάτων και Περιόδων το 2027, ώστε το τεστ
 -- να περνά οποιαδήποτε μέρα τρέξει. Οι προθεσμίες από «σήμερα» ελέγχονται με την ίδια συνάρτηση, όχι με σταθερή ημερομηνία.
 begin;
-select plan(96);
+select plan(113);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής της Περιόδου 1) · e3 Πωλήσεις (χωρίς Παραδοτέα)
@@ -207,11 +207,11 @@ select throws_ok(
 
 -- ───────────── Ενημέρωση ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
-select public.deliverable_update(current_setting('t.d1')::uuid, 'Νέος τίτλος', null, null);
+select public.deliverable_update(current_setting('t.d1')::uuid, 'Νέος τίτλος', null, null, null);
 select is((select d.title from public.deliverables d where d.id = current_setting('t.d1')::uuid), 'Νέος τίτλος', 'Ο τίτλος ενημερώνεται');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}', true);
 select throws_ok(
-  $$ select public.deliverable_update(current_setting('t.d1')::uuid, 'Κλοπή', null, null) $$,
+  $$ select public.deliverable_update(current_setting('t.d1')::uuid, 'Κλοπή', null, null, null) $$,
   '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χρήστης χωρίς Δικαίωμα δεν ενημερώνει Παραδοτέο'
 );
 
@@ -312,7 +312,7 @@ select is(
   'Ακύρωση με «επιστρέφει» επιστρέφει την Παροχή στην Περίοδο'
 );
 select throws_ok(
-  $$ select public.deliverable_update(current_setting('t.d4')::uuid, 'Ακυρωμένο', null, null) $$,
+  $$ select public.deliverable_update(current_setting('t.d4')::uuid, 'Ακυρωμένο', null, null, null) $$,
   'P0001', 'Το Παραδοτέο έχει ακυρωθεί', 'Ακυρωμένο Παραδοτέο δεν ενημερώνεται'
 );
 
@@ -353,7 +353,8 @@ select ok(
 -- ───────────── Εσωτερική Παραγωγή: έγκριση και δουλειά ─────────────
 select set_config('t.i1', public.deliverable_create(current_setting('t.pi')::uuid, current_setting('t.photo')::uuid,
   'Εσωτερικό υλικό ομάδας', null, null, null, null)::text, true);
-select is(public.deliverable_version_add(current_setting('t.i1')::uuid, 'https://drive.google.com/file/d/int', null), 1, 'Η Έκδοση του Ιδιοκτήτη πάει κατευθείαν στον πελάτη');
+select is(public.deliverable_version_add(current_setting('t.i1')::uuid, 'https://drive.google.com/file/d/int', null), 1, 'Η Έκδοση σε Εσωτερική Παραγωγή μπαίνει σε εσωτερικό έλεγχο');
+select is(authz.deliverable_state(current_setting('t.i1')::uuid), 'in_review', 'Η Έκδοση της Εσωτερικής Παραγωγής δεν πάει ποτέ σε αναμονή πελάτη');
 select public.deliverable_approve_internal(current_setting('t.i1')::uuid);
 select is(authz.deliverable_state(current_setting('t.i1')::uuid), 'approved', 'Η εσωτερική έγκριση βγάζει το Παραδοτέο εγκεκριμένο');
 select throws_ok(
@@ -449,6 +450,92 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 select ok(
   exists (select 1 from jsonb_array_elements(public.deliverables_pending_charges()) x where x->>'id' = current_setting('t.d5')),
   'Η Διαχείριση βλέπει το Παραδοτέο με χρέωση σε εκκρεμότητα'
+);
+
+-- ───────────── Κανόνες: Εσωτερική Παραγωγή, υπερκάλυψη, καθυστέρηση, προθεσμία, κλειστή Παραγωγή ─────────────
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select set_config('t.i2', public.deliverable_create(current_setting('t.pi')::uuid, current_setting('t.photo')::uuid,
+  'Εσωτερικό δεύτερο', null, null, null, null)::text, true);
+select public.deliverable_version_add(current_setting('t.i2')::uuid, 'https://drive.google.com/file/d/int2', null);
+select throws_ok(
+  $$ select public.deliverable_version_send(current_setting('t.i2')::uuid) $$,
+  'P0001', 'Η Εσωτερική Παραγωγή δεν στέλνεται στον πελάτη', 'Η Εσωτερική Παραγωγή δεν στέλνεται στον πελάτη'
+);
+select is((public.deliverable_view(current_setting('t.i2')::uuid)->'can'->>'send')::boolean, false, 'Στην Εσωτερική Παραγωγή δεν εμφανίζεται «Στείλε»');
+select is((public.deliverable_view(current_setting('t.i2')::uuid)->'can'->>'approveInternal')::boolean, true, 'Ο ελεγκτής βλέπει «Ενέκρινε» όσο η Έκδοση είναι σε έλεγχο');
+
+-- Υπερκάλυψη: μόνο όταν μία Έκδοση πάει στον πελάτη.
+select set_config('t.d8', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid,
+  'Υπερκάλυψη δοκιμής', null, null, null, null)::text, true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
+select public.deliverable_version_add(current_setting('t.d8')::uuid, 'https://drive.google.com/file/d/s1', null);
+select is(authz.deliverable_state(current_setting('t.d8')::uuid), 'in_review', 'Η Έκδοση μη ελεγκτή μπαίνει σε εσωτερικό έλεγχο');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
+select public.deliverable_version_send(current_setting('t.d8')::uuid);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e2","role":"authenticated"}', true);
+select public.deliverable_version_add(current_setting('t.d8')::uuid, 'https://drive.google.com/file/d/s2', null);
+select is(
+  (select v.state from public.deliverable_versions v where v.deliverable_id = current_setting('t.d8')::uuid and v.number = 1),
+  'awaiting_client', 'Νέα Έκδοση που μπαίνει σε έλεγχο δεν υπερκαλύπτει την Έκδοση που περιμένει πελάτη'
+);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
+select public.deliverable_version_send(current_setting('t.d8')::uuid);
+select is(
+  (select v.state from public.deliverable_versions v where v.deliverable_id = current_setting('t.d8')::uuid and v.number = 1),
+  'superseded', 'Η αποστολή της νέας Έκδοσης υπερκαλύπτει την παλιά που περίμενε πελάτη'
+);
+
+-- Καθυστέρηση: σε έλεγχο ή σε αναμονή πελάτη δεν καθυστερεί.
+update public.deliverables set deadline = date '2000-01-01' where id = current_setting('t.d8')::uuid;
+select is((authz.deliverable_card(current_setting('t.d8')::uuid)->>'isLate')::boolean, false, 'Παραδοτέο σε αναμονή πελάτη δεν καθυστερεί');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select is(
+  (authz.deliverable_card(current_setting('t.i2')::uuid)->>'isLate')::boolean, false, 'Παραδοτέο σε εσωτερικό έλεγχο δεν καθυστερεί'
+);
+select public.deliverable_update(current_setting('t.d8')::uuid, 'Υπερκάλυψη δοκιμής', null, null, date '2027-05-10');
+select is((select d.deadline from public.deliverables d where d.id = current_setting('t.d8')::uuid), date '2027-05-10', 'Η ομάδα αλλάζει την προθεσμία από την ενημέρωση');
+
+-- Προθεσμία από τη μέρα δημιουργίας όταν το Γύρισμα ακυρώνεται: 5 εργάσιμες από Δευτέρα 22 Μαρτίου 2027 (25 Μαρτίου αργία) = Δευτέρα 30 Μαρτίου 2027.
+with ins as (
+  insert into public.filmings (production_id, period_id, client_id, kind_id, starts_at, hours, origin, state)
+  values (current_setting('t.pa1')::uuid, current_setting('t.p1')::uuid, '00000000-0000-0000-0000-0000000000f1',
+          current_setting('t.shoot')::uuid, timestamptz '2027-03-24 10:00:00+02', 2, 'team', 'scheduled')
+  returning id
+)
+select set_config('t.f2', (select id::text from ins), true);
+select set_config('t.d9', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.reel')::uuid,
+  'Reel με γύρισμα που ακυρώνεται', null, current_setting('t.f2')::uuid, null, null)::text, true);
+select is((select d.deadline from public.deliverables d where d.id = current_setting('t.d9')::uuid), null::date, 'Με Γύρισμα που δεν έγινε, η προθεσμία περιμένει');
+alter table public.deliverables disable trigger deliverables_stamp;
+update public.deliverables set created_at = timestamptz '2027-03-22 12:00:00+02' where id = current_setting('t.d9')::uuid;
+alter table public.deliverables enable trigger deliverables_stamp;
+update public.filmings set state = 'cancelled', cancelled_at = now(), cancelled_side = 'team', cancelled_reason = 'Αλλαγή πελάτη' where id = current_setting('t.f2')::uuid;
+select is((select d.deadline from public.deliverables d where d.id = current_setting('t.d9')::uuid), date '2027-03-30', 'Γύρισμα που ακυρώνεται: προθεσμία 5 εργάσιμες από τη μέρα δημιουργίας');
+
+-- Ακυρωμένο Παραδοτέο: δεν παίρνει απόφαση χρέωσης και δεν σχολιάζεται.
+select set_config('t.d6', public.deliverable_create(current_setting('t.pa1')::uuid, current_setting('t.photo')::uuid,
+  'Φωτογραφίες ακύρωσης', null, null, 'pending', null)::text, true);
+select public.deliverable_cancel(current_setting('t.d6')::uuid, 'Δεν χρειάζεται', 'returned');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
+select throws_ok(
+  $$ select public.deliverable_charge_decide(current_setting('t.d6')::uuid, 'charged', null) $$,
+  'P0001', 'Το Παραδοτέο έχει ακυρωθεί', 'Ακυρωμένο Παραδοτέο δεν παίρνει απόφαση χρέωσης'
+);
+select is((public.deliverable_view(current_setting('t.d6')::uuid)->'can'->>'decideCharge')::boolean, false, 'Ακυρωμένο Παραδοτέο δεν δείχνει «Απόφαση χρέωσης»');
+select throws_ok(
+  $$ select public.deliverable_comment_add(current_setting('t.d6')::uuid, 1, 'Σχόλιο', null, false) $$,
+  'P0001', 'Το Παραδοτέο έχει ακυρωθεί', 'Ακυρωμένο Παραδοτέο δεν σχολιάζεται'
+);
+
+-- Κλειστή Παραγωγή: καμία εγγραφή (η Παραγωγή της εφάπαξ Συμφωνίας έχει ακυρωθεί).
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
+select throws_ok(
+  $$ select public.deliverable_version_add(current_setting('t.o2')::uuid, 'https://drive.google.com/file/d/x', null) $$,
+  'P0001', 'Η Παραγωγή δεν είναι ανοιχτή', 'Σε κλειστή Παραγωγή δεν προστίθεται Έκδοση'
+);
+select throws_ok(
+  $$ select public.deliverable_comment_add(current_setting('t.o1')::uuid, 1, 'Σχόλιο', null, false) $$,
+  'P0001', 'Η Παραγωγή δεν είναι ανοιχτή', 'Σε κλειστή Παραγωγή δεν σχολιάζεται'
 );
 
 select * from finish();

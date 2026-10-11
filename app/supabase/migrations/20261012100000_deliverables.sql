@@ -246,6 +246,31 @@ end;
 $$;
 
 -- Βλέπει ο Χρήστης το Παραδοτέο: Εύρος στην εργασία ή στον έλεγχο. Χωρίς κανένα από τα δύο, 42501 πρώτα.
+-- Η Παραγωγή του Παραδοτέου είναι ανοιχτή· αλλιώς P0001. Μπαίνει μετά τον έλεγχο Δικαιώματος.
+create function authz.require_deliverable_open(p_deliverable uuid) returns void
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  if not exists (
+    select 1 from public.deliverables d join public.productions p on p.id = d.production_id
+     where d.id = p_deliverable and p.state = 'open'
+  ) then
+    raise exception 'Η Παραγωγή δεν είναι ανοιχτή' using errcode = 'P0001';
+  end if;
+end;
+$$;
+
+-- Η Έκδοση πάει κατευθείαν σε αναμονή πελάτη (Π2): μόνο σε Παραγωγή πελάτη, και μόνο αν ελέγχει
+-- ο Χρήστης ή ο εσωτερικός έλεγχος είναι κλειστός. Η Εσωτερική Παραγωγή περνά πάντα από έλεγχο.
+create function authz.deliverable_goes_direct(p_deliverable uuid) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select p.client_id is not null
+         and (authz.has('deliverables.review') or not authz.deliverable_rule_internal_review())
+    from public.deliverables d join public.productions p on p.id = d.production_id
+   where d.id = p_deliverable;
+$$;
+
 create function authz.require_deliverable_view(p_deliverable uuid) returns void
 language plpgsql stable security definer set search_path = ''
 as $$
@@ -347,7 +372,7 @@ begin
   select count(*) into v_rounds_used from public.deliverable_versions v where v.deliverable_id = d.id and v.state = 'changes_requested';
   select r.rounds into v_rounds_limit from public.agreement_revision_limits r
    where r.agreement_id = v_production.agreement_id and r.kind_id = d.kind_id;
-  v_late := d.deadline is not null and d.deadline < v_today and v_state not in ('approved', 'awaiting_client', 'cancelled');
+  v_late := d.deadline is not null and d.deadline < v_today and v_state not in ('approved', 'awaiting_client', 'in_review', 'cancelled');
   if v_state = 'awaiting_client' and v_latest.sent_at is not null then
     v_days := v_today - (v_latest.sent_at at time zone 'Europe/Athens')::date;
   elsif v_state = 'in_review' and v_latest.created_at is not null then
@@ -414,21 +439,22 @@ declare
   v_work boolean := authz.deliverable_in_scope(p_deliverable, 'deliverables.work');
   v_review boolean := authz.deliverable_in_scope(p_deliverable, 'deliverables.review');
   v_internal boolean;
+  v_open boolean;
   v_pending boolean;
 begin
-  select p.client_id is null into v_internal
+  select p.client_id is null, p.state = 'open' into v_internal, v_open
     from public.deliverables d join public.productions p on p.id = d.production_id
    where d.id = p_deliverable;
   v_pending := exists (select 1 from public.deliverables d where d.id = p_deliverable and d.charge = 'pending');
   return jsonb_build_object(
-    'addVersion', v_work and v_state not in ('approved', 'cancelled'),
-    'send', v_review and v_state = 'in_review',
-    'return', v_review and v_state = 'in_review',
-    'approveInternal', v_review and coalesce(v_internal, false) and v_state in ('in_review', 'awaiting_client'),
-    'cancel', v_work and v_state not in ('approved', 'cancelled'),
-    'comment', v_work and v_state not in ('draft', 'cancelled'),
-    'decideCharge', authz.has('finance.cost') and v_pending,
-    'edit', v_work and v_state <> 'cancelled'
+    'addVersion', coalesce(v_open, false) and v_work and v_state not in ('approved', 'cancelled'),
+    'send', coalesce(v_open, false) and v_review and v_state = 'in_review' and not coalesce(v_internal, true),
+    'return', coalesce(v_open, false) and v_review and v_state = 'in_review',
+    'approveInternal', coalesce(v_open, false) and v_review and coalesce(v_internal, false) and v_state = 'in_review',
+    'cancel', coalesce(v_open, false) and v_work and v_state not in ('approved', 'cancelled'),
+    'comment', coalesce(v_open, false) and v_work and v_state not in ('draft', 'cancelled'),
+    'decideCharge', authz.has('finance.cost') and v_pending and coalesce(v_open, false) and v_state <> 'cancelled',
+    'edit', coalesce(v_open, false) and v_work and v_state <> 'cancelled'
   );
 end;
 $$;
@@ -480,14 +506,17 @@ language plpgsql security definer set search_path = ''
 as $$
 begin
   update public.deliverables d
-     set deadline = authz.add_working_days(public.sales_today(), authz.deliverable_kind_days(d.kind_id))
+     set deadline = authz.add_working_days(
+           case when new.state = 'done' then public.sales_today()
+                else (d.created_at at time zone 'Europe/Athens')::date end,
+           authz.deliverable_kind_days(d.kind_id))
    where d.filming_id = new.id and d.deadline is null and d.cancelled_at is null;
   return new;
 end;
 $$;
 
 create trigger filmings_done_fill_deadlines after update of state on public.filmings
-  for each row when (new.state = 'done' and old.state is distinct from new.state)
+  for each row when (new.state in ('done', 'cancelled', 'no_show', 'rejected') and old.state is distinct from new.state)
   execute function authz.deliverables_fill_deadlines();
 
 -- ───────────── Κανόνες (triggers) ─────────────
@@ -735,6 +764,9 @@ begin
   perform authz.require_production_scope(p_production, 'deliverables.work');
   select * into v_production from public.productions p where p.id = p_production;
   perform authz.require_production_open(p_production);
+  if coalesce(v_production.period_id, v_production.agreement_id) is not null then
+    perform pg_advisory_xact_lock(hashtextextended(coalesce(v_production.period_id, v_production.agreement_id)::text, 0));
+  end if;
   if not exists (select 1 from public.provision_kinds k where k.id = p_kind and k.measure is null) then
     raise exception 'Το είδος δεν μετράει σε πλήθος' using errcode = 'P0001';
   end if;
@@ -767,7 +799,8 @@ end;
 $$;
 
 -- Ενημέρωση: τίτλος, υπεύθυνος, Γύρισμα. Η προθεσμία μένει, εκτός αν δεν υπήρχε και αλλάζει το Γύρισμα.
-create function public.deliverable_update(p_id uuid, p_title text, p_assignee uuid, p_filming uuid) returns void
+
+create function public.deliverable_update(p_id uuid, p_title text, p_assignee uuid, p_filming uuid, p_deadline date) returns void
 language plpgsql security definer set search_path = ''
 as $$
 declare
@@ -775,6 +808,7 @@ declare
   v_row public.deliverables;
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.work');
+  perform authz.require_deliverable_open(p_id);
   select * into v_row from public.deliverables d where d.id = p_id for update;
   if v_row.cancelled_at is not null then
     raise exception 'Το Παραδοτέο έχει ακυρωθεί' using errcode = 'P0001';
@@ -788,11 +822,11 @@ begin
      set title = v_title,
          assignee_id = p_assignee,
          filming_id = p_filming,
-         deadline = case
+         deadline = coalesce(p_deadline, case
                       when p_filming is distinct from v_row.filming_id and v_row.deadline is null
                         then authz.deliverable_deadline_for(v_row.kind_id, p_filming)
                       else v_row.deadline
-                    end
+                    end)
    where d.id = p_id;
 end;
 $$;
@@ -806,23 +840,25 @@ declare
   v_note text := nullif(trim(coalesce(p_note, '')), '');
   v_host text;
   v_number integer;
-  v_direct boolean;
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.work');
+  perform authz.require_deliverable_open(p_id);
   perform 1 from public.deliverables d where d.id = p_id for update;
   if authz.deliverable_state(p_id) in ('approved', 'cancelled') then
     raise exception 'Το Παραδοτέο δεν δέχεται νέα Έκδοση' using errcode = 'P0001';
   end if;
   v_host := authz.deliverable_host(v_url);
-  v_direct := authz.has('deliverables.review') or not authz.deliverable_rule_internal_review();
-  update public.deliverable_versions v
-     set state = 'superseded'
-   where v.deliverable_id = p_id and v.state in ('in_review', 'awaiting_client');
   v_number := coalesce(authz.deliverable_current_number(p_id), 0) + 1;
-  insert into public.deliverable_versions (deliverable_id, number, url, host, state, note, created_by, sent_at, sent_by)
-  values (p_id, v_number, v_url, v_host,
-          case when v_direct then 'awaiting_client' else 'in_review' end, v_note, auth.uid(),
-          case when v_direct then now() end, case when v_direct then auth.uid() end);
+  if authz.deliverable_goes_direct(p_id) then
+    update public.deliverable_versions v
+       set state = 'superseded'
+     where v.deliverable_id = p_id and v.state in ('in_review', 'awaiting_client');
+    insert into public.deliverable_versions (deliverable_id, number, url, host, state, note, created_by, sent_at, sent_by)
+    values (p_id, v_number, v_url, v_host, 'awaiting_client', v_note, auth.uid(), now(), auth.uid());
+  else
+    insert into public.deliverable_versions (deliverable_id, number, url, host, state, note, created_by)
+    values (p_id, v_number, v_url, v_host, 'in_review', v_note, auth.uid());
+  end if;
   return v_number;
 end;
 $$;
@@ -831,15 +867,28 @@ $$;
 create function public.deliverable_version_send(p_id uuid) returns void
 language plpgsql security definer set search_path = ''
 as $$
+declare
+  v_number integer;
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.review');
+  perform authz.require_deliverable_open(p_id);
   perform 1 from public.deliverables d where d.id = p_id for update;
+  if not exists (
+       select 1 from public.deliverables d join public.productions p on p.id = d.production_id
+        where d.id = p_id and p.client_id is not null
+     ) then
+    raise exception 'Η Εσωτερική Παραγωγή δεν στέλνεται στον πελάτη' using errcode = 'P0001';
+  end if;
   if authz.deliverable_state(p_id) <> 'in_review' then
     raise exception 'Μόνο Έκδοση σε εσωτερικό έλεγχο στέλνεται' using errcode = 'P0001';
   end if;
+  v_number := authz.deliverable_current_number(p_id);
+  update public.deliverable_versions v
+     set state = 'superseded'
+   where v.deliverable_id = p_id and v.state = 'awaiting_client' and v.number < v_number;
   update public.deliverable_versions v
      set state = 'awaiting_client', sent_at = now(), sent_by = auth.uid()
-   where v.deliverable_id = p_id and v.number = authz.deliverable_current_number(p_id);
+   where v.deliverable_id = p_id and v.number = v_number;
 end;
 $$;
 
@@ -851,6 +900,7 @@ declare
   v_note text := nullif(trim(coalesce(p_note, '')), '');
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.review');
+  perform authz.require_deliverable_open(p_id);
   perform 1 from public.deliverables d where d.id = p_id for update;
   if v_note is null then
     raise exception 'Η επιστροφή θέλει σημείωση' using errcode = 'P0001';
@@ -872,13 +922,14 @@ declare
   v_client uuid;
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.review');
+  perform authz.require_deliverable_open(p_id);
   perform 1 from public.deliverables d where d.id = p_id for update;
   select p.client_id into v_client from public.deliverables d join public.productions p on p.id = d.production_id where d.id = p_id;
   if v_client is not null then
     raise exception 'Μόνο Εσωτερική Παραγωγή εγκρίνεται εσωτερικά' using errcode = 'P0001';
   end if;
-  if authz.deliverable_state(p_id) not in ('in_review', 'awaiting_client') then
-    raise exception 'Η Έκδοση δεν είναι σε έλεγχο' using errcode = 'P0001';
+  if authz.deliverable_state(p_id) <> 'in_review' then
+    raise exception 'Η Έκδοση δεν είναι σε εσωτερικό έλεγχο' using errcode = 'P0001';
   end if;
   update public.deliverable_versions v
      set state = 'approved', answered_at = now(), answered_by = auth.uid()
@@ -896,6 +947,7 @@ declare
   v_host text;
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.work');
+  perform authz.require_deliverable_open(p_id);
   perform 1 from public.deliverables d where d.id = p_id for update;
   if authz.deliverable_state(p_id) = 'cancelled' then
     raise exception 'Το Παραδοτέο έχει ακυρωθεί' using errcode = 'P0001';
@@ -918,6 +970,7 @@ declare
   v_reason text := nullif(trim(coalesce(p_reason, '')), '');
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.work');
+  perform authz.require_deliverable_open(p_id);
   perform 1 from public.deliverables d where d.id = p_id for update;
   if v_reason is null then
     raise exception 'Η ακύρωση θέλει λόγο' using errcode = 'P0001';
@@ -948,6 +1001,11 @@ declare
   v_id uuid;
 begin
   perform authz.deliverable_gate(p_id, 'deliverables.work');
+  perform authz.require_deliverable_open(p_id);
+  perform 1 from public.deliverables d where d.id = p_id for update;
+  if authz.deliverable_state(p_id) = 'cancelled' then
+    raise exception 'Το Παραδοτέο έχει ακυρωθεί' using errcode = 'P0001';
+  end if;
   if length(v_body) = 0 or length(v_body) > 2000 then
     raise exception 'Το σχόλιο θέλει κείμενο έως 2000 χαρακτήρες' using errcode = 'P0001';
   end if;
@@ -973,7 +1031,11 @@ declare
   v_charge text;
 begin
   perform authz.deliverable_gate(p_id, 'finance.cost');
+  perform authz.require_deliverable_open(p_id);
   select d.charge into v_charge from public.deliverables d where d.id = p_id for update;
+  if authz.deliverable_state(p_id) = 'cancelled' then
+    raise exception 'Το Παραδοτέο έχει ακυρωθεί' using errcode = 'P0001';
+  end if;
   if v_charge <> 'pending' then
     raise exception 'Η χρέωση έχει ήδη αποφασιστεί' using errcode = 'P0001';
   end if;
@@ -1065,13 +1127,13 @@ revoke all on function
   authz.require_production_scope(uuid, text), authz.deliverable_gate(uuid, text), authz.require_deliverable_view(uuid),
   authz.check_deliverable_filming(uuid, uuid), authz.check_deliverable_assignee(uuid, uuid),
   authz.deliverable_units(uuid, uuid, uuid, text), authz.deliverable_card(uuid), authz.deliverable_versions_json(uuid),
-  authz.deliverable_viewer_can(uuid), authz.deliverable_history(uuid), authz.deliverables_fill_deadlines()
+  authz.deliverable_viewer_can(uuid), authz.deliverable_history(uuid), authz.require_deliverable_open(uuid), authz.deliverable_goes_direct(uuid), authz.deliverables_fill_deadlines()
   from public, anon, authenticated;
 
 -- Οι RPC της εφαρμογής: ο έλεγχος Δικαιώματος γίνεται μέσα τους.
 revoke all on function
   public.deliverables_queue_view(text), public.deliverables_pending_charges(), public.deliverable_view(uuid), public.deliverable_candidates(uuid),
-  public.deliverable_create(uuid, uuid, text, uuid, uuid, text, text), public.deliverable_update(uuid, text, uuid, uuid),
+  public.deliverable_create(uuid, uuid, text, uuid, uuid, text, text), public.deliverable_update(uuid, text, uuid, uuid, date),
   public.deliverable_version_add(uuid, text, text), public.deliverable_version_send(uuid),
   public.deliverable_version_return(uuid, text), public.deliverable_approve_internal(uuid),
   public.deliverable_link_fix(uuid, text), public.deliverable_cancel(uuid, text, text),
@@ -1079,7 +1141,7 @@ revoke all on function
   from public, anon;
 grant execute on function
   public.deliverables_queue_view(text), public.deliverables_pending_charges(), public.deliverable_view(uuid), public.deliverable_candidates(uuid),
-  public.deliverable_create(uuid, uuid, text, uuid, uuid, text, text), public.deliverable_update(uuid, text, uuid, uuid),
+  public.deliverable_create(uuid, uuid, text, uuid, uuid, text, text), public.deliverable_update(uuid, text, uuid, uuid, date),
   public.deliverable_version_add(uuid, text, text), public.deliverable_version_send(uuid),
   public.deliverable_version_return(uuid, text), public.deliverable_approve_internal(uuid),
   public.deliverable_link_fix(uuid, text), public.deliverable_cancel(uuid, text, text),
