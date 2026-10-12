@@ -104,6 +104,8 @@ select '00000000-0000-0000-0000-0000000000d1', x.user_id::uuid, x.name, r.id, tr
   ) as x (user_id, name)
   join public.roles r on r.name = 'Πλήρης' and r.kind = 'client';
 
+-- Τα Γυρίσματα τα κλείνει ο b2 (το created_by το γράφει το trigger από τον συνδεδεμένο).
+select public.t_as('b2');
 select set_config('t.f1', gen_random_uuid()::text, true);
 select set_config('t.f2', gen_random_uuid()::text, true);
 insert into public.filmings (id, production_id, client_id, kind_id, starts_at, hours, origin, state, created_by)
@@ -113,6 +115,7 @@ select x.id::uuid, current_setting('t.pa')::uuid, '00000000-0000-0000-0000-00000
   from (values (current_setting('t.f1'), timestamptz '2027-02-10 10:00+00'),
                (current_setting('t.f2'), timestamptz '2027-02-17 10:00+00')) as x (id, starts_at);
 insert into public.filming_crew (filming_id, user_id) values (current_setting('t.f1')::uuid, '00000000-0000-0000-0000-0000000000a4');
+select public.t_as('a1');
 
 -- Ό,τι γράφτηκε στην προετοιμασία δεν μας αφορά.
 update public.events set processed_at = now() where processed_at is null;
@@ -155,11 +158,11 @@ select is((select (x.payload -> 'details' ->> 'decision') || ' ' || (x.payload ?
   'approved false', 'Μπλοκ λεπτομερειών με την απόφαση· απαραίτητο email χωρίς σύνδεσμο διακοπής');
 
 -- Σβησμένος Αυτοματισμός: κανένα email.
-update public.automations set is_enabled = false where id = public.t_mail_auto('filming.decided', 'client');
+update public.automations set is_enabled = false where id = public.t_mail_auto('filming.decided', 'filming_requester');
 select public.filming_reject(current_setting('t.f2')::uuid, 'Δεν χωράμε');
 select public.events_process();
 select is(public.t_mails('filming.decided', 'b2@kypseli.example.gr'), 1, 'Σβησμένος Αυτοματισμός: κανένα email για την απόρριψη');
-update public.automations set is_enabled = true where id = public.t_mail_auto('filming.decided', 'client');
+update public.automations set is_enabled = true where id = public.t_mail_auto('filming.decided', 'filming_requester');
 
 -- ───────────── Μετάθεση και ακύρωση: πελάτης και Συνεργείο ─────────────
 select authz.filming_event(current_setting('t.f1')::uuid, 'rescheduled',
@@ -215,12 +218,12 @@ select is(public.t_mails('filming.google_moved', 'b1@kypseli.example.gr')::text 
 
 -- Token σε απαραίτητο Αυτοματισμό: αγνοείται.
 insert into public.automation_unsubscribes (token_hash, user_id, automation_id)
-values (authz.token_hash(repeat('e', 64)), public.t_uid('b1'), public.t_mail_auto('filming.decided', 'client'));
+values (authz.token_hash(repeat('e', 64)), public.t_uid('b1'), public.t_mail_auto('filming.decided', 'filming_requester'));
 set local role anon;
 select public.automation_unsubscribe(repeat('e', 64));
 reset role;
 select is((select count(*)::integer from public.automation_optouts
-            where user_id = public.t_uid('b1') and automation_id = public.t_mail_auto('filming.decided', 'client')),
+            where user_id = public.t_uid('b1') and automation_id = public.t_mail_auto('filming.decided', 'filming_requester')),
   0, 'Token σε απαραίτητο Αυτοματισμό: δεν σβήνει τίποτα');
 
 select * from finish();
