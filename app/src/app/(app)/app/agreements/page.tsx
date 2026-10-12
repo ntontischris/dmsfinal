@@ -6,6 +6,7 @@ import { AccessNotice, getViewer, type Viewer } from "@/modules/access";
 import {
   AgreementsTable,
   agreementCaps,
+  athensToday,
   listAgreements,
   toAgreementRowView,
   type AgreementCaps,
@@ -37,6 +38,28 @@ function NoAccess({ viewer }: { viewer: Viewer }) {
   );
 }
 
+const IN_PROGRESS_DAYS = 7;
+
+const plusDays = (day: string, days: number): string =>
+  new Date(Date.parse(`${day}T00:00:00Z`) + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+
+// «Σε εξέλιξη» (η κάρτα της Σήμερα): πρόταση που στάλθηκε και λήγει σε έως 7 μέρες ή την άνοιξε ο πελάτης.
+const isInProgress = (row: AgreementRow, today: string): boolean =>
+  row.state === "proposal" &&
+  row.path === "sent" &&
+  (row.validUntil <= plusDays(today, IN_PROGRESS_DAYS) || row.linksOpened > 0);
+
+function InProgressNote() {
+  return (
+    <p className="m-0 text-sm">
+      Μόνο οι προτάσεις σε εξέλιξη (λήγουν σε {IN_PROGRESS_DAYS} μέρες ή τις
+      άνοιξε ο πελάτης). <Link href="/app/agreements">Όλες οι Συμφωνίες</Link>
+    </p>
+  );
+}
+
 function Body({
   items,
   caps,
@@ -61,11 +84,17 @@ function Body({
 
 // D1: οι Συμφωνίες που βλέπει ο χρήστης. Δεν υπάρχει «Νέα Συμφωνία»: η πρόταση ξεκινά από την Ευκαιρία (B4).
 // Ποσά και χαμηλό περιθώριο φτάνουν μόνο σε όποιον τα δικαιούται (αλλιώς η βάση στέλνει null).
-export default async function AgreementsPage() {
-  const viewer = await getViewer();
+export default async function AgreementsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
+  const [viewer, { view }] = await Promise.all([getViewer(), searchParams]);
   const caps = agreementCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} />;
 
+  const isFiltered = view === "in_progress";
+  const today = athensToday();
   const found = await listAgreements();
   return (
     <>
@@ -75,7 +104,15 @@ export default async function AgreementsPage() {
           Μια πρόταση ξεκινά πάντα μέσα σε μια Ευκαιρία: από τη σελίδα της{" "}
           <Link href="/app/pipeline">Ευκαιρίας</Link>, με «Σύνταξη».
         </p>
-        {found.ok ? <Body items={found.data} caps={caps} /> : <LoadError />}
+        {isFiltered && <InProgressNote />}
+        {found.ok ? (
+          <Body
+            items={isFiltered ? found.data.filter((row) => isInProgress(row, today)) : found.data}
+            caps={caps}
+          />
+        ) : (
+          <LoadError />
+        )}
       </div>
     </>
   );
