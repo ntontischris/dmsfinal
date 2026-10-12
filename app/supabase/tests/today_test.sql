@@ -165,7 +165,7 @@ select is(public.today_card('readiness') -> 'items' -> 0 ->> 'id',
   'Ετοιμότητα: τα βήματα στη σειρά της O7');
 
 -- ───────────── Υγεία: μόνο οι Πελάτες που βλέπει ο θεατής ─────────────
--- a3: health.view + clients.view «mine», Υπεύθυνος του Πελάτη 2. Βλέπει την αποτυχία του Πελάτη 2, όχι του Πελάτη 1.
+-- a3: health.view + clients.view «mine» (και clients.manage «mine», που χρειάζεται για να είναι Υπεύθυνος), Υπεύθυνος του Πελάτη 2. Βλέπει την αποτυχία του Πελάτη 2, όχι του Πελάτη 1.
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000a3', 'health@example.com');
 insert into public.team_users (user_id, name, email, is_active, deactivated_at)
 values ('00000000-0000-0000-0000-0000000000a3', 'Ελένη', 'health@example.com', true, null);
@@ -173,7 +173,7 @@ insert into public.roles (name, description, kind, is_owner, is_builtin)
 values ('Υγεία και δικοί μου Πελάτες (τεστ)', 'Τεστ: health.view και clients.view mine.', 'team', false, false);
 insert into public.role_permissions (role_id, permission, scope)
 select r.id, x.perm, x.scope from public.roles r
- cross join (values ('health.view', 'all'), ('clients.view', 'mine')) x (perm, scope)
+ cross join (values ('health.view', 'all'), ('clients.view', 'mine'), ('clients.manage', 'mine')) x (perm, scope)
  where r.name = 'Υγεία και δικοί μου Πελάτες (τεστ)';
 insert into public.team_user_roles (user_id, role_id)
 select '00000000-0000-0000-0000-0000000000a3', r.id from public.roles r where r.name = 'Υγεία και δικοί μου Πελάτες (τεστ)';
