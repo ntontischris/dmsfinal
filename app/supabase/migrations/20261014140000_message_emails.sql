@@ -28,6 +28,11 @@ create table public.message_digest_marks (
 
 alter table public.message_digest_marks enable row level security;
 
+-- Η πρώτη εκτέλεση μετά την εγκατάσταση δεν στέλνει σύνοψη για παλιά Μηνύματα: όριο «τώρα» για όσους υπάρχουν ήδη.
+insert into public.message_digest_marks (user_id, client_id, upto)
+select cu.user_id, cu.client_id, now() from public.client_users cu where cu.removed_at is null
+on conflict do nothing;
+
 -- Για κάθε Χρήστη πελάτη με c.chatRead: αν υπάρχουν «νέα» Μηνύματα της ομάδας (όχι εσωτερικά, όχι διαγραμμένα, μετά το διάβασμα
 -- και την προηγούμενη σύνοψη) και το παλαιότερο είναι πιο παλιό από digest_minutes, ένα email και νέο όριο. Επιστρέφει πόσα email μπήκαν.
 -- Το p_now (null = τώρα) υπάρχει για τα τεστ. payload: { clientName, count }
@@ -62,7 +67,10 @@ begin
   loop
     insert into public.message_digest_marks (user_id, client_id, upto)
     values (v_row.user_id, v_row.client_id, v_row.newest)
-    on conflict (user_id, client_id) do update set upto = excluded.upto;
+    on conflict (user_id, client_id) do update set upto = excluded.upto
+      where public.message_digest_marks.upto < excluded.upto;
+    -- Μια ταυτόχρονη κλήση έγραψε ήδη το ίδιο όριο: εκείνη στέλνει το email.
+    continue when not found;
     insert into public.email_outbox (kind, to_name, to_email, locale, payload)
     values ('message_digest', v_row.name, v_row.email, v_row.locale,
             jsonb_build_object('clientName', v_row.client_name, 'count', v_row.cnt));
@@ -75,7 +83,8 @@ $$;
 -- ───────────── Κλείσιμο Αιτήματος (Γεγονός 48) ─────────────
 
 -- Όταν ένα Αίτημα περνά από ανοιχτό σε ολοκληρώθηκε/απορρίφθηκε (και αυτόματα): ένα email στον πελάτη.
--- Αν το δήλωσε πελάτης, μόνο σε αυτόν (αν είναι ακόμα ενεργός με c.chatRead)· αλλιώς σε όλους τους Χρήστες του Πελάτη με c.chatRead.
+-- Αν το δήλωσε πελάτης που είναι ακόμα ενεργός με c.chatRead, μόνο σε αυτόν· αλλιώς (Αίτημα της ομάδας ή ο δηλώσας έφυγε)
+-- σε όλους τους Χρήστες του Πελάτη με c.chatRead.
 -- payload: { clientName, kind, outcome, reply?, comment?, link?, deliverableId? }
 create function authz.request_closed_notify() returns trigger
 language plpgsql security definer set search_path = ''
@@ -100,7 +109,11 @@ begin
     join auth.users u on u.id = cu.user_id
     left join public.team_users t on t.user_id = cu.user_id
    where cu.client_id = v_client and cu.removed_at is null and coalesce(u.email, '') <> ''
-     and (new.declared_by = 'team' or cu.user_id = new.declared_user);
+     and (cu.user_id = new.declared_user or not exists (
+            select 1 from public.client_users d
+              join public.role_permissions dp on dp.role_id = d.role_id and dp.permission = 'c.chatRead'
+             where new.declared_by = 'client' and d.user_id = new.declared_user and d.client_id = v_client
+               and d.removed_at is null));
   return null;
 end;
 $$;

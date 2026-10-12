@@ -1,7 +1,7 @@
 -- Μηνύματα Jε #164: σύνοψη αδιάβαστων (Μ4), email κλεισίματος Αιτήματος (Γεγονός 48) και Ρυθμίσεις › Μηνύματα (Μ14).
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι ώρες είναι σταθερές (παρελθόν) και περνούν ως p_now.
 begin;
-select plan(54);
+select plan(58);
 
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις · b1 Χρήστης πελάτη Α «Πλήρης» · b2 Α μόνο «Βλέπει Συνομιλία» · b3 Β «Πλήρης» · b4 Α χωρίς Συνομιλία
 insert into auth.users (id, email) values
@@ -11,7 +11,8 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000b1', 'k1@client-a.example.gr'),
   ('00000000-0000-0000-0000-0000000000b2', 'k2@client-a.example.gr'),
   ('00000000-0000-0000-0000-0000000000b3', 'k3@client-b.example.gr'),
-  ('00000000-0000-0000-0000-0000000000b4', 'k4@client-a.example.gr');
+  ('00000000-0000-0000-0000-0000000000b4', 'k4@client-a.example.gr'),
+  ('00000000-0000-0000-0000-0000000000b5', 'k5@client-a.example.gr');
 insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'Γιώργος', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'Ελένη', 'accountant@example.com'),
@@ -45,6 +46,10 @@ insert into public.client_users (client_id, user_id, name, role_id, is_current) 
    (select r.id from public.roles r where r.name = 'Πλήρης' and r.kind = 'client'), true),
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b4', 'Δήμητρα',
    (select r.id from public.roles r where r.name = 'Χωρίς Συνομιλία (τεστ)' and r.kind = 'client'), true);
+-- b5: αφαιρεμένος Χρήστης πελάτη Α «Πλήρης»· δεν παίρνει κανένα email.
+insert into public.client_users (client_id, user_id, name, role_id, is_current, removed_at) values
+  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b5', 'Στέλιος',
+   (select r.id from public.roles r where r.name = 'Πλήρης' and r.kind = 'client'), false, now());
 
 create function public.t_as(p_last text) returns void
 language plpgsql
@@ -125,6 +130,7 @@ select is((select payload from public.email_outbox where kind = 'message_digest'
 select is(public.t_mails('message_digest', 'k4@client-a.example.gr'), 0, 'Χωρίς c.chatRead: τίποτα');
 select is(public.t_mails('message_digest', 'k3@client-b.example.gr'), 0, 'Ο Πελάτης Β δεν έχει νέα Μηνύματα: τίποτα');
 select is(public.t_mails('message_digest', 'owner@example.com'), 0, 'Η ομάδα δεν παίρνει σύνοψη');
+select is(public.t_mails('message_digest', 'k5@client-a.example.gr'), 0, 'Ο αφαιρεμένος Χρήστης πελάτη δεν παίρνει σύνοψη');
 select is(public.t_digest(16), 0, 'Δεύτερη κλήση: ούτε ένα email ξανά');
 
 select public.t_msg('m5', 'a1', 'team', false, 20);
@@ -206,6 +212,7 @@ select is(public.t_mails('request_closed', 'k1@client-a.example.gr'), 3, 'Αίτ
 select is(public.t_mails('request_closed', 'k2@client-a.example.gr'), 1, 'Αίτημα της ομάδας: πάει και στον πελάτη μόνο ανάγνωσης');
 select is(public.t_mails('request_closed', 'k4@client-a.example.gr') + public.t_mails('request_closed', 'k3@client-b.example.gr'), 0,
           'Αίτημα της ομάδας: όχι σε όσους δεν έχουν c.chatRead ή είναι άλλου Πελάτη');
+select is(public.t_mails('request_closed', 'k5@client-a.example.gr'), 0, 'Αίτημα της ομάδας: όχι στον αφαιρεμένο Χρήστη πελάτη');
 
 -- Αυτόματο κλείσιμο (Μ11): το Αίτημα κλείνει με το Παραδοτέο που δημιουργήθηκε.
 update public.message_requests
@@ -217,14 +224,16 @@ select is((select payload ->> 'deliverableId' from public.email_outbox
           'Το αυτόματο κλείσιμο γράφει email με το Παραδοτέο');
 select is(public.t_mails('request_closed', 'k1@client-a.example.gr'), 4, 'Το αυτόματο κλείσιμο πάει στον πελάτη που δήλωσε');
 
--- Αίτημα πελάτη που δεν έχει (πια) c.chatRead: κανείς.
+-- Αίτημα πελάτη που δεν έχει (πια) c.chatRead: πάει σε όλους τους Χρήστες του Πελάτη με c.chatRead.
 select public.message_request_close(current_setting('t.q5')::uuid, '{"outcome":"rejected","reply":"Όχι"}');
 select is(public.t_mails('request_closed', 'k4@client-a.example.gr'), 0, 'Ο δηλώσας χωρίς c.chatRead δεν παίρνει email');
-select is((select count(*)::integer from public.email_outbox where kind = 'request_closed'), 5, 'Σύνολο email κλεισίματος: 5');
+select is(public.t_mails('request_closed', 'k1@client-a.example.gr'), 5, 'Ο δηλώσας έφυγε: πάει στον πλήρη πελάτη');
+select is(public.t_mails('request_closed', 'k2@client-a.example.gr'), 2, 'Ο δηλώσας έφυγε: πάει και στον πελάτη μόνο ανάγνωσης');
+select is((select count(*)::integer from public.email_outbox where kind = 'request_closed'), 7, 'Σύνολο email κλεισίματος: 7');
 
 -- Αλλαγή υπευθύνου σε ήδη κλεισμένο Αίτημα δεν ξαναστέλνει.
 update public.message_requests set assignee_id = '00000000-0000-0000-0000-0000000000a1' where message_id = current_setting('t.q1')::uuid;
-select is((select count(*)::integer from public.email_outbox where kind = 'request_closed'), 5, 'Αλλαγή στο κλεισμένο Αίτημα δεν ξαναστέλνει');
+select is((select count(*)::integer from public.email_outbox where kind = 'request_closed'), 7, 'Αλλαγή στο κλεισμένο Αίτημα δεν ξαναστέλνει');
 
 select * from finish();
 rollback;
