@@ -21,7 +21,13 @@ function serviceClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-// Πελάτης με ένα Τιμολόγιο που έληξε πριν από χρόνια, ώστε να είναι πρώτο στην κάρτα (παλαιότερη λήξη πρώτη).
+// Πελάτης με ένα Τιμολόγιο που έληξε πριν από χρόνια, ώστε να είναι στα 3 πρώτα της κάρτας (παλαιότερη λήξη πρώτη).
+// Διαφορετική λήξη ανά project, ώστε τα δύο projects να μη μοιράζονται θέση.
+const DUE_DATE: Readonly<Record<string, string>> = {
+  desktop: "2000-01-10",
+  mobile: "2000-01-20",
+};
+
 async function seedOverdueInvoice(
   clientName: string,
   number: string,
@@ -38,8 +44,8 @@ async function seedOverdueInvoice(
     client_id: await clientIdByName(clientName),
     kind: "invoice",
     number,
-    issue_date: "2020-01-01",
-    due_date: "2020-01-31",
+    issue_date: "2000-01-01",
+    due_date: DUE_DATE[project()] ?? "2000-01-30",
     net: 100,
     vat: 24,
     total: 124,

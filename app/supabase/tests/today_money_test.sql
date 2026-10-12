@@ -2,7 +2,7 @@
 -- και «Η εβδομάδα» (Γυρίσματα των επόμενων 7 ημερών). Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 -- Σταθερό p_now: 2026-03-10 10:00 UTC (Αθήνα: Τρίτη 10/3).
 begin;
-select plan(44);
+select plan(47);
 
 -- ───────────── Μητρώο ─────────────
 select is(
@@ -19,24 +19,28 @@ select is((select link from public.today_cards where code = 'overdue_invoices'),
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή (Γυρίσματα «με αφορά», χωρίς ποσά) · a3 Πωλήσεις (ποσά «με αφορά», Υπεύθυνος του Πελάτη 1)
--- a4 Λογιστής (Οικονομικά και ποσά «όλα», χωρίς Παραδοτέα, κόστος και Γυρίσματα) · b1 Χρήστης πελάτη του Πελάτη 1
+-- a4 Λογιστής (Οικονομικά και ποσά «όλα», χωρίς Παραδοτέα, κόστος και Γυρίσματα) · a5 Παραγωγή, Μέλος της Παραγωγής PI2
+-- · b1 Χρήστης πελάτη του Πελάτη 1
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'production@example.com'),
   ('00000000-0000-0000-0000-0000000000a3', 'sales@example.com'),
   ('00000000-0000-0000-0000-0000000000a4', 'accountant@example.com'),
+  ('00000000-0000-0000-0000-0000000000a5', 'member@example.com'),
   ('00000000-0000-0000-0000-0000000000b1', 'b1@client-one.example.gr');
 insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'Γιώργος', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'Πέτρος', 'production@example.com'),
   ('00000000-0000-0000-0000-0000000000a3', 'Άννα', 'sales@example.com'),
-  ('00000000-0000-0000-0000-0000000000a4', 'Ελένη', 'accountant@example.com');
+  ('00000000-0000-0000-0000-0000000000a4', 'Ελένη', 'accountant@example.com'),
+  ('00000000-0000-0000-0000-0000000000a5', 'Σοφία', 'member@example.com');
 insert into public.team_user_roles (user_id, role_id)
 select u.id::uuid, r.id
   from (values ('00000000-0000-0000-0000-0000000000a1', 'Ιδιοκτήτης'),
                ('00000000-0000-0000-0000-0000000000a2', 'Παραγωγή'),
                ('00000000-0000-0000-0000-0000000000a3', 'Πωλήσεις'),
-               ('00000000-0000-0000-0000-0000000000a4', 'Λογιστής')) as u (id, role_name)
+               ('00000000-0000-0000-0000-0000000000a4', 'Λογιστής'),
+               ('00000000-0000-0000-0000-0000000000a5', 'Παραγωγή')) as u (id, role_name)
   join public.roles r on r.name = u.role_name and r.kind = 'team';
 
 -- ───────────── Δεδομένα (χωρίς triggers: μόνο ό,τι διαβάζουν οι κάρτες) ─────────────
@@ -114,6 +118,8 @@ insert into public.filmings (id, production_id, client_id, starts_at, hours, loc
    timestamptz '2026-03-12 09:00+00', 3, 'Στούντιο', 'team', 'cancelled', false, timestamptz '2026-03-05 10:00+00', 'team');
 insert into public.filming_crew (filming_id, user_id) values
   ('00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-0000000000a2');
+insert into public.production_members (production_id, user_id) values
+  ('00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000a5');
 
 reset session_replication_role;
 
@@ -158,6 +164,8 @@ select is(authz.today_items_rounds_over_limit(public.t_uid('a1'), null, public.t
 select is((select array_agg((i ->> 'urgent')::boolean order by n)
              from jsonb_array_elements(authz.today_items_rounds_over_limit(public.t_uid('a1'), null, public.t_now()))
                   with ordinality x (i, n)), array[true, false], 'Επείγον μόνο με προθεσμία σε έως 1 μέρα');
+select ok(not (authz.today_items_rounds_over_limit(public.t_uid('a1'), null, public.t_now()) -> 0 ? 'amount_cents'),
+  'Οι Γύροι δεν δείχνουν ποσά');
 select throws_ok($$ select authz.today_items_rounds_over_limit(public.t_uid('a2'), null, public.t_now()) $$, '42501', null,
   'Γραμμές χωρίς Δικαίωμα: 42501');
 
@@ -197,10 +205,11 @@ select is(authz.today_count_cost_hours(public.t_uid('a2'), null, public.t_now())
 select is(authz.today_count_cost_hours(public.t_uid('a4'), null, public.t_now()), null, 'Λογιστής χωρίς κόστος: null');
 select is(authz.today_items_cost_hours(public.t_uid('a1'), null, public.t_now()) -> 0,
   jsonb_build_object('id', '00000000-0000-0000-0000-0000000000d2', 'title', 'Υπέρβαση: Εσωτερικό podcast',
-                     'subtitle', null, 'at', null, 'urgent', true, 'link', '/app/productions/costs?group=overrun'),
+                     'subtitle', null, 'at', null, 'urgent', true,
+                     'link', '/app/productions/00000000-0000-0000-0000-0000000000d2/costs'),
   'Πρώτα η Υπέρβαση, επείγουσα');
 select is(authz.today_items_cost_hours(public.t_uid('a1'), null, public.t_now()) -> 1 ->> 'link',
-  '/app/productions/costs?group=needs_hours', 'Μετά όσες θέλουν ώρες, χωρίς σήμα επείγοντος');
+  '/app/productions/00000000-0000-0000-0000-0000000000d1/costs', 'Μετά όσες θέλουν ώρες, προς τη φόρμα ωρών της Παραγωγής');
 select is(authz.today_items_cost_hours(public.t_uid('a1'), null, public.t_now()) -> 1 ->> 'urgent', 'false',
   'Οι ώρες που λείπουν δεν είναι επείγουσες');
 select ok(not (authz.today_items_cost_hours(public.t_uid('a1'), null, public.t_now()) -> 0 ? 'amount_cents'),
@@ -214,6 +223,30 @@ select is(authz.today_count_week_filming(public.t_uid('a2'), null, public.t_now(
 select is(authz.today_count_week_filming(public.t_uid('a3'), null, public.t_now()), 1,
   'Πωλήσεις «με αφορά»: μόνο του Πελάτη που έχουν');
 select is(authz.today_count_week_filming(public.t_uid('a4'), null, public.t_now()), null, 'Χωρίς «Βλέπει Γυρίσματα»: null');
+select is(authz.today_count_week_filming(public.t_uid('a5'), null, public.t_now()), 1,
+  'Μέλος Παραγωγής «με αφορά»: το Γύρισμα της Παραγωγής του μέσα στην εβδομάδα');
+
+-- Ίδια ορατότητα με το authz.can_see_filming (που διαβάζει τον auth.uid()), για κάθε Χρήστη ομάδας, στο ίδιο παράθυρο.
+create function public.t_week_same(p_last text) returns boolean
+language plpgsql
+as $$
+declare
+  v_helper uuid[];
+  v_rule uuid[];
+begin
+  perform set_config('request.jwt.claims',
+    format('{"sub":"00000000-0000-0000-0000-0000000000%s","role":"authenticated"}', p_last), true);
+  v_helper := array(select w.id from authz.today_week_filmings(public.t_uid(p_last), public.t_now()) w order by w.id);
+  v_rule := array(select f.id from public.filmings f
+                   where authz.can_see_filming(f.id) and f.state in ('pending', 'scheduled')
+                     and (f.starts_at at time zone 'Europe/Athens')::date
+                         between date '2026-03-10' and date '2026-03-16'
+                   order by f.id);
+  return v_helper = v_rule;
+end;
+$$;
+select is(array(select u from unnest(array['a1', 'a2', 'a3', 'a4', 'a5']) u where not public.t_week_same(u)), '{}'::text[],
+  'Τα Γυρίσματα της κάρτας = όσα δίνει το can_see_filming, για κάθε Χρήστη');
 select is((select array_agg(i ->> 'id' order by n)
              from jsonb_array_elements(authz.today_items_week_filming(public.t_uid('a1'), null, public.t_now()))
                   with ordinality x (i, n)),

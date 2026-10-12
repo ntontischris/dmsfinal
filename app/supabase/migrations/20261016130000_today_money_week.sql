@@ -168,7 +168,9 @@ $$;
 
 -- ───────────── Κάρτα «Ώρες και Υπέρβαση κόστους» (G3) ─────────────
 
--- Οι Παραγωγές των ομάδων «Θέλουν πραγματικές ώρες» και «Υπέρβαση» της G3 (μη ακυρωμένες).
+-- Οι Παραγωγές των ομάδων «Θέλουν πραγματικές ώρες» (needs_hours) και «Υπέρβαση» της G3 (μη ακυρωμένες, μόνο όσες
+-- έχουν γραμμή κόστους). «Υπέρβαση» εδώ = η ομάδα overrun της G3 (authz.production_cost_group): ώρες πάνω από το
+-- ποσοστό υπέρβασης, ή χαμηλό περιθώριο με ολοκληρωμένες ώρες.
 create function authz.today_cost_rows()
 returns table (id uuid, title text, client text, grp text, created_at timestamptz)
 language sql stable security definer set search_path = ''
@@ -176,6 +178,7 @@ as $$
   select x.id, x.cost_row ->> 'title', x.cost_row ->> 'client', authz.production_cost_group(x.cost_row), x.created_at
     from (select p.id, p.created_at, authz.production_cost_row(p.id) as cost_row
             from public.productions p
+            join public.production_costs pc on pc.production_id = p.id
            where p.state <> 'cancelled') x
    where authz.production_cost_group(x.cost_row) in ('needs_hours', 'overrun');
 $$;
@@ -191,7 +194,7 @@ begin
 end;
 $$;
 
--- Πρώτα οι Υπερβάσεις (επείγουσες), μετά όσες θέλουν ώρες· οι νεότερες πρώτα, όπως η G3.
+-- Πρώτα οι Υπερβάσεις (ομάδα overrun της G3, επείγουσες), μετά όσες θέλουν ώρες· οι νεότερες πρώτα, όπως η G3.
 create function authz.today_items_cost_hours(p_uid uuid, p_client uuid, p_now timestamptz) returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
@@ -204,7 +207,7 @@ begin
              'id', r.id,
              'title', case when r.grp = 'overrun' then 'Υπέρβαση: ' else 'Θέλει πραγματικές ώρες: ' end || r.title,
              'subtitle', r.client, 'at', null, 'urgent', r.grp = 'overrun',
-             'link', '/app/productions/costs?group=' || r.grp)
+             'link', '/app/productions/' || r.id || '/costs')
            order by r.grp = 'overrun' desc, r.created_at desc, r.id)
       from (select * from authz.today_cost_rows() x
              order by x.grp = 'overrun' desc, x.created_at desc, x.id limit 3) r),
