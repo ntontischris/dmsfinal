@@ -118,16 +118,16 @@ insert into public.deliverable_requests (id, deliverable_id, body, created_at, c
   ('00000000-0000-0000-0000-00000000cd01', '00000000-0000-0000-0000-00000000dd03', 'Πιο σύντομο τέλος',
    timestamptz '2026-03-04 10:00+00', '00000000-0000-0000-0000-0000000000b1');
 
--- Γυρίσματα του Πελάτη 1: ένα που αναμένει έγκριση (11/3), ένα προγραμματισμένο (12/3), ένα που πέρασε. Ένα του Πελάτη 2.
-insert into public.filmings (id, production_id, client_id, starts_at, hours, location, origin, state) values
+-- Γυρίσματα (έξτρα, χωρίς Παροχή) του Πελάτη 1: ένα που αναμένει έγκριση (11/3), ένα προγραμματισμένο (12/3), ένα που πέρασε. Ένα του Πελάτη 2.
+insert into public.filmings (id, production_id, client_id, starts_at, hours, location, origin, state, is_extra) values
   ('00000000-0000-0000-0000-00000000f001', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
-   timestamptz '2026-03-12 10:00 Europe/Athens', 2, 'Στούντιο Κυψέλης', 'team', 'scheduled'),
+   timestamptz '2026-03-12 10:00 Europe/Athens', 2, 'Στούντιο Κυψέλης', 'team', 'scheduled', true),
   ('00000000-0000-0000-0000-00000000f002', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
-   timestamptz '2026-03-11 10:00 Europe/Athens', 2, 'Καφέ Πλατεία', 'client', 'pending'),
+   timestamptz '2026-03-11 10:00 Europe/Athens', 2, 'Καφέ Πλατεία', 'client', 'pending', true),
   ('00000000-0000-0000-0000-00000000f003', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
-   timestamptz '2026-03-05 10:00 Europe/Athens', 2, 'Παλιό', 'team', 'scheduled'),
+   timestamptz '2026-03-05 10:00 Europe/Athens', 2, 'Παλιό', 'team', 'scheduled', true),
   ('00000000-0000-0000-0000-00000000f005', '00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000c2',
-   timestamptz '2026-03-13 10:00 Europe/Athens', 2, 'Γυμναστήριο', 'team', 'scheduled');
+   timestamptz '2026-03-13 10:00 Europe/Athens', 2, 'Γυμναστήριο', 'team', 'scheduled', true);
 set local session_replication_role = origin;
 
 -- ───────────── Βοηθητικά (ως postgres, ποτέ ως authenticated) ─────────────

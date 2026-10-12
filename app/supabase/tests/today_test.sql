@@ -53,14 +53,16 @@ begin
 end;
 $$;
 
+-- Μόνο οι κάρτες αυτού του τεστ (Υγεία, Ετοιμότητα, t_*): τα Σβ–Σε προσθέτουν δικές τους, με δικά τους τεστ.
 create function public.t_codes(p jsonb) returns text[]
 language sql immutable
-as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n); $$;
+as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n)
+       where c ->> 'code' in ('health', 'readiness') or c ->> 'code' like 't\_%'; $$;
 
 create function public.t_hidden(p jsonb) returns text[]
 language sql immutable
 as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n)
-       where (c ->> 'hidden')::boolean; $$;
+       where (c ->> 'hidden')::boolean and (c ->> 'code' in ('health', 'readiness') or c ->> 'code' like 't\_%'); $$;
 
 create function public.t_card(p jsonb, p_code text) returns jsonb
 language sql immutable
@@ -128,10 +130,7 @@ select throws_ok($$ select public.today_card('nope') $$, '42501', 'Δεν έχε
   'Άγνωστη κάρτα: 42501 με το ίδιο μήνυμα');
 
 select public.t_as('b1');
-select ok('t_client' = any (public.t_codes(public.today_counts()))
-          and not exists (select 1 from public.today_cards c
-                           where c.code = any (public.t_codes(public.today_counts())) and c.audience <> 'client'),
-  'Ο πελάτης βλέπει μόνο κάρτες πελάτη');
+select is(public.t_codes(public.today_counts()), array['t_client'], 'Ο πελάτης βλέπει μόνο κάρτες πελάτη');
 select throws_ok($$ select public.today_card('health') $$, '42501', null, 'Ο πελάτης δεν ανοίγει την Υγεία');
 select is(public.today_card('t_client') ->> 'count', '2', 'Ο πελάτης ανοίγει τη δική του κάρτα');
 select public.t_as('a1');
