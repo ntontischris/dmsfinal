@@ -1,7 +1,7 @@
 -- Σήμερα Σβ #181: οι κάρτες «περιμένει απόφαση» (Προτάσεις προς έγκριση, Γυρίσματα προς έγκριση, Διαγραφές από το Google,
 -- Χωρίς υπεύθυνο). Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Σταθερό p_now: 2026-03-03 10:00 UTC.
 begin;
-select plan(39);
+select plan(41);
 
 -- ───────────── Μητρώο ─────────────
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.sort between 100 and 199),
@@ -10,29 +10,36 @@ select is((select array_agg(c.code order by c.sort) from public.today_cards c wh
   array['proposal_approvals', 'unassigned'], 'Κανόνας 8: Προτάσεις προς έγκριση και Χωρίς υπεύθυνο θέλουν δεύτερο άνθρωπο');
 
 -- ───────────── Χρήστες ─────────────
--- a1 Ιδιοκτήτης · a2 όλες οι αποφάσεις χωρίς ποσά · a3 Πωλήσεις · a4 ομάδα χωρίς Ρόλο · b1 Χρήστης πελάτη του Πελάτη 1
+-- a1 Ιδιοκτήτης · a2 όλες οι αποφάσεις χωρίς ποσά · a3 Πωλήσεις · a4 ομάδα χωρίς Ρόλο · a5 μόνο calendar.google ·
+-- b1 Χρήστης πελάτη του Πελάτη 1
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'decider@example.com'),
   ('00000000-0000-0000-0000-0000000000a3', 'sales@example.com'),
   ('00000000-0000-0000-0000-0000000000a4', 'nobody@example.com'),
+  ('00000000-0000-0000-0000-0000000000a5', 'calendar@example.com'),
   ('00000000-0000-0000-0000-0000000000b1', 'b1@client-one.example.gr');
 insert into public.team_users (user_id, name, email, is_active, deactivated_at) values
   ('00000000-0000-0000-0000-0000000000a1', 'Γιώργος', 'owner@example.com', true, null),
   ('00000000-0000-0000-0000-0000000000a2', 'Δήμητρα', 'decider@example.com', true, null),
   ('00000000-0000-0000-0000-0000000000a3', 'Άννα', 'sales@example.com', true, null),
-  ('00000000-0000-0000-0000-0000000000a4', 'Πέτρος', 'nobody@example.com', true, null);
+  ('00000000-0000-0000-0000-0000000000a4', 'Πέτρος', 'nobody@example.com', true, null),
+  ('00000000-0000-0000-0000-0000000000a5', 'Ελένη', 'calendar@example.com', true, null);
 insert into public.roles (name, description, kind, is_owner, is_builtin)
-values ('Αποφάσεις χωρίς ποσά (τεστ)', 'Τεστ: εγκρίνει και αναθέτει, χωρίς ποσά.', 'team', false, false);
+values ('Αποφάσεις χωρίς ποσά (τεστ)', 'Τεστ: εγκρίνει και αναθέτει, χωρίς ποσά.', 'team', false, false),
+       ('Μόνο Google (τεστ)', 'Τεστ: μόνο το αμφίδρομο ημερολόγιο Google.', 'team', false, false);
 insert into public.role_permissions (role_id, permission, scope)
 select r.id, x.perm, 'all' from public.roles r
  cross join (values ('agreements.deviate'), ('filming.approve'), ('calendar.google'), ('clients.transfer')) x (perm)
  where r.name = 'Αποφάσεις χωρίς ποσά (τεστ)';
+insert into public.role_permissions (role_id, permission, scope)
+select r.id, 'calendar.google', 'all' from public.roles r where r.name = 'Μόνο Google (τεστ)';
 insert into public.team_user_roles (user_id, role_id)
 select u.id::uuid, r.id
   from (values ('00000000-0000-0000-0000-0000000000a1', 'Ιδιοκτήτης'),
                ('00000000-0000-0000-0000-0000000000a2', 'Αποφάσεις χωρίς ποσά (τεστ)'),
-               ('00000000-0000-0000-0000-0000000000a3', 'Πωλήσεις')) as u (id, role_name)
+               ('00000000-0000-0000-0000-0000000000a3', 'Πωλήσεις'),
+               ('00000000-0000-0000-0000-0000000000a5', 'Μόνο Google (τεστ)')) as u (id, role_name)
   join public.roles r on r.name = u.role_name and r.kind = 'team';
 insert into public.clients (id, name, contact_name, contact_email, manager_id) values
   ('00000000-0000-0000-0000-0000000000c1', 'Πελάτης Ένα', 'Μαρία Παπαδάκη', 'one@example.com', '00000000-0000-0000-0000-0000000000a1'),
@@ -43,7 +50,7 @@ select '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-00000000
 
 -- ───────────── Εκκρεμότητες (άμεσες εγγραφές, χωρίς triggers) ─────────────
 set local session_replication_role = replica;
--- Ευκαιρίες: d1 χωρίς Υπεύθυνο (ουρά) · d2, d3 με Υπεύθυνο (για τις Συμφωνίες)
+-- Ευκαιρίες: d1 χωρίς Υπεύθυνο (ουρά) · d2, d3, d4 με Υπεύθυνο (για τις Συμφωνίες)
 insert into public.opportunities (id, client_id, title, stage_id, source_id, manager_id, next_step, next_step_due, created_at)
 select x.id::uuid, x.client_id::uuid, x.title,
        (select s.id from public.sales_stages s where s.code = 'new'), (select s.id from public.sales_sources s where s.code = 'phone'),
@@ -53,6 +60,8 @@ select x.id::uuid, x.client_id::uuid, x.title,
                ('00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000c1', 'Πρόταση με Παρέκκλιση',
                 '00000000-0000-0000-0000-0000000000a1', '2026-02-01 09:00+00'),
                ('00000000-0000-0000-0000-0000000000d3', '00000000-0000-0000-0000-0000000000c1', 'Εφάπαξ βίντεο',
+                '00000000-0000-0000-0000-0000000000a1', '2026-02-01 09:00+00'),
+               ('00000000-0000-0000-0000-0000000000d4', '00000000-0000-0000-0000-0000000000c1', 'Πρόταση που λήγει',
                 '00000000-0000-0000-0000-0000000000a1', '2026-02-01 09:00+00'))
        as x (id, client_id, title, manager, created_at);
 -- Αιτήματα πρόσβασης: ένα σε αναμονή (της Άννας), ένα που απορρίφθηκε
@@ -63,18 +72,23 @@ select x.id::uuid, '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0
   from (values ('00000000-0000-0000-0000-0000000000e1', 'Καμπάνια', 'pending', null, '', '2026-03-02 09:00+00'),
                ('00000000-0000-0000-0000-0000000000e2', 'Παλιό', 'rejected', '2026-02-02 09:00+00', 'Όχι', '2026-02-01 09:00+00'))
        as x (id, topic, status, decided_at, comment, created_at);
--- Συμφωνίες: f1 πρόταση που αναμένει έγκριση (τιμή 1.500 €) · f2 υπογεγραμμένη εφάπαξ, με Παραγωγή
+-- Συμφωνίες: f1 πρόταση που αναμένει έγκριση (2 × 750 € = 1.500 €) · f3 αναμένει έγκριση και λήγει αύριο ·
+-- f2 υπογεγραμμένη εφάπαξ, με Παραγωγή
 insert into public.agreements (id, opportunity_id, kind, title, state, path, valid_until, payment_days, unused_provisions,
                                filming_notice_hours, filming_cancel_hours, late_cancel_burns, no_show_burns, signed_at)
 values
   ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000d2', 'one_off', 'Βίντεο με έκπτωση', 'proposal',
    'awaiting_approval', date '2026-04-01', 15, 'lost', 48, 48, false, false, null),
   ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000d3', 'one_off', 'Εφάπαξ βίντεο', 'signed',
-   'signed', date '2026-04-01', 15, 'lost', 48, 48, false, false, timestamptz '2026-02-10 10:00+00');
+   'signed', date '2026-04-01', 15, 'lost', 48, 48, false, false, timestamptz '2026-02-10 10:00+00'),
+  ('00000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-0000000000d4', 'one_off', 'Πρόταση που λήγει', 'proposal',
+   'awaiting_approval', date '2026-03-04', 15, 'lost', 48, 48, false, false, null);
 insert into public.agreement_revisions (agreement_id, number, approval_state, requested_by, requested_at)
-values ('00000000-0000-0000-0000-0000000000f1', 1, 'pending', '00000000-0000-0000-0000-0000000000a3', timestamptz '2026-03-02 08:00+00');
-insert into public.agreement_costs (agreement_id, multiplier_min, multiplier_target, multiplier_max, price, discounted_price, is_low_margin)
-values ('00000000-0000-0000-0000-0000000000f1', 1.5, 2, 3, 1500.00, 1500.00, false);
+values ('00000000-0000-0000-0000-0000000000f1', 1, 'pending', '00000000-0000-0000-0000-0000000000a3', timestamptz '2026-03-02 08:00+00'),
+       ('00000000-0000-0000-0000-0000000000f3', 1, 'pending', '00000000-0000-0000-0000-0000000000a3', timestamptz '2026-03-02 09:00+00');
+insert into public.agreement_lines (id, agreement_id, position, line_kind, description, quantity)
+values ('00000000-0000-0000-0000-000000000301', '00000000-0000-0000-0000-0000000000f1', 1, 'free', 'Βίντεο', 2);
+insert into public.agreement_line_amounts (line_id, unit_price) values ('00000000-0000-0000-0000-000000000301', 750.00);
 insert into public.productions (id, title, client_id, agreement_id, owner_id) values
   ('00000000-0000-0000-0000-000000000101', 'Εφάπαξ βίντεο', '00000000-0000-0000-0000-0000000000c1',
    '00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000a1');
@@ -97,6 +111,12 @@ values
   ('00000000-0000-0000-0000-000000000205', '00000000-0000-0000-0000-000000000102', null, true,
    timestamptz '2026-03-06 10:00+00', 2, 'team', 'scheduled', timestamptz '2026-02-20 10:00+00',
    timestamptz '2026-03-02 10:00+00', 'Λάθος μέρα');
+-- g6 ζητά μετάθεση: τώρα στις 8/3, η νέα ώρα αύριο στις 05:00 (σε λιγότερες από 24 ώρες)
+insert into public.filmings (id, production_id, client_id, is_extra, starts_at, hours, origin, state, approved_at,
+                             reschedule_starts_at, reschedule_hours, reschedule_requested_at, reschedule_requested_by)
+values ('00000000-0000-0000-0000-000000000206', '00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-0000000000c1', true,
+        timestamptz '2026-03-08 10:00+00', 2, 'client', 'scheduled', timestamptz '2026-02-20 10:00+00',
+        timestamptz '2026-03-04 05:00+00', 2, timestamptz '2026-03-02 12:00+00', '00000000-0000-0000-0000-0000000000b1');
 -- Διαγραφές από το Google: g4 λήγει σε 5 ώρες (επείγον) · g2 σε 2 μέρες · g1 λύθηκε
 insert into public.google_deletions (filming_id, event_id, detected_at, deadline_at, resolved_at, resolution) values
   ('00000000-0000-0000-0000-000000000204', 'ev4', timestamptz '2026-03-02 15:00+00', timestamptz '2026-03-03 15:00+00', null, null),
@@ -170,28 +190,33 @@ select public.t_as('b1');
 select throws_ok($$ select public.today_card('proposal_approvals') $$, '42501', null, 'Ο πελάτης δεν ανοίγει κάρτα ομάδας');
 
 -- ───────────── Προτάσεις προς έγκριση ─────────────
-select is(public.t_counts('a1', null), array[1, 3, 2, 2], 'Ιδιοκτήτης: 1 πρόταση, 3 Γυρίσματα, 2 διαγραφές, 2 χωρίς υπεύθυνο');
-select is(public.t_counts('a2', null), array[1, 3, 2, 2], 'Ίδια πλήθη με Εύρος «όλα» και χωρίς ποσά');
-select is(authz.today_items_proposal_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00') -> 0 ->> 'id',
-  '00000000-0000-0000-0000-0000000000f1', 'Η πρόταση που αναμένει έγκριση');
-select is(authz.today_items_proposal_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00') -> 0 ->> 'amount_cents',
-  '150000', 'Με finance.amounts: το ποσό σε λεπτά');
-select ok(not (authz.today_items_proposal_approvals(public.t_uid('a2'), null, timestamptz '2026-03-03 10:00+00') -> 0 ? 'amount_cents'),
-  'Χωρίς finance.amounts: κανένα ποσό');
-select is(authz.today_items_proposal_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00') -> 0 ->> 'urgent',
-  'false', 'Η πρόταση δεν είναι επείγουσα (κανόνας 5)');
+select is(public.t_counts('a1', null), array[2, 4, 2, 2], 'Ιδιοκτήτης: 2 προτάσεις, 4 Γυρίσματα, 2 διαγραφές, 2 χωρίς υπεύθυνο');
+select is(public.t_counts('a2', null), array[2, 4, 2, 2], 'Ίδια πλήθη με Εύρος «όλα» και χωρίς ποσά');
+select is(public.t_counts('a5', null), array[null, null, 2, null]::integer[], 'Μόνο calendar.google: μόνο οι Διαγραφές από το Google');
+select is(public.t_field(authz.today_items_proposal_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'id'),
+  array['00000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-0000000000f1'],
+  'Πρώτα η πρόταση που λήγει, μετά η παλαιότερη αίτηση');
+select is(public.t_field(authz.today_items_proposal_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'urgent'),
+  array['true', 'false'], 'Επείγουσα η πρόταση που λήγει ως αύριο (ώρα Ελλάδας)');
+select is(public.t_field(authz.today_items_proposal_approvals(public.t_uid('a1'), null, timestamptz '2026-03-01 21:59+00'), 'urgent'),
+  array['false', 'false'], 'Δύο μέρες πριν από τη λήξη (ώρα Ελλάδας): όχι επείγουσα');
+select is(authz.today_items_proposal_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00') -> 1 ->> 'amount_cents',
+  '150000', 'Με finance.amounts: το ποσό των γραμμών σε λεπτά');
+select is((select count(*)::integer
+             from jsonb_array_elements(authz.today_items_proposal_approvals(public.t_uid('a2'), null, timestamptz '2026-03-03 10:00+00')) i
+            where i ? 'amount_cents'), 0, 'Χωρίς finance.amounts: κανένα ποσό');
 
 -- ───────────── Γυρίσματα προς έγκριση ─────────────
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'id'),
-  array['booking:00000000-0000-0000-0000-000000000201', 'cancel:00000000-0000-0000-0000-000000000203',
-        'booking:00000000-0000-0000-0000-000000000202'],
-  'Κρατήσεις και αιτήματα ακύρωσης, τα πιο κοντινά πρώτα· όχι το προγραμματισμένο ούτε η Εσωτερική');
+  array['booking:00000000-0000-0000-0000-000000000201', 'reschedule:00000000-0000-0000-0000-000000000206',
+        'cancel:00000000-0000-0000-0000-000000000203'],
+  'Κρατήσεις, μεταθέσεις και ακυρώσεις, τα πιο κοντινά πρώτα· όχι το προγραμματισμένο ούτε η Εσωτερική');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'urgent'),
-  array['true', 'false', 'false'], 'Επείγον μόνο το Γύρισμα σε έως 1 μέρα');
+  array['true', 'true', 'false'], 'Επείγον σε έως 24 ώρες: η κράτηση απόψε και η νέα ώρα της μετάθεσης');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'title'),
-  array['Πελάτης Ένα: κράτηση', 'Πελάτης Ένα: ζητά ακύρωση', 'Πελάτης Ένα: κράτηση'], 'Τι ζητά ο κάθε Πελάτης');
+  array['Πελάτης Ένα: κράτηση', 'Πελάτης Ένα: ζητά μετάθεση', 'Πελάτης Ένα: ζητά ακύρωση'], 'Τι ζητά ο κάθε Πελάτης');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-04 21:00+00'), 'urgent'),
-  array['true', 'true', 'false'], 'Περασμένο Γύρισμα: και πάλι επείγον');
+  array['true', 'true', 'true'], 'Περασμένο Γύρισμα: και πάλι επείγον');
 
 -- ───────────── Διαγραφές από το Google ─────────────
 select is(public.t_field(authz.today_items_google_deletions(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'id'),
@@ -229,7 +254,7 @@ select is((select array_agg(distinct i ->> 'link' order by i ->> 'link')
 
 -- ───────────── Μέσα από τα public RPC ─────────────
 select public.t_as('a2');
-select is(public.today_card('filming_approvals', timestamptz '2026-03-03 10:00+00') ->> 'count', '3',
+select is(public.today_card('filming_approvals', timestamptz '2026-03-03 10:00+00') ->> 'count', '4',
   'Το today_card ανοίγει την κάρτα για όποιον εγκρίνει');
 select is((select array_agg(c ->> 'code' order by n)
              from jsonb_array_elements(public.today_counts(timestamptz '2026-03-03 10:00+00') -> 'cards') with ordinality x (c, n)

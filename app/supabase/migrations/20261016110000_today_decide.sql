@@ -1,9 +1,11 @@
 -- Σήμερα Σβ (#181): οι κάρτες «περιμένει απόφαση και κρατά άλλους» (ομάδα decide, sort 100–199).
 --
 --  • Προτάσεις προς έγκριση (D4): ό,τι δείχνει το public.agreement_approvals_view, για όποιον «Παρεκκλίνει από τον Κατάλογο».
---    Ποσό (η τιμή της πρότασης) μόνο με finance.amounts, όπως στην ουρά. Κανόνας 8: μόνο με δεύτερο άνθρωπο.
---  • Γυρίσματα προς έγκριση (E2): οι κρατήσεις που αναμένουν έγκριση και τα αιτήματα ακύρωσης, όπως στο
---    public.filming_queue_view (filming.approve με Εύρος «όλα»). Επείγον: το Γύρισμα είναι σε έως 1 μέρα ή πέρασε.
+--    Ποσό (η τιμή της πρότασης) μόνο με finance.amounts, όπως στην ουρά. Επείγον: λήγει (Ισχύει έως) ως αύριο ή έληξε.
+--    Κανόνας 8: μόνο με δεύτερο άνθρωπο.
+--  • Γυρίσματα προς έγκριση (E2): οι κρατήσεις που αναμένουν έγκριση, τα αιτήματα ακύρωσης και τα αιτήματα μετάθεσης, όπως
+--    στο public.filming_queue_view (filming.approve με Εύρος «όλα»). Επείγον: το Γύρισμα (ή η νέα ώρα της μετάθεσης) είναι
+--    σε έως 24 ώρες ή πέρασε.
 --  • Διαγραφές από το Google (A7): οι ανοιχτές του public.google_deletions_view (calendar.google). Επείγον: λιγότερες από
 --    12 ώρες ως την προθεσμία.
 --  • Χωρίς υπεύθυνο (B5): οι ανοιχτές Ευκαιρίες χωρίς Υπεύθυνο και τα Αιτήματα πρόσβασης σε αναμονή, για όποιον «Μεταβιβάζει
@@ -17,10 +19,10 @@ language sql stable security definer set search_path = ''
 as $$ select p_client is null and authz.user_scope(p_uid, 'agreements.deviate') is not null; $$;
 
 create function authz.today_proposal_approvals_rows()
-returns table (id uuid, title text, client_name text, requested_at timestamptz)
+returns table (id uuid, title text, client_name text, requested_at timestamptz, valid_until date)
 language sql stable security definer set search_path = ''
 as $$
-  select a.id, a.title, c.name, r.requested_at
+  select a.id, a.title, c.name, r.requested_at, a.valid_until
     from public.agreements a
     join public.agreement_revisions r on r.agreement_id = a.id and r.number = a.revision and r.approval_state = 'pending'
     join public.opportunities o on o.id = a.opportunity_id
@@ -39,23 +41,27 @@ begin
 end;
 $$;
 
--- Οι παλαιότερες πρώτα, όπως στην ουρά: όσο περιμένει μια πρόταση, τόσο κρατά τον πωλητή και τον πελάτη.
+-- Πρώτα όσες λήγουν ως αύριο (κανόνας 5: προθεσμία σε έως 1 μέρα ή περασμένη), μετά οι παλαιότερες, όπως στην ουρά.
 create function authz.today_items_proposal_approvals(p_uid uuid, p_client uuid, p_now timestamptz) returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
 declare
-  v_amounts boolean := authz.user_scope(p_uid, 'finance.amounts') is not null;
+  v_amounts boolean;
+  v_due date := (p_now at time zone 'Europe/Athens')::date + 1;
 begin
   if not authz.today_proposal_approvals_open(p_uid, p_client) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
+  v_amounts := authz.user_scope(p_uid, 'finance.amounts') is not null;
   return coalesce((
     select jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
              'id', x.id::text, 'title', x.title, 'subtitle', x.client_name || ' · με Παρέκκλιση', 'at', x.requested_at,
-             'urgent', false, 'link', '/app/agreements/approvals',
+             'urgent', x.urgent, 'link', '/app/agreements/approvals',
              'amount_cents', case when v_amounts then (select round(f.price * 100)::bigint from authz.agreement_figures(x.id) f) end))
-           order by x.requested_at, x.id)
-      from (select * from authz.today_proposal_approvals_rows() r order by r.requested_at, r.id limit 3) x),
+           order by x.urgent desc, x.requested_at, x.id)
+      from (select r.*, r.valid_until <= v_due as urgent
+              from authz.today_proposal_approvals_rows() r
+             order by r.valid_until <= v_due desc, r.requested_at, r.id limit 3) x),
     '[]'::jsonb);
 end;
 $$;
@@ -66,24 +72,30 @@ create function authz.today_filming_approvals_open(p_uid uuid, p_client uuid) re
 language sql stable security definer set search_path = ''
 as $$ select p_client is null and coalesce(authz.user_scope(p_uid, 'filming.approve') = 'all', false); $$;
 
--- Ίδια επιλογή με το public.filming_queue_view: όλες οι κρατήσεις σε αναμονή, και τα αιτήματα ακύρωσης Γυρισμάτων που
--- ανήκουν σε Συμφωνία.
+-- Ίδια επιλογή με το public.filming_queue_view: όλες οι κρατήσεις σε αναμονή, τα αιτήματα ακύρωσης Γυρισμάτων που
+-- ανήκουν σε Συμφωνία, και τα αιτήματα μετάθεσης. Στη μετάθεση μετρά η πιο κοντινή από την τωρινή και τη νέα ώρα.
 create function authz.today_filming_approvals_rows()
-returns table (id uuid, title text, starts_at timestamptz, is_cancel boolean)
+returns table (id uuid, title text, starts_at timestamptz, kind text)
 language sql stable security definer set search_path = ''
 as $$
-  select f.id, coalesce(c.name, pr.title) || ': κράτηση', f.starts_at, false
+  select f.id, coalesce(c.name, pr.title) || ': κράτηση', f.starts_at, 'booking'
     from public.filmings f
     join public.productions pr on pr.id = f.production_id
     left join public.clients c on c.id = f.client_id
    where f.state = 'pending'
   union all
-  select f.id, coalesce(c.name, pr.title) || ': ζητά ακύρωση', f.starts_at, true
+  select f.id, coalesce(c.name, pr.title) || ': ζητά ακύρωση', f.starts_at, 'cancel'
     from public.filmings f
     join public.productions pr on pr.id = f.production_id
     join public.agreements a on a.id = pr.agreement_id
     left join public.clients c on c.id = f.client_id
-   where f.state = 'scheduled' and f.cancel_request_at is not null;
+   where f.state = 'scheduled' and f.cancel_request_at is not null
+  union all
+  select f.id, coalesce(c.name, pr.title) || ': ζητά μετάθεση', least(f.starts_at, f.reschedule_starts_at), 'reschedule'
+    from public.filmings f
+    join public.productions pr on pr.id = f.production_id
+    left join public.clients c on c.id = f.client_id
+   where f.state = 'scheduled' and f.reschedule_starts_at is not null;
 $$;
 
 create function authz.today_count_filming_approvals(p_uid uuid, p_client uuid, p_now timestamptz) returns integer
@@ -97,7 +109,7 @@ begin
 end;
 $$;
 
--- Τα πιο κοντινά Γυρίσματα πρώτα· επείγον όταν το Γύρισμα είναι σε έως 1 μέρα ή πέρασε (κανόνας 5).
+-- Τα πιο κοντινά Γυρίσματα πρώτα· επείγον όταν το Γύρισμα είναι σε έως 24 ώρες ή πέρασε (κανόνας 5).
 create function authz.today_items_filming_approvals(p_uid uuid, p_client uuid, p_now timestamptz) returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
@@ -107,11 +119,11 @@ begin
   end if;
   return coalesce((
     select jsonb_agg(jsonb_build_object(
-             'id', case when x.is_cancel then 'cancel:' else 'booking:' end || x.id::text, 'title', x.title,
-             'subtitle', null, 'at', x.starts_at, 'urgent', x.starts_at <= p_now + interval '1 day',
+             'id', x.kind || ':' || x.id::text, 'title', x.title,
+             'subtitle', null, 'at', x.starts_at, 'urgent', x.starts_at <= p_now + interval '24 hours',
              'link', '/app/filming/queue')
-           order by x.starts_at, x.is_cancel, x.id)
-      from (select * from authz.today_filming_approvals_rows() r order by r.starts_at, r.is_cancel, r.id limit 3) x),
+           order by x.starts_at, x.kind, x.id)
+      from (select * from authz.today_filming_approvals_rows() r order by r.starts_at, r.kind, r.id limit 3) x),
     '[]'::jsonb);
 end;
 $$;
