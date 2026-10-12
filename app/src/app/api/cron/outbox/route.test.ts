@@ -69,6 +69,7 @@ describe("GET /api/cron/outbox", () => {
       reminders: { queued: 1 },
       billables: { generated: 1 },
       overdue: { queued: 1 },
+      digest: { queued: 1 },
       attachments: { removed: 0 },
     });
   });
@@ -88,6 +89,7 @@ describe("GET /api/cron/outbox", () => {
       reminders: { error: "Οι υπενθυμίσεις δεν μπήκαν στην ουρά." },
       billables: { generated: 0 },
       overdue: { queued: 0 },
+      digest: { queued: 0 },
       attachments: { removed: 0 },
     });
   });
@@ -107,6 +109,7 @@ describe("GET /api/cron/outbox", () => {
       reminders: { queued: 0 },
       billables: { error: "Τα Τιμολογητέα δεν γεννήθηκαν." },
       overdue: { queued: 0 },
+      digest: { queued: 0 },
       attachments: { removed: 0 },
     });
   });
@@ -126,6 +129,27 @@ describe("GET /api/cron/outbox", () => {
       reminders: { queued: 0 },
       billables: { generated: 0 },
       overdue: { error: "Τα ληξιπρόθεσμα δεν μπήκαν στην ουρά." },
+      digest: { queued: 0 },
+      attachments: { removed: 0 },
+    });
+  });
+
+  it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει η σύνοψη Μηνυμάτων", async () => {
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "message_digest_enqueue"
+        ? { data: null, error: { message: "boom" } }
+        : { data: 0, error: null },
+    );
+
+    const response = await GET(request(`Bearer ${SECRET}`));
+
+    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({
+      sent: 3,
+      reminders: { queued: 0 },
+      billables: { generated: 0 },
+      overdue: { queued: 0 },
+      digest: { error: "Οι συνόψεις Μηνυμάτων δεν μπήκαν στην ουρά." },
       attachments: { removed: 0 },
     });
   });
@@ -145,6 +169,7 @@ describe("GET /api/cron/outbox", () => {
       reminders: { queued: 0 },
       billables: { generated: 0 },
       overdue: { queued: 0 },
+      digest: { queued: 0 },
       attachments: { error: "Τα ανεκμετάλλευτα συνημμένα δεν καθαρίστηκαν." },
     });
   });

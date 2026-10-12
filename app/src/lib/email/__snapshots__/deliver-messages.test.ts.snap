@@ -1,0 +1,51 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`digestMessageFor > should match the snapshot 1`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Έχετε 3 αδιάβαστα Μηνύματα</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Κώστας,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Η ομάδα έγραψε στη Συνομιλία του Πελάτη Πελάτης Δοκιμής και δεν τα έχεις διαβάσει ακόμα.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Η απάντηση σε αυτό το email δεν φτάνει στην ομάδα. Απάντησε μέσα από το DMS.</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/messages" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Απάντησε στο DMS</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Έχετε 3 αδιάβαστα Μηνύματα",
+  "text": "Έχετε 3 αδιάβαστα Μηνύματα
+
+Γεια σου Κώστας,
+Η ομάδα έγραψε στη Συνομιλία του Πελάτη Πελάτης Δοκιμής και δεν τα έχεις διαβάσει ακόμα.
+Η απάντηση σε αυτό το email δεν φτάνει στην ομάδα. Απάντησε μέσα από το DMS.
+
+Απάντησε στο DMS: https://dmsfinal-app.vercel.app/app/messages
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
+
+exports[`requestClosedFor > should write English and match the snapshots 1`] = `
+{
+  "html": "<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Your request is done</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Hello Kostas,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Request (new deliverable) of Πελάτης Δοκιμής: done.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Comment: Έτοιμο</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Link: https://example.com/reel</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">The deliverable: https://dmsfinal-app.vercel.app/app/deliverables/d-42</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/messages?tab=requests" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">View your requests</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · This message was sent by the company system.</p></div></body></html>",
+  "subject": "Your request is done",
+  "text": "Your request is done
+
+Hello Kostas,
+Request (new deliverable) of Πελάτης Δοκιμής: done.
+Comment: Έτοιμο
+Link: https://example.com/reel
+The deliverable: https://dmsfinal-app.vercel.app/app/deliverables/d-42
+
+View your requests: https://dmsfinal-app.vercel.app/app/messages?tab=requests
+
+Devre Media · This message was sent by the company system.",
+}
+`;
+
+exports[`requestClosedFor > should write English and match the snapshots 2`] = `
+{
+  "html": "<!doctype html><html lang="el"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;"><img src="https://dmsfinal-app.vercel.app/logo-email.png" alt="Devre Media" width="140" style="display:block;margin:0 0 24px;" /><h1 style="margin:0 0 16px;font-size:22px;color:#111;">Το Αίτημά σας απορρίφθηκε</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Γεια σου Κώστας,</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Αίτημα (άλλο) του Πελάτη Πελάτης Δοκιμής: απορρίφθηκε.</p><p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1f1f1f;">Απάντηση ομάδας: Δεν γίνεται τώρα</p><p style="margin:24px 0;"><a href="https://dmsfinal-app.vercel.app/app/messages?tab=requests" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">Δες τα Αιτήματά σου</a></p><p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.</p></div></body></html>",
+  "subject": "Το Αίτημά σας απορρίφθηκε",
+  "text": "Το Αίτημά σας απορρίφθηκε
+
+Γεια σου Κώστας,
+Αίτημα (άλλο) του Πελάτη Πελάτης Δοκιμής: απορρίφθηκε.
+Απάντηση ομάδας: Δεν γίνεται τώρα
+
+Δες τα Αιτήματά σου: https://dmsfinal-app.vercel.app/app/messages?tab=requests
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.",
+}
+`;
