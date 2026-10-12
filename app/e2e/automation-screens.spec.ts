@@ -108,7 +108,10 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
 
     // K2: το θέμα της πρόσκλησης αλλάζει και επανέρχεται.
     await visit(page, "/app/settings/system-messages");
-    await page.getByRole("link", { name: "Επεξεργασία: Πρόσκληση" }).click();
+    // Το όνομα του link είναι «Επεξεργασία : Πρόσκληση» (το κουμπί είναι inline-flex).
+    await page
+      .getByRole("link", { name: /^Επεξεργασία\s*: Πρόσκληση$/ })
+      .click();
     await expect(page).toHaveURL(/\/app\/settings\/system-messages\/invite$/);
     const subject = page.getByLabel("Θέμα, ελληνικά");
     await expect(subject).toHaveValue("Πρόσκληση στο DMS: {place}");
