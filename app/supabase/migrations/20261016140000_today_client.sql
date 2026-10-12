@@ -13,6 +13,9 @@
 --      client_allowance c.productions ή c.approve  οι Παροχές της τρέχουσας Περιόδου (H3), εβδομάδας
 --  • Επείγον (κανόνας 5): μόνο το ληξιπρόθεσμο Τιμολόγιο. Ο πελάτης δεν έχει προθεσμίες ή Επόμενα βήματα.
 --  • Δεν προστίθενται πίνακες, άρα το Ίχνος δεν αλλάζει.
+--  • Διευκρίνιση της σύμβασης του 20261016100000_today.sql (εκεί δεν αλλάζει το αρχείο): ποσά μόνο σε όποιον τα βλέπει και
+--    στην ουρά (ομάδα: finance.amounts, πελάτης: c.finance).
+--  • «Τι χρωστάς»: πρώτη γραμμή το σύνολο (id 'balance'), μετά έως 2 Τιμολόγια. Το πλήθος μετρά τα Τιμολόγια με υπόλοιπο.
 
 -- ───────────── Βοηθητικά ─────────────
 
@@ -30,6 +33,11 @@ begin
   raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
 end;
 $$;
+
+-- Ποσό σε ευρώ όπως το γράφει η εφαρμογή (el-GR): 1.234,56 €.
+create function authz.today_euro(p numeric) returns text
+language sql immutable set search_path = ''
+as $$ select translate(to_char(p, 'FM999,999,990.00'), ',.', '.,') || ' €'; $$;
 
 -- Αριθμός Παροχής για ανάγνωση: 1,5 και όχι 1.50.
 create function authz.today_num(p numeric) returns text
@@ -106,21 +114,34 @@ begin
 end;
 $$;
 
--- Ληξιπρόθεσμα πρώτα, μετά κατά λήξη. Το ποσό είναι το υπόλοιπο, όπως στα Τιμολόγια του πελάτη.
+-- Πρώτα το σύνολο (υπόλοιπο, και πόσο είναι ληξιπρόθεσμο), μετά έως 2 Τιμολόγια: ληξιπρόθεσμα πρώτα, μετά κατά λήξη.
+-- Τα ποσά είναι υπόλοιπα, όπως στα Τιμολόγια του πελάτη.
 create function authz.today_items_client_owes(p_uid uuid, p_client uuid, p_now timestamptz) returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
+declare
+  v_total bigint;
+  v_overdue bigint;
 begin
   if not authz.today_client_can(p_uid, p_client, array['c.finance']) then
     perform authz.today_client_deny();
   end if;
-  return coalesce((
+  select sum(o.amount_cents), coalesce(sum(o.amount_cents) filter (where o.urgent), 0) into v_total, v_overdue
+    from authz.today_client_owes_rows(p_client, p_now) o;
+  if v_total is null then
+    return '[]'::jsonb;
+  end if;
+  return jsonb_build_array(jsonb_build_object(
+           'id', 'balance', 'title', 'Υπόλοιπο',
+           'subtitle', case when v_overdue > 0 then 'από τα οποία ' || authz.today_euro(v_overdue / 100.0) || ' ληξιπρόθεσμα' end,
+           'at', null, 'urgent', v_overdue > 0, 'amount_cents', v_total, 'link', '/app/finance/ledger'))
+    || coalesce((
     select jsonb_agg(jsonb_build_object('id', r.id, 'title', r.title, 'subtitle', r.subtitle, 'at', null,
                                         'urgent', r.urgent, 'amount_cents', r.amount_cents,
                                         'link', '/app/finance/invoices')
                      order by r.urgent desc, r.due nulls last, r.issued, r.id)
       from (select * from authz.today_client_owes_rows(p_client, p_now) o
-             order by o.urgent desc, o.due nulls last, o.issued, o.id limit 3) r),
+             order by o.urgent desc, o.due nulls last, o.issued, o.id limit 2) r),
     '[]'::jsonb);
 end;
 $$;
@@ -133,7 +154,7 @@ create function authz.today_client_requests_rows(p_client uuid)
 returns table (id text, title text, subtitle text, at timestamptz)
 language sql stable security definer set search_path = ''
 as $$
-  select r.message_id::text, left(m.body, 120),
+  select r.message_id::text, coalesce(nullif(left(m.body, 120), ''), 'Αίτημα με συνημμένο'),
          case r.kind when 'deliverable' then 'Νέο Παραδοτέο' when 'filming' then 'Γύρισμα' else 'Άλλο' end,
          r.declared_at
     from public.message_requests r
@@ -176,16 +197,19 @@ $$;
 
 -- ───────────── Κάρτα «Τα επόμενα Γυρίσματα» (c.book) ─────────────
 
--- Γυρίσματα του Πελάτη που αναμένουν έγκριση ή είναι προγραμματισμένα, από το p_now και μετά.
+-- Γυρίσματα του Πελάτη που αναμένουν έγκριση ή είναι προγραμματισμένα και δεν έχουν τελειώσει (το σε εξέλιξη μένει).
 create function authz.today_client_filming_rows(p_client uuid, p_now timestamptz)
 returns table (id text, title text, subtitle text, at timestamptz)
 language sql stable security definer set search_path = ''
 as $$
   select f.id::text, coalesce(f.location, k.label, 'Γύρισμα'),
-         case when f.state = 'pending' then 'αναμένει έγκριση' end, f.starts_at
+         nullif(concat_ws(' · ', case when f.state = 'pending' then 'αναμένει έγκριση' end,
+                                 case when f.reschedule_requested_at is not null then 'ζητήθηκε μετάθεση' end), ''),
+         f.starts_at
     from public.filmings f
     left join public.provision_kinds k on k.id = f.kind_id
-   where f.client_id = p_client and f.state in ('pending', 'scheduled') and f.starts_at >= p_now;
+   where f.client_id = p_client and f.state in ('pending', 'scheduled')
+     and f.starts_at + make_interval(secs => (f.hours * 3600)::double precision) >= p_now;
 $$;
 
 create function authz.today_count_client_filming(p_uid uuid, p_client uuid, p_now timestamptz) returns integer
@@ -284,7 +308,7 @@ insert into public.today_cards (code, grp, kind, audience, sort, label_el, label
 -- ───────────── Δικαιώματα ─────────────
 
 revoke all on function
-  authz.today_client_can(uuid, uuid, text[]), authz.today_client_deny(), authz.today_num(numeric),
+  authz.today_client_can(uuid, uuid, text[]), authz.today_client_deny(), authz.today_num(numeric), authz.today_euro(numeric),
   authz.today_client_waiting_rows(uuid),
   authz.today_count_client_waiting(uuid, uuid, timestamptz), authz.today_items_client_waiting(uuid, uuid, timestamptz),
   authz.today_client_owes_rows(uuid, timestamptz),

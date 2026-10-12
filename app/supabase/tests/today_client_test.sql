@@ -1,7 +1,7 @@
 -- Σήμερα Σε #184: οι κάρτες του Χρήστη πελάτη. Δικαίωμα, Πελάτης, σειρά, επείγον, ποσά, κάρτες εβδομάδας και ο τρέχων Πελάτης.
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Όλες οι ώρες είναι σταθερές και περνούν ως p_now.
 begin;
-select plan(45);
+select plan(54);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · b1 «Πλήρης» στον Πελάτη 1 (τρέχων) και στον Πελάτη 2 · b2 Πελάτης 1 μόνο «Βλέπει Συνομιλία»
@@ -99,7 +99,8 @@ insert into public.invoices (id, client_id, kind, number, issue_date, due_date, 
 insert into public.receipts (client_id, received_on, amount, method_id)
 select '00000000-0000-0000-0000-0000000000c1', date '2026-01-09', 50, m.id from public.payment_methods m order by m.sort limit 1;
 
--- Αιτήματα του Πελάτη 1: δύο ανοιχτά, ένα σε διαγραμμένο Μήνυμα (δεν μετρά), και μια αλλαγή μετά την έγκριση. Ένα του Πελάτη 2.
+-- Αιτήματα του Πελάτη 1: δύο ανοιχτά, ένα σε διαγραμμένο και ένα σε Εσωτερικό Μήνυμα (δεν μετρούν), και μια αλλαγή μετά
+-- την έγκριση. Ένα του Πελάτη 2.
 insert into public.messages (id, client_id, author_id, author_kind, body, created_at, deleted_at, deleted_by) values
   ('00000000-0000-0000-0000-00000000cc01', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1',
    'client', 'Θέλουμε reel για το event', timestamptz '2026-03-03 10:00+00', null, null),
@@ -109,6 +110,12 @@ insert into public.messages (id, client_id, author_id, author_kind, body, create
    'client', 'Σβησμένο', timestamptz '2026-03-01 10:00+00', timestamptz '2026-03-01 11:00+00', '00000000-0000-0000-0000-0000000000b1'),
   ('00000000-0000-0000-0000-00000000cc05', '00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000b3',
    'client', 'Αίτημα Πελάτη Δύο', timestamptz '2026-03-03 10:00+00', null, null);
+insert into public.messages (id, client_id, author_id, author_kind, body, is_internal, created_at) values
+  ('00000000-0000-0000-0000-00000000cc04', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1',
+   'team', 'Εσωτερική σημείωση', true, timestamptz '2026-03-02 10:00+00');
+insert into public.message_requests (message_id, kind, state, declared_by, declared_user, declared_at) values
+  ('00000000-0000-0000-0000-00000000cc04', 'other', 'open', 'team', '00000000-0000-0000-0000-0000000000a1',
+   timestamptz '2026-03-02 10:00+00');
 insert into public.message_requests (message_id, kind, state, declared_by, declared_user, declared_at)
 select m.id, x.kind, 'open', 'client', m.author_id, m.created_at
   from (values ('00000000-0000-0000-0000-00000000cc01', 'other'), ('00000000-0000-0000-0000-00000000cc02', 'filming'),
@@ -118,7 +125,8 @@ insert into public.deliverable_requests (id, deliverable_id, body, created_at, c
   ('00000000-0000-0000-0000-00000000cd01', '00000000-0000-0000-0000-00000000dd03', 'Πιο σύντομο τέλος',
    timestamptz '2026-03-04 10:00+00', '00000000-0000-0000-0000-0000000000b1');
 
--- Γυρίσματα (έξτρα, χωρίς Παροχή) του Πελάτη 1: ένα που αναμένει έγκριση (11/3), ένα προγραμματισμένο (12/3), ένα που πέρασε. Ένα του Πελάτη 2.
+-- Γυρίσματα (έξτρα, χωρίς Παροχή) του Πελάτη 1: ένα σε εξέλιξη (10/3 11:00–13:00 Αθήνα), ένα που αναμένει έγκριση (11/3),
+-- ένα προγραμματισμένο με αίτημα μετάθεσης (12/3), ένα που πέρασε. Ένα του Πελάτη 2.
 insert into public.filmings (id, production_id, client_id, starts_at, hours, location, origin, state, is_extra) values
   ('00000000-0000-0000-0000-00000000f001', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
    timestamptz '2026-03-12 10:00 Europe/Athens', 2, 'Στούντιο Κυψέλης', 'team', 'scheduled', true),
@@ -127,7 +135,13 @@ insert into public.filmings (id, production_id, client_id, starts_at, hours, loc
   ('00000000-0000-0000-0000-00000000f003', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
    timestamptz '2026-03-05 10:00 Europe/Athens', 2, 'Παλιό', 'team', 'scheduled', true),
   ('00000000-0000-0000-0000-00000000f005', '00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000c2',
-   timestamptz '2026-03-13 10:00 Europe/Athens', 2, 'Γυμναστήριο', 'team', 'scheduled', true);
+   timestamptz '2026-03-13 10:00 Europe/Athens', 2, 'Γυμναστήριο', 'team', 'scheduled', true),
+  ('00000000-0000-0000-0000-00000000f004', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
+   timestamptz '2026-03-10 11:00 Europe/Athens', 2, 'Σε εξέλιξη', 'team', 'scheduled', true);
+update public.filmings
+   set reschedule_starts_at = timestamptz '2026-03-14 10:00 Europe/Athens', reschedule_hours = 2,
+       reschedule_requested_at = timestamptz '2026-03-06 10:00+00', reschedule_requested_by = '00000000-0000-0000-0000-0000000000b1'
+ where id = '00000000-0000-0000-0000-00000000f001';
 set local session_replication_role = origin;
 
 -- ───────────── Βοηθητικά (ως postgres, ποτέ ως authenticated) ─────────────
@@ -169,8 +183,8 @@ select is(authz.today_count_client_owes(public.t_uid('b1'), public.t_c('c1'), '2
   'Τι χρωστάς: τα δύο Τιμολόγια με υπόλοιπο, όχι το εξοφλημένο');
 select is(authz.today_count_client_requests(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00'), 3,
   'Αιτήματα: τα δύο ανοιχτά και η αλλαγή μετά την έγκριση, όχι του διαγραμμένου Μηνύματος');
-select is(authz.today_count_client_filming(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00'), 2,
-  'Γυρίσματα: τα δύο επόμενα, όχι αυτό που πέρασε');
+select is(authz.today_count_client_filming(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00'), 3,
+  'Γυρίσματα: το σε εξέλιξη και τα δύο επόμενα, όχι αυτό που πέρασε');
 select is(authz.today_count_client_allowance(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00'), 1,
   'Παροχές: μία γραμμή, το reel της τρέχουσας Περιόδου');
 
@@ -181,26 +195,33 @@ select is(public.t_ids(authz.today_items_client_waiting(public.t_uid('b1'), publ
 select is(authz.today_items_client_waiting(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00') -> 0 ->> 'subtitle',
   'Έκδοση 2', 'Περιμένουν εσένα: η Έκδοση σε αναμονή');
 select is(public.t_ids(authz.today_items_client_owes(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00')),
-  array['00000000-0000-0000-0000-00000000ee01', '00000000-0000-0000-0000-00000000ee02'],
-  'Τι χρωστάς: το ληξιπρόθεσμο πρώτο');
+  array['balance', '00000000-0000-0000-0000-00000000ee01', '00000000-0000-0000-0000-00000000ee02'],
+  'Τι χρωστάς: πρώτα το σύνολο, μετά το ληξιπρόθεσμο');
 select is((select array_agg((i ->> 'urgent')::boolean order by n)
              from jsonb_array_elements(authz.today_items_client_owes(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00'))
                   with ordinality x (i, n)),
-  array[true, false], 'Τι χρωστάς: επείγον μόνο το ληξιπρόθεσμο');
+  array[true, true, false], 'Τι χρωστάς: επείγον το σύνολο με ληξιπρόθεσμα και το ληξιπρόθεσμο');
 select is((select array_agg((i ->> 'amount_cents')::bigint order by n)
              from jsonb_array_elements(authz.today_items_client_owes(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00'))
                   with ordinality x (i, n)),
-  array[10000::bigint, 25050::bigint], 'Τι χρωστάς: το υπόλοιπο σε λεπτά');
+  array[35050::bigint, 10000::bigint, 25050::bigint], 'Τι χρωστάς: τα υπόλοιπα σε λεπτά, πρώτα το σύνολο');
 select is(authz.today_items_client_owes(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00') -> 0 ->> 'subtitle',
+  'από τα οποία 100,00 € ληξιπρόθεσμα', 'Τι χρωστάς: πόσο από το σύνολο είναι ληξιπρόθεσμο');
+select is(authz.today_items_client_owes(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00') -> 1 ->> 'subtitle',
   'Ληξιπρόθεσμο από 15/02/2026', 'Τι χρωστάς: από πότε είναι ληξιπρόθεσμο');
 select is(public.t_ids(authz.today_items_client_requests(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00')),
   array['00000000-0000-0000-0000-00000000cc01', '00000000-0000-0000-0000-00000000cd01', '00000000-0000-0000-0000-00000000cc02'],
   'Αιτήματα: το παλαιότερο πρώτο, μαζί με την αλλαγή μετά την έγκριση');
+select is((select count(*)::integer from authz.today_client_requests_rows(public.t_c('c1')) r
+            where r.id = '00000000-0000-0000-0000-00000000cc04'), 0,
+  'Αιτήματα: όχι Αίτημα σε Εσωτερικό Μήνυμα');
 select is(public.t_ids(authz.today_items_client_filming(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00')),
-  array['00000000-0000-0000-0000-00000000f002', '00000000-0000-0000-0000-00000000f001'],
-  'Γυρίσματα: το πιο κοντινό πρώτο');
-select is(authz.today_items_client_filming(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00') -> 0 ->> 'subtitle',
+  array['00000000-0000-0000-0000-00000000f004', '00000000-0000-0000-0000-00000000f002', '00000000-0000-0000-0000-00000000f001'],
+  'Γυρίσματα: το σε εξέλιξη πρώτο, μετά το πιο κοντινό');
+select is(authz.today_items_client_filming(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00') -> 1 ->> 'subtitle',
   'αναμένει έγκριση', 'Γυρίσματα: σήμα «αναμένει έγκριση»');
+select is(authz.today_items_client_filming(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00') -> 2 ->> 'subtitle',
+  'ζητήθηκε μετάθεση', 'Γυρίσματα: σήμα «ζητήθηκε μετάθεση»');
 select is(authz.today_items_client_allowance(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00') -> 0 ->> 'title',
   (select (b ->> 'label') || ': μένουν ' || authz.today_num((b ->> 'balance')::numeric)
      from jsonb_array_elements(authz.period_balances('00000000-0000-0000-0000-000000000a11')) b),
@@ -233,6 +254,12 @@ select is(authz.today_count_client_requests(public.t_uid('b2'), public.t_c('c1')
   'Με c.chatRead: τα Αιτήματα');
 select throws_ok($$ select authz.today_items_client_owes(public.t_uid('b2'), public.t_c('c1'), '2026-03-10 10:00+00') $$,
   '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς c.finance: οι γραμμές 42501');
+select throws_ok($$ select authz.today_items_client_waiting(public.t_uid('b2'), public.t_c('c1'), '2026-03-10 10:00+00') $$,
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς c.approve: οι γραμμές 42501');
+select throws_ok($$ select authz.today_items_client_filming(public.t_uid('b2'), public.t_c('c1'), '2026-03-10 10:00+00') $$,
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς c.book: οι γραμμές 42501');
+select throws_ok($$ select authz.today_items_client_allowance(public.t_uid('b2'), public.t_c('c1'), '2026-03-10 10:00+00') $$,
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Χωρίς c.productions ή c.approve: οι γραμμές 42501');
 select is(authz.today_count_client_owes(public.t_uid('a1'), public.t_c('c1'), '2026-03-10 10:00+00'), null,
   'Χρήστης ομάδας: καμία κάρτα πελάτη');
 select is(authz.today_count_client_owes(public.t_uid('b1'), null, '2026-03-10 10:00+00'), null,
@@ -261,7 +288,7 @@ select is((select array_agg(c ->> 'code' order by n)
   'Ο «Πλήρης» βλέπει τις πέντε κάρτες, στη σειρά του κανόνα 3');
 select is(public.t_count(public.today_counts('2026-03-10 10:00+00'), 'client_requests'), 3,
   'Τρέχων ο Πελάτης 1: τα δικά του Αιτήματα');
-select is(public.today_card('client_owes', '2026-03-10 10:00+00') -> 'items' -> 0 ->> 'amount_cents', '10000',
+select is(public.today_card('client_owes', '2026-03-10 10:00+00') -> 'items' -> 0 ->> 'amount_cents', '35050',
   'Η κάρτα «Τι χρωστάς» ανοίγει με ποσά για τον πελάτη με c.finance');
 update public.client_users set is_current = false where user_id = '00000000-0000-0000-0000-0000000000b1';
 update public.client_users set is_current = true
@@ -274,6 +301,18 @@ select is(public.t_count(public.today_counts('2026-03-10 10:00+00'), 'client_owe
   'Τρέχων ο Πελάτης 2: μόνο τα δικά του Τιμολόγια');
 update public.client_users set is_current = false where user_id = '00000000-0000-0000-0000-0000000000b1';
 update public.client_users set is_current = true
+ where user_id = '00000000-0000-0000-0000-0000000000b1' and client_id = '00000000-0000-0000-0000-0000000000c1';
+
+-- Ο b1 αφαιρείται από τον Πελάτη 1: τίποτα του Πελάτη 1, και τρέχων γίνεται ο Πελάτης 2 (η μόνη ενεργή συμμετοχή).
+update public.client_users set removed_at = now(), is_current = false
+ where user_id = '00000000-0000-0000-0000-0000000000b1' and client_id = '00000000-0000-0000-0000-0000000000c1';
+select is(authz.today_count_client_owes(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00'), null,
+  'Αφαιρεμένος από τον Πελάτη: χωρίς «Τι χρωστάς»');
+select throws_ok($$ select authz.today_items_client_requests(public.t_uid('b1'), public.t_c('c1'), '2026-03-10 10:00+00') $$,
+  '42501', 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια', 'Αφαιρεμένος από τον Πελάτη: οι γραμμές 42501');
+select is(public.t_count(public.today_counts('2026-03-10 10:00+00'), 'client_requests'), 1,
+  'Αφαιρεμένος από τον Πελάτη 1: τρέχων ο Πελάτης 2, με τα δικά του Αιτήματα');
+update public.client_users set removed_at = null, is_current = true
  where user_id = '00000000-0000-0000-0000-0000000000b1' and client_id = '00000000-0000-0000-0000-0000000000c1';
 
 select public.t_as('b2');
