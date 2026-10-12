@@ -25,19 +25,17 @@ export {
 } from "./queries";
 export {
   listClientUsers,
-  listEmailLog,
   listInvitations,
   listMemberships,
 } from "./invitation-queries";
 export { listClientRoleChoices } from "./role-choices";
-export type { ClientUserRow, EmailLogRow, InvitationRow, MembershipRow } from "./invitation-schemas";
+export type { ClientUserRow, InvitationRow, MembershipRow } from "./invitation-schemas";
 export { AccessNotice } from "./components/access-notice";
 export { AuthCard } from "./components/auth-card";
 export { ClientInviteForm } from "./components/client-invite-form";
 export { ClientSwitcher } from "./components/client-switcher";
 export { ClientUsersSection } from "./components/client-users-section";
 export { DeleteRoleForm } from "./components/delete-role-form";
-export { EmailLogList } from "./components/email-log-list";
 export { InvitationList } from "./components/invitation-list";
 export { LoginForm } from "./components/login-form";
 export { NewRoleForm } from "./components/new-role-form";

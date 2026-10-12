@@ -20,6 +20,8 @@ import { GET } from "./route";
 const SECRET = "test-cron-secret";
 const NO_EVENTS = { processed: 0, failed: 0, sent: 0, cleaned: 0 };
 const NO_TIMED = { sent: 0, failed: 0 };
+const NO_HEALTH = { jobs: 0, google: 0, events: 0 };
+const NO_CLEANUP = { sends: 0, logs: 0, outbox: 0 };
 
 const request = (authorization?: string, path = "/api/cron/outbox") =>
   new NextRequest(`http://localhost:3000${path}`, {
@@ -72,6 +74,8 @@ describe("GET /api/cron/outbox", () => {
       attachments: { removed: 0 },
       events: NO_EVENTS,
       timed: NO_TIMED,
+      health: NO_HEALTH,
+      cleanup: NO_CLEANUP,
     });
   });
 
@@ -100,6 +104,8 @@ describe("GET /api/cron/outbox", () => {
       attachments: { removed: 0 },
       events: NO_EVENTS,
       timed: NO_TIMED,
+      health: NO_HEALTH,
+      cleanup: NO_CLEANUP,
     });
   });
 
@@ -119,6 +125,8 @@ describe("GET /api/cron/outbox", () => {
       attachments: { error: "Τα ανεκμετάλλευτα συνημμένα δεν καθαρίστηκαν." },
       events: NO_EVENTS,
       timed: NO_TIMED,
+      health: NO_HEALTH,
+      cleanup: NO_CLEANUP,
     });
   });
 
@@ -205,5 +213,52 @@ describe("GET /api/cron/outbox", () => {
       error: "Ο έλεγχος χρονισμών δεν έτρεξε.",
     });
     expect(console.error).toHaveBeenCalledWith("automations_scan", "boom");
+  });
+  it("γράφει έναρξη και επιτυχία στο job_runs και τρέχει τον έλεγχο Υγείας και τον καθαρισμό", async () => {
+    await GET(request(`Bearer ${SECRET}`));
+
+    const calls = mocks.rpc.mock.calls;
+    const names = calls.map(([name]) => name);
+    expect(names[0]).toBe("job_run_mark");
+    expect(calls[0]?.[1]).toEqual({ p_job: "outbox", p_ok: null, p_error: null });
+    expect(names).toContain("health_check");
+    expect(names).toContain("sends_cleanup");
+    expect(calls.at(-1)).toEqual([
+      "job_run_mark",
+      { p_job: "outbox", p_ok: true, p_error: null },
+    ]);
+  });
+
+  it("γράφει σφάλμα στο job_runs όταν ένα βήμα αποτύχει", async () => {
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "events_process"
+        ? { data: null, error: { message: "boom" } }
+        : { data: 0, error: null },
+    );
+
+    await GET(request(`Bearer ${SECRET}`));
+
+    expect(mocks.rpc.mock.calls.at(-1)).toEqual([
+      "job_run_mark",
+      {
+        p_job: "outbox",
+        p_ok: false,
+        p_error: "events: Τα Γεγονότα δεν επεξεργάστηκαν.",
+      },
+    ]);
+  });
+
+  it("το σκούντημα δεν γράφει job_runs, ούτε ελέγχει Υγεία ούτε καθαρίζει", async () => {
+    const response = await GET(
+      request(`Bearer ${SECRET}`, "/api/cron/outbox?kick=1"),
+    );
+
+    const names = mocks.rpc.mock.calls.map(([name]) => name);
+    expect(names).not.toContain("job_run_mark");
+    expect(names).not.toContain("health_check");
+    expect(names).not.toContain("sends_cleanup");
+    const body = await response.json();
+    expect(body.health).toEqual({ skipped: true });
+    expect(body.cleanup).toEqual({ skipped: true });
   });
 });

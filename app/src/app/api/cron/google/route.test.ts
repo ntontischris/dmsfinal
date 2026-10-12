@@ -35,10 +35,11 @@ describe("GET /api/cron/google", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("answers 200 skipped without any database or Google call when the account is not configured", async () => {
+  it("answers 200 skipped without any Google call when the account is not configured, but still records the run and checks health", async () => {
     const response = await GET(cronRequest(`Bearer ${SECRET}`));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ skipped: "not-configured" });
-    expect(rpc).not.toHaveBeenCalled();
+    expect(rpc.mock.calls.map((call: unknown[]) => call[0])).toEqual(["job_run_mark", "health_check", "job_run_mark"]);
+    expect(rpc).toHaveBeenLastCalledWith("job_run_mark", { p_job: "google", p_ok: true, p_error: null });
   });
 });
