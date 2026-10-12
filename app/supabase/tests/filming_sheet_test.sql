@@ -124,8 +124,13 @@ select throws_ok($$ select public.filming_sheet_save('00000000-0000-0000-0000-00
 select throws_ok($$ select public.filming_sheet_issue('00000000-0000-0000-0000-0000000000a2', null) $$, 'P0001', 'Πρόσθεσε Συνεργείο πριν από την έκδοση', 'Χωρίς Συνεργείο δεν εκδίδεται Δελτίο');
 select throws_ok($$ select public.filming_sheet_issue('00000000-0000-0000-0000-0000000000a3', 'Αλλαγή') $$, 'P0001', 'Το Γύρισμα έχει κλείσει και δεν αλλάζει', 'Κλεισμένο Γύρισμα δεν εκδίδεται Δελτίο');
 select is(public.filming_sheet_issue('00000000-0000-0000-0000-0000000000a1', null), 1, 'Η πρώτη έκδοση δεν θέλει περιγραφή');
-select is((select count(*)::int from public.email_outbox where kind = 'sheet_issued' and payload ->> 'filmingId' = '00000000-0000-0000-0000-0000000000a1' and payload ->> 'version' = '1'), 2, 'Η πρώτη έκδοση στέλνει email σε κάθε μέλος του Συνεργείου');
-select is((select to_name from public.email_outbox where kind = 'sheet_issued' and to_email = 'crew@example.com'), 'Μαρία', 'Το email της έκδοσης έχει το όνομα του μέλους');
+select public.events_process();
+select is((select (count(*) filter (where o.kind = 'automation' and a.event_type = 'filming.sheet_issued'
+                                      and o.payload -> 'details' ->> 'filmingId' = '00000000-0000-0000-0000-0000000000a1'
+                                      and o.payload -> 'details' ->> 'version' = '1'))::text || '/'
+               || (count(*) filter (where o.kind = 'sheet_issued'))::text
+             from public.email_outbox o left join public.automations a on a.id::text = o.payload ->> 'automationId'), '2/0', 'Η πρώτη έκδοση στέλνει email σε κάθε μέλος του Συνεργείου, μόνο από τον Αυτοματισμό');
+select is((select o.to_name from public.email_outbox o left join public.automations a on a.id::text = o.payload ->> 'automationId' where o.kind = 'automation' and a.event_type = 'filming.sheet_issued' and o.to_email = 'crew@example.com'), 'Μαρία', 'Το email της έκδοσης έχει το όνομα του μέλους');
 select throws_ok($$ select public.filming_sheet_issue('00000000-0000-0000-0000-0000000000a1', null) $$, 'P0001', 'Γράψε τι άλλαξε', 'Η δεύτερη έκδοση θέλει περιγραφή αλλαγής');
 select public.t_as('00000000-0000-0000-0000-0000000000e7');
 select lives_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a1', 'confirmed', null) $$, 'Το μέλος επιβεβαιώνει την έκδοση 1');
@@ -142,7 +147,11 @@ select is(public.filming_sheet_view('00000000-0000-0000-0000-0000000000a1') ->> 
 select public.t_as('00000000-0000-0000-0000-0000000000e4');
 select throws_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a1', 'declined', null) $$, 'P0001', 'Το «δεν μπορώ» θέλει λόγο', '«Δεν μπορώ» χωρίς λόγο απορρίπτεται');
 select lives_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a1', 'declined', 'Αρρώστησα') $$, 'Το μέλος λέει «δεν μπορώ» με λόγο');
-select is((select count(*)::int from public.email_outbox where kind = 'crew_declined' and to_email = 'editor@example.com' and payload ->> 'member' = 'Κώστας'), 1, '«Δεν μπορώ» στέλνει email στον εκδότη της τελευταίας έκδοσης');
+select public.events_process();
+select is((select (count(*) filter (where o.kind = 'automation' and a.event_type = 'filming.crew_declined' and o.to_email = 'editor@example.com'
+                                      and o.payload -> 'details' ->> 'member' = 'Κώστας'))::text || '/'
+               || (count(*) filter (where o.kind = 'crew_declined'))::text
+             from public.email_outbox o left join public.automations a on a.id::text = o.payload ->> 'automationId'), '1/0', '«Δεν μπορώ» στέλνει email στον εκδότη της τελευταίας έκδοσης, μόνο από τον Αυτοματισμό');
 select public.t_as('00000000-0000-0000-0000-0000000000e7');
 select lives_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a1', 'confirmed', null) $$, 'Το μέλος επιβεβαιώνει την έκδοση 2');
 
@@ -216,7 +225,9 @@ insert into public.filming_sheet_versions (filming_id, version, issued_by, chang
   ('00000000-0000-0000-0000-0000000000a6', 1, null, null, '{}'::jsonb);
 select public.t_as('00000000-0000-0000-0000-0000000000e7');
 select lives_ok($$ select public.filming_crew_respond('00000000-0000-0000-0000-0000000000a6', 'declined', 'Ταξίδι') $$, 'Το μέλος λέει «δεν μπορώ» σε έκδοση που δεν έγινε από Χρήστη ομάδας');
-select is((select count(*)::int from public.email_outbox where kind = 'crew_declined' and to_email = 'owner@example.com' and payload ->> 'filmingId' = '00000000-0000-0000-0000-0000000000a6'), 1, '«Δεν μπορώ» πηγαίνει στον ιδιοκτήτη της Παραγωγής όταν δεν υπάρχει εκδότης ομάδας');
+select public.events_process();
+select is((select count(*)::int from public.email_outbox o left join public.automations a on a.id::text = o.payload ->> 'automationId' where o.kind = 'automation' and a.event_type = 'filming.crew_declined' and o.to_email = 'owner@example.com'
+              and o.payload -> 'details' ->> 'filmingId' = '00000000-0000-0000-0000-0000000000a6'), 1, '«Δεν μπορώ» πηγαίνει στον ιδιοκτήτη της Παραγωγής όταν δεν υπάρχει εκδότης ομάδας');
 
 -- ───────────── Ίχνος ─────────────
 select ok(authz.audit_entity_allowed('filming_sheets') and authz.audit_entity_allowed('filming_sheet_versions'), 'Το Ίχνος βλέπει τα Δελτία χωρίς ποσά');

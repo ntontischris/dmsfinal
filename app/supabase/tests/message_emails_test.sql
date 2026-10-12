@@ -83,9 +83,31 @@ create function public.t_digest(p_min integer) returns integer
 language sql
 as $$ select public.message_digest_enqueue(public.t_at(p_min)); $$;
 
+-- Το κλείσιμο Αιτήματος φεύγει πλέον από τον Αυτοματισμό του Γεγονότος 48 (#171): πρώτα τρέχει ο επεξεργαστής.
 create function public.t_mails(p_kind text, p_email text) returns integer
-language sql
-as $$ select count(*)::integer from public.email_outbox where kind = p_kind and to_email = p_email; $$;
+language plpgsql
+as $
+begin
+  if p_kind = 'request_closed' then
+    perform public.events_process();
+    return (select count(*)::integer from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+             where o.kind = 'automation' and a.event_type = 'request.closed' and o.to_email = p_email);
+  end if;
+  return (select count(*)::integer from public.email_outbox where kind = p_kind and to_email = p_email);
+end;
+$;
+
+-- «email από τον Αυτοματισμό / email με το παλιό kind» για το κλείσιμο Αιτήματος.
+create function public.t_closed_total() returns text
+language plpgsql
+as $
+begin
+  perform public.events_process();
+  return (select (count(*) filter (where o.kind = 'automation' and a.event_type = 'request.closed'))::text || '/'
+                 || (count(*) filter (where o.kind = 'request_closed'))::text
+            from public.email_outbox o left join public.automations a on a.id::text = o.payload ->> 'automationId');
+end;
+$;
 
 -- ───────────── Δικαιώματα ─────────────
 set local role anon;
@@ -192,19 +214,19 @@ select public.t_req('q3', 'b1', 'client', 'team', 'a1');
 select public.t_req('q4', 'b1', 'client', 'client', 'b1');
 select public.t_req('q5', 'b4', 'client', 'client', 'b4');
 
-select is((select count(*)::integer from public.email_outbox where kind = 'request_closed'), 0, 'Ανοιχτά Αιτήματα: κανένα email');
+select is(public.t_closed_total(), '0/0', 'Ανοιχτά Αιτήματα: κανένα email');
 
 select public.message_request_close(current_setting('t.q1')::uuid, '{"outcome":"done","link":"https://example.com/reel","comment":"Έτοιμο"}');
 select is(public.t_mails('request_closed', 'k1@client-a.example.gr'), 1, 'Ολοκλήρωση: ένα email στον πελάτη που δήλωσε');
 select is(public.t_mails('request_closed', 'k2@client-a.example.gr'), 0, 'Ολοκλήρωση: δεν πάει σε άλλον Χρήστη του Πελάτη όταν το δήλωσε πελάτης');
-select is((select payload from public.email_outbox where kind = 'request_closed' and to_email = 'k1@client-a.example.gr'),
-          '{"clientName":"Πελάτης Α","kind":"other","outcome":"done","comment":"Έτοιμο","link":"https://example.com/reel"}'::jsonb,
+select is((select o.payload -> 'details' from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId' where o.kind = 'automation' and a.event_type = 'request.closed' and o.to_email = 'k1@client-a.example.gr'),
+          '{"kind":"request.closed","clientName":"Πελάτης Α","requestKind":"other","outcome":"done","comment":"Έτοιμο","link":"https://example.com/reel"}'::jsonb,
           'Το payload ολοκλήρωσης έχει σχόλιο και σύνδεσμο https, όχι κείμενο Μηνύματος');
 
 select public.message_request_close(current_setting('t.q2')::uuid, '{"outcome":"rejected","reply":"Δεν γίνεται αυτή την περίοδο"}');
 select is(public.t_mails('request_closed', 'k1@client-a.example.gr'), 2, 'Απόρριψη: ένα ακόμα email');
-select is((select payload from public.email_outbox where kind = 'request_closed' and payload ->> 'outcome' = 'rejected'),
-          '{"clientName":"Πελάτης Α","kind":"other","outcome":"rejected","reply":"Δεν γίνεται αυτή την περίοδο"}'::jsonb,
+select is((select o.payload -> 'details' from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId' where o.kind = 'automation' and a.event_type = 'request.closed' and o.payload -> 'details' ->> 'outcome' = 'rejected'),
+          '{"kind":"request.closed","clientName":"Πελάτης Α","requestKind":"other","outcome":"rejected","reply":"Δεν γίνεται αυτή την περίοδο"}'::jsonb,
           'Το payload απόρριψης έχει την απάντηση');
 
 select public.message_request_close(current_setting('t.q3')::uuid, '{"outcome":"done","comment":"Το φροντίσαμε"}');
@@ -219,8 +241,9 @@ update public.message_requests
    set state = 'done', closed_at = public.t_at(210), closed_by = '00000000-0000-0000-0000-0000000000a1',
        is_automatic = true, result_kind = 'deliverable', result_id = '00000000-0000-0000-0000-0000000000d1'
  where message_id = current_setting('t.q4')::uuid;
-select is((select payload ->> 'deliverableId' from public.email_outbox
-            where kind = 'request_closed' and payload ->> 'deliverableId' is not null), '00000000-0000-0000-0000-0000000000d1',
+select public.events_process();
+select is((select o.payload -> 'details' ->> 'deliverableId' from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'request.closed' and o.payload -> 'details' ->> 'deliverableId' is not null), '00000000-0000-0000-0000-0000000000d1',
           'Το αυτόματο κλείσιμο γράφει email με το Παραδοτέο');
 select is(public.t_mails('request_closed', 'k1@client-a.example.gr'), 4, 'Το αυτόματο κλείσιμο πάει στον πελάτη που δήλωσε');
 
@@ -229,11 +252,11 @@ select public.message_request_close(current_setting('t.q5')::uuid, '{"outcome":"
 select is(public.t_mails('request_closed', 'k4@client-a.example.gr'), 0, 'Ο δηλώσας χωρίς c.chatRead δεν παίρνει email');
 select is(public.t_mails('request_closed', 'k1@client-a.example.gr'), 5, 'Ο δηλώσας έφυγε: πάει στον πλήρη πελάτη');
 select is(public.t_mails('request_closed', 'k2@client-a.example.gr'), 2, 'Ο δηλώσας έφυγε: πάει και στον πελάτη μόνο ανάγνωσης');
-select is((select count(*)::integer from public.email_outbox where kind = 'request_closed'), 7, 'Σύνολο email κλεισίματος: 7');
+select is(public.t_closed_total(), '7/0', 'Σύνολο email κλεισίματος: 7, όλα από τον Αυτοματισμό');
 
 -- Αλλαγή υπευθύνου σε ήδη κλεισμένο Αίτημα δεν ξαναστέλνει.
 update public.message_requests set assignee_id = '00000000-0000-0000-0000-0000000000a1' where message_id = current_setting('t.q1')::uuid;
-select is((select count(*)::integer from public.email_outbox where kind = 'request_closed'), 7, 'Αλλαγή στο κλεισμένο Αίτημα δεν ξαναστέλνει');
+select is(public.t_closed_total(), '7/0', 'Αλλαγή στο κλεισμένο Αίτημα δεν ξαναστέλνει');
 
 select * from finish();
 rollback;

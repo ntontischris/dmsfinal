@@ -129,11 +129,12 @@ select set_config('t.di', public.deliverable_create(current_setting('t.pi')::uui
   'Showreel', null, null, null, null)::text, true);
 select is(public.deliverable_version_add(current_setting('t.d1')::uuid, 'https://drive.google.com/file/d/abc1', 'v1'), 1,
   'Ο Ιδιοκτήτης στέλνει κατευθείαν: η v1 περιμένει τον πελάτη');
-select is((select count(*)::int from public.email_outbox
-            where kind = 'deliverable_version_sent' and payload->>'deliverableId' = current_setting('t.d1')),
-  1, 'Μία γραμμή email για τον Χρήστη πελάτη με «Εγκρίνει Παραδοτέα»');
-select is((select to_email from public.email_outbox
-            where kind = 'deliverable_version_sent' and payload->>'deliverableId' = current_setting('t.d1')),
+select public.events_process();
+select is((select count(*)::int from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'deliverable.version_sent' and o.payload -> 'details' ->> 'deliverableId' = current_setting('t.d1'))::text || '/' || (select count(*) from public.email_outbox where kind = 'deliverable_version_sent')::text,
+  '1/0', 'Μία γραμμή email για τον Χρήστη πελάτη με «Εγκρίνει Παραδοτέα», μόνο από τον Αυτοματισμό');
+select is((select o.to_email from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'deliverable.version_sent' and o.payload -> 'details' ->> 'deliverableId' = current_setting('t.d1')),
   'maria@kypseli.example.gr', 'Το email πάει στην διεύθυνση του Χρήστη με «Εγκρίνει Παραδοτέα»');
 
 select public.t_as('e2');
@@ -439,13 +440,14 @@ select throws_ok($$ select public.production_cancel(current_setting('t.pa1')::uu
 select public.t_as('e1');
 select lives_ok($$ select public.deliverable_version_send(current_setting('t.d2')::uuid) $$,
   'Ο Ελεγκτής στέλνει την Έκδοση της Παραγωγής στον πελάτη');
-select is((select count(*)::int from public.email_outbox where payload->>'deliverableId' = current_setting('t.d2')), 1,
+select public.events_process();
+select is((select count(*)::int from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId' where o.kind = 'automation' and a.event_type = 'deliverable.version_sent' and o.payload -> 'details' ->> 'deliverableId' = current_setting('t.d2')), 1,
   'Η αποστολή στέλνει email στον Χρήστη πελάτη');
-select is((select count(*)::int from public.email_outbox
-            where kind = 'deliverable_version_sent' and payload->>'deliverableId' = current_setting('t.d1')), 4,
+select is((select count(*)::int from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'deliverable.version_sent' and o.payload -> 'details' ->> 'deliverableId' = current_setting('t.d1')), 4,
   'Κάθε Έκδοση που στάλθηκε στον πελάτη έχει μία γραμμή email');
-select is((select count(*)::int from public.email_outbox
-            where payload->>'deliverableId' = current_setting('t.d1') and to_email = 'nikos@kypseli.example.gr'), 0,
+select is((select count(*)::int from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'deliverable.version_sent' and o.payload -> 'details' ->> 'deliverableId' = current_setting('t.d1') and o.to_email = 'nikos@kypseli.example.gr'), 0,
   'Ο Χρήστης χωρίς «Εγκρίνει Παραδοτέα» δεν παίρνει email');
 select public.t_as('e6');
 select is(jsonb_array_length(public.client_deliverables_view() -> 'awaitingYou'), 1,

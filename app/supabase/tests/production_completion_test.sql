@@ -181,8 +181,9 @@ reset role;
 select public.production_deliver(current_setting('t.pi')::uuid, 'Παραδόθηκε στο Drive');
 select is((select state from public.productions where id = current_setting('t.pi')::uuid), 'delivered',
   'Η χειροκίνητη παράδοση δουλεύει όπως πριν');
-select is((select count(*)::int from public.email_outbox
-            where kind = 'production_delivered' and payload->>'productionId' = current_setting('t.pi')), 0,
+select public.events_process();
+select is((select count(*)::int from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'production.delivered' and o.payload -> 'details' ->> 'productionId' = current_setting('t.pi')), 0,
   'Η Εσωτερική Παραγωγή δεν στέλνει email');
 select throws_ok($$ select public.production_task_add(current_setting('t.pi')::uuid, 'Μετά', null, null) $$, 'P0001', null,
   'Σε παραδομένη Παραγωγή δεν προστίθεται Εργασία');
@@ -281,11 +282,12 @@ select ok((select (e.value ->> 'done')::boolean is not true
              from jsonb_array_elements(public.production_view(current_setting('t.pa1')::uuid) -> 'tasks') as e (value)
             where e.value ->> 'id' = current_setting('t.pa_late')),
   'Οι ανοιχτές Εργασίες δεν μπλοκάρουν την αυτόματη παράδοση');
-select is((select count(*)::int from public.email_outbox
-            where kind = 'production_delivered' and payload->>'productionId' = current_setting('t.pa1')), 2,
-  'Email «Παραδόθηκε» σε κάθε Χρήστη πελάτη με «Βλέπει Παραγωγές»');
-select is(jsonb_array_length((select payload -> 'deliverables' from public.email_outbox
-            where kind = 'production_delivered' and payload->>'productionId' = current_setting('t.pa1') limit 1)), 3,
+select public.events_process();
+select is((select count(*)::int from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'production.delivered' and o.payload -> 'details' ->> 'productionId' = current_setting('t.pa1'))::text || '/' || (select count(*) from public.email_outbox where kind = 'production_delivered')::text, '2/0',
+  'Email «Παραδόθηκε» σε κάθε Χρήστη πελάτη με «Βλέπει Παραγωγές» (και σε όποιον ενέκρινε τελευταίος), μόνο από τον Αυτοματισμό');
+select is(jsonb_array_length((select o.payload -> 'details' -> 'deliverables' from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'production.delivered' and o.payload -> 'details' ->> 'productionId' = current_setting('t.pa1') limit 1)), 3,
   'Το email έχει τα μη ακυρωμένα Παραδοτέα');
 
 -- ───────────── Επανάνοιξη, αφαίρεση Μέλους και νέα παράδοση ─────────────
@@ -309,8 +311,9 @@ select throws_ok($$ select public.production_member_remove(current_setting('t.pa
 select public.production_deliver(current_setting('t.pa1')::uuid, 'Ξαναπαραδίδεται μετά την επανάνοιξη');
 select is(public.production_view(current_setting('t.pa1')::uuid) ->> 'autoDelivered', 'false',
   'Η χειροκίνητη παράδοση μετά την επανάνοιξη δεν σημαίνεται ως αυτόματη');
-select is((select count(*)::int from public.email_outbox
-            where kind = 'production_delivered' and payload->>'productionId' = current_setting('t.pa1')), 4,
+select public.events_process();
+select is((select count(*)::int from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'production.delivered' and o.payload -> 'details' ->> 'productionId' = current_setting('t.pa1')), 4,
   'Η νέα παράδοση ξαναστέλνει το email');
 
 select * from finish();
