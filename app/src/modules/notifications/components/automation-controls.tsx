@@ -56,13 +56,23 @@ export function DeleteAutomation({ id }: { id: string }) {
   return (
     <form ref={formRef} onSubmit={onSubmit} className="grid gap-2">
       <input type="hidden" name="id" value={id} />
+      {/* Διαφορετικά keys: αλλιώς η React ξαναχρησιμοποιεί το ίδιο κουμπί, γίνεται submit μέσα στο ίδιο κλικ και διαγράφει χωρίς επιβεβαίωση. */}
       <div>
         {isConfirming ? (
-          <Button type="submit" variant="danger" disabled={isPending}>
+          <Button
+            key="confirm"
+            type="submit"
+            variant="danger"
+            disabled={isPending}
+          >
             {DELETE_CONFIRM}
           </Button>
         ) : (
-          <Button variant="danger" onClick={() => setIsConfirming(true)}>
+          <Button
+            key="ask"
+            variant="danger"
+            onClick={() => setIsConfirming(true)}
+          >
             {DELETE_LABEL}
           </Button>
         )}
