@@ -28,7 +28,8 @@ export const automationPayloadSchema = z.object({
     .regex(/^(\/app(\/|\?|$)|https:\/\/\S+$)/)
     .nullish(),
   automationId: z.string().min(1),
-  details: automationDetailsSchema.nullish(),
+  // Ελέγχεται χωριστά: ένα μπλοκ που δεν ταιριάζει δεν σταματά το email (φεύγει χωρίς αυτό).
+  details: z.unknown().optional(),
   unsubscribeToken: z
     .string()
     .regex(/^[0-9a-f]{64}$/)
@@ -49,6 +50,15 @@ export type AutomationBody = EmailMessageBody & {
 // Η δημόσια σελίδα διακοπής, εκτός /app (χωρίς είσοδο).
 export const unsubscribeUrl = (origin: string, token: string): string =>
   `${origin}/u/${token}`;
+
+// Το μπλοκ του Γεγονότος, αν ταιριάζει στο σχήμα· αλλιώς null και καταγραφή (χωρίς περιεχόμενο).
+export function parseDetails(raw: unknown): AutomationDetails | null {
+  if (raw === undefined || raw === null) return null;
+  const parsed = automationDetailsSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+  console.error("automation details", "μη έγκυρο μπλοκ λεπτομερειών· το email φεύγει χωρίς αυτό");
+  return null;
+}
 
 async function invoiceAttachment(
   admin: SupabaseClient,
@@ -71,7 +81,8 @@ export async function automationMessageFor(
   if (!parsed.success) return INVALID_PAYLOAD;
   const { data } = parsed;
   const locale = toLocale(row.locale);
-  const attachments = await invoiceAttachment(admin, data.details);
+  const details = parseDetails(data.details);
+  const attachments = await invoiceAttachment(admin, details);
   if (typeof attachments === "string") return attachments;
   const stopUrl = data.unsubscribeToken
     ? unsubscribeUrl(origin, data.unsubscribeToken)
@@ -82,8 +93,8 @@ export async function automationMessageFor(
     subject: data.subject,
     body: data.body,
     link: data.link ?? null,
-    details: data.details
-      ? detailParagraphs(data.details, { locale, origin, name: row.to_name })
+    details: details
+      ? detailParagraphs(details, { locale, origin, name: row.to_name })
       : [],
     unsubscribeUrl: stopUrl,
   });

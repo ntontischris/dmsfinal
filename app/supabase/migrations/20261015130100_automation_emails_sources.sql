@@ -3,6 +3,7 @@
 --  • Ξαναγράφονται από τον ΤΕΛΕΥΤΑΙΟ ορισμό τους, χωρίς τις κλήσεις authz.email_*: έγκριση/απόρριψη Γυρίσματος, απόφαση
 --    μετάθεσης, έκδοση Δελτίου, «δεν μπορώ», νέα Έκδοση και αποστολή της, παράδοση Παραγωγής, καταχώρηση Τιμολογίου.
 --    Το email φεύγει πλέον μόνο από τον αρχικό Αυτοματισμό του Γεγονότος (μέρος 1).
+--  • Η απόφαση μετάθεσης γράφει στο Γεγονός τον αιτούντα (requested_by), τον παραλήπτη του email της απόφασης.
 --  • Η καταχώρηση Τιμολογίου γράφει το Γεγονός 36 (invoice.registered) στην ίδια συναλλαγή.
 --  • Το trigger κλεισίματος Αιτήματος και οι βοηθητικές authz.email_* σβήνουν. Τα παλιά kinds μένουν στο check και στο
 --    dispatch της εφαρμογής, για γραμμές που ήδη περιμένουν στην ουρά.
@@ -71,7 +72,9 @@ begin
       raise exception '%', v_problem using errcode = 'P0001';
     end if;
     perform authz.filming_move(p_id, f.reschedule_starts_at, f.reschedule_hours);
-    perform authz.filming_event(p_id, 'reschedule_decided', jsonb_build_object('accepted', true));
+    -- Ο αιτών μπαίνει στο Γεγονός: το filming_move τον μηδενίζει, και το email της απόφασης πάει σε αυτόν.
+    perform authz.filming_event(p_id, 'reschedule_decided', jsonb_build_object(
+      'accepted', true, 'from', f.starts_at, 'requested_by', f.reschedule_requested_by));
     return;
   end if;
   if v_reason is null then
@@ -80,7 +83,8 @@ begin
   update public.filmings x
      set reschedule_starts_at = null, reschedule_hours = null, reschedule_requested_at = null, reschedule_requested_by = null
    where x.id = p_id;
-  perform authz.filming_event(p_id, 'reschedule_decided', jsonb_build_object('accepted', false, 'reason', v_reason));
+  perform authz.filming_event(p_id, 'reschedule_decided', jsonb_build_object(
+    'accepted', false, 'reason', v_reason, 'requested_by', f.reschedule_requested_by));
 end;
 $$;
 

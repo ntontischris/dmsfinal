@@ -185,14 +185,11 @@ describe("automationMessageFor", () => {
     expect(result.text).toContain(`Άνοιγμα στο DMS: ${ORIGIN}/app`);
   });
 
-  it("should refuse a payload without subject, with an unsafe link or with unknown details", async () => {
+  it("should refuse a payload without subject or with an unsafe link", async () => {
     const refuse = async (payload: Record<string, unknown>) =>
       automationMessageFor(fakeAdmin(), row(payload), ORIGIN);
     expect(await refuse({ ...VALID, subject: " " })).toBe(INVALID);
     expect(await refuse({ ...VALID, link: "http://x.example.com" })).toBe(
-      INVALID,
-    );
-    expect(await refuse({ ...VALID, details: { kind: "filming.day" } })).toBe(
       INVALID,
     );
     expect(await refuse({ ...VALID, unsubscribeToken: "short" })).toBe(INVALID);
@@ -200,6 +197,15 @@ describe("automationMessageFor", () => {
 });
 
 describe("automationMessageFor: μπλοκ λεπτομερειών", () => {
+  it("should send the email without the block and log when the block does not match", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const result = await message({ ...VALID, details: { kind: "filming.day" } });
+    expect(result.text).toContain("η Έκδοση 2 του Reel καφέ σας περιμένει.");
+    expect(result.attachments).toBeUndefined();
+    expect(log).toHaveBeenCalledWith("automation details", expect.any(String));
+    log.mockRestore();
+  });
+
   it.each(Object.entries(DETAILS))(
     "should render the block of %s under the text",
     async (_name, details) => {

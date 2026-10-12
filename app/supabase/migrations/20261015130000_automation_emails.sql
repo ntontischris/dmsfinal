@@ -5,7 +5,8 @@
 --    λεπτομερειών» ανά Γεγονός (authz.ev_email_details), από την τρέχουσα κατάσταση της οντότητας. Ποτέ εσωτερικά
 --    σχόλια, κόστος ή link που δεν είδε ο πελάτης· ποσά Τιμολογίου μόνο σε πελάτη ή σε όποιον «Βλέπει ποσά».
 --  • Ίδιοι παραλήπτες με τα σημερινά authz.email_*: Δικαίωμα πελάτη ανά Γεγονός (event_types.client_permission) και δύο
---    νέοι «σε σχέση» παραλήπτες: sheet_issuer (ο τελευταίος εκδότης του Δελτίου, αλλιώς ο Υπεύθυνος της Παραγωγής) και
+--    νέοι «σε σχέση» παραλήπτες: filming_requester (όποιος έκλεισε το Γύρισμα ή ζήτησε τη μετάθεση, όπως τα email
+--    απόφασης/μετάθεσης), sheet_issuer (ο τελευταίος εκδότης του Δελτίου εκτός από τον actor, αλλιώς ο Υπεύθυνος) και
 --    request_client (ο πελάτης που δήλωσε το Αίτημα, αλλιώς όσοι διαβάζουν τη Συνομιλία).
 --  • Η απόρριψη αιτήματος μετάθεσης είναι απόφαση για το Γύρισμα (Γεγονός 14, decision «reschedule_rejected»)· η αποδοχή
 --    είναι μετάθεση (Γεγονός 20). Η αυτόματη παράδοση Παραγωγής δεν έχει actor (δεν είναι ενέργεια του πελάτη).
@@ -34,9 +35,10 @@ $$;
 alter table public.event_types add constraint event_types_relatives_check
   check (relatives <@ array['client', 'crew', 'actor', 'owner', 'production_owner', 'production_members', 'client_owner',
                             'assignee', 'requester', 'mentioned', 'opportunity_owner', 'approval_requester',
-                            'sheet_issuer', 'request_client']);
+                            'sheet_issuer', 'request_client', 'filming_requester']);
 
 update public.event_types set relatives = relatives || '{sheet_issuer}' where code = 'filming.crew_declined';
+update public.event_types set relatives = relatives || '{filming_requester}' where code in ('filming.decided', 'filming.rescheduled');
 update public.event_types set relatives = relatives || '{request_client}' where code = 'request.closed';
 update public.event_types set is_wired = true where code = 'invoice.registered';
 update public.event_types set client_permission = 'c.approve' where code = 'deliverable.version_sent';
@@ -214,12 +216,14 @@ as $$
   select case p_code
     when 'filming.decided' then jsonb_strip_nulls(jsonb_build_object(
       'decision', case p_event when 'reschedule_decided' then 'reschedule_rejected' else p_event end,
-      'reason', p_detail ->> 'reason'))
+      'reason', p_detail ->> 'reason', 'filming_requester_id', p_detail ->> 'requested_by'))
     when 'filming.crew_declined' then jsonb_strip_nulls(jsonb_build_object(
       'member', authz.ev_team_name(nullif(p_detail ->> 'user_id', '')::uuid), 'reason', p_detail ->> 'reason'))
     when 'filming.sheet_issued' then jsonb_strip_nulls(jsonb_build_object(
       'sheetVersion', p_detail -> 'version', 'change', p_detail ->> 'change'))
-    when 'filming.rescheduled' then jsonb_strip_nulls(jsonb_build_object('previousStartsAt', p_detail ->> 'from'))
+    -- txAt: η αρχή της συναλλαγής, για να φανεί αν η ίδια μετακίνηση έβγαλε και νέα έκδοση Δελτίου.
+    when 'filming.rescheduled' then jsonb_strip_nulls(jsonb_build_object(
+      'previousStartsAt', p_detail ->> 'from', 'filming_requester_id', p_detail ->> 'requested_by', 'txAt', now()))
     else '{}'::jsonb
   end;
 $$;
@@ -286,14 +290,28 @@ as $$
       or not exists (select 1 from readers d join r on r.declared_by = 'client' and d.user_id = r.declared_user);
 $$;
 
--- Ο τελευταίος Χρήστης ομάδας που εξέδωσε το Δελτίο· αλλιώς ο Υπεύθυνος της Παραγωγής (ή όσοι «Μεταβιβάζουν Υπεύθυνο»).
+-- Όποιος ζήτησε την απόφαση: στη μετάθεση/απόρριψη μετάθεσης ο αιτών (γραμμένος στο Γεγονός, γιατί το Γύρισμα τον
+-- μηδενίζει)· στην απόφαση κράτησης όποιος έκλεισε το Γύρισμα. Όπως τα email filming_decision / reschedule_decision.
+create function authz.ev_filming_requester(e public.events) returns setof uuid
+language sql stable security definer set search_path = ''
+as $$
+  select x.uid from (
+    select coalesce(authz.ev_uuid(e.payload, 'filming_requester_id'),
+                    case when e.type = 'filming.decided' and e.payload ->> 'decision' in ('approved', 'rejected')
+                         then (select f.created_by from public.filmings f where f.id = e.entity_id) end) as uid
+  ) x
+   where x.uid is not null;
+$$;
+
+-- Ο τελευταίος Χρήστης ομάδας που εξέδωσε το Δελτίο, αν δεν είναι ο ίδιος ο actor («δεν μπορώ» του εκδότη)· αλλιώς ο
+-- Υπεύθυνος της Παραγωγής (ή όσοι «Μεταβιβάζουν Υπεύθυνο»).
 create function authz.ev_sheet_issuer(e public.events) returns setof uuid
 language sql stable security definer set search_path = ''
 as $$
   select * from authz.ev_owner_or_fallback(coalesce(
-    (select v.issued_by from public.filming_sheet_versions v
-      where v.filming_id = authz.ev_uuid(e.payload, 'filming_id') and authz.user_is_team(v.issued_by)
-      order by v.version desc limit 1),
+    nullif((select v.issued_by from public.filming_sheet_versions v
+             where v.filming_id = authz.ev_uuid(e.payload, 'filming_id') and authz.user_is_team(v.issued_by)
+             order by v.version desc limit 1), e.actor_id),
     (select p.owner_id from public.productions p where p.id = authz.ev_uuid(e.payload, 'production_id'))));
 $$;
 
@@ -311,7 +329,13 @@ begin
     when 'owner' then
       return query select u.user_id from public.team_users u where authz.user_is_owner(u.user_id);
     when 'crew' then
-      return query select fc.user_id from public.filming_crew fc where fc.filming_id = authz.ev_uuid(e.payload, 'filming_id');
+      -- Μετακίνηση που έβγαλε νέα έκδοση Δελτίου στην ίδια συναλλαγή: το Συνεργείο παίρνει μόνο το Δελτίο.
+      return query select fc.user_id from public.filming_crew fc
+                    where fc.filming_id = authz.ev_uuid(e.payload, 'filming_id')
+                      and not (e.type = 'filming.rescheduled'
+                               and exists (select 1 from public.filming_sheet_versions v
+                                            where v.filming_id = fc.filming_id
+                                              and v.issued_at = (e.payload ->> 'txAt')::timestamptz));
     when 'production_owner' then
       return query select * from authz.ev_owner_or_fallback((select p.owner_id from public.productions p where p.id = v_production));
     when 'production_members' then
@@ -333,6 +357,8 @@ begin
       return query select x::uuid from jsonb_array_elements_text(coalesce(e.payload -> 'mentioned_ids', '[]'::jsonb)) x;
     when 'sheet_issuer' then
       return query select * from authz.ev_sheet_issuer(e);
+    when 'filming_requester' then
+      return query select * from authz.ev_filming_requester(e);
     when 'request_client' then
       return query select * from authz.ev_request_clients(e);
     else
@@ -379,8 +405,8 @@ language sql stable security definer set search_path = ''
 as $$
   select case
     when authz.is_team_user() then
-      a.recipient_kind not in ('visitor') and coalesce(a.recipient_relative, '') not in ('client', 'request_client')
-    else a.recipient_kind = 'relative' and a.recipient_relative in ('client', 'request_client')
+      a.recipient_kind not in ('visitor') and coalesce(a.recipient_relative, '') not in ('client', 'request_client', 'filming_requester')
+    else a.recipient_kind = 'relative' and a.recipient_relative in ('client', 'request_client', 'filming_requester')
   end;
 $$;
 
@@ -556,7 +582,7 @@ as $$
   values (p_type, 'email', 'relative', p_relative, p_subject_el, p_subject_en, p_el, p_en, p_essential, true, true, p_sort);
 $$;
 
-select authz.seed_mail('filming.decided', 'client', true,
+select authz.seed_mail('filming.decided', 'filming_requester', true,
   'Devre Media · Το Γύρισμά σου στις {filmingDate}', 'Devre Media · Your filming on {filmingDate}',
   'Γεια σου {recipientName},', 'Hello {recipientName},', 10);
 select authz.seed_mail('filming.sheet_issued', 'crew', false,
@@ -570,7 +596,7 @@ select authz.seed_mail('filming.google_moved', 'crew', false,
   'Νέα ώρα για το Γύρισμα {filming}', 'New time for the filming {filming}',
   E'Γεια σου {recipientName},\n\nΤο Γύρισμα {filming} μετακινήθηκε: {filmingDate} στις {filmingTime}.',
   E'Hello {recipientName},\n\nThe filming {filming} was moved: {filmingDate} at {filmingTime}.', 11);
-select authz.seed_mail('filming.rescheduled', 'client', true,
+select authz.seed_mail('filming.rescheduled', 'filming_requester', true,
   'Devre Media · Το Γύρισμά σου μετατέθηκε', 'Devre Media · Your filming was rescheduled',
   'Γεια σου {recipientName},', 'Hello {recipientName},', 10);
 select authz.seed_mail('filming.rescheduled', 'crew', true,
@@ -606,7 +632,7 @@ drop function authz.seed_mail(text, text, boolean, text, text, text, text, integ
 
 revoke all on function
   authz.invitation_language_init(), authz.require_client_person(), authz.audit_payload(text, text, jsonb),
-  authz.ev_request_clients(public.events), authz.ev_sheet_issuer(public.events),
+  authz.ev_request_clients(public.events), authz.ev_sheet_issuer(public.events), authz.ev_filming_requester(public.events),
   authz.ev_filming_details(public.events), authz.ev_sheet_details(public.events), authz.ev_version_details(public.events),
   authz.ev_delivered_details(public.events), authz.ev_invoice_details(public.events, authz.ev_recipient),
   authz.ev_request_details(public.events), authz.ev_email_details(public.events, authz.ev_recipient)

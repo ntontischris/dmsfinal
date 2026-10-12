@@ -3,11 +3,11 @@
 -- Η μεταφορά κάθε σημερινού email (απόφαση, μετάθεση, Δελτίο, «δεν μπορώ», Έκδοση, παράδοση, Τιμολόγιο, Αίτημα) ελέγχεται
 -- και στα τεστ των modules: η ενέργεια → ένα email kind «automation» στον σωστό παραλήπτη και κανένα με το παλιό kind.
 begin;
-select plan(23);
+select plan(25);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή (Υπεύθυνος Παραγωγής) · a3 Πωλήσεις (Υπεύθυνος Πελάτη) · a4 Διαχείριση (Συνεργείο)
--- b1, b2 Χρήστες πελάτη «Πλήρης» (ο b2 διαλέγει αγγλικά)
+-- b1, b2 Χρήστες πελάτη «Πλήρης» (ο b2 διαλέγει αγγλικά και έκλεισε τα Γυρίσματα)
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'production@example.com'),
@@ -106,9 +106,10 @@ select '00000000-0000-0000-0000-0000000000d1', x.user_id::uuid, x.name, r.id, tr
 
 select set_config('t.f1', gen_random_uuid()::text, true);
 select set_config('t.f2', gen_random_uuid()::text, true);
-insert into public.filmings (id, production_id, client_id, kind_id, starts_at, hours, origin, state)
+insert into public.filmings (id, production_id, client_id, kind_id, starts_at, hours, origin, state, created_by)
 select x.id::uuid, current_setting('t.pa')::uuid, '00000000-0000-0000-0000-0000000000d1',
-       (select k.id from public.provision_kinds k where k.code = 'shoot'), x.starts_at, 2, 'client', 'pending'
+       (select k.id from public.provision_kinds k where k.code = 'shoot'), x.starts_at, 2, 'client', 'pending',
+       '00000000-0000-0000-0000-0000000000b2'
   from (values (current_setting('t.f1'), timestamptz '2027-02-10 10:00+00'),
                (current_setting('t.f2'), timestamptz '2027-02-17 10:00+00')) as x (id, starts_at);
 insert into public.filming_crew (filming_id, user_id) values (current_setting('t.f1')::uuid, '00000000-0000-0000-0000-0000000000a4');
@@ -144,34 +145,53 @@ select is((select is_wired from public.event_types where code = 'invoice.registe
 select public.t_as('a1');
 select public.filming_approve(current_setting('t.f1')::uuid);
 select public.events_process();
-select is((public.t_mails('filming.decided', 'b1@kypseli.example.gr') + public.t_mails('filming.decided', 'b2@kypseli.example.gr'))::text
+select is(public.t_mails('filming.decided', 'b2@kypseli.example.gr')::text || '/' || public.t_mails('filming.decided', 'b1@kypseli.example.gr')::text
             || '/' || (select count(*) from public.email_outbox where kind = 'filming_decision')::text,
-  '2/0', 'Η έγκριση: ένα email σε κάθε Χρήστη πελάτη, κανένα με το παλιό kind');
+  '1/0/0', 'Η έγκριση: email μόνο σε όποιον έκλεισε το Γύρισμα (όχι στον συνάδελφο με «Βλέπει Παραγωγές»), κανένα με το παλιό kind');
 select is((select x.locale || ' ' || (x.payload ->> 'subject') from public.t_mail('filming.decided', 'b2@kypseli.example.gr') x),
   'en Devre Media · Your filming on 10/02/2027', 'Ο Χρήστης πελάτη με αγγλικά παίρνει το αγγλικό κείμενο');
 select is((select (x.payload -> 'details' ->> 'decision') || ' ' || (x.payload ? 'unsubscribeToken')::text
-             from public.t_mail('filming.decided', 'b1@kypseli.example.gr') x),
+             from public.t_mail('filming.decided', 'b2@kypseli.example.gr') x),
   'approved false', 'Μπλοκ λεπτομερειών με την απόφαση· απαραίτητο email χωρίς σύνδεσμο διακοπής');
 
 -- Σβησμένος Αυτοματισμός: κανένα email.
 update public.automations set is_enabled = false where id = public.t_mail_auto('filming.decided', 'client');
 select public.filming_reject(current_setting('t.f2')::uuid, 'Δεν χωράμε');
 select public.events_process();
-select is(public.t_mails('filming.decided', 'b1@kypseli.example.gr'), 1, 'Σβησμένος Αυτοματισμός: κανένα email για την απόρριψη');
+select is(public.t_mails('filming.decided', 'b2@kypseli.example.gr'), 1, 'Σβησμένος Αυτοματισμός: κανένα email για την απόρριψη');
 update public.automations set is_enabled = true where id = public.t_mail_auto('filming.decided', 'client');
 
 -- ───────────── Μετάθεση και ακύρωση: πελάτης και Συνεργείο ─────────────
 select authz.filming_event(current_setting('t.f1')::uuid, 'rescheduled',
-  '{"from":"2027-02-10T10:00:00+00:00","to":"2027-02-11T10:00:00+00:00","hours":2}'::jsonb);
+  '{"from":"2027-02-10T10:00:00+00:00","to":"2027-02-11T10:00:00+00:00","hours":2,"requested_by":"00000000-0000-0000-0000-0000000000b1"}'::jsonb);
 select public.events_process();
-select is(public.t_mails('filming.rescheduled', 'b1@kypseli.example.gr') + public.t_mails('filming.rescheduled', 'b2@kypseli.example.gr')
-          + public.t_mails('filming.rescheduled', 'crew@example.com'), 3, 'Μετάθεση: email στους δύο Χρήστες πελάτη και στο Συνεργείο');
+select is(public.t_mails('filming.rescheduled', 'b1@kypseli.example.gr')::text || '/' || public.t_mails('filming.rescheduled', 'b2@kypseli.example.gr')::text
+          || '/' || public.t_mails('filming.rescheduled', 'crew@example.com')::text,
+  '1/0/1', 'Μετάθεση: email στον αιτούντα (όχι στον συνάδελφο) και στο Συνεργείο');
 select is((select x.payload -> 'details' ->> 'previousStartsAt' from public.t_mail('filming.rescheduled', 'b1@kypseli.example.gr') x),
   '2027-02-10T10:00:00+00:00', 'Το μπλοκ της μετάθεσης έχει την προηγούμενη ώρα');
 select authz.filming_event(current_setting('t.f1')::uuid, 'cancelled', '{}'::jsonb);
 select public.events_process();
 select is(public.t_mails('filming.cancelled', 'b1@kypseli.example.gr') + public.t_mails('filming.cancelled', 'b2@kypseli.example.gr')
           + public.t_mails('filming.cancelled', 'crew@example.com'), 3, 'Ακύρωση: email στους δύο Χρήστες πελάτη και στο Συνεργείο');
+
+-- Μετακίνηση που έβγαλε νέα έκδοση Δελτίου στην ίδια συναλλαγή: το Συνεργείο παίρνει μόνο το Δελτίο.
+insert into public.filming_sheet_versions (filming_id, version, issued_by, change, snapshot)
+values (current_setting('t.f1')::uuid, 1, '00000000-0000-0000-0000-0000000000a4', null, '{}'::jsonb);
+select authz.filming_event(current_setting('t.f1')::uuid, 'rescheduled',
+  '{"from":"2027-02-11T10:00:00+00:00","to":"2027-02-12T10:00:00+00:00","hours":2,"requested_by":"00000000-0000-0000-0000-0000000000b1"}'::jsonb);
+select public.events_process();
+select is(public.t_mails('filming.rescheduled', 'b1@kypseli.example.gr')::text || '/' || public.t_mails('filming.rescheduled', 'crew@example.com')::text,
+  '2/1', 'Μετακίνηση με νέο Δελτίο: ο πελάτης παίρνει τη μετάθεση, το Συνεργείο όχι δεύτερο email');
+
+-- «Δεν μπορώ» από τον τελευταίο εκδότη: πάει στον Υπεύθυνο της Παραγωγής.
+select public.t_as('a4');
+select authz.filming_event(current_setting('t.f1')::uuid, 'crew_declined',
+  '{"user_id":"00000000-0000-0000-0000-0000000000a4","reason":"Ταξίδι"}'::jsonb);
+select public.events_process();
+select is(public.t_mails('filming.crew_declined', 'production@example.com')::text || '/' || public.t_mails('filming.crew_declined', 'crew@example.com')::text,
+  '1/0', '«Δεν μπορώ» του εκδότη: στον Υπεύθυνο της Παραγωγής, όχι στον ίδιο');
+select public.t_as('a1');
 
 -- ───────────── Σύνδεσμος διακοπής (μη απαραίτητο: μετακίνηση στο Google) ─────────────
 select authz.emit_event('filming.google_moved', 'filmings', current_setting('t.f1')::uuid, 'filming.google_moved:t1', null, '{}'::jsonb);

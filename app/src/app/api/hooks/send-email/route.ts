@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { appOrigin } from "@/lib/app-origin";
 import { buildAuthEmail, parseAuthHookPayload } from "@/lib/email/auth-hook";
 import { recordEmailLog } from "@/lib/email/log";
-import { readReplyTo } from "@/lib/email/reply-to";
+import { readReplyToQuick } from "@/lib/email/reply-to";
 import { sendEmail } from "@/lib/email/send-email";
 import { verifyStandardWebhook } from "@/lib/email/standard-webhooks";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const admin = createAdminClient();
   const outcome = await sendEmail(
-    { to: email.to, toName: email.toName, ...email.message, replyTo: await readReplyTo(admin) },
+    { to: email.to, toName: email.toName, ...email.message, replyTo: await readReplyToQuick(admin) },
     { timeoutMs: HOOK_TIMEOUT_MS },
   );
   await recordEmailLog(admin, {
