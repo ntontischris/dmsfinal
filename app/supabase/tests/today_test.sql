@@ -17,6 +17,8 @@ select is(
                and not pg_catalog.has_function_privilege('authenticated', p.oid, 'execute')
                and not pg_catalog.has_function_privilege('anon', p.oid, 'execute'))),
   0, 'Κάθε κάρτα: authz.today_count_/today_items_<code>, (p_uid, p_client, p_now), security definer, κλειστές');
+-- οι κάρτες άλλων κομματιών ελέγχονται στα δικά τους τεστ
+delete from public.today_cards where code not in ('health','readiness');
 select ok((select count(*) from public.today_cards c where c.code in ('health', 'readiness')) = 2,
   'Οι κάρτες Υγεία και Ετοιμότητα είναι στο μητρώο');
 -- Οι κάρτες άλλων κομματιών ελέγχονται στα δικά τους τεστ (εδώ, μέσα στη συναλλαγή, μένουν μόνο Υγεία και Ετοιμότητα).
@@ -53,16 +55,14 @@ begin
 end;
 $$;
 
--- Μόνο οι κάρτες αυτού του τεστ (Υγεία, Ετοιμότητα, t_*): τα Σβ–Σε προσθέτουν δικές τους, με δικά τους τεστ.
 create function public.t_codes(p jsonb) returns text[]
 language sql immutable
-as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n)
-       where c ->> 'code' in ('health', 'readiness') or c ->> 'code' like 't\_%'; $$;
+as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n); $$;
 
 create function public.t_hidden(p jsonb) returns text[]
 language sql immutable
 as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n)
-       where (c ->> 'hidden')::boolean and (c ->> 'code' in ('health', 'readiness') or c ->> 'code' like 't\_%'); $$;
+       where (c ->> 'hidden')::boolean; $$;
 
 create function public.t_card(p jsonb, p_code text) returns jsonb
 language sql immutable
