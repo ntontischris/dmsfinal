@@ -19,6 +19,8 @@ select is(
   0, 'Κάθε κάρτα: authz.today_count_/today_items_<code>, (p_uid, p_client, p_now), security definer, κλειστές');
 select ok((select count(*) from public.today_cards c where c.code in ('health', 'readiness')) = 2,
   'Οι κάρτες Υγεία και Ετοιμότητα είναι στο μητρώο');
+-- Οι κάρτες άλλων κομματιών ελέγχονται στα δικά τους τεστ (εδώ, μέσα στη συναλλαγή, μένουν μόνο Υγεία και Ετοιμότητα).
+delete from public.today_cards where code not in ('health', 'readiness');
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή (χωρίς health.view και settings.manage) · b1 Χρήστης πελάτη (Πλήρης) του Πελάτη 1
