@@ -1,6 +1,7 @@
 import { CLIENT_CARDS } from "./client";
 import { DECIDE_CARDS } from "./decide";
 import { HEALTH_CARDS } from "./health";
+import { KNOWLEDGE_CARDS } from "./knowledge";
 import { MONEY_CARDS } from "./money";
 import type { CardRenderer } from "./types";
 import { WEEK_CARDS } from "./week";
@@ -12,6 +13,7 @@ const RENDERERS: Readonly<Record<string, CardRenderer>> = {
   ...DECIDE_CARDS,
   ...WORK_CARDS,
   ...MONEY_CARDS,
+  ...KNOWLEDGE_CARDS,
   ...WEEK_CARDS,
   ...CLIENT_CARDS,
 };

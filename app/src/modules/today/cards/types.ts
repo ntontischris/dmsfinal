@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 import type { CardData, TodayCard } from "../view-schema";
 
-// Ένας renderer κάρτας: καθαρό component χωρίς hooks και χωρίς ανάγνωση. Τον χρησιμοποιεί και ο server (πρώτη φόρτωση)
-// και ο browser («Ξαναδοκίμασε»), γι' αυτό δεν εισάγει τίποτα server-only.
+// Ένας renderer κάρτας: component χωρίς hooks, που τρέχει ΜΟΝΟ στον server (πρώτη φόρτωση, και το «Ξαναδοκίμασε» μέσω
+// server action). Μπορεί άρα να εισάγει από άλλα modules (μόνο από το index.ts τους).
 export interface CardViewProps {
   card: TodayCard;
   data: CardData;

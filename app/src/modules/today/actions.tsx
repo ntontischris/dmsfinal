@@ -1,15 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import type { FormState } from "@/lib/form-state";
 import { createSupabase } from "@/lib/supabase/server";
 
+import { CardView } from "./components/card-view";
 import { getTodayCard } from "./queries";
-import type { ReadResult } from "./read";
-import { cardCodeSchema, prefsSchema } from "./schemas";
-import type { CardData } from "./view-schema";
+import { prefsSchema } from "./schemas";
+import { todayCardSchema } from "./view-schema";
 
 const UNCONFIGURED_TEXT = "Η βάση δεν έχει συνδεθεί ακόμα.";
 const TODAY_PATH = "/app";
@@ -60,16 +61,17 @@ export async function resetTodayPrefs(): Promise<FormState> {
   redirect(TODAY_PATH);
 }
 
-// «Ξαναδοκίμασε» μιας κάρτας: ξαναφορτώνει μόνο αυτή, οι υπόλοιπες δεν αγγίζονται.
-export async function retryTodayCard(
-  code: string,
-): Promise<ReadResult<CardData | null>> {
-  const parsed = cardCodeSchema.safeParse(code);
-  if (!parsed.success) return { ok: false };
+// «Ξαναδοκίμασε» μιας κάρτας: ξαναφορτώνει μόνο αυτή, οι υπόλοιπες δεν αγγίζονται. Η κάρτα αποδίδεται εδώ, στον server,
+// ώστε οι renderers να μη φτάνουν ποτέ στον browser. null = η κάρτα δεν επιτρέπεται πια· undefined = απέτυχε ξανά.
+export async function retryTodayCard(input: unknown): Promise<ReactNode | null | undefined> {
+  const parsed = todayCardSchema.safeParse(input);
+  if (!parsed.success) return undefined;
   try {
-    return await getTodayCard(parsed.data);
+    const result = await getTodayCard(parsed.data.code);
+    if (!result.ok) return undefined;
+    return result.data === null ? null : <CardView card={parsed.data} data={result.data} />;
   } catch (error) {
     console.error("retryTodayCard:", error);
-    return { ok: false };
+    return undefined;
   }
 }

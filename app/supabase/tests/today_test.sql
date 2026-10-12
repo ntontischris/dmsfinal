@@ -1,7 +1,7 @@
 -- Σήμερα Σα #180: μητρώο καρτών, πλήθη, μία κάρτα, Προσαρμογή, Υγεία και Ετοιμότητα.
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Τα πλήθη παίρνουν σταθερό p_now.
 begin;
-select plan(41);
+select plan(53);
 
 -- ───────────── Σύμβαση μητρώου (για κάθε γραμμή, και όσες προσθέσουν τα Σβ–Σε) ─────────────
 select is(
@@ -73,6 +73,8 @@ create function authz.today_count_t_new(p_uid uuid, p_client uuid, p_now timesta
 language sql as $$ select case when p_client is null then 0 end; $$;
 create function authz.today_count_t_boom(p_uid uuid, p_client uuid, p_now timestamptz) returns integer
 language plpgsql as $$ begin raise exception 'boom'; end; $$;
+create function authz.today_count_t_deny(p_uid uuid, p_client uuid, p_now timestamptz) returns integer
+language plpgsql as $$ begin raise exception 'Δεν έχεις Δικαίωμα' using errcode = '42501'; end; $$;
 create function authz.today_items_t(p_uid uuid, p_client uuid, p_now timestamptz) returns jsonb
 language sql as $$ select '[]'::jsonb; $$;
 
@@ -95,7 +97,11 @@ select throws_ok($$ select * from public.today_cards $$, '42501', null, 'Ο πί
 select throws_ok($$ select * from public.today_prefs $$, '42501', null, 'Ο πίνακας today_prefs είναι κλειστός');
 select throws_ok($$ select authz.today_count_health(auth.uid(), null, now()) $$, '42501', null,
   'Οι συναρτήσεις κάρτας δεν καλούνται απευθείας');
+select lives_ok($$ select public.today_counts() $$, 'Ως authenticated: τα πλήθη φορτώνουν');
+select throws_ok($$ select public.today_card('nope') $$, '42501', null, 'Ως authenticated: άγνωστη κάρτα 42501');
 reset role;
+-- Πελάτης άλλου Πελάτη: τα RPC δεν δέχονται Πελάτη ως όρισμα· ο Πελάτης είναι πάντα ο τρέχων του θεατή
+-- (authz.client_user_client_id), άρα δεν υπάρχει τρόπος να ζητηθεί κάρτα άλλου Πελάτη.
 
 -- ───────────── Ποιος βλέπει ποιες κάρτες ─────────────
 select public.t_as('a1');
@@ -152,6 +158,56 @@ select is((select count(*)::integer from jsonb_array_elements(public.today_card(
 select is(public.today_card('health', timestamptz '2026-03-03 10:00+00') -> 'items' -> 1 ->> 'link', '/app/settings/sends?tab=failed',
   'Η αποτυχημένη αποστολή οδηγεί στα «Απέτυχαν»');
 
+select ok(not (public.today_card('readiness') -> 'items' -> 0 ? 'title'), 'Ετοιμότητα: μόνο κωδικοί, οι ετικέτες στην εφαρμογή');
+select is(public.today_card('readiness') -> 'items' -> 0 ->> 'id',
+  (select x.item from authz.readiness_items() x where not x.done
+    order by array_position(authz.today_readiness_order(), x.item) limit 1),
+  'Ετοιμότητα: τα βήματα στη σειρά της O7');
+
+-- ───────────── Υγεία: μόνο οι Πελάτες που βλέπει ο θεατής ─────────────
+-- a3: health.view + clients.view «mine», Υπεύθυνος του Πελάτη 2. Βλέπει την αποτυχία του Πελάτη 2, όχι του Πελάτη 1.
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000a3', 'health@example.com');
+insert into public.team_users (user_id, name, email, is_active, deactivated_at)
+values ('00000000-0000-0000-0000-0000000000a3', 'Ελένη', 'health@example.com', true, null);
+insert into public.roles (name, description, kind, is_owner, is_builtin)
+values ('Υγεία και δικοί μου Πελάτες (τεστ)', 'Τεστ: health.view και clients.view mine.', 'team', false, false);
+insert into public.role_permissions (role_id, permission, scope)
+select r.id, x.perm, x.scope from public.roles r
+ cross join (values ('health.view', 'all'), ('clients.view', 'mine')) x (perm, scope)
+ where r.name = 'Υγεία και δικοί μου Πελάτες (τεστ)';
+insert into public.team_user_roles (user_id, role_id)
+select '00000000-0000-0000-0000-0000000000a3', r.id from public.roles r where r.name = 'Υγεία και δικοί μου Πελάτες (τεστ)';
+insert into public.clients (id, name, contact_name, contact_email, manager_id) values
+  ('00000000-0000-0000-0000-0000000000c2', 'Πελάτης Δύο', 'Νίκος Κίνης', 'two@example.com', '00000000-0000-0000-0000-0000000000a3');
+insert into public.email_outbox (id, kind, to_email, status, attempts, last_error, handled_at, created_at) values
+  ('00000000-0000-0000-0000-0000000000f4', 'test', 'one@example.com', 'failed', 5, 'Bounce',
+   timestamptz '2026-03-02 11:00+00', timestamptz '2026-03-02 11:00+00'),
+  ('00000000-0000-0000-0000-0000000000f5', 'test', 'two@example.com', 'failed', 5, 'Bounce',
+   timestamptz '2026-03-02 12:00+00', timestamptz '2026-03-02 12:00+00');
+insert into public.automation_sends (automation_id, case_key, recipient_key, channel, email_outbox_id, client_id)
+select a.id, x.case_key, x.recipient, 'email', x.outbox::uuid, x.client::uuid
+  from (select id from public.automations order by id limit 1) a
+ cross join (values ('t:f4', 'one@example.com', '00000000-0000-0000-0000-0000000000f4', '00000000-0000-0000-0000-0000000000c1'),
+                    ('t:f5', 'two@example.com', '00000000-0000-0000-0000-0000000000f5', '00000000-0000-0000-0000-0000000000c2'))
+       x (case_key, recipient, outbox, client);
+select is(authz.today_count_health('00000000-0000-0000-0000-0000000000a1', null, timestamptz '2026-03-03 10:00+00'), 4,
+  'Ιδιοκτήτης: και οι δύο αποτυχίες Πελατών');
+select is(authz.today_count_health('00000000-0000-0000-0000-0000000000a3', null, timestamptz '2026-03-03 10:00+00'), 3,
+  'health.view με clients.view mine: όχι η αποτυχία Πελάτη που δεν βλέπει');
+select is(authz.today_items_health('00000000-0000-0000-0000-0000000000a3', null, timestamptz '2026-03-03 10:00+00') -> 0 ->> 'id',
+  'job:outbox', 'Πρώτα η εργασία και για τον a3');
+update public.google_calendar set calendar_id = 'cal@example.com', last_sync_at = timestamptz '2026-03-03 08:00+00' where id;
+select is((select i ->> 'link' from jsonb_array_elements(authz.today_items_health('00000000-0000-0000-0000-0000000000a1', null,
+            timestamptz '2026-03-03 10:00+00')) i where i ->> 'id' = 'google'), '/app/settings/integrations',
+  'Google: ο Ιδιοκτήτης πηγαίνει στις Ενσωματώσεις');
+select is((select i ->> 'link' from jsonb_array_elements(authz.today_items_health('00000000-0000-0000-0000-0000000000a3', null,
+            timestamptz '2026-03-03 10:00+00')) i where i ->> 'id' = 'google'), '/app/settings/sends',
+  'Google: οι άλλοι πηγαίνουν στο Ιστορικό αποστολών');
+delete from public.automation_sends where case_key in ('t:f4', 't:f5');
+delete from public.email_outbox where id in ('00000000-0000-0000-0000-0000000000f4', '00000000-0000-0000-0000-0000000000f5');
+update public.google_calendar set calendar_id = null, last_sync_at = null where id;
+update public.team_users set is_active = false, deactivated_at = now() where user_id = '00000000-0000-0000-0000-0000000000a3';
+
 -- ───────────── Προτιμήσεις ─────────────
 select lives_ok($$ select public.today_prefs_set(array['t_solo', 'health', 'readiness', 'zzz'], array['readiness', 'zzz']) $$,
   'Αποθήκευση σειράς και κρυφών');
@@ -184,6 +240,17 @@ insert into public.today_cards (code, grp, kind, audience, sort, label_el, label
 select is(public.t_card(public.today_counts(), 't_boom') ->> 'failed', 'true', 'Η κάρτα που απέτυχε σημειώνεται failed');
 select is(public.t_codes(public.today_counts()), array['t_new', 't_boom', 'health', 'readiness', 't_solo'],
   'Οι υπόλοιπες κάρτες μετρούν κανονικά');
+
+-- Κάρτα που αρνείται μέσα στη συνάρτηση (42501): παραλείπεται σαν null, και δεν αποθηκεύεται στις Προτιμήσεις.
+insert into public.today_cards (code, grp, kind, audience, sort, label_el, label_en, link, count_fn, items_fn) values
+  ('t_deny', 'work', 'action', 'team', 3, 'Χωρίς Δικαίωμα', 'Denied', '/app',
+   'authz.today_count_t_deny(uuid, uuid, timestamptz)', 'authz.today_items_t(uuid, uuid, timestamptz)');
+select is(public.t_codes(public.today_counts()), array['t_new', 't_boom', 'health', 'readiness', 't_solo'],
+  'Η κάρτα που ρίχνει 42501 δεν εμφανίζεται');
+select public.today_prefs_set(array['t_deny', 'health'], array['t_deny']);
+select is((select p.card_order || p.hidden from public.today_prefs p where p.user_id = '00000000-0000-0000-0000-0000000000a1'),
+  array['health'], 'Η κάρτα που ρίχνει 42501 δεν θεωρείται επιτρεπτή στις Προτιμήσεις');
+select throws_ok($$ select public.today_card('t_deny') $$, '42501', null, 'Ούτε ανοίγει');
 
 -- ───────────── Μετά το «Άνοιγμα σε πελάτες» η Ετοιμότητα φεύγει ─────────────
 alter table public.system_state disable trigger system_state_guard;

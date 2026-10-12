@@ -8,6 +8,7 @@ export {
   recentChanges,
   type CompanySettings,
 } from "./queries";
+export { READINESS, type ReadinessInfo } from "./readiness";
 export { isValidAfm, isValidIban, formatIban } from "./validation";
 export {
   AssistantCard,

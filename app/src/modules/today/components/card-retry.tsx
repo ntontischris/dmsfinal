@@ -1,28 +1,23 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 
 import { retryTodayCard } from "../actions";
 import { CARD_FAILED_TEXT, RETRY_LABEL } from "../labels";
-import type { CardData, TodayCard } from "../view-schema";
-import { CardView } from "./card-view";
+import type { TodayCard } from "../view-schema";
 
-// Σφάλμα σε μία κάρτα: «Ξαναδοκίμασε» ξαναφορτώνει μόνο αυτή· οι άλλες δεν αγγίζονται.
+// Σφάλμα σε μία κάρτα: «Ξαναδοκίμασε» ξαναφορτώνει μόνο αυτή· οι άλλες δεν αγγίζονται. Η κάρτα έρχεται έτοιμη από τον server.
 export function CardRetry({ card }: { card: TodayCard }) {
-  const [data, setData] = useState<CardData | null>(null);
-  const [isGone, setIsGone] = useState(false);
+  const [view, setView] = useState<{ node: ReactNode } | null>(null);
   const [isPending, startTransition] = useTransition();
-  if (isGone) return null;
-  if (data) return <CardView card={card} data={data} />;
+  if (view) return view.node;
   const retry = () =>
     startTransition(async () => {
-      const result = await retryTodayCard(card.code);
-      if (!result.ok) return;
-      if (result.data === null) setIsGone(true);
-      else setData(result.data);
+      const node = await retryTodayCard(card);
+      if (node !== undefined) setView({ node });
     });
   return (
     <div role="alert">

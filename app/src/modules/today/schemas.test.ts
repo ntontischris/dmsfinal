@@ -48,6 +48,15 @@ describe("view schemas", () => {
     });
     expect(data.items[0]).toMatchObject({ amountCents: null, urgent: true });
   });
+
+  it("should fall back to the id when an item has no title", () => {
+    const data = parseCardData({
+      code: "readiness",
+      count: 1,
+      items: [{ id: "logo", urgent: false, link: "/app/settings/readiness" }],
+    });
+    expect(data.items[0]).toMatchObject({ title: "logo", subtitle: null, at: null });
+  });
 });
 
 describe("customize model", () => {

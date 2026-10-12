@@ -35,15 +35,17 @@ export const todayCountsSchema = z
 export const cardItemSchema = z
   .object({
     id: z.string(),
-    title: z.string(),
+    // Χωρίς title ο renderer της κάρτας βρίσκει την ετικέτα από το id (π.χ. Ετοιμότητα).
+    title: z.string().optional(),
     subtitle: z.string().nullable().optional(),
     at: z.string().nullable().optional(),
     urgent: z.boolean(),
     amount_cents: z.number().int().nullable().optional(),
     link: appLink,
   })
-  .transform(({ amount_cents, subtitle, at, ...item }) => ({
+  .transform(({ amount_cents, subtitle, at, title, ...item }) => ({
     ...item,
+    title: title ?? item.id,
     subtitle: subtitle ?? null,
     at: at ?? null,
     amountCents: amount_cents ?? null,

@@ -8,12 +8,14 @@
 --        p_client = ο τρέχων Πελάτης για κάρτα audience 'client', null για κάρτα ομάδας. Κάρτα ομάδας με p_client
 --        μη null, ή κάρτα πελάτη με null, επιστρέφει null.
 --      authz.today_items_<code>(p_uid uuid, p_client uuid, p_now timestamptz) returns jsonb
---        Έως 3 πιο επείγοντα: [{ id, title, subtitle, at, urgent, amount_cents?, link }]. id/title κείμενο, subtitle κείμενο
+--        Έως 3 πιο επείγοντα: [{ id, title?, subtitle, at, urgent, amount_cents?, link }]. id/title κείμενο (χωρίς title ο
+--        renderer της κάρτας βρίσκει την ετικέτα από το id), subtitle κείμενο
 --        ή null, at timestamptz ή null, link εσωτερική διαδρομή /app/…. amount_cents μόνο αν ο Χρήστης έχει finance.amounts.
 --        Ίδιος έλεγχος πρόσβασης με το count· αν δεν έχει, 42501.
 --      Επείγον (κανόνας 5): προθεσμία σε έως 1 μέρα ή περασμένη, Επόμενο βήμα που έληξε, ληξιπρόθεσμο, Τιμολογητέο 14 ημερών
 --      και πάνω, διαγραφή Google με λιγότερες από 12 ώρες, Υπέρβαση κόστους, κάθε κόκκινο της Υγείας.
---      Ο έλεγχος Δικαιώματος γίνεται ΠΡΩΤΟΣ. Οι συναρτήσεις είναι security definer, set search_path = '', και αμέσως μετά
+--      Το p_now χρησιμεύει μόνο για παράθυρα χρόνου και για το «επείγον», ποτέ για την πρόσβαση.
+--      Ο έλεγχος Δικαιώματος γίνεται ΠΡΩΤΟΣ. Αν το count ρίξει 42501, η κάρτα παραλείπεται σαν να επέστρεψε null. Οι συναρτήσεις είναι security definer, set search_path = '', και αμέσως μετά
 --      τη δημιουργία τους: revoke all … from public, anon, authenticated (τις καλούν μόνο τα public RPC εδώ).
 --  • Στήλες μητρώου: grp (health | decide | work | money | knowledge | week | client), kind (action | week | health),
 --    audience (team | client), sort (η κοινή σειρά του κανόνα 2), needs_second_person (κανόνας 8). Ζώνες sort ανά ομάδα:
@@ -92,7 +94,10 @@ begin
       if v_count is not null then
         return query select c.code, c.grp, c.kind, c.label_el, c.link, c.sort, v_count, false;
       end if;
-    exception when others then
+    exception when insufficient_privilege then
+      -- Άρνηση μέσα στη συνάρτηση: η κάρτα δεν επιτρέπεται (όπως το null).
+      null;
+    when others then
       raise warning 'today: η κάρτα % δεν μέτρησε: %', c.code, sqlerrm;
       return query select c.code, c.grp, c.kind, c.label_el, c.link, c.sort, null::integer, true;
     end;
@@ -111,8 +116,23 @@ $$;
 
 -- ───────────── Κάρτα «Υγεία συστήματος» (health.view) ─────────────
 
+-- Ο Χρήστης p_uid βλέπει τον Πελάτη; Ίδιος κανόνας με το authz.can_see_client, για δοσμένο Χρήστη και όχι για τον auth.uid().
+create function authz.today_sees_client(p_uid uuid, p_client uuid) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select authz.user_is_team(p_uid) and (
+    coalesce(authz.user_scope(p_uid, 'clients.view'), '') = 'all'
+    or coalesce(authz.user_scope(p_uid, 'clients.manage'), '') = 'all'
+    or authz.user_scope(p_uid, 'clients.transfer') is not null
+    or authz.user_scope(p_uid, 'clients.merge') is not null
+    or ((authz.user_scope(p_uid, 'clients.view') is not null or authz.user_scope(p_uid, 'clients.manage') is not null)
+        and (exists (select 1 from public.clients c where c.id = p_client and c.manager_id = p_uid)
+             or exists (select 1 from public.opportunities o where o.client_id = p_client and o.manager_id = p_uid))));
+$$;
+
 -- Οι αποστολές που απέτυχαν τις τελευταίες 7 μέρες και δεν ξαναστάλθηκαν. Ό,τι κρύβει το K3 από τον θεατή (Τιμολόγια χωρίς
--- ποσά, κόστος χωρίς «Βλέπει κόστος») δεν μετρά. Ποτέ παραλήπτης, θέμα ή περιεχόμενο: μόνο τι ήταν και πότε.
+-- ποσά, κόστος χωρίς «Βλέπει κόστος», Πελάτης που δεν βλέπει) δεν μετρά. Ο Πελάτης βγαίνει από το σημάδι του email ή του
+-- email που ξαναστάλθηκε, όπως στο authz.sends_failed_count. Ποτέ παραλήπτης, θέμα ή περιεχόμενο: μόνο τι ήταν και πότε.
 create function authz.today_failed_sends(p_uid uuid, p_now timestamptz)
 returns table (id text, title text, at timestamptz)
 language sql stable security definer set search_path = ''
@@ -126,12 +146,17 @@ as $$
     cross join v
     left join public.automations a on a.id = authz.outbox_automation(o.payload)
     left join public.event_types t on t.code = a.event_type
+    left join lateral (select s.client_id from public.automation_sends s
+                        where s.client_id is not null
+                          and (s.email_outbox_id = o.id or (o.retry_of is not null and s.email_outbox_id = o.retry_of))
+                        limit 1) sc on true
    where o.status = 'failed' and o.created_at >= p_now - interval '7 days' and o.created_at <= p_now
      and not exists (select 1 from public.email_outbox x where x.retry_of = o.id)
      and (v.finance or (o.kind not in ('invoice_registered', 'invoice_overdue')
                         and coalesce(a.event_type, '') not in ('billable.created', 'billable.open_waiting',
                                                                 'invoice.registered', 'invoice.overdue', 'receipt.registered')))
      and (v.cost or not coalesce(t.is_cost_only, false))
+     and (sc.client_id is null or authz.today_sees_client(p_uid, sc.client_id))
   union all
   select 'l' || l.id::text, 'email «' || l.kind || '»', l.sent_at
     from public.email_log l cross join v
@@ -151,7 +176,8 @@ as $$
    where j.last_ok_at is not null and j.last_ok_at < p_now - interval '10 minutes'
   union all
   select 'google', 'Ο συγχρονισμός Google σταμάτησε', nullif(left(coalesce(g.last_error, ''), 120), ''),
-         g.last_sync_at, '/app/settings/integrations', 2
+         g.last_sync_at,
+         case when authz.user_is_owner(p_uid) then '/app/settings/integrations' else '/app/settings/sends' end, 2
     from public.google_calendar g
    where g.id and g.calendar_id is not null
      and (g.last_sync_at < p_now - interval '30 minutes' or g.error_since < p_now - interval '30 minutes')
@@ -198,24 +224,12 @@ $$;
 
 -- ───────────── Κάρτα «Έλεγχος ετοιμότητας» (settings.manage, ως το «Άνοιγμα σε πελάτες») ─────────────
 
-create function authz.today_readiness_label(p_item text) returns text
+-- Η σειρά των βημάτων, ίδια με την οθόνη O7. Οι ετικέτες ζουν στην εφαρμογή (READINESS)· εδώ μόνο οι κωδικοί.
+create function authz.today_readiness_order() returns text[]
 language sql immutable set search_path = ''
 as $$
-  select case p_item
-    when 'company_details' then 'Στοιχεία εταιρείας και Υπογράφων'
-    when 'tax_details' then 'ΑΦΜ, ΔΟΥ, ΓΕΜΗ'
-    when 'bank_account' then 'Λογαριασμός τραπέζης, με έναν προεπιλεγμένο'
-    when 'logo' then 'Λογότυπο'
-    when 'booking_hours' then 'Ωράριο κρατήσεων'
-    when 'catalogue' then 'Κατάλογος: Πακέτα, Υπηρεσίες, τιμές'
-    when 'costs' then 'Έξοδα και ώρες: ο πρώτος μήνας Κόστους ώρας'
-    when 'payment_methods' then 'Τρόποι είσπραξης: τουλάχιστον ένας ενεργός'
-    when 'knowledge' then 'Άρθρα Γνώσης'
-    when 'legal_texts' then 'Νομικά κείμενα, ελεγμένα από δικηγόρο'
-    when 'identity_values' then 'Τελικές τιμές ταυτότητας'
-    when 'automation_texts' then 'Αρχικά κείμενα Αυτοματισμών και Μηνυμάτων συστήματος'
-    else p_item
-  end;
+  select array['company_details', 'tax_details', 'bank_account', 'logo', 'booking_hours', 'catalogue', 'costs',
+               'payment_methods', 'knowledge', 'legal_texts', 'identity_values', 'automation_texts'];
 $$;
 
 create function authz.today_readiness_open(p_uid uuid, p_client uuid) returns boolean
@@ -244,10 +258,10 @@ begin
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   return coalesce((
-    select jsonb_agg(jsonb_build_object('id', r.item, 'title', authz.today_readiness_label(r.item), 'subtitle', null,
-                                        'at', null, 'urgent', false, 'link', '/app/settings/readiness') order by r.n)
-      from (select x.item, x.n from authz.readiness_items() with ordinality x (item, done, note, n)
-             where not x.done order by x.n limit 3) r),
+    select jsonb_agg(jsonb_build_object('id', r.item, 'urgent', false, 'link', '/app/settings/readiness') order by r.n)
+      from (select x.item, coalesce(array_position(authz.today_readiness_order(), x.item), 1000) as n
+              from authz.readiness_items() x
+             where not x.done order by 2, 1 limit 3) r),
     '[]'::jsonb);
 end;
 $$;
@@ -353,7 +367,7 @@ revoke all on function
   authz.today_cards_for(uuid, uuid, timestamptz), authz.today_keep(text[], text[]),
   authz.today_failed_sends(uuid, timestamptz), authz.today_health_rows(uuid, timestamptz),
   authz.today_count_health(uuid, uuid, timestamptz), authz.today_items_health(uuid, uuid, timestamptz),
-  authz.today_readiness_label(text), authz.today_readiness_open(uuid, uuid),
+  authz.today_sees_client(uuid, uuid), authz.today_readiness_order(), authz.today_readiness_open(uuid, uuid),
   authz.today_count_readiness(uuid, uuid, timestamptz), authz.today_items_readiness(uuid, uuid, timestamptz)
   from public, anon, authenticated;
 
