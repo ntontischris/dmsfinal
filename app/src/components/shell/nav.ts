@@ -21,6 +21,12 @@ export const NAV: readonly NavSection[] = [
     items: [
       { code: "A1", label: "Σήμερα", href: "/app" },
       {
+        code: "A2",
+        label: "Ειδοποιήσεις",
+        href: "/app/notifications",
+        requires: ["team", "client"],
+      },
+      {
         code: "A5",
         label: "Ημερολόγιο",
         href: "/app/calendar",

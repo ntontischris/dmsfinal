@@ -18,6 +18,7 @@ vi.mock("@/lib/email/worker", () => ({
 import { GET } from "./route";
 
 const SECRET = "test-cron-secret";
+const NO_EVENTS = { processed: 0, failed: 0, sent: 0, cleaned: 0 };
 
 const request = (authorization?: string) =>
   new NextRequest("http://localhost:3000/api/cron/outbox", {
@@ -71,6 +72,7 @@ describe("GET /api/cron/outbox", () => {
       overdue: { queued: 1 },
       digest: { queued: 1 },
       attachments: { removed: 0 },
+      events: NO_EVENTS,
     });
   });
 
@@ -91,6 +93,7 @@ describe("GET /api/cron/outbox", () => {
       overdue: { queued: 0 },
       digest: { queued: 0 },
       attachments: { removed: 0 },
+      events: NO_EVENTS,
     });
   });
 
@@ -111,6 +114,7 @@ describe("GET /api/cron/outbox", () => {
       overdue: { queued: 0 },
       digest: { queued: 0 },
       attachments: { removed: 0 },
+      events: NO_EVENTS,
     });
   });
 
@@ -131,6 +135,7 @@ describe("GET /api/cron/outbox", () => {
       overdue: { error: "Τα ληξιπρόθεσμα δεν μπήκαν στην ουρά." },
       digest: { queued: 0 },
       attachments: { removed: 0 },
+      events: NO_EVENTS,
     });
   });
 
@@ -151,6 +156,7 @@ describe("GET /api/cron/outbox", () => {
       overdue: { queued: 0 },
       digest: { error: "Οι συνόψεις Μηνυμάτων δεν μπήκαν στην ουρά." },
       attachments: { removed: 0 },
+      events: NO_EVENTS,
     });
   });
 
@@ -171,6 +177,42 @@ describe("GET /api/cron/outbox", () => {
       overdue: { queued: 0 },
       digest: { queued: 0 },
       attachments: { error: "Τα ανεκμετάλλευτα συνημμένα δεν καθαρίστηκαν." },
+      events: NO_EVENTS,
     });
+  });
+  it("επεξεργάζεται τα Γεγονότα πριν από τον εργάτη, ώστε τα email «automation» να φύγουν στον ίδιο κύκλο", async () => {
+    const summary = { processed: 2, failed: 0, sent: 1, cleaned: 0 };
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "events_process"
+        ? { data: summary, error: null }
+        : { data: 0, error: null },
+    );
+
+    const response = await GET(request(`Bearer ${SECRET}`));
+
+    const order = mocks.rpc.mock.calls.findIndex(
+      ([name]) => name === "events_process",
+    );
+    expect(mocks.rpc.mock.invocationCallOrder[order]).toBeLessThan(
+      mocks.runOutboxWorker.mock.invocationCallOrder[0] ??
+        Number.POSITIVE_INFINITY,
+    );
+    expect((await response.json()).events).toEqual(summary);
+  });
+
+  it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει ο επεξεργαστής Γεγονότων", async () => {
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "events_process"
+        ? { data: null, error: { message: "boom" } }
+        : { data: 0, error: null },
+    );
+
+    const response = await GET(request(`Bearer ${SECRET}`));
+
+    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
+    expect((await response.json()).events).toEqual({
+      error: "Τα Γεγονότα δεν επεξεργάστηκαν.",
+    });
+    expect(console.error).toHaveBeenCalledWith("events_process", "boom");
   });
 });
