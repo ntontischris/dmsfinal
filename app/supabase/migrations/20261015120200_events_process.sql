@@ -89,6 +89,7 @@ begin
 end;
 $$;
 
+-- «Όσοι έχουν Δικαίωμα»: μόνο με Εύρος «όλα» (όποιος βλέπει μόνο «όσα τον αφορούν» δεν είναι ο αρμόδιος για όλους).
 create function authz.ev_candidates(a public.automations, e public.events) returns setof uuid
 language plpgsql stable security definer set search_path = ''
 as $$
@@ -98,7 +99,7 @@ begin
   elsif a.recipient_kind = 'permission' then
     return query
       select u.user_id from public.team_users u
-       where u.is_active and authz.user_scope(u.user_id, a.recipient_permission) is not null
+       where u.is_active and authz.user_scope(u.user_id, a.recipient_permission) = 'all'
       union
       select cu.user_id from public.client_users cu
         join public.role_permissions rp on rp.role_id = cu.role_id and rp.permission = a.recipient_permission
@@ -119,11 +120,13 @@ as $$
      where cu.user_id = p_user and cu.client_id = p_client and cu.removed_at is null and rp.permission = any (p_perms));
 $$;
 
--- Ορατότητα της οντότητας τη στιγμή της αποστολής. «Νέο Μήνυμα» πάει μόνο στην άλλη πλευρά (πελάτης → ομάδα και αντίστροφα).
+-- Ορατότητα της οντότητας τη στιγμή της αποστολής. Σβησμένο Μήνυμα (και Αίτημα πάνω του) δεν ειδοποιεί κανέναν. «Νέο Μήνυμα» πάει μόνο στην άλλη πλευρά (πελάτης → ομάδα και αντίστροφα).
 create function authz.event_visible_to(e public.events, p_user uuid, p_is_client boolean) returns boolean
 language sql stable security definer set search_path = ''
 as $$
   select case
+    when e.entity in ('messages', 'message_requests')
+         and not exists (select 1 from public.messages m where m.id = e.entity_id and m.deleted_at is null) then false
     when e.entity in ('messages', 'message_requests') and p_is_client then
       authz.ev_client_has(p_user, e.client_id, array['c.chatRead'])
       and (e.type <> 'message.created' or e.payload ->> 'author_kind' = 'team')
@@ -171,19 +174,26 @@ $$;
 
 -- ───────────── Κείμενο ─────────────
 
--- Αντικατάσταση {μεταβλητών}· όσες δεν έχουν τιμή φεύγουν. Το escaping γίνεται εκεί που αποδίδεται (React, email).
-create function authz.ev_render(p_text text, p_vars jsonb) returns text
+-- Αντικατάσταση {μεταβλητών} σε ένα πέρασμα, μόνο για τις μεταβλητές του Γεγονότος· οι άγνωστες και όσες δεν έχουν τιμή
+-- φεύγουν. Μια τιμή που περιέχει «{…}» δεν ξανααντικαθίσταται. Το escaping γίνεται εκεί που αποδίδεται (React, email).
+create function authz.ev_render(p_text text, p_vars jsonb, p_allowed text[]) returns text
 language plpgsql immutable set search_path = ''
 as $$
 declare
-  v_text text := coalesce(p_text, '');
-  v_key text;
-  v_value text;
+  v_rest text := coalesce(p_text, '');
+  v_out text := '';
+  v_match text[];
+  v_pos integer;
 begin
-  for v_key, v_value in select k, v from jsonb_each_text(coalesce(p_vars, '{}'::jsonb)) as x (k, v) loop
-    v_text := replace(v_text, '{' || v_key || '}', coalesce(v_value, ''));
+  loop
+    v_match := regexp_match(v_rest, '\{([A-Za-z]+)\}');
+    exit when v_match is null;
+    v_pos := strpos(v_rest, '{' || v_match[1] || '}');
+    v_out := v_out || left(v_rest, v_pos - 1)
+             || (case when v_match[1] = any (p_allowed) then coalesce(p_vars ->> v_match[1], '') else '' end);
+    v_rest := substr(v_rest, v_pos + length(v_match[1]) + 2);
   end loop;
-  return btrim(regexp_replace(v_text, '\{[A-Za-z]+\}', '', 'g'));
+  return btrim(v_out || v_rest);
 end;
 $$;
 
@@ -206,15 +216,12 @@ declare
   v_vars jsonb := e.payload || jsonb_build_object('recipientName', r.name, 'companyName', authz.ev_company(),
                                                   'link', coalesce(v_link, ''));
   v_label text := (select case v_locale when 'en' then t.label_en else t.label_el end from public.event_types t where t.code = e.type);
+  v_allowed text[] := (select t.variables from public.event_types t where t.code = e.type);
   v_subject text;
   v_body text;
   v_send bigint;
   v_ref uuid;
 begin
-  if a.channel = 'notification'
-     and exists (select 1 from public.notifications n where n.event_id = e.id and n.user_id = r.user_id) then
-    return false;
-  end if;
   if a.channel = 'email' and coalesce(trim(r.email), '') = '' then
     return false;
   end if;
@@ -225,8 +232,17 @@ begin
   if v_send is null then
     return false;
   end if;
-  v_subject := authz.ev_render(coalesce(case v_locale when 'en' then nullif(trim(a.subject_en), '') end, a.subject_el, v_label), v_vars);
-  v_body := authz.ev_render(case v_locale when 'en' then a.body_en else a.body_el end, v_vars);
+  -- Το σημάδι γράφτηκε (μία φορά)· η Ειδοποίηση όμως μπαίνει μία ανά (Γεγονός, Χρήστη), όσοι Αυτοματισμοί κι αν τον βρουν.
+  if a.channel = 'notification'
+     and exists (select 1 from public.notifications n where n.event_id = e.id and n.user_id = r.user_id) then
+    return false;
+  end if;
+  -- Το θέμα είναι μία γραμμή.
+  v_subject := regexp_replace(
+    authz.ev_render(coalesce(case v_locale when 'en' then nullif(trim(a.subject_en), '') end, a.subject_el, v_label),
+                    v_vars, v_allowed),
+    '\s*[\r\n]+\s*', ' ', 'g');
+  v_body := authz.ev_render(case v_locale when 'en' then a.body_en else a.body_el end, v_vars, v_allowed);
   if a.channel = 'notification' then
     insert into public.notifications (user_id, client_id, automation_id, event_id, title, body, link, created_at)
     values (r.user_id, e.client_id, a.id, e.id, left(coalesce(nullif(v_subject, ''), v_label), 300), left(v_body, 2000),
@@ -294,6 +310,10 @@ begin
   foreach v_id in array v_ids loop
     select * into v_event from public.events e where e.id = v_id;
     begin
+      -- Μηνύματα και Αιτήματα: το τρέχον κείμενο (μπορεί να διορθώθηκε από τότε).
+      if v_event.entity in ('messages', 'message_requests') then
+        v_event.payload := v_event.payload || authz.event_context(v_event.entity, v_event.entity_id);
+      end if;
       v_sent := v_sent + authz.event_dispatch(v_event, v_now);
       update public.events set processed_at = v_now, locked_until = null where id = v_id;
       v_processed := v_processed + 1;
@@ -327,27 +347,39 @@ as $$
                             'createdAt', n.created_at, 'isRead', n.read_at is not null);
 $$;
 
+-- Οι Ειδοποιήσεις του θεατή: ομάδα όλες, Χρήστης πελάτη μόνο του τρέχοντος Πελάτη ή χωρίς Πελάτη. Οι συνθήκες γράφονται
+-- με τιμές υπολογισμένες μία φορά, ώστε να πιάνουν οι δείκτες (user_id, created_at desc, id desc).
+
 -- { unread, latest: [5 πιο πρόσφατες] }
 create function public.notifications_bell() returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
+declare
+  v_user uuid := auth.uid();
+  v_team boolean := authz.is_team_user();
+  v_client uuid := authz.client_user_client_id();
 begin
   perform authz.require_notification_user();
   return jsonb_build_object(
-    'unread', (select count(*) from public.notifications n where authz.notification_mine(n) and n.read_at is null),
+    'unread', (select count(*) from public.notifications n where n.user_id = v_user and (v_team or n.client_id is null or n.client_id = v_client) and n.read_at is null),
     'latest', coalesce((
       select jsonb_agg(authz.notification_json(x.r) order by x.created_at desc, x.id desc)
-        from (select n as r, n.created_at, n.id from public.notifications n where authz.notification_mine(n)
+        from (select n as r, n.created_at, n.id from public.notifications n
+               where n.user_id = v_user and (v_team or n.client_id is null or n.client_id = v_client)
                order by n.created_at desc, n.id desc limit 5) x), '[]'::jsonb));
 end;
 $$;
 
--- { items: [...], hasMore, unread }. p_filter 'unread' | 'all'· p_before για «Παλαιότερες»· p_limit 1–50.
-create function public.notifications_list(p_filter text default 'unread', p_before timestamptz default null, p_limit integer default 20)
-returns jsonb
+-- { items: [...], hasMore, unread }. p_filter 'unread' | 'all'· keyset (p_before, p_before_id) για «Παλαιότερες»· p_limit 1–50.
+create function public.notifications_list(
+  p_filter text default 'unread', p_before timestamptz default null, p_before_id uuid default null, p_limit integer default 20
+) returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
 declare
+  v_user uuid := auth.uid();
+  v_team boolean := authz.is_team_user();
+  v_client uuid := authz.client_user_client_id();
   v_limit integer := greatest(1, least(coalesce(p_limit, 20), 50));
   v_rows jsonb;
 begin
@@ -357,16 +389,18 @@ begin
   end if;
   select coalesce(jsonb_agg(authz.notification_json(x.r) order by x.created_at desc, x.id desc), '[]'::jsonb) into v_rows
     from (select n as r, n.created_at, n.id from public.notifications n
-           where authz.notification_mine(n)
+           where n.user_id = v_user and (v_team or n.client_id is null or n.client_id = v_client)
              and (p_filter = 'all' or n.read_at is null)
-             and (p_before is null or n.created_at < p_before)
+             and (p_before is null
+                  or (p_before_id is null and n.created_at < p_before)
+                  or (p_before_id is not null and (n.created_at, n.id) < (p_before, p_before_id)))
            order by n.created_at desc, n.id desc
            limit v_limit + 1) x;
   return jsonb_build_object(
     'items', coalesce((select jsonb_agg(t.v order by t.i) from jsonb_array_elements(v_rows) with ordinality as t (v, i)
                         where t.i <= v_limit), '[]'::jsonb),
     'hasMore', jsonb_array_length(v_rows) > v_limit,
-    'unread', (select count(*) from public.notifications n where authz.notification_mine(n) and n.read_at is null));
+    'unread', (select count(*) from public.notifications n where n.user_id = v_user and (v_team or n.client_id is null or n.client_id = v_client) and n.read_at is null));
 end;
 $$;
 
@@ -392,11 +426,14 @@ create function public.notifications_mark_all_read() returns integer
 language plpgsql security definer set search_path = ''
 as $$
 declare
+  v_user uuid := auth.uid();
+  v_team boolean := authz.is_team_user();
+  v_client uuid := authz.client_user_client_id();
   v_count integer;
 begin
   perform authz.require_notification_user();
   update public.notifications n set read_at = clock_timestamp()
-   where n.read_at is null and authz.notification_mine(n);
+   where n.user_id = v_user and (v_team or n.client_id is null or n.client_id = v_client) and n.read_at is null;
   get diagnostics v_count = row_count;
   return v_count;
 end;
@@ -408,7 +445,7 @@ revoke all on function
   authz.ev_transfer_holders(), authz.ev_owner_or_fallback(uuid), authz.ev_uuid(jsonb, text), authz.ev_assignee(public.events),
   authz.event_relative_users(public.events, text), authz.ev_candidates(public.automations, public.events),
   authz.ev_client_has(uuid, uuid, text[]), authz.event_visible_to(public.events, uuid, boolean),
-  authz.ev_recipients(public.automations, public.events), authz.ev_render(text, jsonb), authz.ev_company(),
+  authz.ev_recipients(public.automations, public.events), authz.ev_render(text, jsonb, text[]), authz.ev_company(),
   authz.ev_deliver(public.automations, public.events, authz.ev_recipient, timestamptz), authz.event_dispatch(public.events, timestamptz),
   authz.notification_mine(public.notifications), authz.notification_json(public.notifications)
   from public, anon, authenticated;
@@ -417,10 +454,10 @@ revoke all on function public.events_process(integer, timestamptz) from public, 
 grant execute on function public.events_process(integer, timestamptz) to service_role;
 
 revoke all on function
-  public.notifications_bell(), public.notifications_list(text, timestamptz, integer),
+  public.notifications_bell(), public.notifications_list(text, timestamptz, uuid, integer),
   public.notification_open(uuid), public.notifications_mark_all_read()
   from public, anon;
 grant execute on function
-  public.notifications_bell(), public.notifications_list(text, timestamptz, integer),
+  public.notifications_bell(), public.notifications_list(text, timestamptz, uuid, integer),
   public.notification_open(uuid), public.notifications_mark_all_read()
   to authenticated;

@@ -57,7 +57,7 @@ function BellIcon() {
   );
 }
 
-function BellList({ bell }: { bell: Bell }) {
+function BellList({ bell, onOpen }: { bell: Bell; onOpen: () => void }) {
   if (bell.latest.length === 0)
     return (
       <p className="m-0 px-3 py-2 text-sm text-muted-foreground">
@@ -69,6 +69,7 @@ function BellList({ bell }: { bell: Bell }) {
       {bell.latest.map((item) => (
         <li key={item.id}>
           <OpenButton
+            onSubmit={onOpen}
             id={item.id}
             className="grid w-full gap-0.5 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted focus-visible:bg-muted"
           >
@@ -121,8 +122,13 @@ export function NotificationBell({ initial }: { initial: Bell }) {
   const [isOpen, setIsOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setIsOpen(false), []);
   useDismiss(isOpen, rootRef, close);
+  // Όταν ανοίγει, η εστίαση πάει στο panel (πληκτρολόγιο και αναγνώστες οθόνης).
+  useEffect(() => {
+    if (isOpen) panelRef.current?.focus();
+  }, [isOpen]);
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -145,10 +151,13 @@ export function NotificationBell({ initial }: { initial: Bell }) {
       </button>
       <div
         id={panelId}
+        ref={panelRef}
+        tabIndex={-1}
+        aria-label={ALL_NOTIFICATIONS}
         hidden={!isOpen}
         className="absolute right-0 z-20 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-md border bg-card p-1 shadow-lg"
       >
-        <BellList bell={bell} />
+        <BellList bell={bell} onOpen={close} />
         <Link
           href={NOTIFICATIONS_PATH}
           onClick={close}

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseBell, parseNotificationPage } from "./view-schema";
 
 const ITEM = {
-  id: "00000000-0000-0000-0000-000000000001",
+  id: "6f1c2a3e-4b5d-4e6f-8a7b-9c0d1e2f3a4b",
   title: "Νέο Μήνυμα",
   body: "Νέο Μήνυμα από Κώστας: καλημέρα",
   link: "/app/messages/00000000-0000-0000-0000-0000000000d1",
@@ -24,6 +24,12 @@ describe("parseBell", () => {
       parseBell({ unread: 0, latest: [{ ...ITEM, link: null, isRead: true }] })
         .latest[0]?.link,
     ).toBeNull();
+  });
+
+  it("should reject an item without a uuid", () => {
+    expect(() =>
+      parseBell({ unread: 0, latest: [{ ...ITEM, id: "n-01" }] }),
+    ).toThrow();
   });
 
   it("should reject a negative count or a missing field", () => {

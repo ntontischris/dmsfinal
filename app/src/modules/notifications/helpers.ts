@@ -7,19 +7,37 @@ export type NotificationFilter = "unread" | "all";
 export const parseFilter = (value: string | undefined): NotificationFilter =>
   value === "all" ? "all" : "unread";
 
-// Το «Παλαιότερες από»: μόνο έγκυρη στιγμή ISO, αλλιώς null (πρώτη σελίδα).
-export const parseBefore = (value: string | undefined): string | null =>
-  value && /^\d{4}-\d{2}-\d{2}T/.test(value) && !Number.isNaN(Date.parse(value))
-    ? value
+// Το «Παλαιότερες»: keyset (στιγμή, id) της τελευταίας γραμμής, ώστε ίδιες στιγμές να μη χάνονται ούτε να επαναλαμβάνονται.
+export interface NotificationCursor {
+  at: string;
+  id: string;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Μόνο έγκυρη στιγμή ISO μαζί με έγκυρο id, αλλιώς null (πρώτη σελίδα).
+export const parseCursor = (
+  at: string | undefined,
+  id: string | undefined,
+): NotificationCursor | null =>
+  at &&
+  id &&
+  /^\d{4}-\d{2}-\d{2}T/.test(at) &&
+  !Number.isNaN(Date.parse(at)) &&
+  UUID.test(id)
+    ? { at, id }
     : null;
 
 export const notificationsHref = (
   filter: NotificationFilter,
-  before: string | null = null,
+  cursor: NotificationCursor | null = null,
 ): string => {
   const params = new URLSearchParams();
   if (filter === "all") params.set("show", "all");
-  if (before) params.set("before", before);
+  if (cursor) {
+    params.set("before", cursor.at);
+    params.set("beforeId", cursor.id);
+  }
   const query = params.toString();
   return query ? `${NOTIFICATIONS_PATH}?${query}` : NOTIFICATIONS_PATH;
 };

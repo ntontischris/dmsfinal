@@ -4,12 +4,13 @@ import {
   badgeText,
   bellLabel,
   notificationsHref,
-  parseBefore,
+  parseCursor,
   parseFilter,
   relativeTime,
   safeLink,
 } from "./helpers";
 
+const ID = "6f1c2a3e-4b5d-4e6f-8a7b-9c0d1e2f3a4b";
 const NOW = new Date("2026-10-12T10:00:00Z");
 const ago = (ms: number): string => new Date(NOW.getTime() - ms).toISOString();
 const MIN = 60_000;
@@ -43,20 +44,23 @@ describe("relativeTime", () => {
   });
 });
 
-describe("parseFilter and parseBefore", () => {
+describe("parseFilter and parseCursor", () => {
   it("should default to unread and accept only «all» otherwise", () => {
     expect(parseFilter(undefined)).toBe("unread");
     expect(parseFilter("bogus")).toBe("unread");
     expect(parseFilter("all")).toBe("all");
   });
 
-  it("should keep only valid ISO instants", () => {
-    expect(parseBefore("2026-10-12T09:00:00.123+00:00")).toBe(
-      "2026-10-12T09:00:00.123+00:00",
-    );
-    expect(parseBefore("2026-13-45T99:00")).toBeNull();
-    expect(parseBefore("yesterday")).toBeNull();
-    expect(parseBefore(undefined)).toBeNull();
+  it("should keep only a valid ISO instant together with a valid id", () => {
+    expect(parseCursor("2026-10-12T09:00:00.123+00:00", ID)).toEqual({
+      at: "2026-10-12T09:00:00.123+00:00",
+      id: ID,
+    });
+    expect(parseCursor("2026-13-45T99:00", ID)).toBeNull();
+    expect(parseCursor("yesterday", ID)).toBeNull();
+    expect(parseCursor("2026-10-12T09:00:00Z", "όχι-id")).toBeNull();
+    expect(parseCursor("2026-10-12T09:00:00Z", undefined)).toBeNull();
+    expect(parseCursor(undefined, ID)).toBeNull();
   });
 });
 
@@ -64,8 +68,10 @@ describe("notificationsHref", () => {
   it("should keep the filter and the cursor in the address", () => {
     expect(notificationsHref("unread")).toBe("/app/notifications");
     expect(notificationsHref("all")).toBe("/app/notifications?show=all");
-    expect(notificationsHref("all", "2026-10-12T09:00:00+00:00")).toBe(
-      "/app/notifications?show=all&before=2026-10-12T09%3A00%3A00%2B00%3A00",
+    expect(
+      notificationsHref("all", { at: "2026-10-12T09:00:00+00:00", id: ID }),
+    ).toBe(
+      `/app/notifications?show=all&before=2026-10-12T09%3A00%3A00%2B00%3A00&beforeId=${ID}`,
     );
   });
 });

@@ -1,7 +1,7 @@
 -- Ειδοποιήσεις Kα #170: κατάλογος, ουρά Γεγονότων, Αυτοματισμοί, επεξεργαστής, Προτιμήσεις και RPC καμπανακιού.
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι ώρες των Γυρισμάτων είναι σταθερές· ο καθαρισμός περνά p_now.
 begin;
-select plan(73);
+select plan(81);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή (Υπεύθυνος Παραγωγής, γλώσσα en) · a3 Πωλήσεις (Υπεύθυνος Πελάτη 1) · a4 Διαχείριση
@@ -145,6 +145,17 @@ values
   ('deliverable.review_pending', 'notification', 'relative', 'production_owner', '{}', null, 'Έλεγχος {deliverable}', '', 0),
   ('filming.crew_declined', 'email', 'relative', 'production_owner', '{}', 'Δεν μπορεί {member}', 'Ο/Η {member} δεν μπορεί.', '', 2);
 
+insert into public.automations (event_type, channel, recipient_kind, recipient_permission, body_el, sort)
+values ('message.mentioned', 'notification', 'permission', 'messages.chat', 'Αναφορά {excerpt}', 2);
+
+-- Ειδοποιήσεις ενός Μηνύματος για έναν Χρήστη.
+create function public.t_msg_notes(p_last text, p_message text) returns integer
+language sql
+as $$
+  select count(*)::integer from public.notifications n join public.events e on e.id = n.event_id
+   where n.user_id = public.t_uid(p_last) and e.entity_id = current_setting(p_message)::uuid;
+$$;
+
 -- ───────────── Δικαιώματα ─────────────
 set local role anon;
 select throws_ok($$ select public.events_process() $$, '42501', null, 'Ο ανώνυμος δεν τρέχει τον επεξεργαστή');
@@ -279,6 +290,27 @@ select is((select count(*)::integer from public.notifications n join public.even
   1, 'Πελάτης χωρίς Υπεύθυνο → όσοι «Μεταβιβάζουν Υπεύθυνο»');
 select is(public.t_count('a2', 'message.mentioned'), 1, '@αναφορά σε Εσωτερικό → ο αναφερόμενος');
 select is(public.t_count('a1', 'message.mentioned'), 0, 'Όποιος ανέφερε τον εαυτό του δεν ειδοποιείται');
+select is((select count(*)::integer from public.automation_sends s join public.automations a on a.id = s.automation_id
+            where a.body_el = 'Αναφορά {excerpt}' and s.recipient_key = public.t_uid('a2')::text),
+  0, '«Δικαίωμα» με Εύρος «όσα με αφορούν» δεν είναι παραλήπτης');
+select is((select count(*)::integer from public.automation_sends s join public.automations a on a.id = s.automation_id
+            where a.body_el = 'Αναφορά {excerpt}' and s.recipient_key = public.t_uid('a4')::text),
+  1, '«Δικαίωμα» με Εύρος «όλα» είναι παραλήπτης');
+
+-- Διορθωμένο και σβησμένο πριν από τον επεξεργαστή.
+select public.t_as('b1');
+select set_config('t.m_edit', gen_random_uuid()::text, true);
+select set_config('t.m_del', gen_random_uuid()::text, true);
+insert into public.messages (id, client_id, author_id, author_kind, body) values
+  (current_setting('t.m_edit')::uuid, '00000000-0000-0000-0000-0000000000d1', public.t_uid('b1'), 'client', 'Πρώτο κείμενο'),
+  (current_setting('t.m_del')::uuid, '00000000-0000-0000-0000-0000000000d1', public.t_uid('b1'), 'client', 'Θα σβηστεί');
+update public.messages set body = 'Διορθωμένο κείμενο', edited_at = now() where id = current_setting('t.m_edit')::uuid;
+update public.messages set deleted_at = now(), deleted_by = public.t_uid('b1') where id = current_setting('t.m_del')::uuid;
+select public.t_run();
+select is(public.t_msg_notes('a3', 't.m_del'), 0, 'Μήνυμα σβησμένο πριν από τον επεξεργαστή: καμία Ειδοποίηση');
+select is((select n.body from public.notifications n join public.events e on e.id = n.event_id
+            where n.user_id = public.t_uid('a3') and e.entity_id = current_setting('t.m_edit')::uuid),
+  'Νέο Μήνυμα από Κώστας: Διορθωμένο κείμενο', 'Διορθωμένο Μήνυμα: φεύγει το τρέχον κείμενο');
 
 -- ───────────── Δ: χαμηλό περιθώριο (Γεγονός κόστους) ─────────────
 select public.t_as('a4');
@@ -339,7 +371,8 @@ select public.t_as('a3');
 select is((public.notifications_bell() ->> 'unread')::integer, public.t_unread('a3'), 'Ο μετρητής μετράει τις αδιάβαστες του Χρήστη');
 select is(jsonb_array_length(public.notifications_bell() -> 'latest'), least(public.t_unread('a3'), 5), 'Οι τελευταίες, έως 5');
 select set_config('t.n', (select n.id::text from public.notifications n join public.events e on e.id = n.event_id
-                           where n.user_id = public.t_uid('a3') and e.type = 'message.created'), true);
+                           where n.user_id = public.t_uid('a3') and e.type = 'message.created'
+                             and n.body like '%Πότε είναι%'), true);
 select is(public.notification_open(current_setting('t.n')::uuid), '/app/messages/00000000-0000-0000-0000-0000000000d1',
   'Το άνοιγμα επιστρέφει το link');
 select is((select read_at is not null from public.notifications where id = current_setting('t.n')::uuid), true,
@@ -355,8 +388,19 @@ select is(public.notifications_mark_all_read(), current_setting('t.u')::integer,
 select is((public.notifications_bell() ->> 'unread')::integer, 0, 'Μετά: μηδέν αδιάβαστες');
 select throws_ok($$ select public.notifications_list('maybe') $$, 'P0001', null, 'Το φίλτρο είναι unread ή all');
 select is((select (x ->> 'hasMore')::boolean and jsonb_array_length(x -> 'items') = 1
-             from (select public.notifications_list('all', null, 1) as x) y), true,
+             from (select public.notifications_list('all', null, null, 1) as x) y), true,
   'Σελίδα με όριο 1: μία γραμμή και «Παλαιότερες»');
+-- Keyset (created_at, id): όλες οι Ειδοποιήσεις του τεστ έχουν την ίδια στιγμή, άρα κρίνει το id.
+select set_config('t.p1', public.notifications_list('all', null, null, 1)::text, true);
+select set_config('t.p2', public.notifications_list('all',
+  (current_setting('t.p1')::jsonb #>> '{items,0,createdAt}')::timestamptz,
+  (current_setting('t.p1')::jsonb #>> '{items,0,id}')::uuid, 50)::text, true);
+select is((select count(*)::integer from jsonb_array_elements(current_setting('t.p2')::jsonb -> 'items') x
+            where x ->> 'id' = current_setting('t.p1')::jsonb #>> '{items,0,id}'),
+  0, '«Παλαιότερες» δεν ξαναδείχνει την ίδια, ακόμα και με ίδια στιγμή');
+select is(jsonb_array_length(current_setting('t.p2')::jsonb -> 'items'),
+  (select count(*)::integer - 1 from public.notifications where user_id = public.t_uid('a3')),
+  '«Παλαιότερες» δείχνει όλες τις υπόλοιπες');
 
 -- Ο Χρήστης πελάτη σε δύο Πελάτες βλέπει μόνο του τρέχοντος.
 select public.t_as('b3');
@@ -367,6 +411,15 @@ update public.client_users set is_current = true
 select is(public.notifications_list('all') -> 'items' -> 0 ->> 'body', 'Νέο Μήνυμα από την Στούντιο Τεστ: Καλημέρα από την ομάδα',
   'Στον Πελάτη 2 βλέπει μόνο του Πελάτη 2');
 select is(jsonb_array_length(public.notifications_list('all') -> 'items'), 1, 'Και μόνο αυτή');
+
+-- ───────────── Αποφάσεις σε αιτήματα Γυρίσματος ─────────────
+select public.t_as('a4');
+select authz.filming_event(current_setting('t.f2')::uuid, 'cancel_request_decided', '{"accepted":false}'::jsonb);
+select is((select count(*)::integer from public.events where type = 'filming.cancelled' and entity_id = current_setting('t.f2')::uuid),
+  0, 'Απόρριψη αιτήματος ακύρωσης: κανένα Γεγονός ακύρωσης');
+select authz.filming_event(current_setting('t.f2')::uuid, 'cancel_request_decided', '{"accepted":true,"burned":false}'::jsonb);
+select is((select case_key from public.events where type = 'filming.cancelled' and entity_id = current_setting('t.f2')::uuid),
+  'filming.cancelled:' || current_setting('t.f2'), 'Αποδοχή αιτήματος ακύρωσης → Γύρισμα ακυρώθηκε');
 
 -- ───────────── Καθαρισμός 90 ημερών ─────────────
 select public.events_process(100, now() + interval '91 days');

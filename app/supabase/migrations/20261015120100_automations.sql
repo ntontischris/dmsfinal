@@ -69,8 +69,8 @@ create table public.notifications (
   read_at timestamptz
 );
 
-create index notifications_user_created_idx on public.notifications (user_id, created_at desc);
-create index notifications_user_unread_idx on public.notifications (user_id) where read_at is null;
+create index notifications_user_created_idx on public.notifications (user_id, created_at desc, id desc);
+create index notifications_user_unread_idx on public.notifications (user_id, created_at desc, id desc) where read_at is null;
 create index notifications_event_user_idx on public.notifications (event_id, user_id);
 create index notifications_created_idx on public.notifications (created_at);
 

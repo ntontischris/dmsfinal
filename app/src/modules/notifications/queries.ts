@@ -1,6 +1,6 @@
 import { createSupabase } from "@/lib/supabase/server";
 
-import type { NotificationFilter } from "./helpers";
+import type { NotificationCursor, NotificationFilter } from "./helpers";
 import { read, type ReadResult } from "./read";
 import {
   parseBell,
@@ -22,7 +22,7 @@ export async function getBell(): Promise<ReadResult<Bell | null>> {
 
 export async function getNotifications(
   filter: NotificationFilter,
-  before: string | null,
+  cursor: NotificationCursor | null,
 ): Promise<ReadResult<NotificationPage | null>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
@@ -30,7 +30,8 @@ export async function getNotifications(
     "getNotifications",
     supabase.rpc("notifications_list", {
       p_filter: filter,
-      p_before: before,
+      p_before: cursor?.at ?? null,
+      p_before_id: cursor?.id ?? null,
       p_limit: PAGE_SIZE,
     }),
     parseNotificationPage,

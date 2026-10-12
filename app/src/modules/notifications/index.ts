@@ -1,6 +1,11 @@
 // Module «Ειδοποιήσεις» (A2, #170): καμπανάκι στην πάνω μπάρα και σελίδα Ειδοποιήσεων. Έξω φαίνεται μόνο ό,τι χρειάζονται οι σελίδες.
 export type { Bell, NotificationItem, NotificationPage } from "./view-schema";
-export { parseBefore, parseFilter, type NotificationFilter } from "./helpers";
+export {
+  parseCursor,
+  parseFilter,
+  type NotificationCursor,
+  type NotificationFilter,
+} from "./helpers";
 export {
   LOAD_ERROR_TEXT,
   LOAD_ERROR_TITLE,

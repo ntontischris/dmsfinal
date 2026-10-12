@@ -9,14 +9,14 @@ import {
   NOTIFICATIONS_TITLE,
   NotificationsScreen,
   getNotifications,
-  parseBefore,
+  parseCursor,
   parseFilter,
 } from "@/modules/notifications";
 
 export const metadata = { title: NOTIFICATIONS_TITLE };
 
 interface NotificationsPageProps {
-  searchParams: Promise<{ show?: string; before?: string }>;
+  searchParams: Promise<{ show?: string; before?: string; beforeId?: string }>;
 }
 
 // A2 για όλους (ομάδα και πελάτη): η βάση δείχνει μόνο τις δικές σου Ειδοποιήσεις.
@@ -27,7 +27,10 @@ export default async function NotificationsPage({
   const filter = parseFilter(params.show);
   const result =
     viewer.status === "signed-in"
-      ? await getNotifications(filter, parseBefore(params.before))
+      ? await getNotifications(
+          filter,
+          parseCursor(params.before, params.beforeId),
+        )
       : null;
   return (
     <>

@@ -3,7 +3,7 @@ import { z } from "zod";
 // Τα JSON των RPC του καμπανακιού (#170). Τα ονόματα είναι camelCase όπως τα γράφει η βάση.
 
 export const notificationItemSchema = z.object({
-  id: z.string(),
+  id: z.uuid(),
   title: z.string(),
   body: z.string(),
   link: z.string().nullable(),

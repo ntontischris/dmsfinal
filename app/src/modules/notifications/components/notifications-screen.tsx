@@ -116,7 +116,10 @@ export function NotificationsScreen({
       {page.hasMore && last && (
         <div>
           <Link
-            href={notificationsHref(filter, last.createdAt)}
+            href={notificationsHref(filter, {
+              at: last.createdAt,
+              id: last.id,
+            })}
             className={buttonVariants()}
           >
             {OLDER_LABEL}

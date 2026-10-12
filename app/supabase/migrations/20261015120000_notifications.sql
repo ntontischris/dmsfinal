@@ -131,7 +131,7 @@ values
   (38, 'receipt.registered', 'Δ', 'instant', 'Καταχωρήθηκε Είσπραξη', 'A receipt was registered',
    'η Είσπραξη', authz.ev_vars('receipt', 'amount', 'invoice'), '{client_owner,actor}', false, false, false, false, 40),
   (39, 'proposal.low_margin', 'Δ', 'instant', 'Χαμηλό περιθώριο πρότασης', 'Low proposal margin',
-   'η αναθεώρηση', authz.ev_vars('production', 'proposal', 'margin', 'cost'), '{opportunity_owner,actor}', false, true, false, true, 41),
+   'η αναθεώρηση', authz.ev_vars('opportunity', 'owner', 'proposal'), '{opportunity_owner,actor}', false, true, false, true, 41),
   (40, 'production.cost_overrun', 'Δ', 'instant', 'Υπέρβαση κόστους Παραγωγής', 'Production cost overrun',
    'η Παραγωγή', authz.ev_vars('production', 'proposal', 'margin', 'cost'), '{production_owner}', false, true, false, false, 42),
   (41, 'production.delivered_without_hours', 'Δ', 'instant', 'Παραγωγή παραδομένη χωρίς πραγματικές ώρες', 'Production delivered without actual hours',
@@ -327,16 +327,22 @@ create function authz.emit_event(
 language plpgsql security definer set search_path = ''
 as $$
 declare
-  v_payload jsonb := authz.event_context(p_entity, p_entity_id) || coalesce(p_payload, '{}'::jsonb);
-  v_client uuid := coalesce(p_client_id, nullif(v_payload ->> 'client_id', '')::uuid);
+  v_payload jsonb;
+  v_client uuid;
   v_id bigint;
 begin
+  v_payload := authz.event_context(p_entity, p_entity_id) || coalesce(p_payload, '{}'::jsonb);
+  v_client := coalesce(p_client_id, nullif(v_payload ->> 'client_id', '')::uuid);
   insert into public.events (type, entity, entity_id, case_key, client_id, actor_id, payload)
   values (p_type, p_entity, p_entity_id,
           coalesce(nullif(p_case_key, ''), p_type || ':' || coalesce(p_entity_id::text, p_entity)),
           v_client, auth.uid(), v_payload)
   returning id into v_id;
   return v_id;
+exception when others then
+  -- Ένα λάθος της ουράς δεν ακυρώνει ποτέ την επιχειρησιακή ενέργεια.
+  raise warning 'emit_event %: %', p_type, sqlerrm;
+  return null;
 end;
 $$;
 
@@ -367,6 +373,9 @@ as $$
       when 'rescheduled' then case when p_actor is not null then 'filming.rescheduled' end
       when 'cancelled' then 'filming.cancelled'
       when 'cancel_requested' then 'filming.cancel_requested'
+      -- Η αποδοχή αιτήματος μετάθεσης περνά και από το filming_move («rescheduled»): ίδια περίπτωση, μία αποστολή.
+      when 'reschedule_decided' then case when (p_detail ->> 'accepted')::boolean then 'filming.rescheduled' end
+      when 'cancel_request_decided' then case when (p_detail ->> 'accepted')::boolean then 'filming.cancelled' end
       when 'crew_declined' then 'filming.crew_declined'
     end
     when 'productions' then case p_event when 'delivered' then 'production.delivered' end
@@ -411,6 +420,8 @@ as $$
       'r' || coalesce(p_detail ->> 'revision', (select a.revision::text from public.agreements a where a.id = p_entity_id), '')
     when p_event = 'sheet_issued' then 'v' || coalesce(p_detail ->> 'version', '')
     when p_event = 'rescheduled' then coalesce(p_detail ->> 'to', p_audit::text)
+    when p_event = 'reschedule_decided' then
+      coalesce((select to_jsonb(f.starts_at) #>> '{}' from public.filmings f where f.id = p_entity_id), p_audit::text)
     when p_event = 'crew_declined' then coalesce(p_detail ->> 'user_id', '')
     when p_entity = 'productions' then p_audit::text
     when p_entity = 'access' then coalesce(p_detail ->> 'invitationId', p_detail ->> 'userId', p_audit::text)
@@ -423,11 +434,12 @@ as $$
 declare
   v_detail jsonb := coalesce(new.after, '{}'::jsonb);
   v_event text := v_detail ->> 'event';
-  v_code text := authz.audit_event_code(new.entity, v_event, v_detail, new.actor_id);
+  v_code text;
   v_id uuid;
   v_suffix text;
   v_payload jsonb := '{}'::jsonb;
 begin
+  v_code := authz.audit_event_code(new.entity, v_event, v_detail, new.actor_id);
   if v_code is null or new.entity_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
     return null;
   end if;
@@ -448,6 +460,10 @@ begin
   end if;
   perform authz.emit_event(v_code, new.entity, v_id,
     v_code || ':' || v_id || coalesce(':' || nullif(v_suffix, ''), ''), null, v_payload);
+  return null;
+exception when others then
+  -- Ένα λάθος της ουράς δεν ακυρώνει ποτέ την επιχειρησιακή ενέργεια (ούτε το Ίχνος).
+  raise warning 'audit_emit %: %', new.entity, sqlerrm;
   return null;
 end;
 $$;
