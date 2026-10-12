@@ -124,7 +124,8 @@ begin
     raise exception 'Τα κείμενα δεν είναι έγκυρα. Έλεγξε τα πεδία.' using errcode = 'P0001';
   end;
   -- Το θέμα φαίνεται σε λίστες και ειδοποιήσεις: ποτέ σύνδεσμος ή κωδικός μέσα του.
-  v_bad := (select m[1] from regexp_matches(concat_ws(' ', v_subject_el, v_subject_en), '\{(link|code)\}', 'g') m limit 1);
+  v_bad := (select r.found[1] from regexp_matches(concat_ws(' ', v_subject_el, v_subject_en), '\{(link|code)\}', 'g') as r (found)
+             limit 1);
   if v_bad is not null then
     raise exception 'Το {%} δεν μπαίνει στο θέμα: βάλ'' το στο κείμενο', v_bad using errcode = 'P0001';
   end if;
