@@ -41,7 +41,10 @@ export interface CompletionRow {
 }
 
 // Το link του Παραδοτέου στο email: τα τελικά αρχεία αν υπάρχουν, αλλιώς το link της Έκδοσης.
-const itemUrl = (item: z.infer<typeof deliveredItemSchema>): string | null =>
+export const itemUrl = (item: {
+  finalFilesUrl?: string | null;
+  url?: string | null;
+}): string | null =>
   item.finalFilesUrl || item.url || null;
 
 export function productionDeliveredFor(

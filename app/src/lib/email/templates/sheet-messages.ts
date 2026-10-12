@@ -55,16 +55,11 @@ const hoursText = (locale: Locale, hours: number): string => {
 const filmingUrl = (origin: string, filmingId: string): string =>
   `${origin}/app/filming/${encodeURIComponent(filmingId)}`;
 
-export function sheetIssuedMessage(input: SheetIssuedInput): EmailMessageBody {
+// Οι παράγραφοι του Δελτίου χωρίς τον χαιρετισμό: ίδιες στο παλιό email και στο μπλοκ του Αυτοματισμού (#171).
+export function sheetIssuedDetails(input: SheetIssuedInput): string[] {
   const { locale } = input;
-  const subject = pick(
-    locale,
-    `Δελτίο γυρίσματος · ${input.production} · ${formatDay(locale, input.startsAt)}`,
-    `Filming sheet · ${input.production} · ${formatDay(locale, input.startsAt)}`,
-  );
   const when = formatWhen(locale, input.startsAt);
   const paragraphs = [
-    pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
     pick(
       locale,
       `Έκδοση ${input.version} του Δελτίου για το γύρισμα «${input.production}»: ${when}, ${hoursText(locale, input.hours)}, ${input.location ?? "χωρίς τοποθεσία"}.`,
@@ -74,6 +69,17 @@ export function sheetIssuedMessage(input: SheetIssuedInput): EmailMessageBody {
   if (input.change) {
     paragraphs.push(pick(locale, `Τι άλλαξε: ${input.change}`, `What changed: ${input.change}`));
   }
+  return paragraphs;
+}
+
+export function sheetIssuedMessage(input: SheetIssuedInput): EmailMessageBody {
+  const { locale } = input;
+  const subject = pick(
+    locale,
+    `Δελτίο γυρίσματος · ${input.production} · ${formatDay(locale, input.startsAt)}`,
+    `Filming sheet · ${input.production} · ${formatDay(locale, input.startsAt)}`,
+  );
+  const paragraphs = [pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`), ...sheetIssuedDetails(input)];
   const rendered = renderShell({
     locale,
     origin: input.origin,
@@ -87,18 +93,28 @@ export function sheetIssuedMessage(input: SheetIssuedInput): EmailMessageBody {
   return { subject, ...rendered };
 }
 
-export function crewDeclinedMessage(input: CrewDeclinedInput): EmailMessageBody {
-  const { locale } = input;
-  const day = formatDay(locale, input.startsAt);
-  const subject = pick(
-    locale,
+const crewDeclinedSubject = (input: CrewDeclinedInput): string => {
+  const day = formatDay(input.locale, input.startsAt);
+  return pick(
+    input.locale,
     `${input.member} δεν μπορεί στο Γύρισμα ${input.production} ${day}`,
     `${input.member} cannot attend the filming ${input.production} ${day}`,
   );
-  const paragraphs = [pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`), subject + "."];
+};
+
+// Οι παράγραφοι του «δεν μπορώ» χωρίς τον χαιρετισμό (#171).
+export function crewDeclinedDetails(input: CrewDeclinedInput): string[] {
+  const paragraphs = [crewDeclinedSubject(input) + "."];
   if (input.reason) {
-    paragraphs.push(pick(locale, `Λόγος: ${input.reason}`, `Reason: ${input.reason}`));
+    paragraphs.push(pick(input.locale, `Λόγος: ${input.reason}`, `Reason: ${input.reason}`));
   }
+  return paragraphs;
+}
+
+export function crewDeclinedMessage(input: CrewDeclinedInput): EmailMessageBody {
+  const { locale } = input;
+  const subject = crewDeclinedSubject(input);
+  const paragraphs = [pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`), ...crewDeclinedDetails(input)];
   const rendered = renderShell({
     locale,
     origin: input.origin,

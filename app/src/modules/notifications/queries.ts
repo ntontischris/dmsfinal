@@ -37,3 +37,17 @@ export async function getNotifications(
     parseNotificationPage,
   );
 }
+
+export type EmailLanguage = "el" | "en";
+
+const parseLanguage = (data: unknown): EmailLanguage =>
+  data === "en" ? "en" : "el";
+
+// Η γλώσσα των email του Χρήστη πελάτη (#171). null = ο θεατής δεν είναι Χρήστης πελάτη.
+export async function getMyLanguage(): Promise<
+  ReadResult<EmailLanguage | null>
+> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("getMyLanguage", supabase.rpc("my_language"), parseLanguage);
+}

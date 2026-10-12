@@ -29,11 +29,10 @@ const roundsText = (input: DeliverableVersionInput): string | null => {
   );
 };
 
-export function deliverableVersionMessage(input: DeliverableVersionInput): EmailMessageBody {
+// Οι παράγραφοι της Έκδοσης χωρίς τον χαιρετισμό: ίδιες στο παλιό email και στο μπλοκ του Αυτοματισμού (#171).
+export function deliverableVersionDetails(input: DeliverableVersionInput): string[] {
   const { locale } = input;
-  const subject = pick(locale, `Νέα Έκδοση για έγκριση · ${input.title}`, `New version for approval · ${input.title}`);
   const paragraphs = [
-    pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
     pick(
       locale,
       `Η Έκδοση ${input.version} του Παραδοτέου «${input.title}» είναι έτοιμη για την Παραγωγή «${input.production}».`,
@@ -42,6 +41,13 @@ export function deliverableVersionMessage(input: DeliverableVersionInput): Email
   ];
   const rounds = roundsText(input);
   if (rounds) paragraphs.push(rounds);
+  return paragraphs;
+}
+
+export function deliverableVersionMessage(input: DeliverableVersionInput): EmailMessageBody {
+  const { locale } = input;
+  const subject = pick(locale, `Νέα Έκδοση για έγκριση · ${input.title}`, `New version for approval · ${input.title}`);
+  const paragraphs = [pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`), ...deliverableVersionDetails(input)];
   const rendered = renderShell({
     locale,
     origin: input.origin,

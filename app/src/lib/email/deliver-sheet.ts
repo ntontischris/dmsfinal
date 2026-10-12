@@ -18,7 +18,7 @@ const AUTOMATIC_CHANGE_EN: Record<string, string> = {
   "Άλλαξε η μέρα ή η ώρα": "The day or time changed",
 };
 
-const localizeChange = (locale: Locale, change: string): string =>
+export const localizeChange = (locale: Locale, change: string): string =>
   locale === "en" ? (AUTOMATIC_CHANGE_EN[change] ?? change) : change;
 
 export const isSheetKind = (kind: string): kind is SheetKind =>

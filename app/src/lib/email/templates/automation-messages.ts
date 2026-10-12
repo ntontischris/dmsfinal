@@ -13,6 +13,10 @@ export interface AutomationMessageInput {
   subject: string;
   body: string;
   link: string | null;
+  // Το μπλοκ λεπτομερειών του Γεγονότος, κάτω από το κείμενο του Αυτοματισμού (#171).
+  details?: readonly string[];
+  // Ο σύνδεσμος διακοπής των email ενός μη απαραίτητου Αυτοματισμού (#171, Α10).
+  unsubscribeUrl?: string | null;
 }
 
 // Οι παράγραφοι του σώματος: χωρίζονται με κενή γραμμή, χωρίς κενές.
@@ -36,11 +40,19 @@ export function automationMessage(
     locale: input.locale,
     origin: input.origin,
     heading: input.subject,
-    paragraphs: bodyParagraphs(input.body),
+    paragraphs: [...bodyParagraphs(input.body), ...(input.details ?? [])],
     action: {
       label: pick(input.locale, "Άνοιγμα στο DMS", "Open in DMS"),
       url: absoluteLink(input.origin, input.link),
     },
+    ...(input.unsubscribeUrl
+      ? {
+          footerLink: {
+            label: pick(input.locale, "Να μη λαμβάνω αυτά τα email", "Stop receiving these emails"),
+            url: input.unsubscribeUrl,
+          },
+        }
+      : {}),
   });
   return { subject: input.subject, ...rendered };
 }

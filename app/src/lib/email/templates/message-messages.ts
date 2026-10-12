@@ -78,23 +78,14 @@ const KIND_LABEL: Readonly<Record<RequestKind, { el: string; en: string }>> = {
 const optionalLine = (text: string | null, label: string): string[] =>
   text ? [`${label}: ${text}`] : [];
 
-export function requestClosedMessage(
-  input: RequestClosedInput,
-): EmailMessageBody {
+// Οι παράγραφοι του κλεισίματος χωρίς τον χαιρετισμό: ίδιες στο παλιό email και στο μπλοκ του Αυτοματισμού (#171).
+export function requestClosedDetails(input: RequestClosedInput): string[] {
   const { locale } = input;
   const isDone = input.outcome === "done";
-  const subject = isDone
-    ? pick(locale, "Το Αίτημά σας ολοκληρώθηκε", "Your request is done")
-    : pick(locale, "Το Αίτημά σας απορρίφθηκε", "Your request was declined");
   const deliverableUrl = input.deliverableId
     ? `${input.origin}/app/deliverables/${encodeURIComponent(input.deliverableId)}`
     : null;
-  const rendered = renderShell({
-    locale,
-    origin: input.origin,
-    heading: subject,
-    paragraphs: [
-      pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
+  return [
       pick(
         locale,
         `Αίτημα (${KIND_LABEL[input.kind].el}) του Πελάτη ${input.clientName}: ${isDone ? "ολοκληρώθηκε" : "απορρίφθηκε"}.`,
@@ -110,6 +101,24 @@ export function requestClosedMessage(
         deliverableUrl,
         pick(locale, "Το Παραδοτέο", "The deliverable"),
       ),
+  ];
+}
+
+export function requestClosedMessage(
+  input: RequestClosedInput,
+): EmailMessageBody {
+  const { locale } = input;
+  const subject =
+    input.outcome === "done"
+      ? pick(locale, "Το Αίτημά σας ολοκληρώθηκε", "Your request is done")
+      : pick(locale, "Το Αίτημά σας απορρίφθηκε", "Your request was declined");
+  const rendered = renderShell({
+    locale,
+    origin: input.origin,
+    heading: subject,
+    paragraphs: [
+      pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
+      ...requestClosedDetails(input),
     ],
     action: {
       label: pick(locale, "Δες τα Αιτήματά σου", "View your requests"),

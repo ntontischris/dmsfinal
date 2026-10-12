@@ -120,10 +120,11 @@ function decisionSentence(input: DecisionInput, when: string): string {
   return pick(locale, `Η αίτηση μετάθεσης δεν εγκρίθηκε. Το γύρισμα μένει για ${when}.`, `The reschedule request was not approved. The filming stays at ${when}.`);
 }
 
-function decisionParagraphs(input: DecisionInput): string[] {
+// Οι παράγραφοι της απόφασης χωρίς τον χαιρετισμό: ίδιες στο παλιό email και στο μπλοκ του Αυτοματισμού (#171).
+export function decisionDetails(input: DecisionInput): string[] {
   const { locale } = input;
   const when = formatAthens(locale, input.startsAt);
-  const paragraphs = [pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`), decisionSentence(input, when)];
+  const paragraphs = [decisionSentence(input, when)];
   if (input.kind === "reschedule_decision" && input.decision === "approved" && input.previousStartsAt) {
     const previous = formatAthens(locale, input.previousStartsAt);
     paragraphs.push(pick(locale, `Η προηγούμενη ώρα ήταν ${previous}.`, `The previous time was ${previous}.`));
@@ -133,6 +134,16 @@ function decisionParagraphs(input: DecisionInput): string[] {
   }
   return paragraphs;
 }
+
+export const decisionTitle = (input: Pick<DecisionInput, "locale" | "kind" | "decision">): string => {
+  const title = DECISION_TITLES[input.kind][input.decision];
+  return pick(input.locale, title.el, title.en);
+};
+
+const decisionParagraphs = (input: DecisionInput): string[] => [
+  pick(input.locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
+  ...decisionDetails(input),
+];
 
 export function decisionMessage(input: DecisionInput): EmailMessageBody {
   const { locale } = input;

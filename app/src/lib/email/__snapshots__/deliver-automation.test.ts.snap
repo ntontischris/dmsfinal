@@ -29,3 +29,141 @@ Open in DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
 Devre Media · This message was sent by the company system.",
 }
 `;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of deliverable.version_sent under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Η Έκδοση 2 του Παραδοτέου «Reel καφέ» είναι έτοιμη για την Παραγωγή «Μηνιαίο».
+Γύροι αλλαγών: 1 από 3.
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of filming.crew_declined under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Κώστας δεν μπορεί στο Γύρισμα Reel καφέ 12 Οκτωβρίου.
+Λόγος: Ταξίδι
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of filming.decided (απορρίφθηκε) under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Το Γύρισμά σου δεν εγκρίθηκε.
+Το αίτημα γυρίσματος για 12 Οκτωβρίου 2026 στις 14:30 δεν εγκρίθηκε.
+Αιτιολογία: Κλειστό στούντιο
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of filming.decided (εγκρίθηκε) under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Το Γύρισμά σου εγκρίθηκε.
+Το γύρισμα είναι προγραμματισμένο για 12 Οκτωβρίου 2026 στις 14:30. Διάρκεια: 2 ώρες.
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of filming.decided (μετάθεση απορρίφθηκε) under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Η μετάθεση δεν εγκρίθηκε.
+Η αίτηση μετάθεσης δεν εγκρίθηκε. Το γύρισμα μένει για 12 Οκτωβρίου 2026 στις 14:30.
+Αιτιολογία: Γεμάτη ώρα
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of filming.rescheduled under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Το γύρισμα μετατέθηκε για 13 Οκτωβρίου 2026 στις 14:30. Διάρκεια: 2 ώρες.
+Η προηγούμενη ώρα ήταν 12 Οκτωβρίου 2026 στις 14:30.
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of filming.sheet_issued under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Έκδοση 2 του Δελτίου για το γύρισμα «Reel καφέ»: 12 Οκτωβρίου 2026 στις 14:30, 2 ώρες, Αθήνα.
+Τι άλλαξε: Άλλαξε το Συνεργείο
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of invoice.registered under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Το τιμολόγιο 87 καταχωρήθηκε. Το PDF επισυνάπτεται σε αυτό το μήνυμα.
+Ημερομηνία έκδοσης: 03/06/2026
+Ποσό: 1.612,00 €
+Λήξη: 23/06/2026
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of production.delivered under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Η Παραγωγή «Μηνιαίο» παραδόθηκε. Τα Παραδοτέα της:
+Reel: https://drive.example.com/final
+Story: https://vimeo.com/1
+Σημείωση
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;
+
+exports[`automationMessageFor: μπλοκ λεπτομερειών > should render the block of request.closed under the text 1`] = `
+"Νέα Έκδοση για έγκριση: Reel καφέ
+
+Γεια σας Μαρία,
+η Έκδοση 2 του Reel καφέ σας περιμένει.
+Αίτημα (νέο Παραδοτέο) του Πελάτη Κυψέλη Καφέ: ολοκληρώθηκε.
+Σχόλιο: Έτοιμο
+Σύνδεσμος: https://example.com/reel
+Το Παραδοτέο: https://dmsfinal-app.vercel.app/app/deliverables/d-9
+
+Άνοιγμα στο DMS: https://dmsfinal-app.vercel.app/app/deliverables/d-1
+
+Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας."
+`;

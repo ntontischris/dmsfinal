@@ -2,7 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { accessLinkFor } from "./access-link";
-import { AUTOMATION_KIND, automationMessageFor } from "./deliver-automation";
+import {
+  AUTOMATION_KIND,
+  automationMessageFor,
+  type AutomationBody,
+} from "./deliver-automation";
 import { deliverableMessageFor, DELIVERABLE_KIND } from "./deliver-deliverable";
 import {
   DELIVERABLE_REMINDER_KIND,
@@ -24,6 +28,7 @@ import {
 import { OVERDUE_KIND, overdueMessageFor } from "./deliver-overdue";
 import { isSheetKind, sheetMessageFor } from "./deliver-sheet";
 import { toLocale, type Locale } from "./locale";
+import { readReplyTo } from "./reply-to";
 import { sendEmail, type SendOutcome } from "./send-email";
 import {
   clientAddedMessage,
@@ -197,7 +202,7 @@ async function messageFor(
   admin: SupabaseClient,
   row: OutboxRow,
   origin: string,
-): Promise<EmailMessageBody | InvoiceBody | string> {
+): Promise<EmailMessageBody | InvoiceBody | AutomationBody | string> {
   if (row.kind === "test")
     return testMessage({ locale: toLocale(row.locale), origin });
   if (row.kind === "invite_resend")
@@ -214,7 +219,8 @@ async function messageFor(
   if (row.kind === OVERDUE_KIND) return overdueMessageFor(row, origin);
   if (row.kind === DIGEST_KIND) return digestMessageFor(row, origin);
   if (row.kind === REQUEST_CLOSED_KIND) return requestClosedFor(row, origin);
-  if (row.kind === AUTOMATION_KIND) return automationMessageFor(row, origin);
+  if (row.kind === AUTOMATION_KIND)
+    return automationMessageFor(admin, row, origin);
   return clientAddedMessageFor(admin, row, origin);
 }
 
@@ -230,6 +236,7 @@ export async function deliverOutboxRow(
     to: row.to_email,
     toName: row.to_name,
     ...message,
+    replyTo: await readReplyTo(admin),
   });
   return { outcome, subject: message.subject };
 }

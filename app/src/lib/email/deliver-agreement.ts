@@ -4,6 +4,7 @@ import { z } from "zod";
 import { accessLinkFor } from "./access-link";
 import { attachInvitationAccount, failInvitation } from "./invitation-account";
 import { toLocale } from "./locale";
+import { readReplyTo } from "./reply-to";
 import { sendEmail, type SendOutcome } from "./send-email";
 import { invitationMessage, type EmailMessageBody } from "./templates/auth-messages";
 import { proposalLinkMessage, signedCopyMessage, signingCodeMessage } from "./templates/agreement-messages";
@@ -80,11 +81,20 @@ async function clientInviteMessage(admin: SupabaseClient, row: AgreementRow, ori
     kind: "client",
     clientName: typeof client?.name === "string" ? client.name : undefined,
   });
-  return sendAgreementMail(row, message);
+  return sendAgreementMail(admin, row, message);
 }
 
-async function sendAgreementMail(row: AgreementRow, message: EmailMessageBody): Promise<AgreementDelivery> {
-  const outcome = await sendEmail({ to: row.to_email, toName: row.to_name, ...message });
+async function sendAgreementMail(
+  admin: SupabaseClient,
+  row: AgreementRow,
+  message: EmailMessageBody,
+): Promise<AgreementDelivery> {
+  const outcome = await sendEmail({
+    to: row.to_email,
+    toName: row.to_name,
+    ...message,
+    replyTo: await readReplyTo(admin),
+  });
   return { status: "done", outcome, subject: message.subject };
 }
 
@@ -109,5 +119,5 @@ export async function deliverAgreementRow(admin: SupabaseClient, row: AgreementR
   }
   const message = messageForRow(row, origin);
   if (!message) return sendFailed("Άγνωστο είδος μηνύματος");
-  return sendAgreementMail(row, message);
+  return sendAgreementMail(admin, row, message);
 }

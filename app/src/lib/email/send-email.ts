@@ -24,6 +24,10 @@ export interface EmailMessage {
   html: string;
   text: string;
   attachments?: readonly EmailAttachment[];
+  // Η διεύθυνση απαντήσεων της εταιρείας (Ρυθμίσεις), σε κάθε email όταν υπάρχει (#171, Α8).
+  replyTo?: string;
+  // Επιπλέον headers, π.χ. List-Unsubscribe (#171, Α10).
+  headers?: Readonly<Record<string, string>>;
 }
 
 export type SendStatus = "sent" | "failed" | "suppressed";
@@ -113,6 +117,8 @@ async function postToResend(
       html: message.html,
       text: message.text,
       ...(message.attachments?.length ? { attachments: message.attachments } : {}),
+      ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+      ...(message.headers && Object.keys(message.headers).length > 0 ? { headers: message.headers } : {}),
     }),
     signal: AbortSignal.timeout(options.timeoutMs ?? RESEND_TIMEOUT_MS),
   });

@@ -39,6 +39,18 @@ const deliverableUrl = (origin: string, deliverableId: string): string =>
 const deliveredItemText = (item: DeliveredItem): string =>
   item.url ? `${item.title}: ${item.url}` : item.title;
 
+// Οι παράγραφοι της παράδοσης χωρίς τον χαιρετισμό: ίδιες στο παλιό email και στο μπλοκ του Αυτοματισμού (#171).
+export function productionDeliveredDetails(input: ProductionDeliveredInput): string[] {
+  return [
+    pick(
+      input.locale,
+      `Η Παραγωγή «${input.productionTitle}» παραδόθηκε. Τα Παραδοτέα της:`,
+      `The production “${input.productionTitle}” has been delivered. Its deliverables:`,
+    ),
+    ...input.deliverables.map(deliveredItemText),
+  ];
+}
+
 export function productionDeliveredMessage(
   input: ProductionDeliveredInput,
 ): EmailMessageBody {
@@ -50,12 +62,7 @@ export function productionDeliveredMessage(
   );
   const paragraphs = [
     pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
-    pick(
-      locale,
-      `Η Παραγωγή «${input.productionTitle}» παραδόθηκε. Τα Παραδοτέα της:`,
-      `The production “${input.productionTitle}” has been delivered. Its deliverables:`,
-    ),
-    ...input.deliverables.map(deliveredItemText),
+    ...productionDeliveredDetails(input),
   ];
   const rendered = renderShell({
     locale,
