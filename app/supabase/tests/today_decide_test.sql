@@ -245,9 +245,9 @@ select is((select count(*)::integer
 select throws_ok($$ select public.today_card('unassigned') $$, '42501', null, 'Ο πωλητής δεν ανοίγει το Χωρίς υπεύθυνο');
 
 -- ───────────── Ένας άνθρωπος (κανόνας 8) ─────────────
+select public.t_as('a1');
 update public.team_users set is_active = false, deactivated_at = now()
  where user_id <> '00000000-0000-0000-0000-0000000000a1';
-select public.t_as('a1');
 select is((select array_agg(c ->> 'code' order by n)
              from jsonb_array_elements(public.today_counts(timestamptz '2026-03-03 10:00+00') -> 'cards') with ordinality x (c, n)
             where c ->> 'grp' = 'decide'),
