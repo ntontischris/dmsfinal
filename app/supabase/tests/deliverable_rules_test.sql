@@ -2,7 +2,7 @@
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες 2027, ώστε οι προθεσμίες να είναι σταθερές.
 -- να περνά οποιαδήποτε μέρα τρέξει. Οι προθεσμίες από «σήμερα» ελέγχονται με την ίδια συνάρτηση, όχι με σταθερή ημερομηνία.
 begin;
-select plan(49);
+select plan(39);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος της Παραγωγής της Περιόδου 1) · e3 Πωλήσεις (χωρίς Παραδοτέα)
@@ -90,7 +90,7 @@ select public.production_transfer(current_setting('t.pa1')::uuid, '00000000-0000
 select set_config('t.pi', public.production_create_internal('Εσωτερική κανόνων', '00000000-0000-0000-0000-0000000000e1')::text, true);
 
 -- Αποθήκευση και επικυρώσεις.
-select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 0, "reminderDays": [2, 5, 9]}'::jsonb) $$, 'Οι Κανόνες αποθηκεύονται (0 μέρες αλλαγών, υπενθυμίσεις 2, 5, 9)');
+select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 0}'::jsonb) $$, 'Οι Κανόνες αποθηκεύονται (0 μέρες αλλαγών)');
 select set_config('t.audit0', (select count(*)::text from public.audit_log where entity = 'deliverable_settings'), true);
 select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 0}'::jsonb) $$, 'Αποθήκευση χωρίς αλλαγή περνά');
 select is((select count(*)::text from public.audit_log where entity = 'deliverable_settings'), current_setting('t.audit0'), 'Αποθήκευση χωρίς αλλαγή δεν γράφει Ίχνος');
@@ -98,23 +98,13 @@ select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 1}':
 select is((select count(*)::int from public.audit_log where entity = 'deliverable_settings') - current_setting('t.audit0')::int, 1, 'Η αλλαγή γράφει ένα Ίχνος');
 select lives_ok($$ select public.deliverable_settings_save('{"changesDays": 0}'::jsonb) $$, 'Η μέρα αλλαγών επιστρέφει στο 0');
 select is(authz.deliverable_changes_days(), 0, 'Η μέρα αλλαγών διαβάζεται από τη ρύθμιση');
-select is(authz.deliverable_reminder_days(), '{2,5,9}'::integer[], 'Οι υπενθυμίσεις διαβάζονται από τη ρύθμιση');
 select throws_ok($$ select public.deliverable_settings_save('{"changesDays": 31}'::jsonb) $$, 'P0001', 'Η τιμή είναι εκτός ορίων στους Κανόνες Παραδοτέων', 'Μέρες αλλαγών πάνω από 30 απορρίπτονται');
 select throws_ok($$ select public.deliverable_settings_save('{"changesDays": 2.5}'::jsonb) $$, 'P0001', 'Η τιμή πρέπει να είναι ακέραιος αριθμός στους Κανόνες Παραδοτέων', 'Δεκαδικές μέρες αλλαγών απορρίπτονται');
 select throws_ok($$ select public.deliverable_settings_save('{"internalReview": "ναι"}'::jsonb) $$, 'P0001', 'Μη έγκυρη τιμή στους Κανόνες Παραδοτέων', 'Ο εσωτερικός έλεγχος θέλει ναι ή όχι');
-select throws_ok($$ select public.deliverable_settings_save('{"reminderDays": [7, 3]}'::jsonb) $$, 'P0001', 'Οι υπενθυμίσεις θέλουν αύξουσα σειρά, χωρίς διπλότυπα, έως 5 τιμές', 'Οι υπενθυμίσεις πρέπει να είναι αύξουσες');
-select throws_ok($$ select public.deliverable_settings_save('{"reminderDays": [3, 3]}'::jsonb) $$, 'P0001', 'Οι υπενθυμίσεις θέλουν αύξουσα σειρά, χωρίς διπλότυπα, έως 5 τιμές', 'Διπλότυπες υπενθυμίσεις απορρίπτονται');
-select throws_ok($$ select public.deliverable_settings_save('{"reminderDays": [0]}'::jsonb) $$, 'P0001', 'Οι υπενθυμίσεις είναι από 1 έως 60 μέρες', 'Υπενθύμιση 0 μέρες απορρίπτεται');
-select throws_ok($$ select public.deliverable_settings_save('{"reminderDays": [61]}'::jsonb) $$, 'P0001', 'Οι υπενθυμίσεις είναι από 1 έως 60 μέρες', 'Υπενθύμιση πάνω από 60 μέρες απορρίπτεται');
-select throws_ok($$ select public.deliverable_settings_save('{"reminderDays": [1, 2, 3, 4, 5, 6]}'::jsonb) $$, 'P0001', 'Οι υπενθυμίσεις θέλουν αύξουσα σειρά, χωρίς διπλότυπα, έως 5 τιμές', 'Πάνω από πέντε υπενθυμίσεις απορρίπτονται');
-select throws_ok($$ select public.deliverable_settings_save('{"reminderDays": "3"}'::jsonb) $$, 'P0001', 'Οι υπενθυμίσεις θέλουν λίστα αριθμών', 'Οι υπενθυμίσεις θέλουν λίστα');
-select throws_ok($$ select public.deliverable_settings_save('{"reminderDays": [3, "7"]}'::jsonb) $$, 'P0001', 'Οι υπενθυμίσεις θέλουν λίστα αριθμών', 'Μη αριθμητική υπενθύμιση απορρίπτεται');
-select throws_ok($$ select public.deliverable_settings_save('{"reminderDays": [3.5]}'::jsonb) $$, 'P0001', 'Οι υπενθυμίσεις θέλουν ακέραιες μέρες', 'Δεκαδική υπενθύμιση απορρίπτεται');
-select throws_ok($$ update public.deliverable_settings set reminder_days = '{7,3}' $$, '23514', null, 'Η σειρά των υπενθυμίσεων ελέγχεται και στη βάση');
 select throws_ok($$ delete from public.deliverable_settings $$, 'P0001', 'Οι Κανόνες Παραδοτέων δεν σβήνονται', 'Οι Κανόνες δεν σβήνονται');
 select ok(authz.audit_entity_allowed('deliverable_settings'), 'Το Ίχνος καταγράφει τους Κανόνες Παραδοτέων');
 select is(public.deliverable_settings_view() -> 'defaults' ->> 'changesDays', '2', 'Οι προεπιλογές αλλαγών είναι 2 μέρες');
-select is(public.deliverable_settings_view() -> 'defaults' -> 'reminderDays', '[3, 7]'::jsonb, 'Οι προεπιλογές υπενθυμίσεων είναι 3 και 7');
+select ok(not (public.deliverable_settings_view() ? 'reminderDays'), 'Οι υπενθυμίσεις πελάτη δεν είναι πια Κανόνας: αλλάζουν στους Αυτοματισμούς');
 
 -- Προθεσμία και όριο ανά είδος.
 select lives_ok($$ select public.deliverable_settings_save(jsonb_build_object('kinds', jsonb_build_array(

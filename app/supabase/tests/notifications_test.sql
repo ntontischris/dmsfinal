@@ -178,8 +178,8 @@ select throws_ok($$ select public.notifications_bell() $$, '42501', null, 'Χω�
 
 -- ───────────── Κατάλογος και συνέπεια Αυτοματισμών ─────────────
 select is((select count(*)::integer from public.event_types), 58, 'Ο κατάλογος έχει τα 58 Γεγονότα του prototype');
-select is((select count(*)::integer from public.event_types where is_wired and kind <> 'instant'), 0,
-  'Κανένα «με ημερομηνία» ή «αναμονής» δεν είναι συνδεδεμένο ακόμα');
+select is((select array_agg(code order by code) from public.event_types where not is_wired and kind <> 'instant'),
+  array['billable.open_waiting'], 'Από τα «με ημερομηνία» και «αναμονής» μόνο το Τιμολογητέο δεν είναι συνδεδεμένο (Kγ)');
 select is((select count(*)::integer from public.automations where is_initial and channel = 'email' and subject_el is null), 0,
   'Κάθε αρχικός Αυτοματισμός email έχει θέμα');
 select throws_ok($$ insert into public.automations (event_type, channel, recipient_kind, recipient_relative, body_el)

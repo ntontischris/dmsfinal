@@ -1,5 +1,5 @@
 -- Διορθώσεις, ακύρωση και Ετοιμότητα Οικονομικών, Iε #154: άρνηση ανά ρόλο, διόρθωση ποσού με Ίχνος και χωρίς email,
--- πολλά μερικά πιστωτικά ως το σύνολο, ακύρωση (λόγος, πιστωτικά, Καρτέλα, κατανομή), ειδοποίηση ληξιπρόθεσμου χωρίς παραλήπτη.
+-- πολλά μερικά πιστωτικά ως το σύνολο, ακύρωση (λόγος, πιστωτικά, Καρτέλα, κατανομή), ειδοποίηση ληξιπρόθεσμου χωρίς παραλήπτη και ακύρωσή της.
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή. Ημερομηνίες σταθερές (2026).
 begin;
 select plan(57);
@@ -237,16 +237,27 @@ select throws_ok($$ select public.invoice_correct(current_setting('t.i2')::uuid,
 select throws_ok($$ select public.invoice_void(current_setting('t.i2')::uuid, 'ξανά') $$, 'P0001', null, 'Το ακυρωμένο δεν ακυρώνεται ξανά');
 select throws_ok($$ select public.invoice_detail('00000000-0000-0000-0000-00000000dead') $$, 'P0001', null, 'Άγνωστο Τιμολόγιο → P0001');
 
--- ───────────── Ειδοποίηση ληξιπρόθεσμου χωρίς παραλήπτη ─────────────
-select set_config('t.c1', public.t_reg(current_setting('t.c')::uuid, 'invoice', 'C-1', date '2026-05-01', 100, 24, 124, null, date '2026-05-16')::text, true);
-select is(public.invoice_overdue_enqueue('2026-06-18 06:00:00+00'), 1, 'Μόνο το A-3 έχει παραλήπτη· το C-1 περιμένει');
-select is((select count(*)::int from public.invoice_overdue_notices n where n.invoice_id = current_setting('t.c1')::uuid), 0, 'Χωρίς παραλήπτη δεν κλείνει η ειδοποίηση');
+-- ───────────── Ειδοποίηση ληξιπρόθεσμου χωρίς παραλήπτη και ακύρωση (Αυτοματισμός «με ημερομηνία», Kγ #172) ─────────────
+create function public.t_c1_mails() returns setof public.email_outbox
+language sql
+as $$
+  select o.* from public.email_outbox o join public.automation_sends s on s.email_outbox_id = o.id
+   where s.case_key like 'invoice.overdue:' || current_setting('t.c1') || ':%';
+$$;
+select set_config('t.c1', public.t_reg(current_setting('t.c')::uuid, 'invoice', 'C-1', date '2026-06-02', 100, 24, 124, null, date '2026-06-17')::text, true);
+select public.automations_scan('2026-06-18 06:00:00+00');
+select is((select count(*)::int from public.t_c1_mails()), 0, 'Χωρίς παραλήπτη δεν φεύγει τίποτα');
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000b4', 'k4@client-c.example.gr');
 insert into public.client_users (client_id, user_id, name, role_id, is_current)
 select current_setting('t.c')::uuid, '00000000-0000-0000-0000-0000000000b4', 'Ρένα', r.id, true
   from public.roles r where r.name = 'Πλήρης' and r.kind = 'client';
-select is(public.invoice_overdue_enqueue('2026-06-18 07:00:00+00'), 1, 'Μόλις μπει Χρήστης, παίρνει την ειδοποίηση');
-select is((select count(*)::int from public.invoice_overdue_notices n where n.invoice_id = current_setting('t.c1')::uuid), 1, 'Η ειδοποίηση κλείνει μία φορά');
+select public.automations_scan('2026-06-18 07:00:00+00');
+select is((select count(*)::int from public.t_c1_mails()), 1, 'Μόλις μπει Χρήστης μέσα στο παράθυρο, παίρνει την ειδοποίηση');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+select public.invoice_void(current_setting('t.c1')::uuid, 'λάθος Πελάτης');
+select is((select status from public.t_c1_mails()), 'cancelled', 'Η ακύρωση του Τιμολογίου ακυρώνει το email που περιμένει');
+select public.automations_scan('2026-06-18 08:00:00+00');
+select is((select count(*)::int from public.t_c1_mails()), 1, 'Ακυρωμένο Τιμολόγιο: τίποτα νέο');
 
 -- ───────────── Ετοιμότητα ─────────────
 select is((select done from authz.readiness_items() where item = 'payment_methods'), true, 'Με ενεργό τρόπο είσπραξης η γραμμή είναι έτοιμη');
