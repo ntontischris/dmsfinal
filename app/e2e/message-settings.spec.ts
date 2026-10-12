@@ -18,7 +18,7 @@ test("ο Ιδιοκτήτης αλλάζει τα λεπτά διόρθωσης 
   await signIn(page, "owner@example.com");
   await visit(page, "/app/settings/messages");
   const form = page.locator("form", {
-    has: page.locator('input[name="digestMinutes"]'),
+    has: page.locator('input[name="editMinutes"]'),
   });
   await expect(button(form, SAVE)).toHaveCount(0);
   await form.getByLabel(EDIT_LABEL).fill("20");

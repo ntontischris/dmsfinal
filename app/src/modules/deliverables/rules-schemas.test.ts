@@ -1,53 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  formatReminderDays,
-  kindRowSchema,
-  rulesFormSchema,
-} from "./rules-schemas";
+import { kindRowSchema, rulesFormSchema } from "./rules-schemas";
 
 const KIND_ID = "11111111-1111-4111-8111-111111111111";
-const baseRules = { internalReview: true, changesDays: "2", reminderDays: "3, 7" };
-
-describe("formatReminderDays", () => {
-  it("should show reminder days as a comma-separated line", () => {
-    expect(formatReminderDays([3, 7])).toBe("3, 7");
-  });
-
-  it("should show no text when there are no reminders", () => {
-    expect(formatReminderDays([])).toBe("");
-  });
-});
+const baseRules = { internalReview: true, changesDays: "2" };
 
 describe("rulesFormSchema", () => {
-  it("should read the reminder line into a list of days", () => {
-    expect(rulesFormSchema.parse(baseRules).reminderDays).toEqual([3, 7]);
-  });
-
-  it("should accept an empty reminder line as no reminders", () => {
-    expect(rulesFormSchema.parse({ ...baseRules, reminderDays: "" }).reminderDays).toEqual([]);
-  });
-
-  it("should reject reminder days that are not in ascending order", () => {
-    expect(rulesFormSchema.safeParse({ ...baseRules, reminderDays: "7, 3" }).success).toBe(false);
-  });
-
-  it("should reject duplicate reminder days", () => {
-    expect(rulesFormSchema.safeParse({ ...baseRules, reminderDays: "3, 3" }).success).toBe(false);
-  });
-
-  it("should reject more than five reminders", () => {
-    expect(rulesFormSchema.safeParse({ ...baseRules, reminderDays: "1, 2, 3, 4, 5, 6" }).success).toBe(false);
-  });
-
-  it("should reject reminder days outside 1 to 60", () => {
-    expect(rulesFormSchema.safeParse({ ...baseRules, reminderDays: "0" }).success).toBe(false);
-    expect(rulesFormSchema.safeParse({ ...baseRules, reminderDays: "61" }).success).toBe(false);
-  });
-
-  it("should reject a reminder line that is not whole numbers", () => {
-    expect(rulesFormSchema.safeParse({ ...baseRules, reminderDays: "3, abc" }).success).toBe(false);
-    expect(rulesFormSchema.safeParse({ ...baseRules, reminderDays: "2.5" }).success).toBe(false);
+  it("should not carry reminder days: they live in the automations now", () => {
+    expect(rulesFormSchema.parse({ ...baseRules, reminderDays: "3, 7" })).toEqual({
+      internalReview: true,
+      changesDays: 2,
+    });
   });
 
   it("should accept zero changes days and reject more than thirty", () => {

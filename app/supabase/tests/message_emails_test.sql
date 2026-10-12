@@ -127,6 +127,7 @@ select is((select count(*)::integer from public.audit_log where entity = 'messag
 select public.t_as('b1');
 select is(public.messages_client_context()->>'digestMinutes', '15', 'Το πλαίσιο του πελάτη διαβάζει τα λεπτά σύνοψης από τον Αυτοματισμό');
 select is(public.messages_client_context()->>'editMinutes', '20', 'Το πλαίσιο του πελάτη διαβάζει τα λεπτά διόρθωσης από τη ρύθμιση');
+select public.t_as('a1');
 
 -- ───────────── Κλείσιμο Αιτήματος ─────────────
 -- Αιτήματα με άμεση εισαγωγή (δηλωμένα από τον πελάτη b1 / την ομάδα a1 / τον b4 χωρίς c.chatRead).

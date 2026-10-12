@@ -127,7 +127,8 @@ const clientContextSchema = z.object({
   clientId: z.string(),
   canWrite: z.boolean(),
   editMinutes: z.number(),
-  digestMinutes: z.number(),
+  // null = κανένας ενεργός Αυτοματισμός email σύνοψης.
+  digestMinutes: z.number().nullable(),
 });
 
 export type ClientContext = z.infer<typeof clientContextSchema>;

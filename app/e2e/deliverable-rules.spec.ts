@@ -13,7 +13,7 @@ test("ο Ιδιοκτήτης αλλάζει την προθεσμία του β
   await signIn(page, "owner@example.com");
   await visit(page, "/app/settings/deliverables");
   const rules = page.locator("form", {
-    has: page.locator('input[name="reminderDays"]'),
+    has: page.locator('input[name="changesDays"]'),
   });
   await expect(button(rules, "Αποθήκευση Κανόνων")).toHaveCount(0);
   await rules.getByLabel("Προθεσμία βίντεο").fill("14");

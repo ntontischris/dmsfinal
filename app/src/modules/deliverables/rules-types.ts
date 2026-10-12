@@ -10,6 +10,5 @@ export interface DeliverableRuleKind {
 export interface DeliverableRules {
   internalReview: boolean;
   changesDays: number;
-  reminderDays: number[];
   kinds: DeliverableRuleKind[];
 }
