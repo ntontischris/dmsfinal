@@ -9,14 +9,13 @@ import {
 
 import { ActionForm } from "./action-form";
 
-// Ρυθμίσεις › Μηνύματα: οι τρεις χρόνοι της Συνομιλίας. Ισχύουν από εκεί και πέρα.
+// Ρυθμίσεις › Μηνύματα: οι δύο χρόνοι της Συνομιλίας. Ισχύουν από εκεί και πέρα.
 export function MessageSettingsForm({
   settings,
 }: {
   settings: MessageSettings;
 }) {
-  const { digestMinutes, editMinutes, requestOpenDays } =
-    MESSAGE_SETTINGS_LIMITS;
+  const { editMinutes, requestOpenDays } = MESSAGE_SETTINGS_LIMITS;
   return (
     <ActionForm
       action={saveMessageSettings}
@@ -39,19 +38,6 @@ export function MessageSettingsForm({
             />
           </Field>
           <Field
-            label="Σύνοψη αδιάβαστων (λεπτά)"
-            hint="Μετά από πόση ώρα αδιάβαστα Μηνύματα της ομάδας φεύγουν στον πελάτη σε ένα email."
-          >
-            <Input
-              name="digestMinutes"
-              type="number"
-              min={digestMinutes.min}
-              max={digestMinutes.max}
-              required
-              defaultValue={settings.digestMinutes}
-            />
-          </Field>
-          <Field
             label="Ανοιχτό Αίτημα (μέρες)"
             hint="Από πόσες μέρες και μετά ένα ανοιχτό Αίτημα σημαίνεται ως καθυστερημένο."
           >
@@ -67,8 +53,8 @@ export function MessageSettingsForm({
         </div>
       </Panel>
       <p className="m-0 text-sm text-muted-foreground">
-        Οι αλλαγές ισχύουν από εκεί και πέρα. Αργότερα οι χρόνοι αυτοί θα
-        μεταφερθούν στους Αυτοματισμούς.
+        Οι αλλαγές ισχύουν από εκεί και πέρα. Η σύνοψη αδιάβαστων προς τον
+        πελάτη αλλάζει στους Αυτοματισμούς.
       </p>
     </ActionForm>
   );

@@ -4,7 +4,6 @@ import { z } from "zod";
 export const rulesViewSchema = z.object({
   internalReview: z.boolean(),
   changesDays: z.number().int(),
-  reminderDays: z.array(z.number().int()),
   kinds: z.array(
     z.object({
       id: z.string(),

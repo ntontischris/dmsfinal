@@ -5,12 +5,11 @@ import {
   messageSettingsViewSchema,
 } from "./settings-schemas";
 
-const valid = { digestMinutes: "15", editMinutes: "20", requestOpenDays: "3" };
+const valid = { editMinutes: "20", requestOpenDays: "3" };
 
 describe("messageSettingsFormSchema", () => {
   it("should turn the form text into numbers", () => {
     expect(messageSettingsFormSchema.parse(valid)).toEqual({
-      digestMinutes: 15,
       editMinutes: 20,
       requestOpenDays: 3,
     });
@@ -20,12 +19,12 @@ describe("messageSettingsFormSchema", () => {
     expect(
       messageSettingsFormSchema.safeParse({
         ...valid,
-        digestMinutes: "1440",
+        editMinutes: "1440",
         requestOpenDays: "60",
       }).success,
     ).toBe(true);
     expect(
-      messageSettingsFormSchema.safeParse({ ...valid, digestMinutes: "0" })
+      messageSettingsFormSchema.safeParse({ ...valid, editMinutes: "0" })
         .success,
     ).toBe(false);
     expect(
@@ -58,12 +57,10 @@ describe("messageSettingsViewSchema", () => {
   it("should read the database JSON", () => {
     expect(
       messageSettingsViewSchema.parse({
-        digestMinutes: 15,
         editMinutes: 15,
         requestOpenDays: 3,
       }),
     ).toEqual({
-      digestMinutes: 15,
       editMinutes: 15,
       requestOpenDays: 3,
     });

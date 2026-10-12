@@ -1,13 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { appOrigin } from "@/lib/app-origin";
-import { enqueueMessageDigest } from "@/lib/email/digest-enqueue";
 import { isCronAuthorized } from "@/lib/email/outbox-trigger";
-import { enqueueOverdueInvoices } from "@/lib/email/overdue-enqueue";
-import { enqueueDeliverableReminders } from "@/lib/email/reminders-enqueue";
 import { runOutboxWorker } from "@/lib/email/worker";
 import { generateBillables } from "@/lib/finance/billables-generate";
 import { cleanExpiredAttachmentSlots } from "@/lib/messages/attachments-cleanup";
+import { scanAutomations } from "@/lib/notifications/automations-scan";
 import { processEvents } from "@/lib/notifications/events-process";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -15,7 +13,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const maxDuration = 60;
 
 // Ο εργάτης της ουράς email: κάθε λεπτό (Vercel cron) και μετά από κάθε εγγραφή (σκούντημα).
-// Πρώτα μπαίνουν στην ουρά οι υπενθυμίσεις πελατών (#143), τα Τιμολογητέα (#151), τα ληξιπρόθεσμα (#153), η σύνοψη Μηνυμάτων (#164), το καθάρισμα συνημμένων (#162) και η ουρά Γεγονότων (#170)· σφάλμα τους δεν σταματά τον εργάτη.
+// Πρώτα τα Τιμολογητέα (#151), το καθάρισμα συνημμένων (#162), η ουρά Γεγονότων (#170) και ο έλεγχος χρονισμών (#172: υπενθυμίσεις,
+// ληξιπρόθεσμα, σύνοψη Μηνυμάτων, Αργίες κ.λπ.)· σφάλμα τους δεν σταματά τον εργάτη. Ο έλεγχος χρονισμών δεν τρέχει στο σκούντημα
+// (?kick=1), μόνο στο cron του λεπτού.
 // Χωρίς CRON_SECRET στο περιβάλλον: 500· με λάθος ή λείπον Bearer: 401.
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
@@ -30,21 +30,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       { error: "service role missing" },
       { status: 500 },
     );
-  const reminders = await enqueueDeliverableReminders(admin);
   const billables = await generateBillables(admin);
-  const overdue = await enqueueOverdueInvoices(admin);
-  const digest = await enqueueMessageDigest(admin);
   const attachments = await cleanExpiredAttachmentSlots(admin);
-  // Τελευταίος πριν τον worker: τα email «automation» φεύγουν στον ίδιο κύκλο (#170).
+  // Τελευταίοι πριν τον worker: τα email «automation» φεύγουν στον ίδιο κύκλο (#170, #172).
   const events = await processEvents(admin);
+  const timed =
+    request.nextUrl.searchParams.get("kick") === "1"
+      ? { skipped: true }
+      : await scanAutomations(admin);
   const summary = await runOutboxWorker(admin, appOrigin());
   return NextResponse.json({
     ...summary,
-    reminders,
     billables,
-    overdue,
-    digest,
     attachments,
     events,
+    timed,
   });
 }

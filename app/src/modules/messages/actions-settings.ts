@@ -12,7 +12,7 @@ export async function saveMessageSettings(
   form: FormData,
 ): Promise<FormState> {
   const parsed = messageSettingsFormSchema.safeParse(
-    pick(form, ["digestMinutes", "editMinutes", "requestOpenDays"]),
+    pick(form, ["editMinutes", "requestOpenDays"]),
   );
   if (!parsed.success) return firstIssue(parsed.error);
   const outcome = await callRpc("message_settings_update", { p: parsed.data });

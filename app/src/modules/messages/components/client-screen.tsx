@@ -76,7 +76,7 @@ function ClientMessages({ thread }: { thread: Thread }) {
   );
 }
 
-function Notes({ digestMinutes }: { digestMinutes: number }) {
+function Notes({ digestMinutes }: { digestMinutes: number | null }) {
   return (
     <section className="grid gap-2 rounded-md border bg-card px-4 py-3">
       <h2 className="m-0 text-base font-semibold">{CLIENT_NOTES_TITLE}</h2>

@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 // Ρυθμίσεις › Μηνύματα (Μ14). Τα όρια ταυτίζονται με της βάσης (message_settings). Τα πεδία έρχονται ως κείμενο· το κενό είναι λάθος.
+// Τα λεπτά σύνοψης αλλάζουν στους Αυτοματισμούς (#172).
 
 export const MESSAGE_SETTINGS_LIMITS = {
-  digestMinutes: { min: 1, max: 1440 },
   editMinutes: { min: 1, max: 1440 },
   requestOpenDays: { min: 1, max: 60 },
 } as const;
@@ -23,11 +23,6 @@ const wholeNumber = (message: string, min: number, max: number) =>
     );
 
 export const messageSettingsFormSchema = z.object({
-  digestMinutes: wholeNumber(
-    "Τα λεπτά σύνοψης είναι ακέραιος αριθμός από 1 έως 1.440.",
-    1,
-    1440,
-  ),
   editMinutes: wholeNumber(
     "Τα λεπτά διόρθωσης είναι ακέραιος αριθμός από 1 έως 1.440.",
     1,
@@ -44,7 +39,6 @@ export type MessageSettingsInput = z.infer<typeof messageSettingsFormSchema>;
 
 // Το JSON της message_settings_get.
 export const messageSettingsViewSchema = z.object({
-  digestMinutes: z.number().int(),
   editMinutes: z.number().int(),
   requestOpenDays: z.number().int(),
 });

@@ -2,7 +2,6 @@ import { Field, Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
 
 import { saveDeliverableRules } from "../actions-rules";
-import { formatReminderDays } from "../rules-schemas";
 import type { DeliverableRules } from "../rules-types";
 
 import { ActionForm } from "./action-form";
@@ -29,9 +28,7 @@ export function DeliverableRulesForm({ rules }: { rules: DeliverableRules }) {
           <Field label="Νέα προθεσμία μετά από αλλαγές (εργάσιμες)">
             <Input name="changesDays" type="number" min={0} max={30} required defaultValue={rules.changesDays} />
           </Field>
-          <Field label="Υπενθυμίσεις στον πελάτη (μέρες)" hint="Χωρισμένες με κόμμα, έως πέντε, π.χ. 3, 7.">
-            <Input name="reminderDays" type="text" inputMode="numeric" defaultValue={formatReminderDays(rules.reminderDays)} />
-          </Field>
+          <MutedNote>Οι υπενθυμίσεις στον πελάτη για Έκδοση που περιμένει αλλάζουν στους Αυτοματισμούς.</MutedNote>
         </div>
       </Panel>
       <Panel label="Ανά είδος Παροχής">

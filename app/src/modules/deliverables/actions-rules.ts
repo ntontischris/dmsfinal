@@ -47,7 +47,6 @@ export async function saveDeliverableRules(
   const parsed = rulesFormSchema.safeParse({
     internalReview: checked(form, "internalReview"),
     changesDays: text(form, "changesDays"),
-    reminderDays: text(form, "reminderDays"),
   });
   if (!parsed.success) return firstIssue(parsed.error);
   const kinds = parseKindRows(form);

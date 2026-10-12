@@ -26,6 +26,12 @@ describe("parseClientContext", () => {
     });
   });
 
+  it("should accept no digest minutes when the digest automation is off", () => {
+    expect(
+      parseClientContext({ clientId: ID, canWrite: false, editMinutes: 15, digestMinutes: null }).digestMinutes,
+    ).toBeNull();
+  });
+
   it("should reject a payload without the client id", () => {
     expect(() => parseClientContext({ digestMinutes: 15 })).toThrow();
   });

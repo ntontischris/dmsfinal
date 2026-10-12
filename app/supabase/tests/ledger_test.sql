@@ -1,9 +1,10 @@
 -- Καρτέλα Πελάτη (I5), όψη πελάτη και ληξιπρόθεσμα, Iδ #153: άρνηση ανά ρόλο, Σενάριο 1 και 3 του blueprint (τρέχον υπόλοιπο),
 -- προκαταβολή → αρνητικό υπόλοιπο, ακυρωμένα και διαγραμμένα εκτός Καρτέλας, «Προς τιμολόγηση» μόνο για την ομάδα,
 -- email ληξιπρόθεσμου μία φορά και μετά τις 09:00 Αθήνας. Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
--- Όλες οι ημερομηνίες είναι σταθερές (2026) και η ώρα του enqueue δίνεται ρητά, άρα το τεστ δεν εξαρτάται από τη μέρα εκτέλεσης.
+-- Όλες οι ημερομηνίες είναι σταθερές (2026) και η ώρα του ελέγχου χρονισμών δίνεται ρητά, άρα το τεστ δεν εξαρτάται από τη μέρα εκτέλεσης.
+-- Το ληξιπρόθεσμο είναι πλέον Αυτοματισμός «με ημερομηνία» (Kγ #172): email kind «automation» με σημάδι στο automation_sends.
 begin;
-select plan(50);
+select plan(47);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις
@@ -89,8 +90,7 @@ select throws_ok(
 );
 select throws_ok($$ select public.clients_with_finance() $$, '42501', null, 'Ο Χρήστης πελάτη δεν βλέπει τη λίστα Καρτελών της ομάδας');
 set local role authenticated;
-select throws_ok($$ select public.invoice_overdue_enqueue() $$, '42501', null, 'Ο authenticated δεν τρέχει το enqueue ληξιπρόθεσμων');
-select throws_ok($$ select * from public.invoice_overdue_notices $$, '42501', null, 'Ο πίνακας ειδοποιήσεων ληξιπρόθεσμων είναι κλειστός');
+select throws_ok($$ select public.automations_scan() $$, '42501', null, 'Ο authenticated δεν τρέχει τον έλεγχο χρονισμών');
 reset role;
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000b2","role":"authenticated"}', true);
@@ -125,7 +125,7 @@ select public.receipt_delete(current_setting('t.del')::uuid, 'Λάθος ποσ�
 
 -- Σενάριο 3: Β. Α-1 1.364 (2/5), Β-1 1.364 (2/6), Είσπραξη 1.364 (10/6), Είσπραξη 500 (20/6), πιστωτικό 124 στο Β-1 (25/6).
 select set_config('t.ba', public.t_reg(current_setting('t.b')::uuid, 'invoice', 'A-1', date '2026-05-02', 1100, 264, 1364)::text, true);
-select set_config('t.bb', public.t_reg(current_setting('t.b')::uuid, 'invoice', 'B-1', date '2026-06-02', 1100, 264, 1364)::text, true);
+select set_config('t.bb', public.t_reg(current_setting('t.b')::uuid, 'invoice', 'B-1', date '2026-06-02', 1100, 264, 1364, null, date '2026-06-17')::text, true);
 select public.receipt_register(current_setting('t.b')::uuid, date '2026-06-10', 1364, current_setting('t.bank')::uuid, '');
 select public.receipt_register(current_setting('t.b')::uuid, date '2026-06-20', 500, current_setting('t.bank')::uuid, 'Μερική');
 select public.t_reg(current_setting('t.b')::uuid, 'credit', 'P-1', date '2026-06-25', 100, 24, 124, current_setting('t.bb')::uuid);
@@ -229,40 +229,48 @@ reset role;
 insert into public.bank_accounts (bank_name, holder, iban, is_default)
 values ('Τράπεζα Δοκιμής', 'Εταιρεία Δοκιμής', 'GR1601101250000000012300695', true);
 
-set local role service_role;
-select is(public.invoice_overdue_enqueue('2026-06-18 05:59:00+00'), 0, 'Στις 08:59 Αθήνας δεν στέλνεται τίποτα');
-select is(public.invoice_overdue_enqueue('2026-06-18 06:00:00+00'), 1, 'Στις 09:00 Αθήνας μπαίνει ένα email για το ληξιπρόθεσμο Β-1');
-select is(public.invoice_overdue_enqueue('2026-06-18 07:00:00+00'), 0, 'Δεύτερη κλήση: τίποτα, μία φορά ανά Τιμολόγιο');
-reset role;
+-- Τα email ληξιπρόθεσμου (ως postgres, ποτέ ως authenticated).
+create function public.t_overdue() returns setof public.email_outbox
+language sql
+as $$
+  select o.* from public.email_outbox o join public.automation_sends s on s.email_outbox_id = o.id
+   where s.case_key like 'invoice.overdue:%';
+$$;
 
-select is((select count(*)::int from public.email_outbox o where o.kind = 'invoice_overdue'), 1, 'Μία γραμμή ουράς');
+set local role service_role;
+select public.automations_scan('2026-06-18 05:59:00+00');
+reset role;
+select is((select count(*)::int from public.t_overdue()), 0, 'Στις 08:59 Αθήνας δεν στέλνεται τίποτα');
+set local role service_role;
+select public.automations_scan('2026-06-18 06:00:00+00');
+reset role;
+select is((select count(*)::int from public.t_overdue()), 1, 'Στις 09:00 Αθήνας μπαίνει ένα email για το ληξιπρόθεσμο Β-1');
+set local role service_role;
+select public.automations_scan('2026-06-18 07:00:00+00');
+reset role;
+select is((select count(*)::int from public.t_overdue()), 1, 'Δεύτερος έλεγχος: τίποτα, μία φορά ανά Τιμολόγιο');
+
+select is((select o.to_email from public.t_overdue() o), 'k3@client-b.example.gr',
+  'Ο παραλήπτης είναι ο Χρήστης πελάτη του Β με «Βλέπει Οικονομικά»');
+select is((select o.payload->>'subject' from public.t_overdue() o), 'Ληξιπρόθεσμο τιμολόγιο B-1', 'Το θέμα έχει τον αριθμό');
+select ok((select o.payload->>'body' like '%Υπόλοιπο: 740,00 €%' from public.t_overdue() o), 'Το κείμενο έχει το υπόλοιπο');
+select ok((select o.payload->>'body' like '%IBAN GR1601101250000000012300695%' from public.t_overdue() o),
+  'Το κείμενο έχει τα στοιχεία πληρωμής του προεπιλεγμένου λογαριασμού');
 select is(
-  (select o.to_email from public.email_outbox o where o.kind = 'invoice_overdue'),
-  'k3@client-b.example.gr', 'Ο παραλήπτης είναι ο Χρήστης πελάτη του Β με «Βλέπει Οικονομικά»'
-);
-select is((select o.payload->>'number' from public.email_outbox o where o.kind = 'invoice_overdue'), 'B-1', 'Το payload έχει τον αριθμό');
-select is(
-  (select (o.payload->>'remaining')::numeric from public.email_outbox o where o.kind = 'invoice_overdue'),
-  740::numeric, 'Το payload έχει το υπόλοιπο'
-);
-select is(
-  (select o.payload->'payment'->>'iban' from public.email_outbox o where o.kind = 'invoice_overdue'),
-  'GR1601101250000000012300695', 'Το payload έχει τα στοιχεία πληρωμής του προεπιλεγμένου λογαριασμού'
-);
-select is((select count(*)::int from public.invoice_overdue_notices), 1, 'Μία γραμμή ειδοποίησης');
-select is(
-  (select count(*)::int from public.invoice_overdue_notices n where n.invoice_id = current_setting('t.ba')::uuid),
+  (select count(*)::int from public.automation_sends s where s.case_key like 'invoice.overdue:' || current_setting('t.ba') || ':%'),
   0, 'Το εξοφλημένο Α-1 δεν ειδοποιείται'
 );
 
 set local role service_role;
-select is(public.invoice_overdue_enqueue('2026-06-24 06:00:00+00'), 1, 'Την επόμενη λήξη (το 87 του Α) μπαίνει ένα νέο email');
+select public.automations_scan('2026-06-24 06:00:00+00');
 reset role;
+select is((select count(*)::int from public.t_overdue()), 2, 'Την επόμενη λήξη (το 87 του Α) μπαίνει ένα νέο email');
 select is(
-  (select string_agg(o.to_email, ',') from public.email_outbox o where o.kind = 'invoice_overdue' and o.payload->>'number' = '87'),
+  (select string_agg(o.to_email, ',') from public.t_overdue() o where o.payload->>'subject' = 'Ληξιπρόθεσμο τιμολόγιο 87'),
   'k1@client-a.example.gr', 'Μόνο ο Χρήστης πελάτη με «Βλέπει Οικονομικά» (όχι ο k2)'
 );
-select is((select count(*)::int from public.email_outbox o where o.kind = 'invoice_overdue'), 2, 'Το Β-1 δεν ξαναστάλθηκε');
+select is((select count(*)::int from public.t_overdue() o where o.payload->>'subject' = 'Ληξιπρόθεσμο τιμολόγιο B-1'), 1,
+  'Το Β-1 δεν ξαναστάλθηκε');
 
 select * from finish();
 rollback;

@@ -19,9 +19,10 @@ import { GET } from "./route";
 
 const SECRET = "test-cron-secret";
 const NO_EVENTS = { processed: 0, failed: 0, sent: 0, cleaned: 0 };
+const NO_TIMED = { sent: 0, failed: 0 };
 
-const request = (authorization?: string) =>
-  new NextRequest("http://localhost:3000/api/cron/outbox", {
+const request = (authorization?: string, path = "/api/cron/outbox") =>
+  new NextRequest(`http://localhost:3000${path}`, {
     headers: authorization ? { authorization } : {},
   });
 
@@ -58,7 +59,7 @@ describe("GET /api/cron/outbox", () => {
     expect(mocks.runOutboxWorker).not.toHaveBeenCalled();
   });
 
-  it("μπαίνει στην ουρά τις υπενθυμίσεις πελατών πριν τρέξει ο εργάτης", async () => {
+  it("τρέχει τις εργασίες της ουράς πριν από τον εργάτη", async () => {
     const response = await GET(request(`Bearer ${SECRET}`));
 
     expect(mocks.rpc.mock.invocationCallOrder[0]).toBeLessThan(
@@ -67,34 +68,20 @@ describe("GET /api/cron/outbox", () => {
     );
     expect(await response.json()).toEqual({
       sent: 3,
-      reminders: { queued: 1 },
       billables: { generated: 1 },
-      overdue: { queued: 1 },
-      digest: { queued: 1 },
       attachments: { removed: 0 },
       events: NO_EVENTS,
+      timed: NO_TIMED,
     });
   });
 
-  it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει η ουρά υπενθυμίσεων", async () => {
-    mocks.rpc.mockImplementation(async (name: string) =>
-      name === "deliverable_reminders_enqueue"
-        ? { data: null, error: { message: "boom" } }
-        : { data: 0, error: null },
-    );
+  it("δεν καλεί πια τα παλιά enqueue (υπενθυμίσεις, ληξιπρόθεσμα, σύνοψη): τα κάνει ο έλεγχος χρονισμών", async () => {
+    await GET(request(`Bearer ${SECRET}`));
 
-    const response = await GET(request(`Bearer ${SECRET}`));
-
-    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({
-      sent: 3,
-      reminders: { error: "Οι υπενθυμίσεις δεν μπήκαν στην ουρά." },
-      billables: { generated: 0 },
-      overdue: { queued: 0 },
-      digest: { queued: 0 },
-      attachments: { removed: 0 },
-      events: NO_EVENTS,
-    });
+    const names = mocks.rpc.mock.calls.map(([name]) => name);
+    expect(names).not.toContain("deliverable_reminders_enqueue");
+    expect(names).not.toContain("invoice_overdue_enqueue");
+    expect(names).not.toContain("message_digest_enqueue");
   });
 
   it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει η γεννήτρια Τιμολογητέων", async () => {
@@ -109,54 +96,10 @@ describe("GET /api/cron/outbox", () => {
     expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({
       sent: 3,
-      reminders: { queued: 0 },
       billables: { error: "Τα Τιμολογητέα δεν γεννήθηκαν." },
-      overdue: { queued: 0 },
-      digest: { queued: 0 },
       attachments: { removed: 0 },
       events: NO_EVENTS,
-    });
-  });
-
-  it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει η ουρά ληξιπρόθεσμων", async () => {
-    mocks.rpc.mockImplementation(async (name: string) =>
-      name === "invoice_overdue_enqueue"
-        ? { data: null, error: { message: "boom" } }
-        : { data: 0, error: null },
-    );
-
-    const response = await GET(request(`Bearer ${SECRET}`));
-
-    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({
-      sent: 3,
-      reminders: { queued: 0 },
-      billables: { generated: 0 },
-      overdue: { error: "Τα ληξιπρόθεσμα δεν μπήκαν στην ουρά." },
-      digest: { queued: 0 },
-      attachments: { removed: 0 },
-      events: NO_EVENTS,
-    });
-  });
-
-  it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει η σύνοψη Μηνυμάτων", async () => {
-    mocks.rpc.mockImplementation(async (name: string) =>
-      name === "message_digest_enqueue"
-        ? { data: null, error: { message: "boom" } }
-        : { data: 0, error: null },
-    );
-
-    const response = await GET(request(`Bearer ${SECRET}`));
-
-    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({
-      sent: 3,
-      reminders: { queued: 0 },
-      billables: { generated: 0 },
-      overdue: { queued: 0 },
-      digest: { error: "Οι συνόψεις Μηνυμάτων δεν μπήκαν στην ουρά." },
-      attachments: { removed: 0 },
-      events: NO_EVENTS,
+      timed: NO_TIMED,
     });
   });
 
@@ -172,14 +115,13 @@ describe("GET /api/cron/outbox", () => {
     expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({
       sent: 3,
-      reminders: { queued: 0 },
       billables: { generated: 0 },
-      overdue: { queued: 0 },
-      digest: { queued: 0 },
       attachments: { error: "Τα ανεκμετάλλευτα συνημμένα δεν καθαρίστηκαν." },
       events: NO_EVENTS,
+      timed: NO_TIMED,
     });
   });
+
   it("επεξεργάζεται τα Γεγονότα πριν από τον εργάτη, ώστε τα email «automation» να φύγουν στον ίδιο κύκλο", async () => {
     const summary = { processed: 2, failed: 0, sent: 1, cleaned: 0 };
     mocks.rpc.mockImplementation(async (name: string) =>
@@ -214,5 +156,54 @@ describe("GET /api/cron/outbox", () => {
       error: "Τα Γεγονότα δεν επεξεργάστηκαν.",
     });
     expect(console.error).toHaveBeenCalledWith("events_process", "boom");
+  });
+
+  it("τρέχει τον έλεγχο χρονισμών πριν από τον εργάτη", async () => {
+    const summary = { sent: 5, failed: 0 };
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "automations_scan"
+        ? { data: summary, error: null }
+        : { data: 0, error: null },
+    );
+
+    const response = await GET(request(`Bearer ${SECRET}`));
+
+    const order = mocks.rpc.mock.calls.findIndex(
+      ([name]) => name === "automations_scan",
+    );
+    expect(order).toBeGreaterThanOrEqual(0);
+    expect(mocks.rpc.mock.invocationCallOrder[order]).toBeLessThan(
+      mocks.runOutboxWorker.mock.invocationCallOrder[0] ??
+        Number.POSITIVE_INFINITY,
+    );
+    expect((await response.json()).timed).toEqual(summary);
+  });
+
+  it("δεν τρέχει τον έλεγχο χρονισμών στο σκούντημα (kick), μόνο στο cron του λεπτού", async () => {
+    const response = await GET(
+      request(`Bearer ${SECRET}`, "/api/cron/outbox?kick=1"),
+    );
+
+    const names = mocks.rpc.mock.calls.map(([name]) => name);
+    expect(names).not.toContain("automations_scan");
+    expect(names).toContain("events_process");
+    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
+    expect((await response.json()).timed).toEqual({ skipped: true });
+  });
+
+  it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει ο έλεγχος χρονισμών", async () => {
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === "automations_scan"
+        ? { data: null, error: { message: "boom" } }
+        : { data: 0, error: null },
+    );
+
+    const response = await GET(request(`Bearer ${SECRET}`));
+
+    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
+    expect((await response.json()).timed).toEqual({
+      error: "Ο έλεγχος χρονισμών δεν έτρεξε.",
+    });
+    expect(console.error).toHaveBeenCalledWith("automations_scan", "boom");
   });
 });
