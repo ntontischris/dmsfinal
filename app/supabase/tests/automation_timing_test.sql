@@ -3,7 +3,7 @@
 -- Το ληξιπρόθεσμο Τιμολόγιο (μετά τις 09:00, ακύρωση) ελέγχεται στα ledger_test και invoice_corrections_test,
 -- οι υπενθυμίσεις Έκδοσης με τα Δικαιώματα πελάτη στο production_completion_test.
 begin;
-select plan(65);
+select plan(67);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή (Υπεύθυνος Παραγωγής)
@@ -335,6 +335,9 @@ select throws_ok($$ select public.automations_upcoming(now(), now() + interval '
 insert into public.client_users (client_id, user_id, name, role_id, is_current)
 select '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b2', 'Πάνος', r.id, false
   from public.roles r where r.name = 'Πλήρης' and r.kind = 'client';
+-- Ο b2 διάλεξε αγγλικά: οι χρονισμένες αποστολές ακολουθούν τη γλώσσα του Χρήστη πελάτη (#171).
+insert into public.client_user_settings (user_id, language) values ('00000000-0000-0000-0000-0000000000b2', 'en')
+on conflict (user_id) do update set language = excluded.language;
 select public.t_scan('2026-12-25 06:59+00');
 select is(public.t_cases('holiday.greeting', '%:20261224T220000'), 0, 'Στις 08:59 Αθήνας των Χριστουγέννων τίποτα');
 select public.t_scan('2026-12-25 07:00+00');
@@ -348,6 +351,14 @@ select ok((select o.payload ->> 'body' like '%χρόνια πολλά για Χ�
              join public.automation_sends s on s.email_outbox_id = o.id join public.automations a on a.id = s.automation_id
             where a.event_type = 'holiday.greeting' and s.recipient_key = '00000000-0000-0000-0000-0000000000b1'),
   'Το κείμενο έχει το όνομα της αργίας');
+select ok((select o.payload ? 'unsubscribeToken' from public.email_outbox o
+             join public.automation_sends s on s.email_outbox_id = o.id join public.automations a on a.id = s.automation_id
+            where a.event_type = 'holiday.greeting' and s.recipient_key = '00000000-0000-0000-0000-0000000000b1'),
+  'Η ευχή (μη απαραίτητη) έχει σύνδεσμο διακοπής');
+select is((select o.locale || ' ' || (o.payload ->> 'subject') from public.email_outbox o
+             join public.automation_sends s on s.email_outbox_id = o.id join public.automations a on a.id = s.automation_id
+            where a.event_type = 'holiday.greeting' and s.recipient_key = '00000000-0000-0000-0000-0000000000b2'),
+  'en Best wishes from Στούντιο Τεστ', 'Η ευχή πάει στη γλώσσα του Χρήστη πελάτη');
 select public.t_scan('2026-12-26 07:00+00');
 select is(public.t_cases('holiday.greeting', '%:20261225T220000'), 0, 'Σβησμένη αργία (Σύναξη Θεοτόκου): τίποτα');
 

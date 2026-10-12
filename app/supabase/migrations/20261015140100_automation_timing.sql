@@ -32,7 +32,8 @@ $$;
 
 alter table public.event_types add constraint event_types_relatives_check
   check (relatives <@ array['client', 'crew', 'actor', 'owner', 'production_owner', 'production_members', 'client_owner',
-                            'assignee', 'requester', 'mentioned', 'opportunity_owner', 'approval_requester', 'self']);
+                            'assignee', 'requester', 'mentioned', 'opportunity_owner', 'approval_requester',
+                            'sheet_issuer', 'request_client', 'filming_requester', 'self']);
 
 update public.event_types set relatives = '{self,client,client_owner}' where code = 'message.unread_waiting';
 update public.event_types set variables = authz.ev_vars('holidayName') where code = 'holiday.greeting';
@@ -43,7 +44,8 @@ update public.event_types set is_wired = true
                 'deliverable.client_waiting', 'invoice.overdue', 'holiday.greeting', 'message.unread_waiting',
                 'request.open_waiting');
 
--- ───────────── Παραλήπτες και ορατότητα (ξαναγραμμένα από το 20261015120200_events_process.sql) ─────────────
+-- ───────────── Παραλήπτες και ορατότητα (event_relative_users από το 20261015130000_automation_emails.sql,
+-- event_visible_to από το 20261015120200_events_process.sql) ─────────────
 
 -- Όπως πριν, με το «self»: ο Χρήστης που αφορά η περίπτωση (payload.self_id).
 create or replace function authz.event_relative_users(e public.events, p_relative text) returns setof uuid
@@ -60,7 +62,13 @@ begin
     when 'owner' then
       return query select u.user_id from public.team_users u where authz.user_is_owner(u.user_id);
     when 'crew' then
-      return query select fc.user_id from public.filming_crew fc where fc.filming_id = authz.ev_uuid(e.payload, 'filming_id');
+      -- Μετακίνηση που έβγαλε νέα έκδοση Δελτίου στην ίδια συναλλαγή: το Συνεργείο παίρνει μόνο το Δελτίο.
+      return query select fc.user_id from public.filming_crew fc
+                    where fc.filming_id = authz.ev_uuid(e.payload, 'filming_id')
+                      and not (e.type = 'filming.rescheduled'
+                               and exists (select 1 from public.filming_sheet_versions v
+                                            where v.filming_id = fc.filming_id
+                                              and v.issued_at = (e.payload ->> 'txAt')::timestamptz));
     when 'production_owner' then
       return query select * from authz.ev_owner_or_fallback((select p.owner_id from public.productions p where p.id = v_production));
     when 'production_members' then
@@ -80,6 +88,12 @@ begin
                     where authz.ev_uuid(e.payload, 'approval_requester_id') is not null;
     when 'mentioned' then
       return query select x::uuid from jsonb_array_elements_text(coalesce(e.payload -> 'mentioned_ids', '[]'::jsonb)) x;
+    when 'sheet_issuer' then
+      return query select * from authz.ev_sheet_issuer(e);
+    when 'filming_requester' then
+      return query select * from authz.ev_filming_requester(e);
+    when 'request_client' then
+      return query select * from authz.ev_request_clients(e);
     when 'self' then
       return query select authz.ev_uuid(e.payload, 'self_id') where authz.ev_uuid(e.payload, 'self_id') is not null;
     else
@@ -116,18 +130,18 @@ as $$
   end;
 $$;
 
--- Προτιμήσεις (ξαναγραμμένο από το 20261015120100_automations.sql): ο «self» της σύνοψης είναι πάντα Χρήστης πελάτη.
+-- Προτιμήσεις (ξαναγραμμένο από το 20261015130000_automation_emails.sql): ο «self» της σύνοψης είναι πάντα Χρήστης πελάτη.
 create or replace function authz.automation_for_viewer(a public.automations) returns boolean
 language sql stable security definer set search_path = ''
 as $$
   select case
     when authz.is_team_user() then
-      a.recipient_kind not in ('visitor') and coalesce(a.recipient_relative, '') not in ('client', 'self')
-    else a.recipient_kind = 'relative' and a.recipient_relative in ('client', 'self')
+      a.recipient_kind not in ('visitor') and coalesce(a.recipient_relative, '') not in ('client', 'request_client', 'filming_requester', 'self')
+    else a.recipient_kind = 'relative' and a.recipient_relative in ('client', 'request_client', 'filming_requester', 'self')
   end;
 $$;
 
--- Αποστολή σε έναν παραλήπτη (ξαναγραμμένο από το 20261015120200_events_process.sql): ίδιο, με μία προσθήκη. Ένας
+-- Αποστολή σε έναν παραλήπτη (ξαναγραμμένο από το 20261015130000_automation_emails.sql): ίδιο, με μία προσθήκη. Ένας
 -- Χρήστης ομάδας χωρίς «Βλέπει ποσά» δεν παίρνει ποτέ ποσό: οι μεταβλητές amount, payment, margin και cost φεύγουν πριν
 -- από την απόδοση (στιγμιαία και χρονισμένα).
 create or replace function authz.ev_deliver(
@@ -146,6 +160,7 @@ declare
   v_body text;
   v_send bigint;
   v_ref uuid;
+  v_token text;
 begin
   if a.channel = 'email' and coalesce(trim(r.email), '') = '' then
     return false;
@@ -178,10 +193,16 @@ begin
     returning id into v_ref;
     update public.automation_sends set notification_id = v_ref where id = v_send;
   else
+    if not a.is_essential then
+      v_token := authz.new_token();
+      insert into public.automation_unsubscribes (token_hash, user_id, automation_id)
+      values (authz.token_hash(v_token), r.user_id, a.id);
+    end if;
     insert into public.email_outbox (kind, to_name, to_email, locale, payload)
     values ('automation', coalesce(r.name, ''), lower(trim(r.email)), v_locale,
             jsonb_strip_nulls(jsonb_build_object('subject', left(coalesce(nullif(v_subject, ''), v_label), 300),
-              'body', left(v_body, 2000), 'link', nullif(v_link, ''), 'automationId', a.id)))
+              'body', left(v_body, 2000), 'link', nullif(v_link, ''), 'automationId', a.id,
+              'details', authz.ev_email_details(e, r), 'unsubscribeToken', v_token)))
     returning id into v_ref;
     update public.automation_sends set email_outbox_id = v_ref where id = v_send;
   end if;
