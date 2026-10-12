@@ -1,6 +1,6 @@
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
-import { AccessNotice, getViewer, isClientViewer } from "@/modules/access";
+import { AccessNotice, can, getViewer, isClientViewer } from "@/modules/access";
 import {
   LOAD_ERROR_TEXT,
   LOAD_ERROR_TITLE,
@@ -9,8 +9,12 @@ import {
   NOTIFICATIONS_EYEBROW,
   NOTIFICATIONS_TITLE,
   NotificationsScreen,
+  NotificationsTabs,
+  PREFS_FAILED_TITLE,
+  PrefsTab,
   getMyLanguage,
   getNotifications,
+  getPrefs,
   parseCursor,
   parseFilter,
 } from "@/modules/notifications";
@@ -18,29 +22,56 @@ import {
 export const metadata = { title: NOTIFICATIONS_TITLE };
 
 interface NotificationsPageProps {
-  searchParams: Promise<{ show?: string; before?: string; beforeId?: string }>;
+  searchParams: Promise<{ show?: string; before?: string; beforeId?: string; tab?: string }>;
 }
 
 // A2 για όλους (ομάδα και πελάτη): η βάση δείχνει μόνο τις δικές σου Ειδοποιήσεις.
-// Ο Χρήστης πελάτη διαλέγει εδώ και τη γλώσσα των email του (#171).
+// Καρτέλες «Εισερχόμενα» και «Προτιμήσεις» (#173)· στις Προτιμήσεις ο Χρήστης πελάτη διαλέγει και τη γλώσσα των email του.
 export default async function NotificationsPage({
   searchParams,
 }: NotificationsPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  const header = (
+    <ScreenHeader eyebrow={NOTIFICATIONS_EYEBROW} title={NOTIFICATIONS_TITLE} />
+  );
+  if (params.tab === "prefs") {
+    const isClient = isClientViewer(viewer);
+    const [prefs, language] = await Promise.all([
+      viewer.status === "signed-in" ? getPrefs() : null,
+      isClient ? getMyLanguage() : null,
+    ]);
+    return (
+      <>
+        {header}
+        <NotificationsTabs current="prefs" />
+        {prefs?.ok === false ? (
+          <Notice kind="error" title={PREFS_FAILED_TITLE}>
+            <p className="m-0">{LOAD_ERROR_TEXT}</p>
+          </Notice>
+        ) : prefs?.data ? (
+          <PrefsTab
+            prefs={prefs.data}
+            isClient={isClient}
+            canConfigure={can(viewer, "automations.manage")}
+            language={language?.ok && language.data ? <LanguageForm current={language.data} /> : null}
+          />
+        ) : (
+          <AccessNotice viewer={viewer}>
+            <p className="m-0">{NO_ACCESS_TEXT}</p>
+          </AccessNotice>
+        )}
+      </>
+    );
+  }
   const filter = parseFilter(params.show);
-  const isSignedIn = viewer.status === "signed-in";
-  const [result, language] = await Promise.all([
-    isSignedIn
-      ? getNotifications(filter, parseCursor(params.before, params.beforeId))
-      : null,
-    isClientViewer(viewer) ? getMyLanguage() : null,
-  ]);
+  const result =
+    viewer.status === "signed-in"
+      ? await getNotifications(filter, parseCursor(params.before, params.beforeId))
+      : null;
   return (
     <>
-      <ScreenHeader
-        eyebrow={NOTIFICATIONS_EYEBROW}
-        title={NOTIFICATIONS_TITLE}
-      />
+      {header}
+      <NotificationsTabs current="inbox" />
       {result?.ok === false ? (
         <Notice kind="error" title={LOAD_ERROR_TITLE}>
           <p className="m-0">{LOAD_ERROR_TEXT}</p>
@@ -55,9 +86,6 @@ export default async function NotificationsPage({
         <AccessNotice viewer={viewer}>
           <p className="m-0">{NO_ACCESS_TEXT}</p>
         </AccessNotice>
-      )}
-      {language?.ok && language.data && (
-        <LanguageForm current={language.data} />
       )}
     </>
   );

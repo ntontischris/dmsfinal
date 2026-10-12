@@ -14,6 +14,7 @@ const TABS = [
   },
   { id: "messages", label: "Μηνύματα", href: "/app/settings/messages" },
   { id: "sends", label: "Ιστορικό αποστολών", href: "/app/settings/sends" },
+  { id: "automations", label: "Αυτοματισμοί", href: "/app/settings/automations" },
   {
     id: "readiness",
     label: "Έλεγχος ετοιμότητας",

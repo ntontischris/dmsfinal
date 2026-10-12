@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Field, Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
 
@@ -28,7 +30,10 @@ export function DeliverableRulesForm({ rules }: { rules: DeliverableRules }) {
           <Field label="Νέα προθεσμία μετά από αλλαγές (εργάσιμες)">
             <Input name="changesDays" type="number" min={0} max={30} required defaultValue={rules.changesDays} />
           </Field>
-          <MutedNote>Οι υπενθυμίσεις στον πελάτη για Έκδοση που περιμένει αλλάζουν στους Αυτοματισμούς.</MutedNote>
+          <MutedNote>
+            Οι υπενθυμίσεις στον πελάτη για Έκδοση που περιμένει αλλάζουν στους{" "}
+            <Link href="/app/settings/automations/deliverable.client_waiting">Αυτοματισμούς</Link>.
+          </MutedNote>
         </div>
       </Panel>
       <Panel label="Ανά είδος Παροχής">

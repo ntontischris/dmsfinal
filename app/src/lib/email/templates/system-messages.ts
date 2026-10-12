@@ -1,4 +1,5 @@
 import { pick, type Locale } from "../locale";
+import { customizeParts, type CustomText } from "../system-texts";
 
 import type { EmailMessageBody } from "./auth-messages";
 import { renderShell } from "./shell";
@@ -33,26 +34,32 @@ export interface ClientAddedInput {
   name: string;
   clientName: string;
   link: string;
+  // Το κείμενο του admin (K2, #173)· το κουμπί μένει πάντα.
+  custom?: CustomText;
 }
 
 export function clientAddedMessage(input: ClientAddedInput): EmailMessageBody {
   const { locale } = input;
   const heading = pick(locale, `Πρόσβαση στον Πελάτη ${input.clientName}`, `Access to client ${input.clientName}`);
+  const greeting = pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`);
+  const text = pick(
+    locale,
+    `Πρόσθεσαν τον λογαριασμό σου στον Πελάτη «${input.clientName}». Μπορείς να μπεις και να διαλέξεις τον Πελάτη από την κεφαλίδα.`,
+    `Your account was added to the client “${input.clientName}”. Sign in and choose the client from the header.`,
+  );
+  const parts = customizeParts({ heading, subject: `Devre Media · ${heading}`, paragraphs: [greeting, text] }, input.custom, {
+    recipientName: input.name,
+    clientName: input.clientName,
+    link: input.link,
+  });
   const rendered = renderShell({
     locale,
     origin: input.origin,
-    heading,
-    paragraphs: [
-      pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
-      pick(
-        locale,
-        `Πρόσθεσαν τον λογαριασμό σου στον Πελάτη «${input.clientName}». Μπορείς να μπεις και να διαλέξεις τον Πελάτη από την κεφαλίδα.`,
-        `Your account was added to the client “${input.clientName}”. Sign in and choose the client from the header.`,
-      ),
-    ],
+    heading: parts.heading,
+    paragraphs: parts.paragraphs,
     action: { label: pick(locale, "Μπες στο σύστημα", "Open the system"), url: input.link },
   });
-  return { subject: `Devre Media · ${heading}`, ...rendered };
+  return { subject: parts.subject, ...rendered };
 }
 
 export type DecisionKind = "filming_decision" | "reschedule_decision";

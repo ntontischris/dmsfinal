@@ -1,4 +1,5 @@
 import { pick, type Locale } from "../locale";
+import { customizeParts, type CustomText } from "../system-texts";
 
 import { renderShell, type RenderedBody } from "./shell";
 
@@ -16,6 +17,8 @@ export interface InvitationInput {
   link: string;
   kind: "team" | "client";
   clientName?: string;
+  // Το κείμενο του admin (K2, #173) στη γλώσσα του μηνύματος· το κουμπί μένει πάντα.
+  custom?: CustomText;
 }
 
 export function invitationMessage(input: InvitationInput): EmailMessageBody {
@@ -37,14 +40,19 @@ export function invitationMessage(input: InvitationInput): EmailMessageBody {
     "Πάτα το κουμπί, όρισε τον κωδικό σου και μπες. Ο σύνδεσμος ισχύει 24 ώρες.",
     "Press the button, set your password and sign in. The link is valid for 24 hours.",
   );
+  const parts = customizeParts({ heading: subject, subject, paragraphs: [greeting, body, rest] }, input.custom, {
+    recipientName: input.name,
+    place: where,
+    link: input.link,
+  });
   const rendered = renderShell({
     locale,
     origin: input.origin,
-    heading: subject,
-    paragraphs: [greeting, body, rest],
+    heading: parts.heading,
+    paragraphs: parts.paragraphs,
     action: { label: pick(locale, "Μπες στο σύστημα", "Open the system"), url: input.link },
   });
-  return { subject, ...rendered };
+  return { subject: parts.subject, ...rendered };
 }
 
 export interface AuthLinkInput {
@@ -52,6 +60,8 @@ export interface AuthLinkInput {
   origin: string;
   type: "magiclink" | "recovery" | "email_change" | "signup";
   link: string;
+  name?: string;
+  custom?: CustomText;
 }
 
 const AUTH_COPY: Record<AuthLinkInput["type"], { el: [string, string]; en: [string, string] }> = {
@@ -75,12 +85,16 @@ const AUTH_COPY: Record<AuthLinkInput["type"], { el: [string, string]; en: [stri
 
 export function authLinkMessage(input: AuthLinkInput): EmailMessageBody {
   const [heading, text] = input.locale === "en" ? AUTH_COPY[input.type].en : AUTH_COPY[input.type].el;
+  const parts = customizeParts({ heading, subject: `Devre Media · ${heading}`, paragraphs: [text] }, input.custom, {
+    recipientName: input.name ?? "",
+    link: input.link,
+  });
   const rendered = renderShell({
     locale: input.locale,
     origin: input.origin,
-    heading,
-    paragraphs: [text],
+    heading: parts.heading,
+    paragraphs: parts.paragraphs,
     action: { label: pick(input.locale, "Συνέχεια", "Continue"), url: input.link },
   });
-  return { subject: `Devre Media · ${heading}`, ...rendered };
+  return { subject: parts.subject, ...rendered };
 }

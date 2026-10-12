@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Field, Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
 
@@ -54,7 +56,11 @@ export function MessageSettingsForm({
       </Panel>
       <p className="m-0 text-sm text-muted-foreground">
         Οι αλλαγές ισχύουν από εκεί και πέρα. Η σύνοψη αδιάβαστων προς τον
-        πελάτη αλλάζει στους Αυτοματισμούς.
+        πελάτη αλλάζει στους{" "}
+        <Link href="/app/settings/automations/message.unread_waiting">
+          Αυτοματισμούς
+        </Link>
+        .
       </p>
     </ActionForm>
   );

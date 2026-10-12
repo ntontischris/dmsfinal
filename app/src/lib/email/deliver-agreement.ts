@@ -6,6 +6,8 @@ import { attachInvitationAccount, failInvitation } from "./invitation-account";
 import { toLocale } from "./locale";
 import { readReplyTo } from "./reply-to";
 import { sendEmail, type SendOutcome } from "./send-email";
+import { chooseText, type SystemTextsMap } from "./system-texts";
+import { readSystemTexts } from "./system-texts-read";
 import { invitationMessage, type EmailMessageBody } from "./templates/auth-messages";
 import { proposalLinkMessage, signedCopyMessage, signingCodeMessage } from "./templates/agreement-messages";
 
@@ -47,7 +49,12 @@ const targetSchema = z.object({
 });
 
 // Ο Υπογράφων: αν είναι ήδη Χρήστης του Πελάτη, τίποτα. Αλλιώς πρόσκληση Πελάτη με Ρόλο «Πλήρης».
-async function clientInviteMessage(admin: SupabaseClient, row: AgreementRow, origin: string): Promise<AgreementDelivery | { error: string } | { skip: true }> {
+async function clientInviteMessage(
+  admin: SupabaseClient,
+  row: AgreementRow,
+  origin: string,
+  texts: SystemTextsMap,
+): Promise<AgreementDelivery | { error: string } | { skip: true }> {
   const { data: rawTarget, error: targetError } = await admin.rpc("client_invite_target", { p_agreement: row.agreement_id });
   if (targetError) return { error: "Ο Υπογράφων δεν διαβάστηκε" };
   const target = targetSchema.safeParse(rawTarget);
@@ -73,8 +80,10 @@ async function clientInviteMessage(admin: SupabaseClient, row: AgreementRow, ori
   if (!attached.ok) return { error: attached.error };
 
   const { data: client } = await admin.from("clients").select("name").eq("id", target.data.clientId).maybeSingle();
+  const chosen = chooseText(locale, texts.invite);
   const message: EmailMessageBody = invitationMessage({
-    locale,
+    locale: chosen.locale,
+    custom: chosen,
     origin,
     name: target.data.name,
     link: link.link,
@@ -98,9 +107,15 @@ async function sendAgreementMail(
   return { status: "done", outcome, subject: message.subject };
 }
 
-function messageForRow(row: AgreementRow, origin: string): EmailMessageBody | null {
-  const locale = toLocale(row.locale);
-  const base = { locale, origin, name: row.to_name, agreementTitle: row.agreement_title };
+// Το κείμενο του admin (K2, #173) για το είδος, στη γλώσσα του παραλήπτη (αν λείπει το en, φεύγει το el).
+function baseFor(row: AgreementRow, origin: string, texts: SystemTextsMap) {
+  const code = row.kind === "client_invite" ? "invite" : row.kind;
+  const chosen = chooseText(toLocale(row.locale), texts[code]);
+  return { locale: chosen.locale, custom: chosen, origin, name: row.to_name, agreementTitle: row.agreement_title };
+}
+
+function messageForRow(row: AgreementRow, origin: string, texts: SystemTextsMap): EmailMessageBody | null {
+  const base = baseFor(row, origin, texts);
   if (row.kind === "proposal_link")
     return proposalLinkMessage({ ...base, token: textField(row.payload, "token") });
   if (row.kind === "signing_code")
@@ -112,12 +127,13 @@ function messageForRow(row: AgreementRow, origin: string): EmailMessageBody | nu
 
 // Επιστρέφει «skip» όταν δεν χρειάζεται email (ο Υπογράφων είναι ήδη μέλος), αλλιώς το αποτέλεσμα της αποστολής.
 export async function deliverAgreementRow(admin: SupabaseClient, row: AgreementRow, origin: string): Promise<AgreementDelivery> {
+  const texts = await readSystemTexts(admin);
   if (row.kind === "client_invite") {
-    const result = await clientInviteMessage(admin, row, origin);
+    const result = await clientInviteMessage(admin, row, origin, texts);
     if ("error" in result) return sendFailed(result.error);
     return "skip" in result ? { status: "skip" } : result;
   }
-  const message = messageForRow(row, origin);
+  const message = messageForRow(row, origin, texts);
   if (!message) return sendFailed("Άγνωστο είδος μηνύματος");
   return sendAgreementMail(admin, row, message);
 }

@@ -30,6 +30,8 @@ import { isSheetKind, sheetMessageFor } from "./deliver-sheet";
 import { toLocale, type Locale } from "./locale";
 import { readReplyTo } from "./reply-to";
 import { sendEmail, type SendOutcome } from "./send-email";
+import { chooseText } from "./system-texts";
+import { readSystemTexts } from "./system-texts-read";
 import {
   clientAddedMessage,
   decisionMessage,
@@ -122,8 +124,11 @@ async function inviteResendMessage(
     locale,
   });
   if (!link.ok) return link.error;
+  // Το κείμενο του admin (K2, #173) για την πρόσκληση.
+  const chosen = chooseText(locale, (await readSystemTexts(admin)).invite);
   return invitationMessage({
-    locale,
+    locale: chosen.locale,
+    custom: chosen,
     origin,
     name: row.to_name,
     link: link.link,
@@ -146,8 +151,11 @@ async function clientAddedMessageFor(
     preferMagic: true,
   });
   if (!link.ok) return link.error;
+  // Το κείμενο του admin (K2, #173) για την προσθήκη σε Πελάτη.
+  const chosen = chooseText(locale, (await readSystemTexts(admin)).client_added);
   return clientAddedMessage({
-    locale,
+    locale: chosen.locale,
+    custom: chosen,
     origin,
     name: row.to_name,
     clientName: stringField(row.payload, "clientName"),

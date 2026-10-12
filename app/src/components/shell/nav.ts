@@ -286,6 +286,12 @@ export const NAV: readonly NavSection[] = [
         requires: "finance.cost",
       },
       {
+        code: "K1",
+        label: "Αυτοματισμοί",
+        href: "/app/settings/automations",
+        requires: "automations.manage",
+      },
+      {
         code: "O7",
         label: "Έλεγχος ετοιμότητας",
         href: "/app/settings/readiness",
