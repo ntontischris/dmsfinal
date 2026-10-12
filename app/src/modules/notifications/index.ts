@@ -46,3 +46,49 @@ export {
 export { getSends } from "./queries-sends";
 export { SendsScreen } from "./components/sends-screen";
 export { ClientSends } from "./components/client-sends";
+
+// K1 Αυτοματισμοί, K2 Μηνύματα συστήματος, A2 Προτιμήσεις (#173).
+export type {
+  Catalog,
+  EventPage,
+  Holidays,
+  Pref,
+  SystemMessage,
+} from "./automation-view-schema";
+export {
+  EVENT_CODE_PATTERN,
+  parseCatalogFilter,
+} from "./automation-helpers";
+export {
+  K1_EYEBROW,
+  K1_NOTE,
+  K2_EYEBROW,
+  LOAD_FAILED_TEXT,
+  LOAD_FAILED_TITLE,
+  NO_EVENT_TITLE,
+  NO_MANAGE_TEXT,
+  PREFS_FAILED_TITLE,
+  SETTINGS_TITLE,
+  SYSTEM_MESSAGES_PATH,
+  ALL_SYSTEM_MESSAGES,
+  SYSTEM_NO_SWITCH,
+  AUTOMATIONS_PATH,
+  BACK_TO_CATALOGUE,
+} from "./automation-labels";
+export {
+  getAutomationEvent,
+  getCatalog,
+  getHolidays,
+  getPrefs,
+  getSystemMessages,
+} from "./queries-automations";
+export { AutomationsCatalog } from "./components/automations-catalog";
+export { EventScreen } from "./components/event-screen";
+export {
+  AutomationsSubnav,
+  SystemMessageBadges,
+  SystemMessageList,
+  editedLine,
+} from "./components/system-messages-screen";
+export { SystemMessageEditor } from "./components/system-message-editor";
+export { NotificationsTabs, PrefsTab } from "./components/prefs-tab";

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Field, Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
 
@@ -10,10 +12,13 @@ import {
 import { ActionForm } from "./action-form";
 
 // Ρυθμίσεις › Μηνύματα: οι δύο χρόνοι της Συνομιλίας. Ισχύουν από εκεί και πέρα.
+// Το link στους Αυτοματισμούς φαίνεται μόνο σε όποιον «Διαχειρίζεται Αυτοματισμούς» (#173).
 export function MessageSettingsForm({
   settings,
+  canManageAutomations,
 }: {
   settings: MessageSettings;
+  canManageAutomations: boolean;
 }) {
   const { editMinutes, requestOpenDays } = MESSAGE_SETTINGS_LIMITS;
   return (
@@ -54,7 +59,15 @@ export function MessageSettingsForm({
       </Panel>
       <p className="m-0 text-sm text-muted-foreground">
         Οι αλλαγές ισχύουν από εκεί και πέρα. Η σύνοψη αδιάβαστων προς τον
-        πελάτη αλλάζει στους Αυτοματισμούς.
+        πελάτη αλλάζει στους{" "}
+        {canManageAutomations ? (
+          <Link href="/app/settings/automations/message.unread_waiting">
+            Αυτοματισμούς
+          </Link>
+        ) : (
+          "Αυτοματισμούς"
+        )}
+        .
       </p>
     </ActionForm>
   );

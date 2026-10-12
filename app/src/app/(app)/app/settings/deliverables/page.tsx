@@ -30,7 +30,7 @@ export default async function DeliverableSettingsPage() {
       <div className="grid gap-4">
         <SettingsTabs current="deliverables" />
         {rules.ok ? (
-          <DeliverableRulesForm rules={rules.data} />
+          <DeliverableRulesForm rules={rules.data} canManageAutomations={can(viewer, "automations.manage")} />
         ) : (
           <Notice kind="error" title="Δεν φόρτωσαν οι Κανόνες">
             <p className="m-0">Τίποτα δεν χάθηκε. Δοκίμασε ξανά σε λίγο.</p>

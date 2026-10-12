@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { toLocale, type Locale } from "./locale";
+import { chooseText, type SystemMessageCode, type SystemTextsMap } from "./system-texts";
 import { authLinkMessage, invitationMessage, type EmailMessageBody } from "./templates/auth-messages";
 
 // Το σώμα του Send Email Hook της Supabase: ο παραλήπτης και τα tokens του email.
@@ -62,22 +63,31 @@ const recipientOf = (payload: AuthHookPayload): { name: string; locale: Locale }
   locale: toLocale(payload.user.user_metadata?.locale),
 });
 
+// Το Μήνυμα συστήματος (K2, #173) κάθε τύπου· η επιβεβαίωση λογαριασμού δεν αλλάζει από τον admin.
+const SYSTEM_CODE: Record<SupportedType, SystemMessageCode | null> = {
+  invite: "invite",
+  magiclink: "magic_link",
+  recovery: "recovery",
+  signup: null,
+};
+
 // Κάθε τύπος email της Supabase γίνεται δικό μας μήνυμα. Άγνωστος τύπος → null (απορρίπτεται).
-export function buildAuthEmail(payload: AuthHookPayload, origin: string): AuthEmail | null {
+// Τα κείμενα του admin (texts) μπαίνουν όπου υπάρχουν· αλλιώς φεύγει το κείμενο του κώδικα.
+export function buildAuthEmail(payload: AuthHookPayload, origin: string, texts: SystemTextsMap = {}): AuthEmail | null {
   const type = payload.email_data.email_action_type;
   if (!isSupported(type)) return null;
   const link = confirmLink(origin, payload.email_data.token_hash, type, nextPathFor(payload.email_data.redirect_to, origin));
-  const { name, locale } = recipientOf(payload);
+  const recipient = recipientOf(payload);
+  const code = SYSTEM_CODE[type];
+  const chosen = chooseText(recipient.locale, code ? texts[code] : undefined);
+  const base = { locale: chosen.locale, origin, name: recipient.name, link, custom: chosen };
   const message =
     type === "invite"
       ? invitationMessage({
-          locale,
-          origin,
-          name,
-          link,
+          ...base,
           kind: payload.user.user_metadata?.kind === "client" ? "client" : "team",
           clientName: payload.user.user_metadata?.client_name,
         })
-      : authLinkMessage({ locale, origin, type, link });
-  return { to: payload.user.email, toName: name, type, message };
+      : authLinkMessage({ ...base, type });
+  return { to: payload.user.email, toName: recipient.name, type, message };
 }
