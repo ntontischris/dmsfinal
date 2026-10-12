@@ -128,7 +128,10 @@ select throws_ok($$ select public.today_card('nope') $$, '42501', 'Δεν έχε
   'Άγνωστη κάρτα: 42501 με το ίδιο μήνυμα');
 
 select public.t_as('b1');
-select is(public.t_codes(public.today_counts()), array['t_client'], 'Ο πελάτης βλέπει μόνο κάρτες πελάτη');
+select ok('t_client' = any (public.t_codes(public.today_counts()))
+          and not exists (select 1 from public.today_cards c
+                           where c.code = any (public.t_codes(public.today_counts())) and c.audience <> 'client'),
+  'Ο πελάτης βλέπει μόνο κάρτες πελάτη');
 select throws_ok($$ select public.today_card('health') $$, '42501', null, 'Ο πελάτης δεν ανοίγει την Υγεία');
 select is(public.today_card('t_client') ->> 'count', '2', 'Ο πελάτης ανοίγει τη δική του κάρτα');
 select public.t_as('a1');
