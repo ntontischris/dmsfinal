@@ -53,14 +53,20 @@ begin
 end;
 $$;
 
+-- Μόνο οι κάρτες αυτού του αρχείου (Υγεία, Ετοιμότητα, t_*): οι κάρτες των Σβ–Σε έχουν δικά τους τεστ.
+create function public.t_mine(p_code text) returns boolean
+language sql immutable
+as $$ select p_code in ('health', 'readiness') or p_code like 't\_%'; $$;
+
 create function public.t_codes(p jsonb) returns text[]
 language sql immutable
-as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n); $$;
+as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n)
+       where public.t_mine(c ->> 'code'); $$;
 
 create function public.t_hidden(p jsonb) returns text[]
 language sql immutable
 as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n)
-       where (c ->> 'hidden')::boolean; $$;
+       where (c ->> 'hidden')::boolean and public.t_mine(c ->> 'code'); $$;
 
 create function public.t_card(p jsonb, p_code text) returns jsonb
 language sql immutable
