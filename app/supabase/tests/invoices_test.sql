@@ -200,20 +200,21 @@ select is(
     where c->>'clientId' = current_setting('t.a')), 1500::numeric,
   'Το καθαρό 1.300 € καλύπτει το παλαιότερο Τιμολογητέο: μένουν 1.500 € ανοιχτά'
 );
+select public.events_process();
 select is(
-  (select count(*)::int from public.email_outbox o
-    where o.kind = 'invoice_registered' and o.payload->>'invoiceId' = current_setting('t.inv1')),
-  1, 'Email μόνο στον Χρήστη πελάτη με «Βλέπει Οικονομικά» (όχι στον k2)'
+  (select count(*)::int from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+    where o.kind = 'automation' and a.event_type = 'invoice.registered' and o.payload -> 'details' ->> 'invoiceId' = current_setting('t.inv1'))::text || '/' || (select count(*) from public.email_outbox where kind = 'invoice_registered')::text,
+  '1/0', 'Email μόνο στον Χρήστη πελάτη με «Βλέπει Οικονομικά» (όχι στον k2), μόνο από τον Αυτοματισμό'
 );
 select is(
-  (select o.to_email from public.email_outbox o
-    where o.kind = 'invoice_registered' and o.payload->>'invoiceId' = current_setting('t.inv1')),
+  (select o.to_email from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+    where o.kind = 'automation' and a.event_type = 'invoice.registered' and o.payload -> 'details' ->> 'invoiceId' = current_setting('t.inv1')),
   'k1@client-a.example.gr', 'Ο παραλήπτης είναι ο k1'
 );
 select is(
-  (select o.payload->>'number' from public.email_outbox o
-    where o.kind = 'invoice_registered' and o.payload->>'invoiceId' = current_setting('t.inv1')),
-  '87', 'Το payload του email έχει τον αριθμό του Τιμολογίου'
+  (select (o.payload -> 'details' ->> 'number') || ' ' || (o.payload -> 'details' ->> 'pdfPath' like 'pending/%.pdf')::text from public.email_outbox o join public.automations a on a.id::text = o.payload ->> 'automationId'
+    where o.kind = 'automation' and a.event_type = 'invoice.registered' and o.payload -> 'details' ->> 'invoiceId' = current_setting('t.inv1')),
+  '87 true', 'Το μπλοκ του email έχει τον αριθμό του Τιμολογίου και το PDF'
 );
 select throws_ok(
   $$ select public.invoice_register(jsonb_build_object(

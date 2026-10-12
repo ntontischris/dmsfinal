@@ -41,11 +41,10 @@ const formatDay = (isoDay: string): string => {
 const formatTotal = (locale: Locale, total: number): string =>
   new Intl.NumberFormat(locale === "en" ? "en-GB" : "el-GR", { style: "currency", currency: "EUR" }).format(total);
 
-export function invoiceRegisteredMessage(input: InvoiceRegisteredInput): EmailMessageBody {
+// Οι παράγραφοι του Τιμολογίου χωρίς τον χαιρετισμό: ίδιες στο παλιό email και στο μπλοκ του Αυτοματισμού (#171).
+export function invoiceRegisteredDetails(input: InvoiceRegisteredInput): string[] {
   const { locale } = input;
-  const subject = `${pick(locale, SUBJECTS[input.kind].el, SUBJECTS[input.kind].en)} ${input.number}`;
-  const paragraphs = [
-    pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`),
+  return [
     pick(
       locale,
       `${KIND_NOUN[input.kind].el} ${input.number} καταχωρήθηκε. Το PDF επισυνάπτεται σε αυτό το μήνυμα.`,
@@ -61,6 +60,12 @@ export function invoiceRegisteredMessage(input: InvoiceRegisteredInput): EmailMe
       ? [pick(locale, `Λήξη: ${formatDay(input.dueDate)}`, `Due date: ${formatDay(input.dueDate)}`)]
       : []),
   ];
+}
+
+export function invoiceRegisteredMessage(input: InvoiceRegisteredInput): EmailMessageBody {
+  const { locale } = input;
+  const subject = `${pick(locale, SUBJECTS[input.kind].el, SUBJECTS[input.kind].en)} ${input.number}`;
+  const paragraphs = [pick(locale, `Γεια σου ${input.name},`, `Hello ${input.name},`), ...invoiceRegisteredDetails(input)];
   const rendered = renderShell({
     locale,
     origin: input.origin,

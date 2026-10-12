@@ -180,8 +180,8 @@ select throws_ok($$ select public.notifications_bell() $$, '42501', null, 'Χω�
 select is((select count(*)::integer from public.event_types), 58, 'Ο κατάλογος έχει τα 58 Γεγονότα του prototype');
 select is((select count(*)::integer from public.event_types where is_wired and kind <> 'instant'), 0,
   'Κανένα «με ημερομηνία» ή «αναμονής» δεν είναι συνδεδεμένο ακόμα');
-select is((select count(*)::integer from public.automations where is_initial and channel = 'email'), 0,
-  'Κανένας αρχικός Αυτοματισμός email στο Kα');
+select is((select count(*)::integer from public.automations where is_initial and channel = 'email' and subject_el is null), 0,
+  'Κάθε αρχικός Αυτοματισμός email έχει θέμα');
 select throws_ok($$ insert into public.automations (event_type, channel, recipient_kind, recipient_relative, body_el)
                    values ('filming.booked', 'notification', 'relative', 'client', 'x') $$,
   'P0001', null, 'Ο «πελάτης» δεν είναι παραλήπτης εσωτερικού Γεγονότος');
@@ -231,10 +231,12 @@ select public.t_run();
 select is(public.t_body('a2', 'filming.crew_declined') like 'Γιώργος cannot make the filming %', true,
   'Ο Υπεύθυνος της Παραγωγής παίρνει Ειδοποίηση στη γλώσσα του (en)');
 select is(public.t_count('a1', 'filming.crew_declined'), 0, 'Όποιος έκανε την ενέργεια δεν ειδοποιείται');
-select is((select count(*)::integer from public.email_outbox where kind = 'automation' and to_email = 'production@example.com'),
+select is((select count(*)::integer from public.email_outbox where kind = 'automation' and to_email = 'production@example.com'
+             and payload ->> 'automationId' = (select a.id::text from public.automations a where a.body_el = 'Ο/Η {member} δεν μπορεί.')),
   1, 'Το κανάλι email γράφει μία γραμμή kind automation');
 select is((select locale || ' ' || (payload ->> 'subject') || ' ' || (payload ?& array['body', 'link', 'automationId'])::text
-             from public.email_outbox where kind = 'automation' and to_email = 'production@example.com'),
+             from public.email_outbox where kind = 'automation' and to_email = 'production@example.com'
+              and payload ->> 'automationId' = (select a.id::text from public.automations a where a.body_el = 'Ο/Η {member} δεν μπορεί.')),
   'el Δεν μπορεί Γιώργος true', 'Χωρίς αγγλικό κείμενο φεύγει το ελληνικό· payload με subject, body, link, automationId');
 
 -- ───────────── Γ: νέα Έκδοση προς τον πελάτη ─────────────

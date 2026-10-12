@@ -1,13 +1,15 @@
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
-import { AccessNotice, getViewer } from "@/modules/access";
+import { AccessNotice, getViewer, isClientViewer } from "@/modules/access";
 import {
   LOAD_ERROR_TEXT,
   LOAD_ERROR_TITLE,
+  LanguageForm,
   NO_ACCESS_TEXT,
   NOTIFICATIONS_EYEBROW,
   NOTIFICATIONS_TITLE,
   NotificationsScreen,
+  getMyLanguage,
   getNotifications,
   parseCursor,
   parseFilter,
@@ -20,18 +22,19 @@ interface NotificationsPageProps {
 }
 
 // A2 για όλους (ομάδα και πελάτη): η βάση δείχνει μόνο τις δικές σου Ειδοποιήσεις.
+// Ο Χρήστης πελάτη διαλέγει εδώ και τη γλώσσα των email του (#171).
 export default async function NotificationsPage({
   searchParams,
 }: NotificationsPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
   const filter = parseFilter(params.show);
-  const result =
-    viewer.status === "signed-in"
-      ? await getNotifications(
-          filter,
-          parseCursor(params.before, params.beforeId),
-        )
-      : null;
+  const isSignedIn = viewer.status === "signed-in";
+  const [result, language] = await Promise.all([
+    isSignedIn
+      ? getNotifications(filter, parseCursor(params.before, params.beforeId))
+      : null,
+    isClientViewer(viewer) ? getMyLanguage() : null,
+  ]);
   return (
     <>
       <ScreenHeader
@@ -52,6 +55,9 @@ export default async function NotificationsPage({
         <AccessNotice viewer={viewer}>
           <p className="m-0">{NO_ACCESS_TEXT}</p>
         </AccessNotice>
+      )}
+      {language?.ok && language.data && (
+        <LanguageForm current={language.data} />
       )}
     </>
   );

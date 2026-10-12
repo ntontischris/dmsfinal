@@ -7,6 +7,8 @@ export interface ShellInput {
   heading: string;
   paragraphs: readonly string[];
   action?: { label: string; url: string };
+  // Μικρός σύνδεσμος πάνω από την υπογραφή, π.χ. διακοπή των email ενός Αυτοματισμού (#171).
+  footerLink?: { label: string; url: string };
 }
 
 export interface RenderedBody {
@@ -23,6 +25,9 @@ const paragraphHtml = (text: string): string =>
 const buttonHtml = (label: string, url: string): string =>
   `<p style="margin:24px 0;"><a href="${escapeHtml(url)}" style="display:inline-block;padding:12px 20px;background:#e0a526;color:#111;text-decoration:none;border-radius:4px;font-weight:600;">${escapeHtml(label)}</a></p>`;
 
+const footerLinkHtml = (label: string, url: string): string =>
+  `<p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;"><a href="${escapeHtml(url)}" style="color:#6b6b6b;">${escapeHtml(label)}</a></p>`;
+
 const footerText = (locale: Locale): string =>
   locale === "en"
     ? "Devre Media · This message was sent by the company system."
@@ -37,6 +42,7 @@ export function renderShell(input: ShellInput): RenderedBody {
     `<h1 style="margin:0 0 16px;font-size:22px;color:#111;">${escapeHtml(input.heading)}</h1>`,
     ...input.paragraphs.map(paragraphHtml),
     input.action ? buttonHtml(input.action.label, input.action.url) : "",
+    input.footerLink ? footerLinkHtml(input.footerLink.label, input.footerLink.url) : "",
     `<p style="margin:24px 0 0;font-size:12px;color:#6b6b6b;">${escapeHtml(footerText(input.locale))}</p>`,
     `</div></body></html>`,
   ].join("");
@@ -45,6 +51,7 @@ export function renderShell(input: ShellInput): RenderedBody {
     "",
     ...input.paragraphs,
     ...(input.action ? ["", `${input.action.label}: ${input.action.url}`] : []),
+    ...(input.footerLink ? ["", `${input.footerLink.label}: ${input.footerLink.url}`] : []),
     "",
     footerText(input.locale),
   ].join("\n");

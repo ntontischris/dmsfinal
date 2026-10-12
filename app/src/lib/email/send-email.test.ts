@@ -134,6 +134,34 @@ describe("sendEmail", () => {
     });
   });
 
+  it("στέλνει reply_to και headers όταν υπάρχουν", async () => {
+    const fetchImpl = okFetch();
+    await sendEmail(
+      {
+        ...message,
+        replyTo: "hello@studio.example.com",
+        headers: { "List-Unsubscribe": "<https://app.example.com/u/abc>" },
+      },
+      { env: env({ apiKey: "k" }), fetchImpl },
+    );
+    const [, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      reply_to: "hello@studio.example.com",
+      headers: { "List-Unsubscribe": "<https://app.example.com/u/abc>" },
+    });
+  });
+
+  it("δεν στέλνει reply_to ούτε headers όταν λείπουν", async () => {
+    const fetchImpl = okFetch();
+    await sendEmail(message, { env: env({ apiKey: "k" }), fetchImpl });
+    const [, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0] as unknown as [string, RequestInit];
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body).not.toHaveProperty("reply_to");
+    expect(body).not.toHaveProperty("headers");
+  });
+
   it("δίνει «failed» με τον κωδικό της απάντησης, χωρίς το σώμα της", async () => {
     const fetchImpl = vi.fn(
       async () => new Response("secret body", { status: 422 }),

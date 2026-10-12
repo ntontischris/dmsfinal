@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { appOrigin } from "@/lib/app-origin";
 import { buildAuthEmail, parseAuthHookPayload } from "@/lib/email/auth-hook";
 import { recordEmailLog } from "@/lib/email/log";
+import { readReplyToQuick } from "@/lib/email/reply-to";
 import { sendEmail } from "@/lib/email/send-email";
 import { verifyStandardWebhook } from "@/lib/email/standard-webhooks";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -36,11 +37,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const email = buildAuthEmail(parsed.data, appOrigin());
   if (!email) return NextResponse.json({ error: "unsupported email type" }, { status: 400 });
 
+  const admin = createAdminClient();
   const outcome = await sendEmail(
-    { to: email.to, toName: email.toName, ...email.message },
+    { to: email.to, toName: email.toName, ...email.message, replyTo: await readReplyToQuick(admin) },
     { timeoutMs: HOOK_TIMEOUT_MS },
   );
-  await recordEmailLog(createAdminClient(), {
+  await recordEmailLog(admin, {
     kind: email.type,
     toEmail: email.to,
     subject: email.message.subject,

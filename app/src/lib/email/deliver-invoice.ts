@@ -12,7 +12,7 @@ import { invoiceRegisteredMessage } from "./templates/invoice-messages";
 export const INVOICE_KIND = "invoice_registered";
 export const INVOICE_BUCKET = "invoices";
 const INVALID_PAYLOAD = "Μη έγκυρο περιεχόμενο ειδοποίησης";
-const MISSING_PDF = "Το PDF του Τιμολογίου δεν βρέθηκε";
+export const MISSING_PDF = "Το PDF του Τιμολογίου δεν βρέθηκε";
 
 export type InvoiceBody = EmailMessageBody & { attachments: readonly EmailAttachment[] };
 
@@ -36,7 +36,7 @@ export interface InvoiceRow {
 export const attachmentName = (kind: string, number: string): string =>
   `${kind}-${number.replace(/[^A-Za-z0-9._-]+/g, "_")}.pdf`;
 
-async function downloadPdf(admin: SupabaseClient, path: string): Promise<string | null> {
+export async function downloadPdf(admin: SupabaseClient, path: string): Promise<string | null> {
   const { data, error } = await admin.storage.from(INVOICE_BUCKET).download(path);
   if (error || !data) return null;
   return Buffer.from(await data.arrayBuffer()).toString("base64");

@@ -242,8 +242,18 @@ select set_config('t.k2', public.filming_book(current_setting('t.a')::uuid, publ
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
 select lives_ok($$ select public.filming_approve(current_setting('t.k1')::uuid) $$, 'Η ομάδα εγκρίνει την κράτηση του πελάτη');
 select lives_ok($$ select public.filming_reject(current_setting('t.k2')::uuid, 'Δεν χωράμε') $$, 'Η ομάδα απορρίπτει την άλλη κράτηση με λόγο');
-select is((select count(*)::integer from public.email_outbox where kind = 'filming_decision' and to_email = 'client@example.com'), 2, 'Κάθε απόφαση κράτησης πελάτη γράφει email στην ουρά');
-select is((select payload ->> 'decision' from public.email_outbox where kind = 'filming_decision' and payload ->> 'filmingId' = current_setting('t.k2')), 'rejected', 'Το email απόρριψης λέει «rejected»');
+select public.events_process();
+select is((select (count(*) filter (where o.kind = 'automation' and a.event_type = 'filming.decided'))::text || '/'
+               || (count(*) filter (where o.kind = 'filming_decision'))::text
+             from public.email_outbox o left join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.to_email = 'client@example.com'),
+  '2/0', 'Κάθε απόφαση κράτησης πελάτη: ένα email από τον Αυτοματισμό, κανένα με το παλιό kind');
+select is((select o.payload -> 'details' ->> 'reason' from public.email_outbox o
+             join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.kind = 'automation' and a.event_type = 'filming.decided'
+              and o.payload -> 'details' ->> 'filmingId' = current_setting('t.k2')
+              and o.payload -> 'details' ->> 'decision' = 'rejected'),
+  'Δεν χωράμε', 'Το email απόρριψης λέει «rejected» με τον λόγο');
 select is((select state from public.filmings where id = current_setting('t.k1')::uuid), 'scheduled', 'Η εγκεκριμένη κράτηση είναι προγραμματισμένη');
 
 -- ───────────── Μετάθεση από τον πελάτη ─────────────
@@ -259,7 +269,12 @@ select lives_ok($$ select public.filming_create(current_setting('t.a')::uuid, pu
 select is(authz.slot_problem(public.t_day(2, time '14:00'), 1, null, true), 'Η ώρα είναι γεμάτη', 'Η εκκρεμής μετάθεση πιάνει θέση στη νέα ώρα');
 select lives_ok($$ select public.filming_decide_reschedule(current_setting('t.k1')::uuid, true, null) $$, 'Η ομάδα εγκρίνει τη μετάθεση (χωράει)');
 select ok((select starts_at = public.t_day(2, time '14:00') and reschedule_starts_at is null from public.filmings where id = current_setting('t.k1')::uuid), 'Μετά την αποδοχή το Γύρισμα μετακινείται και το αίτημα καθαρίζει');
-select is((select count(*)::integer from public.email_outbox where kind = 'reschedule_decision' and to_email = 'client@example.com'), 1, 'Η αποδοχή μετάθεσης γράφει email');
+select public.events_process();
+select is((select (count(*) filter (where o.kind = 'automation' and a.event_type = 'filming.rescheduled'))::text || '/'
+               || (count(*) filter (where o.kind = 'reschedule_decision'))::text
+             from public.email_outbox o left join public.automations a on a.id::text = o.payload ->> 'automationId'
+            where o.to_email = 'client@example.com'),
+  '1/0', 'Η αποδοχή μετάθεσης: ένα email «μετατέθηκε» από τον Αυτοματισμό, κανένα με το παλιό kind');
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
 select lives_ok($$ select public.filming_client_reschedule(current_setting('t.k1')::uuid, public.t_day(2, time '16:00'), 1) $$, 'Νέο αίτημα μετάθεσης στις 16:00');

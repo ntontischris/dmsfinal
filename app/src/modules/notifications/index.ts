@@ -12,7 +12,17 @@ export {
   NO_ACCESS_TEXT,
   NOTIFICATIONS_EYEBROW,
   NOTIFICATIONS_TITLE,
+  UNSUBSCRIBE_TEXT_EL,
+  UNSUBSCRIBE_TEXT_EN,
+  UNSUBSCRIBE_TITLE,
 } from "./labels";
-export { getBell, getNotifications } from "./queries";
+export {
+  getBell,
+  getMyLanguage,
+  getNotifications,
+  type EmailLanguage,
+} from "./queries";
 export { NotificationBell } from "./components/notification-bell";
 export { NotificationsScreen } from "./components/notifications-screen";
+export { LanguageForm } from "./components/language-form";
+export { UnsubscribeForm } from "./components/unsubscribe-form";
