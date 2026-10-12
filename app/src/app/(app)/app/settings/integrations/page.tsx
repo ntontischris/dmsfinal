@@ -1,21 +1,16 @@
+import Link from "next/link";
+
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import { getDefaults } from "@/modules/agreements";
 import { GoogleSettingsCard, getGoogleView } from "@/modules/google";
 import { isGoogleConfigured } from "@/lib/google/config";
-import {
-  AccessNotice,
-  EmailLogList,
-  TestEmailForm,
-  getViewer,
-  isOwner,
-  listEmailLog,
-} from "@/modules/access";
+import { AccessNotice, TestEmailForm, getViewer, isOwner } from "@/modules/access";
 
 export const metadata = { title: "Ενσωματώσεις" };
 
-// O8 Ενσωματώσεις: η κατάσταση του email και το Ιστορικό αποστολών. Μόνο για τον Ιδιοκτήτη.
+// O8 Ενσωματώσεις: η κατάσταση του email και του Google. Μόνο για τον Ιδιοκτήτη. Το Ιστορικό αποστολών είναι στο K3 (#174).
 export default async function IntegrationsPage() {
   const viewer = await getViewer();
   const header = <ScreenHeader eyebrow="O8 · Ρυθμίσεις" title="Ενσωματώσεις" />;
@@ -29,7 +24,7 @@ export default async function IntegrationsPage() {
       </>
     );
 
-  const [defaults, log, google] = await Promise.all([getDefaults(), listEmailLog(20), getGoogleView()]);
+  const [defaults, google] = await Promise.all([getDefaults(), getGoogleView()]);
   const connected = defaults.ok && defaults.data.emailSenderConnected;
   return (
     <>
@@ -56,14 +51,11 @@ export default async function IntegrationsPage() {
           view={google.ok ? google.data : null}
           ownerEmail={viewer.status === "signed-in" ? viewer.email : ""}
         />
-        <Panel label="Τελευταίες αποστολές" aside="20" isFlush>
-          {log.ok ? (
-            <EmailLogList rows={log.data} />
-          ) : (
-            <p className="m-0 p-4 text-sm text-destructive">
-              Το Ιστορικό δεν φόρτωσε. Δοκίμασε ξανά.
-            </p>
-          )}
+        <Panel label="Τελευταίες αποστολές">
+          <p className="m-0 text-sm text-muted-foreground">
+            Τι στάλθηκε, σε ποιον και με τι αποτέλεσμα, μαζί με τα Προγραμματισμένα και όσα απέτυχαν:{" "}
+            <Link href="/app/settings/sends">Ιστορικό αποστολών</Link>.
+          </p>
         </Panel>
       </div>
     </>

@@ -7,6 +7,7 @@ import { Notice } from "@/components/ui/notice";
 import { Panel } from "@/components/ui/panel";
 import { Tabs } from "@/components/ui/segmented";
 import { AccessNotice, type Viewer } from "@/modules/access";
+import { CLIENT_SENDS_TAB, ClientSends } from "@/modules/notifications";
 import {
   AccessRequestForm,
   ActivityList,
@@ -26,14 +27,24 @@ import {
 } from "@/modules/sales";
 
 export const EYEBROW = "B2 · Πελάτες και Πωλήσεις";
-const TAB_IDS = ["details", "opportunities", "activities"] as const;
+const TAB_IDS = ["details", "opportunities", "activities", "sends"] as const;
 export type TabId = (typeof TAB_IDS)[number];
 
 const TAB_LABELS: Readonly<Record<TabId, string>> = {
   details: "Στοιχεία",
   opportunities: "Ευκαιρίες",
   activities: "Δραστηριότητες",
+  sends: CLIENT_SENDS_TAB,
 };
+
+// Η καρτέλα «Αποστολές» (#174): φαίνεται μόνο σε όσους επιτρέπεται· αλλιώς δεν υπάρχει καθόλου.
+export interface SendsAccess {
+  canSee: boolean;
+  hasHistory: boolean;
+}
+
+const isTabShown = (id: TabId, access: ClientAccess, sends: SendsAccess): boolean =>
+  (access !== "granted" || id !== "activities") && (id !== "sends" || sends.canSee);
 
 const BackLink = () => (
   <Link href="/app/clients" className={buttonVariants({ variant: "ghost" })}>
@@ -132,23 +143,24 @@ export function Merged({ client }: { client: ClientDetail }) {
 export const resolveTab = (
   value: string | undefined,
   access: ClientAccess,
+  sends: SendsAccess,
 ): TabId => {
   const tab = TAB_IDS.find((id) => id === value) ?? "details";
-  return access === "granted" && tab === "activities" ? "details" : tab;
+  return isTabShown(tab, access, sends) ? tab : "details";
 };
 
 export function ClientTabs({
   clientId,
   current,
   access,
+  sends,
 }: {
   clientId: string;
   current: TabId;
   access: ClientAccess;
+  sends: SendsAccess;
 }) {
-  const ids = TAB_IDS.filter(
-    (id) => access !== "granted" || id !== "activities",
-  );
+  const ids = TAB_IDS.filter((id) => isTabShown(id, access, sends));
   return (
     <Tabs
       label="Καρτέλες Πελάτη"
@@ -261,7 +273,13 @@ export async function GrantedNote({
   );
 }
 
-export function TabContent({ tab, ...props }: TabProps & { tab: TabId }) {
+export function TabContent({
+  tab,
+  sends,
+  ...props
+}: TabProps & { tab: TabId; sends: SendsAccess }) {
+  if (tab === "sends")
+    return <ClientSends clientId={props.client.id} hasHistoryLink={sends.hasHistory} />;
   if (tab === "opportunities") return <OpportunitiesTab {...props} />;
   if (tab === "activities") return <ActivitiesTab client={props.client} />;
   return <DetailsTab card={props.card} caps={props.caps} />;

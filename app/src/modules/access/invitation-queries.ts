@@ -4,11 +4,9 @@ import { createSupabase } from "@/lib/supabase/server";
 
 import {
   clientUserRowSchema,
-  emailLogRowSchema,
   invitationRowSchema,
   membershipRowSchema,
   type ClientUserRow,
-  type EmailLogRow,
   type InvitationRow,
   type MembershipRow,
 } from "./invitation-schemas";
@@ -55,11 +53,4 @@ export async function listMemberships(): Promise<ReadResult<MembershipRow[]>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return readRows(() => supabase.rpc("my_client_memberships"), parseAll(membershipRowSchema));
-}
-
-// Το Ιστορικό αποστολών (μόνο Ιδιοκτήτης).
-export async function listEmailLog(limit = 20): Promise<ReadResult<EmailLogRow[]>> {
-  const supabase = await createSupabase();
-  if (!supabase) return { ok: false };
-  return readRows(() => supabase.rpc("email_log_view", { p_limit: limit }), parseAll(emailLogRowSchema));
 }

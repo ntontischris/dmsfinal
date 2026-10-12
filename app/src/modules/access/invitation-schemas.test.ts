@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   clientInviteSchema,
   clientUserRowSchema,
-  emailLogRowSchema,
   invitationRowSchema,
   inviteFormSchema,
   membershipRowSchema,
@@ -66,14 +65,6 @@ describe("membershipRowSchema", () => {
   it("δέχεται τη συμμετοχή με τον επιλεγμένο Πελάτη", () => {
     const row = { clientId: UUID, name: "Acme", roleName: "Πλήρης", isCurrent: true };
     expect(membershipRowSchema.safeParse(row).success).toBe(true);
-  });
-});
-
-describe("emailLogRowSchema", () => {
-  it("δέχεται μόνο τις τρεις καταστάσεις αποστολής", () => {
-    const row = { id: UUID, kind: "test", toEmail: "a@b.co", subject: "x", status: "sent", providerId: "local", error: "", sentAt: "2026-10-09T10:00:00Z" };
-    expect(emailLogRowSchema.safeParse(row).success).toBe(true);
-    expect(emailLogRowSchema.safeParse({ ...row, status: "queued" }).success).toBe(false);
   });
 });
 

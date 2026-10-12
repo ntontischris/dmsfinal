@@ -181,27 +181,46 @@ test("ο Ιδιοκτήτης προσκαλεί Χρήστη πελάτη κα�
   await context.close();
 });
 
+// «Πότε» του Ιστορικού αποστολών: ώρα Ελλάδας, όπως τη γράφει το K3.
+const athensMinute = (time: number): string =>
+  new Intl.DateTimeFormat("el-GR", {
+    timeZone: "Europe/Athens",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(time));
+
 test("ο Ιδιοκτήτης στέλνει δοκιμαστικό email και φαίνεται στο Ιστορικό", async ({
   page,
 }) => {
   await signIn(page, "owner@example.com");
   await page.goto("/app/settings/integrations");
-  const sentRows = () =>
-    listItem(page, "owner@example.com").filter({ hasText: "στάλθηκε" });
-  const before = await sentRows().count();
+  const clickedAt = Date.now();
   await page
     .getByRole("button", { name: "Δοκιμαστικό email στον εαυτό μου" })
     .click();
   await expect(page.getByRole("status")).toContainText("μπήκε στην ουρά");
+  // Το Ιστορικό αποστολών (K3, #174): η γραμμή του δοκιμαστικού αυτού του λεπτού, ως «στάλθηκε». Οι ώρες δεν έχουν
+  // ειδικούς χαρακτήρες regex («12/10/2026, 15:23»).
+  const minutes = [clickedAt - 60_000, clickedAt, clickedAt + 60_000].map(athensMinute);
+  const sentNow = page
+    .locator("tr")
+    .filter({ hasText: "Δοκιμαστικό email" })
+    .filter({ hasText: "owner@example.com" })
+    .filter({ hasText: "στάλθηκε" })
+    .filter({ hasText: new RegExp(minutes.join("|")) });
   await expect
     .poll(
       async () => {
-        await page.reload();
-        return sentRows().count();
+        await page.goto("/app/settings/sends?channel=email");
+        return sentNow.count();
       },
       { timeout: 60_000, intervals: [2_000] },
     )
-    .toBeGreaterThan(before);
+    .toBeGreaterThan(0);
 });
 
 // Το πραγματικό Send Email Hook: υπογεγραμμένο αίτημα όπως της Supabase, και η γραμμή στο Ιστορικό.
@@ -251,8 +270,8 @@ test("το Send Email Hook στέλνει την πρόσκληση και το 
   expect(response.status()).toBe(200);
 
   await signIn(page, "owner@example.com");
-  await page.goto("/app/settings/integrations");
+  await page.goto("/app/settings/sends?channel=email");
   await expect(
-    listItem(page, email).filter({ hasText: "στάλθηκε" }),
+    page.locator("tr").filter({ hasText: email }).filter({ hasText: "στάλθηκε" }),
   ).toHaveCount(1);
 });

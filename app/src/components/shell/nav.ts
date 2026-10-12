@@ -292,6 +292,12 @@ export const NAV: readonly NavSection[] = [
         requires: "settings.manage",
       },
       {
+        code: "K3",
+        label: "Ιστορικό αποστολών",
+        href: "/app/settings/sends",
+        requires: ["automations.manage", "health.view"],
+      },
+      {
         code: "O8",
         label: "Ενσωματώσεις",
         href: "/app/settings/integrations",

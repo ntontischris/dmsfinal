@@ -46,19 +46,6 @@ export const membershipRowSchema = z.object({
 
 export type MembershipRow = z.infer<typeof membershipRowSchema>;
 
-export const emailLogRowSchema = z.object({
-  id: z.string(),
-  kind: z.string(),
-  toEmail: z.string(),
-  subject: z.string(),
-  status: z.enum(["sent", "failed", "suppressed"]),
-  providerId: z.string(),
-  error: z.string(),
-  sentAt: z.string(),
-});
-
-export type EmailLogRow = z.infer<typeof emailLogRowSchema>;
-
 export const removeResultSchema = z.object({
   deactivate: z.boolean(),
   signatoryWarning: z.boolean(),

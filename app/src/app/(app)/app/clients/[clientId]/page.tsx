@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Split } from "@/components/ui/inspector";
 import { ClientUsersSection, can, getViewer, type Viewer } from "@/modules/access";
+import { canSeeClientSends, sendsCaps } from "@/modules/notifications";
 import {
   ClientInspector,
   clientAccess,
@@ -27,6 +28,7 @@ import {
   TabContent,
   TakenClient,
   resolveTab,
+  type SendsAccess,
 } from "./page-parts";
 
 export const metadata = { title: "Πελάτης" };
@@ -37,16 +39,18 @@ async function ClientView({
   caps,
   tab,
   usersSection,
+  sends,
 }: {
   client: ClientDetail;
   card: ClientRow | null;
   caps: SalesCaps;
   tab: string | undefined;
   usersSection: ReactNode;
+  sends: SendsAccess;
 }) {
   const access = clientAccess(caps, client);
   const canEdit = caps.canManage && access !== "granted";
-  const current = resolveTab(tab, access);
+  const current = resolveTab(tab, access, sends);
   const assignable = caps.canTransfer ? await listAssignableUsers() : null;
   return (
     <>
@@ -59,7 +63,7 @@ async function ClientView({
           assignable={assignable?.ok ? assignable.data : []}
         />
         <div className="grid min-w-0 gap-4">
-          <ClientTabs clientId={client.id} current={current} access={access} />
+          <ClientTabs clientId={client.id} current={current} access={access} sends={sends} />
           {access === "granted" && <GrantedNote client={client} caps={caps} />}
           <TabContent
             tab={current}
@@ -67,6 +71,7 @@ async function ClientView({
             card={card}
             caps={caps}
             canEdit={canEdit}
+            sends={sends}
           />
           {usersSection}
         </div>
@@ -82,12 +87,14 @@ function ClientOutcome({
   caps,
   tab,
   usersSection,
+  sends,
 }: {
   client: ClientDetail | null;
   card: ClientRow | null;
   caps: SalesCaps;
   tab: string | undefined;
   usersSection: ReactNode;
+  sends: SendsAccess;
 }) {
   if (client === null)
     return card && !card.canOpen ? (
@@ -97,7 +104,7 @@ function ClientOutcome({
     );
   if (client.archivedAt) return <Merged client={client} />;
   return (
-    <ClientView client={client} card={card} caps={caps} tab={tab} usersSection={usersSection} />
+    <ClientView client={client} card={card} caps={caps} tab={tab} usersSection={usersSection} sends={sends} />
   );
 }
 
@@ -129,6 +136,10 @@ export default async function ClientPage({
       caps={caps}
       tab={typeof tab === "string" ? tab : undefined}
       usersSection={usersSectionFor(viewer, id.data, client.data)}
+      sends={{
+        canSee: canSeeClientSends(viewer, client.data?.managerId ?? null),
+        hasHistory: sendsCaps(viewer).canView,
+      }}
     />
   );
 }
