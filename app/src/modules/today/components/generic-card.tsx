@@ -8,7 +8,9 @@ import { formatAt, formatCents } from "../helpers";
 import { EMPTY_TEXT, OPEN_LABEL, URGENT_LABEL } from "../labels";
 import type { CardItem } from "../view-schema";
 
-function CountBadge({ count, hasUrgent }: { count: number; hasUrgent: boolean }) {
+// Στις κάρτες εβδομάδας ο αριθμός είναι πλήθος, όχι εκκρεμότητες: χωρίς «σε αναμονή».
+function CountBadge({ count, hasUrgent, isWeek }: { count: number; hasUrgent: boolean; isWeek: boolean }) {
+  if (isWeek) return <Badge tone={hasUrgent ? "attention" : undefined}>{count}</Badge>;
   return (
     <span aria-label={`${count} σε αναμονή`}>
       <Badge tone={hasUrgent ? "attention" : undefined}>{count}</Badge>
@@ -45,7 +47,7 @@ export function GenericCard({ card, data }: CardViewProps) {
         isHealthy ? (
           <Badge tone="ok">σε λειτουργία</Badge>
         ) : (
-          <CountBadge count={data.count} hasUrgent={hasUrgent} />
+          <CountBadge count={data.count} hasUrgent={hasUrgent} isWeek={card.kind === "week"} />
         )
       }
     >
