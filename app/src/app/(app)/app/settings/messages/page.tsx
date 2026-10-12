@@ -29,7 +29,7 @@ export default async function MessageSettingsPage() {
       <div className="grid gap-4">
         <SettingsTabs current="messages" />
         {settings.ok ? (
-          <MessageSettingsForm settings={settings.data} />
+          <MessageSettingsForm settings={settings.data} canManageAutomations={can(viewer, "automations.manage")} />
         ) : (
           <Notice kind="error" title="Δεν φόρτωσαν οι Ρυθμίσεις">
             <p className="m-0">Τίποτα δεν χάθηκε. Δοκίμασε ξανά σε λίγο.</p>

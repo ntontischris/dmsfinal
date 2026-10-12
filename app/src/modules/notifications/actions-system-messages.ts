@@ -20,8 +20,8 @@ const NO_MESSAGE = { error: "Δεν υπάρχει αυτό το Μήνυμα σ
 const same = (value: string, fallback: string): boolean =>
   value.replace(/\r\n/g, "\n").trim() === fallback.trim();
 
-// Όλα ίδια με τα αρχικά = «Επαναφορά» (null). Αλλιώς τα ελληνικά ίδια με τα αρχικά μένουν null (το κείμενο του κώδικα),
-// ενώ τα αγγλικά γράφονται όπως είναι, ώστε ο αγγλόφωνος να μην πάρει ελληνικά επειδή άλλαξε μόνο το ελληνικό.
+// Κάθε πεδίο ίσο με το αρχικό του κώδικα (ή κενό) αποθηκεύεται κενό = null: ισχύει το κείμενο του κώδικα, μαζί με τις
+// παραλλαγές του (π.χ. η πρόσκληση πελάτη αναφέρει τον Πελάτη). Γράφεται μόνο ό,τι άλλαξε ρητά ο admin.
 function textsToSave(
   code: SystemMessageCode,
   typed: {
@@ -31,21 +31,15 @@ function textsToSave(
     bodyEn: string;
   },
 ) {
-  const defaults = SYSTEM_DEFAULTS[code];
-  const isDefault =
-    same(typed.subjectEl, defaults.subject.el) &&
-    same(typed.subjectEn, defaults.subject.en) &&
-    same(typed.bodyEl, defaults.body.el) &&
-    same(typed.bodyEn, defaults.body.en);
-  if (isDefault) return { code };
+  const { subject, body } = SYSTEM_DEFAULTS[code];
+  const changed = (value: string, fallback: string): string =>
+    same(value, fallback) ? "" : value;
   return {
     code,
-    subjectEl: same(typed.subjectEl, defaults.subject.el)
-      ? ""
-      : typed.subjectEl,
-    bodyEl: same(typed.bodyEl, defaults.body.el) ? "" : typed.bodyEl,
-    subjectEn: typed.subjectEn,
-    bodyEn: typed.bodyEn,
+    subjectEl: changed(typed.subjectEl, subject.el),
+    subjectEn: changed(typed.subjectEn, subject.en),
+    bodyEl: changed(typed.bodyEl, body.el),
+    bodyEn: changed(typed.bodyEn, body.en),
   };
 }
 

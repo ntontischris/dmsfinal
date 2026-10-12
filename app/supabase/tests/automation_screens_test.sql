@@ -1,7 +1,7 @@
 -- Ειδοποιήσεις Kδ #173: RPC της K1 (Αυτοματισμοί) και της K2 (Μηνύματα συστήματος).
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(51);
+select plan(68);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή (χωρίς automations.manage) · a3 Διαχείριση · a4 ανενεργός Χρήστης ομάδας · b1 Χρήστης πελάτη «Πλήρης»
@@ -155,12 +155,60 @@ select throws_ok(format($$ select public.automation_delete(%L) $$,
 select lives_ok(format($$ select public.automation_delete(%L) $$, current_setting('t.new')), 'Ο Αυτοματισμός της Διαχείρισης διαγράφεται');
 select is((select count(*)::integer from public.automations where id = current_setting('t.new')::uuid), 0, 'Δεν υπάρχει πια');
 
+-- Με αποστολές: μόνο σβήνει, το Ιστορικό μένει.
+select set_config('t.sent', (public.t_users_auto('["00000000-0000-0000-0000-0000000000a3"]') ->> 'id'), true);
+insert into public.automation_sends (automation_id, case_key, recipient_key, channel)
+values (current_setting('t.sent')::uuid, 'message.created:τεστ', '00000000-0000-0000-0000-0000000000a3', 'notification');
+select throws_ok(format($$ select public.automation_delete(%L) $$, current_setting('t.sent')), 'P0001', null,
+  'Αυτοματισμός με αποστολές δεν διαγράφεται');
+select is((select count(*)::integer from public.automation_sends where automation_id = current_setting('t.sent')::uuid), 1,
+  'Το σημάδι αποστολής μένει');
+
+-- Κανένας σύνδεσμος στο θέμα.
+select throws_ok($$ select public.automation_save('{"eventType":"message.created","channel":"email","recipientKind":"relative",
+  "recipientRelative":"client_owner","timing":"immediate","subjectEl":"Δες {link}","bodyEl":"Γεια {link}"}') $$, 'P0001', null,
+  'Το {link} δεν μπαίνει στο θέμα Αυτοματισμού');
+select lives_ok($$ select public.automation_save('{"eventType":"message.created","channel":"email","recipientKind":"relative",
+  "recipientRelative":"client_owner","timing":"immediate","subjectEl":"Μήνυμα από {sender}","bodyEl":"Δες {link}"}') $$,
+  'Το {link} μπαίνει στο κείμενο');
+
+-- Δικαίωμα πελάτη: ο Αυτοματισμός ανήκει στις Προτιμήσεις του πελάτη.
+select set_config('t.client_perm', (public.automation_save('{"eventType":"message.created","channel":"notification",
+  "recipientKind":"permission","recipientPermission":"c.chatRead","timing":"immediate","bodyEl":"Νέο Μήνυμα"}') ->> 'id'), true);
+select is((select count(*)::integer from jsonb_array_elements(public.my_notification_prefs()) p
+            where p ->> 'automationId' = current_setting('t.client_perm')), 0,
+  'Η ομάδα δεν βλέπει στις Προτιμήσεις Αυτοματισμό με Δικαίωμα πελάτη');
+select public.t_as('b1');
+select is((select count(*)::integer from jsonb_array_elements(public.my_notification_prefs()) p
+            where p ->> 'automationId' = current_setting('t.client_perm')), 1,
+  'Ο πελάτης τον βλέπει στις Προτιμήσεις');
+select lives_ok(format($$ select public.set_notification_pref(%L, false) $$, current_setting('t.client_perm')),
+  'Ο πελάτης τον σβήνει για τον εαυτό του');
+
+-- ───────────── Αργίες: μία αλλαγή κάθε φορά ─────────────
+select public.t_as('a2');
+select throws_ok($$ select public.holiday_greeting_add('{"name":"Γιορτή","month":12,"day":27}') $$, '42501', null,
+  'Χωρίς automations.manage δεν προστίθεται αργία');
+select public.t_as('a1');
+select lives_ok($$ select public.holiday_greeting_set_official('Πρωτοχρονιά', false) $$, 'Σβήνει μία επίσημη');
+select ok((public.holiday_greetings_get(2026) -> 'removed') ? 'Πρωτοχρονιά', 'Η Πρωτοχρονιά είναι σβηστή');
+select ok((public.holiday_greetings_get(2026) -> 'removed') ? 'Καθαρά Δευτέρα', 'Οι άλλες σβηστές μένουν όπως ήταν');
+select throws_ok($$ select public.holiday_greeting_set_official('Άγνωστη', false) $$, 'P0001', null, 'Μόνο επίσημες');
+select set_config('t.holiday', public.holiday_greeting_add('{"name":"Γιορτή της εταιρείας","month":12,"day":27}')::text, true);
+select is(jsonb_array_length(public.holiday_greetings_get(2026) -> 'added'), 1, 'Η προσθήκη φαίνεται');
+select lives_ok(format($$ select public.holiday_greeting_remove(%L) $$, current_setting('t.holiday')), 'Σβήνει τη δική της');
+select is(jsonb_array_length(public.holiday_greetings_get(2026) -> 'added'), 0, 'Δεν υπάρχει πια');
+
 -- ───────────── Μηνύματα συστήματος ─────────────
 select is(jsonb_array_length(public.system_messages_list()), 7, 'Επτά Μηνύματα συστήματος');
 select throws_ok($$ select public.system_message_save('{"code":"signing_code","bodyEl":"Ο κωδικός σας για {agreement}."}') $$,
   'P0001', null, 'Ο κωδικός υπογραφής χωρίς {code}: P0001');
 select throws_ok($$ select public.system_message_save('{"code":"invite","bodyEl":"Γεια {code}"}') $$,
   'P0001', null, 'Άγνωστη μεταβλητή στην πρόσκληση: P0001');
+select throws_ok($$ select public.system_message_save('{"code":"signing_code","subjectEl":"Κωδικός {code}","bodyEl":"Ο κωδικός {code}."}') $$,
+  'P0001', null, 'Ο {code} δεν μπαίνει στο θέμα');
+select throws_ok($$ select public.system_message_save('{"code":"invite","subjectEn":"Join {link}"}') $$,
+  'P0001', null, 'Ο {link} δεν μπαίνει στο θέμα');
 select throws_ok($$ select public.system_message_save('{"code":"δεν_υπάρχει","bodyEl":"Γεια"}') $$,
   'P0001', null, 'Ανύπαρκτο Μήνυμα συστήματος: P0001');
 select lives_ok($$ select public.system_message_save('{"code":"invite","subjectEl":"Καλώς ήρθες, {recipientName}"}') $$,

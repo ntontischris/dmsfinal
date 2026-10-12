@@ -190,6 +190,27 @@ describe("systemMessageFormSchema", () => {
       firstMessage(schema.safeParse(message({ subjectEl: "Για {place}" }))),
     ).toBe("Άγνωστη μεταβλητή {place}: διάλεξε από τη λίστα του Μηνύματος");
   });
+
+  it("should keep the code and links out of the subject", () => {
+    expect(
+      firstMessage(
+        schema.safeParse(
+          message({ subjectEl: "Κωδικός {code}", bodyEl: "{code}" }),
+        ),
+      ),
+    ).toBe("Το {code} δεν μπαίνει στο θέμα: βάλ' το στο κείμενο");
+    const automation = automationFormSchema({
+      kind: "instant",
+      variables: VARIABLES,
+    });
+    expect(
+      firstMessage(
+        automation.safeParse(
+          form({ channel: "email", subjectEl: "Δες {link}" }),
+        ),
+      ),
+    ).toBe("Το {link} δεν μπαίνει στο θέμα: βάλ' το στο κείμενο");
+  });
 });
 
 describe("holidays and catalogue filters", () => {

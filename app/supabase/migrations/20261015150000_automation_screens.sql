@@ -8,7 +8,10 @@
 --    θέμα στο email, μόνο γνωστές μεταβλητές {…}. Οι νέοι έλεγχοι μένουν στο RPC (όχι στο guard), ώστε οι υπάρχουσες
 --    εγγραφές και οι άμεσες εισαγωγές των τεστ να μην αλλάζουν συμπεριφορά. Χωρίς αλλαγή τιμής δεν γράφεται τίποτα (ούτε Ίχνος).
 --  • Γεγονός με is_wired = false δέχεται Αυτοματισμούς· το UI γράφει «συνδέεται αργότερα».
---  • automation_delete: μόνο όσοι πρόσθεσε η Διαχείριση. Οι αρχικοί μόνο σβήνουν (automation_set_enabled).
+--  • automation_delete: μόνο όσοι πρόσθεσε η Διαχείριση και δεν έχουν στείλει ποτέ (το Ιστορικό K3 κρατά τα σημάδια).
+--    Οι αρχικοί και όσοι έστειλαν μόνο σβήνουν (automation_set_enabled).
+--  • Στο θέμα ποτέ {link}. Αυτοματισμός «όσοι έχουν Δικαίωμα» πελάτη ανήκει στις Προτιμήσεις του πελάτη.
+--  • Αργίες: μία RPC ανά αλλαγή (επίσημη on/off, προσθήκη, σβήσιμο), ώστε δύο admins να μη χάνουν αλλαγές.
 --  • Το Ίχνος γράφεται από τα υπάρχοντα triggers του πίνακα automations.
 
 -- ───────────── JSON ─────────────
@@ -153,6 +156,11 @@ begin
   v_bad := authz.unknown_variable(concat_ws(' ', n.subject_el, n.subject_en, n.body_el, n.body_en), v_allowed);
   if v_bad is not null then
     raise exception 'Άγνωστη μεταβλητή {%}: διάλεξε από τη λίστα του Γεγονότος', v_bad using errcode = 'P0001';
+  end if;
+  -- Το θέμα φαίνεται σε λίστες και προεπισκοπήσεις: κανένας σύνδεσμος μέσα του.
+  v_bad := authz.unknown_variable(concat_ws(' ', n.subject_el, n.subject_en), array_remove(v_allowed, 'link'));
+  if v_bad is not null then
+    raise exception 'Το {%} δεν μπαίνει στο θέμα: βάλ'' το στο κείμενο', v_bad using errcode = 'P0001';
   end if;
 end;
 $$;
@@ -316,7 +324,90 @@ begin
   if a.is_initial then
     raise exception 'Οι αρχικοί Αυτοματισμοί δεν διαγράφονται, μόνο σβήνουν' using errcode = 'P0001';
   end if;
+  -- Το Ιστορικό αποστολών (K3) κρατά τα σημάδια του: όποιος έστειλε έστω μία φορά μόνο σβήνει.
+  if exists (select 1 from public.automation_sends s where s.automation_id = p_id) then
+    raise exception 'Ο Αυτοματισμός έχει αποστολές: απενεργοποίησέ τον' using errcode = 'P0001';
+  end if;
   delete from public.automations x where x.id = p_id;
+end;
+$$;
+
+-- ───────────── Προτιμήσεις: η πλευρά του Αυτοματισμού ─────────────
+-- Ξαναγραμμένο από τον ορισμό του 20261015140100_automation_timing.sql: ο Αυτοματισμός «όσοι έχουν Δικαίωμα» με
+-- Δικαίωμα πελάτη πάει σε Χρήστες πελάτη, άρα φαίνεται στις Προτιμήσεις του πελάτη και όχι της ομάδας.
+
+create function authz.automation_to_client(a public.automations) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select (a.recipient_kind = 'relative' and a.recipient_relative in ('client', 'request_client', 'filming_requester', 'self'))
+      or (a.recipient_kind = 'permission'
+          and exists (select 1 from public.permissions p where p.code = a.recipient_permission and p.kind = 'client'));
+$$;
+
+create or replace function authz.automation_for_viewer(a public.automations) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select case
+    when authz.is_team_user() then a.recipient_kind not in ('visitor') and not authz.automation_to_client(a)
+    else authz.automation_to_client(a)
+  end;
+$$;
+
+-- ───────────── Αργίες: μία αλλαγή κάθε φορά ─────────────
+-- Κάθε ενέργεια της κάρτας αγγίζει μόνο τη δική της γραμμή, ώστε δύο admins να μη σβήνουν ο ένας την αλλαγή του άλλου.
+
+-- Ανάβει ή σβήνει μία επίσημη αργία (με το όνομά της).
+create function public.holiday_greeting_set_official(p_name text, p_on boolean) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_name text := trim(coalesce(p_name, ''));
+begin
+  perform authz.require('automations.manage');
+  if p_on is null then
+    raise exception 'Διάλεξε ενεργή ή σβηστή' using errcode = 'P0001';
+  end if;
+  if not exists (select 1 from authz.greek_holidays(2026) h where h.name = v_name) then
+    raise exception 'Η «%» δεν είναι επίσημη αργία', v_name using errcode = 'P0001';
+  end if;
+  if p_on then
+    delete from public.holiday_greetings g where g.kind = 'removed' and g.name = v_name;
+  elsif not exists (select 1 from public.holiday_greetings g where g.kind = 'removed' and g.name = v_name) then
+    insert into public.holiday_greetings (kind, name, created_by) values ('removed', v_name, auth.uid());
+  end if;
+end;
+$$;
+
+-- Μία προσθήκη: { name, onDate } ή { name, month, day }. Έως 50. Επιστρέφει το id.
+create function public.holiday_greeting_add(p jsonb) returns uuid
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  r record;
+  v_id uuid;
+begin
+  perform authz.require('automations.manage');
+  select * into r from authz.holiday_added_row(coalesce(p, '{}'::jsonb));
+  if (select count(*) from public.holiday_greetings g where g.kind = 'added') >= 50 then
+    raise exception 'Έως 50 προσθήκες αργιών' using errcode = 'P0001';
+  end if;
+  insert into public.holiday_greetings (kind, name, on_date, month, day, created_by)
+  values ('added', r.name, r.on_date, r.month, r.day, auth.uid())
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+-- Σβήνει μία δική σου προσθήκη.
+create function public.holiday_greeting_remove(p_id uuid) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform authz.require('automations.manage');
+  delete from public.holiday_greetings g where g.id = p_id and g.kind = 'added';
+  if not found then
+    raise exception 'Η αργία δεν βρέθηκε' using errcode = 'P0001';
+  end if;
 end;
 $$;
 
@@ -325,14 +416,17 @@ $$;
 revoke all on function
   authz.event_type_json(public.event_types), authz.automation_json(public.automations),
   authz.unknown_variable(text, text[]), authz.automation_check(public.automations, public.automations),
-  authz.automation_apply(public.automations, jsonb), authz.automation_new(text)
+  authz.automation_apply(public.automations, jsonb), authz.automation_new(text),
+  authz.automation_to_client(public.automations)
   from public, anon, authenticated;
 
 revoke all on function
   public.automations_catalog(), public.automation_event(text), public.automation_save(jsonb),
-  public.automation_set_enabled(uuid, boolean), public.automation_delete(uuid)
+  public.automation_set_enabled(uuid, boolean), public.automation_delete(uuid),
+  public.holiday_greeting_set_official(text, boolean), public.holiday_greeting_add(jsonb), public.holiday_greeting_remove(uuid)
   from public, anon;
 grant execute on function
   public.automations_catalog(), public.automation_event(text), public.automation_save(jsonb),
-  public.automation_set_enabled(uuid, boolean), public.automation_delete(uuid)
+  public.automation_set_enabled(uuid, boolean), public.automation_delete(uuid),
+  public.holiday_greeting_set_official(text, boolean), public.holiday_greeting_add(jsonb), public.holiday_greeting_remove(uuid)
   to authenticated;

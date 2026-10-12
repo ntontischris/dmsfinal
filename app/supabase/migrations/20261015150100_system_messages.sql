@@ -4,6 +4,7 @@
 --    εισόδου, επαναφορά κωδικού, κωδικός υπογραφής, Σύνδεσμος πρότασης, αντίγραφο υπογεγραμμένης, προσθήκη σε Πελάτη).
 --    Θέμα και κείμενο el/en, όλα nullable: null = το προεπιλεγμένο κείμενο του κώδικα. «Επαναφορά» = όλα null.
 --  • Πάντα ενεργά, χωρίς διακόπτη. Το κουμπί/σύνδεσμος και ο κωδικός μπαίνουν πάντα από τον κώδικα.
+--  • Στο θέμα ποτέ {link} ή {code}.
 --  • Μόνο γνωστές μεταβλητές {…} ανά Μήνυμα· οι υποχρεωτικές (ο {code} του κωδικού υπογραφής) δεν λείπουν από κανένα
 --    κείμενο που αλλάζει. Ο σύνδεσμος είναι πάντα το κουμπί του μηνύματος, γι' αυτό το {link} δεν είναι υποχρεωτικό.
 --  • Πίνακας κλειστός (RLS χωρίς policies, revoke). Ανάγνωση/αλλαγή με automations.manage· η αποστολή διαβάζει με service role.
@@ -103,6 +104,7 @@ declare
   v_subject_en text;
   v_body_el text;
   v_body_en text;
+  v_bad text;
 begin
   perform authz.require('automations.manage');
   if jsonb_typeof(v) <> 'object' then
@@ -121,6 +123,11 @@ begin
   exception when others then
     raise exception 'Τα κείμενα δεν είναι έγκυρα. Έλεγξε τα πεδία.' using errcode = 'P0001';
   end;
+  -- Το θέμα φαίνεται σε λίστες και ειδοποιήσεις: ποτέ σύνδεσμος ή κωδικός μέσα του.
+  v_bad := (select m[1] from regexp_matches(concat_ws(' ', v_subject_el, v_subject_en), '\{(link|code)\}', 'g') m limit 1);
+  if v_bad is not null then
+    raise exception 'Το {%} δεν μπαίνει στο θέμα: βάλ'' το στο κείμενο', v_bad using errcode = 'P0001';
+  end if;
   perform authz.system_text_check(v_subject_el, 300, s.variables, '{}');
   perform authz.system_text_check(v_subject_en, 300, s.variables, '{}');
   perform authz.system_text_check(v_body_el, 2000, s.variables, s.required);

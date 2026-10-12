@@ -9,6 +9,7 @@ import {
   chooseText,
   customizeParts,
   fillTemplate,
+  forbiddenInSubject,
   missingRequired,
   unknownVariables,
   type SystemTexts,
@@ -36,12 +37,24 @@ describe("chooseText", () => {
     });
   });
 
-  it("should send the Greek text to an English recipient when only Greek was written", () => {
+  it("should keep the English code text when only Greek was written", () => {
     expect(chooseText("en", texts({ bodyEl: "Γεια" }))).toEqual({
+      locale: "en",
+      subject: null,
+      body: null,
+    });
+    expect(chooseText("el", texts({ bodyEl: "Γεια" }))).toEqual({
       locale: "el",
       subject: null,
       body: "Γεια",
     });
+  });
+
+  it("should find links and codes in a subject", () => {
+    expect(forbiddenInSubject("Γεια {recipientName} {link} {code}")).toEqual([
+      "link",
+      "code",
+    ]);
   });
 
   it("should use the English text when the admin wrote one", () => {
@@ -169,12 +182,12 @@ describe("buildAuthEmail with admin texts", () => {
   it("should send the admin subject and keep the button with the link", () => {
     if (!parsed.success) throw new Error("σώμα μη έγκυρο στο τεστ");
     const email = buildAuthEmail(parsed.data, "https://dms.example.com", {
-      magic_link: texts({ subjectEl: "Είσοδος για {recipientName}" }),
+      magic_link: texts({ subjectEl: "Είσοδος για {recipientName}", subjectEn: "Sign in, {recipientName}" }),
     });
-    expect(email?.message.subject).toBe("Είσοδος για Μαρία");
+    expect(email?.message.subject).toBe("Sign in, Μαρία");
     expect(email?.message.text).toContain(
       "https://dms.example.com/auth/confirm?token_hash=abc&type=magiclink",
     );
-    expect(email?.message.html).toContain('lang="el"');
+    expect(email?.message.html).toContain('lang="en"');
   });
 });

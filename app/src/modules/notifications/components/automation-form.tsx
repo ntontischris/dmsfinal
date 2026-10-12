@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Field, Select } from "@/components/ui/field";
+import { SUBJECT_FORBIDDEN } from "@/lib/email/system-texts";
 
 import { saveAutomation } from "../actions-automations";
 import {
@@ -81,6 +82,7 @@ export function AutomationForm({
       <VariableTextFields
         idPrefix={idPrefix}
         hasSubject={channel === "email"}
+        subjectExcluded={SUBJECT_FORBIDDEN}
         variables={page.event.variables}
         values={{
           subjectEl: automation?.subjectEl ?? "",

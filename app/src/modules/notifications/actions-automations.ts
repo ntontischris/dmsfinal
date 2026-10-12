@@ -19,7 +19,6 @@ import {
   holidayToggleSchema,
   idSchema,
 } from "./automation-schemas";
-import { parseHolidays, type AddedHoliday } from "./automation-view-schema";
 
 // Ενέργειες της K1 (#173). Μία κλήση RPC η καθεμία· η βάση ελέγχει Δικαίωμα και κανόνες και γράφει Ίχνος.
 
@@ -89,68 +88,26 @@ export async function deleteAutomation(
   return finishWith(outcome, DELETED);
 }
 
-// ───────────── Αργίες ─────────────
+// ───────────── Αργίες: μία RPC ανά αλλαγή, ώστε δύο admins να μη χάνουν ο ένας την αλλαγή του άλλου ─────────────
 
-const asInput = (holiday: AddedHoliday) =>
-  holiday.onDate
-    ? { name: holiday.name, onDate: holiday.onDate }
-    : { name: holiday.name, month: holiday.month, day: holiday.day };
-
-async function currentHolidays() {
-  const outcome = await callRpc("holiday_greetings_get", {});
-  if (!outcome.ok) return outcome;
-  return { ok: true as const, data: parseHolidays(outcome.data) };
-}
-
-export async function toggleHoliday(
-  _: FormState,
-  form: FormData,
-): Promise<FormState> {
+export async function toggleHoliday(_: FormState, form: FormData): Promise<FormState> {
   const parsed = holidayToggleSchema.safeParse(pick(form, ["name", "isOn"]));
   if (!parsed.success) return firstIssue(parsed.error);
-  const current = await currentHolidays();
-  if (!current.ok) return current.state;
-  const others = current.data.removed.filter(
-    (name) => name !== parsed.data.name,
-  );
-  const removed =
-    parsed.data.isOn === "on" ? others : [...others, parsed.data.name];
-  return finishWith(
-    await callRpc("holiday_greetings_update", { p: { removed } }),
-    HOLIDAY_SAVED,
-  );
+  const outcome = await callRpc("holiday_greeting_set_official", {
+    p_name: parsed.data.name,
+    p_on: parsed.data.isOn === "on",
+  });
+  return finishWith(outcome, HOLIDAY_SAVED);
 }
 
-export async function addHoliday(
-  _: FormState,
-  form: FormData,
-): Promise<FormState> {
-  const parsed = holidayAddSchema.safeParse(
-    pick(form, ["name", "date", "yearly"]),
-  );
+export async function addHoliday(_: FormState, form: FormData): Promise<FormState> {
+  const parsed = holidayAddSchema.safeParse(pick(form, ["name", "date", "yearly"]));
   if (!parsed.success) return firstIssue(parsed.error);
-  const current = await currentHolidays();
-  if (!current.ok) return current.state;
-  const added = [...current.data.added.map(asInput), parsed.data];
-  return finishWith(
-    await callRpc("holiday_greetings_update", { p: { added } }),
-    HOLIDAY_SAVED,
-  );
+  return finishWith(await callRpc("holiday_greeting_add", { p: parsed.data }), HOLIDAY_SAVED);
 }
 
-export async function removeHoliday(
-  _: FormState,
-  form: FormData,
-): Promise<FormState> {
+export async function removeHoliday(_: FormState, form: FormData): Promise<FormState> {
   const parsed = idSchema.safeParse(pick(form, ["id"]));
   if (!parsed.success) return firstIssue(parsed.error);
-  const current = await currentHolidays();
-  if (!current.ok) return current.state;
-  const added = current.data.added
-    .filter((holiday) => holiday.id !== parsed.data.id)
-    .map(asInput);
-  return finishWith(
-    await callRpc("holiday_greetings_update", { p: { added } }),
-    HOLIDAY_SAVED,
-  );
+  return finishWith(await callRpc("holiday_greeting_remove", { p_id: parsed.data.id }), HOLIDAY_SAVED);
 }

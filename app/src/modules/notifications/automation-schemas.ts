@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { missingRequired, unknownVariables } from "@/lib/email/system-texts";
+import {
+  forbiddenInSubject,
+  missingRequired,
+  unknownVariables,
+} from "@/lib/email/system-texts";
 
 import {
   EVENT_CODE_PATTERN,
@@ -129,10 +133,18 @@ function textProblem(
     v.bodyEn,
   ].join(" ");
   const unknown = unknownVariables(all, variables)[0];
-  return unknown
-    ? `Άγνωστη μεταβλητή {${unknown}}: διάλεξε από τη λίστα του Γεγονότος`
-    : null;
+  if (unknown)
+    return `Άγνωστη μεταβλητή {${unknown}}: διάλεξε από τη λίστα του Γεγονότος`;
+  const inSubject =
+    v.channel === "email"
+      ? forbiddenInSubject([v.subjectEl, v.subjectEn].join(" "))[0]
+      : undefined;
+  return inSubject ? subjectMessage(inSubject) : null;
 }
+
+// Σύνδεσμος ή κωδικός στο θέμα: όπως το μήνυμα της βάσης.
+const subjectMessage = (name: string): string =>
+  `Το {${name}} δεν μπαίνει στο θέμα: βάλ' το στο κείμενο`;
 
 export function automationFormSchema(context: AutomationFormContext) {
   return automationFields
@@ -197,6 +209,13 @@ export function systemMessageFormSchema(spec: {
           code: "custom",
           message: `Άγνωστη μεταβλητή {${unknown}}: διάλεξε από τη λίστα του Μηνύματος`,
         });
+        return;
+      }
+      const inSubject = forbiddenInSubject(
+        [v.subjectEl, v.subjectEn].join(" "),
+      )[0];
+      if (inSubject) {
+        ctx.addIssue({ code: "custom", message: subjectMessage(inSubject) });
         return;
       }
       const missing = [v.bodyEl, v.bodyEn]

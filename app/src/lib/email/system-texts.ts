@@ -68,22 +68,32 @@ export interface ChosenText extends CustomText {
 const hasText = (value: string | null | undefined): value is string =>
   !!value && value.trim().length > 0;
 
-// Στα αγγλικά μόνο αν ο admin έγραψε κάτι αγγλικό· αν λείπει το en αλλά υπάρχει el, φεύγει το el (όλο το μήνυμα).
+// Το κείμενο του admin στη γλώσσα του παραλήπτη. Κάθε πεδίο που λείπει (null) παίρνει το κείμενο του κώδικα στην ίδια
+// γλώσσα, που υπάρχει πάντα και στα δύο: έτσι ένα αλλαγμένο ελληνικό δεν στέλνει ποτέ ελληνικά σε αγγλόφωνο.
 export function chooseText(
   locale: Locale,
   texts: SystemTexts | undefined,
 ): ChosenText {
-  const el = { subject: texts?.subjectEl ?? null, body: texts?.bodyEl ?? null };
-  if (locale === "el") return { locale, ...el };
-  if (hasText(texts?.subjectEn) || hasText(texts?.bodyEn))
+  if (locale === "en")
     return {
       locale,
       subject: texts?.subjectEn ?? null,
       body: texts?.bodyEn ?? null,
     };
-  if (hasText(el.subject) || hasText(el.body)) return { locale: "el", ...el };
-  return { locale, subject: null, body: null };
+  return {
+    locale,
+    subject: texts?.subjectEl ?? null,
+    body: texts?.bodyEl ?? null,
+  };
 }
+
+// Οι μεταβλητές που δεν μπαίνουν ποτέ σε θέμα: σύνδεσμοι και κωδικοί (το θέμα φαίνεται σε λίστες και ειδοποιήσεις).
+export const SUBJECT_FORBIDDEN: readonly string[] = ["link", "code"];
+
+export const forbiddenInSubject = (text: string): string[] =>
+  [...text.matchAll(/\{([A-Za-z]+)\}/g)]
+    .map((match) => match[1] ?? "")
+    .filter((name) => SUBJECT_FORBIDDEN.includes(name));
 
 // {μεταβλητή} → τιμή, σε ένα πέρασμα· άγνωστη ή χωρίς τιμή φεύγει (όπως το authz.ev_render). Το escaping το κάνει το κέλυφος.
 export const fillTemplate = (
