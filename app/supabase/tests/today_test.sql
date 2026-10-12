@@ -51,14 +51,16 @@ begin
 end;
 $$;
 
+-- Μόνο οι κάρτες αυτού του τεστ (Υγεία, Ετοιμότητα, t_*): τα Σβ–Σε προσθέτουν δικές τους, με δικά τους τεστ.
 create function public.t_codes(p jsonb) returns text[]
 language sql immutable
-as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n); $$;
+as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n)
+       where c ->> 'code' in ('health', 'readiness') or c ->> 'code' like 't\_%'; $$;
 
 create function public.t_hidden(p jsonb) returns text[]
 language sql immutable
 as $$ select coalesce(array_agg(c ->> 'code' order by n), '{}') from jsonb_array_elements(p -> 'cards') with ordinality x (c, n)
-       where (c ->> 'hidden')::boolean; $$;
+       where (c ->> 'hidden')::boolean and (c ->> 'code' in ('health', 'readiness') or c ->> 'code' like 't\_%'); $$;
 
 create function public.t_card(p jsonb, p_code text) returns jsonb
 language sql immutable
