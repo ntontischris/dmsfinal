@@ -4,9 +4,12 @@ import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer, type Viewer } from "@/modules/access";
 import {
+  AGREEMENTS_LIST_LIMIT,
   AgreementsTable,
+  IN_PROGRESS_DAYS,
   agreementCaps,
   athensToday,
+  isInProgress,
   listAgreements,
   toAgreementRowView,
   type AgreementCaps,
@@ -38,19 +41,6 @@ function NoAccess({ viewer }: { viewer: Viewer }) {
   );
 }
 
-const IN_PROGRESS_DAYS = 7;
-
-const plusDays = (day: string, days: number): string =>
-  new Date(Date.parse(`${day}T00:00:00Z`) + days * 86_400_000)
-    .toISOString()
-    .slice(0, 10);
-
-// «Σε εξέλιξη» (η κάρτα της Σήμερα): πρόταση που στάλθηκε και λήγει σε έως 7 μέρες ή την άνοιξε ο πελάτης.
-const isInProgress = (row: AgreementRow, today: string): boolean =>
-  row.state === "proposal" &&
-  row.path === "sent" &&
-  (row.validUntil <= plusDays(today, IN_PROGRESS_DAYS) || row.linksOpened > 0);
-
 function InProgressNote() {
   return (
     <p className="m-0 text-sm">
@@ -60,13 +50,36 @@ function InProgressNote() {
   );
 }
 
+// Η ανάγνωση φέρνει έως AGREEMENTS_LIST_LIMIT, τις πιο πρόσφατα αλλαγμένες· το φίλτρο δεν βλέπει τις υπόλοιπες.
+function TruncatedNote() {
+  return (
+    <Notice kind="empty" title="Ίσως λείπουν παλαιότερες">
+      <p className="m-0">
+        Το φίλτρο κοιτά τις {AGREEMENTS_LIST_LIMIT} πιο πρόσφατα αλλαγμένες
+        Συμφωνίες.
+      </p>
+    </Notice>
+  );
+}
+
 function Body({
   items,
   caps,
+  isFiltered,
 }: {
   items: readonly AgreementRow[];
   caps: AgreementCaps;
+  isFiltered: boolean;
 }) {
+  if (items.length === 0 && isFiltered)
+    return (
+      <Notice kind="empty" title="Καμία πρόταση σε εξέλιξη">
+        <p className="m-0">
+          Καμία πρόταση δεν λήγει σε {IN_PROGRESS_DAYS} μέρες και καμία δεν
+          την άνοιξε ο πελάτης.
+        </p>
+      </Notice>
+    );
   if (items.length === 0)
     return (
       <Notice kind="empty" title="Δεν υπάρχουν Συμφωνίες ακόμα">
@@ -105,10 +118,12 @@ export default async function AgreementsPage({
           <Link href="/app/pipeline">Ευκαιρίας</Link>, με «Σύνταξη».
         </p>
         {isFiltered && <InProgressNote />}
+        {isFiltered && found.ok && found.data.length >= AGREEMENTS_LIST_LIMIT && <TruncatedNote />}
         {found.ok ? (
           <Body
             items={isFiltered ? found.data.filter((row) => isInProgress(row, today)) : found.data}
             caps={caps}
+            isFiltered={isFiltered}
           />
         ) : (
           <LoadError />

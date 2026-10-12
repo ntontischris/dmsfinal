@@ -8,24 +8,26 @@
 --      unread_messages       J1 Συνομιλίες       messages.chat        τα αδιάβαστα του messages_inbox
 --      next_steps_due        B3 ξεχασμένες       clients.manage       η σελίδα B3 και το can_see_opportunity_row
 --      proposals_in_progress D1 σε εξέλιξη       agreements.*         agreements_list (can_see_agreement)
---  • Επείγον (κανόνας 5): προθεσμία ή λήξη σε έως 1 μέρα ή περασμένη· κάθε Επόμενο βήμα που έληξε.
+--  • Επείγον (κανόνας 5): προθεσμία ή λήξη σε έως 1 μέρα ή περασμένη· κάθε Επόμενο βήμα που έληξε. Η Έκδοση σε έλεγχο
+--    δεν είναι επείγουσα (η H1 δεν τη δείχνει εκπρόθεσμη).
+--  • Οι @αναφορές μετρούν μόνο στα «Αιτήματα και @αναφορές», όχι και στα «Αδιάβαστα Μηνύματα».
 --  • Ποσά: καμία από αυτές τις κάρτες δεν δείχνει ποσά (ούτε amount_cents).
 --  • Δεν αλλάζει καμία κοινή συνάρτηση· μόνο νέες authz.today_* και γραμμές στο μητρώο. Κανένας νέος πίνακας.
 
 -- ───────────── Βοηθητικά ─────────────
 
 -- Η μέρα της p_now στην Ελλάδα (ADR 0018).
-create function authz.today_day(p_now timestamptz) returns date
+create function authz.today_work_day(p_now timestamptz) returns date
 language sql immutable set search_path = ''
 as $$ select (p_now at time zone 'Europe/Athens')::date; $$;
 
 -- Μια ημερομηνία ως στιγμή (μεσάνυχτα Αθήνας), για το πεδίο at των γραμμών. Η εφαρμογή τη δείχνει ως μέρα.
-create function authz.today_day_at(p_day date) returns timestamptz
+create function authz.today_work_day_at(p_day date) returns timestamptz
 language sql immutable set search_path = ''
 as $$ select (p_day::timestamp at time zone 'Europe/Athens'); $$;
 
 -- Οι γραμμές μιας κάρτας ως JSON: τα 3 πρώτα κατά rn.
-create function authz.today_rows_json(p_rows jsonb) returns jsonb
+create function authz.today_work_rows_json(p_rows jsonb) returns jsonb
 language sql immutable set search_path = ''
 as $$
   select coalesce(jsonb_agg(r - 'rn' order by (r ->> 'rn')::integer), '[]'::jsonb)
@@ -41,7 +43,7 @@ create function authz.today_deliverable_rows(p_uid uuid, p_perm text, p_states t
 returns table (id text, title text, subtitle text, at timestamptz, urgent boolean, link text, rn integer)
 language sql stable security definer set search_path = ''
 as $$
-  with v as (select authz.user_scope(p_uid, p_perm) as scope, authz.today_day(p_now) as today),
+  with v as (select authz.user_scope(p_uid, p_perm) as scope, authz.today_work_day(p_now) as today),
   d as (
     select x.id, x.title, coalesce(c.name, p.title) as who, x.deadline,
            (select max(n.number) from public.deliverable_versions n where n.deliverable_id = x.id) as version,
@@ -63,8 +65,9 @@ as $$
   )
   select d.id::text, d.title,
          case when d.version is not null and 'in_review' = any (p_states) then d.who || ' · Έκδοση ' || d.version else d.who end,
-         case when d.deadline is not null then authz.today_day_at(d.deadline) end,
-         d.deadline is not null and d.deadline <= v.today + 1,
+         case when d.deadline is not null then authz.today_work_day_at(d.deadline) end,
+         -- Η Έκδοση σε έλεγχο δεν σημαίνεται επείγουσα, όπως το «εκπρόθεσμο» της H1.
+         d.deadline is not null and d.deadline <= v.today + 1 and not ('in_review' = any (p_states)),
          '/app/deliverables/' || d.id,
          (row_number() over (order by d.deadline asc nulls last, d.version_at asc nulls last, d.id))::integer
     from d cross join v;
@@ -89,7 +92,7 @@ begin
   if p_client is not null or authz.user_scope(p_uid, 'deliverables.work') is null then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
-  return authz.today_rows_json((
+  return authz.today_work_rows_json((
     select jsonb_agg(to_jsonb(r))
       from authz.today_deliverable_rows(p_uid, 'deliverables.work', array['draft', 'returned', 'changes_requested'], p_now) r));
 end;
@@ -113,7 +116,7 @@ begin
   if p_client is not null or authz.user_scope(p_uid, 'deliverables.review') is null then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
-  return authz.today_rows_json((
+  return authz.today_work_rows_json((
     select jsonb_agg(to_jsonb(r))
       from authz.today_deliverable_rows(p_uid, 'deliverables.review', array['in_review'], p_now) r));
 end;
@@ -121,19 +124,24 @@ $$;
 
 -- ───────────── Μηνύματα (J1) ─────────────
 
--- Βλέπει ο Χρήστης ομάδας p_uid το Μήνυμα; Ίδιος κανόνας με το authz.message_visible (πλευρά ομάδας), για δοσμένο Χρήστη.
-create function authz.today_message_visible(p_uid uuid, m public.messages) returns boolean
+-- Τα Μηνύματα που βλέπει ο Χρήστης ομάδας p_uid. Ίδιος κανόνας με το authz.message_visible (πλευρά ομάδας), για δοσμένο
+-- Χρήστη· το Εύρος υπολογίζεται μία φορά, και με «όλα» δεν ελέγχεται τίποτα άλλο (όπως στο messages_inbox).
+create function authz.today_visible_messages(p_uid uuid) returns setof public.messages
 language sql stable security definer set search_path = ''
 as $$
-  select coalesce(authz.user_scope(p_uid, 'messages.chat') is not null and (
-    authz.user_scope(p_uid, 'messages.chat') = 'all'
-    or exists (select 1 from public.clients c where c.id = m.client_id and c.manager_id = p_uid)
-    or (m.production_id is not null and exists (
-          select 1 from public.productions p
-           where p.id = m.production_id
-             and (p.owner_id = p_uid
-                  or exists (select 1 from public.production_members pm where pm.production_id = p.id and pm.user_id = p_uid))))
-    or (m.is_internal and p_uid = any (m.mentions))), false);
+  with s as (select authz.user_scope(p_uid, 'messages.chat') as scope)
+  select m.*
+    from public.messages m cross join s
+   where s.scope is not null
+     and (s.scope = 'all'
+          or exists (select 1 from public.clients c where c.id = m.client_id and c.manager_id = p_uid)
+          or (m.production_id is not null and exists (
+                select 1 from public.productions p
+                 where p.id = m.production_id
+                   and (p.owner_id = p_uid
+                        or exists (select 1 from public.production_members pm
+                                    where pm.production_id = p.id and pm.user_id = p_uid))))
+          or (m.is_internal and p_uid = any (m.mentions)));
 $$;
 
 -- Ανοιχτά Αιτήματα ανατεθειμένα στον Χρήστη (με τα Αιτήματα αλλαγής των Παραγωγών του, όπως η όψη «mine» του J1), και
@@ -146,9 +154,9 @@ as $$
     select 'r:' || r.message_id as id, 'Αίτημα: ' || left(m.body, 80) as title, c.name as subtitle, r.declared_at as at,
            '/app/messages/' || m.client_id || '#m-' || m.id as link, 1 as n
       from public.message_requests r
-      join public.messages m on m.id = r.message_id
+      join authz.today_visible_messages(p_uid) m on m.id = r.message_id
       join public.clients c on c.id = m.client_id
-     where r.state = 'open' and r.assignee_id = p_uid and m.deleted_at is null and authz.today_message_visible(p_uid, m)
+     where r.state = 'open' and r.assignee_id = p_uid and m.deleted_at is null
     union all
     select 'c:' || q.id, 'Αλλαγή: ' || left(q.body, 80), c.name, q.created_at, '/app/deliverables/' || d.id, 1
       from public.deliverable_requests q
@@ -188,22 +196,23 @@ begin
   if p_client is not null or authz.user_scope(p_uid, 'messages.chat') is null then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
-  return authz.today_rows_json((select jsonb_agg(to_jsonb(r)) from authz.today_request_rows(p_uid) r));
+  return authz.today_work_rows_json((select jsonb_agg(to_jsonb(r)) from authz.today_request_rows(p_uid) r));
 end;
 $$;
 
--- Οι Συνομιλίες με αδιάβαστα, όπως τα μετρά τα Εισερχόμενα: ορατά Μηνύματα άλλων, μετά το «ως πού διάβασα».
+-- Οι Συνομιλίες με αδιάβαστα, όπως τα μετρά τα Εισερχόμενα: ορατά Μηνύματα άλλων, μετά το «ως πού διάβασα». Τα Εσωτερικά
+-- που αναφέρουν τον Χρήστη μετρούν μόνο στην κάρτα «Αιτήματα και @αναφορές», όχι και εδώ.
 create function authz.today_unread_rows(p_uid uuid)
 returns table (client_id uuid, client_name text, unread integer, last_at timestamptz)
 language sql stable security definer set search_path = ''
 as $$
   select m.client_id, c.name, count(*)::integer, max(m.created_at)
-    from public.messages m
+    from authz.today_visible_messages(p_uid) m
     join public.clients c on c.id = m.client_id
     left join public.message_reads rd on rd.user_id = p_uid and rd.client_id = m.client_id
    where m.author_id <> p_uid and m.deleted_at is null
      and m.created_at > coalesce(rd.read_at, '-infinity'::timestamptz)
-     and authz.today_message_visible(p_uid, m)
+     and not (m.is_internal and p_uid = any (m.mentions))
    group by m.client_id, c.name;
 $$;
 
@@ -254,12 +263,12 @@ create function authz.today_next_step_rows(p_uid uuid, p_now timestamptz)
 returns table (id text, title text, subtitle text, at timestamptz, urgent boolean, link text, rn integer)
 language sql stable security definer set search_path = ''
 as $$
-  select o.id::text, c.name || ': ' || o.next_step, o.title, authz.today_day_at(o.next_step_due), true,
+  select o.id::text, c.name || ': ' || o.next_step, o.title, authz.today_work_day_at(o.next_step_due), true,
          '/app/pipeline/' || o.id,
          (row_number() over (order by o.next_step_due, o.id))::integer
     from public.opportunities o
     join public.clients c on c.id = o.client_id
-   where o.outcome = 'open' and o.next_step_due < authz.today_day(p_now)
+   where o.outcome = 'open' and o.next_step_due < authz.today_work_day(p_now)
      and authz.today_sees_opportunity(p_uid, o.client_id, o.manager_id);
 $$;
 
@@ -281,7 +290,7 @@ begin
   if p_client is not null or authz.user_scope(p_uid, 'clients.manage') is null then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
-  return authz.today_rows_json((select jsonb_agg(to_jsonb(r)) from authz.today_next_step_rows(p_uid, p_now) r));
+  return authz.today_work_rows_json((select jsonb_agg(to_jsonb(r)) from authz.today_next_step_rows(p_uid, p_now) r));
 end;
 $$;
 
@@ -296,6 +305,16 @@ as $$
     or exists (select 1 from public.opportunities o join public.clients c on c.id = o.client_id
                 where o.id = p_opportunity
                   and (coalesce(o.manager_id = p_uid, false) or coalesce(c.manager_id = p_uid, false))));
+$$;
+
+-- Ίδιο με το authz.can_see_agreement, για δοσμένο Χρήστη και Ευκαιρία της Συμφωνίας.
+create function authz.today_sees_agreement(p_uid uuid, p_opportunity uuid) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select authz.user_is_team(p_uid) and (
+    authz.today_agreement_in_scope(p_uid, p_opportunity, 'agreements.view')
+    or authz.today_agreement_in_scope(p_uid, p_opportunity, 'agreements.draft')
+    or authz.user_scope(p_uid, 'agreements.deviate') is not null);
 $$;
 
 -- Η σελίδα D1 ανοίγει σε όποιον «Βλέπει», «Συντάσσει» ή «Παρεκκλίνει».
@@ -313,7 +332,7 @@ create function authz.today_proposal_rows(p_uid uuid, p_now timestamptz)
 returns table (id text, title text, subtitle text, at timestamptz, urgent boolean, link text, rn integer)
 language sql stable security definer set search_path = ''
 as $$
-  with v as (select authz.today_day(p_now) as today, authz.user_scope(p_uid, 'agreements.deviate') is not null as deviate),
+  with v as (select authz.today_work_day(p_now) as today, authz.user_scope(p_uid, 'agreements.deviate') is not null as deviate),
   a as (
     select x.id, x.title, x.valid_until, c.name as client,
            (v.deviate or authz.today_agreement_in_scope(p_uid, x.opportunity_id, 'agreements.draft'))
@@ -324,12 +343,11 @@ as $$
       join public.clients c on c.id = o.client_id
       cross join v
      where x.state = 'proposal' and x.path = 'sent' and x.valid_until >= v.today
-       and (v.deviate or authz.today_agreement_in_scope(p_uid, x.opportunity_id, 'agreements.view')
-            or authz.today_agreement_in_scope(p_uid, x.opportunity_id, 'agreements.draft'))
+       and authz.today_sees_agreement(p_uid, x.opportunity_id)
   )
   select a.id::text, a.client || ': ' || a.title,
          case when a.opened then 'την άνοιξε ο πελάτης' end,
-         authz.today_day_at(a.valid_until), a.valid_until <= v.today + 1, '/app/agreements/' || a.id,
+         authz.today_work_day_at(a.valid_until), a.valid_until <= v.today + 1, '/app/agreements/' || a.id,
          (row_number() over (order by a.valid_until, a.id))::integer
     from a cross join v
    where a.valid_until <= v.today + 7 or a.opened;
@@ -353,7 +371,7 @@ begin
   if p_client is not null or not authz.today_sees_agreements(p_uid) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
-  return authz.today_rows_json((select jsonb_agg(to_jsonb(r)) from authz.today_proposal_rows(p_uid, p_now) r));
+  return authz.today_work_rows_json((select jsonb_agg(to_jsonb(r)) from authz.today_proposal_rows(p_uid, p_now) r));
 end;
 $$;
 
@@ -379,16 +397,16 @@ insert into public.today_cards (code, grp, kind, audience, sort, label_el, label
 -- ───────────── Δικαιώματα ─────────────
 
 revoke all on function
-  authz.today_day(timestamptz), authz.today_day_at(date), authz.today_rows_json(jsonb),
+  authz.today_work_day(timestamptz), authz.today_work_day_at(date), authz.today_work_rows_json(jsonb),
   authz.today_deliverable_rows(uuid, text, text[], timestamptz),
   authz.today_count_my_deliverables(uuid, uuid, timestamptz), authz.today_items_my_deliverables(uuid, uuid, timestamptz),
   authz.today_count_versions_to_review(uuid, uuid, timestamptz), authz.today_items_versions_to_review(uuid, uuid, timestamptz),
-  authz.today_message_visible(uuid, public.messages), authz.today_request_rows(uuid), authz.today_unread_rows(uuid),
+  authz.today_visible_messages(uuid), authz.today_request_rows(uuid), authz.today_unread_rows(uuid),
   authz.today_count_requests_mentions(uuid, uuid, timestamptz), authz.today_items_requests_mentions(uuid, uuid, timestamptz),
   authz.today_count_unread_messages(uuid, uuid, timestamptz), authz.today_items_unread_messages(uuid, uuid, timestamptz),
   authz.today_sees_opportunity(uuid, uuid, uuid), authz.today_next_step_rows(uuid, timestamptz),
   authz.today_count_next_steps_due(uuid, uuid, timestamptz), authz.today_items_next_steps_due(uuid, uuid, timestamptz),
-  authz.today_agreement_in_scope(uuid, uuid, text), authz.today_sees_agreements(uuid), authz.today_proposal_rows(uuid, timestamptz),
+  authz.today_agreement_in_scope(uuid, uuid, text), authz.today_sees_agreement(uuid, uuid), authz.today_sees_agreements(uuid), authz.today_proposal_rows(uuid, timestamptz),
   authz.today_count_proposals_in_progress(uuid, uuid, timestamptz),
   authz.today_items_proposals_in_progress(uuid, uuid, timestamptz)
   from public, anon, authenticated;

@@ -103,7 +103,9 @@ export {
 } from "./helpers";
 export { marginOf, priceRange, roundMoney } from "./cost";
 export type { ReadResult } from "./read";
+export { IN_PROGRESS_DAYS, isInProgress, plusDays } from "./in-progress";
 export {
+  LIST_LIMIT as AGREEMENTS_LIST_LIMIT,
   getAgreement,
   getProposalPreview,
   getProposalSummary,

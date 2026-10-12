@@ -17,8 +17,6 @@ select is(
                and not pg_catalog.has_function_privilege('authenticated', p.oid, 'execute')
                and not pg_catalog.has_function_privilege('anon', p.oid, 'execute'))),
   0, 'Κάθε κάρτα: authz.today_count_/today_items_<code>, (p_uid, p_client, p_now), security definer, κλειστές');
--- οι κάρτες άλλων κομματιών ελέγχονται στα δικά τους τεστ
-delete from public.today_cards where code not in ('health','readiness');
 select ok((select count(*) from public.today_cards c where c.code in ('health', 'readiness')) = 2,
   'Οι κάρτες Υγεία και Ετοιμότητα είναι στο μητρώο');
 -- Οι κάρτες άλλων κομματιών ελέγχονται στα δικά τους τεστ (εδώ, μέσα στη συναλλαγή, μένουν μόνο Υγεία και Ετοιμότητα).
