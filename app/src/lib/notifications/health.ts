@@ -12,33 +12,14 @@ const healthSchema = z.object({
   google: z.number(),
   events: z.number(),
 });
-const cleanupSchema = z.object({
-  sends: z.number(),
-  logs: z.number(),
-  outbox: z.number(),
-});
+// Ο καθαρισμός τρέχει μία φορά τη μέρα (03:xx Αθήνας)· τις άλλες φορές απαντά «skipped».
+const cleanupSchema = z.union([
+  z.object({ sends: z.number(), logs: z.number(), outbox: z.number() }),
+  z.object({ skipped: z.literal(true) }),
+]);
 
 export type HealthOutcome = z.infer<typeof healthSchema> | { error: string };
 export type CleanupOutcome = z.infer<typeof cleanupSchema> | { error: string };
-
-// Το πρώτο σφάλμα από τα βήματα ενός cron, για το job_runs (null = όλα πέτυχαν).
-const stepError = (value: unknown): string | null =>
-  typeof value === "object" &&
-  value !== null &&
-  "error" in value &&
-  typeof value.error === "string"
-    ? value.error
-    : null;
-
-export const firstStepError = (
-  steps: Readonly<Record<string, unknown>>,
-): string | null => {
-  for (const [name, value] of Object.entries(steps)) {
-    const error = stepError(value);
-    if (error !== null) return `${name}: ${error}`;
-  }
-  return null;
-};
 
 async function mark(
   admin: SupabaseClient,
@@ -57,7 +38,8 @@ async function mark(
 export const markJobStart = (admin: SupabaseClient, job: JobName) =>
   mark(admin, job, null, null);
 
-// Τέλος εκτέλεσης: χωρίς σφάλμα = πέτυχε· με σφάλμα = γράφεται ως τελευταίο σφάλμα της εργασίας.
+// Τέλος εκτέλεσης: χωρίς σφάλμα = πέτυχε· με σφάλμα (η ίδια η εκτέλεση απέτυχε) = τελευταίο σφάλμα της εργασίας.
+// Ένα βήμα που επιστρέφει { error } δεν κάνει την εκτέλεση αποτυχημένη (Γεγονός 50 μόνο όταν το cron δεν τρέχει).
 export const markJobEnd = (
   admin: SupabaseClient,
   job: JobName,
@@ -86,5 +68,5 @@ export async function cleanSends(
     return { error: "Το Ιστορικό αποστολών δεν καθαρίστηκε." };
   }
   const parsed = cleanupSchema.safeParse(data);
-  return parsed.success ? parsed.data : { sends: 0, logs: 0, outbox: 0 };
+  return parsed.success ? parsed.data : { skipped: true };
 }

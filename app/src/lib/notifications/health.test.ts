@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   checkHealth,
   cleanSends,
-  firstStepError,
   markJobEnd,
   markJobStart,
 } from "./health";
@@ -19,24 +18,6 @@ function fakeAdmin(reply: {
 
 afterEach(() => {
   vi.restoreAllMocks();
-});
-
-describe("firstStepError", () => {
-  it("should return null when every step succeeded", () => {
-    expect(
-      firstStepError({ events: { processed: 1 }, timed: { skipped: true } }),
-    ).toBeNull();
-  });
-
-  it("should name the first step that failed", () => {
-    expect(
-      firstStepError({
-        events: { processed: 1 },
-        timed: { error: "Ο έλεγχος χρονισμών δεν έτρεξε." },
-        health: { error: "άλλο" },
-      }),
-    ).toBe("timed: Ο έλεγχος χρονισμών δεν έτρεξε.");
-  });
 });
 
 describe("markJobStart / markJobEnd", () => {
@@ -109,9 +90,8 @@ describe("cleanSends", () => {
     expect(rpc).toHaveBeenCalledWith("sends_cleanup");
   });
 
-  it("should report zeros for an unexpected shape", async () => {
-    const { admin } = fakeAdmin({ data: "x", error: null });
-
-    expect(await cleanSends(admin)).toEqual({ sends: 0, logs: 0, outbox: 0 });
+  it("should pass through the daily skip and treat an unexpected shape as skipped", async () => {
+    expect(await cleanSends(fakeAdmin({ data: { skipped: true }, error: null }).admin)).toEqual({ skipped: true });
+    expect(await cleanSends(fakeAdmin({ data: "x", error: null }).admin)).toEqual({ skipped: true });
   });
 });

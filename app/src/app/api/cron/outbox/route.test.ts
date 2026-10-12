@@ -21,7 +21,7 @@ const SECRET = "test-cron-secret";
 const NO_EVENTS = { processed: 0, failed: 0, sent: 0, cleaned: 0 };
 const NO_TIMED = { sent: 0, failed: 0 };
 const NO_HEALTH = { jobs: 0, google: 0, events: 0 };
-const NO_CLEANUP = { sends: 0, logs: 0, outbox: 0 };
+const NO_CLEANUP = { skipped: true };
 
 const request = (authorization?: string, path = "/api/cron/outbox") =>
   new NextRequest(`http://localhost:3000${path}`, {
@@ -229,7 +229,7 @@ describe("GET /api/cron/outbox", () => {
     ]);
   });
 
-  it("γράφει σφάλμα στο job_runs όταν ένα βήμα αποτύχει", async () => {
+  it("ένα βήμα που επιστρέφει σφάλμα δεν κάνει την εκτέλεση αποτυχημένη", async () => {
     mocks.rpc.mockImplementation(async (name: string) =>
       name === "events_process"
         ? { data: null, error: { message: "boom" } }
@@ -240,11 +240,18 @@ describe("GET /api/cron/outbox", () => {
 
     expect(mocks.rpc.mock.calls.at(-1)).toEqual([
       "job_run_mark",
-      {
-        p_job: "outbox",
-        p_ok: false,
-        p_error: "events: Τα Γεγονότα δεν επεξεργάστηκαν.",
-      },
+      { p_job: "outbox", p_ok: true, p_error: null },
+    ]);
+  });
+
+  it("γράφει σφάλμα στο job_runs όταν η ίδια η εκτέλεση αποτύχει", async () => {
+    mocks.runOutboxWorker.mockRejectedValue(new Error("worker crashed"));
+
+    await expect(GET(request(`Bearer ${SECRET}`))).rejects.toThrow("worker crashed");
+
+    expect(mocks.rpc.mock.calls.at(-1)).toEqual([
+      "job_run_mark",
+      { p_job: "outbox", p_ok: false, p_error: "worker crashed" },
     ]);
   });
 
