@@ -336,8 +336,8 @@ begin
   return jsonb_build_object(
     'unread', (select count(*) from public.notifications n where authz.notification_mine(n) and n.read_at is null),
     'latest', coalesce((
-      select jsonb_agg(authz.notification_json(x) order by x.created_at desc, x.id desc)
-        from (select n.* from public.notifications n where authz.notification_mine(n)
+      select jsonb_agg(authz.notification_json(x.r) order by x.created_at desc, x.id desc)
+        from (select n as r, n.created_at, n.id from public.notifications n where authz.notification_mine(n)
                order by n.created_at desc, n.id desc limit 5) x), '[]'::jsonb));
 end;
 $$;
@@ -355,8 +355,8 @@ begin
   if coalesce(p_filter, '') not in ('unread', 'all') then
     raise exception 'Το φίλτρο είναι «Αδιάβαστες» ή «Όλες»' using errcode = 'P0001';
   end if;
-  select coalesce(jsonb_agg(authz.notification_json(x) order by x.created_at desc, x.id desc), '[]'::jsonb) into v_rows
-    from (select n.* from public.notifications n
+  select coalesce(jsonb_agg(authz.notification_json(x.r) order by x.created_at desc, x.id desc), '[]'::jsonb) into v_rows
+    from (select n as r, n.created_at, n.id from public.notifications n
            where authz.notification_mine(n)
              and (p_filter = 'all' or n.read_at is null)
              and (p_before is null or n.created_at < p_before)

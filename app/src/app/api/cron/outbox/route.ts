@@ -8,13 +8,14 @@ import { enqueueDeliverableReminders } from "@/lib/email/reminders-enqueue";
 import { runOutboxWorker } from "@/lib/email/worker";
 import { generateBillables } from "@/lib/finance/billables-generate";
 import { cleanExpiredAttachmentSlots } from "@/lib/messages/attachments-cleanup";
+import { processEvents } from "@/lib/notifications/events-process";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Το κλείδωμα της ουράς (5 λεπτά) πρέπει να ξεπερνά αυτό το όριο, αλλιώς μια αργή παρτίδα ξαναστέλνεται.
 export const maxDuration = 60;
 
 // Ο εργάτης της ουράς email: κάθε λεπτό (Vercel cron) και μετά από κάθε εγγραφή (σκούντημα).
-// Πρώτα μπαίνουν στην ουρά οι υπενθυμίσεις πελατών (#143), τα Τιμολογητέα (#151), τα ληξιπρόθεσμα (#153), η σύνοψη Μηνυμάτων (#164) και το καθάρισμα συνημμένων (#162)· σφάλμα τους δεν σταματά τον εργάτη.
+// Πρώτα μπαίνουν στην ουρά οι υπενθυμίσεις πελατών (#143), τα Τιμολογητέα (#151), τα ληξιπρόθεσμα (#153), η σύνοψη Μηνυμάτων (#164), το καθάρισμα συνημμένων (#162) και η ουρά Γεγονότων (#170)· σφάλμα τους δεν σταματά τον εργάτη.
 // Χωρίς CRON_SECRET στο περιβάλλον: 500· με λάθος ή λείπον Bearer: 401.
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
@@ -34,6 +35,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const overdue = await enqueueOverdueInvoices(admin);
   const digest = await enqueueMessageDigest(admin);
   const attachments = await cleanExpiredAttachmentSlots(admin);
+  // Τελευταίος πριν τον worker: τα email «automation» φεύγουν στον ίδιο κύκλο (#170).
+  const events = await processEvents(admin);
   const summary = await runOutboxWorker(admin, appOrigin());
   return NextResponse.json({
     ...summary,
@@ -42,5 +45,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     overdue,
     digest,
     attachments,
+    events,
   });
 }

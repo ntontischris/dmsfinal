@@ -14,6 +14,7 @@ import {
   type MembershipRow,
   type Viewer,
 } from "@/modules/access";
+import { NotificationBell, getBell } from "@/modules/notifications";
 
 // «owner», «team» και «client» δεν είναι Δικαιώματα· όλα τα άλλα ελέγχονται ως Δικαιώματα (ομάδας ή πελάτη).
 const allowsRequirement = (viewer: Viewer, requirement: string): boolean => {
@@ -47,6 +48,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const viewer = await getViewer();
   const memberships = viewer.status === "signed-in" && !viewer.team ? await listMemberships() : null;
   const clientRows = memberships?.ok ? memberships.data : [];
+  // Α9: καμπανάκι για ομάδα και πελάτη· null όταν ο Χρήστης δεν έχει Ειδοποιήσεις.
+  const bell = viewer.status === "signed-in" ? await getBell() : null;
   // Χωρίς βάση φαίνονται όλες οι οθόνες, για να περιηγείται κανείς το σύστημα· η καθεμία λέει ότι λείπει η βάση.
   const sections = visibleNav((requirement) =>
     viewer.status === "unconfigured" ? true : allowsRequirement(viewer, requirement),
@@ -71,6 +74,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               {viewer.team?.name ?? viewer.email}
             </span>
           )}
+          {bell?.ok && bell.data && <NotificationBell initial={bell.data} />}
           <ThemeToggle />
           {viewer.status === "signed-in" && <SignOutButton />}
         </div>

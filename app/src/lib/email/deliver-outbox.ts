@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { accessLinkFor } from "./access-link";
+import { AUTOMATION_KIND, automationMessageFor } from "./deliver-automation";
 import { deliverableMessageFor, DELIVERABLE_KIND } from "./deliver-deliverable";
 import {
   DELIVERABLE_REMINDER_KIND,
@@ -57,6 +58,7 @@ export const outboxRowSchema = z.object({
     "invoice_overdue",
     "message_digest",
     "request_closed",
+    "automation",
   ]),
   to_name: z.string(),
   to_email: z.string(),
@@ -212,6 +214,7 @@ async function messageFor(
   if (row.kind === OVERDUE_KIND) return overdueMessageFor(row, origin);
   if (row.kind === DIGEST_KIND) return digestMessageFor(row, origin);
   if (row.kind === REQUEST_CLOSED_KIND) return requestClosedFor(row, origin);
+  if (row.kind === AUTOMATION_KIND) return automationMessageFor(row, origin);
   return clientAddedMessageFor(admin, row, origin);
 }
 

@@ -117,7 +117,7 @@ begin
   if new.recipient_kind = 'visitor' and not t.has_visitor then
     raise exception 'Ο Επισκέπτης υπάρχει μόνο σε Γεγονότα με Επισκέπτη' using errcode = 'P0001';
   end if;
-  if new.timing <> case t.kind when 'instant' then 'immediate' when 'dated' then 'offset' else 'wait' end then
+  if new.timing <> (case t.kind when 'instant' then 'immediate' when 'dated' then 'offset' else 'wait' end) then
     raise exception 'Ο χρονισμός δεν ταιριάζει στο είδος του Γεγονότος' using errcode = 'P0001';
   end if;
   new.updated_at := now();
