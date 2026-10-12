@@ -86,7 +86,7 @@ as $$ select public.message_digest_enqueue(public.t_at(p_min)); $$;
 -- Το κλείσιμο Αιτήματος φεύγει πλέον από τον Αυτοματισμό του Γεγονότος 48 (#171): πρώτα τρέχει ο επεξεργαστής.
 create function public.t_mails(p_kind text, p_email text) returns integer
 language plpgsql
-as $
+as $$
 begin
   if p_kind = 'request_closed' then
     perform public.events_process();
@@ -95,19 +95,19 @@ begin
   end if;
   return (select count(*)::integer from public.email_outbox where kind = p_kind and to_email = p_email);
 end;
-$;
+$$;
 
 -- «email από τον Αυτοματισμό / email με το παλιό kind» για το κλείσιμο Αιτήματος.
 create function public.t_closed_total() returns text
 language plpgsql
-as $
+as $$
 begin
   perform public.events_process();
   return (select (count(*) filter (where o.kind = 'automation' and a.event_type = 'request.closed'))::text || '/'
                  || (count(*) filter (where o.kind = 'request_closed'))::text
             from public.email_outbox o left join public.automations a on a.id::text = o.payload ->> 'automationId');
 end;
-$;
+$$;
 
 -- ───────────── Δικαιώματα ─────────────
 set local role anon;
