@@ -25,7 +25,7 @@ import {
 // σε τιμές, ώρες και κόστος που ο θεατής δεν δικαιούται να δει (το null δεν είναι μηδέν). Η βάση φιλτράρει, όχι η TypeScript.
 
 // Το φίλτρο Ομάδας (D1) τρέχει στην εφαρμογή: η ανάγνωση πρέπει να τα φέρνει όλα, όχι μόνο τα 100 της προεπιλογής της βάσης.
-const LIST_LIMIT = 500;
+export const LIST_LIMIT = 500;
 
 const KIND_COLUMNS =
   "id, label, label_en, unit, unit_en, sort, revision_limit, retired_at";
