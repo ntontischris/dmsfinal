@@ -186,22 +186,21 @@ test("ο Ιδιοκτήτης στέλνει δοκιμαστικό email και
 }) => {
   await signIn(page, "owner@example.com");
   await page.goto("/app/settings/integrations");
-  const sentRows = () =>
-    listItem(page, "owner@example.com").filter({ hasText: "στάλθηκε" });
-  const before = await sentRows().count();
   await page
     .getByRole("button", { name: "Δοκιμαστικό email στον εαυτό μου" })
     .click();
   await expect(page.getByRole("status")).toContainText("μπήκε στην ουρά");
+  // Το Ιστορικό αποστολών (K3, #174): η νεότερη αποστολή email είναι το δοκιμαστικό, ως «στάλθηκε».
+  const latest = page.locator("tbody tr").first();
   await expect
     .poll(
       async () => {
-        await page.reload();
-        return sentRows().count();
+        await page.goto("/app/settings/sends?channel=email");
+        return (await latest.textContent()) ?? "";
       },
       { timeout: 60_000, intervals: [2_000] },
     )
-    .toBeGreaterThan(before);
+    .toMatch(/Δοκιμαστικό email[\s\S]*owner@example\.com[\s\S]*στάλθηκε/);
 });
 
 // Το πραγματικό Send Email Hook: υπογεγραμμένο αίτημα όπως της Supabase, και η γραμμή στο Ιστορικό.
@@ -251,8 +250,8 @@ test("το Send Email Hook στέλνει την πρόσκληση και το 
   expect(response.status()).toBe(200);
 
   await signIn(page, "owner@example.com");
-  await page.goto("/app/settings/integrations");
+  await page.goto("/app/settings/sends?channel=email");
   await expect(
-    listItem(page, email).filter({ hasText: "στάλθηκε" }),
+    page.locator("tr").filter({ hasText: email }).filter({ hasText: "στάλθηκε" }),
   ).toHaveCount(1);
 });

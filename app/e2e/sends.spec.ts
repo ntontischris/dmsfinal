@@ -80,7 +80,7 @@ test("ο Ιδιοκτήτης βλέπει την αποστολή στο K3, φ
 
   // Φίλτρο Πελάτη: μόνο οι αποστολές του.
   await page
-    .getByLabel("Πελάτης", { exact: true })
+    .getByRole("combobox", { name: "Πελάτης", exact: true })
     .selectOption({ label: clientName });
   await page.getByRole("button", { name: "Εφαρμογή" }).click();
   await expect(page).toHaveURL(new RegExp(`client=${clientId}`));
