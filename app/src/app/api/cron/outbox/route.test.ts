@@ -21,8 +21,8 @@ const SECRET = "test-cron-secret";
 const NO_EVENTS = { processed: 0, failed: 0, sent: 0, cleaned: 0 };
 const NO_TIMED = { sent: 0, failed: 0 };
 
-const request = (authorization?: string) =>
-  new NextRequest("http://localhost:3000/api/cron/outbox", {
+const request = (authorization?: string, path = "/api/cron/outbox") =>
+  new NextRequest(`http://localhost:3000${path}`, {
     headers: authorization ? { authorization } : {},
   });
 
@@ -177,6 +177,18 @@ describe("GET /api/cron/outbox", () => {
         Number.POSITIVE_INFINITY,
     );
     expect((await response.json()).timed).toEqual(summary);
+  });
+
+  it("δεν τρέχει τον έλεγχο χρονισμών στο σκούντημα (kick), μόνο στο cron του λεπτού", async () => {
+    const response = await GET(
+      request(`Bearer ${SECRET}`, "/api/cron/outbox?kick=1"),
+    );
+
+    const names = mocks.rpc.mock.calls.map(([name]) => name);
+    expect(names).not.toContain("automations_scan");
+    expect(names).toContain("events_process");
+    expect(mocks.runOutboxWorker).toHaveBeenCalledTimes(1);
+    expect((await response.json()).timed).toEqual({ skipped: true });
   });
 
   it("τρέχει τον εργάτη και δίνει σύντομο λάθος όταν αποτύχει ο έλεγχος χρονισμών", async () => {

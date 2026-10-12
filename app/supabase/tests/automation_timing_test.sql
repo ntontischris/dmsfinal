@@ -3,7 +3,7 @@
 -- Το ληξιπρόθεσμο Τιμολόγιο (μετά τις 09:00, ακύρωση) ελέγχεται στα ledger_test και invoice_corrections_test,
 -- οι υπενθυμίσεις Έκδοσης με τα Δικαιώματα πελάτη στο production_completion_test.
 begin;
-select plan(58);
+select plan(65);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή (Υπεύθυνος Παραγωγής)
@@ -12,6 +12,7 @@ select plan(58);
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'production@example.com'),
+  ('00000000-0000-0000-0000-0000000000a3', 'noamounts@example.com'),
   ('00000000-0000-0000-0000-0000000000b1', 'b1@client-one.example.gr'),
   ('00000000-0000-0000-0000-0000000000b7', 'b7@client-one.example.gr'),
   ('00000000-0000-0000-0000-0000000000b8', 'b8@client-one.example.gr'),
@@ -20,7 +21,12 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000b3', 'b3@client-three.example.gr');
 insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'Γιώργος', 'owner@example.com'),
-  ('00000000-0000-0000-0000-0000000000a2', 'Πέτρος', 'production@example.com');
+  ('00000000-0000-0000-0000-0000000000a2', 'Πέτρος', 'production@example.com'),
+  ('00000000-0000-0000-0000-0000000000a3', 'Άρης', 'noamounts@example.com');
+insert into public.roles (name, description, kind, is_owner, is_builtin)
+values ('Χωρίς ποσά (τεστ)', 'Τεστ: μέλος ομάδας χωρίς Δικαιώματα.', 'team', false, false);
+insert into public.team_user_roles (user_id, role_id)
+select '00000000-0000-0000-0000-0000000000a3', r.id from public.roles r where r.name = 'Χωρίς ποσά (τεστ)';
 insert into public.team_user_roles (user_id, role_id)
 select u.id::uuid, r.id
   from (values ('00000000-0000-0000-0000-0000000000a1', 'Ιδιοκτήτης'), ('00000000-0000-0000-0000-0000000000a2', 'Παραγωγή'))
@@ -90,11 +96,17 @@ insert into public.filmings (id, production_id, client_id, kind_id, starts_at, h
   ('00000000-0000-0000-0000-00000000f002', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
    (select k.id from public.provision_kinds k where k.code = 'shoot'), timestamptz '2026-03-05 10:00 Europe/Athens', 2, 'team', 'scheduled', now()),
   ('00000000-0000-0000-0000-00000000f003', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
-   (select k.id from public.provision_kinds k where k.code = 'shoot'), timestamptz '2026-10-26 10:00 Europe/Athens', 2, 'team', 'scheduled', now());
+   (select k.id from public.provision_kinds k where k.code = 'shoot'), timestamptz '2026-10-26 10:00 Europe/Athens', 2, 'team', 'scheduled', now()),
+  ('00000000-0000-0000-0000-00000000f004', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000c1',
+   (select k.id from public.provision_kinds k where k.code = 'shoot'), timestamptz '2026-05-20 10:00 Europe/Athens', 2, 'team', 'scheduled', now());
 insert into public.filming_crew (filming_id, user_id) values ('00000000-0000-0000-0000-00000000f001', '00000000-0000-0000-0000-0000000000a1');
 insert into public.deliverables (id, production_id, kind_id, title, charge) values
   ('00000000-0000-0000-0000-0000000000dd', '00000000-0000-0000-0000-0000000000d1',
    (select k.id from public.provision_kinds k where k.code = 'reel'), 'Reel Απριλίου', 'included');
+insert into public.deliverables (id, production_id, kind_id, title, charge, assignee_id, deadline) values
+  ('00000000-0000-0000-0000-0000000000de', '00000000-0000-0000-0000-0000000000d1',
+   (select k.id from public.provision_kinds k where k.code = 'reel'), 'Reel Μαΐου', 'included',
+   '00000000-0000-0000-0000-0000000000a2', date '2026-05-15');
 insert into public.deliverable_versions (deliverable_id, number, url, host, state, sent_at) values
   ('00000000-0000-0000-0000-0000000000dd', 1, 'https://vimeo.com/1', 'vimeo.com', 'awaiting_client', timestamptz '2026-04-01 10:00+00');
 set local session_replication_role = origin;
@@ -229,6 +241,40 @@ select is(public.t_sent('deliverable.client_waiting', 'b8'), 0, 'Χωρίς «Ε
 select public.t_scan('2026-04-08 10:00+00');
 select is(public.t_sent('deliverable.client_waiting', 'b1'), 2, 'Στις 7 μέρες δεύτερο email');
 
+-- ───────────── Μία Ειδοποίηση ανά περίπτωση και Χρήστη ─────────────
+-- Ο Υπεύθυνος Παραγωγής a2 είναι και ο ανατεθειμένος: την ημέρα της προθεσμίας τον βρίσκουν δύο Αυτοματισμοί.
+select public.t_scan('2026-05-15 06:00+00');
+select is(public.t_sent('deliverable.deadline', 'a2'), 2, 'Δύο Αυτοματισμοί σημειώνουν την περίπτωση για τον ίδιο Χρήστη');
+select is((select count(*)::integer from public.notifications n where n.user_id = '00000000-0000-0000-0000-0000000000a2'
+            and n.body = 'Σήμερα είναι η προθεσμία του Reel Μαΐου.'), 1, 'Μία μόνο Ειδοποίηση');
+
+-- ───────────── Όχι «αύριο» για κάτι που γίνεται σήμερα ─────────────
+select public.t_scan('2026-05-20 06:01+00');
+select is(public.t_cases('filming.day', 'filming.day:00000000-0000-0000-0000-00000000f004:%'), 0,
+  'Γύρισμα σήμερα στις 10:00, έλεγχος στις 09:01: καμία υπενθύμιση «αύριο»');
+
+-- ───────────── Ποσά μόνο σε όσους βλέπουν ποσά ─────────────
+insert into public.invoices (id, client_id, kind, number, issue_date, due_date, net, vat, total, pdf_path) values
+  ('00000000-0000-0000-0000-0000000000bb', '00000000-0000-0000-0000-0000000000c1', 'invoice', 'T-1',
+   date '2026-06-01', date '2026-07-01', 500, 0, 500, 'invoices/t-1.pdf');
+insert into public.automations (event_type, channel, recipient_kind, recipient_user_ids, timing, offset_days, send_time, body_el)
+values ('invoice.overdue', 'notification', 'users', '{00000000-0000-0000-0000-0000000000a1,00000000-0000-0000-0000-0000000000a3}',
+        'offset', 1, '09:00', 'Υπόλοιπο {amount}');
+create function public.t_note(p_type text, p_last text) returns text
+language sql
+as $$
+  select string_agg(n.body, ' | ') from public.notifications n
+    join public.automation_sends s on s.notification_id = n.id join public.automations a on a.id = s.automation_id
+   where a.event_type = p_type and n.user_id = ('00000000-0000-0000-0000-0000000000' || p_last)::uuid;
+$$;
+select public.t_scan('2026-07-02 06:00+00');
+select is(public.t_note('invoice.overdue', 'a1'), 'Υπόλοιπο 500,00 €', 'Όποιος βλέπει ποσά παίρνει το ποσό (και μία Ειδοποίηση)');
+select is(public.t_note('invoice.overdue', 'a3'), 'Υπόλοιπο', 'Χωρίς «Βλέπει ποσά» το ποσό λείπει');
+select ok((select o.payload ->> 'body' like '%Υπόλοιπο: 500,00 €%' from public.email_outbox o
+             join public.automation_sends s on s.email_outbox_id = o.id join public.automations a on a.id = s.automation_id
+            where a.event_type = 'invoice.overdue' and s.recipient_key = '00000000-0000-0000-0000-0000000000b1'),
+  'Ο πελάτης με «Βλέπει Οικονομικά» βλέπει το υπόλοιπο');
+
 -- ───────────── Σύνοψη αδιάβαστων (ίδια σενάρια με το message_digest_enqueue) ─────────────
 -- m1 ομάδα T0 · m2 εσωτερικό T0+1 · m3 του πελάτη T0 · m4 σβησμένο της ομάδας T0
 select public.t_msg('a1', 'team', false, 0);
@@ -273,12 +319,30 @@ select is(public.t_sent('message.unread_waiting', 'b7'), 3, 'Με 30 λεπτά:
 select public.t_scan(public.t_at(130));
 select is(public.t_sent('message.unread_waiting', 'b7'), 4, 'Με 30 λεπτά: στα 30 στέλνει');
 
+-- ───────────── Προγραμματισμένα ─────────────
+select public.t_as('a1');
+select is((select count(*)::integer from jsonb_array_elements(public.automations_upcoming('2026-03-11 00:00+00', '2026-03-12 00:00+00')) x
+            where x ->> 'eventType' = 'filming.day' and x ->> 'entityId' = '00000000-0000-0000-0000-00000000f001'), 2,
+  'Τα Προγραμματισμένα δείχνουν τις δύο αποστολές της Ημέρας Γυρίσματος');
+select is((select (x ->> 'recipients')::integer from jsonb_array_elements(public.automations_upcoming('2026-03-11 00:00+00', '2026-03-12 00:00+00')) x
+            join public.automations a on a.id = (x ->> 'automationId')::uuid
+           where x ->> 'entityId' = '00000000-0000-0000-0000-00000000f001' and a.recipient_relative = 'client'), 1,
+  'Με πλήθος παραληπτών');
+select throws_ok($$ select public.automations_upcoming(now(), now() + interval '40 days') $$, 'P0001', null, 'Έως 31 μέρες');
+
 -- ───────────── Αργίες ─────────────
+-- Ο b2 γίνεται και Χρήστης του Πελάτη 1: μία ευχή ανά άνθρωπο και αργία.
+insert into public.client_users (client_id, user_id, name, role_id, is_current)
+select '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b2', 'Πάνος', r.id, false
+  from public.roles r where r.name = 'Πλήρης' and r.kind = 'client';
 select public.t_scan('2026-12-25 06:59+00');
 select is(public.t_cases('holiday.greeting', '%:20261224T220000'), 0, 'Στις 08:59 Αθήνας των Χριστουγέννων τίποτα');
 select public.t_scan('2026-12-25 07:00+00');
 select is(public.t_sent('holiday.greeting', 'b1'), 1, 'Στις 09:00 ευχές στον Χρήστη ενεργού Πελάτη');
-select is(public.t_sent('holiday.greeting', 'b2'), 1, 'Ευχές και στον Χρήστη ανενεργού Πελάτη');
+select is(public.t_sent('holiday.greeting', 'b2'), 2, 'Ευχές και στον Χρήστη ανενεργού Πελάτη· σημάδι ανά Πελάτη');
+select is((select count(*)::integer from public.automation_sends s join public.automations a on a.id = s.automation_id
+            where a.event_type = 'holiday.greeting' and s.recipient_key = '00000000-0000-0000-0000-0000000000b2'
+              and s.email_outbox_id is not null), 1, 'Ένα μόνο email για τον Χρήστη δύο Πελατών');
 select is(public.t_sent('holiday.greeting', 'b3'), 0, 'Όχι στον υποψήφιο Πελάτη');
 select ok((select o.payload ->> 'body' like '%χρόνια πολλά για Χριστούγεννα!%' from public.email_outbox o
              join public.automation_sends s on s.email_outbox_id = o.id join public.automations a on a.id = s.automation_id
@@ -299,17 +363,6 @@ select public.t_scan('2026-12-27 07:00+00');
 select is(public.t_sent('holiday.greeting', 'b1'), 2, 'Προσθήκη: φεύγει');
 select public.t_scan('2027-01-01 07:00+00');
 select is(public.t_cases('holiday.greeting', '%:20261231T220000'), 0, 'Σβησμένη Πρωτοχρονιά: τίποτα');
-
--- ───────────── Προγραμματισμένα ─────────────
-select public.t_as('a1');
-select is((select count(*)::integer from jsonb_array_elements(public.automations_upcoming('2026-03-11 00:00+00', '2026-03-12 00:00+00')) x
-            where x ->> 'eventType' = 'filming.day' and x ->> 'entityId' = '00000000-0000-0000-0000-00000000f001'), 2,
-  'Τα Προγραμματισμένα δείχνουν τις δύο αποστολές της Ημέρας Γυρίσματος');
-select is((select (x ->> 'recipients')::integer from jsonb_array_elements(public.automations_upcoming('2026-03-11 00:00+00', '2026-03-12 00:00+00')) x
-            join public.automations a on a.id = (x ->> 'automationId')::uuid
-           where x ->> 'entityId' = '00000000-0000-0000-0000-00000000f001' and a.recipient_relative = 'client'), 1,
-  'Με πλήθος παραληπτών');
-select throws_ok($$ select public.automations_upcoming(now(), now() + interval '40 days') $$, 'P0001', null, 'Έως 31 μέρες');
 
 select * from finish();
 rollback;

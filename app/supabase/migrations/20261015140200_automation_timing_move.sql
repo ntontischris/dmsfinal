@@ -127,6 +127,19 @@ select a.id, c.case_key, cu.user_id::text, 'email', n.sent_at
                                      authz.athens_midnight(i.due_date)) c
 on conflict do nothing;
 
+-- Η Ειδοποίηση ληξιπρόθεσμου είναι νέα και δεν έχει παράθυρο αναπλήρωσης: όσα Τιμολόγια ήταν ήδη ληξιπρόθεσμα πριν από
+-- το deploy σημειώνονται για τους σημερινούς αρμόδιους, ώστε να μην έρθουν όλα μαζί την πρώτη φορά.
+insert into public.automation_sends (automation_id, case_key, recipient_key, channel, created_at)
+select a.id, c.case_key, u.user_id::text, 'notification', now()
+  from authz.invoice_standings(null, null) s
+  join public.invoices i on i.id = s.invoice_id
+  join public.automations a on a.event_type = 'invoice.overdue' and a.channel = 'notification' and a.is_initial
+  join public.team_users u on u.is_active and authz.user_scope(u.user_id, 'finance.invoices') = 'all'
+ cross join lateral authz.timed_case('invoice.overdue', 'invoices', i.id, 'invoice.overdue:' || i.id, i.client_id, '{}'::jsonb,
+                                     authz.athens_midnight(i.due_date)) c
+ where s.remaining > 0 and i.kind <> 'credit' and i.due_date < public.sales_today()
+on conflict do nothing;
+
 drop function public.deliverable_reminders_enqueue();
 drop function authz.email_client_deliverable_reminder(uuid, integer, integer);
 drop function public.invoice_overdue_enqueue(timestamptz);
@@ -140,11 +153,13 @@ create function authz.invoice_voided_cancel() returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 begin
+  -- Από τις εκκρεμείς γραμμές της ουράς (δείκτης email_outbox_pending_idx) προς το σημάδι τους.
   update public.email_outbox o
      set status = 'cancelled', handled_at = now()
-    from public.automation_sends s
-   where s.email_outbox_id = o.id and o.status = 'pending'
-     and s.case_key like 'invoice.%' and split_part(s.case_key, ':', 2) = new.id::text;
+   where o.status = 'pending' and o.kind = 'automation'
+     and exists (select 1 from public.automation_sends s
+                  where s.email_outbox_id = o.id and s.case_key like 'invoice.%'
+                    and split_part(s.case_key, ':', 2) = new.id::text);
   return null;
 end;
 $$;

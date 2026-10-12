@@ -127,6 +127,68 @@ as $$
   end;
 $$;
 
+-- Αποστολή σε έναν παραλήπτη (ξαναγραμμένο από το 20261015120200_events_process.sql): ίδιο, με μία προσθήκη. Ένας
+-- Χρήστης ομάδας χωρίς «Βλέπει ποσά» δεν παίρνει ποτέ ποσό: οι μεταβλητές amount, payment, margin και cost φεύγουν πριν
+-- από την απόδοση (στιγμιαία και χρονισμένα).
+create or replace function authz.ev_deliver(
+  a public.automations, e public.events, r authz.ev_recipient, p_now timestamptz
+) returns boolean
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_locale text := case when r.locale = 'en' and length(trim(a.body_en)) > 0 then 'en' else 'el' end;
+  v_link text := case when r.is_client then coalesce(e.payload ->> 'client_link', e.payload ->> 'link') else e.payload ->> 'link' end;
+  v_vars jsonb := e.payload || jsonb_build_object('recipientName', r.name, 'companyName', authz.ev_company(),
+                                                  'link', coalesce(v_link, ''));
+  v_label text := (select case v_locale when 'en' then t.label_en else t.label_el end from public.event_types t where t.code = e.type);
+  v_allowed text[] := (select t.variables from public.event_types t where t.code = e.type);
+  v_subject text;
+  v_body text;
+  v_send bigint;
+  v_ref uuid;
+begin
+  if a.channel = 'email' and coalesce(trim(r.email), '') = '' then
+    return false;
+  end if;
+  if not r.is_client and authz.user_scope(r.user_id, 'finance.amounts') is null then
+    v_vars := v_vars - array['amount', 'payment', 'margin', 'cost'];
+  end if;
+  insert into public.automation_sends (automation_id, event_id, case_key, recipient_key, channel, created_at)
+  values (a.id, e.id, e.case_key, r.user_id::text, a.channel, p_now)
+  on conflict (automation_id, case_key, recipient_key) do nothing
+  returning id into v_send;
+  if v_send is null then
+    return false;
+  end if;
+  -- Το σημάδι γράφτηκε (μία φορά)· η Ειδοποίηση όμως μπαίνει μία ανά (Γεγονός, Χρήστη), όσοι Αυτοματισμοί κι αν τον βρουν.
+  if a.channel = 'notification'
+     and exists (select 1 from public.notifications n where n.event_id = e.id and n.user_id = r.user_id) then
+    return false;
+  end if;
+  -- Το θέμα είναι μία γραμμή.
+  v_subject := regexp_replace(
+    authz.ev_render(coalesce(case v_locale when 'en' then nullif(trim(a.subject_en), '') end, a.subject_el, v_label),
+                    v_vars, v_allowed),
+    '\s*[\r\n]+\s*', ' ', 'g');
+  v_body := authz.ev_render(case v_locale when 'en' then a.body_en else a.body_el end, v_vars, v_allowed);
+  if a.channel = 'notification' then
+    insert into public.notifications (user_id, client_id, automation_id, event_id, title, body, link, created_at)
+    values (r.user_id, e.client_id, a.id, e.id, left(coalesce(nullif(v_subject, ''), v_label), 300), left(v_body, 2000),
+            nullif(v_link, ''), p_now)
+    returning id into v_ref;
+    update public.automation_sends set notification_id = v_ref where id = v_send;
+  else
+    insert into public.email_outbox (kind, to_name, to_email, locale, payload)
+    values ('automation', coalesce(r.name, ''), lower(trim(r.email)), v_locale,
+            jsonb_strip_nulls(jsonb_build_object('subject', left(coalesce(nullif(v_subject, ''), v_label), 300),
+              'body', left(v_body, 2000), 'link', nullif(v_link, ''), 'automationId', a.id)))
+    returning id into v_ref;
+    update public.automation_sends set email_outbox_id = v_ref where id = v_send;
+  end if;
+  return true;
+end;
+$$;
+
 -- ───────────── Πλαίσιο των νέων οντοτήτων ─────────────
 
 -- Ποσό σε ευρώ με ελληνική μορφή: 1.234,50 €.
@@ -421,29 +483,47 @@ as $$
   end;
 $$;
 
--- Οι περιπτώσεις ενός Αυτοματισμού με ώρα αποστολής στο (p_from, p_to]. Η πηγή ρωτιέται με περιθώριο ±2 μέρες για offset.
+-- Η αρχή του παραθύρου αναπλήρωσης: 36 ώρες. Το ληξιπρόθεσμο δεν έχει παράθυρο όσο υπάρχει υπόλοιπο (όπως το παλιό
+-- enqueue: ένας Χρήστης με c.finance που μπαίνει αργότερα το παίρνει)· το σημάδι κρατά το «μία φορά».
+create function authz.timed_window_start(p_type text, p_now timestamptz) returns timestamptz
+language sql stable set search_path = ''
+as $$ select case when p_type = 'invoice.overdue' then '-infinity'::timestamptz else p_now - interval '36 hours' end; $$;
+
+-- Τα όρια της άγκυρας για ώρες αποστολής στο (p_from, p_to]· για offset με περιθώριο ±2 μέρες.
+create function authz.timed_lo(a public.automations, p_from timestamptz) returns timestamptz
+language sql stable set search_path = ''
+as $$
+  select case a.timing when 'wait' then p_from - make_interval(mins => a.wait_minutes)
+                       else p_from - make_interval(days => a.offset_days + 2) end;
+$$;
+
+create function authz.timed_hi(a public.automations, p_to timestamptz) returns timestamptz
+language sql stable set search_path = ''
+as $$
+  select case a.timing when 'wait' then p_to - make_interval(mins => a.wait_minutes)
+                       else p_to - make_interval(days => a.offset_days - 2) end;
+$$;
+
+-- Η ώρα αποστολής αν πέφτει στο (p_from, p_to], αλλιώς null. Μια υπενθύμιση «πριν» (offset < 0) φεύγει μόνο αν η μέρα
+-- αποστολής (p_at, αλλιώς η ώρα αποστολής) είναι πριν από τη μέρα της άγκυρας: όχι «αύριο» για κάτι που γίνεται σήμερα.
+create function authz.timed_match(a public.automations, p_anchor timestamptz, p_from timestamptz, p_to timestamptz, p_at timestamptz)
+returns timestamptz
+language sql stable set search_path = ''
+as $$
+  select d.due from (select authz.timed_due_at(a, p_anchor) as due) d
+   where d.due > p_from and d.due <= p_to
+     and (a.timing <> 'offset' or a.offset_days >= 0
+          or (coalesce(p_at, d.due) at time zone 'Europe/Athens')::date < (p_anchor at time zone 'Europe/Athens')::date);
+$$;
+
+-- Οι περιπτώσεις ενός Αυτοματισμού με ώρα αποστολής στο (p_from, p_to] (για τα Προγραμματισμένα).
 create function authz.timed_due(a public.automations, p_from timestamptz, p_to timestamptz)
 returns table (e public.events, due_at timestamptz)
-language plpgsql stable security definer set search_path = ''
+language sql stable security definer set search_path = ''
 as $$
-declare
-  v_lo timestamptz;
-  v_hi timestamptz;
-begin
-  if a.timing = 'wait' then
-    v_lo := p_from - make_interval(mins => a.wait_minutes);
-    v_hi := p_to - make_interval(mins => a.wait_minutes);
-  elsif a.timing = 'offset' then
-    v_lo := p_from - make_interval(days => a.offset_days + 2);
-    v_hi := p_to - make_interval(days => a.offset_days - 2);
-  else
-    return;
-  end if;
-  return query
-    select c, d.due from authz.timed_cases(a.event_type, v_lo, v_hi) c
-     cross join lateral (select authz.timed_due_at(a, c.occurred_at) as due) d
-     where d.due > p_from and d.due <= p_to;
-end;
+  select c, m.due from authz.timed_cases(a.event_type, authz.timed_lo(a, p_from), authz.timed_hi(a, p_to)) c
+   cross join lateral (select authz.timed_match(a, c.occurred_at, p_from, p_to, null) as due) m
+   where m.due is not null;
 $$;
 
 -- Ενεργοί χρονισμένοι Αυτοματισμοί συνδεδεμένων Γεγονότων.
@@ -455,13 +535,41 @@ as $$
    order by a.event_type, a.sort, a.created_at, a.id;
 $$;
 
--- Σύνοψη: το «ως πού» προχωρά στο νεότερο Μήνυμα των κυμάτων που ωρίμασαν για όλους τους ενεργούς Αυτοματισμούς της.
+-- Η περίπτωση έχει ήδη σταλεί από αυτόν τον Αυτοματισμό σε προηγούμενο έλεγχο (πάνω από 5 λεπτά πριν): παράλειψη χωρίς
+-- υπολογισμό παραληπτών. Όχι για το ληξιπρόθεσμο, που περιμένει και Χρήστες που μπαίνουν αργότερα.
+create function authz.timed_done(a public.automations, e public.events, p_now timestamptz) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select e.type <> 'invoice.overdue' and exists (
+    select 1 from public.automation_sends s
+     where s.automation_id = a.id and s.case_key = e.case_key and s.created_at < p_now - interval '5 minutes');
+$$;
+
+-- Ο παραλήπτης έχει ήδη πάρει το ίδιο στον ίδιο έλεγχο: μία Ειδοποίηση ανά (περίπτωση, Χρήστη) από όσους Αυτοματισμούς
+-- κι αν τον βρουν, και μία ευχή ανά άνθρωπο και αργία ακόμα κι αν είναι Χρήστης δύο Πελατών.
+create function authz.timed_duplicate(a public.automations, e public.events, r authz.ev_recipient, p_now timestamptz) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select (a.channel = 'notification' and exists (
+            select 1 from public.automation_sends s
+             where s.case_key = e.case_key and s.recipient_key = r.user_id::text and s.channel = 'notification'
+               and s.created_at = p_now and s.automation_id <> a.id))
+      or (e.type = 'holiday.greeting' and exists (
+            select 1 from public.automation_sends s
+             where s.automation_id = a.id and s.recipient_key = r.user_id::text and s.case_key <> e.case_key
+               and s.case_key like 'holiday.greeting:%' and right(s.case_key, 15) = right(e.case_key, 15)));
+$$;
+
+create index automation_sends_case_recipient_idx on public.automation_sends (case_key, recipient_key);
+
+-- Σύνοψη: το «ως πού» προχωρά στο νεότερο Μήνυμα των κυμάτων που ωρίμασαν για τον Αυτοματισμό email προς τον ίδιο (self).
 create function authz.digest_marks_advance(p_now timestamptz) returns void
 language plpgsql security definer set search_path = ''
 as $$
 declare
   v_wait integer := coalesce((select max(a.wait_minutes) from public.automations a
-                               where a.event_type = 'message.unread_waiting' and a.is_enabled), 0);
+                               where a.event_type = 'message.unread_waiting' and a.is_enabled and a.channel = 'email'
+                                 and a.recipient_kind = 'relative' and a.recipient_relative = 'self'), 0);
 begin
   insert into public.message_digest_marks (user_id, client_id, upto)
   select authz.ev_uuid(c.payload, 'self_id'), c.client_id, (c.payload ->> 'newest')::timestamptz
@@ -473,35 +581,55 @@ $$;
 
 -- ───────────── Ο έλεγχος κάθε λεπτού (service_role) ─────────────
 
--- { sent, failed }. Το p_now (null = τώρα) υπάρχει για τα τεστ. Σφάλμα σε έναν Αυτοματισμό: καταγράφεται και συνεχίζει.
+-- { sent, failed }. Το p_now (null = τώρα) υπάρχει για τα τεστ. Οι περιπτώσεις ενός Γεγονότος υπολογίζονται μία φορά για
+-- όλους τους Αυτοματισμούς του. Σφάλμα σε ένα Γεγονός (ή στο «ως πού» της σύνοψης): καταγράφεται και συνεχίζει.
 create function public.automations_scan(p_now timestamptz default null) returns jsonb
 language plpgsql security definer set search_path = ''
 as $$
 declare
   v_now timestamptz := coalesce(p_now, now());
+  v_type text;
+  v_from timestamptz;
+  v_lo timestamptz;
+  v_hi timestamptz;
+  v_cases public.events[];
   a public.automations;
-  v_row record;
-  v_case public.events;
+  c public.events;
   r authz.ev_recipient;
   v_sent integer := 0;
   v_failed integer := 0;
 begin
-  for a in select * from authz.timed_automations() loop
+  for v_type in select distinct t.event_type from authz.timed_automations() t order by 1 loop
     begin
-      for v_row in select * from authz.timed_due(a, v_now - interval '36 hours', v_now) loop
-        v_case := v_row.e;
-        for r in select * from authz.ev_recipients(a, v_case) loop
-          if authz.ev_deliver(a, v_case, r, v_now) then
-            v_sent := v_sent + 1;
-          end if;
+      v_from := authz.timed_window_start(v_type, v_now);
+      select min(authz.timed_lo(t, v_from)), max(authz.timed_hi(t, v_now)) into v_lo, v_hi
+        from authz.timed_automations() t where t.event_type = v_type;
+      select coalesce(array_agg(x), '{}') into v_cases from authz.timed_cases(v_type, v_lo, v_hi) x;
+      for a in select * from authz.timed_automations() t where t.event_type = v_type loop
+        for c in select * from unnest(v_cases) u where authz.timed_match(a, u.occurred_at, v_from, v_now, v_now) is not null loop
+          continue when authz.timed_done(a, c, v_now);
+          for r in select * from authz.ev_recipients(a, c) loop
+            if authz.timed_duplicate(a, c, r, v_now) then
+              insert into public.automation_sends (automation_id, case_key, recipient_key, channel, created_at)
+              values (a.id, c.case_key, r.user_id::text, a.channel, v_now)
+              on conflict do nothing;
+            elsif authz.ev_deliver(a, c, r, v_now) then
+              v_sent := v_sent + 1;
+            end if;
+          end loop;
         end loop;
       end loop;
     exception when others then
       v_failed := v_failed + 1;
-      raise warning 'automations_scan %: %', a.id, sqlerrm;
+      raise warning 'automations_scan %: %', v_type, sqlerrm;
     end;
   end loop;
-  perform authz.digest_marks_advance(v_now);
+  begin
+    perform authz.digest_marks_advance(v_now);
+  exception when others then
+    v_failed := v_failed + 1;
+    raise warning 'automations_scan digest marks: %', sqlerrm;
+  end;
   return jsonb_build_object('sent', v_sent, 'failed', v_failed);
 end;
 $$;
@@ -509,27 +637,35 @@ $$;
 -- ───────────── Προγραμματισμένα (K3) ─────────────
 
 -- [{ automationId, eventType, eventLabel, channel, dueAt, caseKey, entity, entityId, clientId, clientName, link, recipients }]
--- με ώρα στο (p_from, p_to], έως 31 μέρες. Χωρίς ονόματα παραληπτών: μόνο το πλήθος.
+-- με ώρα στο (p_from, p_to], έως 31 μέρες. Χωρίς ονόματα παραληπτών: μόνο το πλήθος. Η σύνοψη δεν δείχνει caseKey (έχει
+-- το id του Χρήστη)· τα Τιμολόγια μόνο σε όσους βλέπουν ποσά ή καταχωρούν Τιμολόγια.
 create function public.automations_upcoming(p_from timestamptz, p_to timestamptz) returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
+declare
+  v_service boolean := coalesce(auth.role(), '') = 'service_role';
+  v_finance boolean;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' and not (authz.has('automations.manage') or authz.has('health.view')) then
+  if not v_service and not (authz.has('automations.manage') or authz.has('health.view')) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   if p_from is null or p_to is null or p_to <= p_from or p_to - p_from > interval '31 days' then
     raise exception 'Το διάστημα είναι έως 31 μέρες' using errcode = 'P0001';
   end if;
+  v_finance := v_service or authz.has('finance.amounts') or authz.has('finance.invoices');
   return coalesce((
     select jsonb_agg(jsonb_build_object(
              'automationId', a.id, 'eventType', a.event_type, 'eventLabel', t.label_el, 'channel', a.channel,
-             'dueAt', x.due_at, 'caseKey', (x.e).case_key, 'entity', (x.e).entity, 'entityId', (x.e).entity_id,
+             'dueAt', x.due_at,
+             'caseKey', case when a.event_type = 'message.unread_waiting' then null else (x.e).case_key end,
+             'entity', (x.e).entity, 'entityId', (x.e).entity_id,
              'clientId', (x.e).client_id, 'clientName', (x.e).payload ->> 'clientName', 'link', (x.e).payload ->> 'link',
              'recipients', (select count(*) from authz.ev_recipients(a, x.e)))
            order by x.due_at, t.sort, a.sort, (x.e).case_key)
       from authz.timed_automations() a
       join public.event_types t on t.code = a.event_type
      cross join lateral authz.timed_due(a, p_from, p_to) x
+     where v_finance or (x.e).entity <> 'invoices'
   ), '[]'::jsonb);
 end;
 $$;
@@ -548,8 +684,13 @@ revoke all on function
   authz.ts_invoice_overdue(timestamptz, timestamptz), authz.ts_holiday(timestamptz, timestamptz),
   authz.ts_message_unread(timestamptz, timestamptz), authz.ts_request_open(timestamptz, timestamptz),
   authz.timed_cases(text, timestamptz, timestamptz), authz.timed_due_at(public.automations, timestamptz),
+  authz.timed_window_start(text, timestamptz), authz.timed_lo(public.automations, timestamptz),
+  authz.timed_hi(public.automations, timestamptz),
+  authz.timed_match(public.automations, timestamptz, timestamptz, timestamptz, timestamptz),
   authz.timed_due(public.automations, timestamptz, timestamptz), authz.timed_automations(),
-  authz.digest_marks_advance(timestamptz)
+  authz.timed_done(public.automations, public.events, timestamptz),
+  authz.timed_duplicate(public.automations, public.events, authz.ev_recipient, timestamptz),
+  authz.digest_marks_advance(timestamptz), authz.ev_deliver(public.automations, public.events, authz.ev_recipient, timestamptz)
   from public, anon, authenticated;
 
 revoke all on function public.automations_scan(timestamptz) from public, anon, authenticated;

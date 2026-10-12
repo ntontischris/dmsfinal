@@ -251,12 +251,12 @@ insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000b4
 insert into public.client_users (client_id, user_id, name, role_id, is_current)
 select current_setting('t.c')::uuid, '00000000-0000-0000-0000-0000000000b4', 'Ρένα', r.id, true
   from public.roles r where r.name = 'Πλήρης' and r.kind = 'client';
-select public.automations_scan('2026-06-18 07:00:00+00');
-select is((select count(*)::int from public.t_c1_mails()), 1, 'Μόλις μπει Χρήστης μέσα στο παράθυρο, παίρνει την ειδοποίηση');
+select public.automations_scan('2026-06-25 07:00:00+00');
+select is((select count(*)::int from public.t_c1_mails()), 1, 'Χρήστης με «Βλέπει Οικονομικά» που μπαίνει μια εβδομάδα αργότερα παίρνει την ειδοποίηση');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
 select public.invoice_void(current_setting('t.c1')::uuid, 'λάθος Πελάτης');
 select is((select status from public.t_c1_mails()), 'cancelled', 'Η ακύρωση του Τιμολογίου ακυρώνει το email που περιμένει');
-select public.automations_scan('2026-06-18 08:00:00+00');
+select public.automations_scan('2026-06-25 08:00:00+00');
 select is((select count(*)::int from public.t_c1_mails()), 1, 'Ακυρωμένο Τιμολόγιο: τίποτα νέο');
 
 -- ───────────── Ετοιμότητα ─────────────

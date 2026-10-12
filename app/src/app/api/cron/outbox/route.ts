@@ -14,7 +14,8 @@ export const maxDuration = 60;
 
 // Ο εργάτης της ουράς email: κάθε λεπτό (Vercel cron) και μετά από κάθε εγγραφή (σκούντημα).
 // Πρώτα τα Τιμολογητέα (#151), το καθάρισμα συνημμένων (#162), η ουρά Γεγονότων (#170) και ο έλεγχος χρονισμών (#172: υπενθυμίσεις,
-// ληξιπρόθεσμα, σύνοψη Μηνυμάτων, Αργίες κ.λπ.)· σφάλμα τους δεν σταματά τον εργάτη.
+// ληξιπρόθεσμα, σύνοψη Μηνυμάτων, Αργίες κ.λπ.)· σφάλμα τους δεν σταματά τον εργάτη. Ο έλεγχος χρονισμών δεν τρέχει στο σκούντημα
+// (?kick=1), μόνο στο cron του λεπτού.
 // Χωρίς CRON_SECRET στο περιβάλλον: 500· με λάθος ή λείπον Bearer: 401.
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
@@ -33,7 +34,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const attachments = await cleanExpiredAttachmentSlots(admin);
   // Τελευταίοι πριν τον worker: τα email «automation» φεύγουν στον ίδιο κύκλο (#170, #172).
   const events = await processEvents(admin);
-  const timed = await scanAutomations(admin);
+  const timed =
+    request.nextUrl.searchParams.get("kick") === "1"
+      ? { skipped: true }
+      : await scanAutomations(admin);
   const summary = await runOutboxWorker(admin, appOrigin());
   return NextResponse.json({
     ...summary,
