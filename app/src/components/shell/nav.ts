@@ -52,6 +52,23 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Γνώση",
+    items: [
+      {
+        code: "A8",
+        label: "Γνώση",
+        href: "/app/knowledge",
+        requires: ["team", "client"],
+      },
+      {
+        code: "L1",
+        label: "Διαχείριση Γνώσης",
+        href: "/app/knowledge/manage",
+        requires: "knowledge.manage",
+      },
+    ],
+  },
+  {
     title: "Πελάτες και Πωλήσεις",
     items: [
       {

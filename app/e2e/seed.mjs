@@ -467,6 +467,26 @@ for (const P of ["desktop", "mobile"]) {
 }
 console.log("seed: Σήμερα πελάτη");
 
+// ───────────── Γνώση: Πελάτης με Χρήστη πελάτη «Πλήρης» για το e2e/knowledge.spec.ts ─────────────
+for (const P of ["desktop", "mobile"]) {
+  const clientId = await insertRow("clients", {
+    name: `Πελάτης Γνώσης ${P}`,
+    city: "Αθήνα",
+    contact_name: "Ιωάννα Γνώσης",
+    contact_email: `knowledge-contact.${P}@pelatis.example.gr`,
+    contact_phone: "",
+    manager_id: ANNA,
+  });
+  const { data: created, error: userError } = await admin.auth.admin.createUser({
+    email: `know.${P}@example.com`, password: PASSWORD, email_confirm: true,
+  });
+  if (userError) throw userError;
+  await insertPlain("client_users", {
+    client_id: clientId, user_id: created.user.id, name: "Ιωάννα Γνώσης", role_id: fullClientRole.id, is_current: true,
+  });
+}
+console.log("seed: Γνώση");
+
 
 // ───────────── Εξοπλισμός: ένα αντικείμενο ανά project για το e2e/equipment.spec.ts ─────────────
 // Τα αντικείμενα μπαίνουν απευθείας με service role: το Πρότυπο της Παραγωγής δουλεύει πάνω σε αυτά.
