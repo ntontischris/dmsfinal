@@ -239,7 +239,10 @@ begin
   if p_text_status is not null and p_text_status not in ('ok', 'image_only', 'failed') then
     raise exception 'Άγνωστη κατάσταση κειμένου' using errcode = 'P0001';
   end if;
-  if case when jsonb_typeof(p_chunks) = 'array' then jsonb_array_length(p_chunks) not between 1 and 500 else true end then
+  if jsonb_typeof(p_chunks) is distinct from 'array' then
+    raise exception 'Τα κομμάτια θέλουν από 1 έως 500' using errcode = 'P0001';
+  end if;
+  if jsonb_array_length(p_chunks) not between 1 and 500 then
     raise exception 'Τα κομμάτια θέλουν από 1 έως 500' using errcode = 'P0001';
   end if;
   perform 1 from public.knowledge_items i
