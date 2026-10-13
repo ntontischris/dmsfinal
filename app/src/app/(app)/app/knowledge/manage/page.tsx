@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
-import { AccessNotice, getViewer } from "@/modules/access";
+import { AccessNotice, can, getViewer } from "@/modules/access";
 import {
   LOAD_ERROR_TEXT,
   LOAD_ERROR_TITLE,
@@ -51,6 +51,7 @@ export default async function KnowledgeManagePage({
           status={status}
           sectionId={sectionId}
           openUnanswered={openUnanswered}
+          canManageSettings={can(viewer, "settings.manage")}
         />
       ) : (
         <AccessNotice viewer={viewer}>

@@ -52,10 +52,8 @@ afterEach(() => {
 });
 
 describe("runKnowledgeIndex", () => {
-  it("χωρίς Gateway: δεν παίρνει τίποτα από την ουρά (μένουν «σε αναμονή»)", async () => {
-    vi.stubEnv("VERCEL", "");
-    vi.stubEnv("VERCEL_OIDC_TOKEN", "");
-    vi.stubEnv("AI_GATEWAY_API_KEY", "");
+  it("χωρίς κλειδί του παρόχου: δεν παίρνει τίποτα από την ουρά (μένουν «σε αναμονή»)", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "");
     const { admin, rpc } = fakeAdmin();
     expect(await runKnowledgeIndex(admin)).toEqual({ skipped: "ai-unavailable", indexed: 0, stale: 0, failed: 0 });
     expect(rpc).not.toHaveBeenCalled();
@@ -86,15 +84,15 @@ describe("runKnowledgeIndex", () => {
     expect(rpc).toHaveBeenCalledWith("knowledge_index_claim", { p_limit: 1, p_item: ITEM });
   });
 
-  it("αποτυχία του Gateway: knowledge_index_fail με το σφάλμα, χωρίς να σκάει", async () => {
+  it("αποτυχία του παρόχου: knowledge_index_fail με το σφάλμα, χωρίς να σκάει", async () => {
     const { admin, rpc } = fakeAdmin();
     const failing = new MockEmbeddingModelV3({
       doEmbed: async () => {
-        throw new Error("Gateway down");
+        throw new Error("provider down");
       },
     });
     expect(await runKnowledgeIndex(admin, { model: failing })).toEqual({ indexed: 0, stale: 0, failed: 1 });
-    expect(rpc).toHaveBeenCalledWith("knowledge_index_fail", { p_item: ITEM, p_version: 3, p_error: "Gateway down" });
+    expect(rpc).toHaveBeenCalledWith("knowledge_index_fail", { p_item: ITEM, p_version: 3, p_error: "provider down" });
   });
 
   it("στοιχείο που κολλά: κόβεται στο χρονικό όριο και γράφεται ως αποτυχία", async () => {

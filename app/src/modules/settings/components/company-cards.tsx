@@ -2,13 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Field, Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
 
+import { saveAssistantCap } from "../actions-assistant";
 import {
-  saveAssistantCap,
   saveAssistantLimits,
   saveCompanyDetails,
   saveTaxDetails,
 } from "../actions";
-import type { CompanySettings } from "../queries";
+import type { AiSpend, CompanySettings } from "../queries";
 import { CardForm } from "./card-form";
 
 // Ρυθμίσεις › Εταιρεία (O1): οι κάρτες με τα στοιχεία της εταιρείας. Κάθε μία αποθηκεύεται χωριστά.
@@ -119,16 +119,39 @@ export function TaxCard({
   );
 }
 
+const usd = (micros: number): string =>
+  (micros / 1_000_000).toLocaleString("el-GR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+// Δαπάνη μήνα / πλαφόν. null = δεν φόρτωσε (τότε δεν δείχνει μηδέν).
+function SpendLine({ spend }: { spend: AiSpend | null }) {
+  if (!spend)
+    return <p className="m-0 text-sm text-muted-foreground">Η δαπάνη του μήνα δεν φόρτωσε.</p>;
+  const percent = spend.capMicros > 0 ? Math.round((spend.spentMicros / spend.capMicros) * 100) : null;
+  return (
+    <p className="m-0 text-sm">
+      Δαπάνη μήνα: <span className="font-semibold tabular-nums">{usd(spend.spentMicros)} $</span> από{" "}
+      <span className="tabular-nums">{usd(spend.capMicros)} $</span>
+      {percent !== null && <span className="tabular-nums"> ({percent}%)</span>}
+    </p>
+  );
+}
+
 export function AssistantCard({
   company,
   isOwner,
+  spend,
 }: {
   company: CompanySettings;
   isOwner: boolean;
+  spend: AiSpend | null;
 }) {
   return (
     <Panel label="Βοηθός">
-      <div className="grid gap-6">
+      <div id="assistant" className="grid gap-6">
+        <SpendLine spend={spend} />
         <CardForm onlyWhenChanged action={saveAssistantLimits} version={company.updated_at}>
           <Field label="Μηνύματα ανά Συζήτηση" hint="Όριο του δημόσιου widget.">
             <Input

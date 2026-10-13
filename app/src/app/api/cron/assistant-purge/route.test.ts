@@ -5,11 +5,13 @@ vi.mock("server-only", () => ({}));
 
 const { rpc } = vi.hoisted(() => ({
   rpc: vi.fn(
-    async (): Promise<{
+    async (
+      name: string,
+    ): Promise<{
       data: unknown;
       error: { message: string } | null;
     }> => ({
-      data: { conversations: 2 },
+      data: name === "assistant_purge" ? { conversations: 2 } : null,
       error: null,
     }),
   ),
@@ -48,11 +50,16 @@ describe("GET /api/cron/assistant-purge", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ conversations: 2 });
     expect(rpc).toHaveBeenCalledWith("assistant_purge", {});
+    expect(rpc).toHaveBeenCalledWith("job_run_mark", { p_job: "assistant_purge", p_ok: null, p_error: null });
+    expect(rpc).toHaveBeenLastCalledWith("job_run_mark", { p_job: "assistant_purge", p_ok: true, p_error: null });
   });
 
   it("answers 500 when the database fails", async () => {
-    rpc.mockResolvedValueOnce({ data: null, error: { message: "boom" } });
+    rpc.mockImplementation(async (name: string) =>
+      name === "assistant_purge" ? { data: null, error: { message: "boom" } } : { data: null, error: null },
+    );
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     expect((await GET(cronRequest(`Bearer ${SECRET}`))).status).toBe(500);
+    expect(rpc).toHaveBeenLastCalledWith("job_run_mark", { p_job: "assistant_purge", p_ok: false, p_error: "boom" });
   });
 });

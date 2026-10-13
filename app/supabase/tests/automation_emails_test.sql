@@ -140,8 +140,8 @@ select lives_ok($$ select public.set_my_language('en') $$, 'Ο Χρήστης π
 select is(public.my_language(), 'en', 'Η γλώσσα του αποθηκεύεται');
 
 -- ───────────── Αρχικοί Αυτοματισμοί email ─────────────
-select is((select count(*)::integer from public.automations where is_initial and channel = 'email' and timing = 'immediate'), 13,
-  'Οι 13 αρχικοί Αυτοματισμοί email των στιγμιαίων Γεγονότων');
+select is((select count(*)::integer from public.automations where is_initial and channel = 'email' and timing = 'immediate'), 14,
+  'Οι 14 αρχικοί Αυτοματισμοί email των στιγμιαίων Γεγονότων (μαζί με το πλαφόν του Βοηθού, #193)');
 select is((select is_wired from public.event_types where code = 'invoice.registered'), true, 'Το «Καταχωρήθηκε Τιμολόγιο» συνδέθηκε');
 
 -- ───────────── Απόφαση Γυρίσματος ─────────────

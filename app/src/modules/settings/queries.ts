@@ -88,6 +88,22 @@ export async function getCompany(): Promise<ReadResult<CompanySettings>> {
   );
 }
 
+// Δαπάνη AI του μήνα και πλαφόν (ai_spend_view, μόνο «Διαχειρίζεται Ρυθμίσεις»), για την κάρτα Βοηθού.
+const aiSpendSchema = z.object({
+  month: z.string(),
+  spentMicros: z.number(),
+  capMicros: z.number(),
+});
+export type AiSpend = z.infer<typeof aiSpendSchema>;
+
+export async function getAiSpend(): Promise<ReadResult<AiSpend>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("getAiSpend", supabase.rpc("ai_spend_view", {}), (data) =>
+    aiSpendSchema.parse(data),
+  );
+}
+
 export async function listBankAccounts(): Promise<ReadResult<BankAccount[]>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };

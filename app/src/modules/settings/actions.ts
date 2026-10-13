@@ -157,28 +157,6 @@ export async function saveAssistantLimits(
   return saveCompanyCard(parsed.data, String(form.get("version")));
 }
 
-const capSchema = z.object({
-  ai_monthly_cap_usd: z.coerce.number().min(0, "Το πλαφόν δεν είναι έγκυρο."),
-  ai_widget_share: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .max(100, "Το μερίδιο είναι από 0 έως 100%."),
-});
-
-export async function saveAssistantCap(
-  _: FormState,
-  form: FormData,
-): Promise<FormState> {
-  const parsed = capSchema.safeParse(
-    Object.fromEntries(
-      Object.keys(capSchema.shape).map((key) => [key, form.get(key)]),
-    ),
-  );
-  if (!parsed.success) return firstIssue(parsed.error);
-  return saveCompanyCard(parsed.data, String(form.get("version")));
-}
-
 const bankSchema = z.object({
   bank_name: text.min(1, "Γράψε την τράπεζα."),
   holder: text.min(1, "Γράψε τον δικαιούχο."),

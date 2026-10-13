@@ -1,4 +1,4 @@
-import { aiAvailable } from "@/lib/ai/available";
+import { aiAvailable } from "@/lib/ai/budget";
 import type { AiAudience } from "@/lib/ai/config";
 import { embedQuery } from "@/lib/ai/embed";
 import { createSupabase } from "@/lib/supabase/server";
@@ -7,13 +7,13 @@ import { read, type ReadResult } from "./read";
 import { parseSearch, type SearchResult } from "./view-schema";
 
 // Αναζήτηση A8 (Γ8): το hybrid search της μνήμης (λέξεις + νόημα, μόνο το Κοινό του Χρήστη). Το embedding της ερώτησης
-// καταγράφει το κόστος του (σκοπός «search»). Χωρίς AI ή αν κάτι αποτύχει: μόνο λέξεις (knowledge_search), χωρίς σφάλμα.
+// καταγράφει το κόστος του (σκοπός «search»). Χωρίς AI, στο πλαφόν (100%) ή αν κάτι αποτύχει: μόνο λέξεις (knowledge_search), χωρίς σφάλμα.
 
 async function questionEmbedding(
   q: string,
   audience: AiAudience,
 ): Promise<number[] | null> {
-  if (!aiAvailable() || q.trim() === "") return null;
+  if (q.trim() === "" || !(await aiAvailable(audience, ["embedding"]))) return null;
   try {
     return await embedQuery(q, { purpose: "search", audience });
   } catch (error) {

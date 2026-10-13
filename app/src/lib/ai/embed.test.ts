@@ -15,7 +15,7 @@ describe("embedTexts", () => {
       maxEmbeddingsPerCall: EMBED_BATCH,
       doEmbed: async ({ values }) => {
         calls += 1;
-        if (calls === 2) throw new Error("Gateway down");
+        if (calls === 2) throw new Error("provider down");
         return {
           embeddings: values.map(() => [0.1]),
           usage: { tokens: 7 },
@@ -29,7 +29,7 @@ describe("embedTexts", () => {
     );
     await expect(
       embedTexts(values, { purpose: "embed", audience: "team", model }),
-    ).rejects.toThrow("Gateway down");
+    ).rejects.toThrow("provider down");
     expect(mocks.recordUsage).toHaveBeenCalledTimes(1);
     expect(mocks.recordUsage).toHaveBeenCalledWith({
       purpose: "embed",
