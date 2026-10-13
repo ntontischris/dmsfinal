@@ -35,7 +35,7 @@ test("ο Χρήστης πελάτη ρωτά τον Βοηθό και, χωρί
 
   await dialog.getByRole("button", { name: "Πώς κλείνω Γύρισμα;" }).click();
   await expect(
-    dialog.getByText("Ο Βοηθός δεν είναι διαθέσιμος τώρα."),
+    dialog.getByRole("listitem").getByText("Ο Βοηθός δεν είναι διαθέσιμος τώρα."),
   ).toBeVisible();
   await expect(
     dialog.getByRole("link", { name: "Γράψε στη Συνομιλία με την ομάδα" }),
@@ -49,7 +49,7 @@ test("ο Χρήστης πελάτη ρωτά τον Βοηθό και, χωρί
   await expect(dialog.getByText("16/1000")).toBeVisible();
   await dialog.getByRole("button", { name: "Νέα Συζήτηση" }).click();
   await expect(
-    dialog.getByText("Ο Βοηθός δεν είναι διαθέσιμος τώρα."),
+    dialog.getByRole("listitem").getByText("Ο Βοηθός δεν είναι διαθέσιμος τώρα."),
   ).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);

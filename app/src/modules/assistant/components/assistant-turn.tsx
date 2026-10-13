@@ -80,7 +80,7 @@ function AnswerBody({
 }) {
   if (turn.status === "unavailable")
     return (
-      <div className="grid justify-items-start gap-2" role="status">
+      <div className="grid justify-items-start gap-2">
         <p className="m-0">{UNAVAILABLE_TEXT[turn.reason ?? "unavailable"]}</p>
         <Referral audience={audience} />
       </div>
@@ -98,7 +98,7 @@ function AnswerBody({
     );
   if (turn.status === "error")
     return (
-      <p className="m-0 text-destructive" role="alert">
+      <p className="m-0 text-destructive">
         {turn.answer}
       </p>
     );
