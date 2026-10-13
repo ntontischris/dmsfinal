@@ -2,9 +2,12 @@
 --
 --  • Πίνακες κλειστοί (RLS χωρίς policies, revoke). Πρόσβαση μόνο από τις συναρτήσεις αυτού του αρχείου.
 --  • Εγγραφή (τα καλεί ο server του Βοηθού, Lγ):
---      authenticated: assistant_conversation_start, assistant_message_append, assistant_unanswered_record. Κοινό (audience) από
+--      authenticated: assistant_conversation_start και assistant_message_append ΜΟΝΟ με p_role 'user'. Κοινό (audience) από
 --        τον Χρήστη: ομάδα → 'team', Χρήστης πελάτη → 'client' με τον τρέχοντα Πελάτη του. Μόνο ο ιδιοκτήτης γράφει στη
---        Συζήτησή του (αλλιώς 42501, ίδιο μήνυμα για ανύπαρκτη και ξένη).
+--        Συζήτησή του (αλλιώς 42501, ίδιο μήνυμα για ανύπαρκτη και ξένη), και μόνο όσο είναι ενεργό μέλος της ομάδας ή
+--        ενεργός Χρήστης του Πελάτη της Συζήτησης.
+--      service_role (ο server του Lγ, αφού ελέγξει τον Χρήστη): assistant_reply_append (απάντηση Βοηθού) και
+--        assistant_unanswered_record, με ρητό p_user και τον ίδιο έλεγχο ιδιοκτησίας.
 --      service_role (Επισκέπτης, Q): assistant_public_conversation_start, assistant_public_message_append,
 --        assistant_public_unanswered_record. user_id null, audience 'public'. Δεν έχουν ακόμα UI.
 --  • Διαχείριση (L2, L3): Δικαίωμα «Διαχειρίζεται Γνώση» (knowledge.manage, Εύρος «όλα»), έλεγχος ΠΡΩΤΟΣ.
@@ -12,8 +15,11 @@
 --    είναι ≥ 0,90 (σταθερά στο authz.assistant_similarity), αλλιώς με ανοιχτή που έχει ακριβώς το ίδιο κανονικοποιημένο κείμενο,
 --    αλλιώς νέα γραμμή. Κλεισμένη που ξαναρωτιέται → νέα ανοιχτή.
 --  • Κανόνας #9: το κείμενο του χρήστη δεν μένει πουθενά. Κάθε «ρωτήθηκε» είναι γραμμή στο assistant_unanswered_asks, δεμένη με τη
---    Συζήτηση (cascade). Το count/first/last ξαναμετριέται από αυτές· όταν φύγει η τελευταία, σβήνει και η Αναπάντητη. Γι' αυτό
---    οι Συζητήσεις ΔΕΝ μπαίνουν στο Ίχνος (audit_entity_allowed ανέγγιχτο).
+--    Συζήτηση (cascade), με το δικό της κείμενο και embedding. Η Αναπάντητη δείχνει το κείμενο του ΠΑΛΑΙΟΤΕΡΟΥ «ρωτήθηκε» που
+--    υπάρχει ακόμα: το trigger ξαναγράφει count/first/last και κείμενο/embedding από αυτά· όταν φύγει το τελευταίο, σβήνει και
+--    η Αναπάντητη. Γι' αυτό οι Συζητήσεις ΔΕΝ μπαίνουν στο Ίχνος (audit_entity_allowed ανέγγιχτο).
+--  • Ταυτόχρονες εγγραφές: advisory lock ανά (Κοινό, κανονικοποιημένο κείμενο), κλείδωμα της Αναπάντητης που ταίριαξε (αν
+--    έκλεισε στο μεταξύ → νέα γραμμή) και κλείδωμα της Αναπάντητης στο trigger πριν τη μέτρηση.
 --  • Καθαρισμός: assistant_purge(p_now) (service_role, cron ημερήσιο) σβήνει Συζητήσεις με τελευταίο μήνυμα πριν από 12 μήνες.
 --  • Πηγές μηνύματος: [{ kind: 'item'|'package'|'sector', id, title }]. Στην ανάγνωση: gone = true όταν στοιχείο Γνώσης δεν υπάρχει
 --    ή δεν είναι πια δημοσιευμένο, ή Πακέτο δεν υπάρχει ή αποσύρθηκε. Για 'sector' δεν υπάρχει ακόμα πίνακας: gone = false.
@@ -51,7 +57,7 @@ create index assistant_messages_conversation_idx on public.assistant_messages (c
 
 create table public.assistant_unanswered (
   id uuid primary key default gen_random_uuid(),
-  -- Το κείμενο της πρώτης ερώτησης της ομάδας (αντιπρόσωπος) και η κανονικοποιημένη μορφή του για το ακριβές ταίριασμα.
+  -- Αντιπρόσωπος: κείμενο, κανονικοποιημένη μορφή και embedding του παλαιότερου «ρωτήθηκε» που υπάρχει (τα γράφει το trigger).
   question text not null check (length(question) between 1 and 1000),
   question_norm text not null,
   embedding extensions.vector(1536),
@@ -72,12 +78,15 @@ create table public.assistant_unanswered (
 create index assistant_unanswered_status_idx on public.assistant_unanswered (status, audience);
 create index assistant_unanswered_norm_idx on public.assistant_unanswered (audience, question_norm) where status = 'open';
 
--- Κάθε φορά που ρωτήθηκε: από ποια Συζήτηση (και ποιο μήνυμα). Σβήνει μαζί τους.
+-- Κάθε φορά που ρωτήθηκε: από ποια Συζήτηση (και ποιο μήνυμα), με ποιο κείμενο. Σβήνει μαζί τους.
 create table public.assistant_unanswered_asks (
   id uuid primary key default gen_random_uuid(),
   unanswered_id uuid not null references public.assistant_unanswered (id) on delete cascade,
   conversation_id uuid not null references public.assistant_conversations (id) on delete cascade,
   message_id uuid references public.assistant_messages (id) on delete cascade,
+  question text not null check (length(question) between 1 and 1000),
+  question_norm text not null,
+  embedding extensions.vector(1536),
   asked_at timestamptz not null default now()
 );
 
@@ -105,8 +114,9 @@ as $$
 $$;
 
 -- Ο ιδιοκτήτης της Συζήτησης: γραμμή για όποιον γράφει. Ανύπαρκτη ή ξένη: 42501, ίδιο μήνυμα.
--- p_public = true: μόνο Συζήτηση Επισκέπτη (service_role)· αλλιώς μόνο του auth.uid().
-create function authz.assistant_conversation_for_write(p_id uuid, p_public boolean)
+-- p_user null: μόνο Συζήτηση Επισκέπτη (service_role)· αλλιώς μόνο του p_user, και μόνο όσο είναι ενεργό μέλος της ομάδας
+-- (team) ή ενεργός Χρήστης του Πελάτη της Συζήτησης (client).
+create function authz.assistant_conversation_for_write(p_id uuid, p_user uuid)
 returns public.assistant_conversations
 language plpgsql security definer set search_path = ''
 as $$
@@ -115,8 +125,13 @@ declare
 begin
   select c.* into v_row from public.assistant_conversations c where c.id = p_id for update;
   if not found
-     or (p_public and v_row.audience <> 'public')
-     or (not p_public and (auth.uid() is null or v_row.user_id is distinct from auth.uid())) then
+     or (p_user is null and v_row.audience <> 'public')
+     or (p_user is not null and (
+          v_row.user_id is distinct from p_user
+          or (v_row.audience = 'team' and not authz.user_is_team(p_user))
+          or (v_row.audience = 'client' and not exists (
+                select 1 from public.client_users cu
+                 where cu.user_id = p_user and cu.client_id = v_row.client_id and cu.removed_at is null)))) then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
   end if;
   return v_row;
@@ -229,39 +244,52 @@ begin
     select 1 from public.assistant_messages m where m.id = p_message and m.conversation_id = p_conv.id) then
     raise exception 'Το μήνυμα δεν ανήκει στη Συζήτηση' using errcode = 'P0001';
   end if;
+  -- Δύο ταυτόχρονες πρώτες ίδιες ερωτήσεις: η δεύτερη περιμένει και βρίσκει τη γραμμή της πρώτης.
+  perform pg_advisory_xact_lock(hashtext(p_conv.audience || ':' || v_norm));
   v_id := authz.assistant_match(p_conv.audience, v_norm, p_embedding);
+  if v_id is not null then
+    -- Αν έκλεισε ή σβήστηκε στο μεταξύ: νέα γραμμή.
+    select u.id into v_id from public.assistant_unanswered u where u.id = v_id and u.status = 'open' for update;
+  end if;
   if v_id is null then
     insert into public.assistant_unanswered (question, question_norm, embedding, audience, first_asked_at, last_asked_at)
     values (v_question, v_norm, p_embedding, p_conv.audience, clock_timestamp(), clock_timestamp())
     returning id into v_id;
     v_is_new := true;
   end if;
-  insert into public.assistant_unanswered_asks (unanswered_id, conversation_id, message_id, asked_at)
-  values (v_id, p_conv.id, p_message, clock_timestamp());
+  insert into public.assistant_unanswered_asks
+    (unanswered_id, conversation_id, message_id, question, question_norm, embedding, asked_at)
+  values (v_id, p_conv.id, p_message, v_question, v_norm, p_embedding, clock_timestamp());
   return jsonb_build_object('id', v_id, 'isNew', v_is_new,
     'count', (select u.count from public.assistant_unanswered u where u.id = v_id));
 end;
 $$;
 
--- Το count, first και last μιας Αναπάντητης ξαναμετριούνται από τα «ρωτήθηκε». Χωρίς κανένα, η Αναπάντητη σβήνει (κανόνας #9).
+-- Το count, first και last μιας Αναπάντητης ξαναμετριούνται από τα «ρωτήθηκε», και το κείμενο/embedding γίνονται του
+-- παλαιότερου που απομένει. Χωρίς κανένα, η Αναπάντητη σβήνει (κανόνας #9).
 create function authz.assistant_unanswered_recount() returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 declare
   v_id uuid := case when tg_op = 'DELETE' then old.unanswered_id else new.unanswered_id end;
   v_count integer;
-  v_first timestamptz;
   v_last timestamptz;
+  v_oldest public.assistant_unanswered_asks;
 begin
-  select count(*)::integer, min(a.asked_at), max(a.asked_at) into v_count, v_first, v_last
+  -- Σειριοποιεί τις ταυτόχρονες αλλαγές της ίδιας Αναπάντητης (όταν σβήνεται η ίδια, δεν βρίσκει τίποτα).
+  perform 1 from public.assistant_unanswered u where u.id = v_id for update;
+  select count(*)::integer, max(a.asked_at) into v_count, v_last
     from public.assistant_unanswered_asks a where a.unanswered_id = v_id;
   if v_count = 0 then
     delete from public.assistant_unanswered u where u.id = v_id;
-  else
-    update public.assistant_unanswered u
-       set count = v_count, first_asked_at = v_first, last_asked_at = v_last
-     where u.id = v_id;
+    return null;
   end if;
+  select a.* into v_oldest from public.assistant_unanswered_asks a
+   where a.unanswered_id = v_id order by a.asked_at, a.id limit 1;
+  update public.assistant_unanswered u
+     set count = v_count, first_asked_at = v_oldest.asked_at, last_asked_at = v_last,
+         question = v_oldest.question, question_norm = v_oldest.question_norm, embedding = v_oldest.embedding
+   where u.id = v_id;
   return null;
 end;
 $$;
@@ -337,26 +365,49 @@ begin
 end;
 $$;
 
--- { id } του μηνύματος. Μόνο ο ιδιοκτήτης της Συζήτησης.
+-- { id } του μηνύματος. Μόνο ο ιδιοκτήτης της Συζήτησης και μόνο ερώτηση (p_role 'user'): την απάντηση τη γράφει ο server.
 create function public.assistant_message_append(
   p_conversation uuid, p_role text, p_content text, p_sources jsonb default '[]'::jsonb, p_no_source boolean default false
 ) returns jsonb
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  return authz.assistant_append(authz.assistant_conversation_for_write(p_conversation, false),
-                                p_role, p_content, p_sources, p_no_source);
+  if auth.uid() is null or p_role is distinct from 'user' then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+  return authz.assistant_append(authz.assistant_conversation_for_write(p_conversation, auth.uid()),
+                                'user', p_content, p_sources, false);
+end;
+$$;
+
+-- ───────────── RPC εγγραφής: server του Βοηθού για Χρήστη (service_role, ρητό p_user) ─────────────
+
+-- { id } της απάντησης του Βοηθού στη Συζήτηση του p_user.
+create function public.assistant_reply_append(
+  p_user uuid, p_conversation uuid, p_content text, p_sources jsonb default '[]'::jsonb, p_no_source boolean default false
+) returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if p_user is null then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+  return authz.assistant_append(authz.assistant_conversation_for_write(p_conversation, p_user),
+                                'assistant', p_content, p_sources, p_no_source);
 end;
 $$;
 
 -- { id, isNew, count } της Αναπάντητης. p_message (προαιρετικό) = το μήνυμα της ερώτησης· p_embedding 1536 διαστάσεων ή null.
 create function public.assistant_unanswered_record(
-  p_conversation uuid, p_message uuid, p_question text, p_embedding extensions.vector default null
+  p_user uuid, p_conversation uuid, p_message uuid, p_question text, p_embedding extensions.vector default null
 ) returns jsonb
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  return authz.assistant_record(authz.assistant_conversation_for_write(p_conversation, false),
+  if p_user is null then
+    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
+  end if;
+  return authz.assistant_record(authz.assistant_conversation_for_write(p_conversation, p_user),
                                 p_message, p_question, p_embedding);
 end;
 $$;
@@ -373,7 +424,7 @@ create function public.assistant_public_message_append(
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  return authz.assistant_append(authz.assistant_conversation_for_write(p_conversation, true),
+  return authz.assistant_append(authz.assistant_conversation_for_write(p_conversation, null),
                                 p_role, p_content, p_sources, p_no_source);
 end;
 $$;
@@ -384,7 +435,7 @@ create function public.assistant_public_unanswered_record(
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  return authz.assistant_record(authz.assistant_conversation_for_write(p_conversation, true),
+  return authz.assistant_record(authz.assistant_conversation_for_write(p_conversation, null),
                                 p_message, p_question, p_embedding);
 end;
 $$;
@@ -655,7 +706,7 @@ insert into public.today_cards (code, grp, kind, audience, sort, label_el, label
 -- ───────────── Δικαιώματα ─────────────
 
 revoke all on function
-  authz.assistant_similarity(), authz.assistant_norm(text), authz.assistant_conversation_for_write(uuid, boolean),
+  authz.assistant_similarity(), authz.assistant_norm(text), authz.assistant_conversation_for_write(uuid, uuid),
   authz.assistant_new_conversation(text, uuid, uuid, text), authz.assistant_sources_ok(jsonb),
   authz.assistant_append(public.assistant_conversations, text, text, jsonb, boolean),
   authz.assistant_match(text, text, extensions.vector),
@@ -668,7 +719,6 @@ revoke all on function
 
 revoke all on function
   public.assistant_conversation_start(text), public.assistant_message_append(uuid, text, text, jsonb, boolean),
-  public.assistant_unanswered_record(uuid, uuid, text, extensions.vector),
   public.assistant_conversations_list(text, integer), public.assistant_conversation_get(uuid),
   public.assistant_conversation_delete(uuid), public.assistant_unanswered_list(text),
   public.assistant_unanswered_open_count(), public.assistant_unanswered_cover(uuid, uuid),
@@ -677,7 +727,6 @@ revoke all on function
 
 grant execute on function
   public.assistant_conversation_start(text), public.assistant_message_append(uuid, text, text, jsonb, boolean),
-  public.assistant_unanswered_record(uuid, uuid, text, extensions.vector),
   public.assistant_conversations_list(text, integer), public.assistant_conversation_get(uuid),
   public.assistant_conversation_delete(uuid), public.assistant_unanswered_list(text),
   public.assistant_unanswered_open_count(), public.assistant_unanswered_cover(uuid, uuid),
@@ -686,6 +735,8 @@ grant execute on function
 
 revoke all on function
   public.assistant_public_conversation_start(text),
+  public.assistant_reply_append(uuid, uuid, text, jsonb, boolean),
+  public.assistant_unanswered_record(uuid, uuid, uuid, text, extensions.vector),
   public.assistant_public_message_append(uuid, text, text, jsonb, boolean),
   public.assistant_public_unanswered_record(uuid, uuid, text, extensions.vector),
   public.assistant_purge(timestamptz)
@@ -693,6 +744,8 @@ revoke all on function
 
 grant execute on function
   public.assistant_public_conversation_start(text),
+  public.assistant_reply_append(uuid, uuid, text, jsonb, boolean),
+  public.assistant_unanswered_record(uuid, uuid, uuid, text, extensions.vector),
   public.assistant_public_message_append(uuid, text, text, jsonb, boolean),
   public.assistant_public_unanswered_record(uuid, uuid, text, extensions.vector),
   public.assistant_purge(timestamptz)

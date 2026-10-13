@@ -159,6 +159,11 @@ export function UnansweredScreen({
         </Notice>
       ) : (
         <Panel label="Ερωτήσεις">
+          {list.items.length < list.counts[tab] ? (
+            <p className="m-0 pb-2 text-sm text-muted-foreground">
+              {`Δείχνονται ${list.items.length} από ${list.counts[tab]}, ${isOpen ? "οι πιο συχνές" : "οι πιο πρόσφατες"} πρώτες.`}
+            </p>
+          ) : null}
           <ul className="m-0 list-none border-t p-0">
             {list.items.map((item) => (
               <ItemView key={item.id} item={item} options={options} />
