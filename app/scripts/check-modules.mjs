@@ -18,6 +18,8 @@ const ADMIN_FILES = new Set([
   "src/app/api/cron/outbox/route.ts",
   "src/app/api/cron/google/route.ts",
   "src/app/api/cron/assistant-purge/route.ts",
+  "src/app/api/cron/knowledge-index/route.ts",
+  "src/lib/ai/usage.ts",
   "src/app/api/hooks/google-calendar/route.ts",
   "src/modules/google/actions-setup.ts",
   "src/lib/email/deliver-outbox.ts",

@@ -132,3 +132,21 @@ test("ο Ιδιοκτήτης ανεβάζει ένα μικρό PDF ως Αρχ
     panel.getByText("Ο Βοηθός θα διαβάσει το κείμενο του Αρχείου σε λίγο."),
   ).toBeVisible();
 });
+
+// Lβ (#191): η μνήμη του Βοηθού ξαναφτιάχνεται από το L1, και η αναζήτηση A8 δουλεύει χωρίς AI (το CI δεν έχει Gateway:
+// πέφτει σε αναζήτηση με λέξεις χωρίς σφάλμα).
+test("ο Ιδιοκτήτης ξαναφτιάχνει τη μνήμη του Βοηθού και η αναζήτηση βρίσκει χωρίς AI", async ({
+  page,
+}) => {
+  const P = project();
+  await signIn(page, "owner@example.com");
+  await page.goto(MANAGE_PATH);
+  const memory = card(page, "Μνήμη του Βοηθού");
+  await button(memory, "Ξαναφτιάξε τη μνήμη του Βοηθού").click();
+  await expect(memory.getByRole("status")).toContainText("Ο Βοηθός ξαναμαθαίνει");
+
+  await switchUser(page, `know.${P}@example.com`);
+  await page.goto(`${KNOWLEDGE_PATH}?q=${encodeURIComponent("φωτισμός")}`);
+  await expect(page.getByRole("link", { name: ARTICLE(P) })).toBeVisible();
+  await expect(page.getByText("Η Γνώση δεν φόρτωσε")).toHaveCount(0);
+});

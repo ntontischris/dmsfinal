@@ -18,8 +18,8 @@ export {
   getLibrary,
   getManageItem,
   getManageList,
-  searchKnowledge,
 } from "./queries";
+export { searchKnowledge } from "./search";
 export type { ItemView, ManageItem, ManageList } from "./view-schema";
 export { ItemScreen } from "./components/item-view";
 export { ItemEditor } from "./components/item-editor";
