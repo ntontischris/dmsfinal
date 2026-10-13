@@ -11,6 +11,7 @@ import {
   ManageScreen,
   NO_MANAGE_TEXT,
   getManageList,
+  getOpenUnansweredCount,
   parseManageTab,
   parseStatusFilter,
 } from "@/modules/knowledge";
@@ -29,10 +30,13 @@ export default async function KnowledgeManagePage({
   const status = parseStatusFilter(params.status);
   const section = z.uuid().safeParse(params.section);
   const sectionId = section.success ? section.data : null;
-  const result =
+  const [result, openUnanswered] =
     viewer.status === "signed-in"
-      ? await getManageList(status, sectionId)
-      : null;
+      ? await Promise.all([
+          getManageList(status, sectionId),
+          getOpenUnansweredCount(),
+        ])
+      : [null, null];
   return (
     <>
       <ScreenHeader eyebrow={MANAGE_EYEBROW} title={MANAGE_TITLE} />
@@ -46,6 +50,7 @@ export default async function KnowledgeManagePage({
           tab={parseManageTab(params.tab)}
           status={status}
           sectionId={sectionId}
+          openUnanswered={openUnanswered}
         />
       ) : (
         <AccessNotice viewer={viewer}>

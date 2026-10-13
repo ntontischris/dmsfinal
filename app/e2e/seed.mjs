@@ -487,6 +487,44 @@ for (const P of ["desktop", "mobile"]) {
 }
 console.log("seed: Γνώση");
 
+// ───────────── Βοηθός: Συζήτηση Επισκέπτη με δύο ίδιες Αναπάντητες ανά project για το e2e/assistant-log.spec.ts ─────────────
+// Οι Συζητήσεις γράφονται μόνο από τα RPC του server του Βοηθού (service role), όπως θα τις γράφει το Lγ. Ένα δημοσιευμένο
+// στοιχείο Γνώσης ανά project, για το «Καλύφθηκε από…» (οι πίνακες της Γνώσης είναι ανοιχτοί μόνο στο service role).
+async function rpcData(name, args) {
+  const { data, error } = await admin.rpc(name, args);
+  if (error) throw error;
+  return data;
+}
+
+const assistantSection = await insertRow("knowledge_sections", { name: "Βοηθός e2e", description: "", sort: 900 });
+for (const P of ["desktop", "mobile"]) {
+  const itemId = await insertRow("knowledge_items", {
+    section_id: assistantSection,
+    kind: "article",
+    title: `Γάμοι και εκδηλώσεις ${P}`,
+    summary: "Τι γυρίζουμε σε εκδηλώσεις.",
+    body_md: "Γυρίζουμε εταιρικές εκδηλώσεις.",
+    status: "published",
+    published_at: new Date().toISOString(),
+  });
+  await insertPlain("knowledge_item_audience", { item_id: itemId, is_public: true });
+  const question = `Κάνετε και γάμους ${P};`;
+  const { id: conversation } = await rpcData("assistant_public_conversation_start", { p_language: "el" });
+  for (let i = 0; i < 2; i += 1) {
+    const { id: message } = await rpcData("assistant_public_message_append", {
+      p_conversation: conversation, p_role: "user", p_content: question,
+    });
+    await rpcData("assistant_public_message_append", {
+      p_conversation: conversation, p_role: "assistant", p_content: "Δεν ξέρω ακόμα· η ερώτηση πήγε στην ομάδα.",
+      p_no_source: true,
+    });
+    await rpcData("assistant_public_unanswered_record", {
+      p_conversation: conversation, p_message: message, p_question: question,
+    });
+  }
+}
+console.log("seed: Βοηθός");
+
 
 // ───────────── Εξοπλισμός: ένα αντικείμενο ανά project για το e2e/equipment.spec.ts ─────────────
 // Τα αντικείμενα μπαίνουν απευθείας με service role: το Πρότυπο της Παραγωγής δουλεύει πάνω σε αυτά.
