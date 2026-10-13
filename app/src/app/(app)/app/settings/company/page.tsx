@@ -8,6 +8,7 @@ import {
   RecentChanges,
   SettingsTabs,
   TaxCard,
+  getAiSpend,
   getCompany,
   listBankAccounts,
   recentChanges,
@@ -56,10 +57,11 @@ export default async function CompanySettingsPage() {
       </>
     );
 
-  const [company, accounts, changes] = await Promise.all([
+  const [company, accounts, changes, spend] = await Promise.all([
     getCompany(),
     listBankAccounts(),
     recentChanges(["company_settings", "bank_accounts"]),
+    getAiSpend(),
   ]);
   const owner = isOwner(viewer);
   return (
@@ -76,7 +78,11 @@ export default async function CompanySettingsPage() {
             <DetailsCard company={company.data} />
             <TaxCard company={company.data} isOwner={owner} />
             <BankAccountsCard accounts={accounts.data} isOwner={owner} />
-            <AssistantCard company={company.data} isOwner={owner} />
+            <AssistantCard
+              company={company.data}
+              isOwner={owner}
+              spend={spend.ok ? spend.data : null}
+            />
             {changes.ok && (
               <RecentChanges
                 changes={changes.data}

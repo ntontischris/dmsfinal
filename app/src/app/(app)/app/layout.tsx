@@ -14,6 +14,7 @@ import {
   type MembershipRow,
   type Viewer,
 } from "@/modules/access";
+import { AssistantLauncher } from "@/modules/assistant";
 import { NotificationBell, getBell } from "@/modules/notifications";
 
 // «owner», «team» και «client» δεν είναι Δικαιώματα· όλα τα άλλα ελέγχονται ως Δικαιώματα (ομάδας ή πελάτη).
@@ -51,6 +52,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // Α9: καμπανάκι για ομάδα και πελάτη· null όταν ο Χρήστης δεν έχει Ειδοποιήσεις.
   const bell = viewer.status === "signed-in" ? await getBell() : null;
   // Χωρίς βάση φαίνονται όλες οι οθόνες, για να περιηγείται κανείς το σύστημα· η καθεμία λέει ότι λείπει η βάση.
+  // A9: ο Βοηθός για Χρήστη ομάδας και για Χρήστη πελάτη με Πελάτη (η βάση ξαναελέγχει σε κάθε ερώτηση).
+  const assistantAudience =
+    viewer.status !== "signed-in" ? null : viewer.team ? "team" : clientRows.length > 0 ? "client" : null;
   const sections = visibleNav((requirement) =>
     viewer.status === "unconfigured" ? true : allowsRequirement(viewer, requirement),
   );
@@ -84,8 +88,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <aside className="order-2 border-t bg-card p-3 md:order-none md:min-h-[calc(100dvh-3rem)] md:border-t-0 md:border-r">
           <SidebarNav sections={sections} />
         </aside>
-        <main className="w-full min-w-0 max-w-6xl p-4 md:p-6">{children}</main>
+        <main className="w-full min-w-0 max-w-6xl p-4 pb-16 md:p-6 md:pb-16">{children}</main>
       </div>
+      {assistantAudience && <AssistantLauncher audience={assistantAudience} />}
     </div>
   );
 }

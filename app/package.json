@@ -17,6 +17,9 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "3.0.126",
+    "@ai-sdk/google": "3.0.130",
+    "@ai-sdk/openai": "3.0.122",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "ai": "6.0.298",

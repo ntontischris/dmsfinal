@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EmbeddingModel } from "ai";
 import { z } from "zod";
 
-import { aiAvailable } from "@/lib/ai/available";
+import { aiConfigured } from "@/lib/ai/available";
 import { AI_MODELS } from "@/lib/ai/config";
 import { embedTexts } from "@/lib/ai/embed";
 
@@ -12,8 +12,8 @@ import { buildChunks } from "./chunk";
 import { extractFileText, type ExtractStatus } from "./extract";
 
 // Ο εργάτης της μνήμης του Βοηθού: παίρνει στοιχεία από την ουρά (knowledge_index_claim), διαβάζει το κείμενο (Άρθρο ή Αρχείο),
-// το κόβει σε κομμάτια με κεφαλίδα, φτιάχνει embeddings μέσω του Gateway και τα γράφει (knowledge_index_store). Αποτυχία
-// (Gateway, Storage, χρονικό όριο) → knowledge_index_fail· το backoff το έχει ορίσει ήδη το claim. Χωρίς AI: δεν παίρνει
+// το κόβει σε κομμάτια με κεφαλίδα, φτιάχνει embeddings (AI_MODELS.embedding) και τα γράφει (knowledge_index_store). Αποτυχία
+// (πάροχος AI, Storage, χρονικό όριο) → knowledge_index_fail· το backoff το έχει ορίσει ήδη το claim. Χωρίς AI: δεν παίρνει
 // τίποτα, τα στοιχεία μένουν στην ουρά. Παίρνει ένα στοιχείο τη φορά, ώστε ό,τι δεν προλαβαίνει να μη μετρά ως προσπάθεια.
 
 const KNOWLEDGE_BUCKET = "knowledge";
@@ -132,7 +132,7 @@ async function claimOne(
   return claimedSchema.parse(data).items[0];
 }
 
-// Ένα στοιχείο με χρονικό όριο: στο όριο κόβεται και η κλήση στο Gateway.
+// Ένα στοιχείο με χρονικό όριο: στο όριο κόβεται και η κλήση στον πάροχο.
 async function indexWithTimeout(
   admin: SupabaseClient,
   item: Claimed,
@@ -162,7 +162,8 @@ export async function runKnowledgeIndex(
   options: IndexOptions = {},
 ): Promise<IndexSummary> {
   const summary: IndexSummary = { indexed: 0, stale: 0, failed: 0 };
-  if (!options.model && !aiAvailable())
+  // Τα embeddings του worker εξαιρούνται από το πλαφόν (μετρούν, δεν σταματούν): χρειάζονται μόνο το κλειδί.
+  if (!options.model && !aiConfigured("embedding"))
     return { ...summary, skipped: "ai-unavailable" };
   const deadline = Date.now() + (options.budgetMs ?? ROUND_BUDGET_MS);
   const limit = options.itemId ? 1 : (options.limit ?? 10);

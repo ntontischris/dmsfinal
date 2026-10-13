@@ -157,6 +157,7 @@ interface ManageScreenProps {
   status: ItemStatus | null;
   sectionId: string | null;
   openUnanswered: number | null; // ανοιχτές Αναπάντητες (L3)· null = δεν φόρτωσε
+  canManageSettings: boolean; // συντόμευση στις Ρυθμίσεις › Εταιρεία › Βοηθός
 }
 
 export function ManageScreen({
@@ -165,6 +166,7 @@ export function ManageScreen({
   status,
   sectionId,
   openUnanswered,
+  canManageSettings,
 }: ManageScreenProps) {
   const isEmpty = list.counts.all === 0;
   return (
@@ -176,7 +178,11 @@ export function ManageScreen({
           {openUnanswered === null ? "" : ` (${openUnanswered} ανοιχτές)`}
         </Link>
         <Link href={CONVERSATIONS_PATH}>Συζητήσεις Βοηθού</Link>
-        <span className="text-muted-foreground">{ASSISTANT_LIMITS_NOTE}</span>
+        {canManageSettings ? (
+          <Link href="/app/settings/company#assistant">Ρυθμίσεις Βοηθού (πλαφόν και όρια)</Link>
+        ) : (
+          <span className="text-muted-foreground">{ASSISTANT_LIMITS_NOTE}</span>
+        )}
       </div>
       <ManageTabs tab={tab} />
       {isEmpty && tab === "items" && <Notice kind="empty" title={EMPTY_KNOWLEDGE_TITLE} />}
