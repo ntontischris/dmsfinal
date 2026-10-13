@@ -8,13 +8,11 @@ import {
   parseLibrary,
   parseManageItem,
   parseManageList,
-  parseSearch,
   type ItemStatus,
   type ItemView,
   type Library,
   type ManageItem,
   type ManageList,
-  type SearchResult,
 } from "./view-schema";
 
 // Ανάγνωση της Γνώσης. Όλα περνούν από RPC· η βάση αποφασίζει ποιος βλέπει τι (Κοινό, knowledge.manage).
@@ -23,18 +21,6 @@ export async function getLibrary(): Promise<ReadResult<Library>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read("getLibrary", supabase.rpc("knowledge_library"), parseLibrary);
-}
-
-export async function searchKnowledge(
-  q: string,
-): Promise<ReadResult<SearchResult>> {
-  const supabase = await createSupabase();
-  if (!supabase) return { ok: false };
-  return read(
-    "searchKnowledge",
-    supabase.rpc("knowledge_search", { p_q: q }),
-    parseSearch,
-  );
 }
 
 // Ένα στοιχείο του A8. null = δεν υπάρχει ή δεν ανήκει στο Κοινό (η βάση δεν ξεχωρίζει τα δύο).

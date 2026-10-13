@@ -34,7 +34,7 @@ function ErrorNotice() {
 // Βιβλιοθήκη ή αποτελέσματα αναζήτησης, ανάλογα με το ?q=.
 async function Body({ q, isClient }: { q: string; isClient: boolean }) {
   if (q) {
-    const found = await searchKnowledge(q);
+    const found = await searchKnowledge(q, isClient ? "client" : "team");
     return found.ok ? (
       <SearchScreen q={q} result={found.data} isClient={isClient} />
     ) : (

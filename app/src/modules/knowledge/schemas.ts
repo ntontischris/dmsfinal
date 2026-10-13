@@ -76,3 +76,4 @@ export const slotSchema = z.object({ path: z.string() });
 export const removedSchema = z.object({ removedPaths: z.array(z.string()) });
 export const previousSchema = z.object({ previousPath: z.string().nullable() });
 export const createdSchema = z.object({ id: z.string() });
+export const queuedSchema = z.object({ queued: z.number().int() });

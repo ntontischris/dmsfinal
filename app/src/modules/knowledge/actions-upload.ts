@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
+import { kickKnowledgeIndex } from "@/lib/knowledge-index/kick";
 import { supabaseConfig } from "@/lib/supabase/config";
 
 import { callRpc, UNCONFIGURED_TEXT } from "./action-support";
@@ -84,6 +86,7 @@ export async function attachFile(input: unknown): Promise<AttachResult> {
   const previous = previousSchema.safeParse(outcome.data);
   if (previous.success && previous.data.previousPath)
     await removeFiles([previous.data.previousPath]);
+  after(() => kickKnowledgeIndex(parsed.data.itemId));
   revalidatePath("/app", "layout");
   return { ok: true };
 }

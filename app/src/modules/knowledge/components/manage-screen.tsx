@@ -25,6 +25,7 @@ import {
   TEXT_STATUS_LABEL,
 } from "../labels";
 import type { ItemStatus, ManageItemRow, ManageList } from "../view-schema";
+import { MemoryPanel } from "./memory-panel";
 import { NewItemForm } from "./new-item-form";
 import { SectionsTab } from "./sections-tab";
 
@@ -145,6 +146,7 @@ function ItemsTab({ list, status, sectionId }: ItemsTabProps) {
           <Rows isNumbered={false} items={list.items.map(rowOf)} />
         )}
       </Panel>
+      <MemoryPanel />
     </div>
   );
 }

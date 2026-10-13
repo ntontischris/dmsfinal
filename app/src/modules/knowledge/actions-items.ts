@@ -1,8 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 
 import type { FormState } from "@/lib/form-state";
+import { kickKnowledgeIndex } from "@/lib/knowledge-index/kick";
 
 import { callRpc, finishWith, firstIssue, pick } from "./action-support";
 import { audienceFromForm, editHref, MANAGE_PATH } from "./helpers";
@@ -46,6 +48,7 @@ export async function saveItem(
   );
   if (!parsed.success) return firstIssue(parsed.error);
   const outcome = await callRpc("knowledge_item_save", { p: parsed.data });
+  if (outcome.ok) after(() => kickKnowledgeIndex(parsed.data.id));
   return finishWith(outcome, "Αποθηκεύτηκε.");
 }
 
@@ -63,6 +66,7 @@ export async function saveAudience(
     p_roles: parsed.data.roles,
     p_public: parsed.data.isPublic,
   });
+  if (outcome.ok) after(() => kickKnowledgeIndex(parsed.data.id));
   return finishWith(outcome, "Το Κοινό αποθηκεύτηκε.");
 }
 
@@ -72,10 +76,9 @@ export async function publishItem(
 ): Promise<FormState> {
   const parsed = idSchema.safeParse(form.get("id"));
   if (!parsed.success) return firstIssue(parsed.error);
-  return finishWith(
-    await callRpc("knowledge_item_publish", { p_id: parsed.data }),
-    "Δημοσιεύτηκε.",
-  );
+  const outcome = await callRpc("knowledge_item_publish", { p_id: parsed.data });
+  if (outcome.ok) after(() => kickKnowledgeIndex(parsed.data));
+  return finishWith(outcome, "Δημοσιεύτηκε.");
 }
 
 export async function unpublishItem(
