@@ -25,3 +25,32 @@ export { ItemScreen } from "./components/item-view";
 export { ItemEditor } from "./components/item-editor";
 export { LibraryScreen, SearchScreen } from "./components/library-screen";
 export { ManageScreen } from "./components/manage-screen";
+
+// Συζητήσεις Βοηθού (L2) και Αναπάντητες ερωτήσεις (L3), #192.
+export {
+  parseAudienceTab,
+  parseDone,
+  parsePage,
+  parseUnansweredTab,
+} from "./assistant-helpers";
+export {
+  CONVERSATION_GONE_TEXT,
+  CONVERSATIONS_EYEBROW,
+  CONVERSATIONS_LOAD_ERROR,
+  CONVERSATIONS_TITLE,
+  NO_CONVERSATIONS_ACCESS_TEXT,
+  NO_UNANSWERED_ACCESS_TEXT,
+  UNANSWERED_EYEBROW,
+  UNANSWERED_LOAD_ERROR,
+  UNANSWERED_TITLE,
+} from "./assistant-labels";
+export {
+  getConversation,
+  getConversations,
+  getCoverOptions,
+  getOpenUnansweredCount,
+  getUnanswered,
+} from "./assistant-queries";
+export { ConversationsScreen } from "./components/conversations-screen";
+export { ConversationView } from "./components/conversation-view";
+export { UnansweredScreen } from "./components/unanswered-screen";

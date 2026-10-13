@@ -8,6 +8,7 @@ import { Panel } from "@/components/ui/panel";
 import { Rows, type RowItem } from "@/components/ui/rows";
 import { Segmented, Tabs } from "@/components/ui/segmented";
 
+import { CONVERSATIONS_PATH, UNANSWERED_PATH } from "../assistant-helpers";
 import {
   audienceText,
   editHref,
@@ -153,14 +154,26 @@ interface ManageScreenProps {
   tab: ManageTab;
   status: ItemStatus | null;
   sectionId: string | null;
+  openUnanswered: number | null; // ανοιχτές Αναπάντητες (L3)· null = δεν φόρτωσε
 }
 
-export function ManageScreen({ list, tab, status, sectionId }: ManageScreenProps) {
+export function ManageScreen({
+  list,
+  tab,
+  status,
+  sectionId,
+  openUnanswered,
+}: ManageScreenProps) {
   const isEmpty = list.counts.all === 0;
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
         <Link href={KNOWLEDGE_PATH}>Η Γνώση όπως τη βλέπω (A8)</Link>
+        <Link href={UNANSWERED_PATH}>
+          Αναπάντητες ερωτήσεις
+          {openUnanswered === null ? "" : ` (${openUnanswered} ανοιχτές)`}
+        </Link>
+        <Link href={CONVERSATIONS_PATH}>Συζητήσεις Βοηθού</Link>
         <span className="text-muted-foreground">{ASSISTANT_LIMITS_NOTE}</span>
       </div>
       <ManageTabs tab={tab} />
