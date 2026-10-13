@@ -13,10 +13,29 @@ const isHttps = (url: string): boolean => {
   }
 };
 
+const BASE = "https://internal.invalid";
+
+const decodeSafely = (value: string): string | null => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+};
+
+// Εσωτερική διαδρομή που μένει κάτω από το /app και μετά την κανονικοποίηση (και με κωδικοποιημένο «..», π.χ. %2e%2e).
+const isInternal = (value: string): boolean => {
+  if (!INTERNAL_PATH.test(value)) return false;
+  const decoded = decodeSafely(value);
+  if (decoded === null || decoded.includes("..") || decoded.includes("\\")) return false;
+  const parsed = new URL(value, BASE);
+  return parsed.origin === BASE && (parsed.pathname === "/app" || parsed.pathname.startsWith("/app/"));
+};
+
 // Ένας σύνδεσμος του Άρθρου όπως θα γραφτεί στη σελίδα, ή κενό αν δεν επιτρέπεται.
 export const safeLinkUrl = (url: string): string => {
   const value = url.trim();
-  if (INTERNAL_PATH.test(value) && !value.includes("..")) return value;
+  if (isInternal(value)) return value;
   return isHttps(value) ? value : "";
 };
 

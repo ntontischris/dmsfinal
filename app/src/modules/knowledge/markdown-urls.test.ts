@@ -27,6 +27,18 @@ describe("safeLinkUrl", () => {
     expect(safeLinkUrl("/login")).toBe("");
     expect(safeLinkUrl("/app/../login")).toBe("");
   });
+
+  it("should drop encoded parent segments that would leave /app", () => {
+    expect(safeLinkUrl("/app/%2e%2e/login")).toBe("");
+    expect(safeLinkUrl("/app/%2E%2E/%2E%2E/login")).toBe("");
+    expect(safeLinkUrl("/app/.%2e/login")).toBe("");
+    expect(safeLinkUrl("/app/..%2flogin")).toBe("");
+    expect(safeLinkUrl("/app/%5c..%5clogin")).toBe("");
+    expect(safeLinkUrl("/app/%E0%A4%A")).toBe("");
+    expect(safeLinkUrl("/app/knowledge?q=%CE%B3")).toBe(
+      "/app/knowledge?q=%CE%B3",
+    );
+  });
 });
 
 describe("safeImageUrl", () => {

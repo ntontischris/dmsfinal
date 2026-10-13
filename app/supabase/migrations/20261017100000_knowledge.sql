@@ -11,13 +11,17 @@
 --
 --  HOOK ΓΙΑ ΤΟ Lβ (μνήμη Βοηθού): η στήλη knowledge_items.content_version αυξάνεται σε ΚΑΘΕ αλλαγή περιεχομένου
 --  (Ενότητα, τίτλος, Περίληψη, κείμενο, Αρχείο), κατάστασης (δημοσίευση/απόσυρση) ή Κοινού. Το text_status ΔΕΝ την αλλάζει
---  (το γράφει το Lβ, άρα δεν προκαλεί βρόχο). Το Lβ βάζει δικό του trigger, π.χ.
---      create trigger … after insert or update of content_version or delete on public.knowledge_items …
---  και δεν ξαναγράφει κανένα RPC αυτού του αρχείου. Η διαγραφή στοιχείου (μόνο πρόχειρου) είναι delete στη γραμμή.
+--  (το γράφει το Lβ, άρα δεν προκαλεί βρόχο). Το Lβ βάζει δικά του triggers:
+--      create trigger … after update on public.knowledge_items
+--        for each row when (old.content_version is distinct from new.content_version) execute function …;
+--      create trigger … after insert on public.knowledge_items … ;   create trigger … after delete on public.knowledge_items … ;
+--  ΟΧΙ «update of content_version»: το UPDATE OF κοιτά μόνο τις στήλες του SET, ενώ εδώ την αλλάζει BEFORE trigger.
+--  Το Lβ δεν ξαναγράφει κανένα RPC αυτού του αρχείου. Η διαγραφή στοιχείου (μόνο πρόχειρου) είναι delete στη γραμμή.
 --
 --  ΑΝΑΖΗΤΗΣΗ: knowledge_items.search_tsv (ελληνικό full-text, βάρη A τίτλος, B Περίληψη, C κείμενο) και το
 --  authz.knowledge_fts(p_uid, p_q, p_limit) που δίνει (item_id, rank) ήδη φιλτραρισμένα με το Κοινό. Το Lβ το συνδυάζει
 --  με pgvector μέσω RRF· το knowledge_search το καλεί μόνο του (αναζήτηση με λέξεις, και στο 100% του πλαφόν).
+--  Το search_tsv ΔΕΝ καλύπτει το κείμενο των Αρχείων (μόνο τίτλο και Περίληψη)· το Lβ θα έχει δικό του FTS στα κομμάτια του.
 --
 --  ΑΡΧΕΙΑ: ιδιωτικό bucket «knowledge», καμία policy στο storage.objects. Ανέβασμα κατευθείαν από τον browser με signed
 --  upload URL (το Vercel κόβει στα 4,5 MB, το όριο εδώ είναι 25 MB). Διαδρομές: <item>/file-<uuid>.<ext> (το Αρχείο ενός
@@ -782,11 +786,14 @@ begin
     raise exception 'Το αρχείο δεν ανέβηκε σωστά' using errcode = 'P0001';
   end if;
   v_size := case when (v_object.metadata->>'size') ~ '^[0-9]{1,12}$' then (v_object.metadata->>'size')::bigint end;
-  if v_size is not null and v_size not between 1 and 26214400 then
+  if v_size is null then
+    raise exception 'Το αρχείο δεν ανέβηκε σωστά' using errcode = 'P0001';
+  end if;
+  if v_size not between 1 and 26214400 then
     raise exception 'Το αρχείο ξεπερνά τα 25 MB' using errcode = 'P0001';
   end if;
   update public.knowledge_items i
-     set storage_path = p_path, file_name = v_name, mime = v_mime, size_bytes = coalesce(v_size, 1)::integer,
+     set storage_path = p_path, file_name = v_name, mime = v_mime, size_bytes = v_size::integer,
          text_status = 'pending', updated_at = clock_timestamp(), updated_by = auth.uid()
    where i.id = p_item;
   return jsonb_build_object('previousPath', case when v_row.storage_path is distinct from p_path then v_row.storage_path end);

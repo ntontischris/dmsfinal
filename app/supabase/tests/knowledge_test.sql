@@ -1,18 +1,19 @@
 -- Γνώση Lα #190: Διαχείριση (knowledge.manage), ορατότητα από το Κοινό, δημοσίευση, αναζήτηση, αρχεία, hook του Lβ.
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Τα αρχεία «ανεβαίνουν» με γραμμή στο storage.objects.
 begin;
-select plan(94);
+select plan(107);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Διαχείριση (έχει knowledge.manage) · a3 Πωλήσεις · a4 Παραγωγή
--- b1 Χρήστης πελάτη Α «Πλήρης» · b2 Χρήστης πελάτη Β με άλλον Ρόλο πελάτη
+-- b1 Χρήστης πελάτη Α «Πλήρης» · b2 Χρήστης πελάτη Β με άλλον Ρόλο πελάτη · b3 και στους δύο Πελάτες
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'admin@example.com'),
   ('00000000-0000-0000-0000-0000000000a3', 'sales@example.com'),
   ('00000000-0000-0000-0000-0000000000a4', 'prod@example.com'),
   ('00000000-0000-0000-0000-0000000000b1', 'k1@client-a.example.gr'),
-  ('00000000-0000-0000-0000-0000000000b2', 'k2@client-b.example.gr');
+  ('00000000-0000-0000-0000-0000000000b2', 'k2@client-b.example.gr'),
+  ('00000000-0000-0000-0000-0000000000b3', 'k3@client-ab.example.gr');
 insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'Γιώργος', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'Δήμητρα', 'admin@example.com'),
@@ -37,6 +38,11 @@ insert into public.client_users (client_id, user_id, name, role_id, is_current) 
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 'Κώστας',
    (select r.id from public.roles r where r.name = 'Πλήρης' and r.kind = 'client'), true),
   ('00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000b2', 'Πάνος',
+   (select r.id from public.roles r where r.name = 'Βασικός (τεστ)' and r.kind = 'client'), true),
+  -- b3: δύο συμμετοχές· τρέχων ο Πελάτης Β (άλλος Ρόλος), ο Πελάτης Α με «Πλήρης» όχι τρέχων.
+  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b3', 'Ρένα',
+   (select r.id from public.roles r where r.name = 'Πλήρης' and r.kind = 'client'), false),
+  ('00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000b3', 'Ρένα',
    (select r.id from public.roles r where r.name = 'Βασικός (τεστ)' and r.kind = 'client'), true);
 
 create function public.t_as(p_last text) returns void
@@ -93,6 +99,31 @@ create function public.t_version(p_key text) returns integer
 language sql
 as $$ select i.content_version from public.knowledge_items i where i.id = public.t_id(p_key); $$;
 
+-- Το hook του Lβ όπως θα το στήσει: after update … when (old.content_version is distinct from new.content_version).
+create table public.t_hook (item_id uuid not null);
+create function public.t_hook_fn() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  insert into public.t_hook (item_id) values (new.id);
+  return null;
+end;
+$$;
+create trigger t_hook_update after update on public.knowledge_items
+  for each row when (old.content_version is distinct from new.content_version) execute function public.t_hook_fn();
+
+create function public.t_hook_reset() returns void
+language sql security definer set search_path = ''
+as $$ delete from public.t_hook; $$;
+
+create function public.t_hook_fired(p_key text) returns boolean
+language sql security definer set search_path = ''
+as $$ select exists (select 1 from public.t_hook h where h.item_id = current_setting('t.' || p_key)::uuid); $$;
+
+create function public.t_img() returns text
+language sql
+as $$ select 'img-33333333-3333-4333-8333-333333333333.png'; $$;
+
 -- ───────────── Άρνηση: ανώνυμος ─────────────
 set local role anon;
 select throws_ok($$ select public.knowledge_section_save('{"name":"x"}') $$, '42501', null, 'Ο ανώνυμος δεν φτιάχνει Ενότητα');
@@ -145,16 +176,20 @@ select lives_ok($$ select public.knowledge_section_reorder(public.t_id('s2'), 'u
 -- ───────────── Δημοσίευση ─────────────
 select lives_ok($$ select public.t_item('x', 'article', 'Πώς κλείνω Γύρισμα', '') $$, 'Άρθρο χωρίς Περίληψη (πρόχειρο)');
 select throws_ok($$ select public.knowledge_item_publish(public.t_id('x')) $$, 'P0001', 'Γράψε Περίληψη πριν από τη δημοσίευση', 'Χωρίς Περίληψη δεν δημοσιεύεται');
+select public.t_hook_reset();
 select lives_ok(
   format($$ select public.knowledge_item_save(jsonb_build_object('id', %L, 'sectionId', %L, 'title', 'Πώς κλείνω Γύρισμα',
     'summary', 'Τα βήματα για να ζητήσεις Γύρισμα.', 'body', 'Ανοίγεις την **Κράτηση** και διαλέγεις μέρα.')) $$,
     current_setting('t.x'), current_setting('t.s1')),
   'Γράφεται η Περίληψη');
+select ok(public.t_hook_fired('x'), 'Hook Lβ: πυροδοτείται στην αποθήκευση');
 select throws_ok($$ select public.knowledge_item_publish(public.t_id('x')) $$, 'P0001', 'Διάλεξε Κοινό πριν από τη δημοσίευση', 'Χωρίς Κοινό δεν δημοσιεύεται');
 select lives_ok($$ select public.knowledge_item_set_audience(public.t_id('x'), array[public.t_role('Πλήρης', 'client')], false) $$, 'Κοινό: ο Ρόλος πελάτη «Πλήρης»');
 select set_config('t.v0', public.t_version('x')::text, true);
+select public.t_hook_reset();
 select lives_ok($$ select public.knowledge_item_publish(public.t_id('x')) $$, 'Με Περίληψη και Κοινό δημοσιεύεται');
 select ok(public.t_version('x') > current_setting('t.v0')::integer, 'Η δημοσίευση αλλάζει το content_version (hook του Lβ)');
+select ok(public.t_hook_fired('x'), 'Hook Lβ: πυροδοτείται στη δημοσίευση');
 select throws_ok($$ select public.knowledge_item_publish(public.t_id('x')) $$, 'P0001', 'Το στοιχείο είναι ήδη δημοσιευμένο', 'Δεύτερη δημοσίευση απορρίπτεται');
 select throws_ok(
   format($$ select public.knowledge_item_save(jsonb_build_object('id', %L, 'sectionId', %L, 'title', 'Τίτλος', 'summary', '', 'body', 'x')) $$,
@@ -180,8 +215,10 @@ select public.knowledge_item_publish(public.t_id('t'));
 
 -- Το content_version αλλάζει με το Κοινό, όχι με το text_status (που γράφει το Lβ).
 select set_config('t.v1', public.t_version('t')::text, true);
+select public.t_hook_reset();
 select public.knowledge_item_set_audience(public.t_id('t'), array[public.t_role('Πωλήσεις', 'team'), public.t_role('Παραγωγή', 'team')], false);
 select ok(public.t_version('t') > current_setting('t.v1')::integer, 'Η αλλαγή Κοινού αλλάζει το content_version');
+select ok(public.t_hook_fired('t'), 'Hook Lβ: πυροδοτείται στην αλλαγή Κοινού');
 select public.knowledge_item_set_audience(public.t_id('t'), array[public.t_role('Πωλήσεις', 'team')], false);
 select set_config('t.v2', public.t_version('t')::text, true);
 select public.knowledge_item_set_audience(public.t_id('t'), array[public.t_role('Πωλήσεις', 'team')], false);
@@ -200,8 +237,19 @@ select ok(public.t_id('x') = any (public.t_search_ids('Γύρισμα')) and not
   'Η αναζήτηση βρίσκει το δημοσιευμένο, όχι το πρόχειρο');
 select ok(not public.t_id('t') = any (public.t_search_ids('Γύρισμα')), 'Η αναζήτηση δεν δίνει στοιχεία άλλου Κοινού');
 
+select is(public.knowledge_image_path(public.t_id('x'), public.t_img()), current_setting('t.x') || '/' || public.t_img(), 'Εικόνα ορατού Άρθρου: δίνεται');
+select throws_ok($$ select public.knowledge_image_path(public.t_id('d'), public.t_img()) $$, '42501', null, 'Εικόνα πρόχειρου: όχι για μη διαχειριστή');
+
+select public.t_as('b3');
+select throws_ok($$ select public.knowledge_item_get(public.t_id('x')) $$, '42501', null, 'Μετράει ο Ρόλος του τρέχοντος Πελάτη, όχι άλλης συμμετοχής');
+update public.client_users set is_current = false where user_id = '00000000-0000-0000-0000-0000000000b3';
+update public.client_users set is_current = true
+ where user_id = '00000000-0000-0000-0000-0000000000b3' and client_id = '00000000-0000-0000-0000-0000000000c1';
+select lives_ok($$ select public.knowledge_item_get(public.t_id('x')) $$, 'Με τρέχοντα τον Πελάτη του «Πλήρης» το βλέπει');
+
 select public.t_as('b2');
 select throws_ok($$ select public.knowledge_item_get(public.t_id('x')) $$, '42501', null, 'Πελάτης με άλλον Ρόλο δεν βλέπει το Άρθρο');
+select throws_ok($$ select public.knowledge_image_path(public.t_id('x'), public.t_img()) $$, '42501', null, 'Εικόνα μη ορατού Άρθρου: όχι');
 select is(public.t_library_ids(), array[public.t_id('p')], 'Ο πελάτης με άλλον Ρόλο βλέπει μόνο το δημόσιο');
 select is(public.t_search_ids('Γύρισμα'), '{}'::uuid[], 'Και η αναζήτηση δεν του δίνει το Άρθρο');
 
@@ -216,6 +264,7 @@ select throws_ok($$ select public.knowledge_item_get(public.t_id('t')) $$, '4250
 -- Ακόμα και η Διαχείριση και ο Ιδιοκτήτης βλέπουν στο A8 μόνο το Κοινό τους, ποτέ πρόχειρο.
 select public.t_as('a2');
 select throws_ok($$ select public.knowledge_item_get(public.t_id('d')) $$, '42501', null, 'Η Διαχείριση δεν βλέπει πρόχειρο στο A8');
+select lives_ok($$ select public.knowledge_image_path(public.t_id('d'), public.t_img()) $$, 'Η Διαχείριση βλέπει εικόνα πρόχειρου (προεπισκόπηση)');
 select throws_ok($$ select public.knowledge_item_get(public.t_id('x')) $$, '42501', null, 'Η Διαχείριση δεν βλέπει Άρθρο άλλου Κοινού στο A8');
 select public.t_as('a1');
 select is(public.t_library_ids(), array[public.t_id('p')], 'Ο Ιδιοκτήτης βλέπει στο A8 μόνο ό,τι έχει το Κοινό του');
@@ -227,7 +276,9 @@ select is((select count(*)::integer from authz.knowledge_visible_to(null)), 1, '
 
 -- ───────────── Απόσυρση και διαγραφή ─────────────
 select public.t_as('a2');
+select public.t_hook_reset();
 select lives_ok($$ select public.knowledge_item_unpublish(public.t_id('x')) $$, 'Απόσυρση');
+select ok(public.t_hook_fired('x'), 'Hook Lβ: πυροδοτείται στην απόσυρση');
 select public.t_as('b1');
 select throws_ok($$ select public.knowledge_item_get(public.t_id('x')) $$, '42501', null, 'Μετά την απόσυρση ο πελάτης δεν το βλέπει');
 select public.t_as('a2');
@@ -246,8 +297,13 @@ select throws_ok($$ select public.knowledge_upload_slot(public.t_id('f'), 'image
 select set_config('t.path', public.knowledge_upload_slot(public.t_id('f'), 'file', 'application/pdf', 1000)->>'path', true);
 select ok(current_setting('t.path') ~ ('^' || current_setting('t.f') || '/file-[0-9a-f-]{36}[.]pdf$'), 'Η διαδρομή έχει το στοιχείο και επέκταση από το mime');
 select throws_ok($$ select public.knowledge_item_attach_file(public.t_id('f'), current_setting('t.path'), 'εταιρεία.pdf') $$, 'P0001', 'Το αρχείο δεν ανέβηκε σωστά', 'Χωρίς ανεβασμένο αρχείο απορρίπτεται');
+select set_config('t.nosize', public.knowledge_upload_slot(public.t_id('f'), 'file', 'application/pdf', 1000)->>'path', true);
+select public.t_up(current_setting('t.nosize'), '{"mimetype":"application/pdf"}');
+select throws_ok($$ select public.knowledge_item_attach_file(public.t_id('f'), current_setting('t.nosize'), 'x.pdf') $$, 'P0001', 'Το αρχείο δεν ανέβηκε σωστά', 'Χωρίς μέγεθος στο Storage απορρίπτεται');
 select public.t_up(current_setting('t.path'), '{"size":4321,"mimetype":"application/pdf"}');
+select public.t_hook_reset();
 select lives_ok($$ select public.knowledge_item_attach_file(public.t_id('f'), current_setting('t.path'), 'εταιρεία.pdf') $$, 'Το Αρχείο γράφεται στο στοιχείο');
+select ok(public.t_hook_fired('f'), 'Hook Lβ: πυροδοτείται στο ανέβασμα Αρχείου');
 select is((select text_status || ':' || size_bytes from public.knowledge_items where id = public.t_id('f')), 'pending:4321', 'text_status pending και μέγεθος από το Storage');
 select lives_ok($$ select public.knowledge_item_publish(public.t_id('f')) $$, 'Το Αρχείο δημοσιεύεται');
 
@@ -259,7 +315,9 @@ select throws_ok($$ select public.knowledge_image_path(public.t_id('p'), '../x.p
 
 -- Το text_status (Lβ) δεν αλλάζει το content_version και δεν γράφεται στο Ίχνος.
 select set_config('t.v3', public.t_version('f')::text, true);
+select public.t_hook_reset();
 update public.knowledge_items set text_status = 'ok' where id = public.t_id('f');
+select ok(not public.t_hook_fired('f'), 'Hook Lβ: ΔΕΝ πυροδοτείται στο text_status');
 select is(public.t_version('f'), current_setting('t.v3')::integer, 'Το text_status δεν αλλάζει το content_version');
 select ok((select count(*) from public.audit_log l where l.entity = 'knowledge_items' and l.entity_id = current_setting('t.f')) >= 1, 'Οι αλλαγές στοιχείων γράφονται στο Ίχνος');
 
