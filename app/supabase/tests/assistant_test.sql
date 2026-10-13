@@ -1,7 +1,7 @@
 -- Γνώση Lγ #193: ο Βοηθός (assistant_context), πλαφόν δαπάνης AI (μόνο Ιδιοκτήτης, μηνιαία δαπάνη, Γεγονός 57 μία φορά ανά
 -- όριο ανά μήνα), ετικέτες και όρια Υγείας ανά εργασία. Φανταστικά δεδομένα και σταθερές στιγμές· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(49);
+select plan(50);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Διαχείριση · a3 Πωλήσεις · b1 Χρήστης πελάτη Α «Πλήρης» · b2 Χρήστης πελάτη Β, άλλος Ρόλος · d1 χωρίς πρόσβαση
@@ -194,7 +194,7 @@ select public.t_store('pt', 'Οδηγοί · Σενάριο πωλήσεων · 
 
 insert into public.catalogue_items (kind, billing, name, name_en, is_public, shows_price, description_public) values
   ('package', 'monthly', 'Podcast Start', 'Podcast Start', true, true, 'Ένα επεισόδιο podcast κάθε μήνα.'),
-  ('package', 'monthly', 'Social Basic', 'Social Basic', true, false, 'Βίντεο για τα social κάθε μήνα.'),
+  ('package', 'monthly', 'Social Basic', 'Social Basic', true, false, 'Ένα γύρισμα για τα social κάθε μήνα.'),
   ('package', 'one_off', 'Εσωτερικό Πακέτο', 'Internal', false, false, '');
 insert into public.catalogue_item_amounts (item_id, price)
 select i.id, 250 from public.catalogue_items i where i.name = 'Podcast Start';
@@ -210,6 +210,8 @@ select is(public.t_pkg(current_setting('t.ctx')::jsonb, 'Social Basic', 'price')
 select is(public.t_pkg(current_setting('t.ctx')::jsonb, 'Podcast Start', 'canOpen'), 'false', 'Ο πελάτης δεν ανοίγει τον Κατάλογο');
 select is(public.t_pkg(public.assistant_context('πόσο κοστίζει το podcast;', public.t_vec(9)), 'Podcast Start', 'matched'), 'true',
   'Η ερώτηση ταιριάζει με το Πακέτο');
+select is(public.t_pkg(current_setting('t.ctx')::jsonb, 'Social Basic', 'matched'), 'false',
+  'Λέξη μόνο στην περιγραφή του Πακέτου («γύρισμα»): δεν ταιριάζει');
 select is(jsonb_array_length(public.assistant_context('ζζζ', public.t_vec(2)) -> 'chunks'), 0,
   'Ο πελάτης δεν βλέπει το Άρθρο της ομάδας ούτε για την ερώτησή του');
 select public.t_as('b2');

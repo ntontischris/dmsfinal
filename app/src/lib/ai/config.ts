@@ -7,7 +7,12 @@ export const AI_PROVIDERS = ["openai", "anthropic", "google"] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];
 export type AiModelId = `${AiProvider}/${string}`;
 
-export const AI_MODELS: { readonly chat: AiModelId; readonly embedding: AiModelId } = {
+// Τα embeddings μόνο από OpenAI: τα υπάρχοντα κομμάτια είναι text-embedding-3-small (1536) και το registry δίνει embeddings
+// μόνο από εκεί.
+export const AI_MODELS: {
+  readonly chat: AiModelId;
+  readonly embedding: `openai/${string}`;
+} = {
   chat: "openai/gpt-4.1-mini",
   embedding: "openai/text-embedding-3-small",
 };

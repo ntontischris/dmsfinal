@@ -74,53 +74,77 @@ function realDeps(
   };
 }
 
-// Η ροή προς το παράθυρο. Σφάλμα στη μέση: ένα γεγονός «error» αντί για κομμένη σύνδεση.
+// Η ροή προς το παράθυρο. Σφάλμα στη μέση: ένα γεγονός «error» αντί για κομμένη σύνδεση. Αν ο Χρήστης φύγει (cancel), η κλήση
+// του μοντέλου κόβεται (abort) και το κόστος της γράφεται όπως σε κάθε διακοπή.
 function toStream(
   events: AsyncGenerator<AssistantEvent>,
+  abort: AbortController,
 ): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
+  const send = (
+    controller: ReadableStreamDefaultController<Uint8Array>,
+    event: AssistantEvent,
+  ): boolean => {
+    if (abort.signal.aborted) return false;
+    controller.enqueue(encoder.encode(encodeEvent(event)));
+    return true;
+  };
   return new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of events)
-          controller.enqueue(encoder.encode(encodeEvent(event)));
+        for await (const event of events) if (!send(controller, event)) break;
       } catch (error) {
         if (!(error instanceof AssistantError))
-          console.error(
-            "assistant",
-            error instanceof Error ? error.message : error,
-          );
-        const message =
-          error instanceof AssistantError ? error.message : ERROR_TEXT;
-        controller.enqueue(
-          encoder.encode(encodeEvent({ type: "error", message })),
-        );
+          console.error("assistant", error instanceof Error ? error.message : "Άγνωστο σφάλμα");
+        send(controller, {
+          type: "error",
+          message: error instanceof AssistantError ? error.message : ERROR_TEXT,
+        });
       }
-      controller.close();
+      if (!abort.signal.aborted) controller.close();
+    },
+    cancel() {
+      abort.abort();
     },
   });
 }
 
+// Μέγιστο μέγεθος αιτήματος: η ερώτηση (1.000 χαρακτήρες, έως 4 bytes ο καθένας) και το id της Συζήτησης, με περιθώριο.
+const MAX_BODY_BYTES = 8 * 1024;
+
 const fail = (status: number, message: string): Response =>
   Response.json({ error: message }, { status });
+
+async function readBody(request: Request): Promise<unknown> {
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) return undefined;
+  const text = await request.text().catch(() => "");
+  if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) return undefined;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
 
 export async function handleAssistantRequest(
   request: Request,
 ): Promise<Response> {
-  const parsed = requestSchema.safeParse(
-    await request.json().catch(() => null),
-  );
-  if (!parsed.success)
-    return fail(400, parsed.error.issues[0]?.message ?? ERROR_TEXT);
   const [viewer, supabase] = await Promise.all([getViewer(), createSupabase()]);
   if (viewer.status !== "signed-in" || !supabase)
     return fail(401, "Χρειάζεται είσοδος.");
+  const body = await readBody(request);
+  if (body === undefined) return fail(413, "Η ερώτηση ξεπερνά τους 1.000 χαρακτήρες.");
+  const parsed = requestSchema.safeParse(body);
+  if (!parsed.success)
+    return fail(400, parsed.error.issues[0]?.message ?? ERROR_TEXT);
   const audience: AiAudience = viewer.team ? "team" : "client";
+  const abort = new AbortController();
+  request.signal.addEventListener("abort", () => abort.abort(), { once: true });
   const events = runAssistant(
-    parsed.data,
+    { ...parsed.data, abortSignal: abort.signal },
     realDeps(supabase, viewer.userId, audience),
   );
-  return new Response(toStream(events), {
+  return new Response(toStream(events, abort), {
     headers: {
       "content-type": "application/x-ndjson; charset=utf-8",
       "cache-control": "no-store",

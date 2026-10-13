@@ -219,4 +219,40 @@ describe("runAssistant", () => {
       ],
     });
   });
+
+  it("σφάλμα του μοντέλου στη μέση: γεγονός σφάλματος, και το κόστος γράφεται με εκτίμηση (χαρακτήρες/3)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const broken = new MockLanguageModelV3({
+      doStream: async () => ({
+        stream: simulateReadableStream({
+          chunks: [
+            { type: "text-start" as const, id: "t" },
+            { type: "text-delta" as const, id: "t", delta: "Ανοίγεις την" },
+            { type: "error" as const, error: new Error("provider down") },
+          ],
+        }),
+      }),
+    });
+    const { value } = deps({}, broken);
+    await expect(collect(value)).rejects.toThrow("Η κλήση του μοντέλου δεν ολοκληρώθηκε");
+    expect(value.recordChatUsage).toHaveBeenCalledTimes(1);
+    const usage = vi.mocked(value.recordChatUsage).mock.calls[0]![0];
+    expect(usage.outputTokens).toBe(Math.ceil("Ανοίγεις την".length / 3));
+    expect(usage.inputTokens).toBeGreaterThan(0);
+    expect(value.reply).not.toHaveBeenCalled();
+  });
+
+  it("σήμα «δεν ξέρω» μετά από κείμενο: πάλι «δεν ξέρω» και Αναπάντητη", async () => {
+    const { value } = deps({}, chatModel(`Δεν είμαι σίγουρος. ${NO_ANSWER_MARKER}`));
+    const events = await collect(value);
+    expect(events.at(-1)?.type).toBe("unknown");
+    expect(value.unanswered).toHaveBeenCalledTimes(1);
+  });
+
+  it("απάντηση χωρίς καμία παραπομπή: γράφεται ως «χωρίς πηγή»", async () => {
+    const { value } = deps({}, chatModel("Ανοίγεις την Κράτηση."));
+    const events = await collect(value);
+    expect(events.at(-1)).toEqual({ type: "done", sources: [] });
+    expect(value.reply).toHaveBeenCalledWith(expect.objectContaining({ noSource: true, sources: [] }));
+  });
 });

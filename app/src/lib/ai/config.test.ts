@@ -15,8 +15,7 @@ describe("costMicros", () => {
   });
 
   it("τα μοντέλα των ρυθμίσεων και παραδείγματα από κάθε πάροχο έχουν τιμή", () => {
-    expect(AI_PRICES[AI_MODELS.chat]).toBeDefined();
-    expect(AI_PRICES[AI_MODELS.embedding]).toBeDefined();
+    for (const model of Object.values(AI_MODELS)) expect(AI_PRICES[model], model).toBeDefined();
     for (const provider of ["openai", "anthropic", "google"]) {
       expect(Object.keys(AI_PRICES).some((id) => id.startsWith(`${provider}/`))).toBe(true);
     }

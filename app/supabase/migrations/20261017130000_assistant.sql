@@ -239,7 +239,8 @@ values
 -- ───────────── Ο Βοηθός: τι διαβάζει ─────────────
 
 -- Τα δημόσια Πακέτα του Καταλόγου, όπως φαίνονται εκεί (τιμή χωρίς ΦΠΑ μόνο όταν «δείχνει τιμή»). matched = η ερώτηση έχει
--- έστω μία λέξη του Πακέτου (ελληνικό full-text, «ή»)· canOpen = ο ερωτών βλέπει τον Κατάλογο, άρα ανοίγει τη σελίδα του.
+-- έστω μία λέξη του ΟΝΟΜΑΤΟΣ του Πακέτου (ελληνικό full-text, «ή»)· η περιγραφή δεν μετρά, αλλιώς κοινές λέξεις όπως
+-- «γύρισμα» θα περνούσαν κάθε ερώτηση από το κατώφλι «δεν ξέρω»· canOpen = ο ερωτών βλέπει τον Κατάλογο, άρα ανοίγει τη σελίδα του.
 create function authz.assistant_packages(p_q text) returns jsonb
 language sql stable security definer set search_path = ''
 as $$
@@ -257,9 +258,7 @@ as $$
                from public.catalogue_item_provisions p
                join public.provision_kinds k on k.id = p.kind_id
               where p.item_id = i.id), '[]'::jsonb),
-           'matched', coalesce(to_tsvector('pg_catalog.greek'::regconfig,
-                                 i.name || ' ' || i.name_en || ' ' || i.description_public || ' ' || i.description_public_en)
-                               @@ q.query, false),
+           'matched', coalesce(to_tsvector('pg_catalog.greek'::regconfig, i.name || ' ' || i.name_en) @@ q.query, false),
            'canOpen', authz.can_view_catalogue())
          order by lower(i.name), i.id), '[]'::jsonb)
     from public.catalogue_items i

@@ -91,7 +91,9 @@ function AnswerBody({
         <p className="m-0">{turn.answer}</p>
         {audience === "team" && <p className="m-0">{ROUTED_TEXT}</p>}
         <Referral audience={audience} question={turn.question} />
-        <p className="m-0 text-muted-foreground">{RECORDED_TEXT}</p>
+        {audience === "team" && (
+          <p className="m-0 text-muted-foreground">{RECORDED_TEXT}</p>
+        )}
       </div>
     );
   if (turn.status === "error")

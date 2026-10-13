@@ -9,9 +9,10 @@ import {
   ASSISTANT_TITLE,
   RETENTION_NOTE,
   SUGGESTIONS,
+  UNAVAILABLE_TEXT,
   WELCOME_TEXT,
 } from "../labels";
-import type { AssistantChat } from "../use-assistant";
+import type { AssistantChat, Turn } from "../use-assistant";
 import { AssistantComposer } from "./assistant-composer";
 import { AssistantTurn, type AssistantAudience } from "./assistant-turn";
 
@@ -69,6 +70,13 @@ function Welcome({
   );
 }
 
+// Οι αναγνώστες οθόνης ακούνε μόνο την ολοκληρωμένη απάντηση ή την κατάσταση, όχι κάθε κομμάτι της ροής.
+function announcement(turn: Turn | undefined): string {
+  if (!turn || turn.status === "streaming") return "";
+  if (turn.status === "unavailable") return UNAVAILABLE_TEXT[turn.reason ?? "unavailable"];
+  return turn.answer;
+}
+
 export function AssistantPanel({ audience, chat, onClose }: PanelProps) {
   const root = useRef<HTMLDivElement>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -109,7 +117,7 @@ export function AssistantPanel({ audience, chat, onClose }: PanelProps) {
         </div>
       </div>
       <p className="m-0 text-sm text-muted-foreground">{ASSISTANT_NOTE}</p>
-      <div className="min-h-0 flex-1 overflow-y-auto" aria-live="polite">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {chat.turns.length === 0 ? (
           <Welcome audience={audience} onPick={chat.ask} />
         ) : (
@@ -121,6 +129,9 @@ export function AssistantPanel({ audience, chat, onClose }: PanelProps) {
         )}
         <div ref={end} />
       </div>
+      <p className="sr-only" aria-live="polite">
+        {announcement(chat.turns.at(-1))}
+      </p>
       <AssistantComposer isBusy={chat.isBusy} onAsk={chat.ask} />
       <p className="m-0 text-sm text-muted-foreground">{RETENTION_NOTE}</p>
     </div>

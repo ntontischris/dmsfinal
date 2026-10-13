@@ -96,8 +96,11 @@ export function useAssistant() {
         if (event.type === "conversation") conversation.current = event.id;
         patch((turn) => applyEvent(turn, event));
       }
+      // Η ροή έκλεισε χωρίς τελικό γεγονός (done/unknown/unavailable/error): κάτι κόπηκε στη μέση.
       patch((turn) =>
-        turn.status === "streaming" ? { ...turn, status: "done" } : turn,
+        turn.status === "streaming"
+          ? { ...turn, status: "error", answer: ERROR_TEXT, sources: [] }
+          : turn,
       );
     } catch {
       patch((turn) => ({ ...turn, status: "error", answer: ERROR_TEXT }));
