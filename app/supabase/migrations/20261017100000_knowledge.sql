@@ -331,7 +331,7 @@ as $$
   with q as (select websearch_to_tsquery('pg_catalog.greek'::regconfig, left(btrim(coalesce(p_q, '')), 200)) as query)
   select i.id, ts_rank(i.search_tsv, q.query)
     from public.knowledge_items i, q
-   where q.query <> ''::tsquery
+   where numnode(q.query) > 0
      and i.search_tsv @@ q.query
      and i.id in (select authz.knowledge_visible_to(p_uid))
    order by 2 desc, i.title, i.id
