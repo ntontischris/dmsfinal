@@ -30,9 +30,15 @@ const embedModel = () =>
     }),
   });
 
+// Η ουρά έχει ένα στοιχείο: το πρώτο claim το δίνει, τα επόμενα βρίσκουν την ουρά άδεια.
 function fakeAdmin(rpc = vi.fn()) {
+  let claimed = false;
   rpc.mockImplementation(async (name: string) => {
-    if (name === "knowledge_index_claim") return { data: { items: [article] }, error: null };
+    if (name === "knowledge_index_claim") {
+      const items = claimed ? [] : [article];
+      claimed = true;
+      return { data: { items }, error: null };
+    }
     if (name === "knowledge_index_store") return { data: { stored: true, chunks: 1 }, error: null };
     return { data: null, error: null };
   });
@@ -91,11 +97,33 @@ describe("runKnowledgeIndex", () => {
     expect(rpc).toHaveBeenCalledWith("knowledge_index_fail", { p_item: ITEM, p_version: 3, p_error: "Gateway down" });
   });
 
+  it("στοιχείο που κολλά: κόβεται στο χρονικό όριο και γράφεται ως αποτυχία", async () => {
+    const { admin, rpc } = fakeAdmin();
+    const hanging = new MockEmbeddingModelV3({ doEmbed: () => new Promise(() => undefined) });
+    expect(await runKnowledgeIndex(admin, { model: hanging, itemTimeoutMs: 10 })).toEqual({ indexed: 0, stale: 0, failed: 1 });
+    expect(rpc).toHaveBeenCalledWith("knowledge_index_fail", { p_item: ITEM, p_version: 3, p_error: "Χρονικό όριο 0s" });
+  });
+
+  it("μετά το χρονικό περιθώριο του γύρου δεν παίρνει νέο στοιχείο", async () => {
+    const { admin, rpc } = fakeAdmin();
+    expect(await runKnowledgeIndex(admin, { model: embedModel(), budgetMs: -1 })).toEqual({ indexed: 0, stale: 0, failed: 0 });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("παίρνει ένα στοιχείο τη φορά ώσπου να αδειάσει η ουρά", async () => {
+    const { admin, rpc } = fakeAdmin();
+    await runKnowledgeIndex(admin, { model: embedModel() });
+    expect(rpc.mock.calls.filter(([name]) => name === "knowledge_index_claim")).toEqual([
+      ["knowledge_index_claim", { p_limit: 1, p_item: null }],
+      ["knowledge_index_claim", { p_limit: 1, p_item: null }],
+    ]);
+  });
+
   it("το στοιχείο άλλαξε στο μεταξύ: μετρά ως παλιό, δεν είναι αποτυχία", async () => {
     const { admin, rpc } = fakeAdmin();
     rpc.mockImplementation(async (name: string) =>
       name === "knowledge_index_claim"
-        ? { data: { items: [article] }, error: null }
+        ? { data: { items: rpc.mock.calls.length === 1 ? [article] : [] }, error: null }
         : { data: { stored: false }, error: null },
     );
     expect(await runKnowledgeIndex(admin, { model: embedModel() })).toEqual({ indexed: 0, stale: 1, failed: 0 });

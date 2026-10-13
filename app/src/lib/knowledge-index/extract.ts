@@ -16,6 +16,9 @@ const DOCX =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const PPTX =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+// Όρια αποσυμπίεσης (zip bomb): μέγεθος ενός XML και όλων μαζί, όπως τα δηλώνει το zip. Πέρα από αυτά → «failed».
+export const MAX_ZIP_ENTRY_BYTES = 10 * 1024 * 1024;
+export const MAX_ZIP_TOTAL_BYTES = 20 * 1024 * 1024;
 // Λιγότεροι χαρακτήρες (χωρίς κενά) από αυτούς = το Αρχείο είναι ουσιαστικά εικόνα.
 export const MIN_TEXT_CHARS = 40;
 
@@ -58,11 +61,21 @@ const slideNumber = (name: string): number =>
 
 function zipText(bytes: Uint8Array, mime: string): string {
   const isDocx = mime === DOCX;
+  let total = 0;
   const files = unzipSync(bytes, {
-    filter: (file) =>
-      isDocx
+    filter: (file) => {
+      const wanted = isDocx
         ? file.name === "word/document.xml"
-        : /^ppt\/slides\/slide\d+\.xml$/.test(file.name),
+        : /^ppt\/slides\/slide\d+\.xml$/.test(file.name);
+      if (!wanted) return false;
+      total += file.originalSize;
+      if (
+        file.originalSize > MAX_ZIP_ENTRY_BYTES ||
+        total > MAX_ZIP_TOTAL_BYTES
+      )
+        throw new Error("Το Αρχείο αποσυμπιέζεται σε πάρα πολλά δεδομένα");
+      return true;
+    },
   });
   const names = Object.keys(files).sort(
     (a, b) => slideNumber(a) - slideNumber(b),

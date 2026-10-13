@@ -1,7 +1,7 @@
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it, vi } from "vitest";
 
-import { extractFileText, officeXmlText } from "./extract";
+import { extractFileText, MAX_ZIP_ENTRY_BYTES, MAX_ZIP_TOTAL_BYTES, officeXmlText } from "./extract";
 
 const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
@@ -78,6 +78,19 @@ describe("extractFileText", () => {
 
   it("εικόνα: μόνο εικόνα, χωρίς ανάγνωση", async () => {
     expect(await extractFileText(new Uint8Array([1, 2, 3]), "image/png")).toEqual({ status: "image_only", text: "" });
+  });
+
+  it("zip bomb: ένα XML πάνω από το όριο → failed, χωρίς αποσυμπίεση", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const huge = zipSync({ "word/document.xml": new Uint8Array(MAX_ZIP_ENTRY_BYTES + 1) });
+    expect(await extractFileText(huge, DOCX)).toEqual({ status: "failed", text: "" });
+  });
+
+  it("zip bomb: διαφάνειες που μαζί ξεπερνούν το όριο → failed", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const slide = new Uint8Array(Math.floor(MAX_ZIP_TOTAL_BYTES / 3) + 1);
+    const bomb = zipSync({ "ppt/slides/slide1.xml": slide, "ppt/slides/slide2.xml": slide, "ppt/slides/slide3.xml": slide });
+    expect(await extractFileText(bomb, PPTX)).toEqual({ status: "failed", text: "" });
   });
 
   it("χαλασμένο αρχείο: failed, χωρίς να σκάει", async () => {

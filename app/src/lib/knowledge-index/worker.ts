@@ -13,9 +13,13 @@ import { extractFileText, type ExtractStatus } from "./extract";
 
 // Ο εργάτης της μνήμης του Βοηθού: παίρνει στοιχεία από την ουρά (knowledge_index_claim), διαβάζει το κείμενο (Άρθρο ή Αρχείο),
 // το κόβει σε κομμάτια με κεφαλίδα, φτιάχνει embeddings μέσω του Gateway και τα γράφει (knowledge_index_store). Αποτυχία
-// (Gateway, Storage) → knowledge_index_fail με backoff. Χωρίς AI: δεν παίρνει τίποτα, τα στοιχεία μένουν στην ουρά.
+// (Gateway, Storage, χρονικό όριο) → knowledge_index_fail· το backoff το έχει ορίσει ήδη το claim. Χωρίς AI: δεν παίρνει
+// τίποτα, τα στοιχεία μένουν στην ουρά. Παίρνει ένα στοιχείο τη φορά, ώστε ό,τι δεν προλαβαίνει να μη μετρά ως προσπάθεια.
 
 const KNOWLEDGE_BUCKET = "knowledge";
+// Ένας γύρος μέσα στα 60s του cron: νέο στοιχείο ξεκινά μόνο στα πρώτα 30s, και κάθε στοιχείο έχει έως 20s.
+export const ROUND_BUDGET_MS = 30_000;
+export const ITEM_TIMEOUT_MS = 20_000;
 
 const claimedSchema = z.object({
   items: z.array(
@@ -37,8 +41,9 @@ type Claimed = z.infer<typeof claimedSchema>["items"][number];
 
 export interface IndexOptions {
   itemId?: string; // άμεση προσπάθεια για ένα στοιχείο
-  limit?: number;
+  limit?: number; // έως τόσα στοιχεία στον γύρο
   budgetMs?: number;
+  itemTimeoutMs?: number;
   model?: EmbeddingModel; // μόνο στα τεστ
 }
 
@@ -76,6 +81,7 @@ async function indexItem(
   admin: SupabaseClient,
   item: Claimed,
   model: EmbeddingModel | undefined,
+  abortSignal: AbortSignal,
 ): Promise<"indexed" | "stale"> {
   const { text, status } = await readItemText(admin, item);
   const chunks = buildChunks(item, text);
@@ -83,6 +89,7 @@ async function indexItem(
     purpose: "embed",
     audience: "team",
     model,
+    abortSignal,
   });
   const { data, error } = await admin.rpc("knowledge_index_store", {
     p_item: item.itemId,
@@ -113,16 +120,41 @@ async function markFailed(
   if (rpcError) console.error("knowledge_index_fail", rpcError.message);
 }
 
-async function claim(
+async function claimOne(
   admin: SupabaseClient,
-  options: IndexOptions,
-): Promise<Claimed[]> {
+  itemId: string | undefined,
+): Promise<Claimed | undefined> {
   const { data, error } = await admin.rpc("knowledge_index_claim", {
-    p_limit: options.limit ?? 10,
-    p_item: options.itemId ?? null,
+    p_limit: 1,
+    p_item: itemId ?? null,
   });
   if (error) throw new Error(error.message);
-  return claimedSchema.parse(data).items;
+  return claimedSchema.parse(data).items[0];
+}
+
+// Ένα στοιχείο με χρονικό όριο: στο όριο κόβεται και η κλήση στο Gateway.
+async function indexWithTimeout(
+  admin: SupabaseClient,
+  item: Claimed,
+  options: IndexOptions,
+): Promise<"indexed" | "stale"> {
+  const ms = options.itemTimeoutMs ?? ITEM_TIMEOUT_MS;
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`Χρονικό όριο ${Math.round(ms / 1000)}s`));
+    }, ms);
+  });
+  try {
+    return await Promise.race([
+      indexItem(admin, item, options.model, controller.signal),
+      timeout,
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function runKnowledgeIndex(
@@ -132,12 +164,13 @@ export async function runKnowledgeIndex(
   const summary: IndexSummary = { indexed: 0, stale: 0, failed: 0 };
   if (!options.model && !aiAvailable())
     return { ...summary, skipped: "ai-unavailable" };
-  const deadline = Date.now() + (options.budgetMs ?? 45_000);
-  for (const item of await claim(admin, options)) {
-    // Ό,τι δεν προλαβαίνει μένει κλειδωμένο 5′ και το ξαναπαίρνει το επόμενο cron.
-    if (Date.now() > deadline) break;
+  const deadline = Date.now() + (options.budgetMs ?? ROUND_BUDGET_MS);
+  const limit = options.itemId ? 1 : (options.limit ?? 10);
+  for (let done = 0; done < limit && Date.now() < deadline; done += 1) {
+    const item = await claimOne(admin, options.itemId);
+    if (!item) break;
     try {
-      summary[await indexItem(admin, item, options.model)] += 1;
+      summary[await indexWithTimeout(admin, item, options)] += 1;
     } catch (error) {
       await markFailed(admin, item, error);
       summary.failed += 1;

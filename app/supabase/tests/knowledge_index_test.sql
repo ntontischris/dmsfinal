@@ -1,7 +1,7 @@
 -- Γνώση Lβ #191: ουρά μάθησης, κομμάτια, hybrid search (RRF, Κοινό, version), worker μόνο service_role, Υγεία, κόστος AI.
 -- Φανταστικά δεδομένα και σταθερά vectors (1 σε μία ή δύο θέσεις)· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(53);
+select plan(57);
 
 -- ───────────── Χρήστες ─────────────
 -- a2 Διαχείριση (knowledge.manage) · a3 Πωλήσεις · b1 Χρήστης πελάτη Α «Πλήρης» · b2 Χρήστης πελάτη Β, άλλος Ρόλος
@@ -84,6 +84,11 @@ as $$ select i.content_version from public.knowledge_items i where i.id = curren
 create function public.t_queued(p_key text) returns integer
 language sql security definer set search_path = ''
 as $$ select q.content_version from public.knowledge_index_queue q where q.item_id = current_setting('t.' || p_key)::uuid; $$;
+
+-- Όλη η γραμμή της ουράς (attempts, next_try_at, last_error).
+create function public.t_q(p_key text) returns public.knowledge_index_queue
+language sql security definer set search_path = ''
+as $$ select q from public.knowledge_index_queue q where q.item_id = current_setting('t.' || p_key)::uuid; $$;
 
 create function public.t_chunks(p_key text) returns integer
 language sql security definer set search_path = ''
@@ -237,14 +242,23 @@ select is((select array_agg(k order by k) from jsonb_object_keys(public.knowledg
 select public.t_as('a2');
 select public.knowledge_item_save(jsonb_build_object('id', public.t_id('y'), 'sectionId', public.t_id('s1'),
   'title', 'Φωτισμός στούντιο', 'summary', 'Περίληψη: Φωτισμός στούντιο', 'body', 'Ο φωτισμός, νέα έκδοση.'));
-select public.knowledge_index_fail(public.t_id('y'), public.t_version('y'), 'Gateway δεν απάντησε', '2026-10-17 10:00+03');
-select is((select q.attempts from public.knowledge_index_queue q where q.item_id = public.t_id('y')), 1, 'Αποτυχία: +1 προσπάθεια');
+select is(public.knowledge_index_claim(10, public.t_id('y'), '2026-10-17 10:00+03')->'items'->0->>'attempts', '1',
+  'Claim: η προσπάθεια μετριέται από πριν');
+select is((public.t_q('y')).next_try_at, '2026-10-17 10:01+03'::timestamptz,
+  'Claim: η επόμενη προσπάθεια ορίζεται από πριν (1′), ώστε ένα στοιχείο που ρίχνει τον worker να μην ξαναπαίρνεται αμέσως');
 select is(public.knowledge_index_claim(10, public.t_id('y'), '2026-10-17 10:00:30+03')->'items', '[]'::jsonb,
+  'Κλειδωμένο: δεν δίνεται δεύτερη φορά');
+select public.knowledge_index_fail(public.t_id('y'), public.t_version('y'), 'Gateway δεν απάντησε');
+select ok((public.t_q('y')).attempts = 1 and (public.t_q('y')).last_error = 'Gateway δεν απάντησε',
+  'Αποτυχία: κρατά το σφάλμα, δεν ξαναμετρά την προσπάθεια');
+select is(public.knowledge_index_claim(10, public.t_id('y'), '2026-10-17 10:00:45+03')->'items', '[]'::jsonb,
   'Πριν περάσει το backoff δεν δίνεται');
 select is(public.knowledge_index_claim(10, public.t_id('y'), '2026-10-17 10:01:30+03')->'items'->0->>'itemId',
   public.t_id('y')::text, 'Μετά το backoff δίνεται, με τα στοιχεία του');
-select is(public.knowledge_index_claim(10, public.t_id('y'), '2026-10-17 10:02:00+03')->'items', '[]'::jsonb,
-  'Κλειδωμένο: δεν δίνεται δεύτερη φορά');
+select ok((public.t_q('y')).attempts = 2 and (public.t_q('y')).next_try_at = '2026-10-17 10:03:30+03'::timestamptz,
+  'Δεύτερη προσπάθεια: backoff 2′');
+select is(public.knowledge_index_claim(10, public.t_id('y'), '2026-10-17 10:04:00+03')->'items', '[]'::jsonb,
+  'Χωρίς fail (ο worker έπεσε): περιμένει να λήξει το κλείδωμα των 5′');
 
 -- ───────────── Υγεία και «ξαναφτιάξε όλα» ─────────────
 select is(public.knowledge_index_mark(true, null, now())->>'stuck', '0', 'Ουρά χωρίς κόλλημα');

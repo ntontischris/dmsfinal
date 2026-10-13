@@ -11,7 +11,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // έναρξη και τέλος· κολλημένη ουρά μετρά ως σφάλμα, ώστε να φαίνεται στην Υγεία. Χωρίς AI: 200 με «skipped».
 // Χωρίς CRON_SECRET: 500· με λάθος ή λείπον Bearer: 401.
 export const maxDuration = 60;
-const ROUND_BUDGET_MS = 45_000;
 
 async function mark(
   admin: SupabaseClient,
@@ -45,14 +44,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       await runKnowledgeIndex(admin, { itemId: item.data, limit: 1 }),
     );
   if (params.get("kick") === "1")
-    return NextResponse.json(
-      await runKnowledgeIndex(admin, { budgetMs: ROUND_BUDGET_MS }),
-    );
+    return NextResponse.json(await runKnowledgeIndex(admin));
   await mark(admin, null, null);
   try {
-    const summary = await runKnowledgeIndex(admin, {
-      budgetMs: ROUND_BUDGET_MS,
-    });
+    const summary = await runKnowledgeIndex(admin);
     await mark(admin, true, null);
     return NextResponse.json(summary);
   } catch (error) {

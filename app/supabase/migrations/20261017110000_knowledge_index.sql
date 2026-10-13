@@ -7,7 +7,9 @@
 --  • Ουρά knowledge_index_queue: μία γραμμή ανά στοιχείο. Τα triggers πάνω στο hook του Lα (content_version):
 --      δημοσιευμένο → στην ουρά (με το νέο version)· πρόχειρο ή διαγραμμένο → τα κομμάτια σβήνουν ΑΜΕΣΩΣ (ο Βοηθός το ξεχνά).
 --    Το text_status (που γράφει ο worker) δεν αλλάζει το version, άρα δεν ξαναμπαίνει στην ουρά.
---  • Worker (μόνο service_role): knowledge_index_claim → knowledge_index_store ή knowledge_index_fail (backoff 1′, 2′, 4′ … έως 1 ώρα).
+--  • Worker (μόνο service_role): knowledge_index_claim → knowledge_index_store ή knowledge_index_fail. Το claim μετρά την
+--    προσπάθεια και ορίζει την επόμενη (backoff 1′, 2′, 4′ … έως 1 ώρα) ΠΡΙΝ από τη δουλειά: στοιχείο που ρίχνει τον worker
+--    (timeout, κατάρρευση) δεν ξαναπαίρνεται αμέσως και φτάνει στις 5 προσπάθειες = κολλημένο στην Υγεία.
 --    Ένα κομμάτι γράφεται μόνο αν το στοιχείο είναι ακόμα δημοσιευμένο και στο ίδιο version.
 --  • «Ξαναφτιάξε όλα»: knowledge_index_rebuild (knowledge.manage ή service_role) βάζει όλα τα δημοσιευμένα στην ουρά.
 --  • Hybrid search: authz.knowledge_hybrid(p_uid, p_q, p_embedding, p_limit) → (item_id, chunk_id, content, score).
@@ -37,8 +39,6 @@ create table public.knowledge_chunks (
   unique (item_id, ord)
 );
 
-create index knowledge_chunks_embedding_idx on public.knowledge_chunks
-  using hnsw (embedding extensions.vector_cosine_ops);
 create index knowledge_chunks_search_idx on public.knowledge_chunks using gin (search_tsv);
 
 create table public.knowledge_index_queue (
@@ -119,7 +119,10 @@ create trigger knowledge_items_index_delete after delete on public.knowledge_ite
 
 -- ───────────── Hybrid search ─────────────
 
--- Τα κομμάτια πέρα από αυτή την απόσταση (cosine) δεν μετρούν ως σχετικά στο σκέλος pgvector.
+-- Το σκέλος pgvector είναι ακριβής σάρωση των ορατών κομματιών του τρέχοντος version (χωρίς ευρετήριο HNSW: το φίλτρο Κοινού
+-- και version μπαίνει πριν από τη διάταξη, άρα ένα HNSW δεν θα χρησιμοποιούνταν· η Γνώση είναι λίγες χιλιάδες κομμάτια).
+-- Κατώφλι: ομοιότητα cosine ≥ 0,35 (απόσταση < 0,65). Κάτω από αυτό το κομμάτι δεν μετρά ως σχετικό, αλλιώς κάθε ερώτηση θα
+-- έφερνε τα 40 κοντινότερα, όσο άσχετα κι αν είναι.
 create function authz.knowledge_hybrid(p_uid uuid, p_q text, p_embedding extensions.vector, p_limit integer)
 returns table (item_id uuid, chunk_id uuid, content text, score double precision)
 language sql stable security definer set search_path = ''
@@ -140,7 +143,7 @@ as $$
              where p_embedding is not null
              order by 2, 1
              limit 40) s
-     where s.distance < 0.8
+     where s.distance < 0.65
   ), lexical as (
     select l.key, l.item_id, l.chunk_id, row_number() over (order by l.rank desc, l.key) as r
       from (
@@ -190,6 +193,7 @@ $$;
 -- ───────────── Worker (μόνο service_role) ─────────────
 
 -- Παίρνει έως p_limit στοιχεία που είναι η ώρα τους (ή μόνο το p_item, για την άμεση προσπάθεια) και τα κλειδώνει 5′.
+-- Μετρά την προσπάθεια (attempts + 1) και ορίζει την επόμενη (1′, 2′, 4′ … έως 1 ώρα) από πριν· το store σβήνει τη γραμμή.
 -- { items: [{ itemId, version, kind, title, summary, sectionName, body, storagePath, mime, attempts }] }
 create function public.knowledge_index_claim(p_limit integer default 10, p_item uuid default null, p_now timestamptz default null)
 returns jsonb
@@ -208,7 +212,10 @@ begin
      limit greatest(1, least(coalesce(p_limit, 10), 50))
      for update skip locked
   ), locked as (
-    update public.knowledge_index_queue q set locked_until = v_now + interval '5 minutes'
+    update public.knowledge_index_queue q
+       set locked_until = v_now + interval '5 minutes',
+           attempts = q.attempts + 1,
+           next_try_at = v_now + least(interval '1 minute' * power(2, least(q.attempts, 10)), interval '1 hour')
       from picked where q.item_id = picked.item_id
     returning q.item_id
   )
@@ -264,15 +271,14 @@ begin
 end;
 $$;
 
--- Αποτυχία (π.χ. το Gateway δεν απάντησε): ξανά σε 1′, 2′, 4′ … έως 1 ώρα. Το σφάλμα κρατιέται για την Υγεία.
-create function public.knowledge_index_fail(p_item uuid, p_version integer, p_error text, p_now timestamptz default null)
+-- Αποτυχία (π.χ. το Gateway δεν απάντησε): κρατά το σφάλμα για την Υγεία και λύνει το κλείδωμα. Η προσπάθεια μετρήθηκε και
+-- η επόμενη ορίστηκε ήδη στο claim.
+create function public.knowledge_index_fail(p_item uuid, p_version integer, p_error text)
 returns void
 language sql security definer set search_path = ''
 as $$
   update public.knowledge_index_queue q
-     set attempts = q.attempts + 1,
-         last_error = left(coalesce(nullif(btrim(p_error), ''), 'Άγνωστο σφάλμα'), 500),
-         next_try_at = coalesce(p_now, now()) + least(interval '1 minute' * power(2, least(q.attempts, 10)), interval '1 hour'),
+     set last_error = left(coalesce(nullif(btrim(p_error), ''), 'Άγνωστο σφάλμα'), 500),
          locked_until = null
    where q.item_id = p_item and q.content_version = p_version;
 $$;
@@ -358,16 +364,22 @@ grant execute on function public.knowledge_index_rebuild() to authenticated, ser
 revoke all on function
   public.knowledge_index_claim(integer, uuid, timestamptz),
   public.knowledge_index_store(uuid, integer, text, text, jsonb),
-  public.knowledge_index_fail(uuid, integer, text, timestamptz),
+  public.knowledge_index_fail(uuid, integer, text),
   public.knowledge_index_mark(boolean, text, timestamptz),
   public.ai_usage_record(text, text, integer, integer, bigint, text)
   from public, anon, authenticated;
 grant execute on function
   public.knowledge_index_claim(integer, uuid, timestamptz),
   public.knowledge_index_store(uuid, integer, text, text, jsonb),
-  public.knowledge_index_fail(uuid, integer, text, timestamptz),
+  public.knowledge_index_fail(uuid, integer, text),
   public.knowledge_index_mark(boolean, text, timestamptz),
   public.ai_usage_record(text, text, integer, integer, bigint, text)
   to service_role;
 
 revoke all on table public.knowledge_chunks, public.knowledge_index_queue, public.ai_usage from anon, authenticated;
+
+-- ───────────── Backfill ─────────────
+-- Ό,τι δημοσιεύτηκε πριν από αυτό το migration μπαίνει στην ουρά· το παίρνει το πρώτο cron.
+insert into public.knowledge_index_queue (item_id, content_version)
+select i.id, i.content_version from public.knowledge_items i where i.status = 'published'
+on conflict (item_id) do nothing;
