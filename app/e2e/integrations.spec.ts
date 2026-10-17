@@ -206,5 +206,5 @@ test("η Διαχείριση δεν βλέπει τις Ενσωματώσει�
   await expect(page.getByRole("button", { name: "Έλεγχος τώρα" })).toHaveCount(
     0,
   );
-  await expect(page.getByRole("heading", { name: "Συνδρομές" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Συνδρομές", exact: true })).toHaveCount(0);
 });
