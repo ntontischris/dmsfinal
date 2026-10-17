@@ -3,7 +3,7 @@
 -- με όσα βλέπει ο Χρήστης. Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι αριθμοί ελέγχονται με σταθερό «σήμερα»
 -- 2025-03-31 στις authz.* (ως superuser, με τον Χρήστη στα claims)· η άρνηση μέσω των public RPC.
 begin;
-select plan(78);
+select plan(80);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις · a4 Παραγωγή · a7 Διαχείριση
@@ -338,6 +338,10 @@ select throws_ok($$ select authz.export_report('by-client', 'report_turnover_by_
   'P0001', 'Αυτή η Αναφορά δεν εξάγεται', 'Μόνο τα φίλτρα της διεύθυνσης (Περίοδος, Πελάτης, Πωλητής)');
 select throws_ok($$ select authz.export_report('by-client', 'report_turnover_by_client', '{}', 'nope', 'xlsx') $$, 'P0001',
   'Αυτή η Αναφορά δεν εξάγεται', 'Χωρίς πίνακα γραμμών → P0001');
+select throws_ok($$ select authz.export_report('pipeline', 'report_receivables_aging', '{}', 'rows', 'xlsx') $$, 'P0001',
+  'Αυτή η Αναφορά δεν εξάγεται', 'Η Αναφορά του Ίχνους πρέπει να ταιριάζει με το RPC που τρέχει');
+select throws_ok($$ select authz.export_report('turnover', 'report_turnover_monthly', '{}', 'rows', 'xlsx') $$, 'P0001',
+  'Αυτή η Αναφορά δεν εξάγεται', 'Ο πίνακας γραμμών του Ίχνους πρέπει να είναι αυτός της Αναφοράς');
 
 -- ───────────── Ιστορικό εξαγωγών ─────────────
 select is(

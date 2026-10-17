@@ -339,6 +339,8 @@ $$;
 -- Καλεί το public.report_* RPC της Αναφοράς με τα ίδια φίλτρα (p_args: p_period, p_client, p_seller). Το RPC ελέγχει
 -- τα δικά του Δικαιώματα (Ρ1)· δέχεται μόνο RPC που η εφαρμογή ήδη καλεί (authenticated) και επιστρέφουν jsonb.
 -- p_rows_key = ο πίνακας γραμμών στο JSON (για το πλήθος του Ίχνους). Επιστρέφει το JSON της Αναφοράς όπως είναι.
+-- Η τριάδα (Αναφορά, RPC, πίνακας γραμμών) πρέπει να είναι στη λίστα της βάσης· αλλιώς το Ίχνος θα έγραφε ό,τι
+-- δηλώνει ο καλών. Νέα Αναφορά = νέο RPC σε migration, και η ίδια migration ξαναγράφει αυτή τη λίστα.
 create function authz.export_report(p_report text, p_rpc text, p_args jsonb, p_rows_key text, p_format text) returns jsonb
 language plpgsql volatile security definer set search_path = ''
 as $$
@@ -349,11 +351,14 @@ declare
 begin
   perform authz.export_require();
   perform authz.export_check_format(p_format);
-  if p_report is null or p_report !~ '^[a-z0-9-]{1,60}$' or p_rpc is null or p_rpc !~ '^report_[a-z0-9_]{1,60}$'
-     or p_rows_key is null or p_rows_key !~ '^[A-Za-z]{1,40}$' or jsonb_typeof(v_args) <> 'object'
+  if p_report is null or p_rpc is null or p_rows_key is null or jsonb_typeof(v_args) <> 'object'
+     or (p_report, p_rpc, p_rows_key) not in (
+       ('turnover', 'report_turnover_monthly', 'months'), ('by-client', 'report_turnover_by_client', 'rows'),
+       ('receivables', 'report_receivables_aging', 'rows'), ('pipeline', 'report_sales_pipeline', 'stages'),
+       ('results', 'report_sales_results', 'rows'), ('sources', 'report_sales_sources', 'rows'))
      or not exists (
        select 1 from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid = p.pronamespace
-        where n.nspname = 'public' and p.proname = p_rpc and p.prorettype = 'jsonb'::regtype
+        where n.nspname = 'public' and p.proname = p_rpc and p.prorettype = 'jsonb'::regtype and p.prosecdef
           and pg_catalog.has_function_privilege('authenticated', p.oid, 'execute'))
      or exists (select 1 from jsonb_object_keys(v_args) k where k not in ('p_period', 'p_client', 'p_seller')) then
     raise exception 'Αυτή η Αναφορά δεν εξάγεται' using errcode = 'P0001';

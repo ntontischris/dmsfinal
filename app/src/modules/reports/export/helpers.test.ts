@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import type { ReportDefinition, ReportExportSpec } from "../catalog/types";
@@ -102,6 +104,17 @@ describe("exportableReport", () => {
       expect(report.exportSpec?.rpc).toMatch(/^report_[a-z_]+$/);
       expect(report.exportSpec?.rowsKey).toMatch(/^[A-Za-z]+$/);
     }
+  });
+
+  it("should list every report export in the database allowlist", () => {
+    const migration = readFileSync(
+      "supabase/migrations/20261017160000_reports_export.sql",
+      "utf8",
+    );
+    for (const { id, exportSpec } of [...FINANCE_REPORTS, ...SALES_REPORTS])
+      expect(migration).toContain(
+        `('${id}', '${exportSpec?.rpc}', '${exportSpec?.rowsKey}')`,
+      );
   });
 });
 
