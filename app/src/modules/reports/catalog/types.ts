@@ -14,6 +14,8 @@ export type ReportFamily = "finance" | "sales";
 export interface ReportFilters {
   period: PeriodCode;
   clientId?: string;
+  // Ο Πωλητής (?seller=) για τις Αναφορές πωλήσεων (Ρβ)· η βάση ελέγχει το Εύρος.
+  sellerId?: string;
 }
 
 export interface ReportBodyProps {

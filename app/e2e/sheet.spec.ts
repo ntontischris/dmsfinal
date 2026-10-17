@@ -3,8 +3,9 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   PRODUCER,
   bookFilmingFromScreen,
-  currentDay,
+  filmingSpecDay,
   fieldOf,
+  upcomingDay,
   visit,
 } from "./filming-parts";
 import { button, inContext, project, signIn } from "./sales-parts";
@@ -37,7 +38,7 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
 }) => {
   const P = project();
   await signIn(page, "sales@example.com");
-  await bookFilmingFromScreen(page, P, currentDay(20));
+  await bookFilmingFromScreen(page, P, upcomingDay(20, Number(filmingSpecDay().slice(8))));
   const filmingUrl = page.url();
 
   await inContext(browser, "owner@example.com", async (owner) => {

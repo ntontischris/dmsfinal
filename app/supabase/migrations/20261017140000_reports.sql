@@ -12,8 +12,11 @@
 --    Τιμολογίων − καθαρό πιστωτικών κατά ημερομηνία έκδοσης (ο ίδιος τύπος με το turnoverMonth της invoices_view)·
 --    Εισπράξεις = μη διαγραμμένες, με ΦΠΑ, κατά ημερομηνία είσπραξης· ανεξόφλητο = remaining του authz.invoice_standings.
 --    Τζίρος και Εισπράξεις δεν προστίθενται ούτε αφαιρούνται πουθενά.
---  • Περίοδοι (Ρ3): πέντε σταθερές, σε ώρα Ελλάδας (public.sales_today). Μήνες στο μέλλον δεν εμφανίζονται· ο τρέχων
---    μήνας είναι «ως σήμερα» (isPartial). Το p_today των authz.* υπάρχει για τα τεστ με σταθερές ημερομηνίες.
+--  • Περίοδοι (Ρ3): πέντε σταθερές, σε ώρα Ελλάδας (public.sales_today). Οι Αναφορές μετρούν ΟΛΗ την Περίοδο (from..to),
+--    όπως το turnoverMonth της I2 μετρά όλο τον μήνα: Τιμολόγιο ή Είσπραξη με μελλοντική ημερομηνία μέσα στην Περίοδο
+--    μετρά. Το through (min(to, σήμερα)) και το isPartial υπάρχουν μόνο για την ετικέτα «ως σήμερα». Οι γραμμές μηνών
+--    φτάνουν ως τον τρέχοντα μήνα ή ως τον τελευταίο μήνα με κίνηση (ό,τι είναι αργότερα), άρα αθροίζονται στα σύνολα.
+--    Το p_today των authz.* υπάρχει για τα τεστ με σταθερές ημερομηνίες.
 
 -- ───────────── Περίοδοι ─────────────
 
@@ -108,26 +111,36 @@ $$;
 -- { period, amounts, client: { id, name } | null, clients: [{ id, name }],
 --   months: [{ month: 'YYYY-MM', turnover, invoiceCount, creditCount, collections, receiptCount, isPartial }],
 --   totals: { turnover, invoiceCount, creditCount, collections, receiptCount } }
--- turnover/collections null χωρίς «Βλέπει ποσά». clients = όσοι έχουν Τιμολόγιο ή Είσπραξη (για το φίλτρο Πελάτη).
+-- turnover/collections null χωρίς «Βλέπει ποσά». clients = όσοι έχουν Τιμολόγιο ή Είσπραξη (για το φίλτρο Πελάτη)·
+-- client = ο Πελάτης του φίλτρου μόνο αν είναι σε αυτή τη λίστα, αλλιώς null.
 create function authz.report_turnover_monthly(p_period text, p_client uuid, p_today date) returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
 declare
   v_amounts boolean := authz.report_finance_amounts();
   v_from date;
+  v_to date;
   v_through date;
 begin
-  select p.from_date, p.through into v_from, v_through from authz.report_period(p_period, p_today) p;
+  select p.from_date, p.to_date, p.through into v_from, v_to, v_through from authz.report_period(p_period, p_today) p;
   return (
     with inv as (
       select i.* from authz.report_invoices(p_today) i
-       where i.issue_date between v_from and v_through and (p_client is null or i.client_id = p_client)
+       where i.issue_date between v_from and v_to and (p_client is null or i.client_id = p_client)
     ), rec as (
       select r.* from authz.report_receipts() r
-       where r.received_on between v_from and v_through and (p_client is null or r.client_id = p_client)
+       where r.received_on between v_from and v_to and (p_client is null or r.client_id = p_client)
+    ), last_day as (
+      select greatest(v_through, (select max(i.issue_date) from inv i), (select max(r.received_on) from rec r)) as d
     ), months as (
       select g::date as m
-        from generate_series(date_trunc('month', v_from), date_trunc('month', v_through), interval '1 month') g
+        from last_day l,
+             generate_series(date_trunc('month', v_from), date_trunc('month', l.d), interval '1 month') g
+    ), shown_clients as (
+      select c.id, c.name
+        from public.clients c
+       where exists (select 1 from public.invoices i where i.client_id = c.id and i.voided_at is null)
+          or exists (select 1 from public.receipts r where r.client_id = c.id and r.deleted_at is null)
     ), lines as (
       select m.m,
              (select coalesce(sum(i.signed_net), 0) from inv i where date_trunc('month', i.issue_date) = m.m) as turnover,
@@ -140,12 +153,9 @@ begin
     select jsonb_build_object(
       'period', authz.report_period_json(p_period, p_today),
       'amounts', v_amounts,
-      'client', (select jsonb_build_object('id', c.id, 'name', c.name) from public.clients c where c.id = p_client),
+      'client', (select jsonb_build_object('id', c.id, 'name', c.name) from shown_clients c where c.id = p_client),
       'clients', coalesce((
-        select jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name) order by c.name, c.id)
-          from public.clients c
-         where exists (select 1 from public.invoices i where i.client_id = c.id and i.voided_at is null)
-            or exists (select 1 from public.receipts r where r.client_id = c.id and r.deleted_at is null)
+        select jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name) order by c.name, c.id) from shown_clients c
       ), '[]'::jsonb),
       'months', coalesce((
         select jsonb_agg(jsonb_build_object(
@@ -182,12 +192,12 @@ as $$
 declare
   v_amounts boolean := authz.report_finance_amounts();
   v_from date;
-  v_through date;
+  v_to date;
 begin
-  select p.from_date, p.through into v_from, v_through from authz.report_period(p_period, p_today) p;
+  select p.from_date, p.to_date into v_from, v_to from authz.report_period(p_period, p_today) p;
   return (
     with inv as (
-      select i.* from authz.report_invoices(p_today) i where i.issue_date between v_from and v_through
+      select i.* from authz.report_invoices(p_today) i where i.issue_date between v_from and v_to
     ), per as (
       select i.client_id, sum(i.signed_net) as turnover,
              count(*) filter (where i.kind <> 'credit') as invoice_count,

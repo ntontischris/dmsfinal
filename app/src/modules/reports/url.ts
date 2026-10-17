@@ -17,6 +17,7 @@ export interface ReportQuery {
   report?: string;
   period?: PeriodCode;
   client?: string;
+  seller?: string;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -37,6 +38,9 @@ export const parseClient = (
   return text && UUID.test(text) ? text : undefined;
 };
 
+// Ο Πωλητής (?seller=) είναι Χρήστης ομάδας: ίδιος έλεγχος αναγνωριστικού με τον Πελάτη.
+export const parseSeller = parseClient;
+
 export const parseReportId = (
   value: string | string[] | undefined,
 ): string | undefined => single(value)?.trim() || undefined;
@@ -48,6 +52,7 @@ export const reportHref = (query: ReportQuery): string => {
   if (query.period && query.period !== DEFAULT_PERIOD)
     params.set("period", query.period);
   if (query.client) params.set("client", query.client);
+  if (query.seller) params.set("seller", query.seller);
   const search = params.toString();
   return search ? `${REPORTS_PATH}?${search}` : REPORTS_PATH;
 };

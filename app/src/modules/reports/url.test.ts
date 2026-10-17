@@ -7,6 +7,7 @@ import {
   parseClient,
   parsePeriod,
   parseReportId,
+  parseSeller,
   reportHref,
 } from "./url";
 
@@ -61,6 +62,19 @@ describe("reportHref", () => {
     expect(
       reportHref({ report: "turnover", period: "last-month", client: CLIENT }),
     ).toBe(`/app/reports?report=turnover&period=last-month&client=${CLIENT}`);
+  });
+});
+
+describe("seller filter", () => {
+  it("should keep the seller in the link next to the period", () => {
+    expect(reportHref({ report: "pipeline", period: "last-month", seller: CLIENT })).toBe(
+      `/app/reports?report=pipeline&period=last-month&seller=${CLIENT}`,
+    );
+  });
+
+  it("should accept only an id as seller", () => {
+    expect(parseSeller(CLIENT)).toBe(CLIENT);
+    expect(parseSeller("anna")).toBeUndefined();
   });
 });
 

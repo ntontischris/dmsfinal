@@ -9,11 +9,12 @@ interface PeriodFilterProps {
   reportId: string;
   period: PeriodCode;
   clientId?: string;
+  sellerId?: string;
 }
 
 // Οι πέντε Περίοδοι, όπως τις υπολογίζει η βάση (ώρα Ελλάδας), και το εύρος της τρέχουσας («ως σήμερα» αν περιέχει το σήμερα).
 // Αν δεν φορτώσουν, δεν φαίνονται· το σώμα της Αναφοράς δείχνει το δικό του σφάλμα με «Ξαναδοκίμασε».
-export async function PeriodFilter({ reportId, period, clientId }: PeriodFilterProps) {
+export async function PeriodFilter({ reportId, period, clientId, sellerId }: PeriodFilterProps) {
   const periods = await getPeriods();
   if (!periods.ok) return null;
   const items = periods.data.items.flatMap((item) =>
@@ -26,7 +27,7 @@ export async function PeriodFilter({ reportId, period, clientId }: PeriodFilterP
         label={PERIOD_LABEL}
         options={items.map((item) => ({
           label: item.label,
-          href: reportHref({ report: reportId, period: item.code, client: clientId }),
+          href: reportHref({ report: reportId, period: item.code, client: clientId, seller: sellerId }),
           isCurrent: item.code === period,
         }))}
       />

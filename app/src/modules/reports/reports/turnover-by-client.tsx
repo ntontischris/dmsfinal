@@ -63,7 +63,7 @@ function ClientsTable({ data }: { data: TurnoverByClient }) {
             {moneyOrDash(data.totals.turnover)}
           </Td>
           <Td data-label={COLUMNS.share} isNumeric className="font-semibold">
-            {percentOrDash(data.totals.turnover === null ? null : 1)}
+            {percentOrDash(data.totals.turnover !== null && data.totals.turnover > 0 ? 1 : null)}
           </Td>
           <Td data-label={COLUMNS.invoices} isNumeric className="font-semibold">
             {data.totals.invoiceCount}

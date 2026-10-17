@@ -46,18 +46,21 @@ export function currentDay(day: number, now: Date = new Date()): string {
 
 // Μέρα Γυρίσματος που δεν έχει περάσει (το πεδίο δεν δέχεται μέρα πριν από σήμερα): η «preferred» του μήνα, ή αύριο αν
 // η «preferred» πέρασε· ποτέ η «avoid» (η μέρα που κλείνει άλλο τεστ με τις ίδιες ώρες). Ώρα Ελλάδας.
+// Μένει πάντα μέσα στον τρέχοντα μήνα, δηλαδή στην τρέχουσα Περίοδο της Συμφωνίας: στο τέλος του μήνα κόβεται στην
+// τελευταία του μέρα (την τελευταία μέρα του μήνα αυτό μπορεί να είναι το σήμερα, που το πεδίο δέχεται).
+// Στις δύο τελευταίες μέρες του μήνα το «avoid» μπορεί να μη χωρά· τότε τα δύο τεστ πέφτουν την ίδια μέρα.
 export function upcomingDay(preferred: number, avoid: number, now: Date = new Date()): string {
-  const today = Number(
-    new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Athens", day: "numeric" }).format(now),
-  );
+  const part = (options: Intl.DateTimeFormatOptions): number =>
+    Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Athens", ...options }).format(now));
+  const today = part({ day: "numeric" });
+  const lastDay = new Date(Date.UTC(part({ year: "numeric" }), part({ month: "numeric" }), 0)).getUTCDate();
   const day = Math.max(preferred, today + 1);
   const pick = day === avoid ? day + 1 : day;
-  if (pick === preferred) return currentDay(pick, now);
-  const athensToday = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Athens" }).format(now);
-  const date = new Date(`${athensToday}T12:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + (pick - today));
-  return date.toISOString().slice(0, 10);
+  return currentDay(Math.min(pick, lastDay), now);
 }
+
+// Η μέρα του Γυρίσματος του filming.spec.ts· το sheet.spec.ts την αποφεύγει, ώστε τα δύο να μη συμπίπτουν.
+export const filmingSpecDay = (now: Date = new Date()): string => upcomingDay(15, 20, now);
 
 // Η ροή της Συμφωνίας: η Άννα συντάσσει την πρόταση με μηνιαίο πακέτο, ο Ιδιοκτήτης την υπογράφει εκτός συστήματος.
 export async function signedMonthlyAgreement(

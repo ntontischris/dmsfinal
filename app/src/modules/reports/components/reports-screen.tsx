@@ -88,11 +88,12 @@ function ReportView({
             reportId={report.id}
             period={filters.period}
             clientId={filters.clientId}
+            sellerId={filters.sellerId}
           />
         </Suspense>
       )}
       <Suspense
-        key={`${report.id}-${filters.period}-${filters.clientId ?? ""}`}
+        key={`${report.id}-${filters.period}-${filters.clientId ?? ""}-${filters.sellerId ?? ""}`}
         fallback={<ReportSkeleton title={report.title} />}
       >
         <Body

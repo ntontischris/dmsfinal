@@ -15,7 +15,7 @@ import {
 import { dateLabel, moneyOrDash } from "../format";
 import { TOTAL_LABEL } from "../labels";
 import { getReceivablesAging } from "../queries";
-import { ledgerHref } from "../url";
+import { clientHref, ledgerHref } from "../url";
 import type { AgingRow, ReceivablesAging } from "../view-schema";
 
 // Οφειλές κατά ηλικία (M1): το ανεξόφλητο (με ΦΠΑ) σήμερα, σε κουτιά από τη λήξη. Χωρίς Περίοδο. Κάθε γραμμή ανοίγει
@@ -48,7 +48,8 @@ function AgingLine({ row, amounts }: { row: AgingRow; amounts: boolean }) {
   return (
     <Tr>
       <Td data-label={CLIENT_COLUMN}>
-        <Link href={ledgerHref(row.clientId)}>{row.clientName}</Link>
+        {/* Η Καρτέλα θέλει «Βλέπει ποσά»· χωρίς αυτό η γραμμή ανοίγει τη Σελίδα Πελάτη. */}
+        <Link href={amounts ? ledgerHref(row.clientId) : clientHref(row.clientId)}>{row.clientName}</Link>
         {row.oldestDue && (
           <span className="block text-sm text-muted-foreground">
             παλαιότερη λήξη {dateLabel(row.oldestDue)}
