@@ -826,6 +826,8 @@ as $$
     when 'knowledge_item_audience' then authz.has('knowledge.manage')
     -- Εξαγωγές (#200, #201): τι, φίλτρα, γραμμές· χωρίς ποσά
     when 'report_exports' then true
+    -- Συνδρομές (#209): πάροχοι και κόστος, μόνο ο Ιδιοκτήτης
+    when 'subscriptions' then authz.is_owner()
     -- GDPR (#208): αιτήματα, εξαγωγές και ανωνυμοποιήσεις, μόνο για τον Ιδιοκτήτη (ποτέ η Διαχείριση)
     when 'gdpr_requests' then authz.is_owner()
     when 'gdpr' then authz.is_owner()
