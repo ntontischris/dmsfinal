@@ -86,10 +86,14 @@ update auth.users set email_change = 'eleni-new@client-one.example.gr', phone_ch
 insert into auth.identities (id, provider_id, user_id, identity_data, provider) values
   (gen_random_uuid(), 'b2', '00000000-0000-0000-0000-0000000000b2', '{}', 'email');
 insert into auth.sessions (id, user_id) values (gen_random_uuid(), '00000000-0000-0000-0000-0000000000b2');
--- Μια Συμφωνία που ΔΕΝ υπογράφηκαν, με την Ελένη παραλήπτρια και Σύνδεσμο
+-- Μια Συμφωνία που ΔΕΝ υπογράφηκε, με την Ελένη παραλήπτρια και Σύνδεσμο (σε δική της Ευκαιρία)
+insert into public.opportunities (id, client_id, title, stage_id, source_id, manager_id, next_step, next_step_due)
+select '00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-0000000000c1', 'Νέα πρόταση',
+       (select s.id from public.sales_stages s where s.code = 'new'), (select s.id from public.sales_sources s where s.code = 'phone'),
+       '00000000-0000-0000-0000-0000000000a1', 'Κλήση', date '2027-01-01';
 insert into public.agreements (id, opportunity_id, kind, title, state, path, valid_until, payment_days, unused_provisions,
                                filming_notice_hours, filming_cancel_hours, late_cancel_burns, no_show_burns)
-values ('00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000101', 'one_off', 'Νέα πρόταση', 'proposal',
+values ('00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000102', 'one_off', 'Νέα πρόταση', 'proposal',
         'sent', date '2026-03-01', 15, 'lost', 48, 48, false, false);
 insert into public.agreement_recipients (agreement_id, position, name, email, is_signatory) values
   ('00000000-0000-0000-0000-000000000202', 1, 'Ελένη Νικολάου', 'eleni@client-one.example.gr', true);
