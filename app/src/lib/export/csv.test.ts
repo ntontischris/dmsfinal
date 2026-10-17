@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ExportSheet } from "./columns";
+import type { ExportSheet } from "./sheet";
 import { buildCsv, csvCell, csvText, toCsv } from "./csv";
 
 const SHEET: ExportSheet = {

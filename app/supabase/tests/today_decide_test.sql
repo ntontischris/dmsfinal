@@ -5,7 +5,8 @@ select plan(41);
 
 -- ───────────── Μητρώο ─────────────
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.sort between 100 and 199),
-  array['proposal_approvals', 'filming_approvals', 'google_deletions', 'unassigned'], 'Οι τέσσερις κάρτες στη ζώνη της ομάδας decide');
+  array['proposal_approvals', 'filming_approvals', 'google_deletions', 'unassigned', 'gdpr'],
+  'Οι τέσσερις κάρτες στη ζώνη της ομάδας decide, και η «GDPR με προθεσμία» (#208) στο τέλος');
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.needs_second_person),
   array['proposal_approvals', 'unassigned'], 'Κανόνας 8: Προτάσεις προς έγκριση και Χωρίς υπεύθυνο θέλουν δεύτερο άνθρωπο');
 
@@ -276,7 +277,8 @@ update public.team_users set is_active = false, deactivated_at = now()
 select is((select array_agg(c ->> 'code' order by n)
              from jsonb_array_elements(public.today_counts(timestamptz '2026-03-03 10:00+00') -> 'cards') with ordinality x (c, n)
             where c ->> 'grp' = 'decide'),
-  array['filming_approvals', 'google_deletions'], 'Με έναν Χρήστη ομάδας: χωρίς Προτάσεις προς έγκριση και Χωρίς υπεύθυνο');
+  array['filming_approvals', 'google_deletions', 'gdpr'],
+  'Με έναν Χρήστη ομάδας: χωρίς Προτάσεις προς έγκριση και Χωρίς υπεύθυνο· η «GDPR με προθεσμία» μένει, με 0');
 select throws_ok($$ select public.today_card('unassigned') $$, '42501', null, 'Με έναν Χρήστη ομάδας: Χωρίς υπεύθυνο 42501');
 
 select * from finish();

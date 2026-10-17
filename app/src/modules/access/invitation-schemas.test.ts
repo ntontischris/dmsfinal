@@ -80,6 +80,11 @@ describe("φόρμες πρόσκλησης", () => {
     expect(parsed).toEqual({ name: "Μαρία", email: "maria@example.com", locale: "en" });
   });
 
+  it("δεν δέχεται τη διεύθυνση ανωνυμοποιημένου λογαριασμού", () => {
+    const result = inviteFormSchema.safeParse({ name: "Χ", email: "Anonymized-3@Anonymized.Invalid", locale: "el" });
+    expect(result.success).toBe(false);
+  });
+
   it("θέλει τουλάχιστον έναν Ρόλο ομάδας", () => {
     const base = { name: "Μαρία", email: "maria@example.com", locale: "el", roleIds: [] };
     expect(teamInviteSchema.safeParse(base).success).toBe(false);

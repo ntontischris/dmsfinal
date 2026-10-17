@@ -1,10 +1,11 @@
 import { strFromU8, unzipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
+import { mapLimit } from "@/lib/export/map-limit";
+
 import type { ExportSheet } from "./columns";
 import {
   buildAccountantPack,
-  mapLimit,
   packFileName,
   type PackPayload,
 } from "./pack";
