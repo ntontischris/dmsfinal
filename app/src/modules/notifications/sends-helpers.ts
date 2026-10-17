@@ -92,7 +92,8 @@ export interface SendsCaps {
 // Ίδιο με τη βάση: K3 με «Διαχειρίζεται Αυτοματισμούς» ή «Βλέπει Υγεία συστήματος»· «Ξαναστείλε» μόνο με το πρώτο.
 export const sendsCaps = (viewer: Viewer): SendsCaps => ({
   canView: can(viewer, "automations.manage") || can(viewer, "health.view"),
-  canRetry: can(viewer, "automations.manage"),
+  // Υ7 (#215): το «Ξαναστείλε» το κάνει και όποιος «Βλέπει Υγεία συστήματος».
+  canRetry: can(viewer, "automations.manage") || can(viewer, "health.view"),
 });
 
 // Η καρτέλα «Αποστολές» του Πελάτη: όπως το K3, ή ο Υπεύθυνος του Πελάτη. Η βάση ελέγχει και ότι βλέπει τον Πελάτη.

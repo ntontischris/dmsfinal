@@ -52,6 +52,7 @@ export const STATE_LABELS: Readonly<Record<SendState, string>> = {
   retrying: "ξαναδοκιμάζεται",
   failed: "απέτυχε",
   not_sent: "δεν στάλθηκε",
+  ignored: "αγνοήθηκε",
 };
 
 export const COLUMNS = {

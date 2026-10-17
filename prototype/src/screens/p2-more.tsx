@@ -82,7 +82,7 @@ export function GoogleSyncCard() {
         <dd>{GOOGLE_SYNC.queued}</dd>
       </dl>
       <p className="muted">
-        Γίνεται κόκκινο αν ο συγχρονισμός αποτυγχάνει για πάνω από 1 ώρα
+        Γίνεται κόκκινο αν ο συγχρονισμός αποτυγχάνει για πάνω από 30 λεπτά
         (Γεγονός 52).
       </p>
     </HealthCard>

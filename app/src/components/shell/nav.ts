@@ -348,6 +348,12 @@ export const NAV: readonly NavSection[] = [
         href: "/app/audit",
         requires: "audit.view",
       },
+      {
+        code: "P2",
+        label: "Υγεία συστήματος",
+        href: "/app/health",
+        requires: "health.view",
+      },
     ],
   },
   {
