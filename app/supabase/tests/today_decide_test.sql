@@ -277,7 +277,8 @@ update public.team_users set is_active = false, deactivated_at = now()
 select is((select array_agg(c ->> 'code' order by n)
              from jsonb_array_elements(public.today_counts(timestamptz '2026-03-03 10:00+00') -> 'cards') with ordinality x (c, n)
             where c ->> 'grp' = 'decide'),
-  array['filming_approvals', 'google_deletions'], 'Με έναν Χρήστη ομάδας: χωρίς Προτάσεις προς έγκριση και Χωρίς υπεύθυνο');
+  array['filming_approvals', 'google_deletions', 'gdpr'],
+  'Με έναν Χρήστη ομάδας: χωρίς Προτάσεις προς έγκριση και Χωρίς υπεύθυνο· η «GDPR με προθεσμία» μένει, με 0');
 select throws_ok($$ select public.today_card('unassigned') $$, '42501', null, 'Με έναν Χρήστη ομάδας: Χωρίς υπεύθυνο 42501');
 
 select * from finish();

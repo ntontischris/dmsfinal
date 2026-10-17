@@ -97,6 +97,7 @@ export const SECTION_TITLES: Readonly<Record<string, string>> = {
   receipts: "Εισπράξεις",
   filmings: "Γυρίσματα",
   deliverables: "Παραδοτέα",
+  deliverableComments: "Σχόλια σε Παραδοτέα",
   messages: "Συνομιλία",
   assistant: "Συζητήσεις με τον Βοηθό",
 };
@@ -153,6 +154,17 @@ export const COLUMN_TITLES: Readonly<Record<string, string>> = {
   conversation: "Συζήτηση",
   startedAt: "Ξεκίνησε",
   content: "Κείμενο",
+  deliverable: "Παραδοτέο",
+  legalName: "Επωνυμία",
+  city: "Πόλη",
+  afm: "ΑΦΜ",
+  contactName: "Επαφή",
+  contactEmail: "Email επαφής",
+  contactPhone: "Τηλέφωνο επαφής",
+  createdAt: "Δημιουργήθηκε",
+  language: "Γλώσσα",
+  isActive: "Ενεργός",
+  deactivatedAt: "Απενεργοποιήθηκε",
 };
 
 export const MONEY_COLUMNS: ReadonlySet<string> = new Set([

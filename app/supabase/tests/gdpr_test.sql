@@ -3,7 +3,7 @@
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι ημερομηνίες είναι σταθερές (p_today / p_now) στις authz.*,
 -- που καλούνται ως superuser με τον Χρήστη στα claims· η άρνηση ελέγχεται μέσω των public RPC.
 begin;
-select plan(110);
+select plan(136);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Διαχείριση · a3 Παραγωγή · a4 Λένα (απενεργοποιημένη, Παραγωγή) · a5 Πέτρος (ενεργός, Παραγωγή)
@@ -80,6 +80,45 @@ insert into public.invitations (kind, email, name, role_ids, client_id, status, 
 select 'client', 'eleni@client-one.example.gr', 'Ελένη Νικολάου', array[r.id], '00000000-0000-0000-0000-0000000000c1',
        'accepted', timestamptz '2026-01-02 10:00+00', '00000000-0000-0000-0000-0000000000b2'
   from public.roles r where r.name = 'Πλήρης' and r.kind = 'client';
+-- Ο λογαριασμός της Ελένης: αλλαγή email σε εκκρεμότητα, ταυτότητα και συνεδρία
+update auth.users set email_change = 'eleni-new@client-one.example.gr', phone_change = '306900000002'
+ where id = '00000000-0000-0000-0000-0000000000b2';
+insert into auth.identities (id, provider_id, user_id, identity_data, provider) values
+  (gen_random_uuid(), 'b2', '00000000-0000-0000-0000-0000000000b2', '{}', 'email');
+insert into auth.sessions (id, user_id) values (gen_random_uuid(), '00000000-0000-0000-0000-0000000000b2');
+-- Μια Συμφωνία που ΔΕΝ υπογράφηκαν, με την Ελένη παραλήπτρια και Σύνδεσμο
+insert into public.agreements (id, opportunity_id, kind, title, state, path, valid_until, payment_days, unused_provisions,
+                               filming_notice_hours, filming_cancel_hours, late_cancel_burns, no_show_burns)
+values ('00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000101', 'one_off', 'Νέα πρόταση', 'proposal',
+        'sent', date '2026-03-01', 15, 'lost', 48, 48, false, false);
+insert into public.agreement_recipients (agreement_id, position, name, email, is_signatory) values
+  ('00000000-0000-0000-0000-000000000202', 1, 'Ελένη Νικολάου', 'eleni@client-one.example.gr', true);
+insert into public.agreement_links (agreement_id, recipient_name, recipient_email, is_signatory, revision, token_hash) values
+  ('00000000-0000-0000-0000-000000000202', 'Ελένη Νικολάου', 'eleni@client-one.example.gr', true, 1, 'hash-link-202');
+-- Κείμενα άλλων που την αναφέρουν: Γεγονός, Ειδοποίηση του Ιδιοκτήτη, email της ουράς (ένα εκκρεμές, ένα σταλμένο)
+insert into public.events (type, entity, entity_id, case_key, payload)
+select (select t.code from public.event_types t order by t.code limit 1), 'client_users', null, 't:gdpr:b2',
+       '{"userName": "Ελένη Νικολάου", "user_id": "00000000-0000-0000-0000-0000000000b2"}'::jsonb;
+insert into public.events (type, entity, entity_id, case_key, payload)
+select (select t.code from public.event_types t order by t.code limit 1), 'client_users', null, 't:gdpr:other',
+       '{"userName": "Ελένη Νικολάου", "user_id": "00000000-0000-0000-0000-0000000000b1"}'::jsonb;
+insert into public.notifications (user_id, title, body) values
+  ('00000000-0000-0000-0000-0000000000a1', 'Νέο μήνυμα από Ελένη Νικολάου', 'Η Λένα Λάμπρου έκλεισε χρόνο');
+insert into public.email_outbox (kind, to_name, to_email, status, payload, handled_at) values
+  ('test', 'Γιώργος', 'owner@example.com', 'pending', '{"text": "Ρώτησε η Ελένη Νικολάου"}', null),
+  ('test', 'Γιώργος', 'owner@example.com', 'sent', '{"text": "Ρώτησε η Ελένη Νικολάου"}', now());
+-- Παλιές γραμμές του Ίχνους με τα στοιχεία τους (οι triggers είναι σβηστοί εδώ, άρα γράφονται με το χέρι)
+insert into public.audit_log (action, entity, entity_id, before, after) values
+  ('update', 'client_users', '00000000-0000-0000-0000-0000000000c1',
+   '{"client_id": "00000000-0000-0000-0000-0000000000c1", "user_id": "00000000-0000-0000-0000-0000000000b2", "name": "Ελένη Νικολάου", "removed_at": null}',
+   '{"client_id": "00000000-0000-0000-0000-0000000000c1", "user_id": "00000000-0000-0000-0000-0000000000b2", "name": "Ελένη Νικολάου", "removed_at": "2026-02-01"}'),
+  ('insert', 'client_users', '00000000-0000-0000-0000-0000000000c1', null,
+   '{"client_id": "00000000-0000-0000-0000-0000000000c1", "user_id": "00000000-0000-0000-0000-0000000000b1", "name": "Κώστας"}'),
+  ('insert', 'invitations', '00000000-0000-0000-0000-000000000501', null,
+   '{"email": "eleni@client-one.example.gr", "name": "Ελένη Νικολάου", "status": "pending"}'),
+  ('update', 'clients', '00000000-0000-0000-0000-0000000000c1',
+   '{"name": "Κυψέλη Καφέ", "city": "Αθήνα", "contact_name": "Μαρία Παπαδάκη", "contact_email": "maria@kypseli.example.gr", "contact_phone": "6900000001"}',
+   '{"name": "Κυψέλη Καφέ", "city": "Πειραιάς", "contact_name": "Μαρία Παπαδάκη", "contact_email": "maria@kypseli.example.gr", "contact_phone": "6900000001"}');
 set local session_replication_role = origin;
 
 -- ───────────── Βοηθητικά (ως postgres, ποτέ ως authenticated) ─────────────
@@ -184,8 +223,16 @@ reset role;
 select throws_ok($$ select authz.gdpr_request_create('export', 'client', '00000000-0000-0000-0000-0000000000c1',
                                                      date '2026-04-02', '', date '2026-04-01') $$, 'P0001',
   'Η ημερομηνία λήψης δεν μπορεί να είναι μετά από σήμερα', 'Η λήψη δεν είναι στο μέλλον');
-select is(authz.today_count_gdpr(public.t_uid('a1'), null, timestamptz '2026-03-31 21:30+00'), null,
-  'Χωρίς ανοιχτό αίτημα η κάρτα δεν υπάρχει (null, όχι 0)');
+select is(authz.today_count_gdpr(public.t_uid('a1'), null, timestamptz '2026-03-31 21:30+00'), 0,
+  'Χωρίς ανοιχτό αίτημα: 0 για τον Ιδιοκτήτη (το null σημαίνει «καμία πρόσβαση»)');
+set local role authenticated;
+select public.t_as('a1');
+select public.today_prefs_set(array['gdpr'], array['gdpr']);
+select is((select c ->> 'count' || ' · ' || (c ->> 'hidden') || ' · ' || n
+             from jsonb_array_elements(public.today_counts() -> 'cards') with ordinality x (c, n) where c ->> 'code' = 'gdpr'),
+  '0 · true · 1', 'Η κάρτα με 0 μένει στα πλήθη, και η Προσαρμογή κρατά θέση και «κρυφή»');
+select public.today_prefs_reset();
+reset role;
 select set_config('t.r1', authz.gdpr_request_create('export', 'client', '00000000-0000-0000-0000-0000000000c1', null,
   'Με email', date '2026-01-31')::text, true);
 select set_config('t.r2', authz.gdpr_request_create('anonymize', 'client_user', '00000000-0000-0000-0000-0000000000b2',
@@ -256,7 +303,7 @@ select set_config('t.client', public.gdpr_export('client', '00000000-0000-0000-0
 select set_config('t.person', public.gdpr_export('client_user', '00000000-0000-0000-0000-0000000000b2')::text, true);
 reset role;
 select is((select array_agg(k order by k) from jsonb_object_keys(current_setting('t.client')::jsonb -> 'sections') k),
-  array['agreements', 'deliverables', 'details', 'filmings', 'invoices', 'messages', 'receipts', 'users'],
+  array['agreements', 'deliverableComments', 'deliverables', 'details', 'filmings', 'invoices', 'messages', 'receipts', 'users'],
   'Πελάτης: όλες οι ενότητες');
 select is((select array_agg(m ->> 'body' order by n)
              from jsonb_array_elements(current_setting('t.client')::jsonb -> 'sections' -> 'messages') with ordinality x (m, n)),
@@ -270,7 +317,7 @@ select is((select array_agg(u ->> 'email' order by n)
 select is(current_setting('t.client')::jsonb -> 'subject', '{"kind": "client", "id": "00000000-0000-0000-0000-0000000000c1",
   "label": "Κυψέλη Καφέ"}'::jsonb, 'Το υποκείμενο της εξαγωγής');
 select is((select array_agg(k order by k) from jsonb_object_keys(current_setting('t.person')::jsonb -> 'sections') k),
-  array['agreementRoles', 'assistant', 'details', 'memberships', 'messages'], 'Πρόσωπο: οι ενότητές του');
+  array['agreementRoles', 'assistant', 'deliverableComments', 'details', 'memberships', 'messages'], 'Πρόσωπο: οι ενότητές του');
 select is(current_setting('t.person')::jsonb -> 'sections' -> 'details' ->> 'email', 'eleni@client-one.example.gr',
   'Τα στοιχεία του προσώπου');
 select is((select count(*)::integer from public.audit_log a
@@ -279,7 +326,7 @@ select is((select count(*)::integer from public.audit_log a
 select is((select a.after from public.audit_log a
             where a.id > current_setting('t.audit')::bigint and a.entity = 'gdpr' and a.entity_id = '00000000-0000-0000-0000-0000000000c1'),
   '{"event": "exported", "subjectKind": "client", "sections": {"users": 2, "details": 1, "filmings": 0, "invoices": 1,
-    "messages": 2, "receipts": 0, "agreements": 1, "deliverables": 0}}'::jsonb,
+    "messages": 2, "receipts": 0, "agreements": 2, "deliverables": 0, "deliverableComments": 0}}'::jsonb,
   'Το Ίχνος έχει μόνο τα πλήθη, όχι τα δεδομένα');
 
 -- ───────────── Ν8 Ανωνυμοποίηση: λόγοι «δεν γίνεται» ─────────────
@@ -348,14 +395,57 @@ select is((select r.email || ' · ' || s.signed_name from public.agreement_recip
   'eleni@client-one.example.gr · Ελένη Νικολάου', 'Η υπογεγραμμένη Συμφωνία μένει όπως υπογράφηκε');
 select is((select count(*)::integer from public.invoices where client_id = '00000000-0000-0000-0000-0000000000c1'), 1,
   'Τα Τιμολόγια μένουν');
-select is((select count(*)::integer from public.audit_log a where a.id > current_setting('t.audit')::bigint), 1,
-  'Μία γραμμή στο Ίχνος, καμία γραμμή-γραμμή με το «πριν»');
+select is((select count(*)::integer from public.audit_log a where a.id > current_setting('t.audit')::bigint), 2,
+  'Δύο γραμμές στο Ίχνος (ανωνυμοποίηση, καθάρισμα), καμία γραμμή-γραμμή με το «πριν»');
+select is((select a.after - 'rows' from public.audit_log a
+            where a.id > current_setting('t.audit')::bigint and a.after ->> 'event' = 'audit_scrubbed'),
+  jsonb_build_object('event', 'audit_scrubbed', 'subjectKind', 'client_user', 'n', current_setting('t.n')::integer),
+  'Το καθάρισμα του Ίχνους γράφεται μόνο με αριθμούς');
+select is((select (a.after ->> 'rows')::integer from public.audit_log a
+            where a.id > current_setting('t.audit')::bigint and a.after ->> 'event' = 'audit_scrubbed'), 2,
+  'Καθαρίστηκαν οι δύο παλιές γραμμές της (συμμετοχή, πρόσκληση)');
 select is((select a.entity || ' ' || a.entity_id || ' ' || a.after::text from public.audit_log a
-            where a.id > current_setting('t.audit')::bigint),
+            where a.id > current_setting('t.audit')::bigint and a.after ->> 'event' = 'anonymized'),
   'gdpr 00000000-0000-0000-0000-0000000000b2 ' || jsonb_build_object('event', 'anonymized', 'subjectKind', 'client_user',
                                                                        'n', current_setting('t.n')::integer)::text,
   'Το Ίχνος χωρίς τα σβησμένα στοιχεία');
 select is(current_setting('gdpr.anonymizing', true), 'off', 'Το Ίχνος γράφει ξανά κανονικά μετά');
+select is((select count(*)::integer from public.audit_log a
+            where concat(a.before::text, a.after::text) ~* 'Ελένη Νικολάου|eleni@client-one'), 0,
+  'Καμία γραμμή του Ίχνους δεν κρατά πια το όνομα ή το email της');
+select is((select a.after ->> 'name' from public.audit_log a
+            where a.entity = 'client_users' and a.after ->> 'user_id' = '00000000-0000-0000-0000-0000000000b2'),
+  'Ανωνυμοποιημένος Χρήστης ' || current_setting('t.n'), 'Η παλιά γραμμή γράφει το νέο όνομα');
+select is((select a.after ->> 'removed_at' from public.audit_log a
+            where a.entity = 'client_users' and a.after ->> 'user_id' = '00000000-0000-0000-0000-0000000000b2'),
+  '2026-02-01', 'Τα άλλα κλειδιά της μένουν');
+select is((select a.after ->> 'name' from public.audit_log a
+            where a.entity = 'client_users' and a.after ->> 'user_id' = '00000000-0000-0000-0000-0000000000b1'),
+  'Κώστας', 'Η γραμμή άλλου Χρήστη δεν αλλάζει');
+select is((select count(*)::integer from auth.identities where user_id = public.t_uid('b2'))
+        + (select count(*)::integer from auth.sessions where user_id = public.t_uid('b2')), 0,
+  'Σβήνουν ταυτότητες και συνεδρίες του λογαριασμού');
+select is((select coalesce(email_change, '') || '|' || coalesce(phone_change, '') from auth.users where id = public.t_uid('b2')),
+  '|', 'Καμία αλλαγή email ή τηλεφώνου σε εκκρεμότητα');
+select is((select r.name || ' · ' || r.email || ' · ' || l.recipient_name || ' · ' || l.recipient_email
+             from public.agreement_recipients r join public.agreement_links l on l.agreement_id = r.agreement_id
+            where r.agreement_id = '00000000-0000-0000-0000-000000000202'),
+  'Ανωνυμοποιημένος Χρήστης ' || current_setting('t.n') || ' · anonymized-' || current_setting('t.n') || '@anonymized.invalid · '
+    || 'Ανωνυμοποιημένος Χρήστης ' || current_setting('t.n') || ' · anonymized-' || current_setting('t.n') || '@anonymized.invalid',
+  'Στη Συμφωνία που δεν υπογράφηκε: παραλήπτης και Σύνδεσμος παίρνουν το νέο όνομα');
+select is((select payload ->> 'userName' from public.events where case_key = 't:gdpr:b2'),
+  'Ανωνυμοποιημένος Χρήστης ' || current_setting('t.n'), 'Το Γεγονός που την αναφέρει παίρνει το νέο όνομα');
+select is((select payload ->> 'userName' from public.events where case_key = 't:gdpr:other'), 'Ελένη Νικολάου',
+  'Γεγονός που δεν την αναφέρει με το id της μένει');
+select is((select title from public.notifications where user_id = public.t_uid('a1') and body like '%έκλεισε χρόνο'),
+  'Νέο μήνυμα από Ανωνυμοποιημένος Χρήστης ' || current_setting('t.n'), 'Η Ειδοποίηση άλλου Χρήστη παίρνει το νέο όνομα');
+select is((select array_agg(status || ': ' || (payload ->> 'text') order by status) from public.email_outbox
+            where to_email = 'owner@example.com'),
+  array['pending: Ρώτησε η Ανωνυμοποιημένος Χρήστης ' || current_setting('t.n'), 'sent: Ρώτησε η Ελένη Νικολάου'],
+  'Email της ουράς: όσο δεν στάλθηκε αλλάζει, το σταλμένο μένει');
+select is((select subject || ' · ' || to_email from public.email_log where kind = 'test'),
+  'Δοκιμή · anonymized-' || current_setting('t.n') || '@anonymized.invalid',
+  'Ιστορικό αποστολών: το θέμα μένει, η διεύθυνση κρύβεται');
 set local role authenticated;
 select public.t_as('a1');
 select throws_ok($$ select public.gdpr_anonymize('client_user', '00000000-0000-0000-0000-0000000000b2',
@@ -369,6 +459,27 @@ select throws_ok($$ insert into public.client_users (client_id, user_id, name, r
                     select '00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000b2', 'Ξανά', r.id
                       from public.roles r where r.name = 'Πλήρης' and r.kind = 'client' $$, 'P0001',
   'Ο Χρήστης έχει ανωνυμοποιηθεί· δεν ενεργοποιείται ξανά', 'Δεν ξαναμπαίνει σε Πελάτη');
+
+-- ───────────── Το Ίχνος μένει αμετάβλητο έξω από την ανωνυμοποίηση ─────────────
+select throws_ok($$ update public.audit_log set after = after || '{"name": "Ανωνυμοποιημένος Χρήστης 1"}'
+                     where id = (select max(id) from public.audit_log where entity = 'client_users') $$,
+  'P0001', 'Το Ίχνος ενεργειών δέχεται μόνο προσθήκες', 'Χωρίς την ανωνυμοποίηση καμία αλλαγή, ούτε σε όνομα');
+select set_config('gdpr.anonymizing', 'on', true);
+select throws_ok($$ update public.audit_log set entity_id = 'x' where id = (select max(id) from public.audit_log) $$,
+  'P0001', 'Το Ίχνος ενεργειών δέχεται μόνο προσθήκες', 'Και μέσα σε αυτήν: όχι αλλαγή σε άλλο πεδίο');
+select throws_ok($$ update public.audit_log set after = after || '{"name": "Κάποιος άλλος"}'
+                     where id = (select max(id) from public.audit_log where entity = 'client_users') $$,
+  'P0001', 'Το Ίχνος ενεργειών δέχεται μόνο προσθήκες', 'Και μέσα σε αυτήν: όνομα μόνο προς το «Ανωνυμοποιημένος Χρήστης N»');
+select throws_ok($$ delete from public.audit_log where id = (select max(id) from public.audit_log) $$,
+  'P0001', 'Το Ίχνος ενεργειών δέχεται μόνο προσθήκες', 'Και μέσα σε αυτήν: καμία διαγραφή');
+select set_config('gdpr.anonymizing', 'off', true);
+select throws_ok($$ insert into public.invitations (kind, email, name, role_ids)
+                    select 'team', 'anonymized-1@anonymized.invalid', 'Χ', array[r.id] from public.roles r
+                     where r.name = 'Παραγωγή' and r.kind = 'team' $$, 'P0001', 'Αυτή η διεύθυνση δεν δέχεται προσκλήσεις',
+  'Η διεύθυνση ανωνυμοποιημένου λογαριασμού δεν προσκαλείται');
+select throws_ok($$ insert into public.team_users (user_id, name, email, is_active)
+                    values ('00000000-0000-0000-0000-0000000000b2', 'Ξανά', 'x@example.com', true) $$, 'P0001',
+  'Ο Χρήστης έχει ανωνυμοποιηθεί· δεν ενεργοποιείται ξανά', 'Ούτε μπαίνει στην ομάδα');
 
 -- ───────────── Ν8 Ανωνυμοποίηση Χρήστη ομάδας ─────────────
 set local role authenticated;
@@ -385,7 +496,20 @@ select throws_ok($$ update public.team_users set is_active = true where user_id 
   'P0001', 'Ο Χρήστης έχει ανωνυμοποιηθεί· δεν ενεργοποιείται ξανά', 'Δεν επανενεργοποιείται');
 select is((select count(*)::integer from public.audit_log a
             where a.id > current_setting('t.audit')::bigint and a.entity = 'team_users'), 0,
-  'Καμία γραμμή team_users με το παλιό email στο Ίχνος');
+  'Καμία νέα γραμμή team_users με το παλιό email στο Ίχνος');
+set local role authenticated;
+select public.t_as('a2');
+select is((select count(*)::integer from public.audit_log a
+            where a.entity = 'team_users' and a.entity_id = '00000000-0000-0000-0000-0000000000a4'
+              and a.after ->> 'name' = current_setting('t.lena')::jsonb ->> 'name'
+              and a.after ->> 'email' = 'anonymized-' || (current_setting('t.lena')::jsonb ->> 'n') || '@anonymized.invalid'), 1,
+  'Η Διαχείριση στο Ίχνος βλέπει το νέο όνομα και το placeholder στη γραμμή της Λένας');
+select is((select count(*)::integer from public.audit_log a
+            where concat(a.before::text, a.after::text) ~* 'Λένα Λάμπρου|lena@example.com'), 0,
+  'και κανένα παλιό όνομα ή email');
+reset role;
+select is((select body from public.notifications where user_id = public.t_uid('a1') and body like '%έκλεισε χρόνο'),
+  'Η ' || (current_setting('t.lena')::jsonb ->> 'name') || ' έκλεισε χρόνο', 'Και στην Ειδοποίηση του Ιδιοκτήτη');
 
 -- ───────────── Ν8 Ανωνυμοποίηση Επαφής ─────────────
 set local role authenticated;
@@ -399,7 +523,13 @@ select is((select contact_name || ' · ' || contact_email || ' · [' || contact_
 select is((select count(*)::integer from public.gdpr_anonymizations), 3, 'Τρεις ανωνυμοποιήσεις, χωρίς κανένα στοιχείο τους');
 select is((select count(*)::integer from public.audit_log a
             where a.id > current_setting('t.audit')::bigint and a.entity = 'clients'), 0,
-  'Καμία γραμμή clients με τα παλιά στοιχεία στο Ίχνος');
+  'Καμία νέα γραμμή clients με τα παλιά στοιχεία στο Ίχνος');
+select is((select count(*)::integer from public.audit_log a
+            where concat(a.before::text, a.after::text) ~* 'Μαρία Παπαδάκη|maria@kypseli|6900000001'), 0,
+  'Οι παλιές γραμμές χάνουν όνομα, email και τηλέφωνο της Επαφής');
+select is((select (a.before ->> 'name') || ' · ' || (a.after ->> 'city') || ' · ' || coalesce(a.after ->> 'contact_phone', 'null')
+             from public.audit_log a where a.entity = 'clients' and a.after ->> 'city' = 'Πειραιάς'),
+  'Κυψέλη Καφέ · Πειραιάς · null', 'Ο Πελάτης ως επιχείρηση και τα άλλα πεδία μένουν στο Ίχνος');
 set local role authenticated;
 select public.t_as('a1');
 select is((select c ->> 'contactBlock' from jsonb_array_elements(public.gdpr_subjects() -> 'clients') c

@@ -181,21 +181,26 @@ export const gdprFolder = (
 ): string =>
   fileBase([ZIP_FOLDER, payload.data.subject.label, payload.exportedOn]);
 
+// Οι γραμμές μιας ενότητας για CSV: η λίστα όπως είναι, τα «Στοιχεία» (ένα αντικείμενο) ως μία γραμμή.
+const sectionRows = (value: GdprExportData["sections"][string]): readonly ExportRow[] =>
+  Array.isArray(value) ? value : value ? [value] : [];
+
 const csvFiles = (
   folder: string,
   sections: GdprExportData["sections"],
 ): Zippable =>
   Object.fromEntries(
-    Object.entries(sections).flatMap(([key, value]) =>
-      Array.isArray(value) && value.length > 0
+    Object.entries(sections).flatMap(([key, value]) => {
+      const rows = sectionRows(value);
+      return rows.length > 0
         ? [
             [
               `${folder}/${fileBase([sectionTitle(key)])}.csv`,
-              buildCsv(sectionSheet(key, value)),
+              buildCsv(sectionSheet(key, rows)),
             ],
           ]
-        : [],
-    ),
+        : [];
+    }),
   );
 
 export async function buildGdprZip(

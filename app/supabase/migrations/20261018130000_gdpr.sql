@@ -5,7 +5,7 @@
 --    ή email: το όνομα του υποκειμένου βγαίνει κάθε φορά από την πηγή του, οπότε μετά την ανωνυμοποίηση γράφει το νέο.
 --    Η λήψη και το «σήμερα» είναι ημερομηνίες Αθήνας (public.sales_today()· τα τεστ δίνουν p_today / p_now).
 --    RLS μόνο για τον Ιδιοκτήτη· όλες οι εγγραφές γίνονται από RPC. Κάρτα «GDPR με προθεσμία» στο Σήμερα: μόνο για
---    τον Ιδιοκτήτη, και μόνο όταν υπάρχει ανοιχτό αίτημα (με μηδέν δεν εμφανίζεται καθόλου, ούτε στη «Τίποτα σε αναμονή»).
+--    τον Ιδιοκτήτη· με μηδέν ανοιχτά μαζεύεται στη «Τίποτα σε αναμονή», όπως κάθε κάρτα.
 --  • Ν7 Εξαγωγή (public.gdpr_export): ενότητες για πρόσωπο ή για ολόκληρο Πελάτη. Η Συνομιλία δεν έχει ποτέ Εσωτερικά
 --    Μηνύματα (not is_internal μέσα στο query)· τα Παραδοτέα μόνο με τις Εκδόσεις που στάλθηκαν στον πελάτη. Γράφει στο
 --    Ίχνος (entity 'gdpr', μόνο πλήθη ανά ενότητα) ΠΡΙΝ επιστρέψει, στην ίδια συναλλαγή. Τα PDF των Τιμολογίων φεύγουν ως
@@ -17,11 +17,15 @@
 --    Σβήνουν: τηλέφωνο, προτιμήσεις, Σύνδεσμος ημερολογίου, Συζητήσεις με τον Βοηθό, Ειδοποιήσεις. Η διεύθυνση κρύβεται
 --    στο Ιστορικό αποστολών, στις ουρές email και στις προσκλήσεις (οι εκκρεμείς ακυρώνονται). Ο λογαριασμός εισόδου
 --    παίρνει το placeholder email, χάνει κωδικό, ταυτότητες και συνεδρίες, και μόνιμο ban· δεν διαγράφεται.
---    Μένουν: Μηνύματα, Ίχνος, Συμφωνίες (παραλήπτες, υπογραφές) και Τιμολόγια όπως ήταν. Φωτογραφία προφίλ δεν υπάρχει
---    ακόμα στο σχήμα, άρα δεν έχει τι να σβήσει.
+--    Συμφωνίες που δεν υπογράφηκαν: ο παραλήπτης και οι Σύνδεσμοί του παίρνουν το νέο όνομα και το placeholder. Γεγονότα που
+--    αναφέρουν το πρόσωπο, Ειδοποιήσεις άλλων και email της ουράς που δεν στάλθηκαν: το παλιό όνομα γίνεται το νέο.
+--    Μένουν: Μηνύματα, υπογεγραμμένες Συμφωνίες (παραλήπτες, υπογραφές), Τιμολόγια, και ό,τι στάλθηκε (το θέμα στο
+--    Ιστορικό αποστολών). Φωτογραφία προφίλ δεν υπάρχει ακόμα στο σχήμα.
 --    Το Ίχνος: οι αλλαγές της ανωνυμοποίησης δεν γράφονται γραμμή-γραμμή (θα κρατούσαν τα σβησμένα στοιχεία στο «πριν»).
---    Η authz.audit_row τις παραλείπει όσο ισχύει το gdpr.anonymizing της συναλλαγής (ίδιο σχήμα με το sales.merging), και
---    γράφεται μία γραμμή 'gdpr' χωρίς τα σβησμένα. Ο Χρήστης που ανωνυμοποιήθηκε δεν επανενεργοποιείται.
+--    Η authz.audit_row τις παραλείπει όσο ισχύει το gdpr.anonymizing της συναλλαγής (ίδιο σχήμα με το sales.merging). Οι
+--    παλιές γραμμές του προσώπου χάνουν όνομα, email και τηλέφωνο (μία ελεγχόμενη εξαίρεση στο authz.reject_audit_change·
+--    καμία γραμμή δεν σβήνει). Γράφονται δύο γραμμές 'gdpr' μόνο με αριθμούς. Ο Χρήστης που ανωνυμοποιήθηκε δεν
+--    επανενεργοποιείται, δεν ξαναμπαίνει σε Πελάτη ή στην ομάδα, και η διεύθυνσή του δεν προσκαλείται.
 
 -- ───────────── Πίνακες ─────────────
 
@@ -381,6 +385,26 @@ as $$
    where lower(btrim(r.email)) = any (p_emails);
 $$;
 
+-- Τα σχόλια Χρηστών πελάτη σε Παραδοτέα ενός Πελάτη ή ενός προσώπου, ΧΩΡΙΣ τα Εσωτερικά.
+create function authz.gdpr_deliverable_comments(p_client uuid, p_author uuid) returns jsonb
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'at', dc.created_at, 'production', p.title, 'deliverable', d.title, 'version', dc.version_number,
+           'author', (select cu.name from public.client_users cu where cu.user_id = dc.created_by
+                       order by (cu.client_id = p.client_id) desc, cu.joined_at desc limit 1),
+           'body', dc.body
+         ) order by dc.created_at, dc.id), '[]'::jsonb)
+    from public.deliverable_comments dc
+    join public.deliverables d on d.id = dc.deliverable_id
+    join public.productions p on p.id = d.production_id
+   where not dc.is_internal and dc.created_by is not null
+     and not exists (select 1 from public.team_users t where t.user_id = dc.created_by)
+     and (p_client is null or p.client_id = p_client)
+     and (p_author is null or dc.created_by = p_author)
+     and (p_client is not null or p_author is not null);
+$$;
+
 -- Οι Συζητήσεις ενός Χρήστη με τον Βοηθό, μία γραμμή ανά μήνυμα.
 create function authz.gdpr_assistant(p_user uuid) returns jsonb
 language sql stable security definer set search_path = ''
@@ -449,6 +473,7 @@ as $$
         join public.productions p on p.id = d.production_id
         left join public.deliverable_versions v on v.deliverable_id = d.id and v.sent_at is not null
        where p.client_id = p_client and d.cancelled_at is null), '[]'::jsonb),
+    'deliverableComments', authz.gdpr_deliverable_comments(p_client, null),
     'messages', authz.gdpr_messages(p_client, null));
 $$;
 
@@ -481,6 +506,7 @@ as $$
                                    join public.roles r on r.id = cu.role_id
                                   where cu.user_id = u.id), '[]'::jsonb),
         'messages', authz.gdpr_messages(null, u.id),
+        'deliverableComments', authz.gdpr_deliverable_comments(null, u.id),
         'assistant', authz.gdpr_assistant(u.id),
         'agreementRoles', authz.gdpr_agreement_roles(authz.gdpr_emails('client_user', u.id)))
         from auth.users u where u.id = p_id and authz.gdpr_is_client_user(p_id))
@@ -560,6 +586,7 @@ begin
   delete from public.assistant_conversations where user_id = p_user;
   update auth.users
      set email = p_mail, phone = null, encrypted_password = '', raw_user_meta_data = '{}'::jsonb,
+         email_change = '', phone_change = '', email_change_token_new = '', confirmation_token = '', recovery_token = '',
          banned_until = timestamptz '2999-12-31 00:00:00+00', updated_at = now()
    where id = p_user;
   delete from auth.identities where user_id = p_user;
@@ -568,6 +595,250 @@ begin
   delete from auth.mfa_factors where user_id = p_user;
   delete from auth.one_time_tokens where user_id = p_user;
 end;
+$$;
+
+-- ───────────── Ν8 Ίχνος: μία ελεγχόμενη διαγραφή των στοιχείων στις παλιές γραμμές ─────────────
+-- Οι παλιές γραμμές του Ίχνους κρατούν όνομα, email και τηλέφωνο στο «πριν» / «μετά». Η ανωνυμοποίηση τα αντικαθιστά
+-- (όνομα → «Ανωνυμοποιημένος Χρήστης N», email → placeholder, τηλέφωνο → null) μόνο στις γραμμές του προσώπου, ενώ η
+-- διεύθυνσή του φεύγει από όποια γραμμή κι αν τη γράφει. Καμία γραμμή δεν σβήνει και κανένα άλλο κλειδί δεν αλλάζει· το
+-- authz.reject_audit_change το ελέγχει γραμμή-γραμμή.
+
+-- Τα κλειδιά με προσωπικά στοιχεία στο «πριν» / «μετά» του Ίχνους, ανά ομάδα. Στον Πελάτη μόνο τα στοιχεία της Επαφής.
+create function authz.gdpr_audit_keys(p_group text, p_entity text) returns text[]
+language sql immutable set search_path = ''
+as $$
+  select case
+    when p_entity = 'clients' then case p_group when 'name' then array['contact_name'] when 'email' then array['contact_email']
+                                                when 'phone' then array['contact_phone'] else array[]::text[] end
+    else case p_group when 'name' then array['name', 'full_name', 'to_name', 'recipient_name']
+                      when 'email' then array['email', 'to_email', 'recipient_email']
+                      when 'phone' then array['phone']
+                      else array['photo', 'photo_url', 'avatar_url'] end
+  end;
+$$;
+
+create function authz.gdpr_audit_all_keys() returns text[]
+language sql immutable set search_path = ''
+as $$
+  select array['name', 'full_name', 'to_name', 'recipient_name', 'contact_name', 'email', 'to_email', 'recipient_email',
+               'contact_email', 'phone', 'contact_phone', 'photo', 'photo_url', 'avatar_url'];
+$$;
+
+-- Ένα «πριν» ή «μετά» χωρίς τα στοιχεία του προσώπου. p_owned: η γραμμή είναι του προσώπου (όλα τα στοιχεία της φεύγουν)·
+-- αλλιώς φεύγει μόνο η ίδια η διεύθυνσή του.
+create function authz.gdpr_scrub_row(
+  p_row jsonb, p_entity text, p_owned boolean, p_emails text[], p_new_name text, p_new_mail text
+) returns jsonb
+language sql immutable set search_path = ''
+as $$
+  select case when p_row is null or jsonb_typeof(p_row) <> 'object' then p_row else coalesce((
+    select jsonb_object_agg(e.key, case
+             when p_owned and e.key = any (authz.gdpr_audit_keys('name', p_entity)) and jsonb_typeof(e.value) = 'string'
+               then to_jsonb(p_new_name)
+             when e.key = any (authz.gdpr_audit_keys('email', p_entity)) and jsonb_typeof(e.value) = 'string'
+                  and (p_owned or lower(btrim(e.value #>> '{}')) = any (p_emails))
+               then to_jsonb(p_new_mail)
+             when p_owned and e.key = any (authz.gdpr_audit_keys('phone', p_entity) || authz.gdpr_audit_keys('photo', p_entity))
+                  and jsonb_typeof(e.value) <> 'null'
+               then 'null'::jsonb
+             else e.value end)
+      from jsonb_each(p_row) e), '{}'::jsonb) end;
+$$;
+
+-- Η αλλαγή μιας γραμμής του Ίχνους είναι μόνο διαγραφή στοιχείων: ίδια ταυτότητα, ίδια όλα τα άλλα κλειδιά, και κάθε κλειδί
+-- προσωπικών στοιχείων είτε ίδιο είτε null είτε το όνομα / email μιας ανωνυμοποίησης.
+create function authz.gdpr_audit_scrub_ok(o public.audit_log, n public.audit_log) returns boolean
+language sql immutable set search_path = ''
+as $$
+  select n.id = o.id and n.at = o.at and n.actor_id is not distinct from o.actor_id and n.action = o.action
+     and n.entity = o.entity and n.entity_id is not distinct from o.entity_id
+     and (case when jsonb_typeof(o.before) = 'object' then o.before - authz.gdpr_audit_all_keys() else o.before end)
+         is not distinct from (case when jsonb_typeof(n.before) = 'object' then n.before - authz.gdpr_audit_all_keys() else n.before end)
+     and (case when jsonb_typeof(o.after) = 'object' then o.after - authz.gdpr_audit_all_keys() else o.after end)
+         is not distinct from (case when jsonb_typeof(n.after) = 'object' then n.after - authz.gdpr_audit_all_keys() else n.after end)
+     and not exists (
+       select 1
+         from (values (o.before, n.before), (o.after, n.after)) x (old_row, new_row)
+         cross join unnest(authz.gdpr_audit_all_keys()) k
+        where jsonb_typeof(x.new_row) = 'object' and x.new_row ? k
+          and (x.new_row -> k) is distinct from (x.old_row -> k)
+          and jsonb_typeof(x.new_row -> k) <> 'null'
+          and coalesce(x.new_row ->> k, '') !~ '^Ανωνυμοποιημένος Χρήστης [0-9]+$'
+          and not authz.gdpr_is_placeholder(x.new_row ->> k));
+$$;
+
+-- Ίδιο με τον αρχικό ορισμό (20261007165851_audit_log.sql): μόνο προσθήκες. Η μόνη εξαίρεση: η διαγραφή στοιχείων της
+-- ανωνυμοποίησης, όσο ισχύει το gdpr.anonymizing της συναλλαγής, και μόνο όπως την επιτρέπει το authz.gdpr_audit_scrub_ok.
+create or replace function authz.reject_audit_change() returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if tg_op = 'UPDATE' and tg_level = 'ROW' and coalesce(current_setting('gdpr.anonymizing', true), '') = 'on' then
+    if authz.gdpr_audit_scrub_ok(old, new) then
+      return new;
+    end if;
+  end if;
+  raise exception 'Το Ίχνος ενεργειών δέχεται μόνο προσθήκες' using errcode = 'P0001';
+end;
+$$;
+
+-- Οι γραμμές του Ίχνους που έχουν στοιχεία του προσώπου. Γραμμή «του προσώπου»: του λογαριασμού του (id ή user_id), της
+-- Επαφής (ο Πελάτης της), ή με τη διεύθυνσή του. Επιστρέφει πόσες γραμμές άλλαξαν.
+create function authz.gdpr_scrub_audit(p_user uuid, p_client uuid, p_emails text[], p_new_name text, p_new_mail text)
+returns integer
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_rows integer;
+begin
+  with t as (
+    select l.id,
+           authz.gdpr_scrub_row(l.before, l.entity, o.owned, p_emails, p_new_name, p_new_mail) as b,
+           authz.gdpr_scrub_row(l.after, l.entity, o.owned, p_emails, p_new_name, p_new_mail) as a
+      from public.audit_log l
+      cross join lateral (select (
+               (p_user is not null and (l.entity_id = p_user::text or l.before ->> 'user_id' = p_user::text
+                                        or l.after ->> 'user_id' = p_user::text))
+            or (p_client is not null and l.entity = 'clients' and l.entity_id = p_client::text)
+            or exists (select 1 from unnest(authz.gdpr_audit_keys('email', l.entity)) k
+                        where lower(btrim(l.before ->> k)) = any (p_emails) or lower(btrim(l.after ->> k)) = any (p_emails))
+           ) as owned) o
+     where l.entity in ('team_users', 'client_users', 'clients', 'invitations', 'agreement_recipients', 'email_outbox', 'email_log')
+       and (l.entity <> 'clients' or l.entity_id = p_client::text)
+  )
+  update public.audit_log l set before = t.b, after = t.a
+    from t
+   where l.id = t.id and (t.b is distinct from l.before or t.a is distinct from l.after);
+  get diagnostics v_rows = row_count;
+  return v_rows;
+end;
+$$;
+
+-- ───────────── Ν8 Κείμενα άλλων: το παλιό όνομα και η διεύθυνση γίνονται τα νέα ─────────────
+
+-- Αντικαθιστά κάθε όνομα ως ολόκληρη λέξη (χωρίς διάκριση πεζών) με το νέο. Κάτω από 3 χαρακτήρες δεν αγγίζεται.
+create function authz.gdpr_swap(p_text text, p_from text[], p_to text) returns text
+language plpgsql immutable set search_path = ''
+as $$
+declare
+  v text := p_text;
+  x text;
+  -- Γράμμα ή ψηφίο (λατινικά, ελληνικά): τα όρια της λέξης, χωρίς να εξαρτώνται από το locale της βάσης.
+  letter constant text := '[0-9A-Za-zÀ-ɏͰ-Ͽἀ-῿]';
+begin
+  if v is null then
+    return null;
+  end if;
+  foreach x in array coalesce((select array_agg(f order by length(f) desc) from unnest(p_from) f where length(btrim(f)) >= 3),
+                              array[]::text[]) loop
+    v := regexp_replace(v, '(?<!' || letter || ')' || regexp_replace(btrim(x), '([][\\.+*?^$(){}=!<>|:#-])', '\\\1', 'g')
+                           || '(?!' || letter || ')',
+                        regexp_replace(p_to, '([\\&])', '\\\1', 'g'), 'gi');
+  end loop;
+  return v;
+end;
+$$;
+
+-- Το ίδιο μέσα σε jsonb, στις τιμές του όπως γράφονται στο JSON.
+create function authz.gdpr_swap_json(p_json jsonb, p_names text[], p_emails text[], p_new_name text, p_new_mail text)
+returns jsonb
+language plpgsql immutable set search_path = ''
+as $$
+declare
+  v text := p_json::text;
+begin
+  if p_json is null then
+    return null;
+  end if;
+  v := authz.gdpr_swap(v, array(select substr(to_jsonb(x)::text, 2, length(to_jsonb(x)::text) - 2) from unnest(p_names) x),
+                       substr(to_jsonb(p_new_name)::text, 2, length(to_jsonb(p_new_name)::text) - 2));
+  v := authz.gdpr_swap(v, p_emails, p_new_mail);
+  return v::jsonb;
+end;
+$$;
+
+-- Γεγονότα που αναφέρουν το πρόσωπο (με το id του, ή την Επαφή με τον Πελάτη της), Ειδοποιήσεις άλλων Χρηστών, και email
+-- της ουράς που δεν στάλθηκαν: το παλιό όνομα και η διεύθυνση γίνονται τα νέα. Ό,τι στάλθηκε μένει (στο Ιστορικό αποστολών
+-- κρύβεται μόνο η διεύθυνση, στο authz.gdpr_mask_sends).
+create function authz.gdpr_swap_others(
+  p_kind text, p_id uuid, p_names text[], p_emails text[], p_new_name text, p_new_mail text
+) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  update public.events e
+     set payload = authz.gdpr_swap_json(e.payload, p_names, p_emails, p_new_name, p_new_mail)
+   where (p_kind <> 'contact' and strpos(e.payload::text, p_id::text) > 0)
+      or (p_kind = 'contact' and e.client_id = p_id);
+  update public.notifications n
+     set title = left(authz.gdpr_swap(authz.gdpr_swap(n.title, p_names, p_new_name), p_emails, p_new_mail), 300),
+         body = left(authz.gdpr_swap(authz.gdpr_swap(n.body, p_names, p_new_name), p_emails, p_new_mail), 2000)
+   where n.user_id is distinct from p_id
+     and (authz.gdpr_swap(authz.gdpr_swap(n.title, p_names, p_new_name), p_emails, p_new_mail) <> n.title
+          or authz.gdpr_swap(authz.gdpr_swap(n.body, p_names, p_new_name), p_emails, p_new_mail) <> n.body);
+  update public.email_outbox o
+     set payload = authz.gdpr_swap_json(o.payload, p_names, p_emails, p_new_name, p_new_mail)
+   where o.status <> 'sent'
+     and authz.gdpr_swap_json(o.payload, p_names, p_emails, p_new_name, p_new_mail) <> o.payload;
+end;
+$$;
+
+-- Συμφωνίες που ΔΕΝ υπογράφηκαν: ο παραλήπτης και οι Σύνδεσμοί του παίρνουν το νέο όνομα και το placeholder. Οι
+-- υπογεγραμμένες μένουν όπως υπογράφηκαν.
+create function authz.gdpr_mask_agreements(p_emails text[], p_new_name text, p_new_mail text) returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  update public.agreement_recipients r set name = left(p_new_name, 120), email = p_new_mail
+    from public.agreements a
+   where a.id = r.agreement_id and a.signed_at is null and lower(btrim(r.email)) = any (p_emails);
+  update public.agreement_links l set recipient_name = p_new_name, recipient_email = p_new_mail
+    from public.agreements a
+   where a.id = l.agreement_id and a.signed_at is null and lower(btrim(l.recipient_email)) = any (p_emails);
+end;
+$$;
+
+-- Ίδιο με τον αρχικό ορισμό (20261009100000_agreements_and_signing.sql), με μία εξαίρεση: όσο ισχύει το gdpr.anonymizing,
+-- ο παραλήπτης μιας Συμφωνίας αλλάζει όνομα και email (και τίποτα άλλο) σε όποια κατάσταση κι αν είναι.
+create or replace function authz.guard_agreement_child() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_ref uuid := coalesce((to_jsonb(new) ->> tg_argv[0])::uuid, (to_jsonb(old) ->> tg_argv[0])::uuid);
+  v_agreement uuid;
+begin
+  if tg_table_name = 'agreement_recipients' and tg_op = 'UPDATE'
+     and coalesce(current_setting('gdpr.anonymizing', true), '') = 'on'
+     and (to_jsonb(new) - array['name', 'email']) = (to_jsonb(old) - array['name', 'email']) then
+    return new;
+  end if;
+  if tg_argv[0] = 'line_id' then
+    select l.agreement_id into v_agreement from public.agreement_lines l where l.id = v_ref;
+  else
+    v_agreement := v_ref;
+  end if;
+  if v_agreement is not null and not exists (
+    select 1 from public.agreements a where a.id = v_agreement and a.state = 'proposal' and a.path = 'draft'
+  ) then
+    raise exception 'Η πρόταση δεν αλλάζει σε αυτή την κατάσταση· ξεκίνα νέα αναθεώρηση' using errcode = 'P0001';
+  end if;
+  return coalesce(new, old);
+end;
+$$;
+
+-- Τα ονόματα του προσώπου όπως γράφονται στα δεδομένα: Χρήστης ομάδας, κάθε συμμετοχή του Χρήστη πελάτη, ή η Επαφή.
+create function authz.gdpr_names(p_kind text, p_id uuid) returns text[]
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce(array_agg(distinct btrim(x.name)) filter (where btrim(x.name) <> ''), '{}')
+    from (
+      select t.name from public.team_users t where p_kind = 'team_user' and t.user_id = p_id
+      union all
+      select cu.name from public.client_users cu where p_kind = 'client_user' and cu.user_id = p_id
+      union all
+      select c.contact_name from public.clients c where p_kind = 'contact' and c.id = p_id
+    ) x;
 $$;
 
 -- { n, name }. Η σειρά: Ιδιοκτήτης, «δεν γίνεται», όνομα, και μετά όλα μαζί στην ίδια συναλλαγή.
@@ -581,6 +852,9 @@ declare
   v_n integer;
   v_new text;
   v_mail text;
+  v_names text[];
+  v_user uuid := case when p_kind = 'contact' then null else p_id end;
+  v_rows integer;
 begin
   perform authz.gdpr_require();
   -- Δύο ταυτόχρονες ανωνυμοποιήσεις του ίδιου προσώπου μπαίνουν στη σειρά· η δεύτερη βρίσκει «ήδη».
@@ -594,6 +868,7 @@ begin
     raise exception 'Το όνομα δεν ταιριάζει. Γράψε το ακριβώς όπως φαίνεται.' using errcode = 'P0001';
   end if;
   v_emails := authz.gdpr_emails(p_kind, p_id);
+  v_names := authz.gdpr_names(p_kind, p_id);
   v_n := nextval('public.gdpr_anonymized_seq');
   v_new := 'Ανωνυμοποιημένος Χρήστης ' || v_n;
   v_mail := 'anonymized-' || v_n || '@anonymized.invalid';
@@ -606,17 +881,23 @@ begin
   else
     update public.clients set contact_name = v_new, contact_email = v_mail, contact_phone = '' where id = p_id;
   end if;
-  perform authz.gdpr_mask_sends(v_emails, case when p_kind = 'contact' then null else p_id end, v_mail, v_new);
+  perform authz.gdpr_mask_sends(v_emails, v_user, v_mail, v_new);
+  perform authz.gdpr_mask_agreements(v_emails, v_new, v_mail);
+  perform authz.gdpr_swap_others(p_kind, p_id, v_names, v_emails, v_new, v_mail);
   if p_kind <> 'contact' then
     perform authz.gdpr_wipe_account(p_id, v_mail);
   end if;
   insert into public.gdpr_anonymizations (n, subject_kind, user_id, client_id, anonymized_by)
-  values (v_n, p_kind, case when p_kind = 'contact' then null else p_id end,
-          case when p_kind = 'contact' then p_id end, auth.uid());
+  values (v_n, p_kind, v_user, case when p_kind = 'contact' then p_id end, auth.uid());
+  v_rows := authz.gdpr_scrub_audit(v_user, case when p_kind = 'contact' then p_id end, v_emails, v_new, v_mail);
   perform set_config('gdpr.anonymizing', 'off', true);
 
   insert into public.audit_log (actor_id, action, entity, entity_id, after)
   values (auth.uid(), 'event', 'gdpr', p_id::text, jsonb_build_object('event', 'anonymized', 'subjectKind', p_kind, 'n', v_n));
+  -- Μόνο πόσες παλιές γραμμές του Ίχνους καθαρίστηκαν, ποτέ τι είχαν.
+  insert into public.audit_log (actor_id, action, entity, entity_id, after)
+  values (auth.uid(), 'event', 'gdpr', p_id::text,
+          jsonb_build_object('event', 'audit_scrubbed', 'subjectKind', p_kind, 'n', v_n, 'rows', v_rows));
   return jsonb_build_object('n', v_n, 'name', v_new);
 end;
 $$;
@@ -637,10 +918,28 @@ create trigger team_users_gdpr_anonymized before update of is_active on public.t
   for each row when (not old.is_active and new.is_active) execute function authz.guard_gdpr_anonymized();
 create trigger client_users_gdpr_anonymized before insert or update of removed_at on public.client_users
   for each row when (new.removed_at is null) execute function authz.guard_gdpr_anonymized();
+create trigger team_users_gdpr_anonymized_insert before insert on public.team_users
+  for each row execute function authz.guard_gdpr_anonymized();
+
+-- Η διεύθυνση ενός ανωνυμοποιημένου λογαριασμού δεν προσκαλείται ποτέ (η πρόσκληση δεν τον βρίσκει, άρα ούτε τον ξεμπλοκάρει).
+create function authz.guard_gdpr_invitation() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  if authz.gdpr_is_placeholder(new.email) then
+    raise exception 'Αυτή η διεύθυνση δεν δέχεται προσκλήσεις' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger invitations_gdpr_placeholder before insert on public.invitations
+  for each row execute function authz.guard_gdpr_invitation();
 
 -- ───────────── Κάρτα «GDPR με προθεσμία» (Σήμερα, μόνο Ιδιοκτήτης) ─────────────
 
--- null: όχι Ιδιοκτήτης, κάρτα πελάτη, ή κανένα ανοιχτό αίτημα (τότε η κάρτα δεν εμφανίζεται καθόλου).
+-- null: όχι Ιδιοκτήτης ή κάρτα πελάτη (καμία πρόσβαση). Για τον Ιδιοκτήτη το πλήθος, και το 0: η κάρτα μαζεύεται στη γραμμή
+-- «Τίποτα σε αναμονή» όπως οι άλλες, και η Προσαρμογή κρατά τη θέση και το «κρυφή» της.
 create function authz.today_count_gdpr(p_uid uuid, p_client uuid, p_now timestamptz) returns integer
 language plpgsql stable security definer set search_path = ''
 as $$
@@ -648,7 +947,7 @@ begin
   if p_client is not null or not coalesce(authz.user_is_owner(p_uid), false) then
     return null;
   end if;
-  return nullif((select count(*)::integer from public.gdpr_requests r where r.completed_on is null), 0);
+  return (select count(*)::integer from public.gdpr_requests r where r.completed_on is null);
 end;
 $$;
 
@@ -845,7 +1144,12 @@ revoke all on function
   authz.gdpr_subjects(), authz.gdpr_messages(uuid, uuid), authz.gdpr_agreement_roles(text[]),
   authz.gdpr_assistant(uuid), authz.gdpr_client_sections(uuid), authz.gdpr_person_sections(text, uuid),
   authz.gdpr_export(text, uuid), authz.gdpr_mask_sends(text[], uuid, text, text), authz.gdpr_wipe_account(uuid, text),
-  authz.gdpr_anonymize(text, uuid, text), authz.guard_gdpr_anonymized(),
+  authz.gdpr_anonymize(text, uuid, text), authz.guard_gdpr_anonymized(), authz.guard_gdpr_invitation(),
+  authz.gdpr_deliverable_comments(uuid, uuid), authz.gdpr_audit_keys(text, text), authz.gdpr_audit_all_keys(),
+  authz.gdpr_scrub_row(jsonb, text, boolean, text[], text, text), authz.gdpr_audit_scrub_ok(public.audit_log, public.audit_log),
+  authz.gdpr_scrub_audit(uuid, uuid, text[], text, text), authz.gdpr_swap(text, text[], text),
+  authz.gdpr_swap_json(jsonb, text[], text[], text, text), authz.gdpr_swap_others(text, uuid, text[], text[], text, text),
+  authz.gdpr_mask_agreements(text[], text, text), authz.gdpr_names(text, uuid),
   authz.today_count_gdpr(uuid, uuid, timestamptz), authz.today_items_gdpr(uuid, uuid, timestamptz)
   from public, anon, authenticated;
 

@@ -90,11 +90,19 @@ describe("buildGdprZip", () => {
         `${FOLDER}/Συνομιλία.csv`,
         `${FOLDER}/Τιμολόγια.csv`,
         `${FOLDER}/Χρήστες.csv`,
+        `${FOLDER}/Στοιχεία.csv`,
       ].sort(),
     );
     expect([...files[`${FOLDER}/Τιμολόγια PDF/Α-12.pdf`]]).toEqual([...PDF]);
     expect(zip.fileName).toBe(`${FOLDER}.zip`);
     expect(zip.pdfCount).toBe(1);
+  });
+
+  it("should write the details section as a one-row CSV", async () => {
+    const { files } = await unzip(payload());
+    const csv = strFromU8(files[`${FOLDER}/Στοιχεία.csv`]);
+    expect(csv).toContain("Όνομα;Επαφή;ΑΦΜ");
+    expect(csv).toContain("Κυψέλη Καφέ;Μαρία Παπαδάκη;");
   });
 
   it("should list every invoice without a PDF explicitly, never skip it", async () => {

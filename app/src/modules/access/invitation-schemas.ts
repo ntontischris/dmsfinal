@@ -68,7 +68,9 @@ export const inviteFormSchema = z.object({
     .string()
     .trim()
     .pipe(z.email("Γράψε ένα έγκυρο email."))
-    .transform((value) => value.toLowerCase()),
+    .transform((value) => value.toLowerCase())
+    // Η διεύθυνση ενός ανωνυμοποιημένου λογαριασμού (#208) δεν προσκαλείται ποτέ.
+    .refine((value) => !value.endsWith("@anonymized.invalid"), "Αυτή η διεύθυνση δεν δέχεται προσκλήσεις."),
   locale: z.enum(["el", "en"]).default("el"),
 });
 
