@@ -44,6 +44,21 @@ export function currentDay(day: number, now: Date = new Date()): string {
   return `${month}-${String(day).padStart(2, "0")}`;
 }
 
+// Μέρα Γυρίσματος που δεν έχει περάσει (το πεδίο δεν δέχεται μέρα πριν από σήμερα): η «preferred» του μήνα, ή αύριο αν
+// η «preferred» πέρασε· ποτέ η «avoid» (η μέρα που κλείνει άλλο τεστ με τις ίδιες ώρες). Ώρα Ελλάδας.
+export function upcomingDay(preferred: number, avoid: number, now: Date = new Date()): string {
+  const today = Number(
+    new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Athens", day: "numeric" }).format(now),
+  );
+  const day = Math.max(preferred, today + 1);
+  const pick = day === avoid ? day + 1 : day;
+  if (pick === preferred) return currentDay(pick, now);
+  const athensToday = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Athens" }).format(now);
+  const date = new Date(`${athensToday}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + (pick - today));
+  return date.toISOString().slice(0, 10);
+}
+
 // Η ροή της Συμφωνίας: η Άννα συντάσσει την πρόταση με μηνιαίο πακέτο, ο Ιδιοκτήτης την υπογράφει εκτός συστήματος.
 export async function signedMonthlyAgreement(
   page: Page,

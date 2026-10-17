@@ -8,6 +8,7 @@ import {
   fieldOf,
   openFilmingFromList,
   signedMonthlyAgreement,
+  upcomingDay,
 } from "./filming-parts";
 import {
   button,
@@ -32,7 +33,7 @@ test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορί�
   await signIn(page, "sales@example.com");
   await signedMonthlyAgreement(page, browser, P);
 
-  await bookFilmingFromScreen(page, P);
+  await bookFilmingFromScreen(page, P, upcomingDay(15, 20));
   await openFilmingFromList(page, P);
   await expect(
     page.getByText("Προγραμματισμένο", { exact: true }).first(),
