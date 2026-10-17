@@ -58,11 +58,11 @@ as $$
    where a.event_type = 'subscription.renewing' and s.recipient_key = '00000000-0000-0000-0000-0000000000' || p_last;
 $$;
 
--- Τα Προγραμματισμένα του θεατή για το 59 σε ένα σταθερό παράθυρο.
+-- Οι περιπτώσεις του 59 στα Προγραμματισμένα του θεατή, σε ένα σταθερό παράθυρο (μία γραμμή ανά Αυτοματισμό).
 create function public.t_upcoming59() returns integer
 language sql
 as $$
-  select count(*)::integer
+  select count(distinct x ->> 'caseKey')::integer
     from jsonb_array_elements(public.automations_upcoming(timestamptz '2026-04-12 00:00+00', timestamptz '2026-04-14 00:00+00')) x
    where x ->> 'eventType' = 'subscription.renewing';
 $$;
