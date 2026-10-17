@@ -44,7 +44,7 @@ export const healthViewSchema = z.object({
     connected: z.boolean(),
     lastSyncAt: z.string().nullable(),
     errorSince: z.string().nullable(),
-    lastError: z.string().nullable(),
+    reason: z.string().nullable(),
     stopped: z.boolean(),
     pendingWrites: z.number().int().nonnegative(),
   }),

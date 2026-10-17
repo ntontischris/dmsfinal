@@ -11,7 +11,6 @@ import {
   getHealth,
   monitorUrl,
 } from "@/modules/health";
-import { getConnectionStatuses } from "@/modules/integrations";
 
 export const metadata = { title: HEALTH_TITLE };
 
@@ -29,21 +28,13 @@ export default async function HealthPage() {
       </>
     );
 
-  const [health, connections] = await Promise.all([
-    getHealth(),
-    getConnectionStatuses(),
-  ]);
-  const google = connections.ok
-    ? (connections.data.connections.find((item) => item.id === "google") ??
-      null)
-    : null;
+  const health = await getHealth();
   return (
     <>
       {header}
       {health.ok ? (
         <HealthScreen
           view={health.data}
-          google={google}
           monitorUrl={monitorUrl()}
           isOwner={isOwner(viewer)}
         />

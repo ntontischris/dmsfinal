@@ -1,5 +1,4 @@
 import { Notice } from "@/components/ui/notice";
-import type { ConnectionStatus } from "@/modules/integrations";
 
 import { BANNER_NOTE, HEALTH_FRESH_TEXT, HEALTH_FRESH_TITLE } from "../labels";
 import type { HealthView } from "../schemas";
@@ -13,7 +12,6 @@ import { SendsCard } from "./sends-card";
 
 interface HealthScreenProps {
   view: HealthView;
-  google: ConnectionStatus | null;
   monitorUrl: string | null;
   isOwner: boolean;
 }
@@ -39,7 +37,6 @@ function Banner({ attention }: { attention: number }) {
 // P2 «Υγεία συστήματος» (#215): μπάρα, εξωτερικός έλεγχος και πέντε ενότητες. Σε κινητό όλα σε μία στήλη.
 export function HealthScreen({
   view,
-  google,
   monitorUrl,
   isOwner,
 }: HealthScreenProps) {
@@ -61,7 +58,7 @@ export function HealthScreen({
           <SendsCard items={view.sends.items} total={view.sends.total} />
           <EventsCard view={view} />
         </div>
-        <GoogleCard view={view} connection={google} />
+        <GoogleCard view={view} />
         <AiCard ai={view.ai} isOwner={isOwner} />
       </div>
       <ExternalCard url={monitorUrl} />

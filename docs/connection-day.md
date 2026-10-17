@@ -227,11 +227,11 @@
 | Τύπος | **Becomes unavailable** (έλεγχος του HTTP status) |
 | URL | `https://dmsfinal-app.vercel.app/api/health` |
 | Συχνότητα (check frequency) | **3 λεπτά** |
-| Επιβεβαίωση (αποτυχίες στη σειρά) | **2 αποτυχίες** (περίπου 6 λεπτά) πριν θεωρηθεί πρόβλημα |
+| Confirmation period (χρόνος επιβεβαίωσης) | **περίπου 3 λεπτά**: ένας ακόμα έλεγχος στη συχνότητα των 3′, δηλαδή 2 αποτυχίες στη σειρά (περίπου 6 λεπτά) πριν θεωρηθεί πρόβλημα |
 | Ειδοποίηση | **Email** στον Ιδιοκτήτη **και** στον developer |
 | Επαναφορά (recovery) | **Ναι**: email όταν το σύστημα ξαναπαντήσει |
 
-Τα ονόματα των πεδίων μπορεί να διαφέρουν λίγο στην οθόνη τους. Κράτα τις τιμές.
+Το Better Stack δεν μετρά «αποτυχίες στη σειρά»: έχει χρόνο επιβεβαίωσης (Confirmation period). **Επιβεβαίωσε τα ακριβή ονόματα των πεδίων στην οθόνη τους**, γιατί μπορεί να διαφέρουν λίγο· κράτα τις τιμές.
 
 ### 9γ. Η Υγεία μαθαίνει ότι στήθηκε
 - Vercel → `dmsfinal-app` → **Settings → Environment Variables** → `HEALTH_MONITOR_URL` = η διεύθυνση του monitor στο Better Stack (ξεκινά με `https://`). Δεν είναι μυστικό. Μετά **Redeploy**.
@@ -251,7 +251,7 @@
 - [ ] Redirect URLs αποθηκεύτηκαν. Το Send Email Hook είναι ενεργό (Βήμα 8β), OTP expiry `86400`, όριο «Email sent» `30`.
 - [ ] Vercel Pro: functions σε `dub1`, cron `/api/cron/outbox` κάθε λεπτό, Spend Management ενεργό (Βήμα 8γ).
 - [ ] Το δοκιμαστικό email φαίνεται **στάλθηκε** στο Ιστορικό αποστολών (Βήμα 8δ).
-- [ ] Better Stack: monitor στο `/api/health` κάθε 3′, 2 αποτυχίες, email σε Ιδιοκτήτη και developer με επαναφορά, `HEALTH_MONITOR_URL` στο Vercel (Βήμα 9). Τα όρια του δωρεάν πλάνου επιβεβαιώθηκαν.
+- [ ] Better Stack: monitor στο `/api/health` κάθε 3′, Confirmation period ~3′, email σε Ιδιοκτήτη και developer με επαναφορά, `HEALTH_MONITOR_URL` στο Vercel (Βήμα 9). Τα όρια του δωρεάν πλάνου επιβεβαιώθηκαν.
 - [ ] 3 secrets στο GitHub (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`).
 - [ ] Το `migrate` πέρασε και φαίνονται πίνακες στο Supabase.
 - [ ] Vercel: οι μεταβλητές Supabase υπάρχουν, έγινε Redeploy, το `/login` ανοίγει.

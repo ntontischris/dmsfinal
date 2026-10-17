@@ -1,7 +1,5 @@
 import type { Tone } from "@/components/ui/badge";
 
-import type { ConnectionStatus } from "@/modules/integrations";
-
 import type { HealthJob, HealthView } from "./schemas";
 
 // Η αντιστοίχιση της κατάστασης σε ό,τι δείχνει η P2 (#215), ως καθαρές συναρτήσεις. Το «θέλουν προσοχή» το μετρά η βάση.
@@ -38,26 +36,14 @@ export const jobsAreRed = (view: HealthView): boolean =>
 export const eventsAreRed = (view: HealthView): boolean =>
   view.events.stuckTotal > 0 || view.events.waiting > 0;
 
-// Το Google: κόκκινο με τον κανόνα της βάσης (30′)· η ετικέτα και ο λόγος από την κοινή πηγή της N5 όταν φορτώσει.
-export function googleVerdict(
-  view: HealthView,
-  connection: ConnectionStatus | null,
-): Verdict & { reason: string } {
-  if (view.google.stopped)
-    return {
-      ...ATTENTION,
-      reason:
-        connection?.reason ||
-        "Ο συγχρονισμός δεν έχει πετύχει για πάνω από 30 λεπτά.",
-    };
-  if (connection?.state === "not_set_up" || !view.google.connected)
-    return {
-      label: "δεν έχει στηθεί",
-      tone: undefined,
-      reason: connection?.reason ?? "",
-    };
-  if (connection?.state === "warning")
-    return { label: "προσοχή", tone: "strong", reason: connection.reason };
+// Το Google: κόκκινο με τον κανόνα της βάσης (30′, Γεγονός 52)· ο σύντομος λόγος έρχεται από τη βάση.
+export function googleVerdict(view: HealthView): Verdict & { reason: string } {
+  const { google } = view;
+  const reason = google.reason ?? "";
+  if (google.stopped) return { ...ATTENTION, reason };
+  if (!google.connected)
+    return { label: "δεν έχει στηθεί", tone: undefined, reason: "" };
+  if (reason) return { label: "προσοχή", tone: "strong", reason };
   return { ...FINE, reason: "" };
 }
 

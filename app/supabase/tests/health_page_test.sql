@@ -3,7 +3,7 @@
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι εργασίες παίρνουν σταθερό p_now· οι αποστολές και τα Γεγονότα που
 -- περνούν από ενέργειες γράφονται σε σχέση με το now(), ώστε το τεστ να μην εξαρτάται από τη μέρα.
 begin;
-select plan(85);
+select plan(97);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Διαχείριση · a3 Πωλήσεις · a4 Παραγωγή · a5 Λογιστής · a6 μόνο «Βλέπει Υγεία συστήματος»
@@ -260,8 +260,12 @@ select is((select attempts || ' ' || coalesce(last_error, '—') from public.eve
   '0 —', 'Μηδέν προσπάθειες, ξανά στην ουρά');
 select is((select count(*)::integer from public.audit_log l
             where l.entity = 'events' and l.entity_id = current_setting('t.event') and l.action = 'event'
-              and l.actor_id = '00000000-0000-0000-0000-0000000000a6' and l.after ->> 'event' = 'retried'), 1,
-  'Το «Ξαναδοκίμασε» γράφεται στο Ίχνος');
+              and l.actor_id = '00000000-0000-0000-0000-0000000000a6' and l.after ->> 'event' = 'Ξαναδοκιμή Γεγονότος'
+              and not (l.after ? 'type')), 1,
+  'Το «Ξαναδοκίμασε» γράφεται στο Ίχνος με ελληνικό όνομα, χωρίς τον τύπο του Γεγονότος');
+select is((select label from public.audit_entities where entity = 'events') || ' / ' ||
+          (select area from public.audit_entities where entity = 'events'),
+  'Ξαναδοκιμή Γεγονότος / health', 'Το Γεγονός έχει γραμμή στον κατάλογο του Ίχνους, στην Υγεία');
 select is((public.health_view() -> 'events' ->> 'stuckTotal')::integer, 0, 'Φεύγει από τα «κόλλησαν»');
 select public.events_process(100, now());
 select ok((select processed_at is not null from public.events where id = current_setting('t.event')::bigint),
@@ -280,11 +284,47 @@ select throws_ok(format('select public.event_retry(%s)', (select id from public.
 
 -- ───────────── Πλαφόν Βοηθού: ανάγνωση με health.view, αλλαγή μόνο ο Ιδιοκτήτης ─────────────
 select ok((public.health_view() -> 'ai') ?& array['spentMicros', 'capMicros', 'publicShare'], 'Η Υγεία δείχνει δαπάνη και πλαφόν');
-select lives_ok($$ select public.ai_spend_view() $$, 'Μόνο με health.view: διαβάζει τη δαπάνη');
+select throws_ok($$ select public.ai_spend_view() $$, '42501', null,
+  'Μόνο με health.view: η κάρτα Ρυθμίσεων μένει «Διαχειρίζεται Ρυθμίσεις» (η Υγεία έχει τη δαπάνη μέσα της)');
 select throws_ok($$ select public.assistant_cap_save(40, 80) $$, '42501', null, 'Μόνο με health.view: δεν αλλάζει το πλαφόν');
-select lives_ok($$ select public.integrations_view() $$, 'Μόνο με health.view: η κοινή πηγή κατάστασης του Google');
+select throws_ok($$ select public.integrations_view() $$, '42501', null, 'Μόνο με health.view: η N5 μένει του Ιδιοκτήτη');
 select public.t_as('a1');
 select lives_ok($$ select public.assistant_cap_save(40, 80) $$, 'Ο Ιδιοκτήτης αλλάζει το πλαφόν');
+
+-- ───────────── Γεγονός κόστους: δεν φαίνεται και δεν ξαναδοκιμάζεται χωρίς «Βλέπει κόστος» ─────────────
+insert into public.events (type, entity, case_key, payload, attempts, last_error)
+select t.code, 'productions', 'cost:t215', '{}', 5, 'boom' from public.event_types t where t.is_cost_only order by t.number limit 1;
+select set_config('t.cost', (select id::text from public.events where case_key = 'cost:t215'), true);
+select public.t_as('a6');
+select ok(not exists (select 1 from jsonb_array_elements(public.health_view() -> 'events' -> 'stuck') e
+                       where e ->> 'id' = current_setting('t.cost')),
+  'health.view χωρίς finance.cost: το Γεγονός κόστους δεν φαίνεται');
+select is((public.health_view() -> 'events' ->> 'stuckTotal')::integer, 0, 'και δεν μετρά');
+select throws_ok(format('select public.event_retry(%s)', current_setting('t.cost')), 'P0001',
+  'Ξαναδοκιμάζεται μόνο Γεγονός που κόλλησε', 'ούτε ξαναδοκιμάζεται (ίδιο λάθος με το ανύπαρκτο)');
+select public.t_as('a1');
+select ok(exists (select 1 from jsonb_array_elements(public.health_view() -> 'events' -> 'stuck') e
+                   where e ->> 'id' = current_setting('t.cost')), 'Ο Ιδιοκτήτης το βλέπει');
+
+-- ───────────── Διαχείριση ως authenticated: τα grants των τριών RPC ─────────────
+insert into public.email_outbox (id, kind, to_name, to_email, status, attempts, last_error, handled_at, created_at) values
+  ('00000000-0000-0000-0000-0000000000f3', 'test', 'Δημήτρης', 'admin@example.com', 'failed', 5, 'Bounce',
+   now() - interval '1 hour', now() - interval '1 hour');
+select public.t_as('a2');
+set local role authenticated;
+select lives_ok($$ select public.health_view() $$, 'Διαχείριση: βλέπει την Υγεία');
+select is((select array_agg(k order by k) from jsonb_object_keys(public.health_view() -> 'google') k),
+  array['connected', 'errorSince', 'lastSyncAt', 'pendingWrites', 'reason', 'stopped'],
+  'Το Google της Υγείας: μόνο σύνδεση, συγχρονισμός, λόγος και ουρά');
+select lives_ok($$ select public.send_ignore('00000000-0000-0000-0000-0000000000f3') $$, 'Διαχείριση: αγνοεί');
+select lives_ok(format('select public.event_retry(%s)', current_setting('t.cost')),
+  'Διαχείριση (με finance.cost): ξαναδοκιμάζει το Γεγονός κόστους');
+select throws_ok($$ select public.integrations_view() $$, '42501', null, 'Διαχείριση: η N5 μένει του Ιδιοκτήτη');
+reset role;
+select is((select status from public.email_outbox where id = '00000000-0000-0000-0000-0000000000f3'), 'ignored',
+  'Η αποστολή της Διαχείρισης αγνοήθηκε');
+select is((select attempts from public.events where id = current_setting('t.cost')::bigint), 0,
+  'Το Γεγονός κόστους ξαναμπήκε στην ουρά');
 
 -- ───────────── Σήμερα: η κάρτα ανοίγει την P2 ─────────────
 select is((select link from public.today_cards where code = 'health'), '/app/health', 'Η κάρτα Υγείας ανοίγει την P2');

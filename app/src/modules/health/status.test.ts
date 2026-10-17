@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import type { ConnectionStatus } from "@/modules/integrations";
-
 import { healthViewSchema, type HealthJob, type HealthView } from "./schemas";
 import {
   aiShare,
@@ -33,7 +31,7 @@ const view = (overrides: Partial<HealthView> = {}): HealthView => ({
     connected: true,
     lastSyncAt: "2026-03-01T10:04:00Z",
     errorSince: null,
-    lastError: null,
+    reason: null,
     stopped: false,
     pendingWrites: 0,
   },
@@ -45,20 +43,6 @@ const view = (overrides: Partial<HealthView> = {}): HealthView => ({
     publicShare: 80,
     alert: false,
   },
-  ...overrides,
-});
-
-const connection = (
-  overrides: Partial<ConnectionStatus> = {},
-): ConnectionStatus => ({
-  id: "google",
-  state: "ok",
-  reason: "",
-  lastSuccessAt: null,
-  usage: null,
-  models: [],
-  isCheckable: true,
-  lastCheck: null,
   ...overrides,
 });
 
@@ -107,32 +91,27 @@ describe("eventsAreRed", () => {
 });
 
 describe("googleVerdict", () => {
-  it("should be red when the database says the sync stopped, with the N5 reason", () => {
-    const stopped = view({ google: { ...view().google, stopped: true } });
-    expect(
-      googleVerdict(stopped, connection({ state: "down", reason: "Λόγος N5" })),
-    ).toEqual({
+  const google = (overrides: Partial<HealthView["google"]>) =>
+    view({ google: { ...view().google, ...overrides } });
+
+  it("should be red when the database says the sync stopped, with its reason", () => {
+    expect(googleVerdict(google({ stopped: true, reason: "Λόγος" }))).toEqual({
       label: "θέλει προσοχή",
       tone: "attention",
-      reason: "Λόγος N5",
+      reason: "Λόγος",
     });
-    expect(googleVerdict(stopped, null).tone).toBe("attention");
   });
 
-  it("should show not set up, warning and ok from the shared N5 status", () => {
-    expect(
-      googleVerdict(view(), connection({ state: "not_set_up" })).label,
-    ).toBe("δεν έχει στηθεί");
-    expect(
-      googleVerdict(
-        view({ google: { ...view().google, connected: false } }),
-        null,
-      ).label,
-    ).toBe("δεν έχει στηθεί");
-    expect(
-      googleVerdict(view(), connection({ state: "warning", reason: "Σφάλμα" })),
-    ).toEqual({ label: "προσοχή", tone: "strong", reason: "Σφάλμα" });
-    expect(googleVerdict(view(), connection()).tone).toBe("ok");
+  it("should show not set up, warning and ok", () => {
+    expect(googleVerdict(google({ connected: false })).label).toBe(
+      "δεν έχει στηθεί",
+    );
+    expect(googleVerdict(google({ reason: "Σφάλμα" }))).toEqual({
+      label: "προσοχή",
+      tone: "strong",
+      reason: "Σφάλμα",
+    });
+    expect(googleVerdict(view()).tone).toBe("ok");
   });
 });
 

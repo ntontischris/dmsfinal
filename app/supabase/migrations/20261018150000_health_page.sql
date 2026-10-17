@@ -8,8 +8,10 @@
 --  • Υ6 public.health_view(p_now) (health.view, έλεγχος πρώτος → 42501): εργασίες, αποστολές που απέτυχαν (χωρίς τις
 --    αγνοημένες, με τους κανόνες ορατότητας της κάρτας Σήμερα), Google με τις αλλαγές σε ουρά, Γεγονότα που κόλλησαν, πλαφόν
 --    Βοηθού, και το σύνολο «θέλουν προσοχή». Όλα υπολογίζονται τη στιγμή της κλήσης· τίποτα δεν αποθηκεύεται.
---    Η δαπάνη AI διαβάζεται πλέον και με health.view (ai_spend_view)· το πλαφόν αλλάζει μόνο ο Ιδιοκτήτης, όπως πριν.
---    Η κατάσταση των συνδέσεων της N5 (integrations_view) ανοίγει σε health.view, όπως είχε προβλεφθεί στο #209.
+--    Η δαπάνη AI και το πλαφόν έρχονται μέσα στην health_view· το ai_spend_view μένει «Διαχειρίζεται Ρυθμίσεις» και το
+--    πλαφόν το αλλάζει μόνο ο Ιδιοκτήτης. Η N5 (integrations_view) μένει μόνο για τον Ιδιοκτήτη (PRD #206 Ν9)· η P2 παίρνει
+--    για το Google μόνο ό,τι χρειάζεται (authz.health_google_view: σύνδεση, συγχρονισμός, σύντομος λόγος, ουρά).
+--    Γεγονότα που ο θεατής δεν βλέπει (ποσά, κόστος: authz.send_hidden_types) δεν φαίνονται και δεν ξαναδοκιμάζονται.
 --  • Υ7 Ενέργειες, όλες στο Ίχνος:
 --      «Ξαναστείλε» (send_retry): health.view ή automations.manage, μία φορά όπως πριν (η νέα γραμμή της ουράς γράφεται
 --      στο Ίχνος από το email_outbox_audit).
@@ -24,9 +26,9 @@
 --  • Υ10 Η κάρτα Υγείας στο Σήμερα ανοίγει την P2 (/app/health), και οι γραμμές της επίσης. Οι αγνοημένες αποστολές δεν
 --    μετρούν (η authz.today_failed_sends κοιτά μόνο status 'failed').
 --  • Ξαναγράφονται από τους ΤΕΛΕΥΤΑΙΟΥΣ ορισμούς: το check του job_runs, authz.health_job_label, authz.health_job_grace,
---    public.job_run_mark, authz.health_jobs, authz.today_health_rows, public.ai_spend_view (20261017130000_assistant.sql),
+--    public.job_run_mark, authz.health_jobs, authz.today_health_rows (20261017130000_assistant.sql),
 --    authz.send_state, authz.send_reason, authz.sends_history, public.send_retry (20261015160000_send_history.sql),
---    authz.integrations_view (20261018120000_integrations_subscriptions.sql), authz.audit_entity_allowed
+--    authz.audit_entity_allowed
 --    (20261018130000_gdpr.sql· το 20261018140000_audit_trail.sql δεν την αλλάζει), με τα 'events' και τη γραμμή τους στον
 --    κατάλογο public.audit_entities (περιοχή «Υγεία συστήματος»).
 
@@ -304,7 +306,8 @@ end;
 $$;
 
 -- «Ξαναδοκίμασε» (health.view): Γεγονός που κόλλησε (5 αποτυχημένες προσπάθειες, όχι Υγείας) ξαναμπαίνει στην ουρά.
--- Όσοι το πήραν ήδη δεν το ξαναπαίρνουν (μοναδικό σημάδι ανά Αυτοματισμό, περίπτωση, παραλήπτη). Γραμμή στο Ίχνος.
+-- Όσοι το πήραν ήδη δεν το ξαναπαίρνουν (μοναδικό σημάδι ανά Αυτοματισμό, περίπτωση, παραλήπτη). Γεγονός που ο θεατής δεν
+-- βλέπει (ποσά, κόστος): το ίδιο λάθος. Γραμμή στο Ίχνος χωρίς τον τύπο του Γεγονότος (μόνο id και προσπάθειες).
 create function public.event_retry(p_event bigint) returns void
 language plpgsql security definer set search_path = ''
 as $$
@@ -313,13 +316,14 @@ declare
 begin
   perform authz.require('health.view');
   select x.* into e from public.events x where x.id = p_event for update;
-  if not found or e.processed_at is not null or e.attempts < 5 or e.type like 'health.%' then
+  if not found or e.processed_at is not null or e.attempts < 5 or e.type like 'health.%'
+     or e.type = any (authz.send_hidden_types()) then
     raise exception 'Ξαναδοκιμάζεται μόνο Γεγονός που κόλλησε' using errcode = 'P0001';
   end if;
   update public.events set attempts = 0, last_error = null, locked_until = null where id = p_event;
   insert into public.audit_log (actor_id, action, entity, entity_id, before, after)
   values (auth.uid(), 'event', 'events', p_event::text, jsonb_build_object('attempts', e.attempts),
-          jsonb_build_object('event', 'retried', 'type', e.type, 'attempts', 0));
+          jsonb_build_object('event', 'Ξαναδοκιμή Γεγονότος', 'attempts', 0));
 end;
 $$;
 
@@ -343,6 +347,33 @@ as $$
     left join public.email_log l on l.id = case when s.id like 'l%' then substr(s.id, 2)::uuid end;
 $$;
 
+-- Το Google για την P2: μόνο σύνδεση, τελευταίος συγχρονισμός, από πότε κρατά το σφάλμα, σύντομος λόγος, «σταμάτησε» (30′,
+-- ο κανόνας του Γεγονότος 52) και αλλαγές σε ουρά. Ποτέ το κείμενο του σφάλματος ή στοιχεία άλλων συνδέσεων.
+create function authz.health_google_view(p_now timestamptz) returns jsonb
+language sql stable security definer set search_path = ''
+as $$
+  with g as (
+    select x.calendar_id is not null as connected, x.last_sync_at, x.error_since, x.last_error
+      from public.google_calendar x where x.id
+  ), s as (
+    select g.*, coalesce(g.connected and (g.last_sync_at < p_now - interval '30 minutes'
+                                          or g.error_since < p_now - interval '30 minutes'), false) as stopped
+      from g
+  )
+  select jsonb_build_object(
+    'connected', coalesce((select s.connected from s), false),
+    'lastSyncAt', (select s.last_sync_at from s),
+    'errorSince', (select s.error_since from s),
+    'stopped', coalesce((select s.stopped from s), false),
+    'reason', (select case
+                 when not s.connected then null
+                 when s.error_since < p_now - interval '30 minutes' then 'Ο συγχρονισμός αποτυγχάνει για πάνω από 30 λεπτά.'
+                 when s.stopped then 'Δεν έχει γίνει συγχρονισμός τα τελευταία 30 λεπτά.'
+                 when s.last_error is not null then 'Ο τελευταίος συγχρονισμός είχε σφάλμα.'
+               end from s),
+    'pendingWrites', (select count(*) from public.google_outbox o where o.done_at is null));
+$$;
+
 -- { now, attention, jobs: [...], sends: { items, total }, google: {...}, events: { stuck, waiting }, ai: {...} }
 -- Το p_now (null = τώρα) υπάρχει για τα τεστ.
 create function public.health_view(p_now timestamptz default null) returns jsonb
@@ -351,7 +382,7 @@ as $$
 declare
   v_now timestamptz := coalesce(p_now, now());
   v_uid uuid := auth.uid();
-  g public.google_calendar;
+  v_google jsonb;
   v_budget jsonb;
   v_jobs jsonb;
   v_late integer;
@@ -362,6 +393,7 @@ declare
   v_waiting integer;
   v_google_stopped boolean;
   v_ai_alert boolean;
+  v_hidden text[] := authz.send_hidden_types();
 begin
   if not authz.has('health.view') then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
@@ -383,15 +415,15 @@ begin
          count(*)
     into v_stuck, v_stuck_total
     from (select e.*, row_number() over (order by e.occurred_at, e.id) as n from public.events e
-           where e.processed_at is null and e.type not like 'health.%' and e.attempts >= 5) x
+           where e.processed_at is null and e.type not like 'health.%' and e.attempts >= 5
+             and not (e.type = any (v_hidden))) x
     left join public.event_types t on t.code = x.type;
   select count(*) into v_waiting from public.events e
-   where e.processed_at is null and e.type not like 'health.%' and e.attempts < 5
+   where e.processed_at is null and e.type not like 'health.%' and e.attempts < 5 and not (e.type = any (v_hidden))
      and e.occurred_at < v_now - interval '15 minutes'
      and not exists (select 1 from authz.health_job_rows(v_now) r where r.job = 'outbox' and r.is_late);
-  select x.* into g from public.google_calendar x where x.id;
-  v_google_stopped := coalesce(g.calendar_id is not null
-    and (g.last_sync_at < v_now - interval '30 minutes' or g.error_since < v_now - interval '30 minutes'), false);
+  v_google := authz.health_google_view(v_now);
+  v_google_stopped := (v_google ->> 'stopped')::boolean;
   v_budget := authz.ai_budget(v_now);
   v_ai_alert := coalesce((v_budget ->> 'capMicros')::bigint > 0
     and (v_budget ->> 'spentMicros')::bigint * 100 >= (v_budget ->> 'capMicros')::bigint * 80, false);
@@ -401,72 +433,12 @@ begin
                  + v_ai_alert::integer,
     'jobs', v_jobs,
     'sends', jsonb_build_object('items', v_sends, 'total', v_sends_total),
-    'google', jsonb_build_object(
-      'connected', coalesce(g.calendar_id is not null, false), 'lastSyncAt', g.last_sync_at, 'errorSince', g.error_since,
-      'lastError', left(g.last_error, 200), 'stopped', v_google_stopped,
-      'pendingWrites', (select count(*) from public.google_outbox o where o.done_at is null)),
+    'google', v_google,
     'events', jsonb_build_object('stuck', v_stuck, 'stuckTotal', v_stuck_total, 'waiting', v_waiting),
     'ai', jsonb_build_object(
       'month', v_budget ->> 'month', 'spentMicros', (v_budget ->> 'spentMicros')::bigint,
       'capMicros', (v_budget ->> 'capMicros')::bigint, 'publicShare', (v_budget ->> 'publicShare')::integer,
       'alert', v_ai_alert));
-end;
-$$;
-
--- Η κάρτα Βοηθού των Ρυθμίσεων και η P2: δαπάνη μήνα και πλαφόν. «Διαχειρίζεται Ρυθμίσεις» ή «Βλέπει Υγεία συστήματος».
-create or replace function public.ai_spend_view(p_now timestamptz default null) returns jsonb
-language plpgsql stable security definer set search_path = ''
-as $$
-begin
-  if not (authz.has('settings.manage') or authz.has('health.view')) then
-    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
-  end if;
-  return authz.ai_budget(p_now);
-end;
-$$;
-
--- Όπως στο 20261018120000, με την πύλη ανοιχτή και σε όσους «Βλέπουν Υγεία συστήματος» (η κάρτα Google της P2).
-create or replace function authz.integrations_view(p_now timestamptz) returns jsonb
-language plpgsql stable security definer set search_path = ''
-as $$
-declare
-  v_now timestamptz := coalesce(p_now, now());
-  v_day timestamptz := date_trunc('day', v_now at time zone 'Europe/Athens') at time zone 'Europe/Athens';
-  g public.google_calendar;
-  v_budget jsonb;
-begin
-  if not (authz.is_owner() or authz.has('health.view')) then
-    raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
-  end if;
-  select x.* into g from public.google_calendar x where x.id;
-  v_budget := authz.ai_budget(v_now);
-  return jsonb_build_object(
-    'now', v_now,
-    'email', jsonb_build_object(
-      'jobOkAt', (select j.last_ok_at from public.job_runs j where j.job = 'outbox'),
-      'lastSentAt', (select max(l.sent_at) from public.email_log l where l.status = 'sent' and l.sent_at <= v_now),
-      'sentToday', (select count(*) from public.email_log l
-                     where l.status = 'sent' and l.sent_at >= v_day and l.sent_at <= v_now),
-      'failedToday', (select count(*) from public.email_log l
-                       where l.status = 'failed' and l.sent_at >= v_day and l.sent_at <= v_now)),
-    'google', jsonb_build_object(
-      'calendarConnected', g.calendar_id is not null,
-      'lastSyncAt', g.last_sync_at,
-      'lastError', g.last_error,
-      'errorSince', g.error_since,
-      'pendingWrites', (select count(*) from public.google_outbox o where o.done_at is null)),
-    'ai', jsonb_build_object(
-      'month', v_budget ->> 'month',
-      'spentMicros', (v_budget ->> 'spentMicros')::bigint,
-      'capMicros', (v_budget ->> 'capMicros')::bigint,
-      'lastUsedAt', (select max(u.at) from public.ai_usage u where u.at <= v_now)),
-    'checks', coalesce((
-      select jsonb_object_agg(c.connection, jsonb_build_object(
-               'lastStartedAt', c.last_started_at, 'lastOkAt', c.last_ok_at,
-               'lastFailedAt', c.last_failed_at, 'lastError', c.last_error))
-        from public.integration_checks c), '{}'::jsonb),
-    'analytics', (select jsonb_build_object('ga4', s.ga4_measurement_id, 'pixel', s.meta_pixel_id)
-                    from public.company_settings s where s.id));
 end;
 $$;
 
@@ -649,12 +621,13 @@ $$;
 -- Ο κατάλογος του Ίχνους (20261018140000_audit_trail.sql): το «Ξαναδοκίμασε» στην περιοχή Υγεία. Το «Αγνόησε» και το
 -- «Ξαναστείλε» γράφονται στα email_outbox / email_log, που είναι ήδη στον κατάλογο (μόνο Ιδιοκτήτης).
 insert into public.audit_entities (entity, area, label, parent, amount_keys, cost_keys, visibility)
-values ('events', 'health', 'Γεγονός (Ξαναδοκίμασε)', null, '{}', '{}', 'rule');
+values ('events', 'health', 'Ξαναδοκιμή Γεγονότος', null, '{}', '{}', 'rule');
 
 -- ───────────── Δικαιώματα ─────────────
 
 revoke all on function
   authz.health_job_catalog(), authz.health_job_rows(timestamptz), authz.health_sends(uuid, timestamptz),
+  authz.health_google_view(timestamptz),
   authz.health_ok(timestamptz)
   from public, anon, authenticated;
 
