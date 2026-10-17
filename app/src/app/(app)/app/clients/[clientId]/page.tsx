@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Split } from "@/components/ui/inspector";
 import { ClientUsersSection, can, getViewer, isOwner, type Viewer } from "@/modules/access";
+import { AuditHistoryLink } from "@/modules/audit";
 import { GdprClientPanel } from "@/modules/gdpr";
 import { canSeeClientSends, sendsCaps } from "@/modules/notifications";
 import {
@@ -41,6 +42,7 @@ async function ClientView({
   tab,
   usersSection,
   sends,
+  historyLink,
 }: {
   client: ClientDetail;
   card: ClientRow | null;
@@ -48,6 +50,7 @@ async function ClientView({
   tab: string | undefined;
   usersSection: ReactNode;
   sends: SendsAccess;
+  historyLink: ReactNode;
 }) {
   const access = clientAccess(caps, client);
   const canEdit = caps.canManage && access !== "granted";
@@ -55,7 +58,9 @@ async function ClientView({
   const assignable = caps.canTransfer ? await listAssignableUsers() : null;
   return (
     <>
-      <ScreenHeader eyebrow={EYEBROW} title={client.name} />
+      <ScreenHeader eyebrow={EYEBROW} title={client.name}>
+        {historyLink}
+      </ScreenHeader>
       <Split>
         <ClientInspector
           client={client}
@@ -89,6 +94,7 @@ function ClientOutcome({
   tab,
   usersSection,
   sends,
+  historyLink,
 }: {
   client: ClientDetail | null;
   card: ClientRow | null;
@@ -96,6 +102,7 @@ function ClientOutcome({
   tab: string | undefined;
   usersSection: ReactNode;
   sends: SendsAccess;
+  historyLink: ReactNode;
 }) {
   if (client === null)
     return card && !card.canOpen ? (
@@ -105,7 +112,15 @@ function ClientOutcome({
     );
   if (client.archivedAt) return <Merged client={client} />;
   return (
-    <ClientView client={client} card={card} caps={caps} tab={tab} usersSection={usersSection} sends={sends} />
+    <ClientView
+      client={client}
+      card={card}
+      caps={caps}
+      tab={tab}
+      usersSection={usersSection}
+      sends={sends}
+      historyLink={historyLink}
+    />
   );
 }
 
@@ -141,6 +156,7 @@ export default async function ClientPage({
         canSee: canSeeClientSends(viewer, client.data?.managerId ?? null),
         hasHistory: sendsCaps(viewer).canView,
       }}
+      historyLink={<AuditHistoryLink viewer={viewer} entity="clients" id={id.data} />}
     />
   );
 }

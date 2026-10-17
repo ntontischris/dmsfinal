@@ -7,3 +7,4 @@ export { ReportsScreen } from "./components/reports-screen";
 export { EXPORT_TITLE } from "./export/labels";
 export { parseDatasetParam, parseFormat, parseMonth } from "./export/url";
 export { ExportScreen } from "./export/components/export-screen";
+export { AuditExportButtons } from "./export/components/audit-export-buttons";

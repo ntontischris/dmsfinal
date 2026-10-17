@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { getViewer } from "@/modules/access";
+import { AuditHistoryLink } from "@/modules/audit";
 import {
   agreementCaps,
   getAgreement,
@@ -51,6 +52,7 @@ export default async function AgreementPage({
       caps={caps}
       extras={extras}
       origin={origin}
+      historyLink={<AuditHistoryLink viewer={viewer} entity="agreements" id={found.data.id} />}
     />
   );
 }

@@ -14,6 +14,7 @@ import {
   listPermissions,
   listTeamUsers,
 } from "@/modules/access";
+import { AuditHistoryLink } from "@/modules/audit";
 
 export const metadata = { title: "Ρόλος" };
 
@@ -72,6 +73,7 @@ export default async function RolePage({
         ) : (
           <Badge tone="strong">δικός σου</Badge>
         )}
+        <AuditHistoryLink viewer={viewer} entity="roles" id={current.id} />
       </ScreenHeader>
       <div className="grid gap-4">
         <RoleEditor

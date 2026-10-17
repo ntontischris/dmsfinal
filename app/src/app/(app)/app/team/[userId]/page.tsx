@@ -19,6 +19,7 @@ import {
   lockReason,
   type Viewer,
 } from "@/modules/access";
+import { AuditHistoryLink } from "@/modules/audit";
 import { GdprTeamUserPanel } from "@/modules/gdpr";
 
 export const metadata = { title: "Χρήστης ομάδας" };
@@ -96,7 +97,9 @@ export default async function TeamUserPage({
   );
   return (
     <>
-      <ScreenHeader eyebrow="N1 · Ομάδα" title={user.name} />
+      <ScreenHeader eyebrow="N1 · Ομάδα" title={user.name}>
+        <AuditHistoryLink viewer={viewer} entity="team_users" id={user.userId} />
+      </ScreenHeader>
       <Split>
         <Inspector
           title={user.name}

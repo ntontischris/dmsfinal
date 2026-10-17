@@ -1,13 +1,16 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import { Segmented } from "@/components/ui/segmented";
+import { AUDIT_PATH, AUDIT_TITLE } from "@/modules/audit";
 
 import { dateLabel } from "@/modules/reports/format";
 import { PERIOD_CODES, type PeriodCode } from "@/modules/reports/url";
 import { DATASETS, type DatasetDefinition } from "../datasets";
 import {
+  AUDIT_DATASET_NOTE,
   COLUMNS_LABEL,
   COST_NOTE,
   DATASET_SECTION,
@@ -59,6 +62,11 @@ function Step({
 
 const FORMAT_ORDER: readonly ExportFormat[] = ["xlsx", "csv"];
 
+// Η βάση μετρά το Ίχνος ως 1.001 γραμμές (δεν το μετρά ολόκληρο σε κάθε άνοιγμα): πάνω από 1.000 = «1.000+».
+const ROW_COUNT_CAP = 1000;
+export const rowCountLabel = (count: number): string =>
+  count > ROW_COUNT_CAP ? `${ROW_COUNT_CAP.toLocaleString("el-GR")}+` : String(count);
+
 // M2 «Εξαγωγή συνόλου δεδομένων»: τι, Περίοδος (όπου ισχύει), μορφή, τι θα περιέχει, «Εξαγωγή». Οι επιλογές στη διεύθυνση.
 export function DatasetSection({
   overview,
@@ -94,6 +102,11 @@ export function DatasetSection({
           <p className="m-0 text-sm text-muted-foreground">
             {seesCost ? PROFITABILITY_NOTE : COST_NOTE}
           </p>
+          {dataset.code === "audit" && (
+            <p className="m-0 text-sm text-muted-foreground">
+              {AUDIT_DATASET_NOTE} <Link href={AUDIT_PATH}>{AUDIT_TITLE}</Link>.
+            </p>
+          )}
         </Step>
         {usesPeriod ? (
           <Step number={2} title={STEP_PERIOD}>
@@ -136,7 +149,7 @@ export function DatasetSection({
               ))}
             </dd>
             <dt className="kit-label">{ROWS_LABEL}</dt>
-            <dd className="m-0 tabular-nums">{rowCount}</dd>
+            <dd className="m-0 tabular-nums">{rowCountLabel(rowCount)}</dd>
           </dl>
           {rowCount === 0 && (
             <p className="m-0 text-sm text-muted-foreground">

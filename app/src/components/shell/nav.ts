@@ -340,6 +340,17 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Διατομεακά",
+    items: [
+      {
+        code: "P1",
+        label: "Ίχνος ενεργειών",
+        href: "/app/audit",
+        requires: "audit.view",
+      },
+    ],
+  },
+  {
     title: "Σύστημα",
     items: [{ code: "KIT", label: "Kit", href: "/app/kit", requires: "team" }],
   },

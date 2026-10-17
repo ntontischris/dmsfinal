@@ -45,6 +45,12 @@ export const EXPORT_BUTTON = "Εξαγωγή";
 export const EXPORTING = "Ετοιμάζεται…";
 export const EXPORT_FAILED = "Η εξαγωγή δεν έγινε. Δοκίμασε ξανά.";
 export const REPORT_EXPORT_LABEL = "Εξαγωγή όπως φαίνεται:";
+export const AUDIT_EXPORT_LABEL = "Εξαγωγή με αυτά τα φίλτρα:";
+export const AUDIT_EXPORT_NOTE =
+  "Μόνο όσα βλέπεις, με τα ίδια κρυφά ποσά και κόστος. Η εξαγωγή γράφεται κι αυτή στο Ίχνος.";
+export const AUDIT_TRUNCATED =
+  "Το αρχείο έχει τις 10.000 πιο πρόσφατες γραμμές. Για τις παλαιότερες, στένεψε τα φίλτρα.";
+export const AUDIT_DATASET_NOTE = "Για φίλτρα (πρόσωπο, περιοχή, στοιχείο, περίοδος), εξαγωγή από το";
 
 export const PACK_SECTION = "Πακέτο λογιστή";
 export const PACK_MONTH = "Μήνας";
