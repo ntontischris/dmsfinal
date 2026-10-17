@@ -242,6 +242,9 @@ select is((select array_agg(k order by k) from jsonb_object_keys(public.knowledg
 select public.t_as('a2');
 select public.knowledge_item_save(jsonb_build_object('id', public.t_id('y'), 'sectionId', public.t_id('s1'),
   'title', 'Φωτισμός στούντιο', 'summary', 'Περίληψη: Φωτισμός στούντιο', 'body', 'Ο φωτισμός, νέα έκδοση.'));
+-- Η αποθήκευση βάζει το στοιχείο στην ουρά με το πραγματικό now()· το claim εδώ τρέχει με σταθερή ώρα, άρα η σειρά της
+-- ουράς στερεώνεται σε αυτή (αλλιώς το τεστ σπάει μόλις η πραγματική ώρα περάσει τη σταθερή).
+update public.knowledge_index_queue set next_try_at = '2026-10-17 10:00+03' where item_id = public.t_id('y');
 select is(public.knowledge_index_claim(10, public.t_id('y'), '2026-10-17 10:00+03')->'items'->0->>'attempts', '1',
   'Claim: η προσπάθεια μετριέται από πριν');
 select is((public.t_q('y')).next_try_at, '2026-10-17 10:01+03'::timestamptz,
