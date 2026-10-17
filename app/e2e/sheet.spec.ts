@@ -3,6 +3,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   PRODUCER,
   bookFilmingFromScreen,
+  ensureSignedMonthlyAgreement,
   filmingSpecDay,
   fieldOf,
   upcomingDay,
@@ -12,8 +13,8 @@ import { button, inContext, project, signIn } from "./sales-parts";
 
 // Δελτίο γυρίσματος (#136) από άκρη σε άκρη: ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία λήψη και βγάζει Έκδοση 2
 // με «Τι άλλαξε», και βλέπει το ιστορικό. Σειριακά και χωρίς retries, όπως το filming.spec.ts.
-// Κλείνει Γύρισμα κάτω από τη Συμφωνία που έχει ήδη υπογράψει το filming.spec.ts· δεν γράφει νέα, γιατί η Ευκαιρία
-// του seed παίρνει μία μόνο Συμφωνία.
+// Κλείνει Γύρισμα κάτω από τη μηνιαία Συμφωνία του project. Τη μοιράζεται με το filming.spec.ts (η Ευκαιρία του seed
+// παίρνει μία μόνο Συμφωνία): όποιο τρέξει πρώτο την υπογράφει, ώστε να περνά σε οποιοδήποτε shard.
 test.describe.configure({ mode: "serial", retries: 0 });
 
 // Το πάνελ «Δελτίο» της σελίδας του Γυρίσματος (ο τίτλος του πάνελ είναι h2 «Δελτίο»).
@@ -38,6 +39,7 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
 }) => {
   const P = project();
   await signIn(page, "sales@example.com");
+  await ensureSignedMonthlyAgreement(page, browser, P);
   await bookFilmingFromScreen(page, P, upcomingDay(20, Number(filmingSpecDay().slice(8))));
   const filmingUrl = page.url();
 

@@ -7,7 +7,7 @@ import {
   clientName,
   fieldOf,
   openFilmingFromList,
-  signedMonthlyAgreement,
+  ensureSignedMonthlyAgreement,
   filmingSpecDay,
 } from "./filming-parts";
 import {
@@ -31,7 +31,7 @@ test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορί�
 }) => {
   const P = project();
   await signIn(page, "sales@example.com");
-  await signedMonthlyAgreement(page, browser, P);
+  await ensureSignedMonthlyAgreement(page, browser, P);
 
   await bookFilmingFromScreen(page, P, filmingSpecDay());
   await openFilmingFromList(page, P);

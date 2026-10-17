@@ -79,6 +79,24 @@ export async function signedMonthlyAgreement(
   });
 }
 
+// Η μηνιαία Συμφωνία του project, μόνο αν δεν υπάρχει ήδη. Τα αρχεία μοιράζονται σε μηχανήματα (shards) και τρέχουν
+// με οποιαδήποτε σειρά: όποιο φτάσει πρώτο την υπογράφει, τα άλλα τη βρίσκουν. Η E4 δείχνει μόνο Πελάτες με
+// Συμφωνία σε ενεργή Περίοδο, οπότε ο Πελάτης στη λίστα σημαίνει ότι η Συμφωνία υπάρχει.
+export async function ensureSignedMonthlyAgreement(
+  page: Page,
+  browser: Browser,
+  P: string,
+): Promise<void> {
+  await visit(page, "/app/filming/new");
+  const form = page.locator("form", {
+    has: page.getByRole("button", { name: "Κλείσιμο Γυρίσματος", exact: true }),
+  });
+  await expect(form).toBeVisible();
+  const option = fieldOf(form, "Πελάτης").locator("option", { hasText: clientName(P) });
+  if ((await option.count()) > 0) return;
+  await signedMonthlyAgreement(page, browser, P);
+}
+
 // Οι δύο λειτουργίες (desktop, mobile) μοιράζονται τη βάση: ώρες που δεν επικαλύπτονται, ώστε το Συνεργείο να μην συγκρούεται.
 export const startTimeOf = (P: string): string => (P === "mobile" ? "15:00" : "10:00");
 
