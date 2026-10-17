@@ -4,7 +4,7 @@
 -- Φανταστικά δεδομένα στο 2025, με σταθερό «σήμερα» 2025-06-30 στις authz.* (ως superuser, με τον Χρήστη στα claims)·
 -- η άρνηση μέσω των public RPC. Κανένα τεστ δεν εξαρτάται από την πραγματική ημερομηνία.
 begin;
-select plan(50);
+select plan(62);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις (Άννα) · a4 Παραγωγή · a5 «Πωλήσεις χωρίς ποσά» (Εύρος όλα)
@@ -327,6 +327,131 @@ select is(
       and (pg_catalog.has_function_privilege('anon', p.oid, 'execute')
            or pg_catalog.has_function_privilege('authenticated', p.oid, 'execute'))),
   0, 'Καμία authz.* του Ρβ δεν εκτελείται από anon ή authenticated'
+);
+
+-- ───────────── Ακραίες περιπτώσεις (Πωλητής a8, σταθερό σήμερα) ─────────────
+-- a8 Δημήτρης (Πωλήσεις) · a9 Μαρίνα (reports.view + clients.manage «όλα», finance.amounts μόνο Α)
+-- Αποσυρμένα: Στάδιο «Παγωμένη», Πηγή «Έκθεση», Λόγος «Προϋπολογισμός». Ο c5 συγχωνεύεται στον c4.
+--  e1 Δ · Παγωμένη · web · 1/3/2025 · ανοιχτή
+--  e2 Δ · Νέα · Έκθεση · 5/3/2025 · χαμένη 1/4 «Προϋπολογισμός»
+--  e3 Ε (→ Δ) · Συνάντηση · phone · 10/4/2025 · ανοιχτή
+--  e4 Δ · Νέα · referral · 2/4/2025 · ανοιχτή, συνέχεια της e2
+--  e5 Δ · Νέα · facebook · 31/12/2025 23:30 UTC = 1/1/2026 ώρα Ελλάδας · ανοιχτή
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000000a8', 'sales3@example.com'),
+  ('00000000-0000-0000-0000-0000000000a9', 'mixed@example.com');
+insert into public.team_users (user_id, name, email) values
+  ('00000000-0000-0000-0000-0000000000a8', 'Δημήτρης', 'sales3@example.com'),
+  ('00000000-0000-0000-0000-0000000000a9', 'Μαρίνα', 'mixed@example.com');
+insert into public.roles (name, kind) values ('Όλα με ποσά Α (τεστ)', 'team');
+insert into public.role_permissions (role_id, permission, scope)
+select r.id, g.code, g.scope
+  from (values ('reports.view', 'all'), ('clients.manage', 'all'), ('finance.amounts', 'mine')) as g (code, scope)
+  join public.roles r on r.name = 'Όλα με ποσά Α (τεστ)' and r.kind = 'team';
+insert into public.team_user_roles (user_id, role_id)
+select u.id::uuid, r.id
+  from (values
+    ('00000000-0000-0000-0000-0000000000a8', 'Πωλήσεις'),
+    ('00000000-0000-0000-0000-0000000000a9', 'Όλα με ποσά Α (τεστ)')
+  ) as u (id, role_name)
+  join public.roles r on r.name = u.role_name and r.kind = 'team';
+
+set session_replication_role = replica;
+insert into public.sales_stages (id, label, sort, retired_at) values
+  ('00000000-0000-0000-0000-000000000501', 'Παγωμένη', 60, timestamptz '2025-05-01 10:00+03');
+insert into public.sales_sources (id, label, sort, retired_at) values
+  ('00000000-0000-0000-0000-000000000502', 'Έκθεση', 70, timestamptz '2025-05-01 10:00+03');
+insert into public.sales_loss_reasons (id, label, sort, retired_at) values
+  ('00000000-0000-0000-0000-000000000503', 'Προϋπολογισμός', 60, timestamptz '2025-05-01 10:00+03');
+insert into public.clients (id, name, contact_name, contact_email, manager_id) values
+  ('00000000-0000-0000-0000-0000000000c4', 'Πελάτης Δ', 'Δήμητρα Δ', 'd@example.com', '00000000-0000-0000-0000-0000000000a8'),
+  ('00000000-0000-0000-0000-0000000000c5', 'Πελάτης Ε', 'Ευάγγελος Ε', 'e@example.com', '00000000-0000-0000-0000-0000000000a8');
+insert into public.opportunities (id, client_id, title, stage_id, source_id, manager_id, outcome, loss_reason_id,
+                                  next_step, next_step_due, follows_opportunity_id, created_at, closed_at)
+select x.id::uuid, x.client_id::uuid, x.title,
+       coalesce(x.stage_id::uuid, (select s.id from public.sales_stages s where s.code = x.stage)),
+       coalesce(x.source_id::uuid, (select s.id from public.sales_sources s where s.code = x.source)),
+       '00000000-0000-0000-0000-0000000000a8'::uuid, x.outcome, x.reason::uuid,
+       'Επόμενο', date '2025-07-01', x.follows::uuid, x.created_at::timestamptz, x.closed_at::timestamptz
+  from (values
+    ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000c4', 'Παγωμένο Δ',
+     '00000000-0000-0000-0000-000000000501', null, null, 'web', 'open', null, null, '2025-03-01 12:00+02', null),
+    ('00000000-0000-0000-0000-0000000000e2', '00000000-0000-0000-0000-0000000000c4', 'Έκθεση Δ',
+     null, 'new', '00000000-0000-0000-0000-000000000502', null, 'lost', '00000000-0000-0000-0000-000000000503', null,
+     '2025-03-05 12:00+02', '2025-04-01 10:00+03'),
+    ('00000000-0000-0000-0000-0000000000e3', '00000000-0000-0000-0000-0000000000c5', 'Συγχώνευση Ε',
+     null, 'meeting', null, 'phone', 'open', null, null, '2025-04-10 12:00+03', null),
+    ('00000000-0000-0000-0000-0000000000e4', '00000000-0000-0000-0000-0000000000c4', 'Συνέχεια Δ',
+     null, 'new', null, 'referral', 'open', null, '00000000-0000-0000-0000-0000000000e2', '2025-04-02 12:00+03', null),
+    ('00000000-0000-0000-0000-0000000000e5', '00000000-0000-0000-0000-0000000000c4', 'Πρωτοχρονιά Δ',
+     null, 'new', null, 'facebook', 'open', null, null, '2025-12-31 23:30+00', null)
+  ) as x (id, client_id, title, stage_id, stage, source_id, source, outcome, reason, follows, created_at, closed_at);
+set session_replication_role = origin;
+
+select set_config('t.dim', '00000000-0000-0000-0000-0000000000a8', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+select lives_ok(
+  $$ select public.sales_merge_clients('00000000-0000-0000-0000-0000000000c4', '00000000-0000-0000-0000-0000000000c5') $$,
+  'Ο Ιδιοκτήτης συγχωνεύει τον Ε στον Δ'
+);
+select is(
+  (select array_agg(r.user_id order by r.user_id) from authz.report_sellers() r),
+  (select array_agg(a.user_id order by a.user_id) from public.sales_assignable_users() a),
+  'Ρ4: οι πιθανοί Υπεύθυνοι της Αναφοράς = η public.sales_assignable_users (ως Ιδιοκτήτης)'
+);
+
+select set_config('t.pd', authz.report_sales_pipeline(current_setting('t.dim')::uuid)::text, true);
+select is(
+  (select s->>'count' from jsonb_array_elements(current_setting('t.pd')::jsonb->'stages') s where s->>'label' = 'Παγωμένη'),
+  '1', 'Αποσυρμένο Στάδιο με ανοιχτή Ευκαιρία φαίνεται ακόμα'
+);
+select is(
+  (select r->>'clientName' from jsonb_array_elements(current_setting('t.pd')::jsonb->'rows') r where r->>'title' = 'Συγχώνευση Ε'),
+  'Πελάτης Δ', 'Η Ευκαιρία του συγχωνευμένου Πελάτη φαίνεται στον Πελάτη που έμεινε'
+);
+
+select set_config('t.sd', authz.report_sales_sources('this-year', current_setting('t.dim')::uuid, date '2025-12-31')::text, true);
+select is(
+  (select r->>'opened' from jsonb_array_elements(current_setting('t.sd')::jsonb->'rows') r where r->>'label' = 'Έκθεση'),
+  '1', 'Αποσυρμένη Πηγή φαίνεται ακόμα στις Πηγές'
+);
+select is(
+  (select (t->>'opened') || '|' || (t->>'open') || '|' || (t->>'won') || '|' || (t->>'lost')
+     from (select current_setting('t.sd')::jsonb->'totals' as t) x),
+  '4|3|0|1', 'Η συνέχεια μιας χαμένης Ευκαιρίας μετρά χωριστά· η Ευκαιρία της 31/12 23:30 UTC δεν μετρά στο 2025'
+);
+select is(
+  (select count(*)::int from jsonb_array_elements(current_setting('t.sd')::jsonb->'opportunities') o
+    where o->>'title' in ('Έκθεση Δ', 'Συνέχεια Δ')),
+  2, 'Η χαμένη Ευκαιρία και η συνέχειά της είναι δύο γραμμές'
+);
+select is(
+  (select string_agg(r->>'label' || '=' || (r->>'opened'), ',')
+     from jsonb_array_elements(authz.report_sales_sources('this-year', current_setting('t.dim')::uuid, date '2026-02-01')->'rows') r),
+  'Facebook=1', 'Πηγές: created_at 31/12 23:30 UTC μετρά την επόμενη χρονιά (ώρα Ελλάδας)'
+);
+select is(
+  (select string_agg(l->>'label' || '=' || (l->>'count'), ',')
+     from jsonb_array_elements(authz.report_sales_results('this-year', current_setting('t.dim')::uuid, date '2025-06-30')->'lossReasons') l),
+  'Προϋπολογισμός=1', 'Αποσυρμένος Λόγος απώλειας φαίνεται ακόμα'
+);
+
+-- Εύρος «όλα» με «Βλέπει ποσά» μόνο Α: κανένα ποσό.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a9","role":"authenticated"}', true);
+select set_config('t.pm', authz.report_sales_pipeline(null)::text, true);
+select is(
+  (select (j->>'amounts') || '|' || (j->>'isScoped') || '|' || (j->'totals'->'monthly')::text || '|' || (j->'totals'->'oneOff')::text
+     from (select current_setting('t.pm')::jsonb as j) x),
+  'false|false|null|null', 'Εύρος όλα με «Βλέπει ποσά» Α: amounts = false, σύνολα χωρίς ποσά'
+);
+select is(
+  (select count(*)::int from jsonb_array_elements(current_setting('t.pm')::jsonb->'rows') r where r->'value' <> 'null'::jsonb),
+  0, 'Εύρος όλα με «Βλέπει ποσά» Α: καμία αξία γραμμής'
+);
+select is(
+  (select (t->'wonMonthly')::text || '|' || (t->'wonOneOff')::text || '|' || (t->>'won')
+     from (select authz.report_sales_results('this-year', null, date '2025-06-30')->'totals' as t) x),
+  'null|null|1', 'Εύρος όλα με «Βλέπει ποσά» Α: κερδισμένες σε πλήθος χωρίς αξία'
 );
 
 select * from finish();

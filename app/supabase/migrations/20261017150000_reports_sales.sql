@@ -36,6 +36,7 @@ $$;
 
 -- Οι ενεργοί Χρήστες που μπορούν να γίνουν Υπεύθυνοι (ο κανόνας της public.sales_assignable_users, χωρίς το Δικαίωμα
 -- ανάθεσης του θεατή: εδώ μετράμε μόνο αν υπάρχουν πάνω από ένας).
+-- Αντίγραφο του κανόνα: το reports_sales_test.sql ελέγχει ότι δίνει τους ίδιους Χρήστες με την sales_assignable_users.
 create function authz.report_sellers()
 returns table (user_id uuid, name text)
 language sql stable security definer set search_path = ''
