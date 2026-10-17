@@ -84,3 +84,35 @@ test("η Παραγωγή δεν βλέπει Αναφορές", async ({ page }
     page.getByRole("heading", { name: "Χωρίς δικαίωμα" }),
   ).toBeVisible();
 });
+
+// Αναφορές Ρβ (#199): ο πωλητής (Εύρος Α) βλέπει τις τρεις Αναφορές πωλήσεων και όχι τις οικονομικές· μόνο τις δικές του
+// Ευκαιρίες, χωρίς φίλτρο «Πωλητής». Οι αριθμοί ελέγχονται στο pgTAP (reports_sales_test.sql).
+test("ο πωλητής βλέπει μόνο τις δικές του Αναφορές πωλήσεων", async ({
+  page,
+}) => {
+  await signIn(page, "sales@example.com");
+  await page.goto(REPORTS_PATH);
+  for (const title of [
+    "Ανοιχτές Ευκαιρίες ανά Στάδιο",
+    "Κερδισμένες και χαμένες",
+    "Πηγές Ευκαιριών",
+  ])
+    await expect(
+      page.getByRole("link", { name: new RegExp(title) }),
+    ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Τζίρος ανά Πελάτη/ }),
+  ).toHaveCount(0);
+
+  await page.getByRole("link", { name: /Κερδισμένες και χαμένες/ }).click();
+  await expect(page).toHaveURL(/report=results/);
+  await expect(
+    page.getByText("Βλέπεις μόνο τις Ευκαιρίες όπου είσαι Υπεύθυνος."),
+  ).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Πωλητής" })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole("navigation", { name: "Περίοδος" }),
+  ).toBeVisible();
+});

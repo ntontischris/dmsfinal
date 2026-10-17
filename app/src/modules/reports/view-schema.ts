@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const amount = z.number().nullable();
 
-const periodSchema = z.object({
+export const periodSchema = z.object({
   code: z.string(),
   label: z.string(),
   from: z.string(),
