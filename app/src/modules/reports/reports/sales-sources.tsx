@@ -165,4 +165,18 @@ export const SALES_SOURCES: ReportDefinition = {
   usesPeriod: true,
   isVisible: canSeeSalesReports,
   Body: SalesSourcesBody,
+  exportSpec: {
+    rpc: "report_sales_sources",
+    params: ["period", "seller"],
+    rowsKey: "rows",
+    columns: [
+      { key: "label", header: COLUMNS.source, type: "text" },
+      { key: "opened", header: COLUMNS.opened, type: "integer" },
+      { key: "won", header: COLUMNS.won, type: "integer" },
+      { key: "lost", header: COLUMNS.lost, type: "integer" },
+      { key: "open", header: COLUMNS.open, type: "integer" },
+      { key: "winRate", header: COLUMNS.rate, type: "percent" },
+    ],
+    totals: { key: "totals", label: TOTAL_LABEL },
+  },
 };

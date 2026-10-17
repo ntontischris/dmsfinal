@@ -176,4 +176,19 @@ export const SALES_RESULTS: ReportDefinition = {
   usesPeriod: true,
   isVisible: canSeeSalesReports,
   Body: SalesResultsBody,
+  exportSpec: {
+    rpc: "report_sales_results",
+    params: ["period", "seller"],
+    rowsKey: "rows",
+    columns: [
+      { key: "title", header: COLUMNS.opportunity, type: "text" },
+      { key: "clientName", header: "Πελάτης", type: "text" },
+      { key: "managerName", header: "Υπεύθυνος", type: "text" },
+      { key: "outcome", header: COLUMNS.outcome, type: "text", labels: OUTCOME },
+      { key: "closedOn", header: COLUMNS.closedOn, type: "date" },
+      { key: "lossReason", header: COLUMNS.reason, type: "text" },
+      { key: "kind", header: "Είδος", type: "text", labels: { monthly: "Μηνιαία", one_off: "Εφάπαξ" } },
+      { key: "value", header: COLUMNS.value, type: "money" },
+    ],
+  },
 };

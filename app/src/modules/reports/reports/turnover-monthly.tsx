@@ -159,4 +159,18 @@ export const TURNOVER_MONTHLY: ReportDefinition = {
   usesPeriod: true,
   isVisible: canSeeFinanceReports,
   Body: TurnoverMonthlyBody,
+  exportSpec: {
+    rpc: "report_turnover_monthly",
+    params: ["period", "client"],
+    rowsKey: "months",
+    columns: [
+      { key: "month", header: COLUMNS.month, type: "month" },
+      { key: "turnover", header: COLUMNS.turnover, type: "money" },
+      { key: "invoiceCount", header: COLUMNS.invoices, type: "integer" },
+      { key: "creditCount", header: "Πιστωτικά", type: "integer" },
+      { key: "collections", header: COLUMNS.collections, type: "money" },
+      { key: "receiptCount", header: COLUMNS.receipts, type: "integer" },
+    ],
+    totals: { key: "totals", label: TOTAL_LABEL },
+  },
 };

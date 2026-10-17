@@ -189,4 +189,17 @@ export const SALES_PIPELINE: ReportDefinition = {
   usesPeriod: false,
   isVisible: canSeeSalesReports,
   Body: SalesPipelineBody,
+  exportSpec: {
+    rpc: "report_sales_pipeline",
+    params: ["seller"],
+    rowsKey: "stages",
+    columns: [
+      { key: "label", header: COLUMNS.stage, type: "text" },
+      { key: "count", header: COLUMNS.count, type: "integer" },
+      { key: "monthly", header: COLUMNS.monthly, type: "money" },
+      { key: "oneOff", header: COLUMNS.oneOff, type: "money" },
+      { key: "withoutProposal", header: COLUMNS.without, type: "integer" },
+    ],
+    totals: { key: "totals", label: TOTAL_LABEL },
+  },
 };

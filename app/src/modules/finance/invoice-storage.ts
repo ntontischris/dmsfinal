@@ -74,3 +74,26 @@ export async function signedInvoicePdfUrl(
   if (error || !data) return null;
   return data.signedUrl;
 }
+
+// Πολλά signed URLs μαζί (Πακέτο λογιστή, Ρδ #201): μόνο για διαδρομές που έδωσε ήδη η βάση σε αυτόν τον Χρήστη
+// (export_accountant_pack, με τον ίδιο έλεγχο με την invoice_pdf_path). Διαδρομή χωρίς αρχείο → λείπει από το αποτέλεσμα.
+export async function signedInvoicePdfUrls(
+  paths: readonly string[],
+  seconds: number,
+): Promise<ReadonlyMap<string, string>> {
+  if (paths.length === 0) return new Map();
+  const admin = createAdminClient();
+  if (!admin) return new Map();
+  const { data, error } = await admin.storage
+    .from(INVOICE_BUCKET)
+    .createSignedUrls([...paths], seconds);
+  if (error || !data) {
+    if (error) console.error("signedInvoicePdfUrls", error.message);
+    return new Map();
+  }
+  return new Map(
+    data.flatMap((item) =>
+      item.path && item.signedUrl && !item.error ? [[item.path, item.signedUrl] as const] : [],
+    ),
+  );
+}
