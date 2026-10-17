@@ -12,12 +12,14 @@ import {
   can,
   getDeactivationPreview,
   getViewer,
+  isOwner,
   listPermissions,
   listRoles,
   listTeamUsers,
   lockReason,
   type Viewer,
 } from "@/modules/access";
+import { GdprTeamUserPanel } from "@/modules/gdpr";
 
 export const metadata = { title: "Χρήστης ομάδας" };
 
@@ -138,6 +140,7 @@ export default async function TeamUserPage({
               preview={preview.ok ? preview.data : null}
             />
           </Panel>
+          {isOwner(viewer) && <GdprTeamUserPanel userId={user.userId} />}
           <Link href="/app/team" className="text-sm text-muted-foreground">
             ← Όλη η Ομάδα
           </Link>

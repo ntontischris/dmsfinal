@@ -1,4 +1,4 @@
-import type { Cell, CellType, ExportSheet } from "./columns";
+import type { Cell, CellType, ExportSheet } from "./sheet";
 
 // CSV για το ελληνικό Excel (Ρ6): UTF-8 με BOM, «;» ως διαχωριστικό, γραμμές με CRLF.
 // Σύμβαση αριθμών: δεκαδική υποδιαστολή «,», χωρίς διαχωριστικό χιλιάδων (1234,50), ώστε το ελληνικό Excel να τους

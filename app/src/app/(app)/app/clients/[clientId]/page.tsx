@@ -3,7 +3,8 @@ import { z } from "zod";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Split } from "@/components/ui/inspector";
-import { ClientUsersSection, can, getViewer, type Viewer } from "@/modules/access";
+import { ClientUsersSection, can, getViewer, isOwner, type Viewer } from "@/modules/access";
+import { GdprClientPanel } from "@/modules/gdpr";
 import { canSeeClientSends, sendsCaps } from "@/modules/notifications";
 import {
   ClientInspector,
@@ -144,8 +145,14 @@ export default async function ClientPage({
   );
 }
 
-// N2 Χρήστες πελάτη: μόνο όποιος «Προσκαλεί και αφαιρεί Χρήστες πελάτη», και μόνο σε Πελάτη που δεν είναι αρχειοθετημένος.
+// N2 Χρήστες πελάτη: μόνο όποιος «Προσκαλεί και αφαιρεί Χρήστες πελάτη»· GDPR (#208) μόνο ο Ιδιοκτήτης. Μόνο σε Πελάτη
+// που δεν είναι αρχειοθετημένος.
 function usersSectionFor(viewer: Viewer, clientId: string, client: ClientDetail | null): ReactNode {
-  if (!client || client.archivedAt || !can(viewer, "access.clientUsers")) return null;
-  return <ClientUsersSection clientId={clientId} viewer={viewer} />;
+  if (!client || client.archivedAt) return null;
+  return (
+    <>
+      {can(viewer, "access.clientUsers") && <ClientUsersSection clientId={clientId} viewer={viewer} />}
+      {isOwner(viewer) && <GdprClientPanel clientId={clientId} />}
+    </>
+  );
 }

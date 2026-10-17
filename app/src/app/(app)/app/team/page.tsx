@@ -16,6 +16,7 @@ import {
   listRoles,
   listTeamUsers,
 } from "@/modules/access";
+import { GDPR_PATH, GDPR_TITLE } from "@/modules/gdpr";
 
 export const metadata = { title: "Ομάδα" };
 
@@ -79,6 +80,8 @@ export default async function TeamPage() {
               {" "}
               Τους ίδιους τους Ρόλους τους αλλάζεις στους{" "}
               <Link href="/app/team/roles">Ρόλους και Δικαιώματα</Link>.
+              Τα αιτήματα πρόσβασης και διαγραφής είναι στα{" "}
+              <Link href={GDPR_PATH}>{GDPR_TITLE}</Link>.
             </>
           )}
         </p>

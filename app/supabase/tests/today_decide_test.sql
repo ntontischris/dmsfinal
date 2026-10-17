@@ -5,7 +5,8 @@ select plan(41);
 
 -- ───────────── Μητρώο ─────────────
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.sort between 100 and 199),
-  array['proposal_approvals', 'filming_approvals', 'google_deletions', 'unassigned'], 'Οι τέσσερις κάρτες στη ζώνη της ομάδας decide');
+  array['proposal_approvals', 'filming_approvals', 'google_deletions', 'unassigned', 'gdpr'],
+  'Οι τέσσερις κάρτες στη ζώνη της ομάδας decide, και η «GDPR με προθεσμία» (#208) στο τέλος');
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.needs_second_person),
   array['proposal_approvals', 'unassigned'], 'Κανόνας 8: Προτάσεις προς έγκριση και Χωρίς υπεύθυνο θέλουν δεύτερο άνθρωπο');
 

@@ -2,11 +2,12 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
+import { fileBase, fileName, periodPart, uniqueName } from "@/lib/export/file-name";
+
 import type { ReportDefinition, ReportExportSpec } from "../catalog/types";
 import { FINANCE_REPORTS } from "../catalog/finance";
 import { SALES_REPORTS } from "../catalog/sales";
 import { DATASETS, DATASET_CODES } from "./datasets";
-import { fileBase, fileName, periodPart, uniqueName } from "./file-name";
 import { historyWhat } from "./history";
 import {
   exportableReport,
