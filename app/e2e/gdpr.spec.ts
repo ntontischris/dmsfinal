@@ -201,7 +201,8 @@ test("η ανωνυμοποίηση θέλει το όνομα γραμμένο 
   await expect(confirm).toBeDisabled();
   await dialog.getByRole("textbox").fill(name);
   await confirm.click();
-  await expect(panel.getByRole("status")).toContainText("Ανωνυμοποιήθηκε");
+  // Η σελίδα ξαναφορτώνει από τη βάση: το πάνελ λέει πια ότι έγινε.
+  await expect(panel).toContainText("Έχει ήδη ανωνυμοποιηθεί.");
 
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
