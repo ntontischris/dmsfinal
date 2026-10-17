@@ -14,9 +14,10 @@
 --    χωρίς μετατροπή. Ίχνος σε κάθε αλλαγή (μόνο ο Ιδιοκτήτης το βλέπει).
 --  • Γεγονός 59 «Η συνδρομή ανανεώνεται σε 7 μέρες» (subscription.renewing, ΣΤ, με ημερομηνία): άγκυρα η ημερομηνία
 --    ανανέωσης. Αρχικός Αυτοματισμός: Ειδοποίηση στους Ιδιοκτήτες, 7 μέρες πριν στις 09:00, ενεργός. Τα Προγραμματισμένα
---    (K3) δείχνουν τις υπενθυμίσεις συνδρομών μόνο στον Ιδιοκτήτη.
+--    (K3) δείχνουν τις υπενθυμίσεις συνδρομών μόνο στον Ιδιοκτήτη, και το authz.event_visible_to δεν τις αφήνει να φτάσουν σε
+--    κανέναν άλλον, όποιον παραλήπτη κι αν ορίσει η Διαχείριση σε έναν Αυτοματισμό.
 --  • Ξαναγράφονται από τους ΤΕΛΕΥΤΑΙΟΥΣ ορισμούς: authz.guard_company_settings (20261007181517_company_settings.sql),
---    authz.timed_cases και public.automations_upcoming (20261015140100_automation_timing.sql), authz.audit_entity_allowed
+--    authz.timed_cases, authz.event_visible_to και public.automations_upcoming (20261015140100_automation_timing.sql), authz.audit_entity_allowed
 --    (20261017160000_reports_export.sql).
 
 -- ───────────── GA4 και Meta Pixel στα στοιχεία της Εταιρείας ─────────────
@@ -158,8 +159,8 @@ as $$ select authz.integration_check_finish(p_connection, p_ok, p_error, now());
 
 -- ───────────── Τα γεγονότα πίσω από την κατάσταση (μία πηγή για N5 και, αργότερα, P2) ─────────────
 
--- { now, email: { jobOkAt, jobErrorAt, jobError, lastSentAt, sentToday, failedToday },
---   google: { calendarConnected, lastSyncAt, lastError, errorSince, pendingWrites, jobOkAt },
+-- { now, email: { jobOkAt, lastSentAt, sentToday, failedToday },
+--   google: { calendarConnected, lastSyncAt, lastError, errorSince, pendingWrites },
 --   ai: { month, spentMicros, capMicros, lastUsedAt },
 --   checks: { <σύνδεση>: { lastStartedAt, lastOkAt, lastFailedAt, lastError } },
 --   analytics: { ga4, pixel } }
@@ -180,8 +181,6 @@ begin
     'now', v_now,
     'email', jsonb_build_object(
       'jobOkAt', (select j.last_ok_at from public.job_runs j where j.job = 'outbox'),
-      'jobErrorAt', (select j.last_error_at from public.job_runs j where j.job = 'outbox'),
-      'jobError', (select j.last_error from public.job_runs j where j.job = 'outbox'),
       'lastSentAt', (select max(l.sent_at) from public.email_log l where l.status = 'sent' and l.sent_at <= v_now),
       'sentToday', (select count(*) from public.email_log l
                      where l.status = 'sent' and l.sent_at >= v_day and l.sent_at <= v_now),
@@ -192,8 +191,7 @@ begin
       'lastSyncAt', g.last_sync_at,
       'lastError', g.last_error,
       'errorSince', g.error_since,
-      'pendingWrites', (select count(*) from public.google_outbox o where o.done_at is null),
-      'jobOkAt', (select j.last_ok_at from public.job_runs j where j.job = 'google')),
+      'pendingWrites', (select count(*) from public.google_outbox o where o.done_at is null)),
     'ai', jsonb_build_object(
       'month', v_budget ->> 'month',
       'spentMicros', (v_budget ->> 'spentMicros')::bigint,
@@ -347,6 +345,37 @@ begin
     else return;
   end case;
 end;
+$$;
+
+-- ───────────── Ορατότητα: η υπενθύμιση συνδρομής φτάνει μόνο σε Ιδιοκτήτη ─────────────
+-- Όπως το 20261015140100 (τελευταίος ορισμός), και οι συνδρομές μόνο για Ιδιοκτήτη. Ισχύει για Ειδοποίηση και email, για
+-- κάθε είδος παραλήπτη (σχετικός, ονομαστικά, «όσοι έχουν Δικαίωμα»), γιατί όλα περνούν από το authz.ev_recipients.
+create or replace function authz.event_visible_to(e public.events, p_user uuid, p_is_client boolean) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select case
+    when e.entity in ('messages', 'message_requests')
+         and not exists (select 1 from public.messages m where m.id = e.entity_id and m.deleted_at is null) then false
+    when e.entity in ('messages', 'message_requests') and p_is_client then
+      authz.ev_client_has(p_user, e.client_id, array['c.chatRead'])
+      and (e.type <> 'message.created' or e.payload ->> 'author_kind' = 'team')
+    when e.entity in ('messages', 'message_requests') then
+      (authz.message_visible_to(p_user, e.entity_id)
+       or (e.type = 'message.mentioned' and authz.message_mentionable(p_user)
+           and exists (select 1 from public.messages m where m.id = e.entity_id and p_user = any (m.mentions))))
+      and (e.type <> 'message.created' or e.payload ->> 'author_kind' = 'client')
+    -- Συνδρομές (59): μόνο ο Ιδιοκτήτης, όποιον παραλήπτη κι αν ορίσει ένας Αυτοματισμός.
+    when e.entity = 'subscriptions' then not p_is_client and authz.user_is_owner(p_user)
+    when not p_is_client then true
+    when e.type = 'message.unread_waiting' then authz.ev_client_has(p_user, e.client_id, array['c.chatRead'])
+    when e.type = 'deliverable.client_waiting' then authz.ev_client_has(p_user, e.client_id, array['c.approve'])
+    when e.entity in ('deliverables', 'productions') then authz.ev_client_has(p_user, e.client_id, array['c.productions', 'c.approve'])
+    when e.entity = 'filmings' then authz.ev_client_has(p_user, e.client_id, array['c.book', 'c.productions'])
+    when e.entity in ('agreements', 'agreement_costs') then authz.ev_client_has(p_user, e.client_id, array['c.agreements'])
+    when e.entity = 'agreement_periods' then authz.ev_client_has(p_user, e.client_id, array['c.agreements', 'c.book'])
+    when e.entity = 'invoices' then authz.ev_client_has(p_user, e.client_id, array['c.finance'])
+    else true
+  end;
 $$;
 
 -- Όπως το 20261015140100, και οι υπενθυμίσεις συνδρομών μόνο για τον Ιδιοκτήτη (και το service_role).

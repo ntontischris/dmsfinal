@@ -7,9 +7,10 @@ import type { ConfiguredMap } from "./connections";
 type Env = Readonly<Record<string, string | undefined>>;
 
 // Σημείο ελέγχου για τα e2e (το CI δεν έχει κλειδιά): με INTEGRATIONS_FAKE_PROVIDERS=1 οι τρεις συνδέσεις μετρούν ως
-// στημένες και το «Έλεγχος τώρα» απαντά χωρίς δίκτυο. Δεν ισχύει ποτέ στην παραγωγή του Vercel.
+// στημένες και το «Έλεγχος τώρα» απαντά χωρίς δίκτυο. Μόνο στο CI και ποτέ στο Vercel (Preview ή Production) ή σε
+// self-host χωρίς CI, όπως το readEmailEnv().isLocal.
 export const usesFakeProviders = (env: Env = process.env): boolean =>
-  env.INTEGRATIONS_FAKE_PROVIDERS === "1" && env.VERCEL_ENV !== "production";
+  env.INTEGRATIONS_FAKE_PROVIDERS === "1" && !env.VERCEL && env.CI === "true";
 
 export function configuredFrom(env: Env = process.env): ConfiguredMap {
   if (usesFakeProviders(env)) return { google: true, email: true, ai: true };

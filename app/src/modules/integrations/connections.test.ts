@@ -19,8 +19,6 @@ function facts(overrides: Partial<IntegrationsFacts> = {}): IntegrationsFacts {
     now: NOW,
     email: {
       jobOkAt: minutesAgo(1),
-      jobErrorAt: null,
-      jobError: null,
       lastSentAt: minutesAgo(5),
       sentToday: 3,
       failedToday: 0,
@@ -31,7 +29,6 @@ function facts(overrides: Partial<IntegrationsFacts> = {}): IntegrationsFacts {
       lastError: null,
       errorSince: null,
       pendingWrites: 0,
-      jobOkAt: minutesAgo(5),
     },
     ai: {
       month: "2026-10",

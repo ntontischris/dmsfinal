@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { FormState } from "@/lib/form-state";
 import { rpcMessage } from "@/lib/rpc-error";
 import { createSupabase } from "@/lib/supabase/server";
+import { getViewer, isOwner } from "@/modules/access";
 
 import { CHECKABLE_IDS } from "./connections";
 import { configuredFrom } from "./environment";
@@ -25,6 +26,8 @@ const NOT_SET_UP: FormState = {
     "Δεν έγινε έλεγχος: η σύνδεση δεν έχει στηθεί ακόμα. Τη στήνει ο developer.",
 };
 
+const NOT_ALLOWED: FormState = { error: "Δεν έχεις Δικαίωμα για αυτή την ενέργεια." };
+
 const firstIssue = (error: z.ZodError): FormState => ({
   error: error.issues[0]?.message,
 });
@@ -38,6 +41,8 @@ export async function checkConnectionNow(
 ): Promise<FormState> {
   const id = z.enum(CHECKABLE_IDS).safeParse(field(form, "connection"));
   if (!id.success) return { error: "Αυτή η σύνδεση δεν ελέγχεται από εδώ." };
+  // Πρώτα ο Ιδιοκτήτης: κάποιος άλλος δεν μαθαίνει ούτε ποιες συνδέσεις έχουν στηθεί (η βάση το ξανακρίνει στο begin).
+  if (!isOwner(await getViewer())) return NOT_ALLOWED;
   if (!configuredFrom()[id.data]) return NOT_SET_UP;
   const supabase = await createSupabase();
   if (!supabase) return UNCONFIGURED;

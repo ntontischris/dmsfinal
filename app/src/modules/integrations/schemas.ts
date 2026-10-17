@@ -17,8 +17,6 @@ export const factsSchema = z.object({
   now: z.string(),
   email: z.object({
     jobOkAt: at,
-    jobErrorAt: at,
-    jobError: z.string().nullable(),
     lastSentAt: at,
     sentToday: z.number(),
     failedToday: z.number(),
@@ -29,7 +27,6 @@ export const factsSchema = z.object({
     lastError: z.string().nullable(),
     errorSince: at,
     pendingWrites: z.number(),
-    jobOkAt: at,
   }),
   ai: z.object({
     month: z.string(),

@@ -73,18 +73,31 @@ describe("runLiveCheck", () => {
 
   it("ψεύτικος πάροχος (e2e): επιτυχία χωρίς καμία κλήση δικτύου, ποτέ στην παραγωγή", async () => {
     const fetchImpl = reply(500);
-    const env = { INTEGRATIONS_FAKE_PROVIDERS: "1" };
+    const env = { INTEGRATIONS_FAKE_PROVIDERS: "1", CI: "true" };
     for (const id of ["email", "ai", "google"] as const)
       expect(await runLiveCheck(id, { env, fetchImpl })).toEqual({
         isOk: true,
       });
     expect(fetchImpl).not.toHaveBeenCalled();
-    expect(usesFakeProviders({ ...env, VERCEL_ENV: "production" })).toBe(false);
-    expect(configuredFrom({ ...env, VERCEL_ENV: "production" })).toEqual({
+    expect(usesFakeProviders({ ...env, VERCEL: "1", VERCEL_ENV: "production" })).toBe(false);
+    expect(configuredFrom({ ...env, VERCEL: "1", VERCEL_ENV: "production" })).toEqual({
       google: false,
       email: false,
       ai: false,
     });
+  });
+});
+
+describe("usesFakeProviders", () => {
+  const flag = { INTEGRATIONS_FAKE_PROVIDERS: "1" };
+  it("ανοιχτό μόνο στο CI χωρίς Vercel", () => {
+    expect(usesFakeProviders({ ...flag, CI: "true" })).toBe(true);
+  });
+  it("κλειστό στο Preview και στην παραγωγή του Vercel, και σε self-host χωρίς CI", () => {
+    expect(usesFakeProviders({ ...flag, CI: "true", VERCEL: "1", VERCEL_ENV: "preview" })).toBe(false);
+    expect(usesFakeProviders({ ...flag, CI: "true", VERCEL: "1", VERCEL_ENV: "production" })).toBe(false);
+    expect(usesFakeProviders({ ...flag })).toBe(false);
+    expect(usesFakeProviders({ CI: "true" })).toBe(false);
   });
 });
 
@@ -100,8 +113,6 @@ describe("κανένα μυστικό δεν φεύγει από τον server",
       now: "2026-10-20T10:00:00.000Z",
       email: {
         jobOkAt: null,
-        jobErrorAt: null,
-        jobError: null,
         lastSentAt: null,
         sentToday: 0,
         failedToday: 0,
@@ -112,7 +123,6 @@ describe("κανένα μυστικό δεν φεύγει από τον server",
         lastError: null,
         errorSince: null,
         pendingWrites: 0,
-        jobOkAt: null,
       },
       ai: {
         month: "2026-10",

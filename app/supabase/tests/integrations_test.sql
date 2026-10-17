@@ -3,7 +3,7 @@
 -- πίσω από την κατάσταση (μέρα Αθήνας), Γεγονός 59 μία φορά 7 μέρες πριν από την ανανέωση.
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι ώρες είναι σταθερές και περνούν ως p_now.
 begin;
-select plan(64);
+select plan(65);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Διαχείριση · a3 Πωλήσεις · b1 Χρήστης πελάτη «Πλήρης»
@@ -43,6 +43,15 @@ language sql
 as $$ select public.automations_scan(p_now); $$;
 
 create function public.t_sent59(p_last text) returns integer
+language sql
+as $$
+  select count(*)::integer from public.automation_sends s join public.automations a on a.id = s.automation_id
+   where a.event_type = 'subscription.renewing' and a.is_initial
+     and s.recipient_key = '00000000-0000-0000-0000-0000000000' || p_last;
+$$;
+
+-- Σημάδια του 59 προς έναν Χρήστη από ΟΠΟΙΟΝΔΗΠΟΤΕ Αυτοματισμό (και όσους πρόσθεσε η Διαχείριση).
+create function public.t_sent59_any(p_last text) returns integer
 language sql
 as $$
   select count(*)::integer from public.automation_sends s join public.automations a on a.id = s.automation_id
@@ -205,11 +214,22 @@ select is((select count(*)::integer from public.automations
 -- Ανανέωση 2026-04-20 → αποστολή 2026-04-13 09:00 Αθήνας = 06:00 UTC (θερινή ώρα).
 insert into public.subscriptions (id, provider, plan, monthly_cost, currency, renews_on) values
   ('00000000-0000-0000-0000-000000005901', 'Resend', 'Pro', 25.5, 'USD', date '2026-04-20');
+-- Η Διαχείριση (automations.manage) βάζει τον εαυτό της παραλήπτη του 59: ονομαστικά και «όσοι έχουν Δικαίωμα».
+insert into public.automations (event_type, channel, recipient_kind, recipient_user_ids, timing, offset_days, send_time, body_el)
+values ('subscription.renewing', 'notification', 'users', '{00000000-0000-0000-0000-0000000000a2}', 'offset', -7, '09:00',
+        '{subscription} {renewsOn} {amount}');
+insert into public.automations (event_type, channel, recipient_kind, recipient_permission, timing, offset_days, send_time, subject_el, body_el)
+values ('subscription.renewing', 'email', 'permission', 'automations.manage', 'offset', -7, '09:00', 'Συνδρομή',
+        '{subscription} {renewsOn} {amount}'),
+       ('subscription.renewing', 'notification', 'permission', 'clients.view', 'offset', -7, '09:00', null,
+        '{subscription} {renewsOn} {amount}');
 select public.t_scan(timestamptz '2026-04-13 05:59+00');
 select is(public.t_sent59('a1'), 0, 'Ένα λεπτό πριν τις 09:00 της 7ης μέρας πριν: τίποτα');
 select public.t_scan(timestamptz '2026-04-13 06:00+00');
 select is(public.t_sent59('a1'), 1, 'Στις 09:00 Αθήνας, 7 μέρες πριν: Ειδοποίηση στον Ιδιοκτήτη');
-select is(public.t_sent59('a2'), 0, 'Η Διαχείριση δεν την παίρνει');
+select is(public.t_sent59_any('a2'), 0,
+  'Η Διαχείριση δεν την παίρνει, ούτε ονομαστικά ούτε ως «όσοι έχουν Δικαίωμα», ούτε με email');
+select is(public.t_sent59_any('a3'), 0, 'Ούτε οι Πωλήσεις μέσω Δικαιώματος');
 select ok((select n.body like '%Resend%20/04/2026%25,50 USD%' from public.notifications n
             join public.automation_sends s on s.notification_id = n.id
             join public.automations a on a.id = s.automation_id
