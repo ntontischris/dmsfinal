@@ -6,6 +6,7 @@ import {
   cleanSends,
   markJobEnd,
   markJobStart,
+  markSteps,
 } from "./health";
 
 function fakeAdmin(reply: {
@@ -93,5 +94,44 @@ describe("cleanSends", () => {
   it("should pass through the daily skip and treat an unexpected shape as skipped", async () => {
     expect(await cleanSends(fakeAdmin({ data: { skipped: true }, error: null }).admin)).toEqual({ skipped: true });
     expect(await cleanSends(fakeAdmin({ data: "x", error: null }).admin)).toEqual({ skipped: true });
+  });
+});
+
+describe("markSteps", () => {
+  const OK = {
+    billables: { generated: 0 },
+    events: { processed: 1, failed: 1, sent: 0, cleaned: 0 },
+    timed: { sent: 0, failed: 0 },
+    cleanup: { skipped: true },
+  };
+
+  it("should record every step as run, and skip the cleanup on the days it did not run", async () => {
+    const { admin, rpc } = fakeAdmin({ data: null, error: null });
+
+    await markSteps(admin, OK);
+
+    expect(rpc.mock.calls).toEqual([
+      ["job_run_mark", { p_job: "billables", p_ok: true, p_error: null }],
+      ["job_run_mark", { p_job: "events_process", p_ok: true, p_error: null }],
+      ["job_run_mark", { p_job: "automations_scan", p_ok: true, p_error: null }],
+    ]);
+  });
+
+  it("should record a step's error and a failed timing check as failures", async () => {
+    const { admin, rpc } = fakeAdmin({ data: null, error: null });
+
+    await markSteps(admin, {
+      billables: { error: "Τα Τιμολογητέα δεν γεννήθηκαν." },
+      events: OK.events,
+      timed: { sent: 0, failed: 2 },
+      cleanup: { sends: 1, logs: 0, outbox: 0 },
+    });
+
+    expect(rpc.mock.calls).toEqual([
+      ["job_run_mark", { p_job: "billables", p_ok: false, p_error: "Τα Τιμολογητέα δεν γεννήθηκαν." }],
+      ["job_run_mark", { p_job: "events_process", p_ok: true, p_error: null }],
+      ["job_run_mark", { p_job: "automations_scan", p_ok: false, p_error: "Δεν έτρεξαν 2 έλεγχοι χρονισμών." }],
+      ["job_run_mark", { p_job: "sends_cleanup", p_ok: true, p_error: null }],
+    ]);
   });
 });

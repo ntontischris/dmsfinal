@@ -157,8 +157,8 @@ select is(public.today_card('health', timestamptz '2026-03-03 10:00+00') -> 'ite
   'Πρώτα η εργασία');
 select is((select count(*)::integer from jsonb_array_elements(public.today_card('health', timestamptz '2026-03-03 10:00+00') -> 'items') i
             where (i ->> 'urgent')::boolean), 2, 'Κάθε κόκκινο της Υγείας είναι επείγον');
-select is(public.today_card('health', timestamptz '2026-03-03 10:00+00') -> 'items' -> 1 ->> 'link', '/app/settings/sends?tab=failed',
-  'Η αποτυχημένη αποστολή οδηγεί στα «Απέτυχαν»');
+select is(public.today_card('health', timestamptz '2026-03-03 10:00+00') -> 'items' -> 1 ->> 'link', '/app/health',
+  'Η αποτυχημένη αποστολή οδηγεί στην Υγεία συστήματος (#215)');
 
 select ok(not (public.today_card('readiness') -> 'items' -> 0 ? 'title'), 'Ετοιμότητα: μόνο κωδικοί, οι ετικέτες στην εφαρμογή');
 select is(public.today_card('readiness') -> 'items' -> 0 ->> 'id',
@@ -200,11 +200,11 @@ select is(authz.today_items_health('00000000-0000-0000-0000-0000000000a3', null,
   'job:outbox', 'Πρώτα η εργασία και για τον a3');
 update public.google_calendar set calendar_id = 'cal@example.com', last_sync_at = timestamptz '2026-03-03 08:00+00' where id;
 select is((select i ->> 'link' from jsonb_array_elements(authz.today_items_health('00000000-0000-0000-0000-0000000000a1', null,
-            timestamptz '2026-03-03 10:00+00')) i where i ->> 'id' = 'google'), '/app/settings/integrations',
-  'Google: ο Ιδιοκτήτης πηγαίνει στις Ενσωματώσεις');
+            timestamptz '2026-03-03 10:00+00')) i where i ->> 'id' = 'google'), '/app/health',
+  'Google: ο Ιδιοκτήτης πηγαίνει στην Υγεία συστήματος (#215)');
 select is((select i ->> 'link' from jsonb_array_elements(authz.today_items_health('00000000-0000-0000-0000-0000000000a3', null,
-            timestamptz '2026-03-03 10:00+00')) i where i ->> 'id' = 'google'), '/app/settings/sends',
-  'Google: οι άλλοι πηγαίνουν στο Ιστορικό αποστολών');
+            timestamptz '2026-03-03 10:00+00')) i where i ->> 'id' = 'google'), '/app/health',
+  'Google: και οι άλλοι πηγαίνουν στην Υγεία συστήματος (#215)');
 delete from public.automation_sends where case_key in ('t:f4', 't:f5');
 delete from public.email_outbox where id in ('00000000-0000-0000-0000-0000000000f4', '00000000-0000-0000-0000-0000000000f5');
 update public.google_calendar set calendar_id = null, last_sync_at = null where id;

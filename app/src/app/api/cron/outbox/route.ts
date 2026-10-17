@@ -13,6 +13,7 @@ import {
   cleanSends,
   markJobEnd,
   markJobStart,
+  markSteps,
 } from "@/lib/notifications/health";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -24,7 +25,8 @@ export const maxDuration = 60;
 // ληξιπρόθεσμα, σύνοψη Μηνυμάτων, Αργίες κ.λπ.)· σφάλμα τους δεν σταματά τον εργάτη. Ο έλεγχος χρονισμών δεν τρέχει στο σκούντημα
 // (?kick=1), μόνο στο cron του λεπτού. Το ίδιο και η Υγεία (#174): έναρξη/τέλος στο job_runs, έλεγχος του cron Google, των
 // κολλημένων Γεγονότων και του συγχρονισμού, και ο καθαρισμός 12 μηνών του Ιστορικού αποστολών (μία φορά τη μέρα). Η εκτέλεση
-// είναι αποτυχημένη μόνο αν σηκώσει σφάλμα· ένα βήμα που επιστρέφει { error } φαίνεται στην απάντηση.
+// είναι αποτυχημένη μόνο αν σηκώσει σφάλμα· ένα βήμα που επιστρέφει { error } φαίνεται στην απάντηση και, από το #215, ως
+// σφάλμα της δικής του εργασίας στο job_runs (Τιμολογητέα, Γεγονότα, έλεγχος χρονισμών, καθαρισμός).
 // Χωρίς CRON_SECRET στο περιβάλλον: 500· με λάθος ή λείπον Bearer: 401.
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
@@ -67,5 +69,7 @@ async function runSteps(admin: SupabaseClient, isKick: boolean) {
   const timed = isKick ? skipped : await scanAutomations(admin);
   const summary = await runOutboxWorker(admin, appOrigin());
   const cleanup = isKick ? skipped : await cleanSends(admin);
+  // Κάθε βήμα γράφει στο job_runs πότε έτρεξε (#215), μόνο στο cron του λεπτού.
+  if (!isKick) await markSteps(admin, { billables, events, timed, cleanup });
   return { ...summary, billables, attachments, events, timed, health, cleanup };
 }

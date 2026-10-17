@@ -6,6 +6,12 @@ import { z } from "zod";
 // Κανένα σφάλμα εδώ δεν σταματά τη δουλειά του cron: καταγράφεται μόνο το μήνυμα της βάσης.
 
 export type JobName = "outbox" | "google";
+// Βήματα του cron της ουράς που γράφουν μόνα τους πότε έτρεξαν (#215): η Υγεία τα δείχνει ως χωριστές εργασίες.
+export type StepJob =
+  | "events_process"
+  | "automations_scan"
+  | "billables"
+  | "sends_cleanup";
 
 const healthSchema = z.object({
   jobs: z.number(),
@@ -23,7 +29,7 @@ export type CleanupOutcome = z.infer<typeof cleanupSchema> | { error: string };
 
 async function mark(
   admin: SupabaseClient,
-  job: JobName,
+  job: JobName | StepJob,
   ok: boolean | null,
   error: string | null,
 ): Promise<void> {
@@ -45,6 +51,45 @@ export const markJobEnd = (
   job: JobName,
   error: string | null,
 ) => mark(admin, job, error === null, error);
+
+// Τέλος ενός βήματος: χωρίς σφάλμα = πέτυχε, αλλιώς το σφάλμα του (η Υγεία το δείχνει κόκκινο μετά το όριο).
+export const markStep = (
+  admin: SupabaseClient,
+  job: StepJob,
+  error: string | null,
+) => mark(admin, job, error === null, error);
+
+// Τα αποτελέσματα των βημάτων ενός κύκλου (ό,τι επιστρέφουν οι βοηθοί τους): { error } ή περίληψη.
+export interface StepOutcomes {
+  billables: object;
+  events: object;
+  timed: object;
+  cleanup: object;
+}
+
+const errorOf = (outcome: object): string | null =>
+  "error" in outcome && typeof outcome.error === "string"
+    ? outcome.error
+    : null;
+
+// Ο έλεγχος χρονισμών μετρά πόσα είδη Γεγονότων απέτυχαν· ένα που αποτυγχάνει κάθε φορά κοκκινίζει την εργασία.
+const scanError = (outcome: object): string | null =>
+  errorOf(outcome) ??
+  ("failed" in outcome && typeof outcome.failed === "number" && outcome.failed > 0
+    ? `Δεν έτρεξαν ${outcome.failed} έλεγχοι χρονισμών.`
+    : null);
+
+// Κάθε βήμα γράφει πότε έτρεξε. Ο καθαρισμός μόνο όταν έτρεξε πράγματι (μία φορά τη μέρα· αλλιώς «skipped»).
+export async function markSteps(
+  admin: SupabaseClient,
+  outcomes: StepOutcomes,
+): Promise<void> {
+  await markStep(admin, "billables", errorOf(outcomes.billables));
+  await markStep(admin, "events_process", errorOf(outcomes.events));
+  await markStep(admin, "automations_scan", scanError(outcomes.timed));
+  if (!("skipped" in outcomes.cleanup))
+    await markStep(admin, "sends_cleanup", errorOf(outcomes.cleanup));
+}
 
 export async function checkHealth(
   admin: SupabaseClient,

@@ -119,14 +119,14 @@ describe("formatWhen", () => {
 });
 
 describe("Δικαιώματα του Ιστορικού", () => {
-  it("should let automations.manage view and retry, health.view only view", () => {
+  it("should let automations.manage and health.view view and retry", () => {
     expect(sendsCaps(teamViewer({ "automations.manage": "all" }))).toEqual({
       canView: true,
       canRetry: true,
     });
     expect(sendsCaps(teamViewer({ "health.view": "all" }))).toEqual({
       canView: true,
-      canRetry: false,
+      canRetry: true,
     });
     expect(sendsCaps(teamViewer({ "clients.view": "mine" }))).toEqual({
       canView: false,

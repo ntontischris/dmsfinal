@@ -255,6 +255,21 @@ describe("GET /api/cron/outbox", () => {
     ]);
   });
 
+  it("κάθε βήμα του κύκλου γράφει πότε έτρεξε, πριν από το τέλος της εργασίας", async () => {
+    await GET(request(`Bearer ${SECRET}`));
+
+    const steps = mocks.rpc.mock.calls
+      .filter(([name]) => name === "job_run_mark")
+      .map(([, args]) => (args as { p_job: string }).p_job);
+    expect(steps).toEqual([
+      "outbox",
+      "billables",
+      "events_process",
+      "automations_scan",
+      "outbox",
+    ]);
+  });
+
   it("το σκούντημα δεν γράφει job_runs, ούτε ελέγχει Υγεία ούτε καθαρίζει", async () => {
     const response = await GET(
       request(`Bearer ${SECRET}`, "/api/cron/outbox?kick=1"),

@@ -9,6 +9,7 @@ export const SEND_STATES = [
   "retrying",
   "failed",
   "not_sent",
+  "ignored",
 ] as const;
 
 const baseSendSchema = z.object({
