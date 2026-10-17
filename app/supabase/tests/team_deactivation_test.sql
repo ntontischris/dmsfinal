@@ -3,7 +3,7 @@
 -- Γεγονός 58 χωρίς τον ίδιο τον actor, Επανενεργοποίηση από την πρόσκληση, Ρόλος σε δύο βήματα.
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι ημερομηνίες είναι σχετικές με το now() της συναλλαγής.
 begin;
-select plan(67);
+select plan(73);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Μαρία (αργότερα δεύτερη Ιδιοκτήτρια) · a3 Διαχείριση · a4 Πωλήσεις · a5 Νίκος (αυτός που φεύγει:
@@ -49,7 +49,8 @@ select ('00000000-0000-0000-0000-0000000009' || lpad(n::text, 2, '0'))::uuid, r.
   from generate_series(1, 13) n cross join public.roles r where r.name = 'Μεγάλος Ρόλος (τεστ)';
 
 -- ───────────── Αναθέσεις του Νίκου (άμεσες εγγραφές, χωρίς triggers) ─────────────
--- Ανοιχτά (επιστρέφουν): Πελάτης c1, Ευκαιρία 101, Παραγωγή 201, Εργασία 301, Παραδοτέο 401, θέση στο μελλοντικό 501.
+-- Ανοιχτά (επιστρέφουν): Πελάτης c1, Ευκαιρία 101, Παραγωγή 201, Εργασία 301, Παραδοτέο 401, θέσεις στα μελλοντικά 501
+-- (Παραγωγή της Ρένας) και 504 (της δικής του Παραγωγής 201, που μένει χωρίς Υπεύθυνο).
 -- Κλειστά (μένουν): αρχειοθετημένος c2, κερδισμένη 102, παραδομένη 203, Εργασία που έγινε 302, εγκεκριμένο 402,
 -- το περασμένο Γύρισμα 502 και το ακυρωμένο 503.
 set local session_replication_role = replica;
@@ -82,13 +83,18 @@ insert into public.filmings (id, production_id, starts_at, hours, origin, state,
   ('00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-000000000202', now() + interval '7 days', 2, 'team', 'scheduled', now(), null, null, null),
   ('00000000-0000-0000-0000-000000000502', '00000000-0000-0000-0000-000000000202', now() - interval '7 days', 2, 'team', 'scheduled', now(), null, null, null),
   ('00000000-0000-0000-0000-000000000503', '00000000-0000-0000-0000-000000000202', now() + interval '9 days', 2, 'team', 'cancelled', now(),
-   now(), 'team', 'Ακυρώθηκε');
+   now(), 'team', 'Ακυρώθηκε'),
+  ('00000000-0000-0000-0000-000000000504', '00000000-0000-0000-0000-000000000201', now() + interval '11 days', 2, 'team', 'scheduled', now(), null, null, null);
 insert into public.filming_crew (filming_id, user_id) values
   ('00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-0000000000a5'),
   ('00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-0000000000a6'),
   ('00000000-0000-0000-0000-000000000502', '00000000-0000-0000-0000-0000000000a5'),
-  ('00000000-0000-0000-0000-000000000503', '00000000-0000-0000-0000-0000000000a5');
+  ('00000000-0000-0000-0000-000000000503', '00000000-0000-0000-0000-0000000000a5'),
+  ('00000000-0000-0000-0000-000000000504', '00000000-0000-0000-0000-0000000000a5');
 set local session_replication_role = origin;
+-- Δελτίο με αυτόματη αποστολή: εκδόθηκε η 1η έκδοση του 501 πριν φύγει ο Νίκος.
+update public.filming_settings set sheet_sending = 'auto' where id;
+select authz.sheet_issue('00000000-0000-0000-0000-000000000501', null);
 
 -- ───────────── Βοηθητικά (ως postgres, ποτέ ως authenticated) ─────────────
 create function public.t_as(p_last text) returns void
@@ -157,6 +163,10 @@ select throws_ok($$ select public.invitation_team_email_check('gone@example.com'
 select public.t_as('b1');
 select throws_ok($$ select public.team_deactivation_preview('00000000-0000-0000-0000-0000000000a5') $$, '42501', null,
   'Ο Χρήστης πελάτη δεν βλέπει προεπισκόπηση');
+select throws_ok($$ select public.team_user_set_roles('00000000-0000-0000-0000-0000000000a6', array[gen_random_uuid()]) $$, '42501', null,
+  'Ο Χρήστης πελάτη δεν αλλάζει Ρόλους');
+select throws_ok($$ select public.invitation_team_email_check('gone@example.com') $$, '42501', null,
+  'Ο Χρήστης πελάτη δεν ελέγχει email πρόσκλησης');
 select throws_ok($$ select public.role_affected_users(gen_random_uuid()) $$,
   '42501', null, 'Ο Χρήστης πελάτη δεν βλέπει ποιους επηρεάζει ένας Ρόλος');
 select public.t_as('a3');
@@ -181,6 +191,7 @@ select is(public.team_deactivation_preview('00000000-0000-0000-0000-0000000000a5
 select is(public.team_deactivation_preview('00000000-0000-0000-0000-0000000000a7'),
   '{"isActive": false, "block": null, "items": []}'::jsonb, 'Ο ήδη απενεργοποιημένος: τίποτα να επιστρέψει');
 reset role;
+-- «last_owner» φτάνει μόνο με κενό actor (service role): ένας Ιδιοκτήτης δεν απενεργοποιεί τον εαυτό του, και με δεύτερο ενεργό δεν είναι ο τελευταίος.
 select is(authz.deactivation_block(null, '00000000-0000-0000-0000-0000000000a1'), 'last_owner',
   'Ο μόνος ενεργός Ιδιοκτήτης είναι ο τελευταίος');
 select is(authz.deactivation_block('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000a5'), null,
@@ -193,10 +204,10 @@ select public.t_as('a3');
 select set_config('t.preview', public.team_deactivation_preview('00000000-0000-0000-0000-0000000000a5')::text, true);
 select is((select array_agg(i ->> 'kind' order by n) from jsonb_array_elements(current_setting('t.preview')::jsonb -> 'items')
             with ordinality x (i, n)),
-  array['client', 'opportunity', 'production', 'task', 'deliverable', 'crew'], 'Ένα ανοιχτό από κάθε είδος, με τη σειρά του καταλόγου');
+  array['client', 'opportunity', 'production', 'task', 'deliverable', 'crew', 'crew'], 'Κάθε είδος, με τη σειρά του καταλόγου');
 select is((select string_agg(i ->> 'label', ' | ' order by n) from jsonb_array_elements(current_setting('t.preview')::jsonb -> 'items')
             with ordinality x (i, n)),
-  'Κυψέλη Καφέ | Βίντεο εγκαινίων | Παραγωγή Νίκου | Μοντάζ | Reel εγκαινίων | Παραγωγή Ρένας', 'Ονομαστικά');
+  'Κυψέλη Καφέ | Βίντεο εγκαινίων | Παραγωγή Νίκου | Μοντάζ | Reel εγκαινίων | Παραγωγή Νίκου | Παραγωγή Ρένας', 'Ονομαστικά');
 select lives_ok($$ select public.team_user_set_active('00000000-0000-0000-0000-0000000000a5', false) $$, 'Η Διαχείριση απενεργοποιεί τον Νίκο');
 reset role;
 select is(
@@ -219,14 +230,23 @@ select is((select array_agg(user_id order by user_id) from public.filming_crew w
 select is((select count(*)::integer from public.filming_crew_vacancies
             where filming_id = '00000000-0000-0000-0000-000000000501' and user_id = public.t_uid('a5')), 1,
   'Σήμα «άδειασε θέση» στο μελλοντικό Γύρισμα');
-select is((select count(*)::integer from public.filming_crew_vacancies where filming_id <> '00000000-0000-0000-0000-000000000501'), 0,
+select is((select count(*)::integer from public.filming_crew_vacancies
+            where filming_id not in ('00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-000000000504')), 0,
   'Κανένα σήμα στα περασμένα ή ακυρωμένα');
+select is((select version || ' ' || change from public.filming_sheet_versions
+            where filming_id = '00000000-0000-0000-0000-000000000501' order by version desc limit 1),
+  '2 Άλλαξε το Συνεργείο', 'Με αυτόματη αποστολή το Δελτίο βγαίνει ξανά, όπως σε κάθε αλλαγή Συνεργείου');
+select is((select after -> 'removed' from public.audit_log
+            where entity = 'filmings' and entity_id = '00000000-0000-0000-0000-000000000501' and after ->> 'event' = 'crew_changed'),
+  '["00000000-0000-0000-0000-0000000000a5"]'::jsonb, 'Το Ιστορικό του Γυρίσματος γράφει την αλλαγή Συνεργείου');
 select is((select count(*)::integer from public.events where type = 'filming.crew_vacated'
             and entity_id = '00000000-0000-0000-0000-000000000501' and actor_id = public.t_uid('a3')), 1,
   'Γεγονός 60 για τη θέση που άδειασε, με actor τη Διαχείριση');
 select public.events_process();
 select is(public.t_notes('a6', 'filming.crew_vacated'), 1, 'Η Υπεύθυνη της Παραγωγής παίρνει Ειδοποίηση');
 select is(public.t_notes('a3', 'filming.crew_vacated'), 0, 'Όποιος απενεργοποίησε δεν ειδοποιείται');
+select is(public.t_notes('a1', 'filming.crew_vacated'), 1,
+  'Ο Νίκος ήταν και Υπεύθυνος της 201: για το 504 ειδοποιούνται όσοι «Μεταβιβάζουν Υπεύθυνο» (ο Ιδιοκτήτης)');
 select is((select n.body from public.notifications n join public.events e on e.id = n.event_id
             where e.type = 'filming.crew_vacated' and n.user_id = public.t_uid('a6')),
   'Άδειασε θέση στο Συνεργείο: Παραγωγή Ρένας · ' || to_char((now() + interval '7 days') at time zone 'Europe/Athens', 'DD/MM')
@@ -252,7 +272,14 @@ select is((select count(*)::integer from public.team_user_roles where user_id = 
 select is((select array_agg(x order by x)::text from public.t_assignments(public.t_uid('a5')) x), current_setting('t.after'),
   'Καμία ανάθεση δεν επιστρέφει');
 insert into public.filming_crew (filming_id, user_id) values ('00000000-0000-0000-0000-000000000501', public.t_uid('a2'));
-select is((select count(*)::integer from public.filming_crew_vacancies), 0, 'Νέο μέλος στο Συνεργείο σβήνει το σήμα');
+select is((select count(*)::integer from public.filming_crew_vacancies where filming_id = '00000000-0000-0000-0000-000000000501'), 0,
+  'Νέο μέλος στο Συνεργείο σβήνει το σήμα');
+update public.filmings set state = 'cancelled', cancelled_at = now(), cancelled_side = 'team', cancelled_reason = 'Ακυρώθηκε'
+ where id = '00000000-0000-0000-0000-000000000504';
+set local role authenticated;
+select is(jsonb_array_length(public.filming_view('00000000-0000-0000-0000-000000000504') -> 'vacancies'), 0,
+  'Σε Γύρισμα που έκλεισε το σήμα δεν φαίνεται');
+reset role;
 
 -- ───────────── Γεγονός 58: πρόσκληση και αλλαγή Ρόλων, ποτέ στον ίδιο ─────────────
 set local role authenticated;

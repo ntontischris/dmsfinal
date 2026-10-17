@@ -1,6 +1,6 @@
 -- Ρόλοι, Δικαιώματα, Εύρος, χωρίς κλιμάκωση, τελευταίος Ιδιοκτήτης, Ίχνος (κεφ. 1, κεφ. 7). Φανταστικοί Χρήστες.
 begin;
-select plan(34);
+select plan(35);
 
 -- ───────────── Δεδομένα ─────────────
 insert into auth.users (id, email) values
@@ -104,28 +104,33 @@ select throws_ok(
   'P0001', null, 'Ένας Ρόλος ομάδας δεν παίρνει Δικαίωμα πελάτη'
 );
 
--- ───────────── Χωρίς κλιμάκωση ─────────────
+-- ───────────── Χωρίς κλιμάκωση (οι Ρόλοι Χρήστη αλλάζουν μόνο με το team_user_set_roles, #207) ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
 select throws_ok(
-  $$ insert into public.team_user_roles (user_id, role_id)
-     select '00000000-0000-0000-0000-000000000003', id from public.roles where is_owner $$,
+  $$ select public.team_user_set_roles('00000000-0000-0000-0000-000000000003',
+       array(select id from public.roles where kind = 'team' and (is_owner or name = 'Πωλήσεις'))) $$,
   '42501', null, 'Η Διαχείριση δεν δίνει τον Ρόλο Ιδιοκτήτης'
 );
 select throws_ok(
-  $$ insert into public.team_user_roles (user_id, role_id)
-     select '00000000-0000-0000-0000-000000000003', id from public.roles where name = 'Τιμολόγηση' $$,
+  $$ select public.team_user_set_roles('00000000-0000-0000-0000-000000000003',
+       array(select id from public.roles where kind = 'team' and name in ('Πωλήσεις', 'Τιμολόγηση'))) $$,
   '42501', null, 'Η Διαχείριση δεν δίνει Ρόλο με Δικαίωμα που δεν έχει'
 );
 select lives_ok(
-  $$ insert into public.team_user_roles (user_id, role_id)
-     select '00000000-0000-0000-0000-000000000003', id from public.roles where name = 'Εκδηλώσεις' $$,
+  $$ select public.team_user_set_roles('00000000-0000-0000-0000-000000000003',
+       array(select id from public.roles where kind = 'team' and name in ('Πωλήσεις', 'Εκδηλώσεις'))) $$,
   'Η Διαχείριση δίνει Ρόλο που δεν ξεπερνά τα δικά της Δικαιώματα'
+);
+select throws_ok(
+  $$ insert into public.team_user_roles (user_id, role_id)
+     select '00000000-0000-0000-0000-000000000004', id from public.roles where name = 'Παραγωγή' and kind = 'team' $$,
+  '42501', null, 'Κανείς δεν γράφει Ρόλο Χρήστη απευθείας (χωρίς Γεγονός 58)'
 );
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
 select throws_ok(
-  $$ insert into public.team_user_roles (user_id, role_id)
-     select '00000000-0000-0000-0000-000000000004', id from public.roles where name = 'Παραγωγή' $$,
+  $$ select public.team_user_set_roles('00000000-0000-0000-0000-000000000004',
+       array(select id from public.roles where name = 'Παραγωγή' and kind = 'team')) $$,
   '42501', null, 'Χωρίς «Προσκαλεί και απενεργοποιεί» δεν δίνεις Ρόλους'
 );
 
@@ -137,15 +142,13 @@ set local role authenticated;
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 select lives_ok(
-  $$ delete from public.team_user_roles
-      where user_id = '00000000-0000-0000-0000-000000000007'
-        and role_id = (select id from public.roles where is_owner) $$,
+  $$ select public.team_user_set_roles('00000000-0000-0000-0000-000000000007',
+       array(select id from public.roles where name = 'Πωλήσεις' and kind = 'team')) $$,
   'Ένας Ιδιοκτήτης αφαιρεί τον Ρόλο από άλλον Ιδιοκτήτη όταν μένει κι άλλος'
 );
 select throws_ok(
-  $$ delete from public.team_user_roles
-      where user_id = '00000000-0000-0000-0000-000000000001'
-        and role_id = (select id from public.roles where is_owner) $$,
+  $$ select public.team_user_set_roles('00000000-0000-0000-0000-000000000001',
+       array(select id from public.roles where name = 'Πωλήσεις' and kind = 'team')) $$,
   'P0001', null, 'Ο τελευταίος Ιδιοκτήτης δεν χάνει τον Ρόλο του'
 );
 select throws_ok(

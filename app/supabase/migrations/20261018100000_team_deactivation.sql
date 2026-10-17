@@ -10,7 +10,7 @@
 --  • Η θέση που αδειάζει γράφεται στο filming_crew_vacancies (σήμα «άδειασε θέση» στο E3) και φεύγει Γεγονός 60
 --    (filming.crew_vacated) προς τον Υπεύθυνο της Παραγωγής. Το σήμα σβήνει όταν μπει νέο μέλος στο Συνεργείο.
 --  • Η επανενεργοποίηση δεν επιστρέφει τίποτα: τα triggers τρέχουν μόνο στο ενεργός → απενεργοποιημένος.
---  • Ν2: η αλλαγή Ρόλων γίνεται από το public.team_user_set_roles (ίδιοι κανόνες με τις policies του team_user_roles) και
+--  • Ν2: η αλλαγή Ρόλων γίνεται ΜΟΝΟ από το public.team_user_set_roles (οι κανόνες των παλιών policies, που φεύγουν) και
 --    γράφει «team_roles_changed» στο Ίχνος → Γεγονός 58. Το 58 πάει μόνο στους Ιδιοκτήτες· ο ίδιος ο actor αποκλείεται
 --    ήδη από το authz.ev_recipients, και το «actor» φεύγει από τους παραλήπτες του.
 --  • Ν3: public.invitation_team_email_check: δομημένο αποτέλεσμα για email απενεργοποιημένου Χρήστη ομάδας.
@@ -135,6 +135,10 @@ begin
     insert into public.filming_crew_vacancies (filming_id, user_id) values (v_filming, old.user_id)
     on conflict (filming_id, user_id) do update set vacated_at = excluded.vacated_at;
     perform authz.filming_event(v_filming, 'crew_vacated', jsonb_build_object('user_id', old.user_id, 'reason', 'deactivated'));
+    -- Όπως το authz.filming_crew_write: γεγονός αλλαγής Συνεργείου και νέα έκδοση Δελτίου όταν η αποστολή είναι αυτόματη.
+    perform authz.filming_event(v_filming, 'crew_changed',
+      jsonb_build_object('added', '[]'::jsonb, 'removed', jsonb_build_array(old.user_id)));
+    perform authz.sheet_changed(v_filming, 'Άλλαξε το Συνεργείο');
   end loop;
   update public.access_requests set status = 'cancelled', decided_at = now()
    where requester_id = old.user_id and status = 'pending';
@@ -247,6 +251,12 @@ begin
     jsonb_build_object('before', to_jsonb(v_before), 'after', to_jsonb(authz.team_role_names(p_user_id))));
 end;
 $$;
+
+-- Οι Ρόλοι Χρήστη αλλάζουν μόνο από το team_user_set_roles (που γράφει το Γεγονός 58). Η αποδοχή πρόσκλησης και ο πρώτος
+-- Ιδιοκτήτης είναι security definer και δεν επηρεάζονται.
+drop policy "Ρόλο σε Χρήστη δίνει όποιος προσκαλεί, χωρίς κλιμάκωση" on public.team_user_roles;
+drop policy "Ρόλο από Χρήστη αφαιρεί όποιος προσκαλεί, χωρίς κλιμάκωση" on public.team_user_roles;
+revoke insert, delete on table public.team_user_roles from authenticated;
 
 -- ───────────── Πρόσκληση: email απενεργοποιημένου Χρήστη ομάδας (Ν3) ─────────────
 
@@ -445,8 +455,10 @@ language sql stable security definer set search_path = ''
 as $$
   select coalesce(jsonb_agg(jsonb_build_object('userId', v.user_id, 'name', u.name, 'vacatedAt', v.vacated_at)
                             order by v.vacated_at, v.user_id), '[]'::jsonb)
-    from public.filming_crew_vacancies v join public.team_users u on u.user_id = v.user_id
-   where v.filming_id = p_filming;
+    from public.filming_crew_vacancies v
+    join public.team_users u on u.user_id = v.user_id
+    join public.filmings f on f.id = v.filming_id
+   where v.filming_id = p_filming and f.state in ('pending', 'scheduled');
 $$;
 
 -- Όπως το 20261011140000, με τα σήματα «άδειασε θέση» για την ομάδα.
