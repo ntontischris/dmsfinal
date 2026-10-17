@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import type { ReactNode } from "react";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -180,6 +181,7 @@ interface BodyProps {
   caps: AgreementCaps;
   extras: Extras;
   origin: string;
+  historyLink: ReactNode;
 }
 
 const PAIR =
@@ -228,6 +230,7 @@ export function AgreementBody(props: BodyProps) {
           agreement={agreement}
           caps={caps}
           expiresInDays={daysToExpiry(agreement)}
+          historyLink={props.historyLink}
         />
       </div>
       <div className="grid gap-4">

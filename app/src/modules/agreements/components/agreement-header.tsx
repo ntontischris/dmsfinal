@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,8 @@ interface AgreementHeaderProps {
   agreement: AgreementDetail;
   caps: AgreementCaps;
   expiresInDays: number | null; // μόνο για υπογεγραμμένη/ενεργή με Λήξη· υπολογίζεται στη σελίδα
+  // «Ιστορικό αλλαγών» (Ίχνος, #214): το δίνει η σελίδα μόνο σε όποιον «Βλέπει ίχνος ενεργειών».
+  historyLink?: ReactNode;
 }
 
 const FLOW: readonly ProposalPath[] = [
@@ -92,6 +95,7 @@ export function AgreementHeader(props: AgreementHeaderProps) {
         >
           ← Συμφωνίες
         </Link>
+        {props.historyLink}
       </ScreenHeader>
       <div className="mb-6 grid gap-3">
         <Steps

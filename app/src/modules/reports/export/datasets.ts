@@ -1,3 +1,5 @@
+import { AUDIT_SHEET_HEADERS, AUDIT_TITLE } from "@/modules/audit";
+
 import type { ExportColumn } from "./columns";
 
 // Τα σύνολα δεδομένων της M2 (Ρ7). Ποια βλέπει ο Χρήστης και πόσες γραμμές έχουν το αποφασίζει η βάση
@@ -11,6 +13,7 @@ export const DATASET_CODES = [
   "clients",
   "agreements",
   "expenses",
+  "audit",
 ] as const;
 export type DatasetCode = (typeof DATASET_CODES)[number];
 
@@ -140,6 +143,13 @@ export const DATASETS: readonly DatasetDefinition[] = [
       { key: "productiveHours", header: "Παραγωγικές ώρες", type: "number" },
       money("hourCost", "Κόστος ώρας"),
     ],
+  },
+  {
+    // Υ5 (#214): το φύλλο το φτιάχνει το module του Ίχνους· οι στήλες εδώ μόνο για την προεπισκόπηση.
+    code: "audit",
+    title: AUDIT_TITLE,
+    row: "μία ενέργεια (ποιος, πότε, τι, πριν → μετά), με κρυφά ποσά και κόστος όπου δεν τα βλέπεις",
+    columns: AUDIT_SHEET_HEADERS.map((header) => text(header, header)),
   },
 ];
 

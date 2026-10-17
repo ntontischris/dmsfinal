@@ -1,13 +1,16 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import { Segmented } from "@/components/ui/segmented";
+import { AUDIT_PATH, AUDIT_TITLE } from "@/modules/audit";
 
 import { dateLabel } from "@/modules/reports/format";
 import { PERIOD_CODES, type PeriodCode } from "@/modules/reports/url";
 import { DATASETS, type DatasetDefinition } from "../datasets";
 import {
+  AUDIT_DATASET_NOTE,
   COLUMNS_LABEL,
   COST_NOTE,
   DATASET_SECTION,
@@ -94,6 +97,11 @@ export function DatasetSection({
           <p className="m-0 text-sm text-muted-foreground">
             {seesCost ? PROFITABILITY_NOTE : COST_NOTE}
           </p>
+          {dataset.code === "audit" && (
+            <p className="m-0 text-sm text-muted-foreground">
+              {AUDIT_DATASET_NOTE} <Link href={AUDIT_PATH}>{AUDIT_TITLE}</Link>.
+            </p>
+          )}
         </Step>
         {usesPeriod ? (
           <Step number={2} title={STEP_PERIOD}>

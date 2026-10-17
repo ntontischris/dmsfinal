@@ -4,6 +4,14 @@ import { z } from "zod";
 
 import { fileName, periodPart } from "@/lib/export/file-name";
 import { createSupabase } from "@/lib/supabase/server";
+import {
+  AUDIT_PERIOD_LABELS,
+  AUDIT_TITLE,
+  auditSheet,
+  parseAuditExport,
+  readAuditFilters,
+  rpcFilters,
+} from "@/modules/audit";
 import { signedInvoicePdfUrls } from "@/modules/finance";
 
 import { FINANCE_REPORTS } from "../catalog/finance";
@@ -13,6 +21,7 @@ import { PERIOD_CODES } from "../url";
 import { toSheet, type ExportSheet } from "./columns";
 import { findDataset, INVOICE_COLUMNS, RECEIPT_COLUMNS } from "./datasets";
 import {
+  AUDIT_TRUNCATED,
   EXPORT_FAILED,
   PACK_SHEET_INVOICES,
   PACK_SHEET_RECEIPTS,
@@ -31,7 +40,7 @@ import { parseDatasetExport, parsePack, parsePackInvoice } from "./view-schema";
 // δίνει γραμμές (Ρ7)· εδώ οι γραμμές γίνονται φύλλα (στήλες + κελιά) και το αρχείο το φτιάχνει ο browser (Ρ6).
 
 export type ExportOutcome =
-  | { ok: true; fileName: string; sheets: ExportSheet[] }
+  | { ok: true; fileName: string; sheets: ExportSheet[]; notice?: string }
   | { ok: false; error: string };
 
 export type PackOutcome =
@@ -53,6 +62,10 @@ const reportInput = z.object({
   period: periodSchema.optional(),
   clientId: UUID.optional(),
   sellerId: UUID.optional(),
+  format: formatSchema,
+});
+const auditInput = z.object({
+  filters: z.record(z.string(), z.string().max(200)),
   format: formatSchema,
 });
 const packInput = z.object({
@@ -86,6 +99,8 @@ export async function exportDataset(
   const parsed = datasetInput.safeParse(input);
   const dataset = parsed.success ? findDataset(parsed.data.dataset) : undefined;
   if (!parsed.success || !dataset) return { ok: false, error: EXPORT_FAILED };
+  if (dataset.code === "audit")
+    return exportAuditTrail({ filters: {}, format: parsed.data.format });
   const { data, error } = await callExport("export_dataset", {
     p_dataset: dataset.code,
     p_period: parsed.data.period ?? null,
@@ -100,6 +115,29 @@ export async function exportDataset(
       parsed.data.format,
     ),
     sheets: [toSheet(dataset.title, dataset.columns, result.rows)],
+  };
+}
+
+// Εξαγωγή του Ίχνους ενεργειών (Υ5, #214) με τα φίλτρα του P1 (ή χωρίς φίλτρα από την M2). Η βάση θέλει «Εξάγει δεδομένα»
+// και «Βλέπει ίχνος ενεργειών», κρύβει ποσά και κόστος όπως στην οθόνη και γράφει Ίχνος πριν δώσει γραμμές.
+export async function exportAuditTrail(
+  input: z.input<typeof auditInput>,
+): Promise<ExportOutcome> {
+  const parsed = auditInput.safeParse(input);
+  if (!parsed.success) return { ok: false, error: EXPORT_FAILED };
+  const filters = readAuditFilters(parsed.data.filters);
+  const { data, error } = await callExport("audit_trail_export", {
+    p_filters: rpcFilters(filters),
+    p_format: parsed.data.format,
+  });
+  if (error) return failure(error);
+  const result = parseAuditExport(data);
+  const period = filters.period === "all" ? null : AUDIT_PERIOD_LABELS[filters.period];
+  return {
+    ok: true,
+    fileName: fileName([AUDIT_TITLE, period], parsed.data.format),
+    sheets: [auditSheet(result.rows)],
+    notice: result.truncated ? AUDIT_TRUNCATED : undefined,
   };
 }
 

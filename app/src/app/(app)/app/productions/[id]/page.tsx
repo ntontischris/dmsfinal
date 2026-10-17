@@ -1,9 +1,11 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer, type Viewer } from "@/modules/access";
+import { AuditHistoryLink } from "@/modules/audit";
 import { costsCaps } from "@/modules/costs";
 import {
   ProductionDeliverables,
@@ -60,6 +62,7 @@ export default async function ProductionPage({
       showCosts={costsCaps(viewer).canView}
       canWorkDeliverables={canWorkDeliverables}
       messagesHref={messagesHrefOf(viewer, production.data)}
+      historyLink={<AuditHistoryLink viewer={viewer} entity="productions" id={production.data.id} />}
     />
   );
 }
@@ -76,11 +79,13 @@ async function ProductionPageContent({
   showCosts,
   canWorkDeliverables,
   messagesHref,
+  historyLink,
 }: {
   production: ProductionDetail;
   showCosts: boolean;
   canWorkDeliverables: boolean;
   messagesHref: string | null;
+  historyLink: ReactNode;
 }) {
   const canTransfer = production.viewerCan.transfer;
   const canManage = production.viewerCan.members;
@@ -118,6 +123,7 @@ async function ProductionPageContent({
             Κόστος και ώρες
           </Link>
         )}
+        {historyLink}
       </ScreenHeader>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <StatePanel production={production} />
