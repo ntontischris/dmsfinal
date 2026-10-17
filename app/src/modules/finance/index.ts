@@ -69,6 +69,7 @@ export { InvoiceRegisterForm } from "./components/invoice-register-form";
 export { InvoiceTable } from "./components/invoice-table";
 export { InvoiceTotals } from "./components/invoice-totals";
 export { athensToday } from "./money";
+export { signedInvoicePdfUrls } from "./invoice-storage";
 export { INVOICE_DETAIL_ERROR } from "./invoice-corrections-labels";
 export { getInvoiceDetail, getVoidedInvoices } from "./invoices-queries";
 export { InvoiceCorrectionScreen } from "./components/invoice-correction-screen";

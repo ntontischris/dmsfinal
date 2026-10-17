@@ -116,3 +116,32 @@ test("ο πωλητής βλέπει μόνο τις δικές του Αναφ�
     page.getByRole("navigation", { name: "Περίοδος" }),
   ).toBeVisible();
 });
+
+// Ργ (#200), Ρδ (#201): ο Ιδιοκτήτης ανοίγει την M2 από την M1 και εξάγει τους Πελάτες (το seed έχει πάντα Πελάτες)·
+// το αρχείο κατεβαίνει αμέσως και η εξαγωγή φαίνεται στο Ιστορικό. Η Εξαγωγή Αναφοράς, τα δεδομένα και το Ίχνος
+// ελέγχονται στο pgTAP (reports_export_test.sql) και στο vitest.
+test("ο Ιδιοκτήτης εξάγει Πελάτες και τους βλέπει στο Ιστορικό εξαγωγών", async ({ page }) => {
+  test.setTimeout(90_000);
+  await signIn(page, "owner@example.com");
+  await page.goto(REPORTS_PATH);
+  await page.getByRole("link", { name: "Εξαγωγή δεδομένων (M2)" }).click();
+  await expect(page).toHaveURL(/\/app\/reports\/export$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Εξαγωγή δεδομένων" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Πακέτο λογιστή" })).toBeVisible();
+
+  await page.getByRole("navigation", { name: "Τι θέλεις να εξάγεις" }).getByRole("link", { name: "Πελάτες" }).click();
+  await expect(page).toHaveURL(/dataset=clients/);
+  const datasetDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Εξαγωγή", exact: true }).click();
+  expect((await datasetDownload).suggestedFilename()).toBe("Πελάτες.xlsx");
+
+  await page.reload();
+  const history = page.getByRole("heading", { name: "Ιστορικό εξαγωγών" }).locator("xpath=ancestor::section[1]");
+  await expect(history.getByText("Πελάτες · Excel").first()).toBeVisible();
+});
+
+test("η Παραγωγή δεν έχει Εξαγωγή", async ({ page }) => {
+  await signIn(page, "production@example.com");
+  await page.goto("/app/reports/export");
+  await expect(page.getByRole("heading", { name: "Χωρίς δικαίωμα" })).toBeVisible();
+});

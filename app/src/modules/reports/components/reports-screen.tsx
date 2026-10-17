@@ -26,6 +26,8 @@ import {
   UNKNOWN_REPORT_TEXT,
   UNKNOWN_REPORT_TITLE,
 } from "../labels";
+import { EXPORT_LINK, EXPORT_LINK_NOTE } from "../export/labels";
+import { EXPORT_PATH } from "../export/url";
 import { REPORTS_PATH } from "../url";
 import { PeriodFilter } from "./period-filter";
 import { ReportCatalogue } from "./report-catalogue";
@@ -54,6 +56,11 @@ function Catalogue({ viewer }: { viewer: Viewer }) {
         <p className="m-0 text-sm text-muted-foreground">
           {PROFITABILITY_NOTE}{" "}
           <Link href={PROFITABILITY_PATH}>{PROFITABILITY_LINK}</Link>
+        </p>
+      )}
+      {can(viewer, "reports.export") && (
+        <p className="m-0 text-sm text-muted-foreground">
+          {EXPORT_LINK_NOTE} <Link href={EXPORT_PATH}>{EXPORT_LINK}</Link>.
         </p>
       )}
     </div>

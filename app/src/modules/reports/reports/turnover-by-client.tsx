@@ -102,4 +102,17 @@ export const TURNOVER_BY_CLIENT: ReportDefinition = {
   usesPeriod: true,
   isVisible: canSeeFinanceReports,
   Body: TurnoverByClientBody,
+  exportSpec: {
+    rpc: "report_turnover_by_client",
+    params: ["period"],
+    rowsKey: "rows",
+    columns: [
+      { key: "clientName", header: COLUMNS.client, type: "text" },
+      { key: "turnover", header: COLUMNS.turnover, type: "money" },
+      { key: "share", header: COLUMNS.share, type: "percent" },
+      { key: "invoiceCount", header: COLUMNS.invoices, type: "integer" },
+      { key: "creditCount", header: "Πιστωτικά", type: "integer" },
+    ],
+    totals: { key: "totals", label: TOTAL_LABEL },
+  },
 };

@@ -171,4 +171,18 @@ export const RECEIVABLES_AGING: ReportDefinition = {
   usesPeriod: false,
   isVisible: canSeeFinanceReports,
   Body: ReceivablesAgingBody,
+  exportSpec: {
+    rpc: "report_receivables_aging",
+    params: [],
+    rowsKey: "rows",
+    columns: [
+      { key: "clientName", header: CLIENT_COLUMN, type: "text" },
+      ...BUCKETS.map((label, index) => ({ key: `buckets.${index}`, header: label, type: "money" as const })),
+      { key: "total", header: "Σύνολο ανεξόφλητων", type: "money" },
+      ...BUCKETS.map((label, index) => ({ key: `counts.${index}`, header: `Τιμολόγια: ${label}`, type: "integer" as const })),
+      { key: "invoiceCount", header: "Τιμολόγια", type: "integer" },
+      { key: "oldestDue", header: "Παλαιότερη λήξη", type: "date" },
+    ],
+    totals: { key: "totals", label: TOTAL_LABEL },
+  },
 };
