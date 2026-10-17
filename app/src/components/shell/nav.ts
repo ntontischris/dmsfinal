@@ -183,6 +183,17 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Αναφορές",
+    items: [
+      {
+        code: "M1",
+        label: "Αναφορές",
+        href: "/app/reports",
+        requires: "reports.view",
+      },
+    ],
+  },
+  {
     title: "Γυρίσματα",
     items: [
       {
