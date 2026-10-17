@@ -14,6 +14,7 @@ export { safeNext } from "./schemas";
 export { lockReason } from "./permissions";
 export { grantableTeamRoles } from "./grantable-roles";
 export {
+  getDeactivationPreview,
   getRole,
   listPermissions,
   listRoles,

@@ -126,6 +126,9 @@ const cardShape = z.object({
   noShowAt: z.string().nullable(),
   provision: provisionSchema.nullable(),
   crew: z.array(crewSchema),
+  vacancies: z
+    .array(z.object({ userId: z.string(), name: z.string(), vacatedAt: z.string() }))
+    .default([]),
   sheet: sheetSummarySchema,
   equipment: z.array(
     z.object({

@@ -7,8 +7,14 @@ import { rpcMessage } from "@/lib/rpc-error";
 import { kickOutbox } from "@/lib/email/outbox-trigger";
 import { createSupabase } from "@/lib/supabase/server";
 
-import { inviteMember, UNCONFIGURED, type Provisioned, type InviteCall } from "./provision";
-import { clientInviteSchema, teamInviteSchema, uuidSchema } from "./invitation-schemas";
+import { inviteMember, UNCONFIGURED, type InviteCall, type Provisioned, type Supabase } from "./provision";
+import {
+  clientInviteSchema,
+  teamEmailCheckSchema,
+  teamInviteSchema,
+  uuidSchema,
+  type DeactivatedTeamUser,
+} from "./invitation-schemas";
 import type { FormState } from "./schemas";
 
 // Προσκλήσεις (N1 Ομάδα, N2/N3 Χρήστες πελάτη). Η βάση ελέγχει κάθε κανόνα· εδώ γίνεται ο λογαριασμός και το email.
@@ -42,8 +48,18 @@ async function inviteWith(call: InviteCall): Promise<FormState> {
   return noticeFor(provisioned, call.email);
 }
 
-// N1: πρόσκληση Χρήστη ομάδας με έναν ή περισσότερους Ρόλους.
-export async function inviteTeamUser(_: FormState, form: FormData): Promise<FormState> {
+export type TeamInviteState = FormState<DeactivatedTeamUser>;
+
+// Ο απενεργοποιημένος Χρήστης ομάδας με αυτό το email, αν υπάρχει. Ό,τι αποτύχει εδώ το πιάνει ξανά η ίδια η πρόσκληση.
+async function deactivatedWithEmail(supabase: Supabase, email: string): Promise<DeactivatedTeamUser | null> {
+  const { data, error } = await supabase.rpc("invitation_team_email_check", { p_email: email });
+  if (error) return null;
+  const parsed = teamEmailCheckSchema.safeParse(data);
+  return parsed.success ? parsed.data.deactivatedUser : null;
+}
+
+// N1: πρόσκληση Χρήστη ομάδας με έναν ή περισσότερους Ρόλους. Email απενεργοποιημένου: αντί για πρόσκληση, Επανενεργοποίηση.
+export async function inviteTeamUser(_: TeamInviteState, form: FormData): Promise<TeamInviteState> {
   const parsed = teamInviteSchema.safeParse({
     name: form.get("name"),
     email: form.get("email"),
@@ -51,6 +67,10 @@ export async function inviteTeamUser(_: FormState, form: FormData): Promise<Form
     roleIds: readRoleIds(form),
   });
   if (!parsed.success) return firstIssue(parsed.error.issues);
+  const supabase = await createSupabase();
+  if (!supabase) return UNCONFIGURED;
+  const deactivated = await deactivatedWithEmail(supabase, parsed.data.email);
+  if (deactivated) return { data: deactivated };
   return inviteWith({
     fn: "invitation_create_team",
     kind: "team",

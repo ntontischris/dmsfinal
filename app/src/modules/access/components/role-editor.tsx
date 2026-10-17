@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
 import { Field, Input } from "@/components/ui/field";
@@ -8,7 +10,8 @@ import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 
 import type { PermissionDef, RoleSummary } from "../queries";
-import { saveRole } from "../team-actions";
+import { affectedText } from "../role-affected";
+import { saveRole, type RoleSaveState } from "../team-actions";
 
 interface Choice {
   value: string;
@@ -73,6 +76,25 @@ const HELP = {
     "Τα Δικαιώματα πελάτη δεν έχουν Εύρος: καλύπτουν τον Πελάτη που έχει επιλέξει ο Χρήστης.",
 };
 
+// Δεύτερο βήμα της αποθήκευσης: τα ονόματα από τη βάση, και μόνο μετά η αποθήκευση.
+function ConfirmSave({ state, isSaving, onCancel }: { state: RoleSaveState; isSaving: boolean; onCancel: () => void }) {
+  if (!state.data) return null;
+  return (
+    <div className="grid justify-items-start gap-2 rounded-sm border px-3 py-3" role="alertdialog" aria-label="Επιβεβαίωση αποθήκευσης">
+      <p className="m-0 text-sm">{affectedText(state.data)}</p>
+      <p className="m-0 text-sm text-muted-foreground">
+        Η αλλαγή ισχύει από την επόμενη ενέργειά τους και γράφεται στο Ίχνος (πριν → μετά).
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="primary" type="submit" name="confirmed" value="true" disabled={isSaving}>
+          {isSaving ? "Αποθήκευση…" : "Επιβεβαίωση αποθήκευσης"}
+        </Button>
+        <Button onClick={onCancel}>Άκυρο</Button>
+      </div>
+    </div>
+  );
+}
+
 interface RoleEditorProps {
   role: RoleSummary;
   permissions: readonly PermissionDef[];
@@ -82,8 +104,9 @@ interface RoleEditorProps {
 export function RoleEditor({ role, permissions }: RoleEditorProps) {
   const { state, isPending: isSaving, onSubmit: action, formRef: actionRef } = useKeptForm(saveRole);
   const isChanged = useFormChanged(actionRef, state.notice ? state : undefined);
+  const [dismissed, setDismissed] = useState<RoleSaveState | null>(null);
+  const isConfirming = Boolean(state.data) && dismissed !== state;
   const areas = [...new Set(permissions.map((p) => p.area))];
-  const holders = role.holders.length;
   return (
     <form ref={actionRef} onSubmit={action} className="grid gap-4">
       <input type="hidden" name="id" value={role.id} />
@@ -141,16 +164,20 @@ export function RoleEditor({ role, permissions }: RoleEditorProps) {
       {!role.isOwner && (
         <div className="grid justify-items-start gap-2">
           <FormMessage state={state} />
-          {isChanged && (
-            <Button variant="primary" type="submit" disabled={isSaving}>
-              {isSaving ? "Αποθήκευση…" : "Αποθήκευση"}
-            </Button>
+          {isConfirming ? (
+            <ConfirmSave state={state} isSaving={isSaving} onCancel={() => setDismissed(state)} />
+          ) : (
+            isChanged && (
+              <Button variant="primary" type="submit" disabled={isSaving}>
+                {isSaving ? "Έλεγχος…" : "Αποθήκευση"}
+              </Button>
+            )
           )}
-          <p className="m-0 text-sm text-muted-foreground">
-            Επηρεάζει {holders === 1 ? "1 Χρήστη" : `${holders} Χρήστες`}, από
-            την επόμενη ενέργειά τους. Η αλλαγή γράφεται στο Ίχνος (πριν →
-            μετά).
-          </p>
+          {!isConfirming && (
+            <p className="m-0 text-sm text-muted-foreground">
+              Πριν από την αποθήκευση βλέπεις ποιους Χρήστες επηρεάζει. Η αλλαγή γράφεται στο Ίχνος (πριν → μετά).
+            </p>
+          )}
         </div>
       )}
     </form>

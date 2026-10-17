@@ -23,6 +23,13 @@ export const invitationRowSchema = z.object({
 
 export type InvitationRow = z.infer<typeof invitationRowSchema>;
 
+// Το email ανήκει σε απενεργοποιημένο Χρήστη ομάδας: η φόρμα προτείνει Επανενεργοποίηση (public.invitation_team_email_check).
+export const teamEmailCheckSchema = z.object({
+  deactivatedUser: z.object({ userId: z.string(), name: z.string() }).nullable(),
+});
+
+export type DeactivatedTeamUser = NonNullable<z.infer<typeof teamEmailCheckSchema>["deactivatedUser"]>;
+
 export const clientUserRowSchema = z.object({
   userId: z.string(),
   name: z.string(),

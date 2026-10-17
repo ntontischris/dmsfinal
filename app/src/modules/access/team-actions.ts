@@ -8,7 +8,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabase } from "@/lib/supabase/server";
 
 import { diffGrants, isScope, type Grants } from "./permissions";
+import type { Supabase } from "./provision";
 import { getRole } from "./queries";
+import { roleAffectedSchema, type RoleAffected } from "./role-affected";
 import type { FormState } from "./schemas";
 
 // Ενέργειες της Ομάδας (N1) και των Ρόλων (N4). Κάθε κανόνας (μόνο ο Ιδιοκτήτης, χωρίς κλιμάκωση,
@@ -53,10 +55,21 @@ const roleFormSchema = z.object({
   description: z.string().trim(),
 });
 
+export type RoleSaveState = FormState<RoleAffected>;
+
+// Πρώτο βήμα: ποιοι επηρεάζονται, από τη βάση. Τίποτα δεν αποθηκεύεται ακόμα.
+async function affectedBy(supabase: Supabase, roleId: string): Promise<RoleSaveState> {
+  const { data, error } = await supabase.rpc("role_affected_users", { p_role_id: roleId });
+  if (error) return { error: messageOf(error, "Δεν βρέθηκαν οι Χρήστες του Ρόλου.") };
+  const parsed = roleAffectedSchema.safeParse(data);
+  return parsed.success ? { data: parsed.data } : { error: "Δεν βρέθηκαν οι Χρήστες του Ρόλου." };
+}
+
+// N4 σε δύο βήματα: χωρίς «confirmed» επιστρέφει τους επηρεαζόμενους· με «confirmed» αποθηκεύει.
 export async function saveRole(
-  _: FormState,
+  _: RoleSaveState,
   form: FormData,
-): Promise<FormState> {
+): Promise<RoleSaveState> {
   const parsed = roleFormSchema.safeParse({
     id: form.get("id"),
     name: form.get("name"),
@@ -67,6 +80,7 @@ export async function saveRole(
   if (!supabase) return UNCONFIGURED;
   const current = await getRole(parsed.data.id);
   if (!current.ok || !current.data) return { error: "Ο Ρόλος δεν βρέθηκε." };
+  if (form.get("confirmed") !== "true") return affectedBy(supabase, parsed.data.id);
 
   const { error: roleError } = await supabase
     .from("roles")
@@ -182,51 +196,24 @@ export async function deleteRole(
   redirect("/app/team/roles");
 }
 
+// Μία κλήση: η βάση ελέγχει «χωρίς κλιμάκωση» και γράφει το Γεγονός 58 για τους Ιδιοκτήτες.
 export async function setUserRoles(
   _: FormState,
   form: FormData,
 ): Promise<FormState> {
   const userId = z.uuid().safeParse(form.get("userId"));
   if (!userId.success) return { error: "Ο Χρήστης δεν βρέθηκε." };
-  const wanted = new Set(form.getAll("role").map(String));
-  if (wanted.size === 0)
+  const wanted = z.array(z.uuid()).safeParse([...new Set(form.getAll("role").map(String))]);
+  if (!wanted.success) return { error: "Ένας από τους Ρόλους δεν βρέθηκε." };
+  if (wanted.data.length === 0)
     return { error: "Ένας Χρήστης ομάδας θέλει τουλάχιστον έναν Ρόλο." };
   const supabase = await createSupabase();
   if (!supabase) return UNCONFIGURED;
-
-  const { data: rows, error: readError } = await supabase
-    .from("team_user_roles")
-    .select("role_id")
-    .eq("user_id", userId.data);
-  if (readError || !rows)
-    return {
-      error: messageOf(
-        readError ?? { message: "" },
-        "Οι Ρόλοι δεν διαβάστηκαν.",
-      ),
-    };
-  const current = new Set(rows.map((row: { role_id: string }) => row.role_id));
-  const added = [...wanted].filter((id) => !current.has(id));
-  const removed = [...current].filter((id) => !wanted.has(id));
-
-  if (added.length > 0) {
-    const { error } = await supabase
-      .from("team_user_roles")
-      .insert(
-        added.map((roleId) => ({ user_id: userId.data, role_id: roleId })),
-      );
-    if (error)
-      return { error: messageOf(error, "Οι Ρόλοι δεν αποθηκεύτηκαν.") };
-  }
-  if (removed.length > 0) {
-    const { error } = await supabase
-      .from("team_user_roles")
-      .delete()
-      .eq("user_id", userId.data)
-      .in("role_id", removed);
-    if (error)
-      return { error: messageOf(error, "Οι Ρόλοι δεν αποθηκεύτηκαν.") };
-  }
+  const { error } = await supabase.rpc("team_user_set_roles", {
+    p_user_id: userId.data,
+    p_role_ids: wanted.data,
+  });
+  if (error) return { error: messageOf(error, "Οι Ρόλοι δεν αποθηκεύτηκαν.") };
   revalidatePath("/app/team", "layout");
   return {
     notice: "Οι Ρόλοι αποθηκεύτηκαν. Ισχύουν από την επόμενη ενέργειά του.",

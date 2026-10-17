@@ -18,6 +18,7 @@ const DATABASE_EVENTS = [
   "outcome_undone",
   "crew_changed",
   "crew_declined",
+  "crew_vacated",
   "equipment_changed",
   "equipment_conflict",
 ];

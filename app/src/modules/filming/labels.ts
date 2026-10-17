@@ -92,6 +92,7 @@ export const EVENT_LABELS: Readonly<Record<string, string>> = {
   outcome_undone: "Αναιρέθηκε το αποτέλεσμα",
   crew_changed: "Άλλαξε το Συνεργείο",
   crew_declined: "Μέλος δήλωσε «δεν μπορώ»",
+  crew_vacated: "Άδειασε θέση (το μέλος απενεργοποιήθηκε)",
   equipment_changed: "Άλλαξε ο Εξοπλισμός",
   equipment_conflict: "Σύγκρουση εξοπλισμού",
 };
