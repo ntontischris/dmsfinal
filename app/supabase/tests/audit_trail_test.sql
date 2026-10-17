@@ -5,12 +5,12 @@
 -- πραγματικό now() (migrations, triggers) δεν μπαίνουν ποτέ στη μέτρηση. Σταθερό p_now: 2030-01-15 10:00 UTC (12:00 Αθήνα).
 -- Οι authz.* καλούνται ως superuser με τον Χρήστη στα claims· η άρνηση ελέγχεται μέσω των public RPC.
 begin;
-select plan(66);
+select plan(73);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις · a4 Παραγωγή · a7 Διαχείριση
 -- a6 «Διαχείριση χωρίς ποσά» (Διαχείριση χωρίς finance.amounts και finance.cost) · a5 «Ίχνος με ποσά χωρίς κόστος»
--- a8 Ανωνυμοποιημένος Χρήστης ομάδας · b1 Χρήστης πελάτη με «Πλήρης»
+-- a8 Ανωνυμοποιημένος Χρήστης ομάδας · a9 «Ίχνος με αφορά» (audit.view + Πελάτες μόνο με αφορά) · b1 Χρήστης πελάτη
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'accountant@example.com'),
@@ -20,6 +20,7 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a6', 'noamounts@example.com'),
   ('00000000-0000-0000-0000-0000000000a7', 'admin@example.com'),
   ('00000000-0000-0000-0000-0000000000a8', 'anonymized-7@anonymized.invalid'),
+  ('00000000-0000-0000-0000-0000000000a9', 'mine@example.com'),
   ('00000000-0000-0000-0000-0000000000b1', 'k1@client-a.example.gr');
 insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'Γιώργος', 'owner@example.com'),
@@ -29,8 +30,10 @@ insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000a5', 'Κώστας', 'nocost@example.com'),
   ('00000000-0000-0000-0000-0000000000a6', 'Λία', 'noamounts@example.com'),
   ('00000000-0000-0000-0000-0000000000a7', 'Μάρκος', 'admin@example.com'),
-  ('00000000-0000-0000-0000-0000000000a8', 'Ανωνυμοποιημένος Χρήστης 7', 'anonymized-7@anonymized.invalid');
-insert into public.roles (name, kind) values ('Διαχείριση χωρίς ποσά (τεστ)', 'team'), ('Ίχνος με ποσά (τεστ)', 'team');
+  ('00000000-0000-0000-0000-0000000000a8', 'Ανωνυμοποιημένος Χρήστης 7', 'anonymized-7@anonymized.invalid'),
+  ('00000000-0000-0000-0000-0000000000a9', 'Νίνα', 'mine@example.com');
+insert into public.roles (name, kind) values
+  ('Διαχείριση χωρίς ποσά (τεστ)', 'team'), ('Ίχνος με ποσά (τεστ)', 'team'), ('Ίχνος με αφορά (τεστ)', 'team');
 insert into public.role_permissions (role_id, permission, scope)
 select n.id, rp.permission, rp.scope
   from public.role_permissions rp
@@ -41,6 +44,10 @@ insert into public.role_permissions (role_id, permission, scope)
 select r.id, g.code, 'all'
   from (values ('audit.view'), ('finance.amounts')) as g (code)
   join public.roles r on r.name = 'Ίχνος με ποσά (τεστ)' and r.kind = 'team';
+insert into public.role_permissions (role_id, permission, scope)
+select r.id, g.code, g.scope
+  from (values ('audit.view', 'all'), ('clients.view', 'mine')) as g (code, scope)
+  join public.roles r on r.name = 'Ίχνος με αφορά (τεστ)' and r.kind = 'team';
 insert into public.team_user_roles (user_id, role_id)
 select u.id::uuid, r.id
   from (values
@@ -51,15 +58,17 @@ select u.id::uuid, r.id
     ('00000000-0000-0000-0000-0000000000a5', 'Ίχνος με ποσά (τεστ)'),
     ('00000000-0000-0000-0000-0000000000a6', 'Διαχείριση χωρίς ποσά (τεστ)'),
     ('00000000-0000-0000-0000-0000000000a7', 'Διαχείριση'),
-    ('00000000-0000-0000-0000-0000000000a8', 'Παραγωγή')
+    ('00000000-0000-0000-0000-0000000000a8', 'Παραγωγή'),
+    ('00000000-0000-0000-0000-0000000000a9', 'Ίχνος με αφορά (τεστ)')
   ) as u (id, role_name)
   join public.roles r on r.name = u.role_name and r.kind = 'team';
 
 -- ───────────── Δεδομένα (χωρίς triggers) ─────────────
 set local session_replication_role = replica;
 
-insert into public.clients (id, name, contact_name, contact_email) values
-  ('00000000-0000-0000-0000-0000000000c1', 'Πελάτης Α', 'Μαρία', 'a@example.com');
+insert into public.clients (id, name, contact_name, contact_email, manager_id) values
+  ('00000000-0000-0000-0000-0000000000c1', 'Πελάτης Α', 'Μαρία', 'a@example.com', null),
+  ('00000000-0000-0000-0000-0000000000c2', 'Πελάτης Β', 'Νίκος', 'b@example.com', '00000000-0000-0000-0000-0000000000a9');
 insert into public.client_users (client_id, user_id, name, role_id, is_current)
 select '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 'Κώστας Πελάτης', r.id, true
   from public.roles r where r.name = 'Πλήρης' and r.kind = 'client';
@@ -101,7 +110,17 @@ insert into public.audit_log (at, actor_id, action, entity, entity_id, before, a
   ('2030-01-13 08:01+00', '00000000-0000-0000-0000-0000000000a1', 'insert', 'agreement_amounts', 't-ag', null,
    '{"agreement_id": "t-ag", "discount_percent": 10, "discount_months": 2, "dissolution_fee": 0, "vat_rate": 24}'),
   ('2030-01-13 08:02+00', '00000000-0000-0000-0000-0000000000a1', 'insert', 'agreements', 't-ag2', null,
-   '{"id": "t-ag2", "title": "Άλλη"}');
+   '{"id": "t-ag2", "title": "Άλλη"}'),
+  ('2030-01-13 08:03+00', '00000000-0000-0000-0000-0000000000a1', 'insert', 'agreement_lines', 't-line', null,
+   '{"id": "t-line", "agreement_id": "t-ag", "label": "Reel"}'),
+  -- Χαμηλό περιθώριο: η «ενέργεια» και η αλλαγή του is_low_margin είναι πληροφορία κόστους
+  ('2030-01-12 08:00+00', null, 'event', 'agreement_costs', 't-lm', null, '{"event": "low_margin", "revision": 2}'),
+  ('2030-01-12 08:01+00', null, 'update', 'agreement_costs', 't-lm',
+   '{"agreement_id": "t-lm", "is_low_margin": false, "price": 100, "frozen_at": "2030-01-11"}',
+   '{"agreement_id": "t-lm", "is_low_margin": true, "price": 120, "frozen_at": "2030-01-12"}'),
+  -- Εύρος ανά εγγραφή: ο c2 ανήκει στην a9, ο c1 όχι
+  ('2030-01-12 09:00+00', null, 'update', 'clients', '00000000-0000-0000-0000-0000000000c1', '{"name": "Α"}', '{"name": "Πελάτης Α"}'),
+  ('2030-01-12 09:01+00', null, 'update', 'clients', '00000000-0000-0000-0000-0000000000c2', '{"name": "Β"}', '{"name": "Πελάτης Β"}');
 
 -- Σελίδες: 55 γραμμές, δύο με την ίδια στιγμή (το id κρίνει τη σειρά).
 insert into public.audit_log (at, actor_id, action, entity, entity_id, after)
@@ -165,17 +184,17 @@ select is(
 select is(
   (select (i #>> '{before,price}') || '|' || (i #>> '{after,price}') || '|' || (i -> 'changed')::text
      from jsonb_array_elements(current_setting('t.m')::jsonb -> 'items') i where i ->> 'entity' = 'catalogue_item_amounts'),
-  '{"$hidden": "amount"}|{"$hidden": "amount"}|["price"]', 'Χωρίς ποσά: «κρυφό ποσό» και ότι άλλαξε η τιμή, χωρίς την τιμή');
+  '{"$hidden": "amount"}|{"$hidden": "amount"}|[]', 'Χωρίς ποσά: «κρυφό ποσό», και η τιμή δεν φαίνεται ούτε στα «changed»');
 select is(
   (select (i #>> '{after,hours_shoot}') || '|' || (i #>> '{after,direct_cost_note}') || '|' || (i #>> '{after,item_id}')
      from jsonb_array_elements(current_setting('t.m')::jsonb -> 'items') i where i ->> 'entity' = 'catalogue_item_costs'),
   '{"$hidden": "cost"}|{"$hidden": "cost"}|t-mask', 'Χωρίς κόστος: «κρυφό κόστος», τα υπόλοιπα πεδία μένουν');
 select is(
-  (select (i #>> '{after,total}') || '|' || (i #>> '{after,changes,0,from}') || '|' || (i #>> '{after,changes,0,to}') || '|'
-          || (i #>> '{after,changes,1,to}') || '|' || (i #>> '{after,number}')
+  (select (i #>> '{after,total}') || '|' || jsonb_array_length(i #> '{after,changes}') || '|'
+          || (i #>> '{after,changes,0,field}') || ':' || (i #>> '{after,changes,0,to}') || '|' || (i #>> '{after,number}')
      from jsonb_array_elements(current_setting('t.m')::jsonb -> 'items') i where i ->> 'entity' = 'invoices'),
-  '{"$hidden": "amount"}|{"$hidden": "amount"}|{"$hidden": "amount"}|2|A-9',
-  'Διόρθωση Τιμολογίου: κρυφά και τα ποσά της λίστας αλλαγών, ο αριθμός και η ΜΑΡΚ μένουν');
+  '{"$hidden": "amount"}|1|mark:2|A-9',
+  'Διόρθωση Τιμολογίου: η αλλαγή του ποσού φεύγει από τη λίστα αλλαγών, ο αριθμός και η ΜΑΡΚ μένουν');
 select ok(
   (select string_agg(coalesce(i -> 'before', 'null')::text || coalesce(i -> 'after', 'null')::text, ' ')
      from jsonb_array_elements(current_setting('t.m')::jsonb -> 'items') i) !~ '[0-9]{2}',
@@ -198,6 +217,39 @@ select is(
                      order by n)
      from jsonb_array_elements(current_setting('t.m')::jsonb -> 'items') with ordinality x (i, n)),
   '136,4,120', 'Ο Ιδιοκτήτης βλέπει ποσά και κόστος');
+select is(
+  (select string_agg((i ->> 'action') || coalesce((i -> 'changed')::text, ''), ',' order by n)
+     from jsonb_array_elements(authz.audit_trail_list('{"id": "t-lm"}', null, null,
+                                                      timestamptz '2030-01-15 10:00+00') -> 'items') with ordinality x (i, n)),
+  'update["frozen_at", "is_low_margin", "price"],event', 'Ο Ιδιοκτήτης βλέπει το «χαμηλό περιθώριο» και την αλλαγή του');
+
+-- Χωρίς κόστος (με ή χωρίς ποσά): ούτε η «ενέργεια» χαμηλού περιθωρίου ούτε το is_low_margin στα «changed».
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a5","role":"authenticated"}', true);
+select is(
+  (select string_agg((i ->> 'action') || coalesce((i -> 'changed')::text, ''), ',' order by n)
+     from jsonb_array_elements(authz.audit_trail_list('{"id": "t-lm"}', null, null,
+                                                      timestamptz '2030-01-15 10:00+00') -> 'items') with ordinality x (i, n)),
+  'update["frozen_at", "price"]', 'Με ποσά χωρίς κόστος: χωρίς το «χαμηλό περιθώριο» και χωρίς το is_low_margin');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a6","role":"authenticated"}', true);
+select is(
+  (select string_agg((i ->> 'action') || coalesce((i -> 'changed')::text, ''), ',' order by n)
+     from jsonb_array_elements(authz.audit_trail_list('{"id": "t-lm"}', null, null,
+                                                      timestamptz '2030-01-15 10:00+00') -> 'items') with ordinality x (i, n)),
+  'update["frozen_at"]', 'Διαχείριση χωρίς ποσά και κόστος: μόνο ότι άλλαξε κάτι άλλο');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+
+-- Εύρος ανά εγγραφή: «Βλέπει ίχνος» με Πελάτες «με αφορά» δεν βλέπει τον Πελάτη άλλου.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a9","role":"authenticated"}', true);
+select is(
+  jsonb_array_length(authz.audit_trail_list('{"entity": "clients", "id": "00000000-0000-0000-0000-0000000000c2"}', null, null,
+                                            timestamptz '2030-01-15 10:00+00') -> 'items') || '|'
+  || jsonb_array_length(authz.audit_trail_list('{"entity": "clients", "id": "00000000-0000-0000-0000-0000000000c1"}', null,
+                                               null, timestamptz '2030-01-15 10:00+00') -> 'items') || '|'
+  || (select count(*) from jsonb_array_elements(authz.audit_trail_list('{"area": "sales", "period": "7d"}', null, null,
+                                                     timestamptz '2030-01-15 10:00+00') -> 'items') i
+       where i ->> 'entityId' = '00000000-0000-0000-0000-0000000000c1'),
+  '1|0|0', 'Πελάτες «με αφορά»: μόνο ο δικός της Πελάτης, ούτε με φίλτρο ούτε χωρίς');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
 
 -- ───────────── Μόνο Ιδιοκτήτη ─────────────
 select is(
@@ -274,7 +326,12 @@ select set_config('t.a', authz.audit_trail_list('{"entity": "agreements", "id": 
 select is(
   (select string_agg(i ->> 'entity', ',' order by n) from jsonb_array_elements(current_setting('t.a')::jsonb -> 'items')
      with ordinality x (i, n)),
-  'agreement_amounts,agreements', 'Το στοιχείο φέρνει και τα παιδιά του (τα ποσά της Συμφωνίας), όχι άλλες Συμφωνίες');
+  'agreement_lines,agreement_amounts,agreements',
+  'Το στοιχείο φέρνει και τα παιδιά του (ποσά, γραμμές μέσω agreement_id), όχι άλλες Συμφωνίες');
+select is(
+  (select i ->> 'parentId' from jsonb_array_elements(current_setting('t.a')::jsonb -> 'items') i
+    where i ->> 'entity' = 'agreement_lines'),
+  't-ag', 'Η γραμμή λέει σε ποια Συμφωνία ανήκει');
 select is(
   (current_setting('t.a')::jsonb -> 'subject')::text, '{"name": "Social Α", "label": "Συμφωνία"}',
   'Η απάντηση λέει ποιο στοιχείο είναι (για το chip)');
@@ -342,6 +399,18 @@ select is_empty(
         and not exists (select 1 from information_schema.columns c
                          where c.table_schema = 'public' and c.table_name = e.entity and c.column_name = k) $$,
   'Τα δηλωμένα κλειδιά είναι στήλες του πίνακα');
+select is_empty(
+  $$ select e.entity || '.' || e.parent_fk from public.audit_entities e
+      where e.parent_fk is not null
+        and not exists (select 1 from information_schema.columns c
+                         where c.table_schema = 'public' and c.table_name = e.entity and c.column_name = e.parent_fk) $$,
+  'Η στήλη γονέα (parent_fk) υπάρχει στον πίνακα');
+select is_empty(
+  $$ select c.table_name || '.' || c.column_name
+       from information_schema.columns c join public.audit_entities e on e.entity = c.table_name
+      where c.table_schema = 'public' and e.visibility = 'masked' and c.data_type = 'numeric'
+        and not (c.column_name = any (e.amount_keys || e.cost_keys || e.safe_keys)) $$,
+  'Κάθε αριθμητική στήλη στοιχείου με απόκρυψη είναι δηλωμένη ως ποσό, κόστος ή ασφαλής');
 select is_empty(
   $$ select e.entity from public.audit_entities e
       where e.visibility = 'masked' and cardinality(e.amount_keys) + cardinality(e.cost_keys) = 0 $$,

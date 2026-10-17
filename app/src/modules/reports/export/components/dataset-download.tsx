@@ -32,7 +32,7 @@ export function DatasetDownload({
       if (!outcome.ok) return { error: outcome.error };
       const file = exportFile(outcome.sheets, format);
       saveBytes(file.bytes, outcome.fileName, file.mime);
-      return {};
+      return outcome.notice ? { notice: outcome.notice } : {};
     });
   return (
     <div className="grid gap-2">

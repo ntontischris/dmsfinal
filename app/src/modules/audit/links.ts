@@ -17,12 +17,12 @@ const PAGES: Readonly<Record<string, string>> = {
   team_users: "/app/team/",
   roles: "/app/team/roles/",
 };
+const href = (base: string | undefined, id: string | null): string | null =>
+  base && id && UUID.test(id) ? `${base}${id}` : null;
 
+// Πρώτα η σελίδα του ίδιου του στοιχείου (π.χ. ένα Γύρισμα), αλλιώς του γονέα του (τα ποσά μιας Συμφωνίας).
 export const pageHref = (
-  item: Pick<AuditItem, "entity" | "parent" | "entityId">,
-): string | null => {
-  const base = PAGES[item.parent ?? item.entity];
-  return base && item.entityId && UUID.test(item.entityId)
-    ? `${base}${item.entityId}`
-    : null;
-};
+  item: Pick<AuditItem, "entity" | "parent" | "entityId" | "parentId">,
+): string | null =>
+  href(PAGES[item.entity], item.entityId) ??
+  (item.parent ? href(PAGES[item.parent], item.parentId) : null);

@@ -17,6 +17,7 @@ const itemSchema = z.object({
   areaLabel: z.string(),
   parent: z.string().nullable(),
   entityId: z.string().nullable(),
+  parentId: z.string().nullable(),
   subject: z.string().nullable(),
   before: z.unknown(),
   after: z.unknown(),

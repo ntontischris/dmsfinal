@@ -14,7 +14,10 @@
 --    Το RLS του audit_log ΔΕΝ αλλάζει (μένει αυστηρό)· η εφαρμογή διαβάζει μόνο μέσω των RPC αυτού του αρχείου.
 --  • Υ3 Περιοχές και ετικέτες: public.audit_areas και public.audit_entities (περιοχή, ελληνική ετικέτα, «γονέας»: το
 --    στοιχείο του οποίου το id κρατά η γραμμή, π.χ. agreement_amounts → agreements). Το φίλτρο «στοιχείο + id» πιάνει και τα
---    παιδιά του (τα ποσά, το κόστος, οι υπογραφές μιας Συμφωνίας). Τα είδη ενέργειας τα μεταφράζει η εφαρμογή.
+--    παιδιά του (τα ποσά, το κόστος, οι υπογραφές μιας Συμφωνίας, και μέσω parent_fk οι γραμμές, οι δόσεις, οι
+--    παραλήπτες και οι Περίοδοί της). Χωρίς id το φίλτρο στοιχείου είναι ακριβές. Τα είδη ενέργειας τα μεταφράζει η εφαρμογή.
+--    Οι «ενέργειες» στοιχείου με event_requires (π.χ. «χαμηλό περιθώριο» → finance.cost) δεν φαίνονται χωρίς αυτό, και τα
+--    κρυφά κλειδιά δεν εμφανίζονται ούτε στη λίστα «changed».
 --    Σύμβαση (pgTAP): κάθε στοιχείο του allowlist και κάθε πίνακας με trigger Ίχνους έχει γραμμή εδώ.
 --  • Υ5 Εξαγωγή: public.audit_trail_export(p_filters, p_format). Θέλει reports.export ΚΑΙ audit.view, ίδια φίλτρα και ίδια
 --    απόκρυψη, έως 10.000 γραμμές. Γράφει authz.export_log ('dataset', 'audit', φίλτρα, γραμμές, μορφή) ΠΡΙΝ επιστρέψει,
@@ -37,8 +40,14 @@ create table public.audit_entities (
   label text not null check (length(trim(label)) between 1 and 120),
   -- Το στοιχείο του οποίου το id γράφει αυτή η γραμμή στο entity_id (null = το δικό της).
   parent text check (parent is null or parent ~ '^[a-z_]{1,60}$'),
+  -- Η στήλη της γραμμής που κρατά το id του γονέα (π.χ. agreement_id)· null = το entity_id είναι ήδη το id του γονέα.
+  parent_fk text check (parent_fk is null or (parent is not null and parent_fk ~ '^[a-z_]{1,60}$')),
   amount_keys text[] not null default '{}',
   cost_keys text[] not null default '{}',
+  -- Αριθμητικές στήλες που ΔΕΝ είναι ποσό ή κόστος (π.χ. ποσοστό προκαταβολής ως όρος): δηλώνονται ρητά.
+  safe_keys text[] not null default '{}',
+  -- Οι «ενέργειες» (event) του στοιχείου φαίνονται μόνο με αυτό το Δικαίωμα (π.χ. το σήμα χαμηλού περιθωρίου).
+  event_requires text check (event_requires in ('finance.amounts', 'finance.cost')),
   visibility text not null check (visibility in ('rule', 'masked', 'owner'))
 );
 
@@ -91,7 +100,7 @@ insert into public.audit_entities (entity, area, label, parent, amount_keys, cos
   ('cost_months', 'settings', 'Κόστος μήνα', null, '{}',
    '{expenses_total,productive_hours,hour_cost}', 'masked'),
   ('cost_settings', 'settings', 'Πολλαπλασιαστές τιμής', null, '{}',
-   '{multiplier_min,multiplier_target,multiplier_max}', 'masked'),
+   '{multiplier_min,multiplier_target,multiplier_max,overrun_percent}', 'masked'),
   ('agreement_defaults', 'settings', 'Όροι Συμφωνιών', null,
    '{standard_discount_percent,standard_discount_months,dissolution_fee}', '{}', 'masked'),
   ('filming_settings', 'settings', 'Ρυθμίσεις Γυρισμάτων', null, '{}', '{}', 'rule'),
@@ -116,7 +125,7 @@ insert into public.audit_entities (entity, area, label, parent, amount_keys, cos
   -- Συμφωνίες
   ('agreements', 'agreements', 'Συμφωνία', null, '{}', '{}', 'rule'),
   ('agreement_amounts', 'agreements', 'Ποσά Συμφωνίας', 'agreements',
-   '{discount_percent,discount_months,dissolution_fee}', '{}', 'masked'),
+   '{discount_percent,discount_months,dissolution_fee,vat_rate}', '{}', 'masked'),
   ('agreement_costs', 'agreements', 'Κόστος Συμφωνίας', 'agreements', '{price,discounted_price}',
    '{hour_cost,hour_cost_month,multiplier_min,multiplier_target,multiplier_max,estimated_cost,is_low_margin}', 'masked'),
   ('agreement_revision_limits', 'agreements', 'Όριο αλλαγών Συμφωνίας', 'agreements', '{}', '{}', 'rule'),
@@ -179,6 +188,29 @@ insert into public.audit_entities (entity, area, label, parent, amount_keys, cos
   ('knowledge_item_audience', 'knowledge', 'Κοινό στοιχείου Γνώσης', null, '{}', '{}', 'rule'),
   -- Αναφορές
   ('report_exports', 'reports', 'Εξαγωγή', null, '{}', '{}', 'rule');
+
+-- Παιδιά που κρατούν το id του γονέα σε στήλη: το «Ιστορικό αλλαγών» του γονέα τα φέρνει κι αυτά (όχι τα εγγόνια).
+update public.audit_entities e set parent = v.parent, parent_fk = v.fk
+  from (values
+    ('agreement_lines', 'agreements', 'agreement_id'),
+    ('agreement_milestones', 'agreements', 'agreement_id'),
+    ('agreement_recipients', 'agreements', 'agreement_id'),
+    ('agreement_periods', 'agreements', 'agreement_id'),
+    ('production_tasks', 'productions', 'production_id'),
+    ('deliverables', 'productions', 'production_id'),
+    ('filmings', 'productions', 'production_id'),
+    ('opportunities', 'clients', 'client_id'),
+    ('invoices', 'clients', 'client_id'),
+    ('receipts', 'clients', 'client_id'),
+    ('billables', 'clients', 'client_id')
+  ) as v (entity, parent, fk)
+ where e.entity = v.entity;
+
+-- Το Γεγονός «χαμηλό περιθώριο» είναι πληροφορία κόστους: μόνο με «Βλέπει κόστος και κερδοφορία».
+update public.audit_entities set event_requires = 'finance.cost' where entity = 'agreement_costs';
+
+-- Αριθμητικοί όροι που δεν είναι ποσά (η σύμβαση ελέγχει ότι κάθε numeric στήλη είναι δηλωμένη).
+update public.audit_entities set safe_keys = '{advance_percent}' where entity = 'agreement_defaults';
 
 -- Keyset ανά (at, id) και φίλτρο «πρόσωπο».
 create index audit_log_at_id_idx on public.audit_log (at desc, id desc);
@@ -260,39 +292,80 @@ $$;
 -- ───────────── Γραμμές ─────────────
 
 -- Οι γραμμές που βλέπει ο Χρήστης με τα φίλτρα, νεότερη πρώτη, ως p_limit (το πολύ 10.001). Τα φίλτρα είναι ήδη ελεγμένα
--- (authz.audit_trail_filters). Η ορατότητα κρίνεται μία φορά ανά στοιχείο, και ανά γραμμή μόνο για Πελάτες και Ευκαιρίες.
+-- (authz.audit_trail_filters). Η ορατότητα του στοιχείου κρίνεται μία φορά· κάθε γραμμή 'rule' περνά ΚΑΙ από το
+-- authz.audit_row_allowed (Εύρος ανά εγγραφή), και οι «ενέργειες» με event_requires θέλουν το Δικαίωμά τους.
+-- Δυναμικό SQL ανά περίπτωση, ώστε να δουλεύουν τα ευρετήρια: στοιχείο + id → (entity, entity_id, at), πρόσωπο → actor_id.
 create function authz.audit_trail_visible(
   p_filters jsonb, p_before_at timestamptz, p_before_id bigint, p_limit integer, p_now timestamptz
 ) returns setof public.audit_log
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  with vis as materialized (
-    select e.entity, e.area, e.parent
+declare
+  v_entity text := p_filters ->> 'entity';
+  v_id text := p_filters ->> 'id';
+  v_who text := p_filters ->> 'who';
+  v_actor uuid := case when p_filters ->> 'who' <> 'system' then (p_filters ->> 'who')::uuid end;
+  v_action text := p_filters ->> 'action';
+  v_since timestamptz := authz.audit_period_start(p_filters ->> 'period', p_now);
+  v_limit integer := greatest(1, least(coalesce(p_limit, 50), 10001));
+  v_visible text[];
+  v_rule text[];
+  v_gated text[];
+  v_direct text[];
+  v_fk_entities text[];
+  v_fk_columns text[];
+  v_common text;
+  v_sql text;
+begin
+  select coalesce(array_agg(e.entity), '{}'),
+         coalesce(array_agg(e.entity) filter (where e.visibility = 'rule'), '{}'),
+         coalesce(array_agg(e.entity) filter (
+           where e.event_requires is not null and not coalesce(authz.has(e.event_requires), false)), '{}')
+    into v_visible, v_rule, v_gated
+    from public.audit_entities e
+   where (p_filters ->> 'area' is null or e.area = p_filters ->> 'area')
+     and authz.audit_trail_entity_visible(e.entity, e.visibility);
+
+  v_common := ' and ($3::text is null or a.action = $3)'
+    || ' and ($4::timestamptz is null or a.at >= $4)'
+    || ' and ($5::timestamptz is null or $6::bigint is null or (a.at, a.id) < ($5, $6))'
+    || case when v_who = 'system' then ' and a.actor_id is null'
+            when v_actor is not null then ' and a.actor_id = $7' else '' end
+    || ' and not (a.action = ''event'' and a.entity = any ($9))'
+    || ' and (not (a.entity = any ($8)) or authz.audit_row_allowed(a.entity, a.entity_id))';
+
+  if v_id is not null then
+    -- Το στοιχείο, τα παιδιά που γράφουν το id του στο entity_id, και τα παιδιά που το κρατούν σε στήλη (parent_fk).
+    -- Id χωρίς στοιχείο (μόνο από τη βάση): ό,τι ορατό έχει αυτό το entity_id.
+    select coalesce(array_agg(e.entity) filter (
+             where e.entity = v_entity or (e.parent = v_entity and e.parent_fk is null)), '{}'),
+           coalesce(array_agg(e.entity) filter (where e.parent = v_entity and e.parent_fk is not null), '{}'),
+           coalesce(array_agg(e.parent_fk) filter (where e.parent = v_entity and e.parent_fk is not null), '{}')
+      into v_direct, v_fk_entities, v_fk_columns
       from public.audit_entities e
-     where authz.audit_trail_entity_visible(e.entity, e.visibility)
-  ), f as materialized (
-    select p_filters ->> 'who' as who, p_filters ->> 'area' as area, p_filters ->> 'entity' as entity,
-           p_filters ->> 'id' as id, p_filters ->> 'action' as action,
-           authz.audit_period_start(p_filters ->> 'period', p_now) as since
-  )
-  select a.*
-    from public.audit_log a
-    join vis v on v.entity = a.entity
-    cross join f
-   where (f.who is null or (f.who = 'system' and a.actor_id is null) or a.actor_id::text = f.who)
-     and (f.area is null or v.area = f.area)
-     and (f.entity is null or a.entity = f.entity or v.parent = f.entity)
-     and (f.id is null or a.entity_id = f.id)
-     and (f.action is null or a.action = f.action)
-     and (f.since is null or a.at >= f.since)
-     and (p_before_at is null or p_before_id is null or (a.at, a.id) < (p_before_at, p_before_id))
-     and (a.entity not in ('clients', 'client_duplicate_flags', 'opportunities', 'access_requests')
-          or authz.audit_row_allowed(a.entity, a.entity_id))
-   order by a.at desc, a.id desc
-   limit greatest(1, least(coalesce(p_limit, 50), 10001));
+     where e.entity = any (v_visible);
+    if v_entity is null then
+      v_direct := v_visible;
+    end if;
+    v_sql := 'select * from (select a.* from public.audit_log a where a.entity = any ($1) and a.entity_id = $2' || v_common
+      || ' union all select a.* from public.audit_log a'
+      || ' join unnest($10::text[], $11::text[]) as k (entity, fk) on k.entity = a.entity'
+      || ' where (a.after ->> k.fk = $2 or a.before ->> k.fk = $2)' || v_common
+      || ') a order by a.at desc, a.id desc limit ' || v_limit;
+  else
+    v_direct := case when v_entity is null then v_visible
+                     when v_entity = any (v_visible) then array[v_entity] else '{}'::text[] end;
+    v_sql := 'select a.* from public.audit_log a where a.entity = any ($1)' || v_common
+      || ' order by a.at desc, a.id desc limit ' || v_limit;
+  end if;
+
+  return query execute v_sql
+    using v_direct, v_id, v_action, v_since, p_before_at, p_before_id, v_actor, v_rule, v_gated, v_fk_entities, v_fk_columns;
+end;
 $$;
 
--- Κρύβει τα κλειδιά ποσών/κόστους ενός «πριν» ή «μετά» (και τα from/to των αλλαγών τους στο «changes»).
+-- Κρύβει τα κλειδιά ποσών/κόστους ενός «πριν» ή «μετά». Από τη λίστα «changes» (διορθώσεις Τιμολογίων) οι αλλαγές
+-- κρυφών πεδίων φεύγουν ολόκληρες: δεν φαίνεται ούτε ότι άλλαξαν.
 create function authz.audit_mask(
   p_data jsonb, p_amount_keys text[], p_cost_keys text[], p_amounts boolean, p_cost boolean
 ) returns jsonb
@@ -305,14 +378,11 @@ as $$
                when not p_amounts and e.key = any (p_amount_keys) then '{"$hidden": "amount"}'::jsonb
                when not p_cost and e.key = any (p_cost_keys) then '{"$hidden": "cost"}'::jsonb
                when e.key = 'changes' and jsonb_typeof(e.value) = 'array' then (
-                 select coalesce(jsonb_agg(case
-                          when jsonb_typeof(c.value) = 'object' and not p_amounts and (c.value ->> 'field') = any (p_amount_keys)
-                            then c.value || '{"from": {"$hidden": "amount"}, "to": {"$hidden": "amount"}}'::jsonb
-                          when jsonb_typeof(c.value) = 'object' and not p_cost and (c.value ->> 'field') = any (p_cost_keys)
-                            then c.value || '{"from": {"$hidden": "cost"}, "to": {"$hidden": "cost"}}'::jsonb
-                          else c.value
-                        end order by c.n), '[]'::jsonb)
-                   from jsonb_array_elements(e.value) with ordinality c (value, n))
+                 select coalesce(jsonb_agg(c.value order by c.n), '[]'::jsonb)
+                   from jsonb_array_elements(e.value) with ordinality c (value, n)
+                  where not (jsonb_typeof(c.value) = 'object'
+                             and (((c.value ->> 'field') = any (p_amount_keys) and not p_amounts)
+                                  or ((c.value ->> 'field') = any (p_cost_keys) and not p_cost))))
                else e.value
              end), '{}'::jsonb)
         from jsonb_each(p_data) e
@@ -320,15 +390,16 @@ as $$
   end;
 $$;
 
--- Τα κλειδιά που άλλαξαν σε μια «αλλαγή» (πριν την απόκρυψη: λέει ότι άλλαξε, ποτέ τι).
-create function authz.audit_changed_keys(p_before jsonb, p_after jsonb) returns text[]
+-- Τα κλειδιά που άλλαξαν σε μια «αλλαγή», χωρίς τα κρυφά: δεν φαίνεται ούτε ότι άλλαξε ένα ποσό ή κόστος.
+create function authz.audit_changed_keys(p_before jsonb, p_after jsonb, p_hidden text[]) returns text[]
 language sql immutable set search_path = ''
 as $$
   select coalesce(array_agg(k order by k), '{}')
     from (select jsonb_object_keys(coalesce(p_before, '{}'::jsonb)) as k
           union
           select jsonb_object_keys(coalesce(p_after, '{}'::jsonb))) keys
-   where p_before -> k is distinct from p_after -> k;
+   where p_before -> k is distinct from p_after -> k
+     and not (k = any (coalesce(p_hidden, '{}')));
 $$;
 
 -- Ένα όνομα για τη γραμμή, από τα συνηθισμένα πεδία κειμένου (όνομα, τίτλος, ετικέτα, αριθμός).
@@ -353,10 +424,15 @@ as $$
            'id', a.id, 'at', a.at, 'actorId', a.actor_id,
            'actorName', coalesce(tu.name, cu.name, case when a.actor_id is null then 'Σύστημα' else 'Άγνωστος Χρήστης' end),
            'action', a.action, 'entity', a.entity, 'entityLabel', e.label, 'area', e.area, 'areaLabel', ar.label,
-           'parent', e.parent, 'entityId', a.entity_id, 'subject', authz.audit_subject(a.before, a.after),
+           'parent', e.parent, 'entityId', a.entity_id,
+           'parentId', case when e.parent is null then null when e.parent_fk is null then a.entity_id
+                            else coalesce(a.after ->> e.parent_fk, a.before ->> e.parent_fk) end,
+           'subject', authz.audit_subject(a.before, a.after),
            'before', authz.audit_mask(a.before, e.amount_keys, e.cost_keys, fl.amounts, fl.cost),
            'after', authz.audit_mask(a.after, e.amount_keys, e.cost_keys, fl.amounts, fl.cost),
-           'changed', case when a.action = 'update' then to_jsonb(authz.audit_changed_keys(a.before, a.after)) end)
+           'changed', case when a.action = 'update' then to_jsonb(authz.audit_changed_keys(a.before, a.after,
+                        (case when fl.amounts then '{}' else e.amount_keys end)
+                        || (case when fl.cost then '{}' else e.cost_keys end))) end)
     from authz.audit_trail_visible(p_filters, p_before_at, p_before_id, p_limit, p_now) with ordinality a
     join public.audit_entities e on e.entity = a.entity
     join public.audit_areas ar on ar.code = e.area
@@ -433,12 +509,13 @@ begin
 end;
 $$;
 
--- Πόσες γραμμές βλέπει ο Χρήστης με αυτά τα φίλτρα (έως 10.000, όσο και η εξαγωγή). Χωρίς Ίχνος: δεν βγαίνουν δεδομένα.
-create function authz.audit_trail_count(p_filters jsonb, p_now timestamptz) returns integer
+-- Πόσες γραμμές βλέπει ο Χρήστης με αυτά τα φίλτρα, το πολύ p_cap. Η M2 ρωτά ως 1.001 και δείχνει «1.000+»: δεν
+-- μετρά ολόκληρο το Ίχνος σε κάθε άνοιγμα. Χωρίς Ίχνος: δεν βγαίνουν δεδομένα.
+create function authz.audit_trail_count(p_filters jsonb, p_now timestamptz, p_cap integer) returns integer
 language sql stable security definer set search_path = ''
 as $$
   select count(*)::integer
-    from authz.audit_trail_visible(authz.audit_trail_filters(p_filters), null, null, 10000, p_now);
+    from authz.audit_trail_visible(authz.audit_trail_filters(p_filters), null, null, p_cap, p_now);
 $$;
 
 -- ───────────── Υ5: εξαγωγή ─────────────
@@ -496,7 +573,7 @@ begin
     ), '[]'::jsonb)
     || case when coalesce(authz.has('audit.view'), false)
          then jsonb_build_array(jsonb_build_object('code', 'audit', 'usesPeriod', false,
-                                                   'rowCount', authz.audit_trail_count('{}'::jsonb, now())))
+                                                   'rowCount', authz.audit_trail_count('{}'::jsonb, now(), 1001)))
          else '[]'::jsonb
        end
   );
@@ -525,10 +602,10 @@ revoke all on function
   authz.audit_trail_require(), authz.audit_trail_entity_visible(text, text), authz.audit_trail_filters(jsonb),
   authz.audit_period_start(text, timestamptz),
   authz.audit_trail_visible(jsonb, timestamptz, bigint, integer, timestamptz),
-  authz.audit_mask(jsonb, text[], text[], boolean, boolean), authz.audit_changed_keys(jsonb, jsonb),
+  authz.audit_mask(jsonb, text[], text[], boolean, boolean), authz.audit_changed_keys(jsonb, jsonb, text[]),
   authz.audit_subject(jsonb, jsonb), authz.audit_trail_rows(jsonb, timestamptz, bigint, integer, timestamptz),
   authz.audit_trail_list(jsonb, timestamptz, bigint, timestamptz), authz.audit_trail_options(),
-  authz.audit_trail_count(jsonb, timestamptz), authz.audit_trail_export(jsonb, text, timestamptz)
+  authz.audit_trail_count(jsonb, timestamptz, integer), authz.audit_trail_export(jsonb, text, timestamptz)
   from public, anon, authenticated;
 
 revoke all on function

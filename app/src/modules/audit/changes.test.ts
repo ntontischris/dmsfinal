@@ -18,6 +18,7 @@ const item = (overrides: Partial<AuditItem>): AuditItem => ({
   areaLabel: "Κατάλογος",
   parent: "catalogue_items",
   entityId: "00000000-0000-0000-0000-0000000000e1",
+  parentId: "00000000-0000-0000-0000-0000000000e1",
   subject: null,
   before: null,
   after: null,
@@ -104,8 +105,20 @@ describe("links and the export sheet", () => {
       "/app/catalogue/00000000-0000-0000-0000-0000000000e1",
     );
     expect(
-      pageHref(item({ entity: "bank_accounts", parent: null })),
+      pageHref(item({ entity: "bank_accounts", parent: null, parentId: null })),
     ).toBeNull();
+    expect(
+      pageHref(
+        item({
+          entity: "agreement_lines",
+          parent: "agreements",
+          parentId: "00000000-0000-0000-0000-0000000000a9",
+        }),
+      ),
+    ).toBe("/app/agreements/00000000-0000-0000-0000-0000000000a9");
+    expect(pageHref(item({ entity: "filmings", parent: "productions" }))).toBe(
+      "/app/filming/00000000-0000-0000-0000-0000000000e1",
+    );
   });
 
   it("should write one row per action with Athens time and hidden values as words", () => {

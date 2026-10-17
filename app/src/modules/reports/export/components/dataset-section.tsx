@@ -62,6 +62,11 @@ function Step({
 
 const FORMAT_ORDER: readonly ExportFormat[] = ["xlsx", "csv"];
 
+// Η βάση μετρά το Ίχνος ως 1.001 γραμμές (δεν το μετρά ολόκληρο σε κάθε άνοιγμα): πάνω από 1.000 = «1.000+».
+const ROW_COUNT_CAP = 1000;
+export const rowCountLabel = (count: number): string =>
+  count > ROW_COUNT_CAP ? `${ROW_COUNT_CAP.toLocaleString("el-GR")}+` : String(count);
+
 // M2 «Εξαγωγή συνόλου δεδομένων»: τι, Περίοδος (όπου ισχύει), μορφή, τι θα περιέχει, «Εξαγωγή». Οι επιλογές στη διεύθυνση.
 export function DatasetSection({
   overview,
@@ -144,7 +149,7 @@ export function DatasetSection({
               ))}
             </dd>
             <dt className="kit-label">{ROWS_LABEL}</dt>
-            <dd className="m-0 tabular-nums">{rowCount}</dd>
+            <dd className="m-0 tabular-nums">{rowCountLabel(rowCount)}</dd>
           </dl>
           {rowCount === 0 && (
             <p className="m-0 text-sm text-muted-foreground">
