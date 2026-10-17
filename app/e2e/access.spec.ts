@@ -54,6 +54,11 @@ test("ο Ιδιοκτήτης βλέπει την Ομάδα και φτιάχν
     .getByLabel("Όλα")
     .check();
   await page.getByRole("button", { name: "Αποθήκευση", exact: true }).click();
+  // Δύο βήματα: πρώτα ποιους επηρεάζει (κανέναν, ο Ρόλος είναι νέος), μετά η αποθήκευση.
+  await expect(page.getByRole("alertdialog")).toContainText(
+    "Κανείς δεν έχει ακόμα αυτόν τον Ρόλο.",
+  );
+  await page.getByRole("button", { name: "Επιβεβαίωση αποθήκευσης" }).click();
   await expect(page.getByRole("status")).toContainText(
     "Αποθηκεύτηκε (1 αλλαγή)",
   );

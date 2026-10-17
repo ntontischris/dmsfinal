@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { createSupabase } from "@/lib/supabase/server";
 
+import { deactivationPreviewSchema, type DeactivationPreview } from "./deactivation";
 import { isScope, type Grants } from "./permissions";
 
 // Ανάγνωση Ρόλων, Δικαιωμάτων και Χρηστών ομάδας. Ό,τι επιστρέφει το φιλτράρει ήδη η βάση (RLS).
@@ -174,5 +175,19 @@ export async function listTeamUsers(): Promise<ReadResult<TeamUserRow[]>> {
           deactivatedAt: row.deactivated_at,
           roleIds: row.team_user_roles.map((r) => r.role_id),
         })),
+  );
+}
+
+// Τι θα επιστρέψει η απενεργοποίηση ενός Χρήστη ομάδας, ή γιατί δεν γίνεται (N1). Τους κανόνες τους έχει η βάση.
+export async function getDeactivationPreview(
+  userId: string,
+): Promise<ReadResult<DeactivationPreview>> {
+  const supabase = await createSupabase();
+  if (!supabase || !z.uuid().safeParse(userId).success) return { ok: false };
+  return read(
+    "getDeactivationPreview",
+    async () =>
+      await supabase.rpc("team_deactivation_preview", { p_user_id: userId }),
+    (data) => deactivationPreviewSchema.parse(data),
   );
 }

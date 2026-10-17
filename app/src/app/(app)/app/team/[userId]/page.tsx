@@ -10,6 +10,7 @@ import {
   UserActiveForm,
   UserRolesForm,
   can,
+  getDeactivationPreview,
   getViewer,
   listPermissions,
   listRoles,
@@ -47,10 +48,11 @@ export default async function TeamUserPage({
       </>
     );
 
-  const [users, roles, permissions] = await Promise.all([
+  const [users, roles, permissions, preview] = await Promise.all([
     listTeamUsers(),
     listRoles(),
     listPermissions(),
+    getDeactivationPreview(userId),
   ]);
   if (!users.ok || !roles.ok || !permissions.ok)
     return (
@@ -90,8 +92,6 @@ export default async function TeamUserPage({
       return reason ? [[role.id, reason]] : [];
     }),
   );
-  const isSelf = viewer.status === "signed-in" && viewer.userId === user.userId;
-
   return (
     <>
       <ScreenHeader eyebrow="N1 · Ομάδα" title={user.name} />
@@ -131,17 +131,12 @@ export default async function TeamUserPage({
             />
           </Panel>
           <Panel label={user.isActive ? "Απενεργοποίηση" : "Επανενεργοποίηση"}>
-            {isSelf ? (
-              <p className="m-0 text-sm text-muted-foreground">
-                Δεν απενεργοποιείς τον εαυτό σου.
-              </p>
-            ) : (
-              <UserActiveForm
-                userId={user.userId}
-                name={user.name}
-                isActive={user.isActive}
-              />
-            )}
+            <UserActiveForm
+              userId={user.userId}
+              name={user.name}
+              isActive={user.isActive}
+              preview={preview.ok ? preview.data : null}
+            />
           </Panel>
           <Link href="/app/team" className="text-sm text-muted-foreground">
             ← Όλη η Ομάδα

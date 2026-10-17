@@ -4,7 +4,7 @@ import { Panel } from "@/components/ui/panel";
 
 import { applyCrewTemplate, setFilmingCrew } from "../actions-crew";
 import { RESPONSE_LABELS } from "../labels";
-import type { CrewMember, CrewTemplate, FilmingCard, NamedRef } from "../types";
+import type { CrewMember, CrewTemplate, CrewVacancy, FilmingCard, NamedRef } from "../types";
 
 import { ActionForm } from "./action-form";
 import { MutedNote } from "./form-fields";
@@ -30,6 +30,7 @@ export function CrewPanel({ card, candidates, templates, blockedIds }: CrewPanel
   return (
     <Panel label="Συνεργείο">
       <div className="grid gap-4">
+        <CrewVacancies vacancies={card.vacancies} />
         <CrewStatus members={card.crew} />
         {canEdit && (
           <>
@@ -47,6 +48,21 @@ export function CrewPanel({ card, candidates, templates, blockedIds }: CrewPanel
         )}
       </div>
     </Panel>
+  );
+}
+
+// Θέσεις που άδειασαν με απενεργοποίηση μέλους: φεύγουν όταν μπει νέο μέλος στο Συνεργείο.
+function CrewVacancies({ vacancies }: { vacancies: readonly CrewVacancy[] }) {
+  if (vacancies.length === 0) return null;
+  return (
+    <ul className="m-0 grid list-none gap-2 p-0 text-sm">
+      {vacancies.map((vacancy) => (
+        <li key={vacancy.userId} className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-muted-foreground">{vacancy.name} απενεργοποιήθηκε. Βρες αντικαταστάτη.</span>
+          <Badge tone="attention">άδειασε θέση</Badge>
+        </li>
+      ))}
+    </ul>
   );
 }
 

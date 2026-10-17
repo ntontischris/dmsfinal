@@ -1,7 +1,7 @@
 import type { FormState } from "@/lib/form-state";
 
 // Το μήνυμα μιας φόρμας εισόδου: λάθος σε κόκκινο, ενημέρωση ουδέτερη. Ανακοινώνεται στους αναγνώστες οθόνης.
-export function FormMessage({ state }: { state: FormState }) {
+export function FormMessage({ state }: { state: FormState<unknown> }) {
   if (state.error)
     return (
       <p role="alert" className="m-0 text-sm text-destructive">

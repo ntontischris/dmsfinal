@@ -132,6 +132,13 @@ export interface CrewMember {
   isBlocked: boolean;
 }
 
+// Θέση που άδειασε επειδή το μέλος απενεργοποιήθηκε (σήμα «άδειασε θέση», μόνο για την ομάδα).
+export interface CrewVacancy {
+  userId: string;
+  name: string;
+  vacatedAt: string;
+}
+
 export interface EquipmentLine {
   itemId: string;
   name: string;
@@ -206,6 +213,7 @@ export interface FilmingCard {
   noShowAt: string | null;
   provision: ProvisionBalance | null;
   crew: CrewMember[];
+  vacancies: CrewVacancy[];
   sheet: SheetSummary | null;
   equipment: EquipmentLine[];
   history: FilmingHistoryEntry[];
