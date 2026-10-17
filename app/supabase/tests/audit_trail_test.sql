@@ -218,7 +218,7 @@ select is(
      from jsonb_array_elements(current_setting('t.m')::jsonb -> 'items') with ordinality x (i, n)),
   '136,4,120', 'Ο Ιδιοκτήτης βλέπει ποσά και κόστος');
 select is(
-  (select string_agg((i ->> 'action') || coalesce((i -> 'changed')::text, ''), ',' order by n)
+  (select string_agg((i ->> 'action') || coalesce(i ->> 'changed', ''), ',' order by n)
      from jsonb_array_elements(authz.audit_trail_list('{"id": "t-lm"}', null, null,
                                                       timestamptz '2030-01-15 10:00+00') -> 'items') with ordinality x (i, n)),
   'update["frozen_at", "is_low_margin", "price"],event', 'Ο Ιδιοκτήτης βλέπει το «χαμηλό περιθώριο» και την αλλαγή του');
@@ -226,13 +226,13 @@ select is(
 -- Χωρίς κόστος (με ή χωρίς ποσά): ούτε η «ενέργεια» χαμηλού περιθωρίου ούτε το is_low_margin στα «changed».
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a5","role":"authenticated"}', true);
 select is(
-  (select string_agg((i ->> 'action') || coalesce((i -> 'changed')::text, ''), ',' order by n)
+  (select string_agg((i ->> 'action') || coalesce(i ->> 'changed', ''), ',' order by n)
      from jsonb_array_elements(authz.audit_trail_list('{"id": "t-lm"}', null, null,
                                                       timestamptz '2030-01-15 10:00+00') -> 'items') with ordinality x (i, n)),
   'update["frozen_at", "price"]', 'Με ποσά χωρίς κόστος: χωρίς το «χαμηλό περιθώριο» και χωρίς το is_low_margin');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a6","role":"authenticated"}', true);
 select is(
-  (select string_agg((i ->> 'action') || coalesce((i -> 'changed')::text, ''), ',' order by n)
+  (select string_agg((i ->> 'action') || coalesce(i ->> 'changed', ''), ',' order by n)
      from jsonb_array_elements(authz.audit_trail_list('{"id": "t-lm"}', null, null,
                                                       timestamptz '2030-01-15 10:00+00') -> 'items') with ordinality x (i, n)),
   'update["frozen_at"]', 'Διαχείριση χωρίς ποσά και κόστος: μόνο ότι άλλαξε κάτι άλλο');
