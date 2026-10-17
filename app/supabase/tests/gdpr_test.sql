@@ -321,7 +321,7 @@ select is(current_setting('t.anon')::jsonb ->> 'name', 'Ανωνυμοποιημ
   'Το νέο όνομα με τον αύξοντα αριθμό');
 select is((select array_agg(distinct name) from public.client_users where user_id = public.t_uid('b2')),
   array['Ανωνυμοποιημένος Χρήστης ' || current_setting('t.n')], 'Το όνομα άλλαξε σε κάθε συμμετοχή');
-select is((select email from auth.users where id = public.t_uid('b2')),
+select is((select email::text from auth.users where id = public.t_uid('b2')),
   'anonymized-' || current_setting('t.n') || '@anonymized.invalid', 'Ο λογαριασμός παίρνει email-placeholder');
 select ok((select banned_until > timestamptz '2999-01-01' and encrypted_password = '' and raw_user_meta_data = '{}'::jsonb
              from auth.users where id = public.t_uid('b2')), 'Μόνιμο ban, χωρίς κωδικό και χωρίς στοιχεία στο προφίλ εισόδου');
@@ -379,7 +379,7 @@ select is((select name || ' · ' || email || ' · ' || is_active from public.tea
   (current_setting('t.lena')::jsonb ->> 'name') || ' · anonymized-' || (current_setting('t.lena')::jsonb ->> 'n')
     || '@anonymized.invalid · false', 'Όνομα και email του Χρήστη ομάδας σβήνουν, μένει απενεργοποιημένος');
 select ok((current_setting('t.lena')::jsonb ->> 'n')::integer > current_setting('t.n')::integer, 'Ο αριθμός N αυξάνει');
-select is((select email from auth.users where id = public.t_uid('a4')),
+select is((select email::text from auth.users where id = public.t_uid('a4')),
   'anonymized-' || (current_setting('t.lena')::jsonb ->> 'n') || '@anonymized.invalid', 'Και ο λογαριασμός εισόδου');
 select throws_ok($$ update public.team_users set is_active = true where user_id = '00000000-0000-0000-0000-0000000000a4' $$,
   'P0001', 'Ο Χρήστης έχει ανωνυμοποιηθεί· δεν ενεργοποιείται ξανά', 'Δεν επανενεργοποιείται');
