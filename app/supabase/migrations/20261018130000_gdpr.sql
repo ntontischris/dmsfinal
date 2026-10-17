@@ -710,7 +710,8 @@ language sql volatile security definer set search_path = ''
 as $$ select authz.gdpr_anonymize(p_subject_kind, p_subject_id, p_typed_name); $$;
 
 -- ───────────── Το Ίχνος δείχνει τα GDPR μόνο στον Ιδιοκτήτη ─────────────
--- Ξαναγράφεται ολόκληρο από τον τελικό ορισμό (20261017160000_reports_export.sql), με τα αιτήματα και τις ενέργειες GDPR.
+-- Ξαναγράφεται ολόκληρο από τον τελικό ορισμό (20261018120000_integrations_subscriptions.sql), με τα αιτήματα και τις
+-- ενέργειες GDPR.
 
 create or replace function authz.audit_entity_allowed(p_entity text) returns boolean
 language sql stable security definer set search_path = ''
