@@ -122,3 +122,9 @@ export function changesUrl(query: ChangesQuery): string {
   if (query.pageToken) params.set("pageToken", query.pageToken);
   return `${eventsPath(query.calendarId)}?${params.toString()}`;
 }
+
+// «Έλεγχος τώρα» (N5): μία φθηνή κλήση. Με ημερολόγιο, διαβάζει τα στοιχεία του· χωρίς, αρκεί ένα token του λογαριασμού.
+export async function pingGoogleCalendar(config: GoogleConfig, calendarId: string | null): Promise<void> {
+  if (calendarId) await callGoogle(config, "GET", calendarPath(calendarId));
+  else await getAccessToken(config);
+}

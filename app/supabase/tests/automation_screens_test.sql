@@ -86,7 +86,7 @@ select throws_ok($$ select public.system_message_save('{"code":"invite","subject
 
 -- ───────────── Κατάλογος και Γεγονός ─────────────
 select public.t_as('a3');
-select is(jsonb_array_length(public.automations_catalog() -> 'events'), 59, 'Η Διαχείριση βλέπει και τα 59 Γεγονότα (58 και το 60)');
+select is(jsonb_array_length(public.automations_catalog() -> 'events'), 60, 'Η Διαχείριση βλέπει και τα 60 Γεγονότα');
 select is(jsonb_array_length(public.automations_catalog() -> 'groups'), 6, 'Έξι ομάδες');
 select is((select (e ->> 'totalCount')::integer from jsonb_array_elements(public.automations_catalog() -> 'events') e
             where e ->> 'code' = 'message.created'), 3, 'Το «Νέο Μήνυμα» έχει 3 αρχικούς Αυτοματισμούς');

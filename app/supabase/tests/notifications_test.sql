@@ -177,7 +177,7 @@ select public.t_as('f9');
 select throws_ok($$ select public.notifications_bell() $$, '42501', null, 'Χωρίς ομάδα και χωρίς Πελάτη: κανένα καμπανάκι');
 
 -- ───────────── Κατάλογος και συνέπεια Αυτοματισμών ─────────────
-select is((select count(*)::integer from public.event_types), 59, 'Ο κατάλογος έχει τα 58 Γεγονότα του prototype και το 60 της απενεργοποίησης');
+select is((select count(*)::integer from public.event_types), 60, 'Ο κατάλογος έχει τα 58 Γεγονότα του prototype, το 59 των συνδρομών και το 60 της απενεργοποίησης');
 select is((select array_agg(code order by code) from public.event_types where not is_wired and kind <> 'instant'),
   array['billable.open_waiting'], 'Από τα «με ημερομηνία» και «αναμονής» μόνο το Τιμολογητέο δεν είναι συνδεδεμένο (Kγ)');
 select is((select count(*)::integer from public.automations where is_initial and channel = 'email' and subject_el is null), 0,

@@ -71,6 +71,8 @@ jobs:
       CRON_SECRET: e2e-cron-secret
       # Τοπική τιμή για το CI, όχι μυστικό: υπογράφει το δοκιμαστικό αίτημα του Send Email Hook.
       SEND_EMAIL_HOOK_SECRET: 'v1,whsec_ZTJlLWhvb2stc2VjcmV0LW5vdC1hLWtleQ=='
+      # Ψεύτικοι πάροχοι για τη N5 (#209): οι συνδέσεις μετρούν ως στημένες και το «Έλεγχος τώρα» δεν κάνει κλήση δικτύου.
+      INTEGRATIONS_FAKE_PROVIDERS: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
