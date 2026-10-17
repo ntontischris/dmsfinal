@@ -261,7 +261,7 @@ select lives_ok($$ select public.team_user_set_roles('00000000-0000-0000-0000-00
                    array(select r.id from public.roles r where r.kind = 'team' and r.name in ('Παραγωγή', 'Πωλήσεις'))) $$,
   'Ο μόνος Ιδιοκτήτης δίνει Ρόλο');
 reset role;
-select is((select after -> 'before' || after -> 'after' from public.audit_log
+select is((select jsonb_build_array(after -> 'before', after -> 'after') from public.audit_log
             where entity = 'access' and after ->> 'event' = 'team_roles_changed' order by id desc limit 1),
   '[["Παραγωγή"], ["Παραγωγή", "Πωλήσεις"]]'::jsonb, 'Το Ίχνος κρατά πριν → μετά');
 select public.events_process();
