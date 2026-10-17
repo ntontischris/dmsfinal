@@ -2,9 +2,21 @@
 name: app
 
 on:
+  # Draft PR: μόνο οι γρήγοροι έλεγχοι (κώδικας, βάση), για γρήγορη απάντηση στις διορθώσεις.
+  # Το e2e τρέχει όταν το PR είναι έτοιμο (ready_for_review) και σε κάθε push μετά από αυτό.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
+  # Κάθε νύχτα στο main: πιάνει τεστ που χαλάνε από την ημερομηνία πριν τα συναντήσει κάποιο PR.
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+# Νέο push στο ίδιο PR ακυρώνει το παλιό τρέξιμο· στο main κάθε τρέξιμο ολοκληρώνεται.
+concurrency:
+  group: app-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -46,8 +58,14 @@ jobs:
         run: supabase db lint --level error
 
   # Από άκρη σε άκρη: τοπικό Supabase (βάση + είσοδος), φανταστικοί Χρήστες, η εφαρμογή σε production build, browser.
+  # Μοιρασμένο σε 4 μηχανήματα, το καθένα με δική του βάση και δικούς του φανταστικούς Χρήστες.
   e2e:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     env:
       # Τοπική τιμή για το CI, όχι μυστικό: το σκούντημα της ουράς email την χρειάζεται στα τεστ.
       CRON_SECRET: e2e-cron-secret
@@ -83,11 +101,11 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - name: Τεστ από άκρη σε άκρη
-        run: pnpm e2e
+        run: pnpm e2e --shard=${{ matrix.shard }}/4
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e
+          name: e2e-${{ matrix.shard }}
           path: |
             app/e2e-results
             app/e2e-report
