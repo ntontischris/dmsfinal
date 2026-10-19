@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 
 import { Notice } from "@/components/ui/notice";
-import { AuthCard, LoginForm, getViewer, safeNext } from "@/modules/access";
+import { AuthCard, DemoLogins, LoginForm, demoLabels, getViewer, safeNext } from "@/modules/access";
 
 export const metadata = { title: "Είσοδος" };
 
 const LINK_ERRORS: Record<string, string> = {
   link: "Ο σύνδεσμος έληξε ή χρησιμοποιήθηκε ήδη. Ζήτησε νέο.",
   google: "Η σύνδεση με Google δεν ολοκληρώθηκε. Δοκίμασε ξανά.",
+  demo: "Η είσοδος επίδειξης δεν είναι διαθέσιμη τώρα.",
 };
 
 interface LoginPageProps {
@@ -19,6 +20,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { next, error } = await searchParams;
   const viewer = await getViewer();
   if (viewer.status === "signed-in") redirect(safeNext(next));
+  const demos = demoLabels();
 
   return (
     <AuthCard title="Είσοδος">
@@ -33,6 +35,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               {LINK_ERRORS[error]}
             </p>
           )}
+          {demos.length > 0 && <DemoLogins labels={demos} />}
           <LoginForm next={safeNext(next)} />
         </>
       )}
