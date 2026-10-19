@@ -11,6 +11,7 @@ export {
 } from "./viewer";
 export { handleCodeLink, handleTokenLink } from "./links";
 export { safeNext } from "./schemas";
+export { demoLabels } from "./demo";
 export { lockReason } from "./permissions";
 export { grantableTeamRoles } from "./grantable-roles";
 export {
@@ -37,6 +38,7 @@ export { ClientInviteForm } from "./components/client-invite-form";
 export { ClientSwitcher } from "./components/client-switcher";
 export { ClientUsersSection } from "./components/client-users-section";
 export { DeleteRoleForm } from "./components/delete-role-form";
+export { DemoLogins } from "./components/demo-logins";
 export { InvitationList } from "./components/invitation-list";
 export { LoginForm } from "./components/login-form";
 export { NewRoleForm } from "./components/new-role-form";

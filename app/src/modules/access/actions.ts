@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createSupabase } from "@/lib/supabase/server";
 
 import { claimOnEntry } from "./claim";
+import { readDemoLogins } from "./demo";
 import { appOrigin as origin } from "@/lib/app-origin";
 import { emailSchema, loginSchema, newPasswordSchema, safeNext, type FormState } from "./schemas";
 
@@ -60,6 +61,22 @@ export async function signInWithGoogle(form: FormData): Promise<void> {
     redirect("/login?error=google");
   }
   redirect(data.url);
+}
+
+// «Δες ως…» (demo.ts): ο κωδικός και το email δεν φτάνουν ποτέ στον browser.
+export async function signInAsDemo(form: FormData): Promise<void> {
+  const login = readDemoLogins()[Number(form.get("demo"))];
+  const password = process.env.DEMO_LOGIN_PASSWORD;
+  const supabase = await createSupabase();
+  if (!login || !password || !supabase) redirect("/login?error=demo");
+
+  const { error } = await supabase.auth.signInWithPassword({ email: login.email, password });
+  if (error) {
+    console.error("signInAsDemo", error.status, error.code);
+    redirect("/login?error=demo");
+  }
+  await claimOnEntry(supabase);
+  redirect("/app");
 }
 
 export async function requestPasswordReset(_: FormState, form: FormData): Promise<FormState> {
