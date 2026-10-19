@@ -10,6 +10,11 @@ on:
         required: true
         type: choice
         options: [seed, purge, purge_attached]
+      client_emails:
+        description: 'Μόνο για seed, προαιρετικό: υπάρχοντες λογαριασμοί πελάτη (με κόμμα) που μπαίνουν στον πρώτο Πελάτη επίδειξης'
+        required: false
+        type: string
+        default: ''
 
 # Ποτέ δύο μαζί: το δεύτερο περιμένει.
 concurrency:
@@ -29,6 +34,7 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
       ACTION: ${{ inputs.action }}
+      CLIENT_EMAILS: ${{ inputs.client_emails }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -43,8 +49,17 @@ jobs:
           supabase link --project-ref "$SUPABASE_PROJECT_REF"
       - name: Γέμισμα ή σβήσιμο
         run: |
+          # Τα email περνούν μόνο αν μοιάζουν με email (χωρίς εισαγωγικά ή κενά), ώστε να μπαίνουν με ασφάλεια στο SQL.
+          set -f
+          emails=""
+          for e in $(echo "$CLIENT_EMAILS" | tr ',' ' '); do
+            if ! echo "$e" | grep -Eq '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'; then
+              echo "Μη έγκυρο email: $e"; exit 1
+            fi
+            emails="$emails${emails:+,}'$e'"
+          done
           case "$ACTION" in
-            seed) sql="select public.demo_seed() as result" ;;
+            seed) sql="select public.demo_seed(null, array[$emails]::text[]) as result" ;;
             purge) sql="select public.demo_purge(false) as result" ;;
             purge_attached) sql="select public.demo_purge(true) as result" ;;
             *) echo "Άγνωστη ενέργεια: $ACTION"; exit 1 ;;
