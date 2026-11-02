@@ -1,4 +1,4 @@
-import { Manrope } from "next/font/google";
+import { spacesSans } from "@/spaces/shell/font";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -18,12 +18,6 @@ import "@/spaces/styles/screens.css";
 import "@/spaces/styles/page.css";
 import "@/spaces/styles/app.css";
 
-// Η Manrope της ταυτότητας με ελληνικά, όπως στο root layout του prototype (η Satoshi έρχεται από το brand.css).
-const sans = Manrope({
-  subsets: ["latin", "greek"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-kit-sans",
-});
 
 interface SpacesShellProps {
   model: SpacesModel;
@@ -43,7 +37,7 @@ export function SpacesShell({
   children,
 }: SpacesShellProps) {
   return (
-    <div data-look="spaces" className={sans.variable}>
+    <div data-look="spaces" className={spacesSans.variable}>
       <a className="skip-link" href="#main" data-spaces>
         Μετάβαση στο περιεχόμενο
       </a>
@@ -69,7 +63,7 @@ export function SpacesShell({
         {children}
       </main>
       <BottomBar model={model} />
-      <div data-tw>{assistant}</div>
+      {assistant}
     </div>
   );
 }

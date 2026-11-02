@@ -8,6 +8,8 @@ export interface NavItem {
   href: string;
   // Ένα Δικαίωμα, ή περισσότερα (αρκεί ένα). «owner» = μόνο Ιδιοκτήτης.
   requires?: string | readonly string[];
+  // Μόνο στη νέα εμφάνιση (μενού προφίλ): η παλιά δεν έχει αυτή την οθόνη.
+  isSpacesOnly?: boolean;
 }
 
 export interface NavSection {
@@ -258,6 +260,25 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Προφίλ",
+    items: [
+      {
+        code: "A3",
+        isSpacesOnly: true,
+        label: "Προφίλ και προτιμήσεις",
+        href: "/app/settings/profile",
+        requires: ["team", "client"],
+      },
+      {
+        code: "A4",
+        isSpacesOnly: true,
+        label: "Εναλλαγή Πελάτη",
+        href: "/app/settings/switch-client",
+        requires: "client",
+      },
+    ],
+  },
+  {
     title: "Ο Πελάτης μου",
     items: [
       {
@@ -376,6 +397,17 @@ export const visibleNav = (
       (item) => !item.requires || requirementsOf(item.requires).some(allows),
     ),
   })).filter((section) => section.items.length > 0);
+
+// Το πλαϊνό μενού της παλιάς εμφάνισης: χωρίς τις οθόνες που υπάρχουν μόνο στη νέα.
+export const classicNav = (
+  allows: (requirement: string) => boolean,
+): NavSection[] =>
+  visibleNav(allows)
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.isSpacesOnly),
+    }))
+    .filter((section) => section.items.length > 0);
 
 // Η τρέχουσα οθόνη: η μεγαλύτερη διαδρομή που ταιριάζει (π.χ. το /app/team/roles/… ανήκει στο N4, όχι στο N1).
 export const currentHref = (

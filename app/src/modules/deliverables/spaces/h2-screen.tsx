@@ -101,8 +101,15 @@ export async function SpacesDeliverable({
     client: query.client,
     late: query.late,
   });
+  // Ο τίτλος όπως στο prototype: το Παραδοτέο ως τίτλος σελίδας (η κεφαλίδα του κελύφους γράφει μόνο τον Χώρο).
   return wrap(
     <>
+      <header className="page-head">
+        <h1>
+          {detail.data.title}
+          <span className="page-head-dot">.</span>
+        </h1>
+      </header>
       <nav aria-label="Διαδρομή" className="h2-back">
         <Link href={backHref}>‹ Παραδοτέα</Link>
       </nav>

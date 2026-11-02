@@ -1,0 +1,52 @@
+/* H3, H4 Παραδοτέα, όψη πελάτη (prototype screens/h34.css, αυτούσιο· τα σταθερά χρώματα του player έγιναν tokens) */
+[data-look='spaces'] {
+/* Όψη πελάτη Παραδοτέων (H3, H4). Μόνο τα ουδέτερα tokens του globals.css. */
+& .h34 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+& .h34 .card { min-width: 0; }
+& .h34 .input, & .h34 .select { max-width: 100%; }
+& .h34-header { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+& .h34-header h1 { margin: 0; }
+& .h34-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+& .h34-item { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+& .h34-item a { font-weight: 600; }
+& .h34-total { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
+& .h34-total strong { display: block; font-size: var(--text-lg); }
+& .h34-player { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; border: 1px dashed var(--color-border); border-radius: var(--radius-lg); padding: var(--space-4); background: var(--color-surface); min-width: 0; max-width: 100%; }
+& .h34-link { overflow-wrap: anywhere; word-break: break-all; font-size: var(--text-sm); }
+& .h34-form { display: flex; flex-direction: column; gap: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-3); margin: var(--space-2) 0; width: 100%; max-width: 32rem; min-width: 0; }
+& .h34-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+& .h34-form .input { width: 100%; }
+& .h34-warn { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-attention); border-radius: var(--radius-lg); font-size: var(--text-sm); }
+& .h34-memo { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid color-mix(in oklab, var(--color-accent) 35%, transparent); border-radius: var(--radius-lg); background: color-mix(in oklab, var(--color-accent) 7%, var(--color-surface-raised)); font-size: var(--text-sm); }
+& .h34 .h34-form label.h34-check { flex-direction: row; align-items: center; gap: var(--space-2); }
+& .h34 .h34-form label.h34-check input { width: auto; }
+/* Ο player μέσα στην εφαρμογή: 16:9, όλο το πλάτος. */
+& .h34-screen { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden; background: var(--color-bg); color: var(--color-text); }
+& .h34-screen iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+& .h34-poster { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); border: 0; cursor: pointer; font: inherit; font-weight: 600; }
+& .h34-poster:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+& .h34-play { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 50%; background: var(--color-text); color: var(--color-bg); font-size: 1.4rem; padding-left: 0.2rem; }
+/* Σταθερός χώρος για τη βοήθεια κάτω από το πεδίο: το κουμπί δεν μετακινείται όσο γράφεις. */
+& .h34-hint { min-height: 1.4em; }
+& .h34-hint[data-hidden='true'] { visibility: hidden; }
+/* Reels: κάθετος player 9:16, όσο χωράει στην οθόνη. */
+& .h34-screen[data-vertical='true'] { aspect-ratio: 9 / 16; width: min(100%, calc(70vh * 9 / 16)); align-self: center; }
+@media (max-width: 40rem) { & .h34-player { padding: var(--space-2); } }
+/* Έγκριση ή Ζητώ αλλαγές: φαίνεται καθαρά ποιο πάτησες· κανένα δεν είναι χρωματισμένο από πριν. */
+& .h34-choice[aria-pressed='true'] { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-on-accent); font-weight: 700; }
+/* Η επιβεβαίωση μετά την απάντηση, στη θέση της απόφασης. */
+& .h34-done { border-color: color-mix(in oklab, var(--color-accent) 45%, transparent); }
+& .h34-done h2 { margin-top: 0; }
+/* Ύφος ταυτότητας */
+& .h34-item a:hover { color: var(--color-accent); }
+& .h34-item a, & .h34-link { text-decoration: none; }
+& .h34-player { border-radius: var(--radius-lg); }
+/* screens2 μορφή */
+& .h34-counters { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: grid; gap: var(--space-4); }
+& .h34-counters li { display: grid; gap: var(--space-2); }
+& .h34-counters .h34-total { margin-bottom: 0; }
+/* Ο χρόνος του σχολίου μπροστά στη γραμμή (prototype screens/e5.css). */
+& .sx-dots { letter-spacing: 0.12em; font-weight: 700; color: var(--color-accent); white-space: nowrap; }
+/* Το λάθος της βάσης κάτω από τη φόρμα (στο prototype δεν υπάρχει βάση). */
+& .h34-error { color: var(--color-attention); font-size: var(--text-sm); }
+}

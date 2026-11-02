@@ -1,20 +1,17 @@
 import Link from "next/link";
 
-import { NewDeliverableForm } from "@/modules/deliverables";
 import { Badge } from "@/spaces/screens/shared";
 
-import { createDeliverableFromRequest } from "../actions-requests";
 import type { CandidatesByProduction } from "../components/request-slot";
 import {
   CREATE_DELIVERABLE_NEEDS_TAG,
   CREATE_DELIVERABLE_NO_ACCESS,
-  CREATE_DELIVERABLE_SUBMIT,
   CHANGE_DECIDED,
   CHANGE_NOTE,
 } from "../request-labels";
 import type { Thread } from "../view-schema";
 import type { J2Change, J2Message, J2Request } from "./j2-adapter";
-import { RequestActions } from "./j2-request-actions";
+import { RequestActions, type DeliverableSource } from "./j2-request-actions";
 
 function ClosingInfo({ request }: { request: J2Request }) {
   if (request.isOpen) return null;
@@ -40,33 +37,21 @@ function ClosingInfo({ request }: { request: J2Request }) {
   );
 }
 
-function DeliverableForm({
-  thread,
-  message,
-  candidates,
-}: {
-  thread: Thread;
-  message: J2Message;
-  candidates: CandidatesByProduction;
-}) {
+// Τα υποψήφια της Παραγωγής για τη φόρμα νέου Παραδοτέου, ή γιατί δεν γίνεται.
+function deliverableSourceOf(
+  thread: Thread,
+  message: J2Message,
+  candidates: CandidatesByProduction,
+): DeliverableSource {
   if (message.productionId === null)
-    return <p className="muted">{CREATE_DELIVERABLE_NEEDS_TAG}</p>;
+    return { note: CREATE_DELIVERABLE_NEEDS_TAG };
   const found = candidates.get(message.productionId) ?? null;
-  if (found === null)
-    return <p className="muted">{CREATE_DELIVERABLE_NO_ACCESS}</p>;
-  return (
-    <NewDeliverableForm
-      productionId={message.productionId}
-      defaultTitle={`${thread.client.name} — ${message.tagTitle ?? ""}`}
-      isInternal={false}
-      candidates={found}
-      fromRequest={{
-        messageId: message.id,
-        action: createDeliverableFromRequest,
-        submitLabel: CREATE_DELIVERABLE_SUBMIT,
-      }}
-    />
-  );
+  if (found === null) return { note: CREATE_DELIVERABLE_NO_ACCESS };
+  return {
+    productionId: message.productionId,
+    defaultTitle: `${thread.client.name} — ${message.tagTitle ?? ""}`,
+    candidates: found,
+  };
 }
 
 // Το Αίτημα ενός Μηνύματος του prototype (`screens/j2-request.tsx`): είδος, κατάσταση, υπεύθυνος, μέρες, κλείσιμο και
@@ -103,13 +88,7 @@ export function RequestBox({
           clientId={thread.client.id}
           request={request}
           assignable={thread.assignable ?? []}
-          deliverableForm={
-            <DeliverableForm
-              thread={thread}
-              message={message}
-              candidates={candidates}
-            />
-          }
+          deliverable={deliverableSourceOf(thread, message, candidates)}
         />
       )}
     </div>

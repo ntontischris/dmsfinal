@@ -106,3 +106,10 @@ export { SpacesNewInvoice } from "./spaces/i3-screen";
 // Χώροι: I4, I5
 export { SpacesReceipts } from "./spaces/i4-screen";
 export { SpacesLedger } from "./spaces/i5-screen";
+// Χώροι: I2, I5 του Χρήστη πελάτη.
+export { SpacesClientInvoices } from "./spaces/i2-client-screen";
+export { SpacesClientLedger } from "./spaces/i5-client-screen";
+// Τρόποι είσπραξης: για τη φόρμα της νέας εμφάνισης (O6).
+export { saveMethod, retireMethod, restoreMethod } from "./actions-methods";
+// Ctrl+K: αναζήτηση εγγραφών.
+export { searchInvoices } from "./invoices-search";

@@ -1,24 +1,27 @@
-import { getViewer } from "@/modules/access";
+import { can, getViewer } from "@/modules/access";
 import {
-  ProvisionKindsEditor,
+  SpacesProvisionKinds,
   getKindUsage,
   listProvisionKinds,
 } from "@/modules/catalogue";
 import {
-  RecentChanges,
+  SpacesRecentChanges,
   SpacesSettingsTabs,
+  o1ChangesOf,
   recentChanges,
 } from "@/modules/settings";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
-import { PolicyCard } from "../components/policy-card";
-import { PricingCard } from "../components/pricing-card";
-import { RevisionLimitsCard } from "../components/revision-limits-card";
-import { TermsCard } from "../components/terms-card";
 import { agreementCaps } from "../helpers";
 import { listProvisionKinds as listKindsWithLimits } from "../queries-agreements";
 import { getDefaults } from "../queries-settings";
 import type { AgreementKind } from "../types";
+import { PolicyCard, PricingCard, TermsCard } from "./o3-cards";
+import { RevisionLimitsCard } from "./o3-limits";
+
+import "./o3.css";
+
+const AUDIT_HREF = "/app/audit?area=settings";
 
 const FIELD_LABELS: Readonly<Record<string, string>> = {
   label: "Ετικέτα",
@@ -48,12 +51,17 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   proposal_validity_days: "Ισχύς πρότασης",
 };
 
+const ENTITY_LABELS: Readonly<Record<string, string>> = {
+  provision_kinds: "Είδη Παροχής",
+  agreement_defaults: "Προεπιλογές Συμφωνιών",
+};
+
 const EMAIL_PENDING =
   "Η αποστολή email δεν έχει συνδεθεί ακόμα: οι Σύνδεσμοι και οι κωδικοί υπογραφής παραδίδονται από τη Σελίδα Συμφωνίας.";
 const EMAIL_ACTIVE = "Η αποστολή email είναι ενεργή.";
 
-// O3 Ρυθμίσεις › Συμφωνίες στη νέα εμφάνιση: οι καρτέλες Ρυθμίσεων του prototype (`screens/O3.tsx`)· οι κάρτες
-// (Όροι, πολιτική, τιμολόγηση, είδη Παροχής, όρια αλλαγών, τελευταίες αλλαγές) είναι οι σημερινές, ως [data-tw].
+// O3 Ρυθμίσεις › Συμφωνίες στη νέα εμφάνιση (prototype `screens/O3.tsx`): Όροι σε δύο σετ, Πολιτική Γυρισμάτων,
+// Προεπιλογές τιμολόγησης, Είδη Παροχής (κάρτα του Καταλόγου), Όριο αλλαγών και τελευταίες αλλαγές, με τα πραγματικά actions.
 export async function SpacesAgreementsSettings({
   showRetired,
   set,
@@ -75,7 +83,7 @@ export async function SpacesAgreementsSettings({
     listProvisionKinds(),
     listKindsWithLimits(),
     getKindUsage(),
-    recentChanges(["provision_kinds", "agreement_defaults"]),
+    recentChanges(Object.keys(ENTITY_LABELS)),
   ]);
   return (
     <div data-spaces>
@@ -87,25 +95,25 @@ export async function SpacesAgreementsSettings({
           <p className="note">
             {defaults.data.emailSenderConnected ? EMAIL_ACTIVE : EMAIL_PENDING}
           </p>
-          <div data-tw>
-            <div className="grid gap-4">
-              <TermsCard defaults={defaults.data} set={set} />
-              <PolicyCard defaults={defaults.data} />
-              <PricingCard defaults={defaults.data} />
-              <ProvisionKindsEditor
-                kinds={kinds.data}
-                usage={usage.data}
-                showRetired={showRetired}
-              />
-              <RevisionLimitsCard kinds={kindsWithLimits.data} />
-              {changes.ok && (
-                <RecentChanges
-                  changes={changes.data}
-                  labelOf={(field) => FIELD_LABELS[field] ?? field}
-                />
-              )}
-            </div>
-          </div>
+          <TermsCard defaults={defaults.data} set={set} />
+          <PolicyCard defaults={defaults.data} />
+          <PricingCard defaults={defaults.data} />
+          <SpacesProvisionKinds
+            kinds={kinds.data}
+            usage={usage.data}
+            showRetired={showRetired}
+          />
+          <RevisionLimitsCard kinds={kindsWithLimits.data} />
+          {changes.ok && (
+            <SpacesRecentChanges
+              changes={o1ChangesOf(changes.data, {
+                entities: ENTITY_LABELS,
+                fields: FIELD_LABELS,
+              })}
+              auditHref={can(viewer, "audit.view") ? AUDIT_HREF : null}
+              areaLabel="Ρυθμίσεις"
+            />
+          )}
         </>
       )}
     </div>

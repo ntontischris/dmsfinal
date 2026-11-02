@@ -25,7 +25,8 @@ export {
 export { NotificationBell } from "./components/notification-bell";
 export { NotificationsScreen } from "./components/notifications-screen";
 export { LanguageForm } from "./components/language-form";
-export { UnsubscribeForm } from "./components/unsubscribe-form";
+export { SpacesUnsubscribeForm } from "./spaces/r-unsubscribe-form";
+export { SpacesLanguageChoice } from "./spaces/a3-language";
 // Ιστορικό αποστολών (K3) και καρτέλα «Αποστολές» του Πελάτη (#174).
 export {
   canSeeClientSends,
@@ -46,6 +47,7 @@ export {
 export { getSends } from "./queries-sends";
 export { SendsScreen } from "./components/sends-screen";
 export { ClientSends } from "./components/client-sends";
+export { SpacesClientSends } from "./spaces/b2-sends";
 
 // K1 Αυτοματισμοί, K2 Μηνύματα συστήματος, A2 Προτιμήσεις (#173).
 export type {
@@ -55,10 +57,7 @@ export type {
   Pref,
   SystemMessage,
 } from "./automation-view-schema";
-export {
-  EVENT_CODE_PATTERN,
-  parseCatalogFilter,
-} from "./automation-helpers";
+export { EVENT_CODE_PATTERN, parseCatalogFilter } from "./automation-helpers";
 export {
   K1_EYEBROW,
   K1_NOTE,
@@ -96,10 +95,7 @@ export { NotificationsTabs, PrefsTab } from "./components/prefs-tab";
 // Νέα εμφάνιση (Χώροι): K1, K2, K3 όπως στο prototype.
 export { SpacesAutomations } from "./spaces/k1-screen";
 export { SpacesAutomationEvent } from "./spaces/k1-event";
-export {
-  SpacesSystemMessage,
-  SpacesSystemMessages,
-} from "./spaces/k2-screen";
+export { SpacesSystemMessage, SpacesSystemMessages } from "./spaces/k2-screen";
 export { SpacesSends } from "./spaces/k3-screen";
 // Νέα εμφάνιση (Χώροι): A2 Ειδοποιήσεις όπως στο prototype.
 export { SpacesNotifications } from "./spaces/a2-screen";

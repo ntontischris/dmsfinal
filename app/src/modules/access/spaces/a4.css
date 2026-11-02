@@ -1,0 +1,5 @@
+/* A4 Εναλλαγή Πελάτη (τα .a4-* του prototype `screens/a3.css`, αυτούσια) */
+[data-look='spaces'] {
+& .a4-foot { padding: var(--space-3) 1.25rem 0; }
+& .a4-rule { font-weight: 400; }
+}

@@ -1,0 +1,10 @@
+/* O3: σύντομοι πίνακες Όρων και ειδών Παροχής (prototype `screens/o3.css`, αυτούσιο). */
+[data-look='spaces'] {
+& .o3-switch { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); flex-wrap: wrap; }
+& .o3-table input.input { width: 100%; max-width: 14rem; box-sizing: border-box; }
+& .o3-table td { vertical-align: top; }
+/* Ύφος ταυτότητας */
+& .o3-switch a { padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong); font-weight: 600; text-decoration: none; color: var(--color-text); }
+& .o3-switch a:hover { background: color-mix(in oklab, var(--color-text) 8%, transparent); }
+& .o3-switch a[aria-current='true'] { background: var(--color-text); color: var(--color-bg); border-color: transparent; }
+}

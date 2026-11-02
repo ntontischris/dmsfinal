@@ -7,7 +7,7 @@ import {
   readAuditQuery,
   rpcFilters,
 } from "@/modules/audit";
-import { AuditExportButtons } from "@/modules/reports";
+import { AuditExportButtons, SpacesAuditExport } from "@/modules/reports";
 
 export const metadata = { title: AUDIT_TITLE };
 
@@ -21,17 +21,21 @@ interface AuditPageProps {
 export default async function AuditPage({ searchParams }: AuditPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
   const query = readAuditQuery(params);
-  const exportAction = can(viewer, "reports.export") ? (
-    <AuditExportButtons filters={rpcFilters(query.filters)} />
-  ) : undefined;
+  const canExport = can(viewer, "reports.export");
+  const filters = rpcFilters(query.filters);
   if ((await lookOf(viewer)) === "spaces")
     return (
       <SpacesAudit
         canView={can(viewer, "audit.view")}
         query={query}
-        exportAction={exportAction}
+        exportAction={
+          canExport ? <SpacesAuditExport filters={filters} /> : undefined
+        }
       />
     );
+  const exportAction = canExport ? (
+    <AuditExportButtons filters={filters} />
+  ) : undefined;
   return (
     <AuditScreen viewer={viewer} query={query} exportAction={exportAction} />
   );

@@ -1,8 +1,10 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, can, getViewer } from "@/modules/access";
 import {
   DeliverableRulesForm,
+  SpacesDeliverableSettings,
   getDeliverableRules,
 } from "@/modules/deliverables";
 import { SettingsTabs } from "@/modules/settings";
@@ -10,8 +12,10 @@ import { SettingsTabs } from "@/modules/settings";
 export const metadata = { title: "Ρυθμίσεις · Παραδοτέα" };
 
 // Ρυθμίσεις › Παραδοτέα: οι Κανόνες Παραδοτέων. Τη σελίδα τη βλέπει μόνο όποιος «Διαχειρίζεται Ρυθμίσεις».
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype (O5)· αλλιώς η σημερινή.
 export default async function DeliverableSettingsPage() {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") return <SpacesDeliverableSettings />;
   const header = <ScreenHeader eyebrow="Ρυθμίσεις" title="Ρυθμίσεις" />;
   if (!can(viewer, "settings.manage"))
     return (

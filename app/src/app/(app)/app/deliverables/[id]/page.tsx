@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getViewer, isClientViewer } from "@/modules/access";
 import {
   DeliverableDetailView,
+  SpacesClientDeliverable,
   SpacesDeliverable,
   deliverablesCaps,
   getDeliverable,
@@ -21,7 +22,7 @@ export const metadata = { title: "Παραδοτέο" };
 const EYEBROW = "H2 · Παραδοτέο";
 
 // H2: ένα Παραδοτέο. Ό,τι δεν επιτρέπεται στον θεατή δεν εμφανίζεται· η βάση ξαναελέγχει κάθε ενέργεια.
-// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη μένει πάντα στη σημερινή (H4).
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη βλέπει την H4 (και αυτή στις δύο εμφανίσεις).
 export default async function DeliverablePage({
   params,
   searchParams,
@@ -33,6 +34,14 @@ export default async function DeliverablePage({
   const { id } = await params;
   const parsed = z.uuid().safeParse(id);
   if (isClientViewer(viewer)) {
+    if ((await lookOf(viewer)) === "spaces")
+      return (
+        <SpacesClientDeliverable
+          viewer={viewer}
+          id={parsed.success ? parsed.data : null}
+          query={await searchParams}
+        />
+      );
     return parsed.success ? <ClientDetailScreen viewer={viewer} id={parsed.data} /> : <Missing />;
   }
   if ((await lookOf(viewer)) === "spaces")

@@ -2,7 +2,10 @@ import { z } from "zod";
 
 import { createSupabase } from "@/lib/supabase/server";
 
-import { deactivationPreviewSchema, type DeactivationPreview } from "./deactivation";
+import {
+  deactivationPreviewSchema,
+  type DeactivationPreview,
+} from "./deactivation";
 import { isScope, type Grants } from "./permissions";
 
 // Ανάγνωση Ρόλων, Δικαιωμάτων και Χρηστών ομάδας. Ό,τι επιστρέφει το φιλτράρει ήδη η βάση (RLS).
@@ -189,5 +192,34 @@ export async function getDeactivationPreview(
     async () =>
       await supabase.rpc("team_deactivation_preview", { p_user_id: userId }),
     (data) => deactivationPreviewSchema.parse(data),
+  );
+}
+
+const myRolesSchema = z
+  .object({
+    team_user_roles: z.array(
+      z.object({ roles: z.object({ name: z.string() }).nullable() }),
+    ),
+  })
+  .nullable();
+
+// «Οι Ρόλοι μου» (A3): τα ονόματα των Ρόλων ομάδας του ίδιου του συνδεδεμένου (η RLS δείχνει τη δική του γραμμή).
+export async function listMyRoleNames(
+  userId: string,
+): Promise<ReadResult<string[]>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "listMyRoleNames",
+    async () =>
+      await supabase
+        .from("team_users")
+        .select("team_user_roles(roles(name))")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    (data) =>
+      (myRolesSchema.parse(data)?.team_user_roles ?? []).flatMap((row) =>
+        row.roles ? [row.roles.name] : [],
+      ),
   );
 }

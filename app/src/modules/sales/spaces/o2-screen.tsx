@@ -1,19 +1,25 @@
-import { getViewer } from "@/modules/access";
+import { can, getViewer } from "@/modules/access";
 import {
-  RecentChanges,
+  SpacesRecentChanges,
   SpacesSettingsTabs,
+  o1ChangesOf,
   recentChanges,
 } from "@/modules/settings";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
-import { ListEditor } from "../components/list-editor";
-import { SalesRoutingCard } from "../components/sales-routing-card";
-import { StagesEditor } from "../components/stages-editor";
 import { salesCaps } from "../helpers";
 import { LIST_LABELS } from "../labels";
 import { listSalesLists } from "../queries-lists";
 import { listAssignableUsers } from "../queries-queue";
 import { getSalesSettings, listListUsage } from "../queries-settings";
+import type { ListName, ListUsage, SalesLists } from "../types";
+import { toggleRetiredHref } from "./o2-adapter";
+import { O2List } from "./o2-list";
+import { O2Routing } from "./o2-routing";
+
+import "./o2.css";
+
+const AUDIT_HREF = "/app/audit?area=settings";
 
 const FIELD_LABELS: Readonly<Record<string, string>> = {
   label: "Ετικέτα",
@@ -23,16 +29,61 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   form_assignee_id: "Συγκεκριμένο πρόσωπο",
 };
 
-const AUDITED = [
-  "sales_stages",
-  "sales_sources",
-  "sales_loss_reasons",
-  "sales_activity_kinds",
-  "sales_settings",
+const ENTITY_LABELS: Readonly<Record<string, string>> = {
+  sales_stages: "Στάδια",
+  sales_sources: "Πηγές",
+  sales_loss_reasons: "Λόγοι απώλειας",
+  sales_activity_kinds: "Είδη Δραστηριότητας",
+  sales_settings: "Νέες Ευκαιρίες από τη φόρμα",
+};
+
+const LISTS: readonly { list: ListName; key: keyof SalesLists }[] = [
+  { list: "sources", key: "sources" },
+  { list: "loss_reasons", key: "lossReasons" },
+  { list: "activity_kinds", key: "activityKinds" },
 ];
 
-// O2 Ρυθμίσεις › Πωλήσεις στη νέα εμφάνιση: οι καρτέλες Ρυθμίσεων του prototype (`screens/O2.tsx`)· οι κάρτες
-// (δρομολόγηση, Στάδια, λίστες, τελευταίες αλλαγές) είναι οι σημερινές, ως [data-tw], με τις πραγματικές ενέργειές τους.
+function Lists({
+  lists,
+  usage,
+  showRetired,
+}: {
+  lists: SalesLists;
+  usage: ListUsage;
+  showRetired: boolean;
+}) {
+  const common = {
+    usage,
+    showRetired,
+    toggleRetiredHref: toggleRetiredHref(showRetired),
+  };
+  return (
+    <>
+      <O2List
+        list="stages"
+        title={LIST_LABELS.stages}
+        items={lists.stages}
+        {...common}
+      />
+      <p className="muted o-hint">
+        Κερδισμένη και Χαμένη δεν είναι Στάδια: είναι σταθερή Έκβαση της
+        Ευκαιρίας.
+      </p>
+      {LISTS.map(({ list, key }) => (
+        <O2List
+          key={list}
+          list={list}
+          title={LIST_LABELS[list]}
+          items={lists[key]}
+          {...common}
+        />
+      ))}
+    </>
+  );
+}
+
+// O2 Ρυθμίσεις › Πωλήσεις στη νέα εμφάνιση (prototype `screens/O2.tsx`): δρομολόγηση των νέων Ευκαιριών, Στάδια,
+// Πηγές, Λόγοι απώλειας, Είδη Δραστηριότητας και τελευταίες αλλαγές, με τις πραγματικές ενέργειες.
 export async function SpacesSalesSettings({
   showRetired,
 }: {
@@ -52,7 +103,7 @@ export async function SpacesSalesSettings({
     getSalesSettings(),
     listListUsage(),
     listAssignableUsers(),
-    recentChanges(AUDITED),
+    recentChanges(Object.keys(ENTITY_LABELS)),
   ]);
   return (
     <div data-spaces>
@@ -60,46 +111,24 @@ export async function SpacesSalesSettings({
       {!lists.ok || !settings.ok || !usage.ok || !assignable.ok ? (
         <ErrorNotice what="τις Ρυθμίσεις των Πωλήσεων" />
       ) : (
-        <div data-tw>
-          <div className="grid gap-4">
-            <SalesRoutingCard
-              settings={settings.data}
-              assignable={assignable.data}
+        <>
+          <O2Routing settings={settings.data} assignable={assignable.data} />
+          <Lists
+            lists={lists.data}
+            usage={usage.data}
+            showRetired={showRetired}
+          />
+          {changes.ok && (
+            <SpacesRecentChanges
+              changes={o1ChangesOf(changes.data, {
+                entities: ENTITY_LABELS,
+                fields: FIELD_LABELS,
+              })}
+              auditHref={can(viewer, "audit.view") ? AUDIT_HREF : null}
+              areaLabel="Ρυθμίσεις"
             />
-            <StagesEditor
-              items={lists.data.stages}
-              usage={usage.data}
-              showRetired={showRetired}
-            />
-            <ListEditor
-              list="sources"
-              title={LIST_LABELS.sources}
-              items={lists.data.sources}
-              usage={usage.data}
-              showRetired={showRetired}
-            />
-            <ListEditor
-              list="loss_reasons"
-              title={LIST_LABELS.loss_reasons}
-              items={lists.data.lossReasons}
-              usage={usage.data}
-              showRetired={showRetired}
-            />
-            <ListEditor
-              list="activity_kinds"
-              title={LIST_LABELS.activity_kinds}
-              items={lists.data.activityKinds}
-              usage={usage.data}
-              showRetired={showRetired}
-            />
-            {changes.ok && (
-              <RecentChanges
-                changes={changes.data}
-                labelOf={(field) => FIELD_LABELS[field] ?? field}
-              />
-            )}
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );

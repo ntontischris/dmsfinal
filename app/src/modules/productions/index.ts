@@ -36,3 +36,5 @@ export { StatePanel } from "./components/state-panel";
 export { TasksPanel } from "./components/tasks-panel";
 export { SpacesProductions } from "./spaces/g1-screen";
 export { SpacesProduction } from "./spaces/g2-screen";
+// Ctrl+K: αναζήτηση εγγραφών.
+export { searchProductions } from "./queries-search";

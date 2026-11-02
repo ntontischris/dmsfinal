@@ -56,7 +56,13 @@ const endOf = (filming: ProductionFilming): string =>
     ).toISOString(),
   );
 
-function FilmingLine({ filming }: { filming: ProductionFilming }) {
+function FilmingLine({
+  filming,
+  isClient,
+}: {
+  filming: ProductionFilming;
+  isClient: boolean;
+}) {
   const day = athensDate(filming.startsAt);
   const word = filmingWord(filming);
   return (
@@ -64,9 +70,10 @@ function FilmingLine({ filming }: { filming: ProductionFilming }) {
       lead={<DateLead weekday={weekdayOf(day)} day={dayOf(day)} />}
       title={`${fmtDate(day)} · ${athensTime(filming.startsAt)}–${endOf(filming)}`}
       href={hrefOf("E3", { id: filming.id })}
-      sub={[filming.kind, filming.isExtra && "έξτρα"]
-        .filter(Boolean)
-        .join(" · ")}
+      sub={
+        !isClient &&
+        [filming.kind, filming.isExtra && "έξτρα"].filter(Boolean).join(" · ")
+      }
       aside={
         <Badge tone={word === "έγινε" ? "strong" : undefined}>{word}</Badge>
       }
@@ -75,10 +82,13 @@ function FilmingLine({ filming }: { filming: ProductionFilming }) {
 }
 
 // Τα Γυρίσματα της Παραγωγής, όσα βλέπει ο Χρήστης. Το Συνεργείο κάθε Γυρίσματος δεν έρχεται εδώ.
+// Ο πελάτης βλέπει μόνο πότε και την κατάσταση (όπως η παλιά G2 πελάτη).
 export function G2Filmings({
   filmings,
+  isClient = false,
 }: {
   filmings: readonly ProductionFilming[];
+  isClient?: boolean;
 }) {
   return (
     <Panel label="Γυρίσματα" aside={filmings.length} isFlush>
@@ -87,7 +97,11 @@ export function G2Filmings({
       )}
       <RowList>
         {filmings.map((filming) => (
-          <FilmingLine key={filming.id} filming={filming} />
+          <FilmingLine
+            key={filming.id}
+            filming={filming}
+            isClient={isClient}
+          />
         ))}
       </RowList>
     </Panel>

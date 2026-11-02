@@ -134,7 +134,6 @@ export function H2Header(props: PanelProps) {
   const { detail, ctx } = props;
   return (
     <header className="h2-header">
-      <h1>{detail.title}</h1>
       <Panel label={detail.kind} aside={<Signals detail={detail} />}>
         <dl className="dl">
           <dt>Πελάτης — Παραγωγή</dt>

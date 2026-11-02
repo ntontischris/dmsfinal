@@ -7,19 +7,28 @@ import { Badge, fmtMoney } from "@/spaces/screens/shared";
 import type { LedgerView } from "../ledger-view-schema";
 import { CopyButton } from "./i5-pay";
 
-// Οι κάρτες της Καρτέλας του prototype (`screens/i5-cards.tsx`). Η νέα εμφάνιση είναι μόνο για την ομάδα· ο Χρήστης πελάτη
-// μένει στην παλιά, οπότε το «Πώς πληρώνω» με τα ανοιχτά Τιμολόγια του πελάτη δεν μεταφέρθηκε εδώ.
+// Οι κάρτες της Καρτέλας του prototype (`screens/i5-cards.tsx`), για την ομάδα και για τον Χρήστη πελάτη (isClient).
+// Η λίστα ανοιχτών Τιμολογίων μέσα στο «Πώς πληρώνω» δεν μεταφέρθηκε: η Καρτέλα της βάσης δεν δίνει υπόλοιπο ανά Τιμολόγιο.
 
-const balanceLabel = (inFavour: boolean): string =>
-  inFavour
+const balanceLabel = (inFavour: boolean, isClient: boolean): string => {
+  if (isClient)
+    return inFavour
+      ? "Υπόλοιπο υπέρ σου (με ΦΠΑ)"
+      : "Χρωστάς από Τιμολόγια (με ΦΠΑ)";
+  return inFavour
     ? "Υπόλοιπο υπέρ του πελάτη (με ΦΠΑ)"
     : "Χρωστά από Τιμολόγια (με ΦΠΑ)";
+};
 
-export function BalanceCards(props: { balance: number; overdue: number }) {
+export function BalanceCards(props: {
+  balance: number;
+  overdue: number;
+  isClient?: boolean;
+}) {
   const inFavour = props.balance < 0;
   return (
     <div className="i245-totals">
-      <Panel label={balanceLabel(inFavour)}>
+      <Panel label={balanceLabel(inFavour, props.isClient ?? false)}>
         <div className="i245-big i245-bignum">
           {fmtMoney(Math.abs(props.balance))}
         </div>
@@ -40,15 +49,21 @@ export function BalanceCards(props: { balance: number; overdue: number }) {
   );
 }
 
-// Οι εσωτερικοί ρόλοι βλέπουν τι δείχνεται στον πελάτη: τα στοιχεία πληρωμής από τις Ρυθμίσεις.
+// Ο πελάτης τις διαβάζει ως «Πώς πληρώνω»· οι εσωτερικοί ρόλοι βλέπουν τι δείχνεται στον πελάτη (στοιχεία από τις Ρυθμίσεις).
 export function PaymentCard({
   payment,
+  isClient = false,
 }: {
   payment: NonNullable<LedgerView["payment"]>;
+  isClient?: boolean;
 }) {
   return (
     <div id="pay">
-      <Panel label="Οδηγίες πληρωμής που βλέπει ο πελάτης">
+      <Panel
+        label={
+          isClient ? "Πώς πληρώνω" : "Οδηγίες πληρωμής που βλέπει ο πελάτης"
+        }
+      >
         <dl className="dl">
           <dt>Δικαιούχος</dt>
           <dd>{payment.holder}</dd>
@@ -60,7 +75,11 @@ export function PaymentCard({
             <CopyButton value={payment.iban} what="το IBAN" />
           </dd>
           <dt>Αιτιολογία</dt>
-          <dd>ο αριθμός του Τιμολογίου που πληρώνει ο πελάτης</dd>
+          <dd>
+            {isClient
+              ? "ο αριθμός του Τιμολογίου που πληρώνεις"
+              : "ο αριθμός του Τιμολογίου που πληρώνει ο πελάτης"}
+          </dd>
         </dl>
       </Panel>
     </div>

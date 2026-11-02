@@ -1,6 +1,6 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 
+import { Pending, SettingsCard } from "@/modules/settings";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Panel } from "@/spaces/kit/panel";
 import { hrefOf } from "@/spaces/data/screens";
@@ -13,56 +13,8 @@ import {
 
 import type { ChangeRow, HourCostGlance, MethodItem } from "./o6-adapter";
 
-// Τα κοινά της σελίδας Ρυθμίσεων από το prototype (`screens/o-shared.tsx`) που χρειάζεται η O6, και τα μπλοκ της
-// `o6-cost.tsx` που έχουν πραγματική πηγή.
-
-// Οι καρτέλες του prototype (O1–O6 + O7) με τις πραγματικές διαδρομές των Ρυθμίσεων.
-const SETTINGS_TABS: readonly { id: string; label: string; href: string }[] = [
-  { id: "O1", label: "Εταιρεία", href: "/app/settings/company" },
-  { id: "O2", label: "Πωλήσεις", href: "/app/settings/sales" },
-  { id: "O3", label: "Συμφωνίες", href: "/app/settings/agreements" },
-  { id: "O4", label: "Γυρίσματα", href: "/app/settings/filming" },
-  { id: "O5", label: "Παραδοτέα", href: "/app/settings/deliverables" },
-  { id: "O6", label: "Οικονομικά", href: "/app/settings/finance" },
-];
-
-export function SettingsTabs({ code }: { code: string }) {
-  return (
-    <nav className="tabs" aria-label="Ενότητες Ρυθμίσεων">
-      {SETTINGS_TABS.map((tab) => (
-        <Link
-          key={tab.id}
-          className="tab"
-          href={tab.href}
-          aria-current={tab.id === code ? "page" : undefined}
-        >
-          {tab.label}
-        </Link>
-      ))}
-      <Link className="tab" href={hrefOf("O7")}>
-        Έλεγχος ετοιμότητας
-      </Link>
-    </nav>
-  );
-}
-
-export function SettingsCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="o-card">
-      <Panel label={title}>{children}</Panel>
-    </div>
-  );
-}
-
-export function Pending() {
-  return <Badge tone="attention">εκκρεμεί</Badge>;
-}
+// Τα μπλοκ της O6 (prototype `screens/o6-cost.tsx`, `o-shared.tsx`) που δεν είναι φόρμες. Καρτέλες, κάρτα και
+// «εκκρεμεί» είναι τα κοινά των Ρυθμίσεων (`@/modules/settings`).
 
 export function NoCostPermission() {
   return (

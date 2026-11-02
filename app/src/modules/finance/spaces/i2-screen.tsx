@@ -105,7 +105,7 @@ async function Totals({ totals, receipts, today, viewer }: TotalsProps) {
   );
 }
 
-function FilterTabs({
+export function FilterTabs({
   query,
   all,
 }: {
@@ -156,7 +156,7 @@ function ClientFilter({
 }
 
 // Φίλτρο μήνα έκδοσης: μόνο οι μήνες που έχουν Τιμολόγια.
-function MonthFilter({
+export function MonthFilter({
   query,
   months,
 }: {

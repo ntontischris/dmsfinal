@@ -3,10 +3,10 @@ import { z } from "zod";
 
 import { getViewer, type Viewer } from "@/modules/access";
 import { agreementCaps } from "@/modules/agreements";
-import { AuditHistoryLink } from "@/modules/audit";
+import { SpacesHistoryLink } from "@/modules/audit";
 import { costsCaps } from "@/modules/costs";
 import {
-  NewDeliverableForm,
+  SpacesNewDeliverable,
   deliverablesCaps,
   getDeliverableCandidates,
 } from "@/modules/deliverables";
@@ -25,6 +25,7 @@ import {
 } from "../queries";
 import type { ProductionDetail } from "../types";
 import { STATE_WORDS } from "./g1-rows";
+import { G2ClientPage } from "./g2-client";
 import { G2State } from "./g2-live";
 import { G2Members } from "./g2-members";
 import {
@@ -97,13 +98,11 @@ function Header({
             Κόστος και ώρες
           </Link>
         )}
-        <span data-tw>
-          <AuditHistoryLink
-            viewer={viewer}
-            entity="productions"
-            id={production.id}
-          />
-        </span>
+        <SpacesHistoryLink
+          viewer={viewer}
+          entity="productions"
+          id={production.id}
+        />
       </span>
     </header>
   );
@@ -137,8 +136,8 @@ const messagesHrefOf = (
     ? threadHref(production.client.id, { production: production.id })
     : null;
 
-// G2 Παραγωγή στη νέα εμφάνιση (prototype `screens/G2.tsx`), όψη ομάδας. Ό,τι δεν επιτρέπεται δεν εμφανίζεται·
-// η βάση ξαναελέγχει κάθε ενέργεια (viewerCan).
+// G2 Παραγωγή στη νέα εμφάνιση (prototype `screens/G2.tsx`). Ο Χρήστης πελάτη παίρνει την όψη πελάτη (g2-client)·
+// για την ομάδα, ό,τι δεν επιτρέπεται δεν εμφανίζεται και η βάση ξαναελέγχει κάθε ενέργεια (viewerCan).
 export async function SpacesProduction({ id }: { id: string }) {
   const viewer = await getViewer();
   if (!productionsCaps(viewer).canView)
@@ -160,6 +159,12 @@ export async function SpacesProduction({ id }: { id: string }) {
     );
   if (read.data === null) return <Missing />;
   const production = read.data;
+  if (productionsCaps(viewer).isClient)
+    return (
+      <div data-spaces>
+        <G2ClientPage production={production} viewer={viewer} />
+      </div>
+    );
   const candidates = await loadCandidates(production, viewer);
   if (candidates.failed)
     return (
@@ -214,7 +219,7 @@ function G2Page({
         production={production}
         newForm={
           candidates.deliverables && (
-            <NewDeliverableForm
+            <SpacesNewDeliverable
               productionId={production.id}
               defaultTitle={
                 production.client

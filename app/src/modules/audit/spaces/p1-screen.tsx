@@ -25,7 +25,7 @@ import "./p1.css";
 interface SpacesAuditProps {
   canView: boolean;
   query: AuditQuery;
-  // Η «Εξαγωγή» σε Excel/CSV με τα ίδια φίλτρα (από τις Αναφορές, μόνο για όποιον «Εξάγει δεδομένα»).
+  // Η «Εξαγωγή» σε Excel/CSV με τα ίδια φίλτρα (SpacesAuditExport των Αναφορών, μόνο για όποιον «Εξάγει δεδομένα»).
   exportAction?: ReactNode;
 }
 
@@ -104,7 +104,7 @@ export async function SpacesAudit({
         options={options.data}
         subject={page.data.subject}
       />
-      {exportAction && <div data-tw>{exportAction}</div>}
+      {exportAction}
       <Results page={page.data} query={query} />
     </div>
   );

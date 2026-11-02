@@ -1,0 +1,35 @@
+/* R9, R10, R13 (prototype `screens/r-auth.css` αυτούσιο, και από το `screens/w.css` η μπάρα και τα κουμπιά της Ιστοσελίδας) */
+[data-look='spaces'] {
+& .site-head { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+& .site-brand { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 600; letter-spacing: 0.04em; text-decoration: none; }
+& .site-lamp { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--color-attention); box-shadow: 0 0 8px var(--color-attention); }
+& .site-body { padding: var(--space-6) var(--space-4); }
+& .site-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; color: var(--color-on-accent); background: var(--color-accent); border: 1px solid var(--color-accent); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-4); white-space: nowrap; }
+& .site-button:hover { filter: brightness(1.08); }
+& .site-button[data-quiet='true'] { color: var(--color-text); background: transparent; border-color: var(--color-border-strong); }
+& .site-button[data-quiet='true']:hover { border-color: var(--color-accent); filter: none; }
+& .site-button[disabled] { opacity: 0.7; cursor: progress; }
+@media (prefers-reduced-motion: no-preference) {
+  & .site-button { transition: color 120ms ease, border-color 120ms ease, filter 120ms ease; }
+}
+
+& .r-auth { display: grid; justify-items: center; padding: var(--space-4) 0; }
+& .r-card { width: 100%; max-width: 26rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-4); display: grid; gap: var(--space-3); }
+& .r-card h1 { margin: 0; font-size: var(--text-xl, 1.5rem); }
+& .r-card p { margin: 0; }
+& .r-card .r-muted { color: var(--color-text-muted); font-size: var(--text-sm); }
+& .r-card .r-form { display: grid; gap: var(--space-3); }
+& .r-card .r-form label { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+& .r-card .r-form .input { width: 100%; padding: var(--space-2) var(--space-3); box-sizing: border-box; }
+& .r-card .r-form .input[disabled] { opacity: 0.7; }
+& .r-card .site-button { text-align: center; }
+& .r-msg { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); font-size: var(--text-sm); }
+& .r-msg[data-kind='error'] { border-color: var(--color-accent); }
+& .r-row { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; font-size: var(--text-sm); }
+& .r-or { text-align: center; color: var(--color-text-muted); font-size: var(--text-sm); }
+& .r-who { border-left: 3px solid var(--color-accent); padding-left: var(--space-3); }
+& .r-reason { font-weight: 600; }
+& .r-help { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+& .r-demos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+& .r-demos .site-button { width: 100%; white-space: normal; }
+}

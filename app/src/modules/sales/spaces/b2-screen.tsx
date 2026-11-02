@@ -2,7 +2,7 @@ import Link from "next/link";
 import { z } from "zod";
 
 import {
-  ClientUsersSection,
+  SpacesClientUsers,
   can,
   getViewer,
   isOwner,
@@ -13,12 +13,12 @@ import {
   listAgreements,
   type AgreementRow,
 } from "@/modules/agreements";
-import { AuditHistoryLink } from "@/modules/audit";
+import { SpacesHistoryLink } from "@/modules/audit";
 import { financeCaps, getLedger } from "@/modules/finance";
-import { GdprClientPanel } from "@/modules/gdpr";
+import { SpacesGdprClientSection } from "@/modules/gdpr";
 import { messagesCaps } from "@/modules/messages";
 import {
-  ClientSends,
+  SpacesClientSends,
   canSeeClientSends,
   sendsCaps,
 } from "@/modules/notifications";
@@ -64,7 +64,6 @@ import {
   AgreementsSection,
   ChatSection,
   DetailsSection,
-  EmbeddedSection,
   LedgerSection,
   OpportunitiesSection,
 } from "./b2-sections";
@@ -233,9 +232,7 @@ function TabContent({
 }: TabInput) {
   if (tab === "users")
     return (
-      <EmbeddedSection>
-        <ClientUsersSection clientId={client.id} viewer={viewer} />
-      </EmbeddedSection>
+      <SpacesClientUsers clientId={client.id} clientName={client.name} viewer={viewer} />
     );
   if (tab === "agreements")
     return <AgreementsSection agreements={data.agreements ?? []} />;
@@ -258,12 +255,10 @@ function TabContent({
   if (tab === "chat") return <ChatSection clientId={client.id} />;
   if (tab === "dispatches")
     return (
-      <EmbeddedSection label="Τι στάλθηκε στον Πελάτη">
-        <ClientSends
-          clientId={client.id}
-          hasHistoryLink={sendsCaps(viewer).canView}
-        />
-      </EmbeddedSection>
+      <SpacesClientSends
+        clientId={client.id}
+        hasHistoryLink={sendsCaps(viewer).canView}
+      />
     );
   if (tab === "ledger" && data.ledger)
     return (
@@ -306,9 +301,7 @@ function TabContent({
       }
       extra={
         isOwner(viewer) ? (
-          <EmbeddedSection>
-            <GdprClientPanel clientId={client.id} />
-          </EmbeddedSection>
+          <SpacesGdprClientSection clientId={client.id} />
         ) : undefined
       }
     />
@@ -372,13 +365,11 @@ async function ClientView({
             data.agreements ? activeAgreementText(data.agreements) : null
           }
           extra={
-            <span data-tw>
-              <AuditHistoryLink
-                viewer={viewer}
-                entity="clients"
-                id={client.id}
-              />
-            </span>
+            <SpacesHistoryLink
+              viewer={viewer}
+              entity="clients"
+              id={client.id}
+            />
           }
         />
         <div className="b2-main">

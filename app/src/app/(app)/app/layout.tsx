@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import type { Look } from "@/components/shell/look";
 import { LookToggle } from "@/components/shell/look-toggle";
-import { visibleNav } from "@/components/shell/nav";
+import { classicNav } from "@/components/shell/nav";
 import { canChooseLook, readLook } from "@/components/shell/read-look";
 import { SidebarNav } from "@/components/shell/sidebar-nav";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
@@ -17,7 +17,7 @@ import {
   type MembershipRow,
   type Viewer,
 } from "@/modules/access";
-import { AssistantLauncher } from "@/modules/assistant";
+import { AssistantLauncher, SpacesAssistant } from "@/modules/assistant";
 import { NotificationBell, getBell } from "@/modules/notifications";
 import { newEntryFor } from "@/spaces/data/new-actions";
 import { searchItemsFor } from "@/spaces/data/search";
@@ -72,7 +72,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     viewer.status === "unconfigured" ? true : allowsRequirement(viewer, requirement);
   const isLookChoosable = canChooseLook(viewer);
   const look: Look = isLookChoosable ? await readLook() : "classic";
-  const assistant = assistantAudience && <AssistantLauncher audience={assistantAudience} />;
   if (look === "spaces") {
     const model = spacesModel(allows);
     const tools = {
@@ -87,12 +86,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       canSignOut: viewer.status === "signed-in",
     };
     return (
-      <SpacesShell model={model} tools={tools} notice={noticeText(viewer, clientRows)} assistant={assistant}>
+      <SpacesShell model={model} tools={tools} notice={noticeText(viewer, clientRows)} assistant={assistantAudience && <SpacesAssistant audience={assistantAudience} />}>
         {children}
       </SpacesShell>
     );
   }
-  const sections = visibleNav(allows);
+  const sections = classicNav(allows);
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b bg-card px-4 py-2">
@@ -126,7 +125,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </aside>
         <main className="w-full min-w-0 max-w-6xl p-4 pb-16 md:p-6 md:pb-16">{children}</main>
       </div>
-      {assistant}
+      {assistantAudience && <AssistantLauncher audience={assistantAudience} />}
     </div>
   );
 }

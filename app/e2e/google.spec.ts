@@ -38,20 +38,28 @@ test("Ρυθμίσεις › Ενσωματώσεις δείχνει ότι λε
   await shot(page, "google-integrations");
 });
 
+// Η φόρμα ενεργοποιεί το κουμπί μόνο μετά από αλλαγή· μια επιλογή πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγίνεται.
+async function chooseAndSave(page: Page, value: string) {
+  const save = page.getByRole("button", { name: "Αποθήκευση Κανόνων Google" });
+  await expect(async () => {
+    await newEventSelect(page).selectOption(value);
+    await expect(save).toBeEnabled({ timeout: 1_000 });
+  }).toPass();
+  await save.click();
+}
+
 test("οι Κανόνες Google αποθηκεύονται από τα Γυρίσματα", async ({ page }) => {
   await signIn(page, OWNER);
   await page.goto("/app/settings/filming");
   await expect(newEventSelect(page)).toBeVisible();
-  await newEventSelect(page).selectOption("none");
-  await page.getByRole("button", { name: "Αποθήκευση Κανόνων Google" }).click();
+  await chooseAndSave(page, "none");
   await expect(
     page.getByText("Οι Κανόνες Google αποθηκεύτηκαν."),
   ).toBeVisible();
 
   await page.reload();
   await expect(newEventSelect(page)).toHaveValue("none");
-  await newEventSelect(page).selectOption("blocked");
-  await page.getByRole("button", { name: "Αποθήκευση Κανόνων Google" }).click();
+  await chooseAndSave(page, "blocked");
   await expect(
     page.getByText("Οι Κανόνες Google αποθηκεύτηκαν."),
   ).toBeVisible();

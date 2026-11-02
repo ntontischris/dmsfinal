@@ -40,4 +40,7 @@
 
 /* Αναθεωρήσεις: ο αριθμός έκδοσης μπροστά στη γραμμή */
 & .d2-version { display: inline-grid; place-items: center; min-width: 2.6rem; padding: 0.25rem 0.5rem; border-radius: 10px; font-weight: 800; font-variant-numeric: tabular-nums; background: color-mix(in oklab, var(--color-text) 8%, transparent); }
+
+/* Εφαρμογή: το μήνυμα του πελάτη κρατά τις αλλαγές γραμμής του */
+& .d2-message { white-space: pre-wrap; }
 }

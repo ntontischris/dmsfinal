@@ -1,0 +1,44 @@
+[data-look='spaces'] {
+/* Μηνύματα πελάτη (J3). */
+& .j3-thread { display: grid; gap: var(--space-3); min-width: 0; }
+& .j3-req {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  font-size: var(--text-sm);
+}
+& .j3-req-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .j3-composer { display: grid; gap: var(--space-3); min-width: 0; }
+& .j3-composer textarea { width: 100%; min-height: 5rem; box-sizing: border-box; }
+& .j3-composer select { max-width: 100%; }
+& .j3-field { display: grid; gap: var(--space-1); min-width: 0; }
+& .j3-check { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .j3-files { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+& .j3-toggle { display: flex; flex-wrap: wrap; gap: var(--space-2); font-size: var(--text-sm); }
+& .j3-toggle a[aria-current='true'] { font-weight: 700; text-decoration: none; }
+& .j3-grid { display: grid; gap: var(--space-4); min-width: 0; }
+& .j3-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: var(--space-2); }
+& .j3-modes .button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; min-height: 3.5rem; }
+& .j3-modes .button small { font-weight: 400; color: var(--color-text-muted); font-size: 0.78rem; }
+& .j3-modes .button[aria-pressed='true'] { border-color: var(--color-accent); background: var(--color-surface-raised); font-weight: 700; }
+& .j3-attach { position: relative; justify-self: start; cursor: pointer; }
+& .j3-attach input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+& .j3-attach:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+/* Επιλεγμένη κατάσταση με χρώμα και σημάδι, όχι μόνο περίγραμμα. */
+& .j3-modes .button[aria-pressed='true'] { background: var(--color-accent); color: var(--color-on-accent); }
+& .j3-modes .button[aria-pressed='true'] small { color: var(--color-on-accent); }
+& .j3-to { margin: 0; }
+& .j3-kinds { display: grid; gap: var(--space-2); border: 0; padding: 0; margin: 0; min-width: 0; }
+& .j3-kinds legend { padding: 0; margin-bottom: var(--space-1); }
+& .j3-kind { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 0 var(--space-3); border: 1px solid var(--color-border-strong); border-radius: var(--radius); cursor: pointer; }
+& .j3-kind:has(input:checked) { border-color: var(--color-accent); background: var(--color-surface-raised); font-weight: 700; }
+/* Ύφος ταυτότητας */
+& .j3-req, & .j3-kind { border-radius: var(--radius-lg); }
+& .j3-toggle a { text-decoration: none; font-weight: 600; padding: 0.2rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border); }
+& .j3-toggle a:hover { color: var(--color-accent); }
+& .j3-toggle a[aria-current='true'] { border-color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 16%, transparent); }
+& .j3-req-text { display: block; margin: 0.15rem 0; font-size: var(--text-sm); color: var(--color-text); overflow-wrap: anywhere; }
+}

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { AuthCard, SetPasswordForm, getViewer } from "@/modules/access";
+import { AuthPage, SpacesSetPasswordForm, getViewer } from "@/modules/access";
 
 export const metadata = { title: "Νέος κωδικός" };
 
@@ -9,9 +9,9 @@ export default async function SetPasswordPage() {
   const viewer = await getViewer();
   if (viewer.status !== "signed-in") redirect("/login?error=link");
   return (
-    <AuthCard title="Όρισε κωδικό">
-      <p className="m-0 text-sm text-muted-foreground">Για τον λογαριασμό {viewer.email}.</p>
-      <SetPasswordForm />
-    </AuthCard>
+    <AuthPage title="Νέος κωδικός">
+      <p className="r-muted">Για τον λογαριασμό {viewer.email}.</p>
+      <SpacesSetPasswordForm />
+    </AuthPage>
   );
 }

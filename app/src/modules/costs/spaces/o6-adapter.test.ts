@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { changeRowsOf, hourCostOf, methodItemsOf } from "./o6-adapter";
+import type { CostMonth } from "@/modules/catalogue";
+
+import {
+  changeRowsOf,
+  hourCostOf,
+  methodItemsOf,
+  monthRowsOf,
+  multiplierRowsOf,
+} from "./o6-adapter";
 
 const hint = {
   hourCostMonth: "2026-11-01",
@@ -63,5 +71,56 @@ describe("hourCostOf", () => {
       monthLabel: null,
       hourCost: null,
     });
+  });
+});
+
+const costMonth = (month: string, overrides: Partial<CostMonth> = {}): CostMonth => ({
+  month,
+  expensesTotal: 8000,
+  productiveHours: 200,
+  hourCost: 40,
+  isClosed: false,
+  updatedAt: "2026-11-02T08:30:00Z",
+  updatedByName: "Γιώργος",
+  ...overrides,
+});
+
+const fmt = {
+  money: (value: number) => `${value}€`,
+  hours: (value: number) => String(value),
+};
+
+describe("monthRowsOf", () => {
+  it("should mark past, current and future months", () => {
+    const rows = monthRowsOf(
+      [costMonth("2026-10-01"), costMonth("2026-11-01"), costMonth("2026-12-01")],
+      "2026-11-01",
+      fmt,
+    );
+    expect(rows.map((row) => row.status)).toEqual(["closed", "current", "future"]);
+  });
+
+  it("should show hours, hour cost and who saved the month", () => {
+    const [row] = monthRowsOf([costMonth("2026-11-01")], "2026-11-01", fmt);
+    expect(row?.sub).toBe("200 ώρες · Κόστος ώρας 40€ · Γιώργος, 02/11/2026, 10:30");
+  });
+
+  it("should leave out the author when it is unknown", () => {
+    const [row] = monthRowsOf(
+      [costMonth("2026-11-01", { updatedByName: null })],
+      "2026-11-01",
+      fmt,
+    );
+    expect(row?.sub).toBe("200 ώρες · Κόστος ώρας 40€");
+  });
+});
+
+describe("multiplierRowsOf", () => {
+  it("should give the margin of each multiplier", () => {
+    const rows = multiplierRowsOf({ min: 1.25, target: 2, max: 4 });
+    expect(rows.map((row) => row.label)).toEqual(["Ελάχιστη", "Στόχος", "Μέγιστη"]);
+    expect(rows[0]?.margin).toBeCloseTo(0.2);
+    expect(rows[1]?.margin).toBeCloseTo(0.5);
+    expect(rows[2]?.margin).toBeCloseTo(0.75);
   });
 });

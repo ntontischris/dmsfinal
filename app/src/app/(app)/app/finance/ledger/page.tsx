@@ -16,6 +16,7 @@ import {
   LedgerBackLink,
   LedgerBody,
   LedgerClients,
+  SpacesClientLedger,
   SpacesLedger,
   clientParam,
   financeViewOf,
@@ -76,12 +77,16 @@ async function LedgerScreen({
 
 // I5: η Καρτέλα Πελάτη. Η ομάδα (Οικονομικά + ποσά) διαλέγει Πελάτη (?client=)· ο Χρήστης πελάτη με «Βλέπει Οικονομικά» βλέπει τη δική του.
 // Η βάση αποφασίζει ποιος βλέπει τι· το «Προς τιμολόγηση» δεν φτάνει ποτέ στον πελάτη.
-// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype, μόνο για την ομάδα· ο Χρήστης πελάτη μένει στη σημερινή.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype, για την ομάδα και για τον Χρήστη πελάτη (τη δική του Καρτέλα).
 export default async function LedgerPage({ searchParams }: LedgerPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
   const view = financeViewOf(viewer);
-  if (view !== "client" && (await lookOf(viewer)) === "spaces")
-    return <SpacesLedger clientId={clientParam(params.client)} />;
+  if ((await lookOf(viewer)) === "spaces")
+    return view === "client" ? (
+      <SpacesClientLedger />
+    ) : (
+      <SpacesLedger clientId={clientParam(params.client)} />
+    );
   if (view === "none") {
     return (
       <>
