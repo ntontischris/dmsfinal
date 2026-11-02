@@ -1,0 +1,15 @@
+/* P1 Ίχνος ενεργειών (prototype `screens/p1.css`, αυτούσιο) */
+[data-look='spaces'] {
+& .p1-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--space-3); align-items: end; margin-top: var(--space-3); }
+& .p1-form label { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+& .p1-form .input, & .p1-form .select { width: 100%; box-sizing: border-box; }
+& .p1-chips { margin: var(--space-3) 0; align-items: center; }
+& .p1-hidden { color: var(--color-text-muted); font-style: italic; }
+& .p1-ba { overflow-wrap: anywhere; }
+/* Ύφος ταυτότητας */
+& .p1-form label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); }
+& .p1-form label .input, & .p1-form label .select { text-transform: none; letter-spacing: normal; font-size: var(--text-sm); font-weight: 400; color: var(--color-text); }
+& .p1-hidden { font-style: normal; }
+& .p1-when { font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted); font-variant-numeric: tabular-nums; max-width: 7rem; display: block; }
+& .p1-ba { font-size: var(--text-sm); }
+}

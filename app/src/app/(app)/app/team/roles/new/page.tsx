@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import {
@@ -8,6 +9,7 @@ import {
   getViewer,
   isOwner,
   listRoles,
+  SpacesNewRole,
   type RoleKind,
 } from "@/modules/access";
 
@@ -17,11 +19,19 @@ export const metadata = { title: "Νέος Ρόλος" };
 export default async function NewRolePage({
   searchParams,
 }: {
-  searchParams: Promise<{ kind?: string }>;
+  searchParams: Promise<{ kind?: string; from?: string }>;
 }) {
-  const { kind: raw } = await searchParams;
+  const { kind: raw, from } = await searchParams;
   const kind: RoleKind = raw === "client" ? "client" : "team";
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesNewRole
+        kind={typeof raw === "string" ? raw : undefined}
+        from={typeof from === "string" ? from : undefined}
+      />
+    );
   const title = kind === "team" ? "Νέος Ρόλος ομάδας" : "Νέος Ρόλος πελάτη";
   if (!isOwner(viewer))
     return (

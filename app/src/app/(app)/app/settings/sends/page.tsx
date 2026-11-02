@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -8,6 +9,7 @@ import {
   SENDS_NO_ACCESS,
   SENDS_TITLE,
   SendsScreen,
+  SpacesSends,
   getSends,
   parseSendsChannel,
   parseSendsClient,
@@ -32,6 +34,7 @@ interface SendsPageProps {
 // K3 Ιστορικό αποστολών (#174): για όποιον «Διαχειρίζεται Αυτοματισμούς» ή «Βλέπει Υγεία συστήματος». Η βάση το ξανακρίνει.
 export default async function SendsPage({ searchParams }: SendsPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  if ((await lookOf(viewer)) === "spaces") return <SpacesSends params={params} />;
   const caps = sendsCaps(viewer);
   const header = <ScreenHeader eyebrow={SENDS_EYEBROW} title={SENDS_TITLE} />;
   if (!caps.canView)

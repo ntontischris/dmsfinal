@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { Panel } from "@/components/ui/panel";
@@ -13,6 +14,7 @@ import {
 } from "@/modules/access";
 import {
   ConnectionsGrid,
+  SpacesIntegrations,
   SubscriptionsSection,
   getConnectionStatuses,
   getSubscriptions,
@@ -30,6 +32,9 @@ export default async function IntegrationsPage({
   searchParams,
 }: IntegrationsPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesIntegrations open={params.sub ?? null} />;
   const header = (
     <ScreenHeader eyebrow="N5 · Ρυθμίσεις" title="Ενσωματώσεις και συνδρομές" />
   );

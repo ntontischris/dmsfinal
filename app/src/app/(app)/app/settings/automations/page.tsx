@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, can, getViewer } from "@/modules/access";
@@ -10,6 +11,7 @@ import {
   LOAD_FAILED_TITLE,
   NO_MANAGE_TEXT,
   SETTINGS_TITLE,
+  SpacesAutomations,
   getCatalog,
   parseCatalogFilter,
 } from "@/modules/notifications";
@@ -26,6 +28,8 @@ export default async function AutomationsPage({
   searchParams,
 }: AutomationsPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesAutomations group={params.group} only={params.only} />;
   const header = <ScreenHeader eyebrow={K1_EYEBROW} title={SETTINGS_TITLE} />;
   if (!can(viewer, "automations.manage"))
     return (

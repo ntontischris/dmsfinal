@@ -1,0 +1,20 @@
+/* P2 Υγεία συστήματος (prototype `screens/p2.css`, αυτούσιο· το `:root X` έγινε `:root & X`) */
+[data-look='spaces'] {
+& .p2-banner { border-left: 4px solid var(--color-accent); }
+& .p2-banner[data-red='true'] { border-left-color: var(--color-attention); }
+& .p2-card { min-width: 0; }
+& .p2-card[data-red='true'] { border-left: 4px solid var(--color-attention); }
+& .p2-list { list-style: none; padding: 0; margin: var(--space-2) 0; display: grid; gap: var(--space-3); }
+& .p2-list li { border-top: 1px solid var(--color-border); padding-top: var(--space-2); }
+& .p2-bar { height: 0.5rem; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; background: var(--color-surface); }
+& .p2-bar > span { display: block; height: 100%; background: var(--color-accent); }
+/* Ύφος ταυτότητας: κάρτες χωρίς χοντρή πλευρική γραμμή, REC τελεία για το κόκκινο */
+:root & .p2-banner, :root & .p2-card[data-red='true'], :root & .p2-banner[data-red='true'] { border-left: 1px solid var(--color-border); }
+& .p2-banner[data-red='true'], & .p2-card[data-red='true'] { background: color-mix(in oklab, var(--brand-rec) 8%, var(--color-surface)); }
+& .p2-banner[data-red='true'] > :first-child::before, & .p2-card[data-red='true'] > :first-child::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.5rem; vertical-align: middle; border-radius: 50%; background: var(--brand-rec); }
+& .p2-list li { border-top-color: color-mix(in oklab, var(--color-text) 7%, transparent); }
+& .p2-card a:not(.button) { font-weight: 600; text-decoration: none; }
+& .p2-card a:not(.button):hover { color: var(--color-accent); }
+& .p2-card .part-rows { margin: 0 -1.25rem 0.5rem; }
+& .p2-card .part-meter { margin: 0.25rem 0 0.75rem; }
+}

@@ -1,0 +1,14 @@
+/* O7 Έλεγχος ετοιμότητας (prototype `screens/o7.css`, αυτούσιο· το `:root X` έγινε `:root & X`) */
+[data-look='spaces'] {
+& .o7-group { margin-top: var(--space-4); }
+& .o7-switch { font-size: var(--text-sm); margin: var(--space-2) 0; }
+& .o7-queue { margin: var(--space-2) 0; }
+& .o7-choice { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
+& .o7-warn { border-left-color: var(--color-attention); }
+:root & .o7-warn { border-left: 1px solid var(--color-border); background: color-mix(in oklab, var(--brand-rec) 8%, var(--color-surface)); }
+& .o7-warn > :first-child::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.5rem; vertical-align: middle; border-radius: 50%; background: var(--brand-rec); }
+& .o7-pad { margin: 0; padding: 0 1.25rem 0.75rem; }
+& .o7-warn .kit-panel { border-color: var(--brand-rec, var(--color-attention)); }
+& .o7-warn .part-rows { margin: 0 -1.25rem; }
+& .o7-warn .part-row { padding-left: 1.25rem; }
+}

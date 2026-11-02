@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Badge } from "@/components/ui/badge";
 import { Notice } from "@/components/ui/notice";
@@ -13,19 +14,32 @@ import {
   isOwner,
   listPermissions,
   listTeamUsers,
+  SpacesRole,
 } from "@/modules/access";
 import { AuditHistoryLink } from "@/modules/audit";
 
 export const metadata = { title: "Ρόλος" };
 
 // N4 Ρόλος: όνομα, Δικαιώματα με Εύρος, ποιοι τον έχουν, διαγραφή όταν δεν τον έχει κανείς.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function RolePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ roleId: string }>;
+  searchParams: Promise<{ confirm?: string }>;
 }) {
   const { roleId } = await params;
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") {
+    const { confirm } = await searchParams;
+    return (
+      <SpacesRole
+        roleId={roleId}
+        confirm={typeof confirm === "string" ? confirm : undefined}
+      />
+    );
+  }
   if (!isOwner(viewer))
     return (
       <>

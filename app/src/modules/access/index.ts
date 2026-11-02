@@ -53,3 +53,5 @@ export { TeamTable } from "./components/team-table";
 export { TestEmailForm } from "./components/test-email-form";
 export { UserActiveForm } from "./components/user-active-form";
 export { UserRolesForm } from "./components/user-roles-form";
+export { SpacesTeam, SpacesTeamUser } from "./spaces/n1-screen";
+export { SpacesNewRole, SpacesRole, SpacesRoles } from "./spaces/n4-screen";
