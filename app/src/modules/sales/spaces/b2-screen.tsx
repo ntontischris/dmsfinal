@@ -2,7 +2,7 @@ import Link from "next/link";
 import { z } from "zod";
 
 import {
-  ClientUsersSection,
+  SpacesClientUsers,
   can,
   getViewer,
   isOwner,
@@ -233,9 +233,7 @@ function TabContent({
 }: TabInput) {
   if (tab === "users")
     return (
-      <EmbeddedSection>
-        <ClientUsersSection clientId={client.id} viewer={viewer} />
-      </EmbeddedSection>
+      <SpacesClientUsers clientId={client.id} clientName={client.name} viewer={viewer} />
     );
   if (tab === "agreements")
     return <AgreementsSection agreements={data.agreements ?? []} />;

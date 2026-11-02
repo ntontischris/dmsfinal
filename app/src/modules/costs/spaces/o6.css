@@ -1,13 +1,8 @@
-/* O6 Ρυθμίσεις Οικονομικών: τα κοινά της σελίδας Ρυθμίσεων (prototype `screens/o.css`) που χρησιμοποιεί η O6,
-   αυτούσια μέσα στη νέα εμφάνιση. Οι κανόνες της `o6.css` (σύνολο εξόδων, πεδίο ωρών) λείπουν μαζί με τα μπλοκ τους. */
+/* O6 «Ρυθμίσεις: Οικονομικά» (prototype screens/o6.css, αυτούσιο). Τα κοινά των Ρυθμίσεων (o.css) έρχονται με το
+   `@/modules/settings`. */
 [data-look='spaces'] {
-& .o-card { margin-bottom: var(--space-4); min-width: 0; }
-& .o-card > h2 { margin-top: 0; }
-& .o-hint { font-size: var(--text-sm); }
-& .o-recent { margin-top: var(--space-6); }
-& .o-card a:not(.button) { font-weight: 600; text-decoration: none; }
-& .o-card a:not(.button):hover { color: var(--color-accent); }
-& .o-recent-empty { padding: 0 1.25rem 1rem; margin: 0; }
-& .kit-panel-head .kit-label a { text-transform: none; letter-spacing: 0; }
-/* Γραμμές λίστας μέσα σε Panel ρυθμίσεων: φτάνουν ως τις άκρες */
-& .o-card .part-rows { margin: 0 -1.25rem 0.5rem; } }
+& .o6-total td, & .o6-total th { font-weight: 600; }
+& .o6-hours { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: end; }
+/* Ύφος ταυτότητας */
+& .o6-total td, & .o6-total th { border-top: 1px solid var(--color-border-strong); }
+}

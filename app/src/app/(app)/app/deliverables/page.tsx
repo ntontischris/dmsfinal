@@ -5,6 +5,7 @@ import {
   ChargeDecisionsPanel,
   QueueTable,
   QueueTabs,
+  SpacesClientDeliverables,
   SpacesDeliverables,
   deliverablesCaps,
   listDeliverableQueue,
@@ -23,14 +24,17 @@ const EYEBROW = "H1 · Παραδοτέα";
 const DEFAULT_FILTER = { view: "mine" } as const;
 
 // H1: η ουρά των Παραδοτέων. Η καρτέλα είναι στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
-// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη μένει πάντα στη σημερινή (H3).
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη βλέπει την H3 (και αυτή στις δύο εμφανίσεις).
 export default async function DeliverablesPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
-  if (isClientViewer(viewer)) return <ClientQueueScreen viewer={viewer} />;
+  if (isClientViewer(viewer)) {
+    if ((await lookOf(viewer)) === "spaces") return <SpacesClientDeliverables viewer={viewer} />;
+    return <ClientQueueScreen viewer={viewer} />;
+  }
   if ((await lookOf(viewer)) === "spaces")
     return <SpacesDeliverables query={await searchParams} />;
   const caps = deliverablesCaps(viewer);

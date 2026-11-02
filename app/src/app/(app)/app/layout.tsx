@@ -17,7 +17,7 @@ import {
   type MembershipRow,
   type Viewer,
 } from "@/modules/access";
-import { AssistantLauncher } from "@/modules/assistant";
+import { AssistantLauncher, SpacesAssistant } from "@/modules/assistant";
 import { NotificationBell, getBell } from "@/modules/notifications";
 import { newEntryFor } from "@/spaces/data/new-actions";
 import { searchItemsFor } from "@/spaces/data/search";
@@ -72,7 +72,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     viewer.status === "unconfigured" ? true : allowsRequirement(viewer, requirement);
   const isLookChoosable = canChooseLook(viewer);
   const look: Look = isLookChoosable ? await readLook() : "classic";
-  const assistant = assistantAudience && <AssistantLauncher audience={assistantAudience} />;
   if (look === "spaces") {
     const model = spacesModel(allows);
     const tools = {
@@ -87,7 +86,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       canSignOut: viewer.status === "signed-in",
     };
     return (
-      <SpacesShell model={model} tools={tools} notice={noticeText(viewer, clientRows)} assistant={assistant}>
+      <SpacesShell model={model} tools={tools} notice={noticeText(viewer, clientRows)} assistant={assistantAudience && <SpacesAssistant audience={assistantAudience} />}>
         {children}
       </SpacesShell>
     );
@@ -126,7 +125,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </aside>
         <main className="w-full min-w-0 max-w-6xl p-4 pb-16 md:p-6 md:pb-16">{children}</main>
       </div>
-      {assistant}
+      {assistantAudience && <AssistantLauncher audience={assistantAudience} />}
     </div>
   );
 }

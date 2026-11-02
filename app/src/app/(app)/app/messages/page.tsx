@@ -15,6 +15,7 @@ import {
   parseClientTab,
   parseRequestView,
   parseTab,
+  SpacesClientMessages,
   SpacesInbox,
 } from "@/modules/messages";
 
@@ -26,19 +27,21 @@ interface MessagesPageProps {
 
 // J1 για την ομάδα (Εισερχόμενα: «Συνομιλίες» και «Με ανέφεραν»), J3 για τον Χρήστη πελάτη με «Βλέπει Συνομιλία»,
 // αλλιώς ενημέρωση (και για τον Λογιστή). Η βάση αποφασίζει ποιος βλέπει τι.
-// Στη νέα εμφάνιση (Χώροι, μόνο για την ομάδα) η οθόνη του prototype· αλλιώς η σημερινή.
+// Στη νέα εμφάνιση (Χώροι) οι οθόνες του prototype (J1 ή J3)· αλλιώς οι σημερινές.
 export default async function MessagesPage({
   searchParams,
 }: MessagesPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  const view = messagesViewOf(viewer);
   if ((await lookOf(viewer)) === "spaces")
-    return (
+    return view === "client" ? (
+      <SpacesClientMessages tab={parseClientTab(params.tab)} />
+    ) : (
       <SpacesInbox
         tab={parseTab(params.tab)}
         view={parseRequestView(params.view)}
       />
     );
-  const view = messagesViewOf(viewer);
   if (view === "client") {
     return (
       <>

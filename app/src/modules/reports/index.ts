@@ -11,3 +11,4 @@ export { AuditExportButtons } from "./export/components/audit-export-buttons";
 // Νέα εμφάνιση (Χώροι): οι οθόνες M1 και M2 του prototype πάνω στα ίδια RPC.
 export { SpacesReports } from "./spaces/m1-screen";
 export { SpacesExport } from "./spaces/m2-screen";
+export { SpacesAuditExport } from "./spaces/p1-audit-export";

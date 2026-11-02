@@ -1,12 +1,18 @@
 import { redirect } from "next/navigation";
 
-import { Notice } from "@/components/ui/notice";
-import { AuthCard, DemoLogins, LoginForm, demoLabels, getViewer, safeNext } from "@/modules/access";
+import {
+  AuthPage,
+  SpacesDeadLink,
+  SpacesDemoLogins,
+  SpacesLoginForm,
+  demoLabels,
+  getViewer,
+  safeNext,
+} from "@/modules/access";
 
 export const metadata = { title: "Είσοδος" };
 
 const LINK_ERRORS: Record<string, string> = {
-  link: "Ο σύνδεσμος έληξε ή χρησιμοποιήθηκε ήδη. Ζήτησε νέο.",
   google: "Η σύνδεση με Google δεν ολοκληρώθηκε. Δοκίμασε ξανά.",
   demo: "Η είσοδος επίδειξης δεν είναι διαθέσιμη τώρα.",
 };
@@ -15,30 +21,39 @@ interface LoginPageProps {
   searchParams: Promise<{ next?: string; error?: string }>;
 }
 
-// R9 Είσοδος. Όποιος έχει ήδη συνδεθεί πάει κατευθείαν στο σύστημα.
+// R9 Είσοδος. Όποιος έχει ήδη συνδεθεί πάει κατευθείαν στο σύστημα. Ένας ληγμένος σύνδεσμος από email
+// (?error=link) δείχνει την R13 «Ο σύνδεσμος δεν ισχύει πια».
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { next, error } = await searchParams;
   const viewer = await getViewer();
   if (viewer.status === "signed-in") redirect(safeNext(next));
+  if (error === "link")
+    return (
+      <AuthPage title="Ο σύνδεσμος δεν ισχύει πια">
+        <SpacesDeadLink />
+      </AuthPage>
+    );
   const demos = demoLabels();
+  const linkError = error ? LINK_ERRORS[error] : undefined;
 
   return (
-    <AuthCard title="Είσοδος">
+    <AuthPage title="Είσοδος">
       {viewer.status === "unconfigured" ? (
-        <Notice kind="error" title="Η βάση δεν έχει συνδεθεί ακόμα">
-          <p className="m-0">Η είσοδος θα ανοίξει μόλις συνδεθεί η βάση.</p>
-        </Notice>
+        <p className="r-msg" data-kind="error" role="alert">
+          Η βάση δεν έχει συνδεθεί ακόμα. Η είσοδος θα ανοίξει μόλις συνδεθεί η
+          βάση.
+        </p>
       ) : (
         <>
-          {error && LINK_ERRORS[error] && (
-            <p role="alert" className="m-0 text-sm text-destructive">
-              {LINK_ERRORS[error]}
+          {linkError && (
+            <p className="r-msg" data-kind="error" role="alert">
+              {linkError}
             </p>
           )}
-          {demos.length > 0 && <DemoLogins labels={demos} />}
-          <LoginForm next={safeNext(next)} />
+          {demos.length > 0 && <SpacesDemoLogins labels={demos} />}
+          <SpacesLoginForm next={safeNext(next)} />
         </>
       )}
-    </AuthCard>
+    </AuthPage>
   );
 }

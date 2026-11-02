@@ -162,7 +162,7 @@ export const SPACES: readonly Space[] = [
 
 // Εργαλεία πάνω δεξιά (Ειδοποιήσεις, Γνώση) και οθόνες του μενού προφίλ: δεν ανήκουν σε Χώρο.
 export const TOOL_CODES = ["A2", "A8"] as const;
-export const PROFILE_CODES = ["N3"] as const;
+export const PROFILE_CODES = ["A3", "A4", "N3"] as const;
 
 // Οι ουρές δεν είναι καρτέλες: φαίνονται ως φίλτρα κάτω από τη λίστα-γονιό τους (ουρά → γονιός).
 export const QUEUES: Readonly<Record<string, string>> = {

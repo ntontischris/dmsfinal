@@ -143,3 +143,4 @@ export { SpacesAgreements } from "./spaces/d1-screen";
 export { SpacesAgreement } from "./spaces/d2-screen";
 export { SpacesApprovals } from "./spaces/d4-screen";
 export { SpacesAgreementsSettings } from "./spaces/o3-screen";
+export { SpacesProposalLink } from "./spaces/d5-screen";

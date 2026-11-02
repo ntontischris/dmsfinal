@@ -2,9 +2,15 @@
 // prototype (`screens/O6.tsx`, `o-shared.tsx`). Καθαρές συναρτήσεις.
 
 import {
+  MONTH_STATUS_LABELS,
   formatDateTime,
   formatMonth,
+  minimumMargin,
+  monthStatus,
   type CostHint,
+  type CostMonth,
+  type MonthStatus,
+  type Multipliers,
 } from "@/modules/catalogue";
 import type { PaymentMethod } from "@/modules/finance";
 
@@ -75,3 +81,60 @@ export const hourCostOf = (hint: CostHint): HourCostGlance =>
   hint.hourCost === null || hint.hourCostMonth === null
     ? { monthLabel: null, hourCost: null }
     : { monthLabel: formatMonth(hint.hourCostMonth), hourCost: hint.hourCost };
+
+export interface MonthRow {
+  month: string;
+  label: string;
+  expenses: number;
+  sub: string;
+  status: MonthStatus;
+  statusLabel: string;
+}
+
+// Οι μήνες Κόστους ώρας ως γραμμές λίστας: έξοδα δεξιά, ώρες, Κόστος ώρας και ποιος τα έγραψε από κάτω.
+export const monthRowsOf = (
+  months: readonly CostMonth[],
+  current: string,
+  fmt: { money: (value: number) => string; hours: (value: number) => string },
+): readonly MonthRow[] =>
+  months.map((row) => {
+    const status = monthStatus(row.month, current);
+    return {
+      month: row.month,
+      label: formatMonth(row.month),
+      expenses: row.expensesTotal,
+      sub: [
+        `${fmt.hours(row.productiveHours)} ώρες`,
+        `Κόστος ώρας ${fmt.money(row.hourCost)}`,
+        row.updatedByName && `${row.updatedByName}, ${formatDateTime(row.updatedAt)}`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      status,
+      statusLabel: MONTH_STATUS_LABELS[status],
+    };
+  });
+
+export interface MultiplierRow {
+  name: keyof Multipliers;
+  label: string;
+  factor: number;
+  margin: number;
+}
+
+const MULTIPLIER_LABELS: Readonly<Record<keyof Multipliers, string>> = {
+  min: "Ελάχιστη",
+  target: "Στόχος",
+  max: "Μέγιστη",
+};
+
+// Οι τρεις πολλαπλασιαστές με το περιθώριο που δίνει ο καθένας (1 − 1/π).
+export const multiplierRowsOf = (
+  multipliers: Multipliers,
+): readonly MultiplierRow[] =>
+  (["min", "target", "max"] as const).map((name) => ({
+    name,
+    label: MULTIPLIER_LABELS[name],
+    factor: multipliers[name],
+    margin: minimumMargin(multipliers[name]),
+  }));

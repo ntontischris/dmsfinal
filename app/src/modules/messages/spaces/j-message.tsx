@@ -10,6 +10,9 @@ import "./j.css";
 
 interface MessageBubbleProps {
   message: J2Message;
+  // Ο πελάτης (J3) δεν βλέπει το «προς πελάτη»· το δικό του Μήνυμα σημειώνεται (data-own).
+  isClientViewer?: boolean;
+  isOwn?: boolean;
   actions?: ReactNode;
   children?: ReactNode;
 }
@@ -18,6 +21,8 @@ interface MessageBubbleProps {
 // ενδείξεις, και κάτω από αυτό ό,τι δώσει η οθόνη (Αίτημα, ενέργειες).
 export function MessageBubble({
   message,
+  isClientViewer = false,
+  isOwn,
   actions,
   children,
 }: MessageBubbleProps) {
@@ -26,12 +31,13 @@ export function MessageBubble({
       className="jmsg"
       id={message.anchor}
       data-side={message.side}
+      data-own={isOwn}
       data-internal={message.isInternal}
     >
       <header className="jmsg-head">
         <Avatar name={message.authorName} size={28} />
         <strong>{message.authorName}</strong>
-        {message.side === "team" && !message.isInternal && (
+        {!isClientViewer && message.side === "team" && !message.isInternal && (
           <span className="muted">προς πελάτη</span>
         )}
         <span className="muted">{message.when}</span>

@@ -15,3 +15,6 @@ export { parseAuditExport } from "./schema";
 export { AuditScreen } from "./components/audit-screen";
 export { AuditHistoryLink } from "./components/history-link";
 export { SpacesAudit } from "./spaces/p1-screen";
+// Ο σύνδεσμος «Ιστορικό αλλαγών» στη νέα εμφάνιση, χωρίς το παλιό component.
+export { historyHref } from "./url";
+export { HISTORY_LINK } from "./labels";

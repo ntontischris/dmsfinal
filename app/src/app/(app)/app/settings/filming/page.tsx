@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
@@ -8,17 +9,25 @@ import {
   filmingCaps,
   getBookingHours,
   getFilmingSettings,
+  SpacesFilmingSettings,
 } from "@/modules/filming";
 import { SettingsTabs } from "@/modules/settings";
-import { GoogleRulesForm, getGoogleView } from "@/modules/google";
+import { GoogleRulesForm, SpacesGoogleRules, getGoogleView } from "@/modules/google";
 
 import { Notice } from "@/components/ui/notice";
 
 export const metadata = { title: "Ρυθμίσεις · Γυρίσματα" };
 
 // Ρυθμίσεις › Γυρίσματα: οι Κανόνες του Γ7. Τη σελίδα τη βλέπει μόνο όποιος «Διαχειρίζεται Ρυθμίσεις».
-export default async function FilmingSettingsPage() {
+export default async function FilmingSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ part?: string }>;
+}) {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesFilmingSettings part={(await searchParams).part} google={<SpacesGoogleRules />} />;
   const header = <ScreenHeader eyebrow="Ρυθμίσεις" title="Ρυθμίσεις" />;
   if (!filmingCaps(viewer).canManageSettings)
     return (

@@ -16,6 +16,7 @@ export function RowForm({
   isDanger = false,
   isDisabled = false,
   className = "btn-row",
+  ariaLabel,
   onDone,
   children,
 }: {
@@ -25,6 +26,7 @@ export function RowForm({
   isDanger?: boolean;
   isDisabled?: boolean;
   className?: string;
+  ariaLabel?: string;
   onDone: (notice: string) => void;
   children?: ReactNode;
 }) {
@@ -44,6 +46,7 @@ export function RowForm({
         data-primary={isPrimary ? "true" : undefined}
         data-danger={isDanger ? "true" : undefined}
         disabled={isPending || isDisabled}
+        aria-label={ariaLabel}
       >
         {submitLabel}
       </button>

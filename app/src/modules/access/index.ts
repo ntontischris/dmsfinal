@@ -19,6 +19,7 @@ export {
   getRole,
   listPermissions,
   listRoles,
+  listMyRoleNames,
   listTeamUsers,
   type PermissionDef,
   type RoleKind,
@@ -31,27 +32,37 @@ export {
   listMemberships,
 } from "./invitation-queries";
 export { listClientRoleChoices } from "./role-choices";
-export type { ClientUserRow, InvitationRow, MembershipRow } from "./invitation-schemas";
+export type {
+  ClientUserRow,
+  InvitationRow,
+  MembershipRow,
+} from "./invitation-schemas";
 export { AccessNotice } from "./components/access-notice";
-export { AuthCard } from "./components/auth-card";
 export { ClientInviteForm } from "./components/client-invite-form";
 export { ClientSwitcher } from "./components/client-switcher";
 export { ClientUsersSection } from "./components/client-users-section";
 export { DeleteRoleForm } from "./components/delete-role-form";
-export { DemoLogins } from "./components/demo-logins";
 export { InvitationList } from "./components/invitation-list";
-export { LoginForm } from "./components/login-form";
 export { NewRoleForm } from "./components/new-role-form";
-export { ResetForm } from "./components/reset-form";
 export { RoleEditor } from "./components/role-editor";
 export { RoleList } from "./components/role-list";
-export { SetPasswordForm } from "./components/set-password-form";
 export { SignOutButton } from "./components/sign-out-button";
 export { signOut } from "./actions";
 export { TeamInviteForm } from "./components/team-invite-form";
 export { TeamTable } from "./components/team-table";
 export { TestEmailForm } from "./components/test-email-form";
+export { sendTestEmail } from "./integrations-actions";
 export { UserActiveForm } from "./components/user-active-form";
 export { UserRolesForm } from "./components/user-roles-form";
 export { SpacesTeam, SpacesTeamUser } from "./spaces/n1-screen";
 export { SpacesNewRole, SpacesRole, SpacesRoles } from "./spaces/n4-screen";
+// Νέα εμφάνιση των δημόσιων σελίδων (R9 Είσοδος, R10 Επαναφορά/Νέος κωδικός, R13 Ο σύνδεσμος δεν ισχύει πια).
+export { AuthPage } from "./spaces/r-frame";
+export { SpacesLoginForm } from "./spaces/r9-login-form";
+export { SpacesDemoLogins } from "./spaces/r9-demo";
+export { SpacesResetForm, SpacesSetPasswordForm } from "./spaces/r10-forms";
+export { SpacesDeadLink } from "./spaces/r13-dead-link";
+// N2 Χρήστες πελάτη (μέσα στη B2) και N3 Συνάδελφοι στη νέα εμφάνιση.
+export { SpacesClientUsers } from "./spaces/n2-screen";
+export { SpacesColleagues } from "./spaces/n3-screen";
+export { SpacesSwitchClient } from "./spaces/a4-screen";

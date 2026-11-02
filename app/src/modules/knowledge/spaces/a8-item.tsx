@@ -5,13 +5,13 @@ import { hrefOf } from "@/spaces/data/screens";
 import { Panel } from "@/spaces/kit/panel";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
-import { MarkdownBody } from "../components/markdown";
 import { fileHref } from "../helpers";
 import { KIND_LABEL } from "../labels";
 import { getItem } from "../queries";
 import { formatSize } from "../upload-rules";
 import type { ItemView } from "../view-schema";
 import { athensDate } from "./a8-adapter";
+import { ArticleBody } from "./a8-markdown";
 
 import "./a8.css";
 
@@ -24,9 +24,7 @@ function ItemContent({
 }) {
   if (item.kind === "article")
     return (
-      <div className="a8-body" data-tw>
-        <MarkdownBody source={item.body ?? ""} />
-      </div>
+      <ArticleBody source={item.body ?? ""} />
     );
   if (!item.file) return null;
   return (

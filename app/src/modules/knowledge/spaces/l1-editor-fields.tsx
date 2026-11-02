@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, type ChangeEvent } from "react";
 
 import { attachFile } from "../actions-upload";
-import { MarkdownBody } from "../components/markdown";
 import { fileHref } from "../helpers";
 import { TEXT_STATUS_LABEL } from "../labels";
 import { articleImageSrc, imageMarkdown } from "../markdown-urls";
 import { uploadToKnowledge } from "../upload-client";
 import { acceptOf, formatSize } from "../upload-rules";
 import type { EditableItem } from "../view-schema";
+import { ArticleBody } from "./a8-markdown";
 
 // Το «Κείμενο» του επεξεργαστή (prototype `l1-editor.tsx` › ContentFields) σε Markdown, με προεπισκόπηση και ανέβασμα
 // εικόνας που εισάγει Markdown link στη θέση του δρομέα.
@@ -75,9 +75,7 @@ export function BodyField({ item }: { item: EditableItem }) {
         />
       </label>
       {isPreview && (
-        <div className="a8-body" data-tw>
-          <MarkdownBody source={body} />
-        </div>
+        <ArticleBody source={body} />
       )}
       <p className="muted">
         **έντονα**, - λίστα, [σύνδεσμος](https://…). Σύνδεσμοι μόνο https:// ή /app/….

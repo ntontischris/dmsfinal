@@ -1,18 +1,19 @@
 import { isGoogleConfigured } from "@/lib/google/config";
-import { TestEmailForm, getViewer, isOwner } from "@/modules/access";
-import { GoogleSettingsCard, getGoogleView } from "@/modules/google";
+import { getViewer, isOwner, sendTestEmail } from "@/modules/access";
+import { getGoogleView } from "@/modules/google";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { getSubscriptions } from "../queries";
 import { getConnectionStatuses } from "../status";
+import { N5Form } from "./n5-forms";
+import { GoogleSetup } from "./n5-google";
 import { IntegrationsSection } from "./n5-integrations";
 import { SubscriptionsSection } from "./n5-subscriptions";
 
 import "./n5.css";
 
 // N5 Ενσωματώσεις και συνδρομές στη νέα εμφάνιση (prototype `screens/N5.tsx`, στο μενού O8): μόνο ο Ιδιοκτήτης
-// (η βάση το ξανακρίνει). Το δοκιμαστικό email και η ρύθμιση του Google ημερολογίου είναι πραγματικά components
-// άλλων modules, γι' αυτό μπαίνουν με [data-tw].
+// (η βάση το ξανακρίνει). Το δοκιμαστικό email και η ρύθμιση του Google ημερολογίου μπαίνουν στις κάρτες τους.
 export async function SpacesIntegrations({ open }: { open: string | null }) {
   const viewer = await getViewer();
   if (!isOwner(viewer))
@@ -37,22 +38,24 @@ export async function SpacesIntegrations({ open }: { open: string | null }) {
           analytics={connections.data.analytics}
           extras={{
             email: (
-              <div data-tw>
-                <TestEmailForm />
-              </div>
+              <N5Form
+                action={sendTestEmail}
+                submitLabel="Δοκιμαστικό email στον εαυτό μου"
+                pendingLabel="Αποστολή…"
+              />
+            ),
+            google: (
+              <GoogleSetup
+                configured={isGoogleConfigured()}
+                view={google.ok ? google.data : null}
+                ownerEmail={viewer.status === "signed-in" ? viewer.email : ""}
+              />
             ),
           }}
         />
       ) : (
         <ErrorNotice what="η κατάσταση των συνδέσεων" />
       )}
-      <div data-tw className="n5-section">
-        <GoogleSettingsCard
-          configured={isGoogleConfigured()}
-          view={google.ok ? google.data : null}
-          ownerEmail={viewer.status === "signed-in" ? viewer.email : ""}
-        />
-      </div>
       <div className="n5-section">
         {subscriptions.ok ? (
           <SubscriptionsSection view={subscriptions.data} open={open} />

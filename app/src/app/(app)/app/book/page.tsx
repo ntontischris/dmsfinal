@@ -1,9 +1,11 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { AccessNotice, can, getViewer } from "@/modules/access";
 import {
   BookingPage,
   bookingSelectionSchema,
   getBookingOptions,
+  SpacesBooking,
 } from "@/modules/filming";
 
 import { LoadError } from "../filming/filming-parts";
@@ -19,6 +21,9 @@ export default async function BookPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesBooking selection={bookingSelectionSchema.parse(await searchParams)} />;
   const header = <ScreenHeader eyebrow={EYEBROW} title="Κράτηση" />;
   if (!can(viewer, "c.book"))
     return (

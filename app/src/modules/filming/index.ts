@@ -86,5 +86,8 @@ export { ReservationsPanel } from "./components/reservations-panel";
 export { SpacesFilmings } from "./spaces/e1-screen";
 export { SpacesFilming, type E3EquipmentSource } from "./spaces/e3-screen";
 export { SpacesFilmingQueue } from "./spaces/e2-screen";
+export { SpacesNewFilming } from "./spaces/e4-screen";
+export { SpacesBooking } from "./spaces/e5-screen";
+export { SpacesFilmingSettings } from "./spaces/o4-screen";
 export { SpacesMine } from "./spaces/e6-screen";
 export { SpacesCrewTemplates } from "./spaces/e7-screen";

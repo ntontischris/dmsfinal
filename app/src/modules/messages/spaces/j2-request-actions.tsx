@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
+
+import type { DeliverableCandidates } from "@/modules/deliverables";
 
 import {
   assignRequest,
@@ -9,7 +11,13 @@ import {
   rejectRequest,
 } from "../actions-requests";
 import type { J2Request } from "./j2-adapter";
+import { DeliverableFromRequest } from "./j2-deliverable-form";
 import { JForm } from "./j2-form";
+
+// Ό,τι χρειάζεται η φόρμα νέου Παραδοτέου (υποψήφια της Παραγωγής) ή ένα κείμενο γιατί δεν υπάρχει.
+export type DeliverableSource =
+  | { productionId: string; defaultTitle: string; candidates: DeliverableCandidates }
+  | { note: string };
 
 type Mode = null | "deliverable" | "done" | "reject";
 
@@ -18,8 +26,7 @@ interface RequestActionsProps {
   clientId: string;
   request: J2Request;
   assignable: readonly { id: string; name: string }[];
-  // Η φόρμα νέου Παραδοτέου (φτιάχνεται στον server με τα υποψήφια της Παραγωγής) ή ένα κείμενο γιατί δεν υπάρχει.
-  deliverableForm: ReactNode;
+  deliverable: DeliverableSource;
 }
 
 // Οι ενέργειες ενός ανοιχτού Αιτήματος του prototype (`screens/j2-request.tsx`), δεμένες στα πραγματικά server actions.
@@ -28,7 +35,7 @@ export function RequestActions({
   clientId,
   request,
   assignable,
-  deliverableForm,
+  deliverable,
 }: RequestActionsProps) {
   const [mode, setMode] = useState<Mode>(null);
   const close = useCallback(() => setMode(null), []);
@@ -73,7 +80,18 @@ export function RequestActions({
           </button>
         </div>
       )}
-      {mode === "deliverable" && <div data-tw>{deliverableForm}</div>}
+      {mode === "deliverable" &&
+        ("note" in deliverable ? (
+          <p className="muted">{deliverable.note}</p>
+        ) : (
+          <DeliverableFromRequest
+            messageId={messageId}
+            productionId={deliverable.productionId}
+            defaultTitle={deliverable.defaultTitle}
+            candidates={deliverable.candidates}
+            onDone={close}
+          />
+        ))}
       {mode === "done" && (
         <JForm
           action={completeRequest}

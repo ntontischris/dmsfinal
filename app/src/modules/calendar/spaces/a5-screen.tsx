@@ -1,6 +1,6 @@
 import { getViewer } from "@/modules/access";
 import { athensDate, filmingCaps, formatDateTime } from "@/modules/filming";
-import { GoogleSyncCard, getGoogleView } from "@/modules/google";
+import { getGoogleView } from "@/modules/google";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { buildCalendarDays } from "../calendar-days";
@@ -10,6 +10,7 @@ import { getCalendarView, getLinkStatus } from "../queries";
 import type { CalendarData } from "../types";
 import { parseCalendarParams, type CalendarParams } from "../url-state";
 import { A5Filters, A5Nav, A5Tabs, A5Toolbar } from "./a5-chrome";
+import { A5Google } from "./a5-google";
 import { CalendarLinkCard } from "./a5-link";
 import { a5ItemsOf, hasEvents, layerOptions, type A5Item } from "./a5-model";
 import { A5List, A5Month, A5Week } from "./a5-views";
@@ -77,9 +78,7 @@ async function Sidebar({ data }: { data: CalendarData }) {
         isClient={!data.isTeam}
       />
       {data.google && google?.ok && (
-        <div data-tw>
-          <GoogleSyncCard view={google.data} stale={data.google.stale} />
-        </div>
+        <A5Google view={google.data} isStale={data.google.stale} />
       )}
     </div>
   );

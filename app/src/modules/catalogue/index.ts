@@ -69,6 +69,8 @@ export {
   listProvisionKinds,
 } from "./queries-items";
 export { getKindUsage, listCostMonths } from "./queries-settings";
+// Οι ενέργειες του Κόστους ώρας και του Εύρους τιμής, για την O6 της νέας εμφάνισης (module Κόστος).
+export { saveCostMonth, saveMultipliers } from "./actions-settings";
 export { ActionForm } from "./components/action-form";
 export { CatalogueTable } from "./components/catalogue-table";
 export { CostNote } from "./components/cost-note";
@@ -82,4 +84,7 @@ export { ProvisionKindsEditor } from "./components/provision-kinds-editor";
 export { CostMonthsCard } from "./components/cost-months-card";
 export { MultipliersCard } from "./components/multipliers-card";
 export { SpacesCatalogue } from "./spaces/c1-screen";
-export { SpacesCatalogueItem, SpacesNewCatalogueItem } from "./spaces/c2-screen";
+export {
+  SpacesCatalogueItem,
+  SpacesNewCatalogueItem,
+} from "./spaces/c2-screen";

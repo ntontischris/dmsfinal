@@ -1,11 +1,17 @@
 import { can, getViewer } from "@/modules/access";
 import {
-  CostMonthsCard,
-  MultipliersCard,
   athensMonthStart,
   catalogueCaps,
+  formatHours,
+  formatMoney,
+  formatMonth,
   getCostHint,
   listCostMonths,
+  monthOptions,
+  saveCostMonth,
+  saveMultipliers,
+  type CostHint,
+  type CostMonth,
 } from "@/modules/catalogue";
 import {
   PaymentMethodsCard,
@@ -13,28 +19,51 @@ import {
   listPaymentMethods,
   type PaymentMethod,
 } from "@/modules/finance";
-import { recentChanges } from "@/modules/settings";
-import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import {
+  SaveRow,
+  SettingsCard,
+  SettingsForm,
+  SpacesSettingsTabs,
+  recentChanges,
+} from "@/modules/settings";
+import { ListRow, RowList } from "@/spaces/kit/parts";
+import {
+  Badge,
+  ErrorNotice,
+  StateNotice,
+  fmtPercent,
+} from "@/spaces/screens/shared";
 
 import {
   O6_AUDIT_ENTITIES,
   changeRowsOf,
   hourCostOf,
   methodItemsOf,
+  monthRowsOf,
+  multiplierRowsOf,
 } from "./o6-adapter";
-import {
-  AdminCost,
-  MethodsList,
-  RecentChanges,
-  SettingsTabs,
-} from "./o6-parts";
+import { decimalText } from "./o6-live";
+import { O6MonthCards } from "./o6-month";
+import { AdminCost, MethodsList, RecentChanges } from "./o6-parts";
 
 import "./o6.css";
 
 // O6 Ρυθμίσεις Οικονομικών στη νέα εμφάνιση (prototype `screens/O6.tsx`). Η σελίδα ανοίγει σε όποιον «Βλέπει κόστος»·
 // τα έξοδα, οι ώρες και το Εύρος τιμής φαίνονται και αλλάζουν μόνο με «Διαχειρίζεται κόστος».
-// Οι φόρμες (Κόστος ώρας, Εύρος τιμής, Τρόποι είσπραξης) είναι τα πραγματικά components των modules με [data-tw]: τα
-// actions τους δεν εξάγονται, οπότε δεν γίνεται να τα καλέσει φόρμα του prototype.
+// Οι Τρόποι είσπραξης για όποιον τους αλλάζει μένουν το πραγματικό component του module Οικονομικά ([data-tw]):
+// οι ενέργειές του δεν εξάγονται. Το «Προεπιλεγμένο περιθώριο» του prototype δεν υπάρχει στη βάση.
+
+const MONTHS_AHEAD = 6;
+const FORWARD_NOTE =
+  "Ισχύει από τον μήνα που ορίζεις και μετά, μέχρι να οριστεί νεότερος· οι κλεισμένοι μήνες δεν αλλάζουν.";
+const RANGE_NOTE =
+  "Είναι οδηγός δίπλα στην τιμή κάθε Πακέτου ή Υπηρεσίας (κόστος × πολλαπλασιαστής)· την τιμή τη γράφεις πάντα εσύ.";
+
+const STATUS_TONE = {
+  closed: undefined,
+  current: "ok",
+  future: "strong",
+} as const;
 
 function Methods({
   methods,
@@ -48,6 +77,135 @@ function Methods({
     <div className="o-card" data-tw>
       <PaymentMethodsCard methods={methods} canManage />
     </div>
+  );
+}
+
+function MonthList({
+  months,
+  current,
+}: {
+  months: readonly CostMonth[];
+  current: string;
+}) {
+  const rows = monthRowsOf(months, current, {
+    money: formatMoney,
+    hours: formatHours,
+  });
+  if (rows.length === 0) return null;
+  return (
+    <RowList>
+      {rows.map((row) => (
+        <ListRow
+          key={row.month}
+          isFaded={row.status === "closed"}
+          title={row.label}
+          sub={row.sub}
+          aside={
+            <>
+              <strong>{formatMoney(row.expenses)}</strong>
+              <Badge tone={STATUS_TONE[row.status]}>{row.statusLabel}</Badge>
+            </>
+          }
+        />
+      ))}
+    </RowList>
+  );
+}
+
+// «Έξοδα του μήνα» + «Παραγωγικές ώρες και Κόστος ώρας»: μία φόρμα του `saveCostMonth`, δύο κουμπιά όπως στο prototype.
+function CostMonthCards({
+  months,
+  hint,
+}: {
+  months: readonly CostMonth[];
+  hint: CostHint;
+}) {
+  const current = athensMonthStart();
+  return (
+    <SettingsForm action={saveCostMonth}>
+      <O6MonthCards
+        months={months}
+        options={monthOptions(current, MONTHS_AHEAD)}
+        current={current}
+        inForceMonth={hint.hourCostMonth}
+        forwardNote={FORWARD_NOTE}
+        monthList={<MonthList months={months} current={current} />}
+        saveExpenses={<SaveRow card="expenses" />}
+        saveHours={<SaveRow card="hours" />}
+      />
+    </SettingsForm>
+  );
+}
+
+function InForce({ hint }: { hint: CostHint }) {
+  if (hint.hourCostMonth === null || hint.hourCost === null) return null;
+  return (
+    <p className="muted o-hint">
+      Κόστος ώρας που ισχύει: {formatMoney(hint.hourCost)} (
+      {formatMonth(hint.hourCostMonth)})
+    </p>
+  );
+}
+
+function MultiplierRows({ hint }: { hint: CostHint }) {
+  return (
+    <RowList>
+      {multiplierRowsOf(hint.multipliers).map((row) => (
+        <ListRow
+          key={row.name}
+          title={row.label}
+          sub={
+            <>
+              Ελάχιστο περιθώριο: {fmtPercent(row.margin)}
+              <span className="muted"> (1 − 1/{decimalText(row.factor)})</span>
+            </>
+          }
+          aside={
+            <label className="o5-days">
+              <span className="part-sub">Πολλαπλασιαστής</span>
+              <input
+                className="input"
+                name={row.name}
+                inputMode="decimal"
+                required
+                aria-label={`Πολλαπλασιαστής ${row.label}`}
+                defaultValue={decimalText(row.factor)}
+              />
+            </label>
+          }
+        />
+      ))}
+    </RowList>
+  );
+}
+
+// «Εύρος τιμής και Υπέρβαση κόστους»: οι τρεις πολλαπλασιαστές και το ποσοστό υπέρβασης, στο πραγματικό `saveMultipliers`.
+function RangeCard({ hint }: { hint: CostHint }) {
+  return (
+    <SettingsForm action={saveMultipliers}>
+      <SettingsCard title="Εύρος τιμής και Υπέρβαση κόστους">
+        <MultiplierRows hint={hint} />
+        <div className="o-fields">
+          <span className="stack o-field">
+            <label htmlFor="o6-overrun">Όριο Υπέρβασης κόστους (%)</label>
+            <input
+              id="o6-overrun"
+              className="input"
+              name="overrunPercent"
+              inputMode="decimal"
+              required
+              defaultValue={decimalText(hint.overrunPercent)}
+            />
+            <span className="muted o-hint">
+              Πάνω από αυτό, η Παραγωγή σημαίνεται «Υπέρβαση» στο Κόστος και
+              ώρες· δεν μπλοκάρει τίποτα.
+            </span>
+          </span>
+        </div>
+        <SaveRow card="range" />
+        <p className="muted o-hint">{RANGE_NOTE}</p>
+      </SettingsCard>
+    </SettingsForm>
   );
 }
 
@@ -75,21 +233,9 @@ async function O6Body({ canManageCost }: { canManageCost: boolean }) {
       )}
       {months?.ok ? (
         <>
-          <div className="o-card" data-tw>
-            <CostMonthsCard
-              months={months.data}
-              hint={hint.data}
-              current={athensMonthStart()}
-              canManage
-            />
-          </div>
-          <div className="o-card" data-tw>
-            <MultipliersCard
-              multipliers={hint.data.multipliers}
-              overrunPercent={hint.data.overrunPercent}
-              canManage
-            />
-          </div>
+          <CostMonthCards months={months.data} hint={hint.data} />
+          <InForce hint={hint.data} />
+          <RangeCard hint={hint.data} />
         </>
       ) : (
         <AdminCost glance={hourCostOf(hint.data)} />
@@ -108,7 +254,7 @@ export async function SpacesFinanceSettings() {
   const caps = catalogueCaps(await getViewer());
   return (
     <div data-spaces>
-      <SettingsTabs code="O6" />
+      <SpacesSettingsTabs code="O6" />
       {caps.canSeeCost ? (
         <O6Body canManageCost={caps.canManageCost} />
       ) : (

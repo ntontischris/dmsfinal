@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer } from "@/modules/access";
 import {
@@ -7,6 +8,7 @@ import {
   listBookingOptions,
   parseBlockedPrefill,
   parseFromRequest,
+  SpacesNewFilming,
 } from "@/modules/filming";
 import { listProductions } from "@/modules/productions";
 
@@ -23,6 +25,17 @@ export default async function NewFilmingPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") {
+    const spacesQuery = await searchParams;
+    return (
+      <SpacesNewFilming
+        prefill={parseBlockedPrefill(spacesQuery)}
+        fromRequest={parseFromRequest(spacesQuery)}
+        internal={() => listProductions({ state: "open", internalOnly: true })}
+      />
+    );
+  }
   const caps = filmingCaps(viewer);
   if (!caps.canBook)
     return (

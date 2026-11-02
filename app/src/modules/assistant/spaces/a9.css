@@ -1,0 +1,52 @@
+[data-look='spaces'] {
+& .a9-scen { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); font-size: var(--text-sm); min-width: 0; }
+& .a9-scen a { white-space: nowrap; }
+& .a9-scen a[aria-current='true'] { font-weight: 600; }
+& .a9-panel { max-width: 32rem; min-width: 0; margin-inline: auto; border: 1px solid var(--color-border); border-radius: var(--radius); display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); }
+& .a9-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; }
+& .a9-head h2 { margin: 0; }
+& .a9-msgs { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+& .a9-q, & .a9-a { min-width: 0; overflow-wrap: anywhere; font-size: var(--text-sm); padding: var(--space-2) var(--space-3); border-radius: var(--radius); max-width: 92%; }
+& .a9-q { align-self: flex-end; border: 1px solid var(--color-accent); }
+& .a9-a { align-self: flex-start; border: 1px solid var(--color-border); }
+& .a9-a p { margin: 0 0 var(--space-2); }
+& .a9-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
+& .a9-chip { font-size: var(--text-sm); border: 1px solid var(--color-border); border-radius: 999px; padding: 0 var(--space-2); overflow-wrap: anywhere; min-width: 0; }
+& .a9-input { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .a9-input .input { flex: 1 1 10rem; }
+& .a9-count { font-size: var(--text-sm); color: var(--color-text-muted); }
+& .a9-sugg { display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; }
+& .a9-sugg .button { text-align: left; overflow-wrap: anywhere; max-width: 100%; }
+@media (max-width: 480px) { & .a9-panel { max-width: none; } }
+/* Ύφος ταυτότητας */
+& .a9-scen a { padding: 0.2rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border); text-decoration: none; font-weight: 600; }
+& .a9-scen a:hover { color: var(--color-accent); }
+& .a9-scen a[aria-current='true'] { border-color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 16%, transparent); }
+& .a9-panel { border-radius: var(--radius-lg); }
+& .a9-q, & .a9-a { border-radius: var(--radius-lg); }
+& .a9-q { background: color-mix(in oklab, var(--color-accent) 12%, transparent); }
+/* screens2 (s09): avatar δίπλα στη φούσκα του Βοηθού, προτάσεις ως χάπια */
+& .a9-row { display: flex; align-items: flex-end; gap: var(--space-2); min-width: 0; max-width: 100%; }
+& .a9-row .a9-a { align-self: auto; background: color-mix(in oklab, var(--color-text) 6%, transparent); border-color: transparent; }
+& .a9-q { border-color: transparent; }
+& .a9-sugg { flex-direction: row; flex-wrap: wrap; align-items: center; }
+& .a9-sugg .button { border-radius: 999px; min-height: 2.75rem; }
+& .a9-capped { align-self: stretch; max-width: 100%; }
+& .a9-head h2 { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); }
+/* Το παράθυρο σε κάθε οθόνη: κουμπί κάτω δεξιά, πάνελ στο desktop, όλη η οθόνη στο κινητό (πάνω από την κάτω μπάρα). */
+& .a9-launch { position: fixed; right: var(--space-4); bottom: var(--space-4); z-index: 30; box-shadow: 0 6px 20px color-mix(in oklab, var(--color-text) 18%, transparent); }
+& .a9-dock { position: fixed; inset: 0; z-index: 50; display: flex; background: var(--color-bg); }
+& .a9-dock .a9-panel { flex: 1; max-width: none; margin: 0; border: 0; border-radius: 0; background: var(--color-bg); min-height: 0; }
+& .a9-dock .a9-msgs { flex: 1; min-height: 0; overflow-y: auto; }
+& .a9-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+& .a9-q, & .a9-text { white-space: pre-wrap; }
+& .a9-turn { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+& .a9-turns { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+& .a9-error { color: var(--color-attention); font-weight: 600; }
+& .a9-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 48rem) { & .a9-launch { bottom: calc(5.5rem + env(safe-area-inset-bottom)); } }
+@media (min-width: 48rem) {
+  & .a9-dock { inset: auto var(--space-4) var(--space-4) auto; width: 26rem; height: min(40rem, calc(100dvh - 6rem)); background: transparent; }
+  & .a9-dock .a9-panel { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); box-shadow: 0 12px 32px color-mix(in oklab, var(--color-text) 22%, transparent); }
+}
+}

@@ -4,16 +4,9 @@ import { z } from "zod";
 
 import { getViewer } from "@/modules/access";
 import { getCompany } from "@/modules/settings";
-import { Panel } from "@/spaces/kit/panel";
 import { hrefOf } from "@/spaces/data/screens";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
-import { ItemBasicsForm } from "../components/item-basics-form";
-import { ItemCostSection } from "../components/item-cost-section";
-import { ItemProvisionsForm } from "../components/item-provisions-form";
-import { ItemPublicForm } from "../components/item-public-form";
-import { ItemUsage } from "../components/item-usage";
-import { NewItemForm } from "../components/new-item-form";
 import { catalogueCaps, itemKindLabel } from "../helpers";
 import {
   getCatalogueItem,
@@ -21,17 +14,19 @@ import {
   listProvisionKinds,
 } from "../queries-items";
 
+import { C2Basics } from "./c2-basics";
+import { C2Cost } from "./c2-cost";
+import { C2New } from "./c2-new";
+import { C2Provisions } from "./c2-provisions";
+import { C2Public } from "./c2-public";
+import { C2Usage } from "./c2-usage";
+
 const Frame = ({ children }: { children: ReactNode }) => (
   <div data-spaces>{children}</div>
 );
 
-// Οι φόρμες της σημερινής σελίδας μπαίνουν όπως είναι (πραγματικά πεδία και ενέργειες), ως [data-tw], μέσα στα Panel του prototype.
-const Embedded = ({ children }: { children: ReactNode }) => (
-  <div data-tw>{children}</div>
-);
-
-// C2 Πακέτο ή Υπηρεσία στη νέα εμφάνιση (prototype `screens/C2.tsx`): κεφαλίδα, σήματα και οι ενότητες σε δύο στήλες.
-// Ο ζωντανός έλεγχος τιμής του prototype (`c2-price-live`) είναι μέσα στη φόρμα «Βασικά και τιμή» της εφαρμογής.
+// C2 Πακέτο ή Υπηρεσία στη νέα εμφάνιση (prototype `screens/C2.tsx`): κεφαλίδα, σήματα και οι ενότητες του prototype.
+// Κάθε ενότητα έχει τη δική της πραγματική ενέργεια και το δικό της κουμπί (όχι ένα «Αποθήκευση» για όλη τη σελίδα).
 export async function SpacesCatalogueItem({ itemId }: { itemId: string }) {
   const viewer = await getViewer();
   const caps = catalogueCaps(viewer);
@@ -93,45 +88,13 @@ export async function SpacesCatalogueItem({ itemId }: { itemId: string }) {
           ώρες και το κόστος είναι εσωτερικά.
         </p>
       )}
-      <div className="grid2">
-        <Panel label="Βασικά και τιμή">
-          <Embedded>
-            <ItemBasicsForm item={found} caps={caps} vatRate={vatRate} />
-          </Embedded>
-        </Panel>
-        <Panel label="Παροχές">
-          <Embedded>
-            <ItemProvisionsForm item={found} kinds={kinds.data} caps={caps} />
-          </Embedded>
-        </Panel>
-      </div>
-      {caps.canSeeCost && (
-        <div className="grid2">
-          <Panel label="Κόστος και περιθώριο">
-            <Embedded>
-              <ItemCostSection item={found} hint={costHint} caps={caps} />
-            </Embedded>
-          </Panel>
-          <Panel label="Μέσες Πραγματικές ώρες">
-            <p className="muted">
-              Όταν υπάρξουν Παραγωγές με Πραγματικές ώρες, εδώ φαίνεται ο μέσος
-              όρος δίπλα στην εκτίμηση. Τίποτα δεν αλλάζει μόνο του.
-            </p>
-          </Panel>
-        </div>
-      )}
+      <C2Basics item={found} caps={caps} vatRate={vatRate} />
+      <C2Provisions item={found} kinds={kinds.data} caps={caps} />
+      <C2Cost item={found} hint={costHint} caps={caps} />
       {found.kind === "package" && (
-        <Panel label="Δημόσιο">
-          <Embedded>
-            <ItemPublicForm item={found} canEdit={caps.canManage} />
-          </Embedded>
-        </Panel>
+        <C2Public item={found} canEdit={caps.canManage} />
       )}
-      <Panel label="Χρήση και αρχειοθέτηση">
-        <Embedded>
-          <ItemUsage item={found} canManage={caps.canManage} />
-        </Embedded>
-      </Panel>
+      <C2Usage item={found} canManage={caps.canManage} />
     </Frame>
   );
 }
@@ -158,15 +121,12 @@ export async function SpacesNewCatalogueItem({ type }: { type: string | undefine
       {!kinds.ok ? (
         <ErrorNotice what="τα είδη Παροχής" />
       ) : (
-        <Panel label="Στοιχεία">
-          <Embedded>
-            <NewItemForm
-              kinds={kinds.data}
-              canEditPrice={caps.canEditPrice}
-              initialType={isService ? "service" : "package_monthly"}
-            />
-          </Embedded>
-        </Panel>
+        <C2New
+          kinds={kinds.data}
+          canEditPrice={caps.canEditPrice}
+          canManageSettings={caps.canManageSettings}
+          initialType={isService ? "service" : "package_monthly"}
+        />
       )}
     </Frame>
   );

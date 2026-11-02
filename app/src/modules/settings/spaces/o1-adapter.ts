@@ -82,17 +82,28 @@ const AT = new Intl.DateTimeFormat("el-GR", {
 export const fmtAt = (iso: string): string =>
   AT.format(new Date(iso)).replace(",", "");
 
+// Ετικέτες των άλλων ενοτήτων (O2–O6): ο καλών δίνει τις δικές του οντότητες/πεδία.
+export interface ChangeLabels {
+  entities?: Readonly<Record<string, string>>;
+  fields?: Readonly<Record<string, string>>;
+}
+
 export const o1ChangesOf = (
   changes: readonly SettingsChange[],
+  labels: ChangeLabels = {},
 ): readonly O1Change[] =>
   changes.map((change, index) => ({
     id: `${change.at}-${change.entity}-${index}`,
     at: fmtAt(change.at),
     actor: change.actorName,
-    subject: ENTITY_LABELS[change.entity] ?? change.entity,
+    subject:
+      labels.entities?.[change.entity] ??
+      ENTITY_LABELS[change.entity] ??
+      change.entity,
     fields:
-      change.fields.map((field) => FIELD_LABELS[field] ?? field).join(", ") ||
-      "άλλαξε",
+      change.fields
+        .map((field) => labels.fields?.[field] ?? FIELD_LABELS[field] ?? field)
+        .join(", ") || "άλλαξε",
   }));
 
 const usd = (micros: number): string => `$${(micros / 1_000_000).toFixed(2)}`;

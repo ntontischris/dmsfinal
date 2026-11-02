@@ -40,3 +40,4 @@ export {
 export { LoadNotice, MissingNotice } from "./components/calendar-notices";
 export { SpacesCalendar } from "./spaces/a5-screen";
 export { SpacesBlockedTime, SpacesNewBlockedTime } from "./spaces/a6-screen";
+export { CalendarLinkCard as SpacesCalendarLinkCard } from "./spaces/a5-link";

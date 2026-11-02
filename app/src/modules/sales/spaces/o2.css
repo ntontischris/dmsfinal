@@ -1,0 +1,8 @@
+/* O2 Ρυθμίσεις › Πωλήσεις: οι πραγματικές ενέργειες μέσα στη γραμμή λίστας του prototype. */
+[data-look='spaces'] {
+& .o2-inline { display: inline-flex; gap: var(--space-1); align-items: center; }
+& .o2-order { display: inline-flex; gap: var(--space-1); align-items: center; font-variant-numeric: tabular-nums; }
+& .o2-order .button { min-width: 2rem; padding-inline: var(--space-2); }
+& .o2-rename { margin-top: var(--space-1); }
+& .o2-rename .input { max-width: 14rem; }
+}

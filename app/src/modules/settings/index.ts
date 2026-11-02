@@ -28,6 +28,8 @@ export {
   ListEditor,
   LockedField,
   Pending,
+  READINESS_HREF as SPACES_READINESS_HREF,
+  RecentChanges as SpacesRecentChanges,
   SettingsCard,
   SettingsTabs as SpacesSettingsTabs,
   TextField,
@@ -35,3 +37,14 @@ export {
   type SettingsListItem,
 } from "./spaces/o-shared";
 export { ActionButton, SaveRow, SettingsForm } from "./spaces/o-form";
+export {
+  o1ChangesOf,
+  type ChangeLabels,
+  type O1Change,
+} from "./spaces/o1-adapter";
+// A3 Προφίλ και προτιμήσεις (νέα εμφάνιση).
+export {
+  PROFILE_HREF,
+  SWITCH_CLIENT_HREF,
+  SpacesProfile,
+} from "./spaces/a3-screen";

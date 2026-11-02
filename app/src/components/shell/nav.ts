@@ -258,6 +258,23 @@ export const NAV: readonly NavSection[] = [
     ],
   },
   {
+    title: "Προφίλ",
+    items: [
+      {
+        code: "A3",
+        label: "Προφίλ και προτιμήσεις",
+        href: "/app/settings/profile",
+        requires: ["team", "client"],
+      },
+      {
+        code: "A4",
+        label: "Εναλλαγή Πελάτη",
+        href: "/app/settings/switch-client",
+        requires: "client",
+      },
+    ],
+  },
+  {
     title: "Ο Πελάτης μου",
     items: [
       {

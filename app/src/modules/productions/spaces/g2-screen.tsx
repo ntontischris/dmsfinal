@@ -6,7 +6,7 @@ import { agreementCaps } from "@/modules/agreements";
 import { AuditHistoryLink } from "@/modules/audit";
 import { costsCaps } from "@/modules/costs";
 import {
-  NewDeliverableForm,
+  SpacesNewDeliverable,
   deliverablesCaps,
   getDeliverableCandidates,
 } from "@/modules/deliverables";
@@ -214,7 +214,7 @@ function G2Page({
         production={production}
         newForm={
           candidates.deliverables && (
-            <NewDeliverableForm
+            <SpacesNewDeliverable
               productionId={production.id}
               defaultTitle={
                 production.client

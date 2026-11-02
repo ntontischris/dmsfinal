@@ -4,25 +4,22 @@ import { z } from "zod";
 
 import { getViewer } from "@/modules/access";
 import { AuditHistoryLink } from "@/modules/audit";
-import { Steps } from "@/spaces/kit/steps";
 import { hrefOf } from "@/spaces/data/screens";
-import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
-import { AgreementActions } from "../components/agreement-actions";
-import { proposalSteps } from "../components/agreement-header";
-import { CostSection } from "../components/cost-section";
-import { DeviationsSection } from "../components/deviations-section";
-import { HistorySections } from "../components/history-sections";
-import { LinesSection } from "../components/lines-section";
-import { OutboxSection } from "../components/outbox-section";
-import { PeopleSection } from "../components/people-section";
-import { ProposalPreview } from "../components/proposal-preview";
-import { ScheduleSection } from "../components/schedule-section";
-import { TermsSection } from "../components/terms-section";
-import { agreementCaps, athensToday, statusLabel } from "../helpers";
-import { KIND_LABELS } from "../labels";
+import { DOC_LABELS } from "../labels-public";
+import { agreementCaps, athensToday } from "../helpers";
 import { getAgreement, listProvisionKinds } from "../queries-agreements";
 import type { AgreementCaps, AgreementDetail, KindInfo } from "../types";
+import { ActionBar } from "./d2-actions";
+import { CostSection, DeviationsSection } from "./d2-cost";
+import { D2Header } from "./d2-header";
+import {
+  ChangeRequestsSection,
+  RevisionsSection,
+  SignatureSection,
+} from "./d2-history";
+import { LinesSection } from "./d2-lines";
 import {
   daysToExpiry,
   isInternal,
@@ -31,6 +28,13 @@ import {
   requestOrigin,
   type D2Extras,
 } from "./d2-load";
+import { usedKindsOf } from "./d2-model";
+import { OutboxSection } from "./d2-outbox";
+import { PeopleSection } from "./d2-people";
+import { PeriodsSection, ScheduleSection } from "./d2-schedule";
+import { TermsSection } from "./d2-terms";
+
+import { SpacesProposalDocument } from "./d5-document";
 
 import "./d2.css";
 
@@ -40,63 +44,19 @@ const Frame = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-// Οι ενότητες της σημερινής σελίδας μπαίνουν όπως είναι (με τα πραγματικά πεδία και ενέργειές τους), ως [data-tw].
-const Embedded = ({ children }: { children: ReactNode }) => (
-  <div data-tw>{children}</div>
-);
-
-interface HeaderProps {
-  agreement: AgreementDetail;
-  caps: AgreementCaps;
-  expiresInDays: number | null;
-  historyLink: ReactNode;
-}
-
-// Η κεφαλίδα του prototype (`screens/d2-header.tsx`): τίτλος, Πελάτης · Ευκαιρία · Υπεύθυνος, σήματα και η πορεία.
-function D2Header({
-  agreement,
-  caps,
-  expiresInDays,
-  historyLink,
-}: HeaderProps) {
-  const internal = isInternal(caps);
-  return (
-    <header className="d2-header">
-      <h1>{agreement.title || "Χωρίς τίτλο"}</h1>
-      <p className="muted">
-        <Link href={hrefOf("B2", { id: agreement.client.id })}>
-          {agreement.client.name}
-        </Link>
-        {" · Ευκαιρία "}
-        <Link href={hrefOf("B4", { id: agreement.opportunity.id })}>
-          {agreement.opportunity.title}
-        </Link>
-        {` · Υπεύθυνος: ${agreement.opportunity.managerName ?? "—"}`}
+// «Όπως θα τη δει ο πελάτης»: το έγγραφο της D5 (ίδιο με τον Σύνδεσμο πρότασης)· η βάση το δίνει μόνο σε όποιον «Βλέπει ποσά».
+const previewOf = (extras: D2Extras): ReactNode | null =>
+  extras.preview === null ? null : (
+    <div className="stack">
+      <p className="note" role="note">
+        {DOC_LABELS.el.preview}
       </p>
-      <span className="btn-row">
-        <Badge tone="strong">{statusLabel(agreement)}</Badge>
-        <Badge>{KIND_LABELS[agreement.kind]}</Badge>
-        {internal && <Badge>αναθεώρηση {agreement.revision}</Badge>}
-        {expiresInDays !== null && (
-          <Badge tone="attention">
-            {expiresInDays === 0
-              ? "λήγει σήμερα"
-              : `λήγει σε ${expiresInDays} ${expiresInDays === 1 ? "μέρα" : "μέρες"}`}
-          </Badge>
-        )}
-        {agreement.cost?.isLowMargin === true && (
-          <Badge tone="attention">χαμηλό περιθώριο</Badge>
-        )}
-        {!caps.canDraft && <Badge>Μόνο ανάγνωση</Badge>}
-        <span data-tw>{historyLink}</span>
-      </span>
-      <Steps
-        steps={proposalSteps(agreement.path)}
-        label="Πορεία της πρότασης"
+      <SpacesProposalDocument
+        document={extras.preview}
+        language={extras.preview.language}
       />
-    </header>
+    </div>
   );
-}
 
 interface BodyProps {
   agreement: AgreementDetail;
@@ -106,63 +66,67 @@ interface BodyProps {
   origin: string;
 }
 
+// Η σειρά του prototype (`screens/d2-workbench.tsx`): ενέργειες, Γραμμές, κόστος/Παρεκκλίσεις, Όροι, έναρξη/παραλήπτες,
+// Περίοδοι, και στο τέλος τα εξερχόμενα και το ιστορικό.
 function Body({ agreement, kinds, caps, extras, origin }: BodyProps) {
   const internal = isInternal(caps);
+  const today = athensToday();
+  const hasCost = agreement.cost !== null;
+  const hasDeviations = agreement.deviations.length > 0 || agreement.can.edit;
   return (
-    <div className="stack">
+    <>
       {agreement.can.closeLost && extras.isLossReasonsFailed && (
         <ErrorNotice what="οι λόγοι απώλειας (το «Κλείσιμο ως χαμένη» δεν γίνεται τώρα)" />
       )}
-      <Embedded>
-        <div className="grid gap-4">
-          <div className="empty:hidden">
-            <AgreementActions
-              agreement={agreement}
-              lossReasons={extras.lossReasons}
-              kinds={kinds}
-              today={athensToday()}
-              pendingDays={pendingApprovalDays(agreement)}
-            />
-          </div>
-          <ProposalPreview document={extras.preview} />
-          <LinesSection
-            agreement={agreement}
-            kinds={kinds}
-            options={extras.options}
-            isOptionsFailed={extras.isOptionsFailed}
-          />
-          <div className="grid items-start gap-4 lg:grid-cols-2 lg:[&>*:only-child]:col-span-2">
-            <CostSection agreement={agreement} />
-            <DeviationsSection agreement={agreement} />
-          </div>
-          <TermsSection agreement={agreement} />
-          <div className="grid items-start gap-4 lg:grid-cols-2 lg:[&>*:only-child]:col-span-2">
-            <ScheduleSection
-              agreement={agreement}
-              canSeeProductions={caps.canSeeProductions}
-            />
-            {internal && <PeopleSection agreement={agreement} />}
-          </div>
-          {internal && (
-            <OutboxSection
-              items={extras.outbox}
-              origin={origin}
-              emailSenderConnected={agreement.emailSenderConnected}
-            />
-          )}
-          <HistorySections
-            agreement={agreement}
-            kinds={kinds}
-            isInternal={internal}
-          />
+      <ActionBar
+        agreement={agreement}
+        lossReasons={extras.lossReasons}
+        usedKinds={usedKindsOf(agreement, kinds)}
+        today={today}
+        pendingDays={pendingApprovalDays(agreement)}
+        preview={previewOf(extras)}
+      />
+      <LinesSection
+        agreement={agreement}
+        kinds={kinds}
+        options={extras.options}
+        isOptionsFailed={extras.isOptionsFailed}
+      />
+      {(hasCost || hasDeviations) && (
+        <div className="grid2">
+          <CostSection agreement={agreement} />
+          <DeviationsSection agreement={agreement} />
         </div>
-      </Embedded>
-    </div>
+      )}
+      <TermsSection agreement={agreement} />
+      <div className="grid2">
+        <ScheduleSection agreement={agreement} />
+        {internal && <PeopleSection agreement={agreement} />}
+      </div>
+      <PeriodsSection
+        agreement={agreement}
+        canSeeProductions={caps.canSeeProductions}
+      />
+      {internal && (
+        <OutboxSection
+          items={extras.outbox}
+          origin={origin}
+          emailSenderConnected={agreement.emailSenderConnected}
+        />
+      )}
+      {internal && (
+        <div className="grid2">
+          <ChangeRequestsSection agreement={agreement} />
+          <RevisionsSection agreement={agreement} />
+        </div>
+      )}
+      <SignatureSection agreement={agreement} kinds={kinds} />
+    </>
   );
 }
 
-// D2 Σελίδα Συμφωνίας στη νέα εμφάνιση: κεφαλίδα του prototype με πραγματικά δεδομένα· οι ενότητες (γραμμές, κόστος,
-// Όροι, χρονοδιάγραμμα, παραλήπτες, εξερχόμενα, ιστορικό) και οι ενέργειες είναι οι σημερινές, ως έχουν.
+// D2 Σελίδα Συμφωνίας στη νέα εμφάνιση (prototype `screens/D2.tsx`): όλες οι ενότητες στη μορφή του prototype, με τα
+// πραγματικά δεδομένα και actions. Τι επιτρέπεται το λέει το `can` της βάσης, όπως στη σημερινή σελίδα.
 export async function SpacesAgreement({
   agreementId,
 }: {

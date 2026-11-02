@@ -7,8 +7,6 @@ import { Avatar, ListRow, Meter, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { filmingCaps } from "../caps";
-import { FilmingNotes } from "../components/filming-notes";
-import { SheetSection } from "../components/sheet-section";
 import { historyLines } from "../helpers";
 import {
   athensDate,
@@ -26,12 +24,14 @@ import {
   listFilmings,
 } from "../queries";
 import { checkSlot } from "../queries-booking";
+import { getSheet } from "../queries-sheet";
 import type { FilmingCard, FilmingRow } from "../types";
 import { e1FilmingOf } from "./e1-adapter";
 import { needsOutcome, stateWord, statusLook } from "./e1-groups";
 import { E3Actions } from "./e3-actions";
 import { E3Crew } from "./e3-crew";
 import { E3Equipment } from "./e3-equipment";
+import { E3InternalNote, E3Sheet } from "./e3-sheet";
 import { RESPONSE_WORDS, balanceOf, fmtDay, hoursLabel } from "./e3-model";
 import { StatusBadge, responseTone } from "./e3-ui";
 
@@ -369,6 +369,31 @@ async function loadTools(
   };
 }
 
+function NotePanel({ note }: { note: string | null }) {
+  if (!note) return null;
+  return (
+    <Panel label="Σημειώσεις">
+      <E3InternalNote note={note} />
+    </Panel>
+  );
+}
+
+// Το Δελτίο φορτώνει μόνο για όποιον βλέπει το Συνεργείο ή είναι μέλος του (όπως η παλιά σελίδα)· ο πελάτης δεν βλέπει τίποτα.
+async function SheetPart({ card }: { card: FilmingCard }) {
+  if (card.sheet === null && !card.viewerCan.crew)
+    return <NotePanel note={card.internalNote} />;
+  const sheet = await getSheet(card.id);
+  if (!sheet.ok) return <ErrorNotice what="το Δελτίο" />;
+  if (sheet.data === null) return <NotePanel note={card.internalNote} />;
+  return (
+    <E3Sheet
+      filmingId={card.id}
+      sheet={sheet.data}
+      internalNote={card.internalNote}
+    />
+  );
+}
+
 function Denied() {
   return (
     <div data-spaces>
@@ -392,7 +417,7 @@ function Missing() {
 }
 
 // E3 Γύρισμα στη νέα εμφάνιση (prototype `screens/E3.tsx` + `e3-workbench.tsx`). Κάθε ενέργεια φαίνεται μόνο όταν το
-// viewerCan της βάσης το επιτρέπει. Το Δελτίο και οι Σημειώσεις μένουν τα πραγματικά components (μέσα σε data-tw).
+// viewerCan της βάσης το επιτρέπει.
 export async function SpacesFilming({
   id,
   equipment,
@@ -445,14 +470,7 @@ export async function SpacesFilming({
           statusLabels={equipment.statusLabels}
         />
       )}
-      <Panel label="Δελτίο γυρίσματος">
-        <div data-tw>
-          <SheetSection card={card} viewerId={viewerId} />
-        </div>
-      </Panel>
-      <div data-tw>
-        <FilmingNotes card={card} />
-      </div>
+      <SheetPart card={card} />
       <History card={card} />
     </>
   );
