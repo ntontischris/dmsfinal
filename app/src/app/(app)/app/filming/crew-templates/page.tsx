@@ -1,7 +1,9 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer } from "@/modules/access";
 import {
   CrewTemplateList,
+  SpacesCrewTemplates,
   filmingCaps,
   listCrewCandidates,
   listCrewTemplates,
@@ -16,6 +18,7 @@ const EYEBROW = "E7 · Πρότυπα Συνεργείου";
 // E7: τα Πρότυπα Συνεργείου. Τα βλέπει και τα αλλάζει όποιος «Διαχειρίζεται Συνεργείο».
 export default async function CrewTemplatesPage() {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") return <SpacesCrewTemplates />;
   const caps = filmingCaps(viewer);
   if (!caps.canCrew)
     return (

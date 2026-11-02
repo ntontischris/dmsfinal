@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { getViewer } from "@/modules/access";
@@ -6,6 +7,7 @@ import {
   EquipmentTable,
   MutedNote,
   NewItemDetails,
+  SpacesEquipment,
   equipmentCaps,
   listCategories,
   listItems,
@@ -23,8 +25,10 @@ const READ_ONLY_NOTE =
   "Μόνο ανάγνωση: δεσμεύεις στα Γυρίσματά σου, όταν φτάσουν.";
 
 // F1: το μητρώο του Εξοπλισμού. Τα αποσυρμένα κρύβονται αν δεν τα ζητήσεις με το φίλτρο Κατάστασης.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function EquipmentPage() {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") return <SpacesEquipment />;
   const caps = equipmentCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} eyebrow={EYEBROW} />;
 

@@ -1,0 +1,30 @@
+/* F1–F3 Εξοπλισμός: prototype screens/f.css */
+[data-look='spaces'] {
+/* Οθόνες F1–F3 (Εξοπλισμός). Μόνο τα ουδέτερα tokens του globals.css. */
+& .f { min-width: 0; max-width: 100%; }
+& .f .card { min-width: 0; overflow-wrap: anywhere; }
+& .f-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+& .f-group { border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-2) var(--space-3); margin: 0 0 var(--space-2); min-width: 0; }
+& .f-group legend { font-size: var(--text-sm); color: var(--color-text-muted); padding: 0 var(--space-1); }
+& .f .select, .f .input { max-width: 100%; min-width: 0; }
+& .f .e3-inline { width: 100%; }
+& .f .e3-inline .select { flex: 1 1 12rem; }
+/* Ύφος ταυτότητας */
+& .f-group legend { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+}
+/* Ό,τι παίρνουν τα F1–F3 από τα prototype screens/e5.css και screens/e3.css (ίδιοι κανόνες, αυτούσιοι· όταν φορτωθούν και τα E3/E5 απλώς συμπίπτουν) */
+[data-look='spaces'] {
+& .e { min-width: 0; max-width: 100%; }
+& .e .card { min-width: 0; overflow-wrap: anywhere; }
+& .e-form { display: flex; flex-direction: column; gap: var(--space-3); max-width: 36rem; }
+& .e-form label, .e-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+& .e-form .input { width: 100%; }
+& .e-warn { border: 1px solid color-mix(in oklab, var(--color-attention) 40%, transparent); border-radius: var(--radius-lg); padding: var(--space-2) var(--space-3); background: var(--color-surface-raised); font-size: var(--text-sm); margin: var(--space-2) 0; }
+& .e-info { border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-2) var(--space-3); background: var(--color-surface); font-size: var(--text-sm); margin: var(--space-2) 0; }
+& .e-checks { display: flex; flex-direction: column; gap: var(--space-1); }
+& .e-checks label { flex-direction: row; align-items: center; gap: var(--space-2); }
+& .e3-picker { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; padding: 0; margin: 0 0 var(--space-4); }
+& .e3-picker a { text-decoration: none; color: inherit; }
+& .e3-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .e3-picker a:hover { color: var(--color-accent); }
+}

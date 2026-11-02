@@ -1,8 +1,10 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
   GoogleDeletionsList,
+  SpacesGoogleDeletions,
   canSeeGoogleCalendar,
   getGoogleDeletions,
 } from "@/modules/google";
@@ -14,6 +16,7 @@ const EYEBROW = "A7 · Ημερολόγιο";
 // A7: Γυρίσματα που διαγράφηκαν στο Google. Η απόφαση είναι του Χρήστη, πριν λήξει η προθεσμία.
 export default async function GoogleDeletionsPage() {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") return <SpacesGoogleDeletions />;
   const header = <ScreenHeader eyebrow={EYEBROW} title="Διαγραφές από το Google" />;
   if (!canSeeGoogleCalendar(viewer))
     return (

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
@@ -17,6 +18,7 @@ import {
   ItemHistory,
   ItemStatusPanel,
   MutedNote,
+  SpacesEquipmentItem,
   equipmentCaps,
   getItem,
   historyLines,
@@ -34,12 +36,15 @@ import { ItemDetailsPanel } from "./item-details-panel";
 export const metadata = { title: "Αντικείμενο Εξοπλισμού" };
 
 // F2: ένα αντικείμενο του μητρώου. Τα πεδία είναι φόρμα μόνο για όποιον Διαχειρίζεται απόθεμα.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function EquipmentItemPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesEquipmentItem id={(await params).id} />;
   const caps = equipmentCaps(viewer);
   if (!caps.canView)
     return <NoAccess viewer={viewer} eyebrow="F2 · Αντικείμενο" />;

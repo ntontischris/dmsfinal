@@ -1,9 +1,11 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer, isClientViewer } from "@/modules/access";
 import {
   ChargeDecisionsPanel,
   QueueTable,
   QueueTabs,
+  SpacesDeliverables,
   deliverablesCaps,
   listDeliverableQueue,
   listPendingCharges,
@@ -21,6 +23,7 @@ const EYEBROW = "H1 · Παραδοτέα";
 const DEFAULT_FILTER = { view: "mine" } as const;
 
 // H1: η ουρά των Παραδοτέων. Η καρτέλα είναι στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη μένει πάντα στη σημερινή (H3).
 export default async function DeliverablesPage({
   searchParams,
 }: {
@@ -28,6 +31,8 @@ export default async function DeliverablesPage({
 }) {
   const viewer = await getViewer();
   if (isClientViewer(viewer)) return <ClientQueueScreen viewer={viewer} />;
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesDeliverables query={await searchParams} />;
   const caps = deliverablesCaps(viewer);
   if (!caps.canQueue) return <NoAccess viewer={viewer} />;
 

@@ -1,10 +1,12 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer } from "@/modules/access";
 import {
   FilmingList,
+  SpacesFilmings,
   filmingCaps,
   listFilmings,
   listFilterSchema,
@@ -23,6 +25,10 @@ export default async function FilmingPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") {
+    const { tab } = listFilterSchema.parse(await searchParams);
+    return <SpacesFilmings tab={tab} />;
+  }
   const caps = filmingCaps(viewer);
   if (!caps.canView)
     return (
@@ -39,12 +45,18 @@ export default async function FilmingPage({
     <>
       <ScreenHeader eyebrow={EYEBROW} title="Γυρίσματα">
         {caps.canApprove && (
-          <Link href="/app/filming/queue" className={buttonVariants({ variant: "ghost" })}>
+          <Link
+            href="/app/filming/queue"
+            className={buttonVariants({ variant: "ghost" })}
+          >
             Ουρά έγκρισης
           </Link>
         )}
         {caps.canBook && (
-          <Link href="/app/filming/new" className={buttonVariants({ variant: "primary" })}>
+          <Link
+            href="/app/filming/new"
+            className={buttonVariants({ variant: "primary" })}
+          >
             Νέο Γύρισμα
           </Link>
         )}

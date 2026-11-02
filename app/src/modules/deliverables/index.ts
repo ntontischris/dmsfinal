@@ -46,3 +46,6 @@ export { QueueTable } from "./components/queue-table";
 export { QueueTabs } from "./components/queue-tabs";
 export { getDeliverableRules } from "./queries-rules";
 export type { DeliverableRuleKind, DeliverableRules } from "./rules-types";
+// Νέα εμφάνιση (Χώροι): οι οθόνες του prototype H1, H2 πάνω στα ίδια δεδομένα.
+export { SpacesDeliverables } from "./spaces/h1-screen";
+export { SpacesDeliverable } from "./spaces/h2-screen";

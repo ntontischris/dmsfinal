@@ -1,0 +1,6 @@
+/* E6: προειδοποιήσεις του Δελτίου (prototype screens/e6.css). */
+[data-look='spaces'] {
+/* E6: προειδοποιήσεις του Δελτίου. */
+& .e6-warnings { list-style: none; margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-attention); border-radius: var(--radius-lg); display: grid; gap: var(--space-1); font-size: var(--text-sm); overflow-wrap: anywhere; }
+& .e6-issue { color: var(--color-attention); font-weight: 600; }
+}

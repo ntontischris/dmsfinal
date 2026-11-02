@@ -1,0 +1,46 @@
+/* G2 Σελίδα Παραγωγής (prototype screens/g2.css) */
+[data-look='spaces'] {
+/* Σελίδα Παραγωγής (G2). Μόνο τα ουδέτερα tokens του globals.css. */
+& .g2 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+& .g2 .card { min-width: 0; }
+& .g2 .input, .g2 .select { max-width: 100%; }
+& .g2-header { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+& .g2-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .g2-form { display: flex; flex-direction: column; gap: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-3); margin: var(--space-2) 0; width: 100%; max-width: 32rem; min-width: 0; }
+& .g2-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+& .g2-form .input { width: 100%; }
+& .g2-memo { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid color-mix(in oklab, var(--color-accent) 35%, transparent); border-radius: var(--radius-lg); background: color-mix(in oklab, var(--color-accent) 7%, var(--color-surface-raised)); font-size: var(--text-sm); }
+& .g2-warn { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-attention); border-radius: var(--radius-lg); font-size: var(--text-sm); }
+& .g2-row { display: flex; flex-direction: column; gap: var(--space-1); }
+& .g2-row[data-muted='true'] { opacity: 0.65; }
+& .g2-row[data-done='true'] .g2-title { text-decoration: line-through; }
+& .g2-title { font-weight: 600; }
+& .g2-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+& .g2-total { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); gap: var(--space-3); }
+& .g2-total strong { display: block; font-size: var(--text-lg); }
+& .g2-add { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: var(--space-3); }
+& .g2-add .input { flex: 1 1 12rem; }
+/* Ύφος ταυτότητας */
+& .g2-row a { text-decoration: none; font-weight: 600; }
+& .g2-row a:hover { color: var(--color-accent); }
+& .g2-total strong { font-weight: 700; letter-spacing: -0.01em; }
+/* screens2 μορφή */
+& .g2-pad { padding: var(--space-3) var(--space-4); margin: 0; }
+& .g2-pad:empty { display: none; }
+& .g2-pad .muted + .muted, .g2-pad .note { margin-top: var(--space-2); }
+& .g2-provisions { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
+& .g2-provisions li { display: grid; gap: var(--space-1); }
+& .g2-check { display: inline-block; width: 1.1rem; height: 1.1rem; border-radius: 0.3rem; border: 1.5px solid var(--color-border); flex: none; }
+& .g2-check[data-done='true'] { background: var(--color-accent); border-color: var(--color-accent); }
+& .g2-people-note { padding: var(--space-3) var(--space-4); margin: 0; }
+& .g2-members, .g2-tasks { list-style: none; margin: 0; padding: 0; }
+& .g2-member { padding: var(--space-2) 0; border-top: 1px solid var(--color-border); }
+& .g2-member:first-child { border-top: 0; }
+& .g2-member-line { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; }
+& .g2-member-who { display: inline-flex; gap: var(--space-2); align-items: center; min-width: 0; }
+& .g2-member-text { display: grid; }
+& .g2-task { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; padding: var(--space-2) 0; border-top: 1px solid var(--color-border); }
+& .g2-task:first-child { border-top: 0; }
+& .g2-task .g2-title { flex: 1 1 10rem; min-width: 0; }
+& .g2-task[data-done='true'] .g2-title { text-decoration: line-through; color: var(--color-text-muted); }
+}

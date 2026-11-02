@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer, isClientViewer } from "@/modules/access";
 import {
   DeliverableDetailView,
+  SpacesDeliverable,
   deliverablesCaps,
   getDeliverable,
   getDeliverableCandidates,
@@ -19,10 +21,13 @@ export const metadata = { title: "Παραδοτέο" };
 const EYEBROW = "H2 · Παραδοτέο";
 
 // H2: ένα Παραδοτέο. Ό,τι δεν επιτρέπεται στον θεατή δεν εμφανίζεται· η βάση ξαναελέγχει κάθε ενέργεια.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη μένει πάντα στη σημερινή (H4).
 export default async function DeliverablePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
   const { id } = await params;
@@ -30,6 +35,10 @@ export default async function DeliverablePage({
   if (isClientViewer(viewer)) {
     return parsed.success ? <ClientDetailScreen viewer={viewer} id={parsed.data} /> : <Missing />;
   }
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesDeliverable id={parsed.success ? parsed.data : null} query={await searchParams} />
+    );
   const caps = deliverablesCaps(viewer);
   if (!caps.canQueue) return <NoAccess viewer={viewer} />;
   if (!parsed.success) return <Missing />;

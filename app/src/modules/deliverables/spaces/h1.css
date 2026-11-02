@@ -1,0 +1,30 @@
+/* H1 Ουρά Παραδοτέων (prototype screens/h1.css, αυτούσιο) */
+[data-look='spaces'] {
+/* H1: Ουρά Παραδοτέων. Μόνο ουδέτερα tokens. */
+& .h1-cell { min-width: 0; overflow-wrap: anywhere; }
+& .h1-cell a { overflow-wrap: anywhere; }
+& .h1-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+& .h1-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+& .h1-charges ul, .h1-rules ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+& .h1-charges li, .h1-rules li { overflow-wrap: anywhere; }
+& .h1-rules dl { margin: 0; }
+& .h1-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); }
+& .h1-wrap { min-width: 0; overflow-wrap: anywhere; }
+& .h1-title { font-weight: 600; }
+& .h1-toolbar .select { max-width: 100%; }
+/* Ύφος ταυτότητας */
+& .h1-cell a, .h1-title a { text-decoration: none; font-weight: 600; }
+& .h1-cell a:hover, .h1-title a:hover { color: var(--color-accent); }
+/* Από το e5.css του prototype: τα κοινά sx-* που χρησιμοποιούν το H1 και το H2 */
+& .sx-pad { padding: var(--space-3) var(--space-4); }
+& .sx-extra { list-style: none; padding: 0.25rem 1.25rem 1rem; display: grid; gap: var(--space-2); min-width: 0; overflow-wrap: anywhere; }
+& .sx-extra .dl { margin: 0; }
+& .sx-extra .note, .sx-extra .muted, .sx-pad .note, .sx-pad .muted { margin: 0; }
+& .sx-actions { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .sx-actions .button { border-radius: 999px; }
+& .sx-actions .button, .sx-extra .button, .sx-pad .button { min-height: 44px; }
+& .sx-line { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; justify-content: space-between; min-width: 0; }
+& .sx-done { opacity: 0.8; }
+& .sx-flat { background: none; border: 0; box-shadow: none; padding: 0; margin: 0; }
+& .sx-dots { letter-spacing: 0.12em; font-weight: 700; color: var(--color-accent); white-space: nowrap; }
+}

@@ -34,3 +34,5 @@ export { ProductionList } from "./components/production-list";
 export { ProductionTabs } from "./components/production-tabs";
 export { StatePanel } from "./components/state-panel";
 export { TasksPanel } from "./components/tasks-panel";
+export { SpacesProductions } from "./spaces/g1-screen";
+export { SpacesProduction } from "./spaces/g2-screen";
