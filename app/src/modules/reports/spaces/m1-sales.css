@@ -1,0 +1,20 @@
+/* M1 Αναφορές Πωλήσεων (prototype `screens/m1-sales.css`, αυτούσιο). Μόνο ουδέτερα tokens. */
+[data-look='spaces'] {
+& .m1s-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3); margin: var(--space-3) 0 var(--space-4); }
+& .m1s-card { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; overflow-wrap: anywhere; }
+& .m1s-card strong { font-size: var(--text-lg); }
+& .m1s-section { margin-top: var(--space-5); min-width: 0; }
+& .m1s-list { list-style: none; padding: 0; margin: var(--space-2) 0 0; display: flex; flex-direction: column; gap: var(--space-2); }
+& .m1s-list li { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; min-width: 0; overflow-wrap: anywhere; border-bottom: 1px solid color-mix(in oklab, var(--color-text) 7%, transparent); padding-bottom: var(--space-2); }
+& .m1s-export { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-top: var(--space-4); }
+& .m1s-body { min-width: 0; overflow-wrap: anywhere; }
+& .m1s-cards .kit-panel { margin-bottom: 0; }
+& .m1s-big { display: block; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+& .m1s-section { margin-top: var(--space-4); }
+& .m1s-section .kit-panel { margin-bottom: 0; }
+& .m1s-table { margin: 0; }
+& .m1s-table .num { font-variant-numeric: tabular-nums; font-weight: 600; }
+& .m1s-table .m1s-money { font-weight: 800; }
+& .m1s-table .part-tile { width: 2.2rem; height: 2.2rem; font-size: 0.8rem; }
+& .m1s-body > .kit-panel { margin-bottom: var(--space-4); }
+}

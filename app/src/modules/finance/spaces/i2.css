@@ -1,0 +1,52 @@
+/* I2: Τιμολόγια. Πίνακας εργασίας, χωρίς σπασίματα λέξεων. */
+[data-look='spaces'] {
+& .i2-table th, & .i2-table td { vertical-align: middle; }
+& .i2-number { min-width: 9rem; }
+& .i2-code { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+& .i2-number .i245-sub { max-width: 30rem; margin-top: 2px; }
+& .i2-client { min-width: 9rem; }
+& .i2-nowrap { white-space: nowrap; }
+& .i2-actions { white-space: nowrap; }
+& .i2-actions a + a { margin-left: var(--space-3); }
+& .i2-actions > * + * { margin-left: var(--space-3); }
+/* mono = sans */
+& .i2-voided { font-family: var(--font-mono); color: var(--color-text-muted); }
+& details.card > summary { cursor: pointer; }
+@media (max-width: 40rem) {
+  & .i2-number, & .i2-client { min-width: 0; }
+  & .rtable td.i2-number { display: grid; grid-template-columns: auto 1fr; }
+  & .i2-number::before { grid-row: 1; }
+  & .i2-number > * { grid-column: 2; }
+  & .i2-number .i245-sub { max-width: none; text-align: right; }
+}
+/* Ενέργειες σταθερές στα δεξιά στο desktop· το υπόλοιπο που μένει σε έμφαση. */
+@media (min-width: 40.01rem) {
+  & .i2-table .i2-actions { position: sticky; right: 0; z-index: 2; background: var(--color-surface-raised); box-shadow: -1px 0 0 var(--color-border); }
+}
+& .i2-actions { min-width: 11rem; }
+& .i2-actions-row { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; }
+& .i2-remaining[data-open='true'] { font-weight: 700; color: var(--color-text); }
+& .i2-reminder { display: grid; gap: var(--space-2); margin-top: var(--space-2); white-space: normal; max-width: 22rem; }
+& .i2-reminder-preview { display: grid; gap: var(--space-2); margin: 0; font-size: var(--text-sm); }
+& .i2-reminder-preview p { margin: 0; }
+& .i2-reminders { margin: 0; padding-left: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
+& .i2-client-filter { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); font-size: var(--text-sm); }
+& .i2-client-filter a { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong); font-weight: 600; text-decoration: none; color: var(--color-text); transition: background-color 120ms ease; }
+& .i2-client-filter a:hover { background: color-mix(in oklab, var(--color-text) 8%, transparent); }
+& .i2-client-filter a[aria-current='true'] { background: color-mix(in oklab, var(--color-accent) 18%, transparent); border-color: var(--color-accent); }
+@media (pointer: coarse) { & .i2-client-filter a { min-height: 44px; } }
+/* Πίνακας τιμολογίων: ήρεμο γυάλινο πάνελ (όπως ListPanel στα screens2) */
+& .scroll:has(> .i2-table) { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); backdrop-filter: blur(4px); }
+& .i2-table { margin: 0; }
+@media (max-width: 40rem) {
+  & .rtable td.i2-remaining[data-open='true'] { font-size: var(--text-lg); }
+  & .i2-actions { grid-column: 1 / -1; min-width: 0; }
+}
+
+/* screens2 */
+& .i2-money { font-weight: 700; font-variant-numeric: tabular-nums; }
+& .i2-code { font-family: inherit; font-size: 1.02rem; font-weight: 700; }
+& .i2-table .part-tile { width: 2.2rem; height: 2.2rem; font-size: 0.8rem; }
+& .i2-voided-panel { padding-bottom: var(--space-3); }
+& .i2-voided-panel > summary { cursor: pointer; padding: 1rem 1.25rem; }
+& .i2-voided-panel > :not(summary) { margin-inline: 1.25rem; } }

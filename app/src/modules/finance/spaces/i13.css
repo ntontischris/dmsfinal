@@ -1,0 +1,39 @@
+/* I1 + I3: Προς τιμολόγηση, Καταχώρηση Τιμολογίου. Μόνο ουδέτερα tokens. */
+[data-look='spaces'] {
+& .i13-cell { min-width: 0; overflow-wrap: anywhere; }
+& .i13-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+& .i13-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
+& .i13-group { padding: 0; }
+& .i13-group > summary { cursor: pointer; list-style: none; padding: var(--space-3) var(--space-4); }
+& .i13-group > summary::-webkit-details-marker { display: none; }
+& .i13-group > summary::before { content: "▸ "; color: var(--color-text-muted); }
+& .i13-group[open] > summary::before { content: "▾ "; }
+& .i13-body { padding: 0 var(--space-4) var(--space-3); min-width: 0; }
+& .i13-sum { display: inline-flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: baseline; min-width: 0; max-width: 100%; }
+& .i13-sum > * { min-width: 0; overflow-wrap: anywhere; }
+& .i13-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--space-4); align-items: start; }
+& .i13-layout > * { min-width: 0; }
+& .i13-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--space-3); }
+& .i13-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); min-width: 0; }
+& .i13-field .input { width: 100%; }
+& .i13-warn { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+& .i13-warn li { position: relative; padding-left: var(--space-4); font-size: var(--text-sm); overflow-wrap: anywhere; }
+& .i13-warn li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: var(--color-attention); }
+& .i13-warn li[data-strong="true"] { font-weight: 600; }
+& .i13-warn li[data-strong="true"]::before { background: var(--brand-rec); }
+& .i13-group { border-radius: var(--radius-lg); }
+& .i13-check { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); margin: var(--space-2) 0; }
+& .i13-done { border-color: var(--color-accent); }
+& .i13-wrap { min-width: 0; overflow-wrap: anywhere; }
+
+/* screens2: ομάδα Πελάτη = πάνελ με Entity αριστερά και ποσό δεξιά */
+& .i13-group > summary::before { content: none; }
+& .i13-group > summary { padding: var(--space-3) var(--space-4); }
+& .i13-group .i13-sum { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: var(--space-3) var(--space-4); }
+& .i13-total { margin-left: auto; text-align: right; color: var(--color-text-muted); font-size: var(--text-sm); }
+& .i13-total strong { display: block; font-size: 1.25rem; color: var(--color-text); font-variant-numeric: tabular-nums; }
+& .i13-money { font-weight: 700; font-variant-numeric: tabular-nums; }
+& .i13-date { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-text); white-space: nowrap; }
+& .i13-money { font-weight: 700; font-variant-numeric: tabular-nums; }
+& .i13-done-wrap .kit-panel { border-color: var(--color-accent); }
+}

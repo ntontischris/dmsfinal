@@ -8,3 +8,6 @@ export { EXPORT_TITLE } from "./export/labels";
 export { parseDatasetParam, parseFormat, parseMonth } from "./export/url";
 export { ExportScreen } from "./export/components/export-screen";
 export { AuditExportButtons } from "./export/components/audit-export-buttons";
+// Νέα εμφάνιση (Χώροι): οι οθόνες M1 και M2 του prototype πάνω στα ίδια RPC.
+export { SpacesReports } from "./spaces/m1-screen";
+export { SpacesExport } from "./spaces/m2-screen";
