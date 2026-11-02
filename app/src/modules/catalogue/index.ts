@@ -81,6 +81,7 @@ export { ItemCostSection } from "./components/item-cost-section";
 export { ItemPublicForm } from "./components/item-public-form";
 export { ItemUsage } from "./components/item-usage";
 export { ProvisionKindsEditor } from "./components/provision-kinds-editor";
+export { SpacesProvisionKinds } from "./spaces/o3-kinds";
 export { CostMonthsCard } from "./components/cost-months-card";
 export { MultipliersCard } from "./components/multipliers-card";
 export { SpacesCatalogue } from "./spaces/c1-screen";

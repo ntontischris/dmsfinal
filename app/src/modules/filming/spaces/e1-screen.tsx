@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { getViewer, type Viewer } from "@/modules/access";
+import { can, getViewer, isClientViewer, type Viewer } from "@/modules/access";
 import { getSpaceStrip } from "@/modules/today";
 import { hrefOf } from "@/spaces/data/screens";
 import { codesOfSpace } from "@/spaces/data/spaces";
@@ -64,19 +64,26 @@ function Views({
   );
 }
 
+const CLIENT_EMPTY_TEXT =
+  "Δεν έχεις Γυρίσματα σε αυτή την προβολή. Μπορείς να κλείσεις ένα.";
+
 function Groups({
   rows,
   nowMs,
+  isClient,
 }: {
   rows: readonly FilmingRow[];
   nowMs: number;
+  isClient: boolean;
 }) {
-  const groups = groupFilmings(rows.map(e1FilmingOf), nowMs);
+  const groups = groupFilmings(rows.map(e1FilmingOf), nowMs, { isClient });
   const today = athensDate(new Date(nowMs));
   if (groups.length === 0)
     return (
       <StateNotice kind="empty" title="Κανένα Γύρισμα εδώ.">
-        Δεν υπάρχει Γύρισμα σε αυτή την προβολή.
+        {isClient
+          ? CLIENT_EMPTY_TEXT
+          : "Δεν υπάρχει Γύρισμα σε αυτή την προβολή."}
       </StateNotice>
     );
   return groups.map((group) => (
@@ -88,6 +95,7 @@ function Groups({
           today={today}
           nextId={group.nextId}
           isLate={group.isAttention}
+          isClient={isClient}
         />
       </Panel>
     </div>
@@ -95,7 +103,9 @@ function Groups({
 }
 
 // E1 Γυρίσματα στη νέα εμφάνιση (prototype `screens/E1.tsx`): ομάδες «Θέλουν «έγινε»», επόμενα και παλιά ανά μήνα.
-// Η βάση φιλτράρει ανά καρτέλα και αποφασίζει τι βλέπει ο Χρήστης· μόνο για την ομάδα (ο πελάτης μένει στην παλιά).
+// Η βάση φιλτράρει ανά καρτέλα και αποφασίζει τι βλέπει ο Χρήστης. Ο Χρήστης πελάτη βλέπει τη δική του όψη (prototype `isClient`):
+// τη λωρίδα του Χώρου «Γυρίσματα» πελάτη, χωρίς «Θέλουν «έγινε»», Συνεργείο ή σήματα. Η κάρτα υπολοίπου του prototype λείπει
+// (η λίστα της βάσης δεν δίνει υπόλοιπο Παροχής ανά Περίοδο).
 export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
   const viewer = await getViewer();
   const caps = filmingCaps(viewer);
@@ -107,9 +117,10 @@ export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
         </StateNotice>
       </div>
     );
-  const views = visibleViews(caps.canApprove);
+  const isClient = isClientViewer(viewer);
+  const views = visibleViews(caps.canApprove, isClient);
   const [strip, ...results] = await Promise.all([
-    getSpaceStrip(codesOfSpace("production")),
+    getSpaceStrip(codesOfSpace(isClient ? "c-filming" : "production")),
     ...views.map((view) => listFilmings(view.id)),
   ]);
   const counts = new Map(
@@ -130,6 +141,13 @@ export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
           «Με αφορά»: βλέπεις τα Γυρίσματα στα οποία συμμετέχεις.
         </p>
       )}
+      {isClient && can(viewer, "c.book") && (
+        <div className="toolbar">
+          <Link className="button" data-primary="true" href={hrefOf("E5")}>
+            Κλείσε νέο Γύρισμα
+          </Link>
+        </div>
+      )}
       {caps.canBook && (
         <div className="toolbar">
           <Link className="button" data-primary="true" href={hrefOf("E4")}>
@@ -139,7 +157,7 @@ export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
       )}
       <Views views={views} tab={tab} counts={counts} />
       {current.ok ? (
-        <Groups rows={current.data} nowMs={nowMs} />
+        <Groups rows={current.data} nowMs={nowMs} isClient={isClient} />
       ) : (
         <ErrorNotice what="τα Γυρίσματα" />
       )}

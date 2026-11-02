@@ -19,6 +19,7 @@ import {
   InvoiceFilterTabs,
   InvoiceTable,
   InvoiceTotals,
+  SpacesClientInvoices,
   SpacesInvoices,
   VoidedInvoicesCard,
   financeCaps,
@@ -43,9 +44,17 @@ export default async function InvoicesPage({
   searchParams,
 }: InvoicesPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
-  if (financeViewOf(viewer) === "client") return <ClientInvoicesScreen />;
-  // Στη νέα εμφάνιση (Χώροι, μόνο ομάδα) η οθόνη του prototype· αλλιώς η σημερινή.
-  if ((await lookOf(viewer)) === "spaces")
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype, για τον πελάτη και για την ομάδα· αλλιώς η σημερινή.
+  const look = await lookOf(viewer);
+  if (financeViewOf(viewer) === "client")
+    return look === "spaces" ? (
+      <SpacesClientInvoices
+        query={{ filter: parseInvoiceFilter(params.filter), month: params.month }}
+      />
+    ) : (
+      <ClientInvoicesScreen />
+    );
+  if (look === "spaces")
     return (
       <SpacesInvoices
         query={{

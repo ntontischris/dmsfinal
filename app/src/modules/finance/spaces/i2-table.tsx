@@ -18,6 +18,8 @@ interface InvoiceTableProps {
   rows: readonly InvoiceItem[];
   today: string;
   canEdit: boolean;
+  // Ο Χρήστης πελάτη δεν βλέπει στήλη Πελάτη (prototype: showClient).
+  showClient?: boolean;
 }
 
 function NumberCell({ row }: { row: InvoiceItem }) {
@@ -95,6 +97,7 @@ function InvoiceRow({
   row,
   today,
   canEdit,
+  showClient = true,
 }: InvoiceTableProps & { row: InvoiceItem }) {
   return (
     <tr>
@@ -102,9 +105,11 @@ function InvoiceRow({
       <td data-label="Είδος" className="i2-nowrap">
         {KIND_LABELS[row.kind]}
       </td>
-      <td data-label="Πελάτης" className="i2-client">
-        <Entity name={row.clientName} />
-      </td>
+      {showClient && (
+        <td data-label="Πελάτης" className="i2-client">
+          <Entity name={row.clientName} />
+        </td>
+      )}
       <td data-label="Έκδοση" className="i2-nowrap">
         {fmtDate(row.issueDate)}
       </td>
@@ -118,12 +123,12 @@ function InvoiceRow({
   );
 }
 
-function HeadRow() {
+function HeadRow({ showClient }: { showClient: boolean }) {
   return (
     <tr>
       <th>Αριθμός</th>
       <th>Είδος</th>
-      <th>Πελάτης</th>
+      {showClient && <th>Πελάτης</th>}
       <th>Έκδοση</th>
       <th>Λήξη</th>
       <th className="num">Σύνολο με ΦΠΑ</th>
@@ -137,12 +142,17 @@ function HeadRow() {
 
 // Ο πίνακας Τιμολογίων του prototype (`screens/i2-table.tsx`) με πραγματικές γραμμές· το PDF και η Διόρθωση
 // οδηγούν στις πραγματικές διαδρομές.
-export function InvoiceTable({ rows, today, canEdit }: InvoiceTableProps) {
+export function InvoiceTable({
+  rows,
+  today,
+  canEdit,
+  showClient = true,
+}: InvoiceTableProps) {
   return (
     <div className="scroll">
       <table className="rtable i2-table">
         <thead>
-          <HeadRow />
+          <HeadRow showClient={showClient} />
         </thead>
         <tbody>
           {rows.map((row) => (
@@ -152,6 +162,7 @@ export function InvoiceTable({ rows, today, canEdit }: InvoiceTableProps) {
               row={row}
               today={today}
               canEdit={canEdit}
+              showClient={showClient}
             />
           ))}
         </tbody>

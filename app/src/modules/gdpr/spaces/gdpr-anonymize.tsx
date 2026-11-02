@@ -14,7 +14,32 @@ interface AnonymizeConfirmProps {
   subjectKind: PersonKind;
   subjectId: string;
   name: string;
-  backHref: string;
+  // Στη N1 η επιβεβαίωση είναι δική της διεύθυνση (backHref)· στη B2 ανοίγει στη θέση της (onCancel).
+  backHref?: string;
+  onCancel?: () => void;
+}
+
+function BackControl({
+  backHref,
+  onCancel,
+  label,
+}: {
+  backHref?: string;
+  onCancel?: () => void;
+  label: string;
+}) {
+  if (backHref)
+    return (
+      <Link className="button" href={backHref}>
+        {label}
+      </Link>
+    );
+  if (!onCancel) return null;
+  return (
+    <button type="button" className="button" onClick={onCancel}>
+      {label}
+    </button>
+  );
 }
 
 // Η επιβεβαίωση της Ανωνυμοποίησης (prototype `screens/n1-gdpr.tsx`), με την πραγματική ενέργεια. Το κουμπί ανοίγει
@@ -24,6 +49,7 @@ export function AnonymizeConfirm({
   subjectId,
   name,
   backHref,
+  onCancel,
 }: AnonymizeConfirmProps) {
   const { state, isPending, onSubmit, formRef } = useKeptForm(anonymizeSubject);
   const [typed, setTyped] = useState("");
@@ -32,9 +58,11 @@ export function AnonymizeConfirm({
       <div className="n1-danger" role="status">
         <Panel label={`Ανωνυμοποίηση: ${name}`}>
           <p>{state.notice}</p>
-          <Link className="button" href={backHref}>
-            Πίσω στον Χρήστη
-          </Link>
+          {backHref && (
+            <Link className="button" href={backHref}>
+              Πίσω στον Χρήστη
+            </Link>
+          )}
         </Panel>
       </div>
     );
@@ -73,9 +101,11 @@ export function AnonymizeConfirm({
             >
               {isPending ? "Ανωνυμοποίηση…" : "Ανωνυμοποίηση οριστικά"}
             </button>
-            <Link className="button" href={backHref}>
-              Άκυρο
-            </Link>
+            <BackControl
+              backHref={backHref}
+              onCancel={onCancel}
+              label="Άκυρο"
+            />
           </div>
           <p className="note">
             Το κουμπί ενεργοποιείται όταν το όνομα ταιριάζει ακριβώς.

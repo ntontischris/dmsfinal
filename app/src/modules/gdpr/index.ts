@@ -9,3 +9,4 @@ export {
   GdprUserSection as SpacesGdprUserSection,
 } from "./spaces/gdpr-panels";
 export { SpacesGdpr } from "./spaces/gdpr-screen";
+export { GdprClientSection as SpacesGdprClientSection } from "./spaces/gdpr-client";

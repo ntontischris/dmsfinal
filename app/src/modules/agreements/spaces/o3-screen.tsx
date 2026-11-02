@@ -1,6 +1,6 @@
 import { can, getViewer } from "@/modules/access";
 import {
-  ProvisionKindsEditor,
+  SpacesProvisionKinds,
   getKindUsage,
   listProvisionKinds,
 } from "@/modules/catalogue";
@@ -61,8 +61,7 @@ const EMAIL_PENDING =
 const EMAIL_ACTIVE = "Η αποστολή email είναι ενεργή.";
 
 // O3 Ρυθμίσεις › Συμφωνίες στη νέα εμφάνιση (prototype `screens/O3.tsx`): Όροι σε δύο σετ, Πολιτική Γυρισμάτων,
-// Προεπιλογές τιμολόγησης, Όριο αλλαγών και τελευταίες αλλαγές, με τα πραγματικά actions. Τα είδη Παροχής τα γράφει
-// ο Κατάλογος και μπαίνουν ως έχουν ([data-tw]) μέχρι να δώσει δική του κάρτα στη νέα εμφάνιση.
+// Προεπιλογές τιμολόγησης, Είδη Παροχής (κάρτα του Καταλόγου), Όριο αλλαγών και τελευταίες αλλαγές, με τα πραγματικά actions.
 export async function SpacesAgreementsSettings({
   showRetired,
   set,
@@ -99,13 +98,11 @@ export async function SpacesAgreementsSettings({
           <TermsCard defaults={defaults.data} set={set} />
           <PolicyCard defaults={defaults.data} />
           <PricingCard defaults={defaults.data} />
-          <div className="o-card" data-tw>
-            <ProvisionKindsEditor
-              kinds={kinds.data}
-              usage={usage.data}
-              showRetired={showRetired}
-            />
-          </div>
+          <SpacesProvisionKinds
+            kinds={kinds.data}
+            usage={usage.data}
+            showRetired={showRetired}
+          />
           <RevisionLimitsCard kinds={kindsWithLimits.data} />
           {changes.ok && (
             <SpacesRecentChanges

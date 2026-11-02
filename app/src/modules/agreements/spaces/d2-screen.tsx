@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { getViewer } from "@/modules/access";
-import { AuditHistoryLink } from "@/modules/audit";
+import { SpacesHistoryLink } from "@/modules/audit";
 import { hrefOf } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
@@ -182,7 +182,7 @@ export async function SpacesAgreement({
         caps={caps}
         expiresInDays={daysToExpiry(found.data, athensToday())}
         historyLink={
-          <AuditHistoryLink
+          <SpacesHistoryLink
             viewer={viewer}
             entity="agreements"
             id={found.data.id}

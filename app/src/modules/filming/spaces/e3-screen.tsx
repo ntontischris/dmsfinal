@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { getViewer } from "@/modules/access";
+import { getViewer, isClientViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
 import { Panel } from "@/spaces/kit/panel";
 import { Avatar, ListRow, Meter, RowList } from "@/spaces/kit/parts";
@@ -27,8 +27,14 @@ import { checkSlot } from "../queries-booking";
 import { getSheet } from "../queries-sheet";
 import type { FilmingCard, FilmingRow } from "../types";
 import { e1FilmingOf } from "./e1-adapter";
-import { needsOutcome, stateWord, statusLook } from "./e1-groups";
+import {
+  clientStatusLook,
+  needsOutcome,
+  stateWord,
+  statusLook,
+} from "./e1-groups";
 import { E3Actions } from "./e3-actions";
+import { E3ClientActions } from "./e3-client";
 import { E3Crew } from "./e3-crew";
 import { E3Equipment } from "./e3-equipment";
 import { E3InternalNote, E3Sheet } from "./e3-sheet";
@@ -76,12 +82,24 @@ const asListItem = (card: FilmingCard) =>
     signals: card.signals,
   });
 
-function Header({ card, nowMs }: { card: FilmingCard; nowMs: number }) {
+// Ο πελάτης δεν βλέπει τα εσωτερικά (Προέλευση, Έγκριση, Πραγματική διάρκεια)· βλέπει τον λόγο απόρριψης.
+function Header({
+  card,
+  nowMs,
+  isClient,
+}: {
+  card: FilmingCard;
+  nowMs: number;
+  isClient: boolean;
+}) {
   const clientName = card.client?.name ?? NO_CLIENT_LABEL;
+  const look = isClient
+    ? clientStatusLook(asListItem(card))
+    : statusLook(asListItem(card), nowMs);
   return (
     <Panel
       label={clientAndTitle(clientName, card.production.title)}
-      aside={<StatusBadge look={statusLook(asListItem(card), nowMs)} />}
+      aside={<StatusBadge look={look} />}
     >
       <dl className="dl">
         <dt>Πότε</dt>
@@ -110,9 +128,13 @@ function Header({ card, nowMs }: { card: FilmingCard; nowMs: number }) {
           <>
             <dt>Συμφωνία</dt>
             <dd>
-              <Link href={hrefOf("D2", { id: card.agreement.id })}>
-                {card.agreement.title}
-              </Link>
+              {isClient ? (
+                card.agreement.title
+              ) : (
+                <Link href={hrefOf("D2", { id: card.agreement.id })}>
+                  {card.agreement.title}
+                </Link>
+              )}
             </dd>
           </>
         )}
@@ -122,23 +144,33 @@ function Header({ card, nowMs }: { card: FilmingCard; nowMs: number }) {
             {card.production.title}
           </Link>
         </dd>
-        <dt>Προέλευση</dt>
-        <dd>{ORIGIN_LABELS[card.origin]}</dd>
-        <dt>Έγκριση</dt>
-        <dd>
-          {card.approvedAt
-            ? formatDate(card.approvedAt)
-            : card.rejectedAt
-              ? `Απορρίφθηκε: ${card.rejectedReason ?? "—"}`
-              : "Δεν έχει εγκριθεί ακόμα"}
-        </dd>
-        {card.actualHours !== null && (
+        {!isClient && (
+          <>
+            <dt>Προέλευση</dt>
+            <dd>{ORIGIN_LABELS[card.origin]}</dd>
+            <dt>Έγκριση</dt>
+            <dd>
+              {card.approvedAt
+                ? formatDate(card.approvedAt)
+                : card.rejectedAt
+                  ? `Απορρίφθηκε: ${card.rejectedReason ?? "—"}`
+                  : "Δεν έχει εγκριθεί ακόμα"}
+            </dd>
+          </>
+        )}
+        {isClient && card.state === "rejected" && card.rejectedReason && (
+          <>
+            <dt>Λόγος απόρριψης</dt>
+            <dd>{card.rejectedReason}</dd>
+          </>
+        )}
+        {!isClient && card.actualHours !== null && (
           <>
             <dt>Πραγματική διάρκεια</dt>
             <dd>{hoursLabel(card.actualHours)}</dd>
           </>
         )}
-        {card.cancelledAt && (
+        {!isClient && card.cancelledAt && (
           <>
             <dt>Ακύρωση</dt>
             <dd>
@@ -150,6 +182,36 @@ function Header({ card, nowMs }: { card: FilmingCard; nowMs: number }) {
           </>
         )}
       </dl>
+    </Panel>
+  );
+}
+
+// Ο πελάτης βλέπει μόνο τι του μένει, με τις δικές του λέξεις (prototype `CLIENT_WORDS.filmingBalance`).
+function ClientBalance({ card }: { card: FilmingCard }) {
+  if (!card.provision) return null;
+  const balance = balanceOf(card.provision);
+  return (
+    <Panel
+      label="Γυρίσματα που σου αναλογούν"
+      aside={
+        card.period && (
+          <span className="muted">
+            Περίοδος {card.period.n} · {formatDate(card.period.starts)}–
+            {formatDate(card.period.ends)}
+          </span>
+        )
+      }
+    >
+      <div className="e3-balance">
+        <div>
+          <strong>{balance.left}</strong>υπόλοιπα
+        </div>
+      </div>
+      <details className="muted">
+        <summary>Πώς μετρούν τα γυρίσματα</summary>Το γύρισμα μετρά από τη
+        στιγμή που το κλείνεις και θεωρείται χρησιμοποιημένο όταν γίνει. Αν το
+        ακυρώσεις εγκαίρως ή δεν εγκριθεί, σου μένει διαθέσιμο για άλλη μέρα.
+      </details>
     </Panel>
   );
 }
@@ -416,6 +478,22 @@ function Missing() {
   );
 }
 
+// Η όψη του πελάτη (prototype `e3-workbench.tsx` με isClient): κεφαλίδα, «Τι μπορείς να κάνεις», υπόλοιπο. Χωρίς banner
+// «έγινε», Συνεργείο, Εξοπλισμό, Δελτίο ή Ιστορικό· καμία λίστα υποψηφίων δεν φορτώνει.
+async function ClientFilming({ card }: { card: FilmingCard }) {
+  const open = await listFilmings("open");
+  return (
+    <div data-spaces>
+      <Others rows={open.ok ? open.data : []} currentId={card.id} />
+      <div className="e3">
+        <Header card={card} nowMs={new Date().getTime()} isClient />
+        <E3ClientActions card={card} />
+        <ClientBalance card={card} />
+      </div>
+    </div>
+  );
+}
+
 // E3 Γύρισμα στη νέα εμφάνιση (prototype `screens/E3.tsx` + `e3-workbench.tsx`). Κάθε ενέργεια φαίνεται μόνο όταν το
 // viewerCan της βάσης το επιτρέπει.
 export async function SpacesFilming({
@@ -438,6 +516,7 @@ export async function SpacesFilming({
     );
   if (filming.data === null) return <Missing />;
   const card = filming.data;
+  if (isClientViewer(viewer)) return <ClientFilming card={card} />;
   const tools = await loadTools(card, caps.canBook, equipment);
   if (tools.isBroken)
     return (
@@ -489,7 +568,7 @@ export async function SpacesFilming({
             viewerId={viewerId}
             statusLabels={equipment.statusLabels}
           />}
-        <Header card={card} nowMs={nowMs} />
+        <Header card={card} nowMs={nowMs} isClient={false} />
         <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />
         {!isCrewView && viewerId && <Mine
             card={card}

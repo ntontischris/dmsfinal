@@ -2,7 +2,12 @@ import Link from "next/link";
 
 import { getViewer, type Viewer } from "@/modules/access";
 import { costsCaps, listCostRows } from "@/modules/costs";
-import { deliverablesCaps, listDeliverableQueue } from "@/modules/deliverables";
+import {
+  clientProgressByProduction,
+  deliverablesCaps,
+  listClientDeliverables,
+  listDeliverableQueue,
+} from "@/modules/deliverables";
 import { athensDate, filmingCaps, listOpenFilmings } from "@/modules/filming";
 import { hrefOf, type HrefParams } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
@@ -11,6 +16,8 @@ import { productionsCaps } from "../caps";
 import { listOwnerCandidates, listProductions } from "../queries";
 import type { OwnerCandidate, ProductionCard } from "../types";
 import {
+  NO_SIGNALS,
+  VIEWS,
   countByProduction,
   matches,
   nextFilmingsOf,
@@ -22,6 +29,8 @@ import {
   type G1Signals,
   type View,
 } from "./g1-rows";
+import { G1ClientCards } from "./g1-client";
+import { CLIENT_VIEWS } from "./g1-client-model";
 import { G1Team } from "./g1-team";
 
 import "./g1.css";
@@ -141,7 +150,72 @@ function ClientFilter({ name, view }: { name: string; view: View }) {
   );
 }
 
-// G1 Παραγωγές στη νέα εμφάνιση (prototype `screens/G1.tsx`), όψη ομάδας. Μία ανάγνωση όλων των Παραγωγών που βλέπει ο θεατής·
+const EMPTY_CLIENT =
+  "Δεν υπάρχουν Παραγωγές σε αυτή την προβολή. Ανοίγουν μόνες τους με τη Συμφωνία σου.";
+
+// Η όψη πελάτη: οι Παραγωγές του (χωρίς Εσωτερικές) σε κάρτες, με την πρόοδο από την όψη πελάτη των Παραδοτέων
+// και το επόμενο Γύρισμα από τη λίστα Γυρισμάτων του (ίδιες αναγνώσεις με τις παλιές H3 και E1 πελάτη).
+async function ClientProductions({
+  viewer,
+  query,
+}: {
+  viewer: Viewer;
+  query: G1Query;
+}) {
+  const [productions, deliverables, filmings] = await Promise.all([
+    listProductions({ state: null, internalOnly: false }),
+    listClientDeliverables(),
+    filmingCaps(viewer).canView ? listOpenFilmings() : null,
+  ]);
+  if (!productions.ok)
+    return (
+      <div data-spaces>
+        <ErrorNotice what="οι Παραγωγές" />
+      </div>
+    );
+  const all = productions.data.filter((card) => !card.isInternal);
+  const progress = clientProgressByProduction(
+    deliverables.ok
+      ? deliverables.data.periods.flatMap((period) => period.deliverables)
+      : [],
+  );
+  const next = filmings?.ok
+    ? nextFilmingsOf(filmings.data, new Date().toISOString())
+    : new Map<string, string>();
+  const views = VIEWS.filter((view) => CLIENT_VIEWS.includes(view.id));
+  const wanted = parseView(query);
+  const active = views.some((view) => view.id === wanted) ? wanted : "open";
+  const shown = sortFor(
+    active,
+    all.filter((card) => matches(active, card, NO_SIGNALS)),
+  );
+  return (
+    <div data-spaces>
+      <ViewTabs
+        views={views}
+        active={active}
+        all={all}
+        signals={NO_SIGNALS}
+        clientId={undefined}
+      />
+      {shown.length === 0 ? (
+        <StateNotice kind="empty" title="Καμία Παραγωγή εδώ.">
+          {EMPTY_CLIENT}
+        </StateNotice>
+      ) : (
+        <G1ClientCards
+          cards={shown}
+          progress={progress}
+          nextFilming={
+            new Map([...next].map(([id, at]) => [id, athensDate(at)]))
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+// G1 Παραγωγές στη νέα εμφάνιση (prototype `screens/G1.tsx`): όψη ομάδας, ή κάρτες για τον Χρήστη πελάτη. Μία ανάγνωση όλων των Παραγωγών που βλέπει ο θεατής·
 // οι προβολές και οι αριθμοί τους μετρώνται εδώ. Η βάση αποφασίζει ποιες Παραγωγές φαίνονται.
 export async function SpacesProductions({ query: raw }: { query: RawQuery }) {
   const query = g1QueryOf(raw);
@@ -155,6 +229,7 @@ export async function SpacesProductions({ query: raw }: { query: RawQuery }) {
         </StateNotice>
       </div>
     );
+  if (caps.isClient) return <ClientProductions viewer={viewer} query={query} />;
   const [productions, candidates, signals] = await Promise.all([
     listProductions({ state: null, internalOnly: false }),
     caps.canCreateInternal ? listOwnerCandidates() : null,

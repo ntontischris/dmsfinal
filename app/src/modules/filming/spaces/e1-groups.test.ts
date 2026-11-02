@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import type { FilmingRow } from "../types";
 import { e1FilmingOf, tabCountLabel, visibleViews } from "./e1-adapter";
 import {
+  clientStatusLook,
   daysLateLabel,
   groupFilmings,
   signalsOf,
@@ -61,6 +62,14 @@ describe("groupFilmings", () => {
       "Σεπτέμβριος 2026 · πέρασαν",
       "Αύγουστος 2026 · πέρασαν",
     ]);
+  });
+
+  test("ο πελάτης δεν έχει ομάδα «Θέλουν «έγινε»»· τα βλέπει με τα παλιά", () => {
+    const groups = groupFilmings(rows, NOW, { isClient: true });
+    expect(groups.map((g) => g.label)).not.toContain("Θέλουν «έγινε»");
+    expect(
+      groups.find((g) => g.label === "Σεπτέμβριος 2026 · πέρασαν")?.filmings.map((f) => f.id),
+    ).toContain("late");
   });
 
   test("«Επόμενο» είναι το πρώτο ανοιχτό που δεν έχει περάσει, σε μία μόνο ομάδα", () => {
@@ -129,4 +138,29 @@ test("ο εγκρίνων βλέπει τα «Αναμένουν έγκριση�
   expect(visibleViews(true).map((v) => v.id)).not.toContain("pending");
   expect(visibleViews(false).map((v) => v.id)).toContain("pending");
   expect(tabCountLabel(100)).toBe("100+");
+});
+
+test("ο πελάτης δεν έχει την προβολή «Θέλουν «έγινε»»", () => {
+  expect(visibleViews(false, true).map((v) => v.id)).not.toContain("needs_outcome");
+  expect(visibleViews(false).map((v) => v.id)).toContain("needs_outcome");
+});
+
+describe("clientStatusLook", () => {
+  test("δείχνει μόνο την κατάσταση, ποτέ «θέλει «έγινε»» ή «θέλει κοίταγμα»", () => {
+    const late = filming({ startsAt: "2026-09-18T07:00:00Z" });
+    expect(clientStatusLook(late).label).toBe(statusLook(filming(), NOW).label);
+    const declined = filming({
+      signals: { ...rowOf().signals, crewDeclined: true },
+    });
+    expect(clientStatusLook(declined).tone).toBe("neutral");
+  });
+
+  test("το αίτημα ακύρωσης του πελάτη φαίνεται ως «ζητήθηκε ακύρωση»", () => {
+    const asked = filming({ signals: { ...rowOf().signals, cancelRequest: true } });
+    expect(clientStatusLook(asked)).toEqual({
+      tone: "pending",
+      icon: "?",
+      label: "ζητήθηκε ακύρωση",
+    });
+  });
 });

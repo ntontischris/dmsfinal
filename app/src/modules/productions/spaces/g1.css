@@ -21,4 +21,6 @@
 & .e-form { display: flex; flex-direction: column; gap: var(--space-3); max-width: 36rem; }
 & .e-form label, .e-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
 & .e-form .input { width: 100%; }
+/* Οι κάρτες πελάτη (prototype screens/g1-client.tsx) παίρνουν το .sx-extra του prototype (screens/e5.css). */
+& .sx-extra { list-style: none; padding: 0.25rem 1.25rem 1rem; display: grid; gap: var(--space-2); min-width: 0; overflow-wrap: anywhere; }
 }

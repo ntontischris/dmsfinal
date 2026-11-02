@@ -15,7 +15,7 @@ interface HeaderProps {
   agreement: AgreementDetail;
   caps: AgreementCaps;
   expiresInDays: number | null;
-  // «Ιστορικό αλλαγών» (Ίχνος): κοινό component άλλου module, χωρίς αντίστοιχο στο prototype.
+  // «Ιστορικό αλλαγών» (Ίχνος): σύνδεσμος του module Ίχνος στη νέα εμφάνιση.
   historyLink: ReactNode;
 }
 
@@ -55,7 +55,7 @@ export function D2Header({
           <Badge tone="attention">χαμηλό περιθώριο</Badge>
         )}
         {!caps.canDraft && <Badge>Μόνο ανάγνωση</Badge>}
-        <span data-tw>{historyLink}</span>
+        {historyLink}
       </span>
       <Steps
         steps={proposalSteps(agreement.path)}

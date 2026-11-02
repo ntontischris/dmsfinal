@@ -22,7 +22,7 @@ const EYEBROW = "G1 · Παραγωγές";
 const DEFAULT_FILTER = { tab: "open", internal: false } as const;
 
 // G1: οι Παραγωγές. Η καρτέλα και το «Εσωτερικές» είναι στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
-// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή (και πάντα για τον Χρήστη πελάτη).
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή (και για τον Χρήστη πελάτη η δική του όψη).
 export default async function ProductionsPage({
   searchParams,
 }: {

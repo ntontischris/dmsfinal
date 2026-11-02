@@ -71,8 +71,10 @@ const byMonth = (
 export const groupFilmings = (
   filmings: readonly E1Filming[],
   nowMs: number,
+  { isClient = false }: { isClient?: boolean } = {},
 ): readonly FilmingGroup[] => {
-  const isLate = (f: E1Filming) => needsOutcome(f, nowMs);
+  // Ο πελάτης δεν σημειώνει «έγινε»· τα βλέπει μαζί με τα παλιά.
+  const isLate = (f: E1Filming) => !isClient && needsOutcome(f, nowMs);
   const oldestFirst = (a: E1Filming, b: E1Filming) =>
     a.startsAtMs - b.startsAtMs;
   const late = filmings.filter(isLate).sort(oldestFirst);
@@ -147,6 +149,19 @@ export const statusLook = (filming: E1Filming, nowMs: number): StatusLook => {
     return { tone: "pending", icon: "?", label: word };
   if (hasCantDo(filming) || hasConflict(filming, nowMs))
     return { tone: "problem", icon: "!", label: `${word} · θέλει κοίταγμα` };
+  if (filming.state === "scheduled")
+    return { tone: "neutral", icon: "●", label: word };
+  if (filming.state === "done") return { tone: "ok", icon: "✓", label: word };
+  return { tone: "muted", icon: "×", label: word };
+};
+
+// Για τον πελάτη: μόνο η κατάσταση και το δικό του αίτημα, όχι τα εσωτερικά του Συνεργείου.
+export const clientStatusLook = (filming: E1Filming): StatusLook => {
+  const word = stateWord(filming.state);
+  if (filming.signals.cancelRequest)
+    return { tone: "pending", icon: "?", label: "ζητήθηκε ακύρωση" };
+  if (filming.state === "pending")
+    return { tone: "pending", icon: "?", label: word };
   if (filming.state === "scheduled")
     return { tone: "neutral", icon: "●", label: word };
   if (filming.state === "done") return { tone: "ok", icon: "✓", label: word };

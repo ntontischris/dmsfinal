@@ -259,18 +259,6 @@ export function LedgerSection({
   );
 }
 
-// Ενότητα που ανήκει σε άλλο module και μπαίνει ως έχει (π.χ. Χρήστες πελάτη, Τι στάλθηκε).
-export function EmbeddedSection({
-  label,
-  children,
-}: {
-  label?: string;
-  children: ReactNode;
-}) {
-  const body = <div data-tw>{children}</div>;
-  return label ? <Panel label={label}>{body}</Panel> : body;
-}
-
 export function ActivitiesSection({
   rows,
   canLog,

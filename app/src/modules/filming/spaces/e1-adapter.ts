@@ -40,8 +40,16 @@ export const E1_VIEWS: readonly E1View[] = [
 ];
 
 // Όποιος έχει την ουρά «Αναμένουν έγκριση» (E2) τη βλέπει ως φίλτρο πάνω από τη λίστα, όχι και εδώ.
-export const visibleViews = (hasQueue: boolean): readonly E1View[] =>
-  E1_VIEWS.filter((view) => !(hasQueue && view.id === "pending"));
+// Ο πελάτης δεν σημειώνει «έγινε»: χωρίς την προβολή «Θέλουν «έγινε»».
+export const visibleViews = (
+  hasQueue: boolean,
+  isClient = false,
+): readonly E1View[] =>
+  E1_VIEWS.filter(
+    (view) =>
+      !(hasQueue && view.id === "pending") &&
+      !(isClient && view.id === "needs_outcome"),
+  );
 
 // Η βάση δίνει έως 100 ανά καρτέλα.
 export const LIST_LIMIT = 100;

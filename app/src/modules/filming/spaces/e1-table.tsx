@@ -8,6 +8,7 @@ import { StatusHelp } from "@/spaces/screens/status-help";
 
 import { NO_CLIENT_LABEL } from "../labels";
 import {
+  clientStatusLook,
   daysLateLabel,
   signalsOf,
   statusLook,
@@ -18,7 +19,8 @@ import { weekdayOf } from "./e1-format";
 
 import "./e1.css";
 
-// Η λίστα Γυρισμάτων της νέας εμφάνισης (prototype `screens/e1-table.tsx`), μόνο για την ομάδα.
+// Η λίστα Γυρισμάτων της νέας εμφάνισης (prototype `screens/e1-table.tsx`). Ο πελάτης βλέπει την Παραγωγή ως τίτλο,
+// χωρίς Συνεργείο και σήματα· η λίστα της βάσης δεν φέρνει τόπο ούτε σημείωση πελάτη, άρα χωρίς δεύτερη γραμμή.
 
 const TONE_OF: Readonly<Record<StatusLook["tone"], BadgeTone | undefined>> = {
   problem: "attention",
@@ -119,6 +121,7 @@ interface E1TableProps {
   today: string;
   nextId?: string;
   isLate?: boolean;
+  isClient?: boolean;
 }
 
 export function E1Table({
@@ -127,11 +130,14 @@ export function E1Table({
   today,
   nextId,
   isLate = false,
+  isClient = false,
 }: E1TableProps) {
   return (
     <RowList>
       {filmings.map((filming) => {
-        const look = statusLook(filming, nowMs);
+        const look = isClient
+          ? clientStatusLook(filming)
+          : statusLook(filming, nowMs);
         return (
           <ListRow
             key={filming.id}
@@ -141,14 +147,22 @@ export function E1Table({
               <FilmingLead filming={filming} isLate={isLate} today={today} />
             }
             href={hrefOf("E3", { id: filming.id })}
-            title={filming.clientName ?? NO_CLIENT_LABEL}
-            sub={filming.productionTitle}
+            title={
+              isClient
+                ? filming.productionTitle
+                : (filming.clientName ?? NO_CLIENT_LABEL)
+            }
+            sub={isClient ? undefined : filming.productionTitle}
             aside={
               <>
                 {filming.id === nextId && <Badge tone="strong">Επόμενο</Badge>}
                 <Badge tone={TONE_OF[look.tone]}>{look.label}</Badge>
-                <Crew filming={filming} />
-                <Signals filming={filming} nowMs={nowMs} />
+                {!isClient && (
+                  <>
+                    <Crew filming={filming} />
+                    <Signals filming={filming} nowMs={nowMs} />
+                  </>
+                )}
               </>
             }
           />

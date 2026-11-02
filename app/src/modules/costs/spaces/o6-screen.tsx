@@ -14,9 +14,11 @@ import {
   type CostMonth,
 } from "@/modules/catalogue";
 import {
-  PaymentMethodsCard,
   financeCaps,
   listPaymentMethods,
+  restoreMethod,
+  retireMethod,
+  saveMethod,
   type PaymentMethod,
 } from "@/modules/finance";
 import {
@@ -43,6 +45,7 @@ import {
   multiplierRowsOf,
 } from "./o6-adapter";
 import { decimalText } from "./o6-live";
+import { MethodsEditor } from "./o6-methods";
 import { O6MonthCards } from "./o6-month";
 import { AdminCost, MethodsList, RecentChanges } from "./o6-parts";
 
@@ -50,8 +53,8 @@ import "./o6.css";
 
 // O6 Ρυθμίσεις Οικονομικών στη νέα εμφάνιση (prototype `screens/O6.tsx`). Η σελίδα ανοίγει σε όποιον «Βλέπει κόστος»·
 // τα έξοδα, οι ώρες και το Εύρος τιμής φαίνονται και αλλάζουν μόνο με «Διαχειρίζεται κόστος».
-// Οι Τρόποι είσπραξης για όποιον τους αλλάζει μένουν το πραγματικό component του module Οικονομικά ([data-tw]):
-// οι ενέργειές του δεν εξάγονται. Το «Προεπιλεγμένο περιθώριο» του prototype δεν υπάρχει στη βάση.
+// Οι Τρόποι είσπραξης αλλάζουν με «Διαχειρίζεται Ρυθμίσεις» (όπως η κλασική), στη μορφή του ListEditor.
+// Το «Προεπιλεγμένο περιθώριο» του prototype δεν υπάρχει στη βάση.
 
 const MONTHS_AHEAD = 6;
 const FORWARD_NOTE =
@@ -74,9 +77,10 @@ function Methods({
 }) {
   if (!canManage) return <MethodsList items={methodItemsOf(methods)} />;
   return (
-    <div className="o-card" data-tw>
-      <PaymentMethodsCard methods={methods} canManage />
-    </div>
+    <MethodsEditor
+      methods={methods}
+      actions={{ save: saveMethod, retire: retireMethod, restore: restoreMethod }}
+    />
   );
 }
 
