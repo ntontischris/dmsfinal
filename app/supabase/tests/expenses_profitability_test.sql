@@ -50,6 +50,7 @@ insert into public.clients (id, name, contact_name, contact_email) values
   ('00000000-0000-0000-0000-0000000000c1', 'Καφέ Αθηνά', 'Μαρία', 'maria@athina.example.gr'),
   ('00000000-0000-0000-0000-0000000000c2', 'Γυμναστήριο Κίνηση', 'Νίκος', 'nikos@kinisi.example.gr');
 
+-- Μία Παραγωγή ανά εφάπαξ Συμφωνία (productions_one_off_key): κάθε μία με δική της.
 -- d1 Πελάτη 1, ώρες επιβεβαιωμένες · d2 Πελάτη 2 χωρίς ώρες · d3 Εσωτερική με ώρες · d4 ακυρωμένη · d5 εκτός διαστήματος
 insert into public.productions (id, title, client_id, agreement_id, state, delivered_at, delivered_note, cancelled_at, cancelled_reason) values
   ('00000000-0000-0000-0000-0000000000d1', 'Βίντεο Αθηνά', '00000000-0000-0000-0000-0000000000c1',
@@ -59,9 +60,9 @@ insert into public.productions (id, title, client_id, agreement_id, state, deliv
   ('00000000-0000-0000-0000-0000000000d3', 'Εσωτερικό showreel', null, null,
    'delivered', timestamptz '2026-03-15 10:00+00', 'Παραδόθηκε', null, null),
   ('00000000-0000-0000-0000-0000000000d4', 'Ακυρωμένο Αθηνά', '00000000-0000-0000-0000-0000000000c1',
-   '00000000-0000-0000-0000-0000000000e1', 'cancelled', null, null, timestamptz '2026-03-05 10:00+00', 'Δεν χρειάζεται'),
+   '00000000-0000-0000-0000-0000000000e3', 'cancelled', null, null, timestamptz '2026-03-05 10:00+00', 'Δεν χρειάζεται'),
   ('00000000-0000-0000-0000-0000000000d5', 'Παλιό Αθηνά', '00000000-0000-0000-0000-0000000000c1',
-   '00000000-0000-0000-0000-0000000000e1', 'delivered', timestamptz '2025-06-10 10:00+00', 'Παραδόθηκε', null, null);
+   '00000000-0000-0000-0000-0000000000e4', 'delivered', timestamptz '2025-06-10 10:00+00', 'Παραδόθηκε', null, null);
 insert into public.production_costs (production_id, estimate_shoot_hours, estimate_edit_hours, estimate_direct_cost,
                                      estimate_price, estimate_hour_cost, shoot_hours, shoot_confirmed_at, edit_hours, edit_confirmed_at) values
   ('00000000-0000-0000-0000-0000000000d1', 6, 14, 0, 1000, 10, 10, now(), 15, now()),
