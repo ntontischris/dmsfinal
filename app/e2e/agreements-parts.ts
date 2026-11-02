@@ -120,10 +120,11 @@ export async function asVisitor(
 // Ο εξαψήφιος κωδικός υπογραφής όπως τον δείχνουν τα εξερχόμενα («481 920»), μόνο ψηφία.
 export async function readSigningCode(page: Page): Promise<string> {
   await page.reload();
-  const body = page.locator("body");
   const shown = /Κωδικός υπογραφής για[^:]*:\s*(\d{3})\s?(\d{3})/;
-  await expect(body).toContainText(shown);
-  const match = (await body.innerText()).match(shown);
+  // Ορατό στοιχείο, όχι body: το κείμενο φτάνει πρώτα κρυφό (streaming) πίσω από τον σκελετό αναμονής.
+  const line = page.getByText(shown).first();
+  await expect(line).toBeVisible();
+  const match = (await line.innerText()).match(shown);
   if (!match) throw new Error("Δεν βρέθηκε ο κωδικός υπογραφής στα εξερχόμενα");
   return `${match[1]}${match[2]}`;
 }
