@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Split } from "@/components/ui/inspector";
 import { Notice } from "@/components/ui/notice";
@@ -14,6 +15,7 @@ import {
   FollowUpForm,
   LogActivityForm,
   OpportunityPanel,
+  SpacesOpportunity,
   athensToday,
   getActivityLookups,
   getOpportunity,
@@ -222,6 +224,9 @@ export default async function OpportunityPage({
 }) {
   const { opportunityId } = await params;
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesOpportunity opportunityId={opportunityId} />;
   const caps = salesCaps(viewer);
   if (!caps.canManage)
     return (

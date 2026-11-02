@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
@@ -7,6 +8,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
   PipelineBoard,
+  SpacesPipeline,
   athensToday,
   groupByStage,
   isForgotten,
@@ -135,6 +137,8 @@ export default async function PipelinePage({
 }) {
   const { forgotten } = await searchParams;
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype (τα φίλτρα της είναι μέσα στη σελίδα)· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") return <SpacesPipeline />;
   const caps = salesCaps(viewer);
   if (!caps.canManage)
     return (

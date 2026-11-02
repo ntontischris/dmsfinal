@@ -1,7 +1,9 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer, type Viewer } from "@/modules/access";
 import {
+  SpacesApprovals,
   ApprovalQueue,
   agreementCaps,
   listApprovals,
@@ -29,6 +31,8 @@ function NoAccess({ viewer }: { viewer: Viewer }) {
 // D4: η ουρά Εγκρίσεων. «Εγκρίνω» στέλνει την πρόταση αμέσως σε όλους τους παραλήπτες· «Απόρριψη» θέλει σχόλιο.
 export default async function ApprovalsPage() {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") return <SpacesApprovals />;
   const caps = agreementCaps(viewer);
   if (!caps.canDeviate) return <NoAccess viewer={viewer} />;
 

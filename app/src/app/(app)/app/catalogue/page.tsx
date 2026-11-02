@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
@@ -7,6 +8,7 @@ import { AccessNotice, getViewer, type Viewer } from "@/modules/access";
 import {
   CatalogueTable,
   CostNote,
+  SpacesCatalogue,
   catalogueCaps,
   getCostHint,
   listCatalogue,
@@ -106,6 +108,8 @@ function CatalogueBody({ items, kinds, hint, caps }: CatalogueBodyProps) {
 // C1: η λίστα Πακέτων και Υπηρεσιών. Τα ποσά που ο θεατής δεν δικαιούται δεν φτάνουν ποτέ εδώ: η βάση στέλνει null.
 export default async function CataloguePage() {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") return <SpacesCatalogue />;
   const caps = catalogueCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} />;
 

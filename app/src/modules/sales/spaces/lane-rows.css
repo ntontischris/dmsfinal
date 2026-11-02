@@ -1,0 +1,7 @@
+/* Γραμμές λίστας μέσα σε Panel με περιθώριο: φτάνουν μέχρι τις άκρες του Panel */
+[data-look='spaces'] {
+& .lane-flush { margin-inline: -1.25rem; }
+& .lane-flush .part-rows { min-width: 0; }
+& .lane-note { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0 0 var(--space-3); }
+& .lane-inset { margin-block: var(--space-2); border-radius: var(--radius); overflow: hidden; border: 1px solid color-mix(in oklab, var(--color-text) 8%, transparent); }
+}

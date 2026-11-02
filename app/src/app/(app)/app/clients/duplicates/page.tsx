@@ -1,7 +1,13 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
-import { DuplicatePairs, listDuplicatePairs, salesCaps } from "@/modules/sales";
+import {
+  DuplicatePairs,
+  SpacesDuplicates,
+  listDuplicatePairs,
+  salesCaps,
+} from "@/modules/sales";
 
 export const metadata = { title: "Πιθανά διπλά" };
 
@@ -10,6 +16,8 @@ const EYEBROW = "B6 · Πελάτες και Πωλήσεις";
 // B6: μόνο όποιος «Συγχωνεύει Πελάτες» βλέπει τα ζευγάρια (η βάση επιστρέφει κενό στους άλλους).
 export default async function DuplicatesPage() {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") return <SpacesDuplicates />;
   const header = <ScreenHeader eyebrow={EYEBROW} title="Πιθανά διπλά" />;
   if (!salesCaps(viewer).canMerge)
     return (

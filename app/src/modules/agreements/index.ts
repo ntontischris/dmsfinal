@@ -138,3 +138,8 @@ export { TermsCard } from "./components/terms-card";
 export { PolicyCard } from "./components/policy-card";
 export { PricingCard } from "./components/pricing-card";
 export { RevisionLimitsCard } from "./components/revision-limits-card";
+export { SpacesProposalPanel } from "./spaces/b4-proposal";
+export { SpacesAgreements } from "./spaces/d1-screen";
+export { SpacesAgreement } from "./spaces/d2-screen";
+export { SpacesApprovals } from "./spaces/d4-screen";
+export { SpacesAgreementsSettings } from "./spaces/o3-screen";
