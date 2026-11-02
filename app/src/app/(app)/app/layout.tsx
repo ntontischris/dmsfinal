@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import type { Look } from "@/components/shell/look";
 import { LookToggle } from "@/components/shell/look-toggle";
-import { visibleNav } from "@/components/shell/nav";
+import { classicNav } from "@/components/shell/nav";
 import { canChooseLook, readLook } from "@/components/shell/read-look";
 import { SidebarNav } from "@/components/shell/sidebar-nav";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
@@ -91,7 +91,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </SpacesShell>
     );
   }
-  const sections = visibleNav(allows);
+  const sections = classicNav(allows);
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b bg-card px-4 py-2">
