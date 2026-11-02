@@ -144,3 +144,5 @@ export { SpacesAgreement } from "./spaces/d2-screen";
 export { SpacesApprovals } from "./spaces/d4-screen";
 export { SpacesAgreementsSettings } from "./spaces/o3-screen";
 export { SpacesProposalLink } from "./spaces/d5-screen";
+// Ctrl+K: αναζήτηση εγγραφών.
+export { searchAgreements } from "./queries-search";

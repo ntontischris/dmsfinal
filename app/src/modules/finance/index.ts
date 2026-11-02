@@ -111,3 +111,5 @@ export { SpacesClientInvoices } from "./spaces/i2-client-screen";
 export { SpacesClientLedger } from "./spaces/i5-client-screen";
 // Τρόποι είσπραξης: για τη φόρμα της νέας εμφάνισης (O6).
 export { saveMethod, retireMethod, restoreMethod } from "./actions-methods";
+// Ctrl+K: αναζήτηση εγγραφών.
+export { searchInvoices } from "./invoices-search";

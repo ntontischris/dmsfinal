@@ -106,3 +106,5 @@ export { SpacesPipeline } from "./spaces/b3-screen";
 export { SpacesUnassigned } from "./spaces/b5-screen";
 export { SpacesDuplicates } from "./spaces/b6-screen";
 export { SpacesSalesSettings } from "./spaces/o2-screen";
+// Ctrl+K: αναζήτηση εγγραφών.
+export { searchClients } from "./queries-search";

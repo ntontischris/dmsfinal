@@ -91,3 +91,5 @@ export { SpacesBooking } from "./spaces/e5-screen";
 export { SpacesFilmingSettings } from "./spaces/o4-screen";
 export { SpacesMine } from "./spaces/e6-screen";
 export { SpacesCrewTemplates } from "./spaces/e7-screen";
+// Ctrl+K: αναζήτηση εγγραφών.
+export { searchFilmings } from "./queries-search";

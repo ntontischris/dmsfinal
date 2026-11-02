@@ -66,3 +66,5 @@ export {
   type ClientProgress,
 } from "./spaces/g2-client-model";
 export { SpacesDeliverableSettings } from "./spaces/o5-screen";
+// Ctrl+K: αναζήτηση εγγραφών.
+export { searchDeliverables } from "./queries-search";
