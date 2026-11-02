@@ -1,11 +1,13 @@
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
   THREAD_EYEBROW,
   THREAD_NO_ACCESS_TEXT,
+  SpacesThread,
   ThreadScreen,
   messagesCaps,
   parseFilter,
@@ -20,6 +22,7 @@ interface ThreadPageProps {
 }
 
 // J2: η Συνομιλία ενός Πελάτη (?production= ετικέτα και προεπιλογή του συντάκτη, ?filter=untagged|internal).
+// Στη νέα εμφάνιση (Χώροι, μόνο για την ομάδα) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function ThreadPage({
   params,
   searchParams,
@@ -29,8 +32,19 @@ export default async function ThreadPage({
     params,
     searchParams,
   ]);
-  const caps = messagesCaps(viewer);
   const parsed = z.uuid().safeParse(clientId);
+  const filters = {
+    filter: parseFilter(query.filter),
+    production: parseProduction(query.production),
+  };
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesThread
+        clientId={parsed.success ? parsed.data : undefined}
+        filters={filters}
+      />
+    );
+  const caps = messagesCaps(viewer);
   return (
     <>
       <ScreenHeader eyebrow={THREAD_EYEBROW} title="Συνομιλία" />
@@ -43,10 +57,7 @@ export default async function ThreadPage({
       ) : (
         <ThreadScreen
           clientId={parsed.data}
-          filters={{
-            filter: parseFilter(query.filter),
-            production: parseProduction(query.production),
-          }}
+          filters={filters}
           clientHref={
             caps.canOpenClient ? `/app/clients/${parsed.data}` : undefined
           }

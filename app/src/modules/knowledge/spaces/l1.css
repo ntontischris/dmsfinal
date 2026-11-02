@@ -1,0 +1,19 @@
+[data-look='spaces'] {
+& .l1-cell { min-width: 0; overflow-wrap: anywhere; }
+& .l1-sub { display: block; color: var(--color-text-muted); font-size: var(--text-sm); }
+& .l1-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin: var(--space-3) 0; font-size: var(--text-sm); }
+& .l1-filters a[aria-current='true'] { font-weight: 600; }
+& .l1-form { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; margin-bottom: var(--space-3); }
+& .l1-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); min-width: 0; }
+& .l1-form .input { width: 100%; max-width: 100%; box-sizing: border-box; }
+& .l1-checks { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); border: 0; padding: 0; margin: 0; min-width: 0; }
+& .l1-checks label { flex-direction: row; align-items: center; gap: var(--space-1); }
+& .l1-links { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-4); font-size: var(--text-sm); overflow-wrap: anywhere; }
+& .l1-blockers { margin: var(--space-2) 0 0; padding-left: var(--space-4); font-size: var(--text-sm); }
+/* Ύφος ταυτότητας */
+& .l1-filters a, & .l1-links a { text-decoration: none; font-weight: 600; }
+& .l1-filters a { padding: 0.2rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border); }
+& .l1-filters a:hover, & .l1-links a:hover { color: var(--color-accent); }
+& .l1-filters a[aria-current='true'] { border-color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 16%, transparent); }
+& .l1-pad { padding-inline: 1.25rem; }
+& .l1-kind { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 10px; background: color-mix(in oklab, var(--color-text) 8%, transparent); font-size: 0.8rem; font-weight: 700; color: var(--color-text); } }

@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -8,6 +9,7 @@ import {
   ConversationsScreen,
   LOAD_ERROR_TEXT,
   NO_CONVERSATIONS_ACCESS_TEXT,
+  SpacesConversations,
   getConversations,
   parseAudienceTab,
   parseDone,
@@ -26,6 +28,14 @@ export default async function ConversationsPage({
 }: ConversationsPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
   const audience = parseAudienceTab(params.tab);
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesConversations
+        audience={audience}
+        page={parsePage(params.page)}
+        done={parseDone(params.done)}
+      />
+    );
   const result =
     viewer.status === "signed-in"
       ? await getConversations(audience, parsePage(params.page))

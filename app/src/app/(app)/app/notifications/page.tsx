@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, can, getViewer, isClientViewer } from "@/modules/access";
@@ -12,6 +13,7 @@ import {
   NotificationsTabs,
   PREFS_FAILED_TITLE,
   PrefsTab,
+  SpacesNotifications,
   getMyLanguage,
   getNotifications,
   getPrefs,
@@ -27,10 +29,19 @@ interface NotificationsPageProps {
 
 // A2 για όλους (ομάδα και πελάτη): η βάση δείχνει μόνο τις δικές σου Ειδοποιήσεις.
 // Καρτέλες «Εισερχόμενα» και «Προτιμήσεις» (#173)· στις Προτιμήσεις ο Χρήστης πελάτη διαλέγει και τη γλώσσα των email του.
+// Στη νέα εμφάνιση (Χώροι, μόνο για την ομάδα) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function NotificationsPage({
   searchParams,
 }: NotificationsPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesNotifications
+        tab={params.tab === "prefs" ? "prefs" : "inbox"}
+        filter={parseFilter(params.show)}
+        cursor={parseCursor(params.before, params.beforeId)}
+      />
+    );
   const header = (
     <ScreenHeader eyebrow={NOTIFICATIONS_EYEBROW} title={NOTIFICATIONS_TITLE} />
   );

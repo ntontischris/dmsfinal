@@ -38,3 +38,5 @@ export {
   type BlockedTimeValues,
 } from "./components/blocked-time-form";
 export { LoadNotice, MissingNotice } from "./components/calendar-notices";
+export { SpacesCalendar } from "./spaces/a5-screen";
+export { SpacesBlockedTime, SpacesNewBlockedTime } from "./spaces/a6-screen";

@@ -54,3 +54,13 @@ export {
 export { ConversationsScreen } from "./components/conversations-screen";
 export { ConversationView } from "./components/conversation-view";
 export { UnansweredScreen } from "./components/unanswered-screen";
+
+// Νέα εμφάνιση (Χώροι): οι οθόνες του prototype (A8, L1, L2, L3) με πραγματικά δεδομένα.
+export { SpacesKnowledge } from "./spaces/a8-screen";
+export { SpacesKnowledgeItem } from "./spaces/a8-item";
+export { SpacesKnowledgeManage } from "./spaces/l1-screen";
+export { SpacesKnowledgeEditor } from "./spaces/l1-editor";
+export { SpacesConversations } from "./spaces/l2-screen";
+export { SpacesConversation } from "./spaces/l2-detail";
+export { SpacesUnanswered } from "./spaces/l3-screen";
+export { parseSelection } from "./spaces/l3-adapter";

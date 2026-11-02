@@ -33,3 +33,5 @@ export { MessageSettingsForm } from "./components/settings-form";
 export { InboxScreen } from "./components/inbox-screen";
 export { parseRequestView } from "./request-helpers";
 export { ThreadScreen } from "./components/thread-screen";
+export { SpacesInbox } from "./spaces/j1-screen";
+export { SpacesThread } from "./spaces/j2-screen";

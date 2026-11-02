@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -10,6 +11,7 @@ import {
   CalendarLinkPanel,
   CalendarNav,
   LoadNotice,
+  SpacesCalendar,
   buildCalendarDays,
   calendarCaps,
   datesOf,
@@ -26,12 +28,15 @@ export const metadata = { title: "Ημερολόγιο" };
 const EYEBROW = "A5 · Ημερολόγιο";
 
 // A5: Εβδομάδα, Μήνας, Λίστα. Η βάση ορίζει τι βλέπει ο καθένας· εδώ μόνο φαίνεται.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function CalendarPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesCalendar query={await searchParams} />;
   const caps = calendarCaps(viewer);
   if (!caps.canSee)
     return (

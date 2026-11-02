@@ -1,9 +1,11 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { AccessNotice, getViewer } from "@/modules/access";
 import { athensDate } from "@/modules/filming";
 import {
   BlockedTimeForm,
   LoadNotice,
+  SpacesNewBlockedTime,
   calendarCaps,
   getCalendarView,
   parseCalendarParams,
@@ -16,12 +18,15 @@ const DEFAULT_FROM = "09:00";
 const DEFAULT_TO = "10:00";
 
 // A6: νέος κλεισμένος χρόνος. Μόνο η ομάδα· το άτομο αλλάζει μόνο όσοι «Κλείνουν χρόνο άλλων».
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function NewBlockedTimePage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesNewBlockedTime query={await searchParams} />;
   const caps = calendarCaps(viewer);
   if (!caps.isTeam || viewer.status !== "signed-in" || viewer.team === null)
     return (

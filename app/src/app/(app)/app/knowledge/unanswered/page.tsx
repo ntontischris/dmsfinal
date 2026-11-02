@@ -1,9 +1,11 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
   LOAD_ERROR_TEXT,
   NO_UNANSWERED_ACCESS_TEXT,
+  SpacesUnanswered,
   UNANSWERED_EYEBROW,
   UNANSWERED_LOAD_ERROR,
   UNANSWERED_TITLE,
@@ -11,13 +13,20 @@ import {
   getCoverOptions,
   getUnanswered,
   parseDone,
+  parseSelection,
   parseUnansweredTab,
 } from "@/modules/knowledge";
 
 export const metadata = { title: UNANSWERED_TITLE };
 
 interface UnansweredPageProps {
-  searchParams: Promise<{ tab?: string; done?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    done?: string;
+    close?: string;
+    by?: string;
+    reason?: string;
+  }>;
 }
 
 // L3 Αναπάντητες ερωτήσεις: μόνο με «Διαχειρίζεται Γνώση». Η καρτέλα στη διεύθυνση.
@@ -26,6 +35,14 @@ export default async function UnansweredPage({
 }: UnansweredPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
   const tab = parseUnansweredTab(params.tab);
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesUnanswered
+        tab={tab}
+        selection={parseSelection(params)}
+        done={parseDone(params.done)}
+      />
+    );
   const result =
     viewer.status === "signed-in" ? await getUnanswered(tab) : null;
   // Οι επιλογές του «Καλύφθηκε από…» μόνο όταν η λίστα φόρτωσε (χωρίς Δικαίωμα γυρίζει null) και μόνο στις ανοιχτές.
