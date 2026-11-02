@@ -3,7 +3,16 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import { LOOK_COOKIE, parseLook, type Look } from "@/components/shell/look";
+import type { Viewer } from "@/modules/access";
 
-// Διαβάζεται μόνο στο layout του συστήματος (/app), ποτέ στο root: η δημόσια σελίδα μένει στατική.
+// Διαβάζεται μόνο στο σύστημα (/app), ποτέ στο root: η δημόσια σελίδα μένει στατική.
 export const readLook = async (): Promise<Look> =>
   parseLook((await cookies()).get(LOOK_COOKIE)?.value);
+
+// Η νέα εμφάνιση είναι για την ομάδα (και για την περιήγηση χωρίς βάση)· ο Χρήστης πελάτη μένει στην παλιά προς το παρόν.
+export const canChooseLook = (viewer: Viewer): boolean =>
+  viewer.status === "unconfigured" || (viewer.status === "signed-in" && viewer.team !== null);
+
+// Η εμφάνιση του θεατή: ίδια απόφαση στο layout και στις σελίδες που έχουν και νέα εκδοχή (A1, B1).
+export const lookOf = async (viewer: Viewer): Promise<Look> =>
+  canChooseLook(viewer) ? readLook() : "classic";

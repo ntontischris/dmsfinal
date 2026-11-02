@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import type { Look } from "@/components/shell/look";
 import { LookToggle } from "@/components/shell/look-toggle";
 import { visibleNav } from "@/components/shell/nav";
-import { readLook } from "@/components/shell/read-look";
+import { canChooseLook, readLook } from "@/components/shell/read-look";
 import { SidebarNav } from "@/components/shell/sidebar-nav";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import {
@@ -54,10 +54,6 @@ function ViewerNotice({ viewer, memberships }: { viewer: Viewer; memberships: re
     </p>
   );
 }
-
-// Η νέα εμφάνιση είναι για την ομάδα (και για την περιήγηση χωρίς βάση)· ο Χρήστης πελάτη μένει στην παλιά προς το παρόν.
-const canChooseLook = (viewer: Viewer): boolean =>
-  viewer.status === "unconfigured" || (viewer.status === "signed-in" && viewer.team !== null);
 
 // Το όνομα στο avatar του μενού προφίλ.
 const nameOf = (viewer: Viewer): string =>
