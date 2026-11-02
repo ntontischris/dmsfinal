@@ -1,5 +1,6 @@
 import { Blocks } from "./_specimens/blocks";
 import { Controls } from "./_specimens/controls";
+import { Parts } from "./_specimens/parts";
 import { ScreenHeader } from "@/components/shell/screen-header";
 
 export const metadata = { title: "Kit" };
@@ -18,6 +19,7 @@ const SECTIONS: readonly [string, string][] = [
   ["timeline", "Timeline"],
   ["steps", "Βήματα"],
   ["states", "Καταστάσεις"],
+  ["parts", "Κομμάτια"],
 ];
 
 // Το Kit «Μοντάζ» στην πραγματική εφαρμογή: κάθε component σε ζωντανό δείγμα. Αναφορά: Blueprint κεφ. 10.
@@ -46,6 +48,7 @@ export default async function KitPage({
       </nav>
       <Controls filter={f ?? "open"} />
       <Blocks />
+      <Parts />
     </>
   );
 }

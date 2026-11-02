@@ -4,6 +4,8 @@
    Σκοτεινό θέμα προεπιλογή, φωτεινό με data-theme="light". Οι τιμές μένουν tokens ως το τελικό build.
    Τα ονόματα ακολουθούν τη σύμβαση του shadcn, ώστε τα components του να δουλεύουν χωρίς αλλαγές. */
 @custom-variant dark (&:where(:root:not([data-theme='light']) *));
+/* Μόνο μέσα στη νέα εμφάνιση (Χώροι, cookie dms-look=spaces): π.χ. `spaces:rounded-full`. */
+@custom-variant spaces (&:where([data-look='spaces'], [data-look='spaces'] *));
 
 :root {
   color-scheme: dark;
@@ -22,6 +24,11 @@
   --destructive: oklch(68% 0.2 27);
   --ok: oklch(76% 0.15 150);
   --ring: oklch(80% 0.145 70);
+  /* Των κομματιών (parts): στην παλιά εμφάνιση δανείζονται τα παραπάνω, στη νέα παίρνουν τα χρώματα της ταυτότητας. */
+  --now: var(--primary);
+  --now-foreground: var(--primary-foreground);
+  --waiting: var(--primary);
+  --rec: var(--destructive);
 }
 
 :root[data-theme='light'] {
@@ -39,6 +46,66 @@
   --destructive: oklch(54% 0.2 27);
   --ok: oklch(50% 0.13 150);
   --ring: oklch(55% 0.15 55);
+  --now: var(--primary);
+  --now-foreground: var(--primary-foreground);
+  --waiting: var(--primary);
+  --rec: var(--destructive);
+}
+
+/* Η νέα εμφάνιση (Brand Identity Guidelines, 25-10-2026), μόνο κάτω από [data-look='spaces'].
+   Midnight Navy φόντο, Deep Navy για βάθος, Periwinkle κύριο, Butter Yellow για «Τώρα» και αναμονή,
+   REC Red μόνο για τελεία/σήμα· για κείμενο-πρόβλημα μια φωτεινότερη απόχρωσή του (το REC σε navy δεν διαβάζεται). */
+[data-look='spaces'] {
+  color-scheme: dark;
+  --brand-midnight: #060d14;
+  --brand-deep: #0f192b;
+  --brand-periwinkle: #a3b1f1;
+  --brand-yellow: #ebd68e;
+  --brand-rec: #f7422f;
+  --background: var(--brand-midnight);
+  --card: color-mix(in oklab, var(--brand-deep) 82%, transparent);
+  --muted: #16233b;
+  --border: color-mix(in oklab, var(--brand-periwinkle) 12%, transparent);
+  --border-strong: color-mix(in oklab, var(--brand-periwinkle) 26%, transparent);
+  --input: color-mix(in oklab, var(--brand-periwinkle) 26%, transparent);
+  --foreground: #ffffff;
+  --muted-foreground: #a9b2c8;
+  --primary: var(--brand-periwinkle);
+  --primary-foreground: var(--brand-midnight);
+  --destructive: #ff7a6b;
+  --ok: oklch(76% 0.15 150);
+  --ring: var(--brand-periwinkle);
+  --now: var(--brand-yellow);
+  --now-foreground: var(--brand-midnight);
+  --waiting: var(--brand-yellow);
+  --rec: var(--brand-rec);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.5rem;
+  /* Σκιά για ό,τι αιωρείται (χάπι, μενού) */
+  --shadow-pop: 0 20px 50px -20px rgb(0 0 0 / 0.55);
+  --page-bg: radial-gradient(ellipse 80% 60% at 50% 25%, var(--brand-deep), var(--brand-midnight) 90%) fixed;
+  --monogram: url('/brand/monogram-primary-dark.svg');
+}
+
+:root[data-theme='light'] [data-look='spaces'] {
+  color-scheme: light;
+  --background: #ffffff;
+  --card: #ffffff;
+  --muted: #eef1fd;
+  --border: color-mix(in oklab, var(--brand-midnight) 10%, transparent);
+  --border-strong: color-mix(in oklab, var(--brand-midnight) 22%, transparent);
+  --input: color-mix(in oklab, var(--brand-midnight) 22%, transparent);
+  --foreground: var(--brand-midnight);
+  --muted-foreground: #4a5468;
+  --primary: var(--brand-midnight);
+  --primary-foreground: #ffffff;
+  --destructive: #c4261a;
+  --ok: oklch(45% 0.13 150);
+  --ring: var(--brand-midnight);
+  --waiting: #7a5c00;
+  --page-bg: #f6f7fb;
+  --monogram: url('/brand/monogram-primary-light.svg');
 }
 
 @theme inline {
@@ -56,12 +123,20 @@
   --color-destructive: var(--destructive);
   --color-ok: var(--ok);
   --color-ring: var(--ring);
+  --color-now: var(--now);
+  --color-now-foreground: var(--now-foreground);
+  --color-waiting: var(--waiting);
+  --color-rec: var(--rec);
   --font-sans: var(--font-kit-sans), system-ui, sans-serif;
   --font-mono: var(--font-kit-mono), ui-monospace, monospace;
-  --radius-sm: 0.25rem;
-  --radius-md: 0.35rem;
   --text-xs: 0.6875rem;
   --text-base: 0.9375rem;
+}
+
+/* Οι γωνίες ως μεταβλητές (όχι inline), ώστε η νέα εμφάνιση να τις μεγαλώνει χωρίς να αλλάζει την παλιά. */
+@theme {
+  --radius-sm: 0.25rem;
+  --radius-md: 0.35rem;
 }
 
 @layer base {
@@ -70,7 +145,23 @@
   a { text-underline-offset: 0.2em; }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   h1, h2, h3 { letter-spacing: -0.01em; line-height: 1.2; }
+  /* Το περίβλημα της νέας εμφάνισης ζωγραφίζει το δικό του φόντο· το body κρατά τα παλιά tokens.
+     Satoshi για λατινικά και αριθμούς, Manrope (--font-brand-sans, next/font) για ελληνικά. */
+  [data-look='spaces'] {
+    --font-kit-sans: 'Satoshi Latin', var(--font-brand-sans);
+    min-height: 100dvh;
+    background: var(--page-bg);
+    color: var(--foreground);
+    font-family: var(--font-kit-sans), system-ui, sans-serif;
+  }
 }
+
+/* Satoshi (Fontshare) μόνο για λατινικά, αριθμούς και σύμβολα: χωρίς unicode-range θα έβαζε δικά της
+   ελληνικά γράμματα (π.χ. Ω) ανάμεσα στη Manrope. Τη ζητά μόνο η νέα εμφάνιση. */
+@font-face { font-family: 'Satoshi Latin'; font-weight: 400; font-display: swap; src: url('https://cdn.fontshare.com/wf/TTX2Z3BF3P6Y5BQT3IV2VNOK6FL22KUT/7QYRJOI3JIMYHGY6CH7SOIFRQLZOLNJ6/KFIAZD4RUMEZIYV6FQ3T3GP5PDBDB6JY.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+2190-2193, U+2212; }
+@font-face { font-family: 'Satoshi Latin'; font-weight: 500; font-display: swap; src: url('https://cdn.fontshare.com/wf/P2LQKHE6KA6ZP4AAGN72KDWMHH6ZH3TA/ZC32TK2P7FPS5GFTL46EU6KQJA24ZYDB/7AHDUZ4A7LFLVFUIFSARGIWCRQJHISQP.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+2190-2193, U+2212; }
+@font-face { font-family: 'Satoshi Latin'; font-weight: 700; font-display: swap; src: url('https://cdn.fontshare.com/wf/LAFFD4SDUCDVQEXFPDC7C53EQ4ZELWQI/PXCT3G6LO6ICM5I3NTYENYPWJAECAWDD/GHM6WVH6MILNYOOCXHXB5GTSGNTMGXZR.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+2190-2193, U+2212; }
+@font-face { font-family: 'Satoshi Latin'; font-weight: 900; font-display: swap; src: url('https://cdn.fontshare.com/wf/NHPGVFYUXYXE33DZ75OIT4JFGHITX5PE/PSUTMASCDJTVPERDYJZPN23BVUFUCQIF/J64QX5IPOHK56I2KYUNBQ5M2XWZEYKYX.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+2190-2193, U+2212; }
 
 /* Ετικέτα: μικρή, mono, κεφαλαία. Μόνο για σύντομες ετικέτες, ποτέ για περιεχόμενο. */
 @utility kit-label {
