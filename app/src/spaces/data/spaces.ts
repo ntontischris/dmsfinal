@@ -359,3 +359,9 @@ export const spaceOf = (
   code === undefined
     ? undefined
     : model.spaces.find((view) => view.codes.includes(code));
+
+// Όλοι οι κωδικοί ενός Χώρου (καρτέλες και μέλη), π.χ. για τη λωρίδα του από τις κάρτες της Σήμερα.
+export const codesOfSpace = (id: SpaceId): readonly string[] => {
+  const space = SPACES.find((candidate) => candidate.id === id);
+  return space ? [...space.tabs, ...space.members] : [];
+};

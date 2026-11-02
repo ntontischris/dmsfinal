@@ -24,8 +24,6 @@ import { searchItemsFor } from "@/spaces/data/search";
 import { spacesModel } from "@/spaces/data/spaces";
 import { SpacesShell } from "@/spaces/shell/spaces-shell";
 
-type Bell = Awaited<ReturnType<typeof getBell>> | null;
-
 // «owner», «team» και «client» δεν είναι Δικαιώματα· όλα τα άλλα ελέγχονται ως Δικαιώματα (ομάδας ή πελάτη).
 const allowsRequirement = (viewer: Viewer, requirement: string): boolean => {
   if (requirement === "owner") return isOwner(viewer);

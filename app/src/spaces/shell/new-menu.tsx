@@ -8,6 +8,9 @@ import { newActionHref, type NewAction } from "@/spaces/data/new-actions";
 import { Icon } from "@/spaces/shell/icons";
 import { ToolMenu } from "@/spaces/shell/tool-menu";
 
+// Νέα τιμή σε κάθε πάτημα (έξω από το render).
+const freshStamp = (): string => String(Date.now());
+
 interface NewMenuProps {
   actions: readonly NewAction[];
 }
@@ -18,7 +21,7 @@ export function NewMenu({ actions }: NewMenuProps) {
   const handlePick = (event: MouseEvent, action: NewAction) => {
     if (!action.query) return;
     event.preventDefault();
-    router.push(newActionHref(action, String(Date.now())));
+    router.push(newActionHref(action, freshStamp()));
   };
 
   return (

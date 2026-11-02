@@ -99,3 +99,4 @@ export { AccessRequests } from "./components/access-requests";
 export { SalesRoutingCard } from "./components/sales-routing-card";
 export { ListEditor } from "./components/list-editor";
 export { StagesEditor } from "./components/stages-editor";
+export { SpacesClients } from "./spaces/b1-screen";

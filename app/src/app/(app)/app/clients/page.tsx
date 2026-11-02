@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
@@ -8,6 +9,7 @@ import {
   ClientsSearch,
   ClientsTable,
   NewOpportunity,
+  SpacesClients,
   listClients,
   listSalesLists,
   salesCaps,
@@ -96,17 +98,20 @@ function SettingsLink() {
 }
 
 // B1: όλοι οι Πελάτες φαίνονται με όνομα και Υπεύθυνο· ανοίγουν μόνο όσοι αφορούν τον θεατή (αποφασίζει η βάση).
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; new?: string }>;
 }) {
   const viewer = await getViewer();
+  const { q, new: newStamp } = await searchParams;
+  const query = typeof q === "string" ? q.trim() : "";
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesClients query={query} newStamp={typeof newStamp === "string" ? newStamp : undefined} />;
   const caps = salesCaps(viewer);
   if (!caps.canViewClients) return <NoAccess viewer={viewer} />;
 
-  const { q } = await searchParams;
-  const query = typeof q === "string" ? q.trim() : "";
   const [clients, lists] = await Promise.all([
     listClients({ query }),
     caps.canManage ? listSalesLists() : null,

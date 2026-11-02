@@ -4,3 +4,4 @@ export type { CardData, CardItem, TodayCard, TodayCounts } from "./view-schema";
 export { TODAY_TITLE } from "./labels";
 export { TodayScreen } from "./components/today-screen";
 export { SpacesToday } from "./spaces/a1-screen";
+export { getSpaceStrip } from "./spaces/space-strip";
