@@ -13,6 +13,7 @@ import {
   type SpaceView,
 } from "@/spaces/data/spaces";
 import { Icon } from "@/spaces/shell/icons";
+import { NavPending } from "@/spaces/shell/nav-pending";
 import { ToolMenu } from "@/spaces/shell/tool-menu";
 
 interface SpaceLinksProps {
@@ -47,6 +48,7 @@ function SpaceLinks({
           >
             <Icon name={view.icon} size={18} />
             <span>{showLabels === "always" ? view.barLabel : view.label}</span>
+            <NavPending />
           </Link>
         </li>
       ))}
@@ -101,6 +103,7 @@ function MoreSpaces({ model, views }: MoreSpacesProps) {
               >
                 <Icon name={view.icon} size={18} />
                 {view.label}
+                <NavPending />
               </Link>
             </li>
           ))}

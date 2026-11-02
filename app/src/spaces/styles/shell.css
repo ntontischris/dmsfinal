@@ -20,6 +20,11 @@
 & .space-nav a:hover, & .bottom-bar-list a:hover { background: color-mix(in oklab, var(--color-text) 8%, transparent); color: var(--color-text); }
 & .space-nav a[aria-current='page'], & .bottom-bar-list a[aria-current='page'] { background: var(--color-accent); color: var(--color-on-accent); }
 & .space-nav[data-labels='wide'] span { display: none; }
+/* Το πάτημα φαίνεται αμέσως (πριν φτάσει η σελίδα): ο Χώρος ανάβει μισός ως να ανοίξει. */
+& .nav-pending { display: none; }
+& :is(.space-nav, .bottom-bar-list, .bottom-bar-more .tool-menu-list) a:has(.nav-pending[data-pending='true']) {
+  background: color-mix(in oklab, var(--color-accent) 45%, transparent); color: var(--color-text);
+}
 @media (min-width: 64rem) { & .space-nav[data-labels='wide'] span { display: inline; } }
 
 & .top-tools { display: flex; align-items: center; gap: var(--space-1); }

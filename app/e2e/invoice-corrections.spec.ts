@@ -49,9 +49,14 @@ test("ο Ιδιοκτήτης διορθώνει τη λήξη και μετά �
 
   await signIn(page, "owner@example.com");
   await page.goto(`${NEW_PATH}?client=${clientId}`);
+  // Η φόρμα έρχεται μετά τον σκελετό αναμονής: πρώτα να φανεί, μετά να γραφτεί (όπως στο invoices.spec).
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Καταχώρηση Τιμολογίου" }),
+  ).toBeVisible();
   await page.locator('input[type="file"]').setInputFiles(PDF_FIXTURE);
   await fieldOf(page, "Αριθμός").fill(number);
   await fieldOf(page, "Καθαρό (€)").fill("1000");
+  await expect(fieldOf(page, "Σύνολο (€)")).toHaveValue("1240");
   await page.getByRole("button", { name: SUBMIT }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Καταχωρήθηκε το" }),
