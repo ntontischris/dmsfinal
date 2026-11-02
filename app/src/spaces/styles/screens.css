@@ -1,0 +1,179 @@
+/* Κοινά στοιχεία των οθονών του prototype, στη γλώσσα του Kit (βλ. /kit). Μόνο tokens του globals.css. */
+[data-look='spaces'] {
+& .main { min-width: 0; }
+
+& .sw { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
+& .sw a[aria-current='true'] { font-weight: 600; color: var(--color-text); }
+& .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
+& .toolbar .grow { flex: 1 1 12rem; }
+
+/* Πεδίο */
+& .input {
+  font: inherit; font-size: var(--text-sm); color: var(--color-text); background: var(--color-bg);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 0.35rem var(--space-3);
+  min-width: 0; max-width: 100%; line-height: 1.4;
+}
+& .input:hover { border-color: var(--color-border-strong); }
+& .input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--tint-accent-20); }
+
+/* Κουμπιά: κύριο = γεμάτο χρώμα έμφασης (ένα ανά περιοχή), κίνδυνος = κόκκινο περίγραμμα */
+& .button[data-primary='true'] { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); font-weight: 600; }
+& .button[data-primary='true']:hover { filter: brightness(1.06); }
+& .button[data-danger='true'] { border-color: var(--color-danger); color: var(--color-danger); }
+& .button:disabled, & .button[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
+& .btn-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+/* Αριθμοί και ποσά: sans με ψηφία ίσου πλάτους, για να στοιχίζονται σε στήλες (το mono μένει για κωδικούς και ετικέτες) */
+& .num { font-variant-numeric: tabular-nums; }
+
+/* Σήμα κατάστασης (tally του Ρεζί): λυχνία + λέξη. Χρώμα μόνο με λέξη δίπλα. */
+& .badge {
+  display: inline-flex; align-items: center; gap: 0.4em; font-size: var(--text-xs); font-weight: 500; line-height: 1.6;
+  padding: 0 0.5em; border: 1px solid var(--color-border); border-radius: var(--radius-sm); white-space: nowrap;
+  color: var(--color-text-muted); background: var(--color-surface);
+}
+& .badge::before { content: ''; width: 0.45em; height: 0.45em; border-radius: 50%; background: currentColor; opacity: 0.7; flex: none; }
+& .badge[data-tone='attention'], & .badge[data-tone='danger'] { border-color: var(--tint-danger-55); color: var(--color-danger); background: var(--tint-danger-10); }
+& .badge[data-tone='strong'] { border-color: var(--tint-accent-60); color: var(--color-accent); background: var(--tint-accent-10); font-weight: 600; }
+& .badge[data-tone='ok'] { border-color: var(--tint-ok-55); color: var(--color-ok); background: var(--tint-ok-10); }
+& .badge[data-tone='attention']::before, & .badge[data-tone='danger']::before { opacity: 1; box-shadow: 0 0 6px currentColor; }
+/* «Τι σημαίνει;» δίπλα στο σήμα: μικρό ερωτηματικό, και φούσκα με την εξήγηση του όρου */
+& .badge-with-help { display: inline-flex; align-items: center; gap: 0.25em; white-space: nowrap; }
+& .status-help-button {
+  display: inline-grid; place-items: center; width: 1.35em; height: 1.35em; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1px solid var(--color-border); background: none; color: var(--color-text-muted); font: inherit; font-size: var(--text-xs); font-weight: 600; line-height: 1;
+}
+& .status-help-button:hover, & .status-help-button:focus-visible { border-color: var(--color-border-strong); color: var(--color-text); }
+/* Αόρατη περιοχή αφής 44px γύρω από το μικρό κουμπί */
+@media (pointer: coarse) { & .status-help-button { position: relative; } & .status-help-button::after { content: ''; position: absolute; inset: -0.75rem; } }
+& .status-help {
+  position: fixed; inset: auto; margin: 0; width: min(18rem, calc(100vw - 2rem)); padding: var(--space-3);
+  border: 1px solid var(--color-border-strong); border-radius: var(--radius); background: var(--color-surface-raised); color: var(--color-text);
+  box-shadow: 0 20px 50px -20px var(--shadow-color); font-size: var(--text-sm); white-space: normal; text-align: left;
+}
+& .status-help:popover-open { display: grid; gap: var(--space-2); }
+& .status-help-title { display: block; margin: 0; font: 500 var(--text-xs)/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); }
+& .status-help-entry { display: grid; gap: 2px; cursor: auto; }
+& .status-help-entry strong { display: block; font-weight: 600; }
+& .status-help-entry strong::first-letter { text-transform: uppercase; }
+& .status-help-entry span { color: var(--color-text-muted); line-height: 1.45; }
+
+/* Πίνακας (Τεχνικό δελτίο): ετικέτες στηλών mono, λεπτές γραμμές, αριθμοί δεξιά */
+& .scroll { overflow-x: auto; max-width: 100%; }
+& .rtable { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+& .rtable th, & .rtable td { text-align: left; padding: 0.55rem var(--space-3); border-bottom: 1px solid var(--color-border); vertical-align: top; }
+& .rtable th {
+  font: 500 var(--text-xs)/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--color-text-muted); border-bottom-color: var(--color-border-strong); white-space: nowrap;
+}
+& .rtable tbody tr:hover { background: var(--color-surface-raised); }
+& .rtable .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Στο κινητό κάθε γραμμή γίνεται συμπαγής κάρτα: η πρώτη στήλη (συνήθως ο τίτλος) σε όλο το πλάτος,
+   οι υπόλοιπες δύο-δύο, με την ετικέτα πάνω από την τιμή. Οι ετικέτες δεν σπάνε ποτέ μέσα στη λέξη. */
+@media (max-width: 40rem) {
+  & .rtable thead { display: none; }
+  & .rtable, & .rtable tbody { display: block; width: 100%; }
+  & .rtable tr {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); margin-bottom: var(--space-2); background: var(--color-surface);
+  }
+  & .rtable td { display: grid; align-content: start; gap: 2px; min-width: 0; border: 0; padding: 0; text-align: left; }
+  & .rtable td:first-child, & .rtable td[colspan] { grid-column: 1 / -1; }
+  & .rtable td::before {
+    content: attr(data-label); color: var(--color-text-muted); font: 500 var(--text-xs)/1.4 var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;
+    overflow-wrap: normal; word-break: normal; hyphens: none;
+  }
+  & .rtable td:not([data-label])::before { display: none; }
+  & .rtable .num { text-align: left; }
+}
+
+/* Καρτέλες ενότητας: υπογράμμιση με το χρώμα έμφασης */
+/* Αναδιπλώνονται αντί να κυλάνε: καμία καρτέλα δεν κρύβεται και η μπάρα δεν μετακινείται στο κλικ */
+& .tabs { display: flex; flex-wrap: wrap; gap: var(--space-1); border-bottom: 1px solid var(--color-border); margin-bottom: var(--space-4); }
+& .tab { padding: var(--space-2) var(--space-3); text-decoration: none; font-size: var(--text-sm); white-space: nowrap; color: var(--color-text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+& .tab:hover { color: var(--color-text); }
+& .tab[aria-current='page'] { color: var(--color-text); font-weight: 600; border-bottom-color: var(--color-accent); }
+
+& .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--space-4); }
+/* Ιδιότητες (πάνελ ιδιοτήτων του Μοντάζ): ετικέτα mono αριστερά, τιμή δεξιά */
+& .dl { display: grid; grid-template-columns: minmax(6rem, max-content) 1fr; gap: var(--space-2) var(--space-4); margin: 0 0 var(--space-3); font-size: var(--text-sm); }
+& .dl dt { color: var(--color-text-muted); font: 500 var(--text-xs)/1.9 var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase; }
+& .dl dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+/* Λίστα (Φως): γραμμές με λεπτά διαχωριστικά */
+& .list { list-style: none; margin: 0; padding: 0; }
+& .list li { padding: var(--space-3) 0; border-top: 1px solid var(--color-border); font-size: var(--text-sm); }
+& .list li:first-child { border-top: 0; }
+& .row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; }
+& .card-title { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+& .card-title h2 { margin: 0; }
+
+& .kanban { display: flex; gap: var(--space-3); overflow-x: auto; padding-bottom: var(--space-2); align-items: flex-start; }
+& .kcol { flex: 0 0 16.5rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); }
+& .kcol h3 { display: flex; justify-content: space-between; font: 500 var(--text-xs)/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); }
+& .kcard { background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); margin-bottom: var(--space-2); font-size: var(--text-sm); }
+& .kcard[data-forgotten='true'] { border-left: 3px solid var(--color-danger); }
+& .kcard p { margin: var(--space-1) 0; }
+
+/* Άδεια κατάσταση και σφάλμα */
+& .notice { border-style: dashed; text-align: center; padding: var(--space-6) var(--space-4); }
+& .notice[data-kind='error'] { border-style: solid; border-color: var(--tint-danger-60); }
+& .compare { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+@media (max-width: 40rem) { & .compare { grid-template-columns: 1fr; } }
+& .note { font-size: var(--text-sm); color: var(--color-text-muted); border-left: 2px solid var(--color-border-strong); padding-left: var(--space-3); margin: var(--space-3) 0; }
+
+& .stack { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; max-width: 100%; }
+& .stack .input { width: 100%; max-width: 28rem; }
+& tr.taken { opacity: 0.8; background: var(--color-surface); }
+& tr.taken td { text-align: left; }
+& tr.archived { opacity: 0.8; }
+
+/* Φόρμα «Νέος πελάτης + Ευκαιρία» */
+& .new-lead { display: grid; gap: var(--space-3); max-width: 32rem; }
+& .new-lead .field { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+& .new-lead .field span { color: var(--color-text-muted); }
+& .new-lead ul.note { margin: 0; padding-left: var(--space-6); }
+& .new-lead .button { justify-self: start; }
+& .choice-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+& .choice-row .button[aria-pressed='true'] { background: var(--color-accent); color: var(--color-on-accent); border-color: transparent; }
+
+/* Επιβεβαίωση ενέργειας: δίπλα στο κουμπί (στην ίδια γραμμή όσο χωρά), μεγάλη και χρωματιστή, ώστε να μη χάνεται.
+   Η περιοχή υπάρχει κενή από πριν, για να ανακοινώνεται κάθε αλλαγή. */
+& .feedback-msg { display: inline-flex; flex: 0 1 auto; max-width: 100%; vertical-align: middle; gap: var(--space-2); align-items: baseline; margin: 0; font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
+& .feedback-msg:focus { outline: none; }
+& .feedback-msg:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+& .feedback-msg[data-shown='false'] { flex: 0 0 0; width: 0; height: 0; padding: 0; border: 0; overflow: hidden; }
+& .feedback-msg[data-tone='ok']:not([data-shown='false']) {
+  margin: var(--space-1) 0 var(--space-1) var(--space-1); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-ok); background: var(--tint-ok-14);
+}
+& .feedback-msg[data-tone='ok'] > span[aria-hidden] { color: var(--color-ok); font-weight: 800; }
+& .feedback-msg[data-tone='error'] > span[aria-hidden] { color: var(--color-danger); font-weight: 800; }
+& .feedback-msg[data-tone='error']:not([data-shown='false']) {
+  margin: var(--space-1) 0 var(--space-1) var(--space-1); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-danger); background: var(--tint-danger-12);
+}
+/* Κάθε μήνυμα κατάστασης διαβάζεται καθαρά, όχι αχνό */
+& .note[role='status'] { color: var(--color-text); font-size: var(--text-base); font-weight: 600; border-left: 3px solid var(--color-accent); }
+
+/* Ολόκληρη η γραμμή ή η κάρτα ανοίγει τη λεπτομέρειά της (ο πρώτος σύνδεσμος απλώνεται από πάνω της).
+   Τα υπόλοιπα κουμπιά, πεδία και σύνδεσμοι μένουν πατήσιμα από πάνω. */
+& .kit-row:has(> a.kit-row-title), & .kcard:has(> a:first-child), & .rtable tbody tr:has(a:not(.button)) { position: relative; cursor: pointer; }
+& .kit-row > a.kit-row-title::after,
+& .kcard > a:first-child::after,
+& .rtable tbody td:has(a:not(.button)):not(td:has(a:not(.button)) ~ td) a:not(.button):first-of-type::after {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+}
+& .kit-row :is(a, button, input, select, textarea, label, summary):not(.kit-row-title), & .kcard :is(a, button, input, select, textarea, label, summary):not(.kcard > a:first-child), & .rtable tbody tr :is(button, input, select, textarea, label, summary, a.button), & .rtable tbody td:has(a:not(.button)) ~ td a { position: relative; z-index: 1; }
+& .kit-row:has(> a.kit-row-title):hover, & .kcard:has(> a:first-child):hover { background: var(--color-surface-raised); }
+& .kit-row:has(> a.kit-row-title):hover > a.kit-row-title, & .kcard:has(> a:first-child):hover > a:first-child, & .rtable tbody tr:has(a:not(.button)):hover a:not(.button) { text-decoration-color: currentColor; }
+
+/* Στόχοι αφής: τουλάχιστον 24px στον υπολογιστή, 44px στο κινητό */
+& .tab, & .kit-seg a { min-height: 1.75rem; }
+& .a1-card-foot a:not(.button) { display: inline-flex; align-items: center; min-height: 1.75rem; padding-inline: var(--space-2); }
+& input[type='checkbox'], & input[type='radio'] { width: 1.15rem; height: 1.15rem; accent-color: var(--color-accent); flex: none; }
+@media (max-width: 48rem) {
+  & .button, & .select, & .input { min-height: 2.75rem; }
+  & .tab, & .kit-seg a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  & .a1-card-foot a:not(.button) { min-height: 2.75rem; }
+  & input[type='checkbox'], & input[type='radio'] { width: 1.5rem; height: 1.5rem; }
+} }

@@ -1,0 +1,22 @@
+/* Προσθήκες της εφαρμογής πάνω στο prototype (όχι από το prototype): μόνο ό,τι χρειάστηκε για πραγματικά δεδομένα.
+   1. Στο μενού προφίλ, θέμα / εμφάνιση / Έξοδος είναι κουμπιά (όχι σύνδεσμοι): ίδια εμφάνιση με τους συνδέσμους του μενού.
+   2. Το «Περισσότερα» στο τέλος των καρτελών: ίδιο σχήμα με καρτέλα, ώστε καμία οθόνη του μενού να μη χάνεται. */
+[data-look='spaces'] {
+& .tool-menu-list button {
+  display: flex; align-items: center; width: 100%; min-height: 2.5rem; padding: var(--space-2) var(--space-3);
+  border: 0; border-radius: var(--radius-sm); background: none; color: inherit; font: inherit; font-size: var(--text-sm);
+  text-align: left; cursor: pointer;
+}
+& .tool-menu-list button:hover { background: color-mix(in oklab, var(--color-text) 8%, transparent); }
+& .tool-menu-list form { margin: 0; }
+& .page-tabs .tool-menu-list { min-width: 14rem; }
+& .page-tab-more {
+  display: flex; align-items: center; gap: var(--space-1); height: 2.25rem; padding: 0 var(--space-4); border: 0;
+  border-radius: 999px; background: none; cursor: pointer; font: inherit; font-size: var(--text-sm); font-weight: 500;
+  color: var(--color-text-muted); white-space: nowrap;
+}
+& .page-tab-more:hover, & .page-tab-more[aria-expanded='true'] { background: color-mix(in oklab, var(--color-text) 8%, transparent); color: var(--color-text); }
+@media (max-width: 48rem) { & .page-tab-more { height: 2.75rem; } }
+/* Ειδοποίηση κάτω από τη μπάρα (χωρίς βάση ή χωρίς ομάδα): ίδια γραμμή με την παλιά εμφάνιση. */
+& .shell-notice { margin: var(--space-4) auto 0; max-width: 82rem; padding: var(--space-2) var(--space-6); font-size: var(--text-sm); color: var(--color-text-muted); }
+}

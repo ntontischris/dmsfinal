@@ -1,0 +1,18 @@
+/* Η νέα εμφάνιση (Χώροι) ζει μέσα στο περίβλημα [data-look='spaces']: εκεί το prototype είχε το body.
+   Το περίβλημα γίνεται η σελίδα (ύψος οθόνης)· τα χρώματα, η γραμματοσειρά και το φόντο του έρχονται από το globals.css. */
+[data-look='spaces'] {
+  min-height: 100dvh;
+}
+
+/* Το prototype ζωγραφίζεται πάνω στα στυλ του browser, όχι πάνω στο preflight του Tailwind (που μηδενίζει περιθώρια,
+   λίστες, κουμπιά, υπογραμμίσεις και κάνει τα svg block). Στις περιοχές του prototype ([data-spaces]) τα στοιχεία
+   γυρίζουν στα στυλ του browser· τα κανόνια του prototype (εκτός layer) κερδίζουν πάντα από πάνω.
+   Τα πραγματικά components της εφαρμογής που μπαίνουν μέσα (καμπανάκι, εναλλαγή Πελάτη) σημειώνονται [data-tw]
+   και κρατούν το preflight τους. Στο layer base, ώστε τα utilities του Tailwind να κερδίζουν όπως πριν. */
+@layer base {
+  [data-look='spaces'] :is([data-spaces], [data-spaces] *):not([data-tw], [data-tw] *),
+  [data-look='spaces'] :is([data-spaces], [data-spaces] *):not([data-tw], [data-tw] *)::before,
+  [data-look='spaces'] :is([data-spaces], [data-spaces] *):not([data-tw], [data-tw] *)::after {
+    all: revert;
+  }
+}

@@ -2,9 +2,11 @@ import { fileURLToPath } from "node:url";
 
 import { report, walk } from "./lib/walk.mjs";
 
-// Kit (Blueprint κεφ. 10): τα χρώματα ζουν μόνο στα tokens του globals.css.
+// Kit (Blueprint κεφ. 10): τα χρώματα ζουν μόνο στα αρχεία tokens.
 // Απαγορεύονται χρώματα γραμμένα με το χέρι και η παλέτα του Tailwind (π.χ. bg-red-500).
-const TOKENS_FILE = "src/app/globals.css";
+// Αρχεία tokens: το globals.css της εφαρμογής, και τα δύο αρχεία tokens της νέας εμφάνισης (Χώροι), αυτούσια από το
+// prototype (globals.css + brand.css), μόνο κάτω από [data-look='spaces']. Κάθε άλλο ported CSS χρησιμοποιεί μόνο tokens.
+const TOKENS_FILES = new Set(["src/app/globals.css", "src/spaces/styles/globals.css", "src/spaces/styles/brand.css"]);
 // Τα email δεν διαβάζουν τα tokens του CSS· τα χρώματα του πρότυπου είναι inline και σταθερά εκεί.
 const EMAIL_TEMPLATES = /^src\/lib\/email\/templates\//;
 const RULES = [
@@ -17,7 +19,7 @@ const RULES = [
 export function findDesignViolations(files) {
   const violations = [];
   for (const file of files) {
-    if (file.path === TOKENS_FILE || EMAIL_TEMPLATES.test(file.path)) continue;
+    if (TOKENS_FILES.has(file.path) || EMAIL_TEMPLATES.test(file.path)) continue;
     file.text.split("\n").forEach((line, index) => {
       if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
       for (const [pattern, what] of RULES)
