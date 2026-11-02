@@ -10,7 +10,10 @@ export type {
   BoardColumn,
   ClientAccess,
   ClientDetail,
+  ClientOverview,
+  ClientProvision,
   ClientRow,
+  ClientStatus,
   DuplicatePair,
   DuplicateReason,
   DuplicateSide,
@@ -60,6 +63,7 @@ export {
   listClientOpportunities,
   listClients,
 } from "./queries-clients";
+export { listClientOverviews } from "./queries-overview";
 export {
   getOpportunity,
   listOpportunityActivities,
@@ -95,3 +99,4 @@ export { AccessRequests } from "./components/access-requests";
 export { SalesRoutingCard } from "./components/sales-routing-card";
 export { ListEditor } from "./components/list-editor";
 export { StagesEditor } from "./components/stages-editor";
+export { SpacesClients } from "./spaces/b1-screen";

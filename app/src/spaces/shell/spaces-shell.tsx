@@ -1,0 +1,75 @@
+import { Manrope } from "next/font/google";
+import Link from "next/link";
+import type { ComponentProps, ReactNode } from "react";
+
+import type { SpacesModel } from "@/spaces/data/spaces";
+import { Monogram } from "@/spaces/shell/icons";
+import { PageHead } from "@/spaces/shell/page-head";
+import { BottomBar, SpaceNav } from "@/spaces/shell/space-nav";
+import { TopTools } from "@/spaces/shell/top-tools";
+
+// Η σειρά του prototype: globals → kit → brand (root layout), shell, parts, screens. Όλα μόνο κάτω από [data-look='spaces'].
+import "@/spaces/styles/globals.css";
+import "@/spaces/styles/kit.css";
+import "@/spaces/styles/brand.css";
+import "@/spaces/styles/shell.css";
+import "@/spaces/styles/parts.css";
+import "@/spaces/styles/screens.css";
+import "@/spaces/styles/page.css";
+import "@/spaces/styles/app.css";
+
+// Η Manrope της ταυτότητας με ελληνικά, όπως στο root layout του prototype (η Satoshi έρχεται από το brand.css).
+const sans = Manrope({
+  subsets: ["latin", "greek"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-kit-sans",
+});
+
+interface SpacesShellProps {
+  model: SpacesModel;
+  tools: ComponentProps<typeof TopTools>;
+  notice: string | null;
+  assistant: ReactNode;
+  children: ReactNode;
+}
+
+// Το κέλυφος των Χώρων, από το prototype (`app/[role]/layout.tsx`): χάπι πάνω με μονόγραμμα, Χώρους και εργαλεία,
+// η κεφαλίδα του Χώρου με τις καρτέλες, και στο κινητό μπάρα κάτω. Οι Χώροι βγαίνουν από τα Δικαιώματα (spacesModel).
+export function SpacesShell({
+  model,
+  tools,
+  notice,
+  assistant,
+  children,
+}: SpacesShellProps) {
+  return (
+    <div data-look="spaces" className={sans.variable}>
+      <a className="skip-link" href="#main" data-spaces>
+        Μετάβαση στο περιεχόμενο
+      </a>
+      <header className="shell-bar" data-spaces>
+        <nav className="shell-pill" aria-label="Χώροι">
+          <Link className="shell-home" href="/app" aria-label="Σήμερα">
+            <Monogram />
+          </Link>
+          <SpaceNav model={model} />
+          <span className="shell-divider" />
+          <TopTools {...tools} />
+        </nav>
+      </header>
+      {notice && (
+        <p className="shell-notice" role="status" data-spaces>
+          {notice}
+        </p>
+      )}
+      <main id="main" className="app-main" tabIndex={-1}>
+        <div data-spaces>
+          <PageHead model={model} />
+        </div>
+        {children}
+      </main>
+      <BottomBar model={model} />
+      <div data-tw>{assistant}</div>
+    </div>
+  );
+}

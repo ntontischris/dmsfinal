@@ -165,3 +165,25 @@ export interface PickerClient {
   isMine: boolean;
   managerName: string | null;
 }
+
+// Πλούσια λίστα Πελατών (B1): ό,τι δεν δίνει η sales_client_list, από τη sales_client_overview.
+export type ClientStatus = "candidate" | "active" | "inactive";
+export interface ClientProvision {
+  kindId: string;
+  unit: string;
+  isShoot: boolean; // είδος που καταναλώνεται από Γυρίσματα
+  given: number;
+  carried: number;
+  used: number;
+  reserved: number; // Γυρίσματα κλεισμένα, όχι ακόμα γυρισμένα
+}
+export interface ClientOverview {
+  clientId: string;
+  status: ClientStatus;
+  activeAgreements: number | null; // null = ο Χρήστης δεν βλέπει Συμφωνίες
+  packageName: string | null;
+  provisions: readonly ClientProvision[];
+  nextFilming: string | null; // ISO
+  balanceCents: number | null; // null = ο Χρήστης δεν βλέπει Οικονομικά
+  lastContact: string | null; // ISO
+}

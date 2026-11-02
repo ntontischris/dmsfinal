@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
 // Γράφει ή σβήνει το cookie· χωρίς cookie ισχύει η παλιά εμφάνιση.
-const saveLook = (look: Look): void => {
+export const saveLook = (look: Look): void => {
   document.cookie =
     look === "spaces"
       ? `${LOOK_COOKIE}=${SPACES_LOOK}; path=/; max-age=${ONE_YEAR}; samesite=lax`

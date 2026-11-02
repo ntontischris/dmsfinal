@@ -1,0 +1,145 @@
+/* Kit · «Μοντάζ»: tokens κοινά για Ιστοσελίδα και εφαρμογή (ticket «Οπτική κατεύθυνση»).
+   Σκοτεινό θέμα προεπιλογή, φωτεινό με data-theme="light". Οι τιμές μένουν tokens ως το τελικό build. */
+:root:has([data-look='spaces']) { scroll-padding-top: 6.5rem; scroll-padding-bottom: var(--space-4); }
+@media (max-width: 48rem) {
+  :root:has([data-look='spaces']) { scroll-padding-top: var(--space-4); scroll-padding-bottom: calc(7rem + env(safe-area-inset-bottom)); }
+}
+[data-look='spaces'] {
+& {
+  color-scheme: dark;
+  /* Επιφάνειες: η navy της ταυτότητας (NUD Studio), με γυάλινα πάνελ πάνω της */
+  --color-bg: #14213d;
+  --color-surface: color-mix(in oklab, #1d2c4f 78%, transparent);
+  --color-surface-raised: #1d2c4f;
+  --color-border: color-mix(in oklab, #a2b5f9 12%, transparent);
+  --color-border-strong: color-mix(in oklab, #a2b5f9 26%, transparent);
+  --color-text: #ffffff;
+  /* Συμπαγές (όχι διαφάνεια), ώστε να περνά AA 4,5:1 σε κάθε σκούρα επιφάνεια */
+  --color-text-muted: #c3cbe0;
+  /* Periwinkle: η κύρια ενέργεια και ο ενεργός Χώρος */
+  --color-accent: #a2b5f9;
+  --color-on-accent: #0b1528;
+  /* Κίτρινο: μόνο το «Τώρα», το ένα πιο επείγον της οθόνης */
+  --color-now: #f2d888;
+  --color-on-now: #0b1528;
+  /* Καταστάσεις: κόκκινο = πρόβλημα, πράσινο = έτοιμο. Πάντα με λέξη δίπλα. */
+  /* Λίγο πιο ανοιχτό από το brand κόκκινο, για να διαβάζεται ως κείμενο και πάνω στα πάνελ (AA) */
+  --color-attention: #ff6b66;
+  --color-danger: #ff6b66;
+  --color-ok: oklch(76% 0.15 150);
+  --color-focus: #a2b5f9;
+  --font-sans: var(--font-kit-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-kit-mono), ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --font-display-weight: 800;
+  /* 13px: το μικρότερο που διαβάζεται άνετα (σήματα, ετικέτες, κάτω μπάρα) */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 0.9375rem;
+  --text-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem);
+  --text-xl: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-lg: 1.5rem;
+  --shadow-panel: 0 1px 0 oklch(100% 0 0 / 0.04) inset;
+  --page-bg: radial-gradient(ellipse 80% 60% at 50% 30%, #14213d, #0b1528 95%) fixed;
+}
+
+:root[data-theme='light'] & {
+  color-scheme: light;
+  --color-bg: #f4f4f4;
+  --color-surface: #ffffff;
+  --color-surface-raised: #dfe6fe;
+  --color-border: color-mix(in oklab, #14213d 12%, transparent);
+  --color-border-strong: color-mix(in oklab, #14213d 24%, transparent);
+  --color-text: #14213d;
+  --color-text-muted: #3d4865;
+  --color-accent: #14213d;
+  --color-on-accent: #ffffff;
+  --color-now: #f2d888;
+  --color-on-now: #0b1528;
+  --color-attention: #c4161c;
+  --color-danger: #c4161c;
+  --color-ok: oklch(45% 0.13 150);
+  --color-focus: #14213d;
+  --shadow-panel: none;
+  --page-bg: #f4f4f4;
+}
+
+&, & * { box-sizing: border-box; }
+/* Η σταθερή μπάρα πάνω (και κάτω στο κινητό) δεν κρύβει ποτέ το πεδίο με εστίαση ή τον στόχο ενός συνδέσμου */
+/* Στο κινητό η πάνω μπάρα κυλά με τη σελίδα· μένει μόνο το κάτω μενού. Το κείμενο λίγο μεγαλύτερο, για χαμηλό φως και μικρή οθόνη. */
+@media (max-width: 48rem) {
+  & { --text-sm: 0.9375rem; --text-base: 1rem; }
+}
+& {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  /* Καμία οριζόντια κύλιση σελίδας: ό,τι είναι φαρδύ κυλά μέσα στο δικό του πλαίσιο */
+  overflow-x: clip;
+}
+& a { color: inherit; text-underline-offset: 0.2em; text-decoration-color: var(--color-border-strong); }
+& a:hover { text-decoration-color: currentColor; }
+& :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+& h1, & h2, & h3 { line-height: 1.2; margin: 0 0 var(--space-3); letter-spacing: -0.01em; }
+& h1 { font-size: var(--text-lg); font-weight: 600; }
+& h2 { font-size: var(--text-base); font-weight: 600; }
+& h3 { font-size: var(--text-sm); font-weight: 600; }
+& code { font-family: var(--font-mono); font-size: 0.85em; }
+
+/* Μπάρα: όπως η μπάρα της αίθουσας μοντάζ, με τη «λυχνία» δίπλα στο όνομα */
+
+& .main { padding: var(--space-6); max-width: 76rem; width: 100%; }
+
+& .select, & .button {
+  font: inherit; font-size: var(--text-sm); font-weight: 500; color: var(--color-text);
+  background: var(--color-surface-raised); border: 1px solid var(--color-border);
+  border-radius: 999px; padding: 0.4rem var(--space-4); line-height: 1.4;
+}
+& .button { cursor: pointer; display: inline-flex; align-items: center; gap: var(--space-2); text-decoration: none; }
+& .chip a { text-decoration: none; }
+& .button:hover { border-color: var(--color-border-strong); }
+
+& .screen-header { margin-bottom: var(--space-6); }
+& .screen-header h1 { font-size: var(--text-xl); font-weight: 500; letter-spacing: -0.025em; }
+/* Ετικέτα: μικρή, mono, κεφαλαία. Μόνο για σύντομες ετικέτες, ποτέ για περιεχόμενο. */
+& .eyebrow {
+  font: 500 var(--text-xs)/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-text-muted); margin-bottom: var(--space-2);
+}
+/* Φίλτρα: «χάπια» (από τη Χρωματική διόρθωση) */
+& .chips { display: flex; flex-wrap: wrap; gap: var(--space-1); list-style: none; padding: 0; margin: var(--space-3) 0 0; }
+& .chip {
+  display: inline-block; max-width: 100%; font-size: var(--text-sm); padding: 0.2rem var(--space-3);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+& .chip[data-current='true'] { border-color: var(--color-accent); color: var(--color-text); font-weight: 600; background: var(--color-surface-raised); }
+
+/* Πάνελ: η βασική επιφάνεια, όπως τα πάνελ της αίθουσας */
+& .card {
+  background: var(--color-surface); border: 1px solid var(--color-border); box-shadow: var(--shadow-panel);
+  border-radius: var(--radius-lg); padding: var(--space-4) var(--space-6); margin-bottom: var(--space-4);
+}
+& .placeholder { border-style: dashed; color: var(--color-text-muted); }
+& .muted { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+@media (prefers-reduced-motion: no-preference) {
+  & .button { transition: background-color 120ms ease; }
+}
+& .chip a { color: inherit; text-decoration: none; }
+& .chip a:hover { text-decoration: underline; }
+
+/* Προβολή κινητού: το πλαίσιο ενός τηλεφώνου στη μέση της σελίδας */
+
+/* Προβολή desktop σε κινητό: η οθόνη 1280px μικραμένη στο πλάτος του παραθύρου (κλίμακα από το desktop-frame) */
+
+/* Στο dock: στον υπολογιστή «Προβολή κινητού», στο κινητό «Προβολή desktop» */ }

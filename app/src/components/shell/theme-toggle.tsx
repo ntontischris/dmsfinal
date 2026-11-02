@@ -13,17 +13,18 @@ const saveTheme = (theme: "dark" | "light"): void => {
   }
 };
 
+// Εναλλαγή σκοτεινό / φωτεινό· τη χρησιμοποιεί και το μενού προφίλ της νέας εμφάνισης.
+export const toggleTheme = (): void => {
+  const next = readTheme() === "dark" ? "light" : "dark";
+  if (next === "light") document.documentElement.dataset.theme = "light";
+  else delete document.documentElement.dataset.theme;
+  saveTheme(next);
+};
+
 // Στο v1 το θέμα θα ζει στο προφίλ του Χρήστη (A3)· ως τότε μένει στον browser.
 export function ThemeToggle() {
-  const handleClick = () => {
-    const next = readTheme() === "dark" ? "light" : "dark";
-    if (next === "light") document.documentElement.dataset.theme = "light";
-    else delete document.documentElement.dataset.theme;
-    saveTheme(next);
-  };
-
   return (
-    <Button size="sm" onClick={handleClick}>
+    <Button size="sm" onClick={toggleTheme}>
       Σκοτεινό / φωτεινό
     </Button>
   );

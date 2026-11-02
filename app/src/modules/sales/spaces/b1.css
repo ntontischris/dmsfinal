@@ -1,0 +1,22 @@
+/* Λίστα Πελατών (screens2): ο Πελάτης με αρχικά, ο μήνας ως μπάρες ανά Παροχή */
+[data-look='spaces'] {
+& .b1-month { display: grid; gap: 0.4rem; min-width: 11rem; }
+& .b1-package { display: block; margin-bottom: 0.4rem; font-weight: 600; }
+& .b1-balance { font-weight: 700; }
+& .b1-duplicate {
+  justify-self: start; margin-top: 0.3rem; padding: 0.15rem 0.65rem; border-radius: 999px; font-size: var(--text-xs); font-weight: 600;
+  text-decoration: none; color: var(--color-danger); background: color-mix(in oklab, var(--brand-rec, var(--color-danger)) 16%, transparent);
+}
+& .b1-duplicate:hover { background: color-mix(in oklab, var(--brand-rec, var(--color-danger)) 26%, transparent); }
+& .b1-filter { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); }
+& .b1-table td:first-child { min-width: 15rem; }
+& .b1-duplicate { white-space: nowrap; }
+& .b1-table :is(th, td) { padding-inline: 0.9rem; }
+& .b1-month { min-width: 9.5rem; }
+/* Μεγάλες ετικέτες στηλών σε δύο γραμμές, για να χωρά ο πίνακας χωρίς οριζόντια κύλιση */
+& .b1-table th { white-space: normal; vertical-align: bottom; }
+& .b1-table td:first-child { min-width: 13rem; }
+& .b1-table th.num { white-space: normal; max-width: 7rem; }
+& .b1-table td:first-child { min-width: 11rem; }
+& .b1-table .part-person-name { white-space: normal; }
+& .b1-table :is(th, td) { padding-inline: 0.75rem; } }
