@@ -47,7 +47,7 @@ export function ApprovalActions({ agreementId }: { agreementId: string }) {
             disabled={isPending}
             onClick={() => (decision.current = "reject")}
           >
-            Απορρίπτω
+            Απόρριψη
           </button>
         </>
       )}

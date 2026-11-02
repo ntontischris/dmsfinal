@@ -7,8 +7,10 @@ import { AccessNotice, getViewer, type Viewer } from "@/modules/access";
 import {
   AGREEMENTS_LIST_LIMIT,
   AgreementsTable,
+  ClientAgreementsList,
   IN_PROGRESS_DAYS,
   SpacesAgreements,
+  SpacesClientAgreements,
   agreementCaps,
   athensToday,
   isInProgress,
@@ -105,9 +107,12 @@ export default async function AgreementsPage({
   searchParams: Promise<{ view?: string }>;
 }) {
   const [viewer, { view }] = await Promise.all([getViewer(), searchParams]);
-  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
-  if ((await lookOf(viewer)) === "spaces") return <SpacesAgreements view={view} />;
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη έχει τη δική του όψη.
+  const look = await lookOf(viewer);
   const caps = agreementCaps(viewer);
+  if (caps.isClient)
+    return look === "spaces" ? <SpacesClientAgreements /> : <ClientAgreementsList />;
+  if (look === "spaces") return <SpacesAgreements view={view} />;
   if (!caps.canView) return <NoAccess viewer={viewer} />;
 
   const isFiltered = view === "in_progress";

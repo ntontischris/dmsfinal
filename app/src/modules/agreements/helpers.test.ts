@@ -33,6 +33,14 @@ const viewerWith = (permissions: Record<string, "all" | "mine">): Viewer => ({
   team: { name: "Άννα", isOwner: false, permissions },
 });
 
+const clientWith = (clientGrants: Record<string, "all">): Viewer => ({
+  status: "signed-in",
+  userId: UUID_A,
+  email: "k@client.example.gr",
+  team: null,
+  clientGrants,
+});
+
 const ALL_CODES = [
   "agreements.view",
   "agreements.draft",
@@ -65,6 +73,7 @@ describe("agreementCaps", () => {
     canManageCost: false,
     canManageSettings: false,
     canSeeProductions: false,
+    isClient: false,
   };
   it("ανώνυμος: όλα false", () => {
     expect(agreementCaps({ status: "anonymous" })).toEqual(NONE);
@@ -100,10 +109,23 @@ describe("agreementCaps", () => {
       canManageCost: false,
       canManageSettings: true,
       canSeeProductions: true,
+      isClient: false,
     });
   });
-  it("Ιδιοκτήτης: όλα true", () => {
-    expect(Object.values(agreementCaps(grantAll())).every(Boolean)).toBe(true);
+  it("Ιδιοκτήτης: όλα true εκτός από την όψη πελάτη", () => {
+    const { isClient, ...team } = agreementCaps(grantAll());
+    expect(Object.values(team).every(Boolean)).toBe(true);
+    expect(isClient).toBe(false);
+  });
+  it("Χρήστης πελάτη με «Βλέπει Συμφωνίες»: μόνο η όψη πελάτη", () => {
+    expect(
+      agreementCaps(clientWith({ "c.agreements": "all", "c.finance": "all" })),
+    ).toEqual({ ...NONE, isClient: true });
+  });
+  it("Χρήστης πελάτη χωρίς «Βλέπει Συμφωνίες»: τίποτα", () => {
+    expect(
+      agreementCaps(clientWith({ "c.finance": "all" })),
+    ).toEqual(NONE);
   });
   it("ο σύνδεσμος της Παραγωγής θέλει «Παραγωγές» και τίποτε άλλο", () => {
     expect(agreementCaps(viewerWith({ "agreements.view": "all" })).canSeeProductions).toBe(false);

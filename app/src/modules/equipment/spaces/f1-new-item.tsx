@@ -16,10 +16,12 @@ interface F1NewItemProps {
 }
 
 // Νέο αντικείμενο (prototype `f1-new-item.tsx`): όνομα και Κατηγορία υποχρεωτικά, όνομα μοναδικό. Μπαίνει «διαθέσιμο».
+// Η Ποσότητα (όπως η σημερινή σελίδα) γράφει N μονάδες με αρίθμηση· τα όριά της τα ελέγχει το action.
 export function F1NewItem({ items, categories, onDone }: F1NewItemProps) {
   const active = categories.filter((category) => !category.isRetired);
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState(active[0]?.id ?? "");
+  const [quantity, setQuantity] = useState("1");
   const [code, setCode] = useState("");
   const [note, setNote] = useState("");
   const [tried, setTried] = useState(false);
@@ -31,7 +33,7 @@ export function F1NewItem({ items, categories, onDone }: F1NewItemProps) {
   const handleSave = () => {
     setTried(true);
     if (nameError || categoryError) return;
-    run(createItem, { name, categoryId, code, note }, onDone);
+    run(createItem, { name, categoryId, quantity, code, note }, onDone);
   };
 
   return (
@@ -59,6 +61,22 @@ export function F1NewItem({ items, categories, onDone }: F1NewItemProps) {
                 </option>
               ))}
             </select>
+          </label>
+          <label>
+            Ποσότητα
+            <input
+              className="input"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={50}
+              value={quantity}
+              onChange={(event) => setQuantity(event.target.value)}
+            />
+            <span className="muted">
+              Πάνω από 1: κάθε μονάδα παίρνει αρίθμηση #1, #2… και το δικό της
+              κωδικό.
+            </span>
           </label>
           <label>
             Κωδικός ή σειριακός

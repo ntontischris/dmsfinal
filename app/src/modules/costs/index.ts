@@ -15,3 +15,5 @@ export { CostLoadError, CostMissing, CostNoAccess } from "./components/cost-stat
 export { isInternalCost } from "./helpers";
 export { SpacesCosts } from "./spaces/g3-screen";
 export { SpacesFinanceSettings } from "./spaces/o6-screen";
+export { SpacesExpenses } from "./spaces/i6-screen";
+export { SpacesProfitability } from "./spaces/i7-screen";

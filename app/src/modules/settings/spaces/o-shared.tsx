@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { can, getViewer } from "@/modules/access";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Panel } from "@/spaces/kit/panel";
 import { Badge, type BadgeTone } from "@/spaces/screens/shared";
@@ -13,10 +14,12 @@ import "./o.css";
 // τελευταίες αλλαγές. Το prototype άλλαζε κατάσταση με ?save=/?act=· εδώ τις ενέργειες τις δίνει ο καλών (πραγματικά actions).
 
 // Οι καρτέλες του prototype (O1–O6 + O7), με τις πραγματικές διαδρομές.
+// Το `needs` κρύβει την καρτέλα από όποιον δεν έχει το δικαίωμα που θέλει η σελίδα της.
 export const SETTINGS_TABS: readonly {
   code: string;
   label: string;
   href: string;
+  needs?: string;
 }[] = [
   { code: "O1", label: "Εταιρεία", href: "/app/settings/company" },
   { code: "O2", label: "Πωλήσεις", href: "/app/settings/sales" },
@@ -24,14 +27,24 @@ export const SETTINGS_TABS: readonly {
   { code: "O4", label: "Γυρίσματα", href: "/app/settings/filming" },
   { code: "O5", label: "Παραδοτέα", href: "/app/settings/deliverables" },
   { code: "O6", label: "Οικονομικά", href: "/app/settings/finance" },
+  {
+    code: "messages",
+    label: "Μηνύματα",
+    href: "/app/settings/messages",
+    needs: "settings.manage",
+  },
 ];
 
 export const READINESS_HREF = "/app/settings/readiness";
 
-export function SettingsTabs({ code }: { code: string }) {
+export async function SettingsTabs({ code }: { code: string }) {
+  const viewer = await getViewer();
+  const tabs = SETTINGS_TABS.filter(
+    (tab) => !tab.needs || can(viewer, tab.needs),
+  );
   return (
     <nav className="tabs" aria-label="Ενότητες Ρυθμίσεων">
-      {SETTINGS_TABS.map((tab) => (
+      {tabs.map((tab) => (
         <Link
           key={tab.code}
           className="tab"

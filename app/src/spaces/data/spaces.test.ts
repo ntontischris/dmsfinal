@@ -111,7 +111,7 @@ describe("spacesModel: Χώροι από τα Δικαιώματα", () => {
 
   it("ο Χώρος ανοίγει την πρώτη ορατή καρτέλα του", () => {
     const model = spacesModel(teamWith("finance.cost"));
-    expect(landingOf(space(model, "money")!)).toBe("/app/productions/costs");
+    expect(landingOf(space(model, "money")!)).toBe("/app/finance/expenses");
     expect(landingOf(space(spacesModel(fullTeam), "today")!)).toBe("/app");
   });
 

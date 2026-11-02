@@ -53,22 +53,26 @@ export function PeriodCard({ group }: { group: H3Group }) {
   return (
     <Panel label={group.label}>
       <Counter group={group} />
-      <RowList>
-        {group.deliverables.map((d) => (
-          <ListRow
-            key={d.id}
-            lead={
-              <span className="part-tile" aria-hidden="true">
-                {initialsOf(d.title)}
-              </span>
-            }
-            href={hrefOf("H2", { id: d.id })}
-            title={d.title}
-            sub={rowSubOf(d)}
-            aside={<ClientStatusBadge state={CLIENT_WORDS[d.state]} />}
-          />
-        ))}
-      </RowList>
+      {group.deliverables.length === 0 ? (
+        <p className="muted">Κανένα Παραδοτέο ακόμα.</p>
+      ) : (
+        <RowList>
+          {group.deliverables.map((d) => (
+            <ListRow
+              key={d.id}
+              lead={
+                <span className="part-tile" aria-hidden="true">
+                  {initialsOf(d.title)}
+                </span>
+              }
+              href={hrefOf("H2", { id: d.id })}
+              title={d.title}
+              sub={rowSubOf(d)}
+              aside={<ClientStatusBadge state={CLIENT_WORDS[d.state]} />}
+            />
+          ))}
+        </RowList>
+      )}
     </Panel>
   );
 }

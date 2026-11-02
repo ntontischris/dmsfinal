@@ -8,10 +8,13 @@ import type {
 } from "../view-schema";
 import {
   j3ItemOf,
+  j3OrderHrefOf,
   j3RecipientOf,
   j3RequestOf,
   j3RequestRowsOf,
   j3SentNoticeOf,
+  orderedOf,
+  parseJ3Order,
 } from "./j3-adapter";
 
 const NOW = new Date("2026-11-02T10:00:00Z");
@@ -227,5 +230,28 @@ describe("j3RecipientOf and j3SentNoticeOf", () => {
   it("should say what was sent", () => {
     expect(j3SentNoticeOf(true, "Άννα")).toContain("Το Αίτημα στάλθηκε");
     expect(j3SentNoticeOf(false, "Άννα")).toContain("Το μήνυμα στάλθηκε");
+  });
+});
+
+describe("σειρά της Συνομιλίας", () => {
+  it("προεπιλογή τα νεότερα πρώτα· μόνο το «old» αλλάζει τη σειρά", () => {
+    expect(parseJ3Order(undefined)).toBe("new");
+    expect(parseJ3Order("new")).toBe("new");
+    expect(parseJ3Order("xyz")).toBe("new");
+    expect(parseJ3Order("old")).toBe("old");
+  });
+
+  it("νεότερα πρώτα αντιστρέφει τη χρονική σειρά χωρίς να πειράξει την αρχική", () => {
+    const chronological = ["a", "b", "c"];
+    expect(orderedOf(chronological, "new")).toEqual(["c", "b", "a"]);
+    expect(orderedOf(chronological, "old")).toEqual(["a", "b", "c"]);
+    expect(chronological).toEqual(["a", "b", "c"]);
+  });
+
+  it("η επιλογή μένει στη διεύθυνση", () => {
+    expect(j3OrderHrefOf("old", "/app/messages")).toBe(
+      "/app/messages?order=old",
+    );
+    expect(j3OrderHrefOf("new", "/app/messages")).toBe("/app/messages");
   });
 });

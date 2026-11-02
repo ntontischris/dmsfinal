@@ -8,7 +8,7 @@ import { money, monthlyText, openSub } from "./m1-adapter";
 import { NoAmountsNote } from "./m1-finance-parts";
 import { ExportRow } from "./m1-export-row";
 import type { ReportBodyProps } from "./m1-model";
-import { Cards, Section } from "./m1-sales-parts";
+import { Cards, Section, rowValue } from "./m1-sales-parts";
 
 // Ανοιχτές Ευκαιρίες ανά Στάδιο (prototype `screens/m1-sales-pipeline.tsx`) πάνω στο report_sales_pipeline.
 // Η βάση κρίνει Εύρος, Πωλητή και ποσά.
@@ -29,9 +29,12 @@ function OpenList({
           href={hrefOf("B4", { id: row.opportunityId })}
           sub={openSub(row.stageLabel, row.managerName, showOwner)}
           aside={
-            row.managerName === null ? (
-              <Badge tone="attention">Χωρίς υπεύθυνο</Badge>
-            ) : undefined
+            <>
+              <span className="m1s-money">{rowValue(row.kind, row.value)}</span>
+              {row.managerName === null && (
+                <Badge tone="attention">Χωρίς υπεύθυνο</Badge>
+              )}
+            </>
           }
         />
       ))}

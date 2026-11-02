@@ -28,4 +28,6 @@
 & .e3-picker a, .e3-others summary { font-weight: 600; text-decoration: none; }
 & .e3-picker a:hover { color: var(--color-accent); }
 & .e3-day, .e3-banner { border-radius: var(--radius-lg); }
+/* Σημειώσεις: οι αλλαγές γραμμής μένουν (όπως στη σημερινή σελίδα) */
+& .e3-note { white-space: pre-line; }
 }

@@ -144,5 +144,16 @@ export { SpacesAgreement } from "./spaces/d2-screen";
 export { SpacesApprovals } from "./spaces/d4-screen";
 export { SpacesAgreementsSettings } from "./spaces/o3-screen";
 export { SpacesProposalLink } from "./spaces/d5-screen";
+// Η όψη του Χρήστη πελάτη («Βλέπει Συμφωνίες»): μόνο ανάγνωση, από τις client_agreements_view / client_agreement_view.
+export { SpacesClientAgreements } from "./spaces/d1-client-screen";
+export { SpacesClientAgreement } from "./spaces/d2-client-screen";
+export { ClientAgreementPage, ClientAgreementsList } from "./components/client-agreements";
+export { getClientAgreement, listClientAgreements } from "./queries-client";
+export type {
+  ClientAgreement,
+  ClientAgreementCard,
+  ClientPeriod,
+  ClientProvision,
+} from "./client-view-schema";
 // Ctrl+K: αναζήτηση εγγραφών.
 export { searchAgreements } from "./queries-search";

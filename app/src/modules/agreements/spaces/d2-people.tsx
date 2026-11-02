@@ -86,6 +86,11 @@ function RecipientsEditor({ agreement }: { agreement: AgreementDetail }) {
     setRows((current) =>
       current.map((row) => ({ ...row, isSignatory: row.key === key })),
     );
+  // Επεξεργασία στη θέση της, όπως στη σημερινή σελίδα (όχι αφαίρεση και ξανά προσθήκη).
+  const change = (key: number, patch: Partial<Row>) =>
+    setRows((current) =>
+      current.map((row) => (row.key === key ? { ...row, ...patch } : row)),
+    );
   const add = (name: string, email: string) => {
     setRows((current) => [
       ...current,
@@ -124,8 +129,25 @@ function RecipientsEditor({ agreement }: { agreement: AgreementDetail }) {
         items={rows.map((row) => ({
           id: String(row.key),
           lead: <Avatar name={row.name || "—"} size={34} />,
-          title: row.name,
-          sub: row.email,
+          title: (
+            <input
+              className="input"
+              aria-label="Όνομα παραλήπτη"
+              autoComplete="off"
+              value={row.name}
+              onChange={(e) => change(row.key, { name: e.target.value })}
+            />
+          ),
+          sub: (
+            <input
+              className="input"
+              type="email"
+              aria-label="Email παραλήπτη"
+              autoComplete="off"
+              value={row.email}
+              onChange={(e) => change(row.key, { email: e.target.value })}
+            />
+          ),
           aside: (
             <>
               <Badge tone={row.isSignatory ? "strong" : undefined}>

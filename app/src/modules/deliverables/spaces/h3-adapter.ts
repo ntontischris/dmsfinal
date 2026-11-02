@@ -48,16 +48,14 @@ export interface H3Group {
   deliverables: readonly ClientDeliverableCard[];
 }
 
-// Όπως στο prototype: οι Περίοδοι χωρίς Παραδοτέα δεν φαίνονται. Η σειρά είναι της βάσης.
+// Όπως στη σημερινή σελίδα: φαίνονται και οι Περίοδοι χωρίς Παραδοτέα (με τους μετρητές τους). Η σειρά είναι της βάσης.
 export const groupsOf = (view: ClientDeliverablesView): readonly H3Group[] =>
-  view.periods
-    .filter((group: ClientPeriodGroup) => group.deliverables.length > 0)
-    .map((group) => ({
-      key: group.periodId ?? group.periodLabel,
-      label: group.periodLabel,
-      rows: group.provisions.map(counterOf),
-      deliverables: group.deliverables,
-    }));
+  view.periods.map((group: ClientPeriodGroup) => ({
+    key: group.periodId ?? group.periodLabel,
+    label: group.periodLabel,
+    rows: group.provisions.map(counterOf),
+    deliverables: group.deliverables,
+  }));
 
 // «Περιμένουν εσένα»: όποιο περιμένει περισσότερο, πρώτο.
 export const waitingOf = (

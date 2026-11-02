@@ -73,11 +73,18 @@ const NO_CAPS: AgreementCaps = {
   canManageCost: false,
   canManageSettings: false,
   canSeeProductions: false,
+  isClient: false,
 };
 
 // Ό,τι ζητά η οθόνη, από τα Δικαιώματα. Μόνο για να κρύβει κουμπιά· τα χρήματα και οι εγγραφές τα αποφασίζει η βάση.
 export const agreementCaps = (viewer: Viewer): AgreementCaps => {
-  if (viewer.status !== "signed-in" || !viewer.team) return NO_CAPS;
+  if (viewer.status !== "signed-in") return NO_CAPS;
+  // Ο Χρήστης πελάτη δεν έχει δικαιώματα ομάδας: βλέπει μόνο τις δικές του, από τη δική του ανάγνωση.
+  if (!viewer.team)
+    return {
+      ...NO_CAPS,
+      isClient: viewer.clientGrants?.["c.agreements"] !== undefined,
+    };
   const grants = viewer.team.permissions;
   const has = (permission: string): boolean => grants[permission] !== undefined;
   const canDraft = has("agreements.draft");
@@ -91,6 +98,7 @@ export const agreementCaps = (viewer: Viewer): AgreementCaps => {
     canManageCost: has("finance.costManage") && has("finance.cost"),
     canManageSettings: has("settings.manage"),
     canSeeProductions: has("productions.manage"),
+    isClient: false,
   };
 };
 

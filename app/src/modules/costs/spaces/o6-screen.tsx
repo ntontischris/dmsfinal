@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { can, getViewer } from "@/modules/access";
 import {
   athensMonthStart,
@@ -28,6 +30,7 @@ import {
   SpacesSettingsTabs,
   recentChanges,
 } from "@/modules/settings";
+import { hrefOf } from "@/spaces/data/screens";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import {
   Badge,
@@ -133,7 +136,16 @@ function CostMonthCards({
         current={current}
         inForceMonth={hint.hourCostMonth}
         forwardNote={FORWARD_NOTE}
-        monthList={<MonthList months={months} current={current} />}
+        monthList={
+          <>
+            <MonthList months={months} current={current} />
+            <p className="muted o-hint">
+              <Link href={hrefOf("I6")}>
+                Αναλυτικά έξοδα ανά κατηγορία: Έξοδα και Κόστος ώρας
+              </Link>
+            </p>
+          </>
+        }
         saveExpenses={<SaveRow card="expenses" />}
         saveHours={<SaveRow card="hours" />}
       />

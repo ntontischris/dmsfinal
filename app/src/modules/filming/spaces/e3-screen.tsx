@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 
 import { getViewer, isClientViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
@@ -37,8 +38,16 @@ import { E3Actions } from "./e3-actions";
 import { E3ClientActions } from "./e3-client";
 import { E3Crew } from "./e3-crew";
 import { E3Equipment } from "./e3-equipment";
-import { E3InternalNote, E3Sheet } from "./e3-sheet";
-import { RESPONSE_WORDS, balanceOf, fmtDay, hoursLabel } from "./e3-model";
+import { E3Sheet } from "./e3-sheet";
+import {
+  RESPONSE_WORDS,
+  balanceOf,
+  fmtDay,
+  hoursLabel,
+  notesOf,
+  replyOf,
+} from "./e3-model";
+import { E3Reply } from "./e3-reply";
 import { StatusBadge, responseTone } from "./e3-ui";
 
 import "./e.css";
@@ -275,6 +284,7 @@ function Mine({
   const slot = card.crew.find((member) => member.userId === viewerId);
   if (!slot) return null;
   const myWord = RESPONSE_WORDS[slot.response];
+  const reply = replyOf(slot, card.state, card.sheet?.version ?? null);
   return (
     <Panel
       label="Είσαι στο Συνεργείο"
@@ -316,7 +326,11 @@ function Mine({
         </dd>
         <dt>Η απάντησή σου</dt>
         <dd>
-          <Badge tone={responseTone(myWord)}>{myWord}</Badge>
+          {reply ? (
+            <E3Reply filmingId={card.id} reply={reply} myWord={myWord} />
+          ) : (
+            <Badge tone={responseTone(myWord)}>{myWord}</Badge>
+          )}
         </dd>
         <dt>Τι παίρνω</dt>
         <dd>
@@ -431,29 +445,34 @@ async function loadTools(
   };
 }
 
-function NotePanel({ note }: { note: string | null }) {
-  if (!note) return null;
+// Οι Σημειώσεις όπως στη σημερινή σελίδα: σημείωση πελάτη, εσωτερική (μόνο όπου τη δίνει η βάση), λόγοι απόρριψης/ακύρωσης.
+function Notes({ card }: { card: FilmingCard }) {
+  const notes = notesOf(card);
   return (
     <Panel label="Σημειώσεις">
-      <E3InternalNote note={note} />
+      {notes.length === 0 ? (
+        <p className="muted">Καμία σημείωση.</p>
+      ) : (
+        <dl className="dl">
+          {notes.map((note) => (
+            <Fragment key={note.label}>
+              <dt>{note.label}</dt>
+              <dd className="e3-note">{note.text}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      )}
     </Panel>
   );
 }
 
 // Το Δελτίο φορτώνει μόνο για όποιον βλέπει το Συνεργείο ή είναι μέλος του (όπως η παλιά σελίδα)· ο πελάτης δεν βλέπει τίποτα.
 async function SheetPart({ card }: { card: FilmingCard }) {
-  if (card.sheet === null && !card.viewerCan.crew)
-    return <NotePanel note={card.internalNote} />;
+  if (card.sheet === null && !card.viewerCan.crew) return null;
   const sheet = await getSheet(card.id);
   if (!sheet.ok) return <ErrorNotice what="το Δελτίο" />;
-  if (sheet.data === null) return <NotePanel note={card.internalNote} />;
-  return (
-    <E3Sheet
-      filmingId={card.id}
-      sheet={sheet.data}
-      internalNote={card.internalNote}
-    />
-  );
+  if (sheet.data === null) return null;
+  return <E3Sheet filmingId={card.id} sheet={sheet.data} />;
 }
 
 function Denied() {
@@ -489,6 +508,7 @@ async function ClientFilming({ card }: { card: FilmingCard }) {
         <Header card={card} nowMs={new Date().getTime()} isClient />
         <E3ClientActions card={card} />
         <ClientBalance card={card} />
+        <Notes card={card} />
       </div>
     </div>
   );
@@ -563,18 +583,22 @@ export async function SpacesFilming({
             «δεν έγινε».
           </section>
         )}
-        {isCrewView && viewerId && <Mine
+        {isCrewView && viewerId && (
+          <Mine
             card={card}
             viewerId={viewerId}
             statusLabels={equipment.statusLabels}
-          />}
+          />
+        )}
         <Header card={card} nowMs={nowMs} isClient={false} />
         <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />
-        {!isCrewView && viewerId && <Mine
+        {!isCrewView && viewerId && (
+          <Mine
             card={card}
             viewerId={viewerId}
             statusLabels={equipment.statusLabels}
-          />}
+          />
+        )}
         <Balance card={card} />
         {isCrewView ? (
           <details className="card e3-tools">
@@ -586,6 +610,7 @@ export async function SpacesFilming({
         ) : (
           toolPanels
         )}
+        <Notes card={card} />
       </div>
     </div>
   );

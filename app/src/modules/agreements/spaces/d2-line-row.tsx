@@ -72,9 +72,9 @@ function DescriptionCell({ line, agreement }: LineRowProps) {
       {isOffCatalogue && line.catalogPrice !== null && (
         <div className="muted">Κατάλογος: {formatMoney(line.catalogPrice)}</div>
       )}
-      {line.kind === "free" && <div className="muted">Ελεύθερη γραμμή</div>}
-      {deviations.length > 0 && (
+      {(line.kind === "free" || deviations.length > 0) && (
         <div className="btn-row">
+          {line.kind === "free" && <Badge>Ελεύθερη γραμμή</Badge>}
           {deviations.map((d) => (
             <Badge
               key={d.key}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Panel } from "@/spaces/kit/panel";
+import { Segmented } from "@/spaces/kit/segmented";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
@@ -30,8 +31,11 @@ import { ReadAtScope } from "./j2-read-at";
 import { ClientMessageActions } from "./j3-actions";
 import {
   j3ItemOf,
+  j3OrderHrefOf,
   j3RecipientOf,
   j3RequestRowsOf,
+  orderedOf,
+  type J3Order,
   type J3RequestRow,
 } from "./j3-adapter";
 import { J3Composer } from "./j3-composer";
@@ -110,10 +114,7 @@ function RequestsTab({ rows }: { rows: readonly J3RequestRow[] }) {
 function ChangeBubble({ change }: { change: ChangeRequest }) {
   const isOpen = change.state === "open";
   return (
-    <article
-      className="jmsg"
-      id={`cr-${change.id}`}
-      data-side="client">
+    <article className="jmsg" id={`cr-${change.id}`} data-side="client">
       <div className="j3-req">
         <div className="j3-req-head">
           <strong>{CHANGE_TITLE}</strong>
@@ -134,9 +135,12 @@ function ChangeBubble({ change }: { change: ChangeRequest }) {
   );
 }
 
-// Τα πιο πρόσφατα πάνω, ακριβώς κάτω από τη φόρμα (όπως στο prototype).
-function Messages({ thread }: { thread: Thread }) {
-  const entries = timelineOf(thread.messages, thread.changeRequests).reverse();
+// Νεότερα πρώτα: τα πιο πρόσφατα πάνω, κάτω από τη φόρμα (prototype). Παλαιότερα πρώτα: χρονολογικά (σημερινή οθόνη).
+function Messages({ thread, order }: { thread: Thread; order: J3Order }) {
+  const entries = orderedOf(
+    timelineOf(thread.messages, thread.changeRequests),
+    order,
+  );
   return (
     <ReadAtScope readAt={thread.readAt}>
       {entries.map((entry) => {
@@ -183,16 +187,32 @@ function Writer({
   return <p className="note">{CLIENT_READONLY_NOTE}</p>;
 }
 
+function OrderToggle({ order }: { order: J3Order }) {
+  return (
+    <Segmented
+      label="Σειρά Μηνυμάτων"
+      options={(["new", "old"] as const).map((option) => ({
+        label: option === "new" ? "Νεότερα πρώτα" : "Παλαιότερα πρώτα",
+        href: j3OrderHrefOf(option, MESSAGES_PATH),
+        isCurrent: option === order,
+      }))}
+    />
+  );
+}
+
 function ConversationTab({
   context,
   thread,
+  order,
 }: {
   context: ClientContext;
   thread: Thread | null;
+  order: J3Order;
 }) {
   const isEmpty =
     thread === null ||
     (thread.messages.length === 0 && thread.changeRequests.length === 0);
+  const writer = <Writer context={context} thread={thread} />;
   return (
     <div className="j3-thread">
       {isEmpty && (
@@ -200,8 +220,10 @@ function ConversationTab({
           {thread?.canWrite && <p>Γράψε το πρώτο σου Μήνυμα στην ομάδα</p>}
         </StateNotice>
       )}
-      <Writer context={context} thread={thread} />
-      {thread && !isEmpty && <Messages thread={thread} />}
+      {!isEmpty && <OrderToggle order={order} />}
+      {order === "new" && writer}
+      {thread && !isEmpty && <Messages thread={thread} order={order} />}
+      {order === "old" && writer}
       {thread?.canWrite && (
         <p className="muted">{clientEditFooter(thread.editMinutes)}</p>
       )}
@@ -232,7 +254,13 @@ function LoadError() {
 
 // J3 Μηνύματα του Χρήστη πελάτη στη νέα εμφάνιση (prototype `screens/J3.tsx`): «Συνομιλία» και «Αιτήματα (N ανοιχτά)».
 // Η βάση κρύβει Εσωτερικά, υπεύθυνο και αναφορές· χωρίς Δικαίωμα γραφής φαίνεται η σημείωση «μόνο ανάγνωση».
-export async function SpacesClientMessages({ tab }: { tab: ClientTab }) {
+export async function SpacesClientMessages({
+  tab,
+  order,
+}: {
+  tab: ClientTab;
+  order: J3Order;
+}) {
   const context = await getClientContext();
   if (!context.ok || context.data === null) return <LoadError />;
   const requests = await getClientRequests();
@@ -265,7 +293,7 @@ export async function SpacesClientMessages({ tab }: { tab: ClientTab }) {
       <AutoRefresh />
       <div className="j3-grid" id="top">
         <Tabs tab={tab} openCount={openCount} />
-        <ConversationTab context={context.data} thread={thread} />
+        <ConversationTab context={context.data} thread={thread} order={order} />
         <Notes digestMinutes={context.data.digestMinutes} />
       </div>
     </div>

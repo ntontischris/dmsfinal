@@ -22,7 +22,11 @@ import { Cards, Section, rowValue } from "./m1-sales-parts";
 // Κερδισμένες και χαμένες, Πηγές Ευκαιριών (prototype `screens/m1-sales-results.tsx`) πάνω στα report_sales_results και
 // report_sales_sources. Ποσοστά από τη βάση.
 
-const OUTCOME = { won: "Κερδισμένη", lost: "Χαμένη" } as const;
+const OUTCOME = {
+  open: "Ανοιχτή",
+  won: "Κερδισμένη",
+  lost: "Χαμένη",
+} as const;
 
 const percent = (value: number | null): string =>
   value === null ? "—" : fmtPercent(value);
@@ -141,6 +145,50 @@ export function ResultsBody(props: ReportBodyProps & { data: SalesResults }) {
   );
 }
 
+// Οι Ευκαιρίες της περιόδου με την Έκβασή τους σήμερα, όπως η σημερινή σελίδα.
+function SourcesOpportunities({ data }: { data: SalesSources }) {
+  return (
+    <div className="scroll">
+      <table className="rtable m1s-table">
+        <thead>
+          <tr>
+            <th>Ευκαιρία</th>
+            <th>Πηγή</th>
+            <th>Άνοιξε</th>
+            <th>Σήμερα</th>
+            {data.showSeller && <th>Υπεύθυνος</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {data.opportunities.map((r) => (
+            <tr key={r.opportunityId}>
+              <td data-label="Ευκαιρία">
+                <Entity
+                  name={r.title}
+                  sub={r.clientName}
+                  href={hrefOf("B4", { id: r.opportunityId })}
+                />
+              </td>
+              <td data-label="Πηγή">{r.sourceLabel}</td>
+              <td data-label="Άνοιξε">{fmtDate(r.createdOn)}</td>
+              <td data-label="Σήμερα">
+                <Badge tone={r.outcome === "won" ? "strong" : undefined}>
+                  {OUTCOME[r.outcome]}
+                </Badge>
+              </td>
+              {data.showSeller && (
+                <td data-label="Υπεύθυνος">
+                  <Person name={r.managerName ?? "Χωρίς υπεύθυνο"} />
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function SourcesBody(props: ReportBodyProps & { data: SalesSources }) {
   const { data, report, filters, canExport } = props;
   if (data.totals.opened === 0) {
@@ -193,6 +241,9 @@ export function SourcesBody(props: ReportBodyProps & { data: SalesSources }) {
           </table>
         </div>
       </Panel>
+      <Section title="Οι Ευκαιρίες της περιόδου">
+        <SourcesOpportunities data={data} />
+      </Section>
       {canExport && (
         <ExportRow family="sales" reportId={report.id} filters={filters} />
       )}

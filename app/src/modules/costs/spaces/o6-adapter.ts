@@ -22,6 +22,7 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   expenses_total: "Έξοδα",
   productive_hours: "Παραγωγικές ώρες",
   hour_cost: "Κόστος ώρας",
+  expense_categories: "Ανάλυση εξόδων",
   multiplier_min: "Ελάχιστη (×)",
   multiplier_target: "Στόχος (×)",
   multiplier_max: "Μέγιστη (×)",
