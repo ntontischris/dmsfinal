@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 
 import {
   PRODUCER,
@@ -94,6 +94,14 @@ test("η ουρά έγκρισης φαίνεται στον Ιδιοκτήτη 
   });
 });
 
+// Το κουμπί εμφανίζεται μόνο μετά από αλλαγή· ό,τι γράφεται πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
+async function fillUntilSaveShows(rules: Locator, value: string) {
+  await expect(async () => {
+    await fieldOf(rules, "Ορίζοντας κρατήσεων (μέρες)").fill(value);
+    await expect(button(rules, "Αποθήκευση Κανόνων")).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+}
+
 test("ο Ιδιοκτήτης αλλάζει έναν Κανόνα γυρισμάτων και τον γυρίζει πίσω", async ({
   page,
 }) => {
@@ -103,8 +111,7 @@ test("ο Ιδιοκτήτης αλλάζει έναν Κανόνα γυρισμ�
     has: page.locator('input[name="horizonDays"]'),
   });
   await expect(button(rules, "Αποθήκευση Κανόνων")).toHaveCount(0);
-  const horizon = fieldOf(rules, "Ορίζοντας κρατήσεων (μέρες)");
-  await horizon.fill("45");
+  await fillUntilSaveShows(rules, "45");
   await button(rules, "Αποθήκευση Κανόνων").click();
   await expect(rules.getByRole("status")).toContainText(
     "Οι Κανόνες αποθηκεύτηκαν.",
@@ -113,7 +120,7 @@ test("ο Ιδιοκτήτης αλλάζει έναν Κανόνα γυρισμ�
 
   await page.reload();
   await expect(fieldOf(rules, "Ορίζοντας κρατήσεων (μέρες)")).toHaveValue("45");
-  await fieldOf(rules, "Ορίζοντας κρατήσεων (μέρες)").fill("60");
+  await fillUntilSaveShows(rules, "60");
   await button(rules, "Αποθήκευση Κανόνων").click();
   await expect(rules.getByRole("status")).toContainText(
     "Οι Κανόνες αποθηκεύτηκαν.",
