@@ -10,7 +10,10 @@ export type {
   BoardColumn,
   ClientAccess,
   ClientDetail,
+  ClientOverview,
+  ClientProvision,
   ClientRow,
+  ClientStatus,
   DuplicatePair,
   DuplicateReason,
   DuplicateSide,
@@ -60,6 +63,7 @@ export {
   listClientOpportunities,
   listClients,
 } from "./queries-clients";
+export { listClientOverviews } from "./queries-overview";
 export {
   getOpportunity,
   listOpportunityActivities,
