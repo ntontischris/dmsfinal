@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, can, getViewer } from "@/modules/access";
@@ -10,6 +11,7 @@ import {
   MANAGE_TITLE,
   ManageScreen,
   NO_MANAGE_TEXT,
+  SpacesKnowledgeManage,
   getManageList,
   getOpenUnansweredCount,
   parseManageTab,
@@ -30,6 +32,14 @@ export default async function KnowledgeManagePage({
   const status = parseStatusFilter(params.status);
   const section = z.uuid().safeParse(params.section);
   const sectionId = section.success ? section.data : null;
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesKnowledgeManage
+        tab={parseManageTab(params.tab)}
+        status={status}
+        sectionId={sectionId}
+      />
+    );
   const [result, openUnanswered] =
     viewer.status === "signed-in"
       ? await Promise.all([

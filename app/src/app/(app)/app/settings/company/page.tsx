@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, can, getViewer, isOwner } from "@/modules/access";
@@ -7,6 +8,7 @@ import {
   DetailsCard,
   RecentChanges,
   SettingsTabs,
+  SpacesCompanySettings,
   TaxCard,
   getAiSpend,
   getCompany,
@@ -41,8 +43,15 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
 };
 
 // O1 Ρυθμίσεις › Εταιρεία. Τη σελίδα τη βλέπει μόνο όποιος «Διαχειρίζεται Ρυθμίσεις».
-export default async function CompanySettingsPage() {
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+export default async function CompanySettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ bank?: string }>;
+}) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesCompanySettings isAddingBank={(await searchParams).bank === "new"} />;
   const header = <ScreenHeader eyebrow="O1 · Ρυθμίσεις" title="Ρυθμίσεις" />;
   if (!can(viewer, "settings.manage"))
     return (

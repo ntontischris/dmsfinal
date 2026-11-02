@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -12,6 +13,7 @@ import {
   ConversationView,
   LOAD_ERROR_TEXT,
   NO_CONVERSATIONS_ACCESS_TEXT,
+  SpacesConversation,
   getConversation,
 } from "@/modules/knowledge";
 
@@ -27,6 +29,8 @@ export default async function ConversationPage({
 }: ConversationPageProps) {
   const [viewer, { id }] = await Promise.all([getViewer(), params]);
   const isValid = z.uuid().safeParse(id).success;
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesConversation id={isValid ? id : null} />;
   const result =
     viewer.status === "signed-in" && isValid ? await getConversation(id) : null;
   if (result?.ok && result.data)

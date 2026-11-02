@@ -1,0 +1,30 @@
+/* I2, I4, I5: Τιμολόγια, Εισπράξεις, Καρτέλα Πελάτη. Μόνο ουδέτερα tokens. */
+[data-look='spaces'] {
+& .i245-cell { min-width: 0; overflow-wrap: anywhere; }
+& .i245-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+& .i245-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+& .i245-totals .card { min-width: 0; margin: 0; }
+& .i245-big { font-size: var(--text-lg); font-weight: 600; overflow-wrap: anywhere; }
+& .i245-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+& .i245-form { display: flex; flex-direction: column; gap: var(--space-3); max-width: 28rem; }
+& .i245-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); min-width: 0; }
+& .i245-form .input, & .i245-form .select { width: 100%; box-sizing: border-box; }
+& .i245-preview { margin: var(--space-3) 0; font-size: var(--text-sm); overflow-wrap: anywhere; }
+& .i245-preview ul { margin: var(--space-1) 0 0; padding-left: var(--space-4); }
+& .i245-iban { font-family: var(--font-mono); overflow-wrap: anywhere; }
+/* Οδηγίες πληρωμής (I2, I5) */
+& .i5-pay { margin-top: var(--space-2); white-space: normal; max-width: 24rem; }
+& .i5-pay > summary { display: inline-flex; list-style: none; cursor: pointer; }
+& .i5-pay > summary::-webkit-details-marker { display: none; }
+& .i5-pay[open] > .dl { margin-top: var(--space-2); }
+& .i5-pay-line { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-width: 0; }
+
+/* screens2 */
+& .i245-glass { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); backdrop-filter: blur(4px); }
+& .i245-glass .rtable { margin: 0; }
+& .i245-money { font-weight: 700; font-variant-numeric: tabular-nums; }
+& .i245-glass .part-tile { width: 2.2rem; height: 2.2rem; font-size: 0.8rem; }
+& .i245-bignum { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+& .i245-bignum[data-late='true'] { color: var(--color-danger); }
+& .i245-totals .kit-panel { margin-bottom: 0; }
+& .i245-payrows { padding: 0; } }

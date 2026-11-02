@@ -1,11 +1,13 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { Panel } from "@/components/ui/panel";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
   AccessRequests,
+  SpacesUnassigned,
   UnassignedQueue,
   listAccessRequests,
   listAssignableUsers,
@@ -85,6 +87,8 @@ async function UnassignedBody({ caps }: { caps: SalesCaps }) {
 // B5 Χωρίς υπεύθυνο: η ουρά των Ευκαιριών της φόρμας και τα Αιτήματα πρόσβασης. Τη σελίδα τη βλέπει όποιος «Μεταβιβάζει Υπεύθυνο».
 export default async function UnassignedPage() {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") return <SpacesUnassigned />;
   const caps = salesCaps(viewer);
   if (!caps.canTransfer)
     return (

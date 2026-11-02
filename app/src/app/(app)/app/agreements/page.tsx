@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer, type Viewer } from "@/modules/access";
@@ -7,6 +8,7 @@ import {
   AGREEMENTS_LIST_LIMIT,
   AgreementsTable,
   IN_PROGRESS_DAYS,
+  SpacesAgreements,
   agreementCaps,
   athensToday,
   isInProgress,
@@ -103,6 +105,8 @@ export default async function AgreementsPage({
   searchParams: Promise<{ view?: string }>;
 }) {
   const [viewer, { view }] = await Promise.all([getViewer(), searchParams]);
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") return <SpacesAgreements view={view} />;
   const caps = agreementCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} />;
 

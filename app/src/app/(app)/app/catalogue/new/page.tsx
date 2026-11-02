@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
@@ -7,6 +8,7 @@ import { Panel } from "@/components/ui/panel";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
   NewItemForm,
+  SpacesNewCatalogueItem,
   catalogueCaps,
   listProvisionKinds,
 } from "@/modules/catalogue";
@@ -36,6 +38,9 @@ export default async function NewCatalogueItemPage({
   searchParams: Promise<{ type?: string }>;
 }) {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesNewCatalogueItem type={(await searchParams).type} />;
   const caps = catalogueCaps(viewer);
   if (!caps.canManage)
     return (

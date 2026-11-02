@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Split } from "@/components/ui/inspector";
 import { ClientUsersSection, can, getViewer, isOwner, type Viewer } from "@/modules/access";
@@ -9,6 +10,7 @@ import { GdprClientPanel } from "@/modules/gdpr";
 import { canSeeClientSends, sendsCaps } from "@/modules/notifications";
 import {
   ClientInspector,
+  SpacesClient,
   clientAccess,
   getClient,
   getClientCard,
@@ -133,6 +135,11 @@ export default async function ClientPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") {
+    const [{ clientId: spacesId }, { tab: spacesTab }] = await Promise.all([params, searchParams]);
+    return <SpacesClient clientId={spacesId} tab={typeof spacesTab === "string" ? spacesTab : undefined} />;
+  }
   const caps = salesCaps(viewer);
   if (!caps.canViewClients) return <NoAccess viewer={viewer} />;
 

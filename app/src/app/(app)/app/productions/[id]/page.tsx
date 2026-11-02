@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer, type Viewer } from "@/modules/access";
@@ -20,6 +21,7 @@ import {
   OwnerPanel,
   PeriodCard,
   ProductionFilmings,
+  SpacesProduction,
   StatePanel,
   TasksPanel,
   getProduction,
@@ -37,12 +39,15 @@ export const metadata = { title: "Παραγωγή" };
 const EYEBROW = "G2 · Παραγωγή";
 
 // G2: μία Παραγωγή. Ό,τι δεν επιτρέπεται στον θεατή δεν εμφανίζεται· η βάση ξαναελέγχει κάθε ενέργεια.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή (και πάντα για τον Χρήστη πελάτη).
 export default async function ProductionPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesProduction id={(await params).id} />;
   const caps = productionsCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} eyebrow={EYEBROW} />;
 

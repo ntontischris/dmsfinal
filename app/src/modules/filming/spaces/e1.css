@@ -1,0 +1,31 @@
+/* E1/E2: Γυρίσματα (prototype screens/e1.css). Μόνο ουδέτερα tokens. */
+[data-look='spaces'] {
+/* E1/E2: Γυρίσματα. Μόνο ουδέτερα tokens. */
+& .e1-when { white-space: nowrap; }
+& .e1-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
+& .e1-balance { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+& .e1-balance > div { min-width: 10rem; }
+& .e2-item[data-done='true'] { opacity: 0.8; }
+& .e2-item .stack { margin-top: var(--space-3); }
+/* Ομάδες της λίστας και σήματα ανά σημασία (όχι μόνο χρώμα: και εικονίδιο). */
+& .e1-group { margin-top: var(--space-4); }
+& .e1-group-title { font-size: var(--text-md, 1rem); margin: 0 0 var(--space-2); }
+& .e1-group[data-attention='true'] { padding: var(--space-3); border: 1px solid var(--color-accent); border-radius: var(--radius-lg); }
+& .e1-when .badge { margin-left: var(--space-2); }
+& .e1-late { display: block; font-size: var(--text-sm); color: var(--color-accent); font-weight: 600; }
+& .e1-pill::before { display: none; }
+& .e1-pill[data-look='problem'] { border-color: color-mix(in oklab, var(--color-danger) 55%, transparent); color: var(--color-danger); background: color-mix(in oklab, var(--color-danger) 10%, transparent); font-weight: 600; }
+& .e1-pill[data-look='pending'] { border-color: var(--color-now); color: var(--color-text); background: color-mix(in oklab, var(--color-now) 25%, transparent); }
+& .e1-pill[data-look='action'] { border-color: color-mix(in oklab, var(--color-accent) 60%, transparent); color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 10%, transparent); font-weight: 600; }
+& .e1-pill[data-look='ok'] { border-color: color-mix(in oklab, var(--color-ok) 55%, transparent); color: var(--color-ok); background: color-mix(in oklab, var(--color-ok) 10%, transparent); }
+& .e1-pill[data-look='muted'] { opacity: 0.75; }
+& .rtable tr[data-next='true'] td { background: color-mix(in oklab, var(--color-accent) 6%, transparent); }
+/* Ύφος ταυτότητας */
+& .e1-group-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); }
+& .e1-group[data-attention='true'] { border-color: color-mix(in oklab, var(--color-accent) 45%, transparent); }
+& .e1-pill { border-radius: 999px; }
+& .e1-group[data-attention='true'] { padding: 0; border: 0; }
+& .e1-group[data-attention='true'] .kit-panel { border-color: color-mix(in oklab, var(--color-accent) 45%, transparent); }
+& .e1-lead { display: flex; align-items: center; gap: var(--space-3); }
+& .e1-crew { display: inline-flex; align-items: center; gap: var(--space-2); }
+}

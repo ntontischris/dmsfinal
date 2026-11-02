@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -8,6 +9,7 @@ import {
   BILLABLES_NOTE,
   BILLABLES_NO_ACCESS_TEXT,
   BILLABLES_TITLE,
+  SpacesToInvoice,
   ToInvoiceList,
   ToInvoiceTotals,
   financeCaps,
@@ -19,6 +21,8 @@ export const metadata = { title: BILLABLES_TITLE };
 // I1: τι περιμένει τιμολόγηση, ανά Πελάτη. Εσωτερική υπενθύμιση, όχι οφειλή· η βάση αποφασίζει τι βλέπεις.
 export default async function ToInvoicePage() {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι, μόνο ομάδα) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces") return <SpacesToInvoice />;
   if (!financeCaps(viewer).canView) {
     return (
       <>

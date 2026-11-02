@@ -1,9 +1,11 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer } from "@/modules/access";
 import { costsCaps, countNeedsHours } from "@/modules/costs";
 import {
   NewInternalDetails,
   ProductionList,
+  SpacesProductions,
   listFilterSchema,
   listOwnerCandidates,
   listProductions,
@@ -20,12 +22,15 @@ const EYEBROW = "G1 · Παραγωγές";
 const DEFAULT_FILTER = { tab: "open", internal: false } as const;
 
 // G1: οι Παραγωγές. Η καρτέλα και το «Εσωτερικές» είναι στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή (και πάντα για τον Χρήστη πελάτη).
 export default async function ProductionsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesProductions query={await searchParams} />;
   const caps = productionsCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} eyebrow={EYEBROW} />;
 

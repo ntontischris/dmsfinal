@@ -3,3 +3,9 @@
 export { GDPR_PATH, GDPR_TITLE } from "./labels";
 export { GdprScreen } from "./components/gdpr-screen";
 export { GdprClientPanel, GdprTeamUserPanel } from "./components/panels";
+export {
+  GdprAnonymize as SpacesGdprAnonymize,
+  GdprRequests as SpacesGdprRequests,
+  GdprUserSection as SpacesGdprUserSection,
+} from "./spaces/gdpr-panels";
+export { SpacesGdpr } from "./spaces/gdpr-screen";

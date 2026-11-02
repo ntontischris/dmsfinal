@@ -1,0 +1,24 @@
+/* G1 Παραγωγές (prototype screens/g1.css) */
+[data-look='spaces'] {
+/* G1: Λίστα Παραγωγών. Μόνο ουδέτερα tokens. */
+& .g1-when { white-space: nowrap; }
+& .g1-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
+& .g1-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr)); gap: var(--space-3); }
+& .g1-cards .card { margin: 0; }
+& .g1-cards h3 { margin: 0 0 var(--space-1); }
+& .g1-cards ul { margin: var(--space-2) 0; padding-left: var(--space-4); }
+& .g1-form { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+& .g1-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+& .g1-hours { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+& .g1-filter { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+/* Ύφος ταυτότητας */
+& .g1-cards a, .g1-filter a { text-decoration: none; font-weight: 600; }
+& .g1-cards a:hover, .g1-filter a:hover { color: var(--color-accent); }
+& .g1-filter a { padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong); }
+& .g1-filter a[aria-current] { background: color-mix(in oklab, var(--color-accent) 16%, transparent); border-color: var(--color-accent); }
+& .g1-progress { display: grid; gap: 0.25rem; min-width: 9rem; }
+/* Η φόρμα της νέας Εσωτερικής Παραγωγής παίρνει το .e-form του prototype (screens/e5.css), όπως το g1-team. */
+& .e-form { display: flex; flex-direction: column; gap: var(--space-3); max-width: 36rem; }
+& .e-form label, .e-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+& .e-form .input { width: 100%; }
+}

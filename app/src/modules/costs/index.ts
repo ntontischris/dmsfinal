@@ -13,3 +13,5 @@ export { EstimateForm } from "./components/estimate-form";
 export { HoursForm } from "./components/hours-form";
 export { CostLoadError, CostMissing, CostNoAccess } from "./components/cost-states";
 export { isInternalCost } from "./helpers";
+export { SpacesCosts } from "./spaces/g3-screen";
+export { SpacesFinanceSettings } from "./spaces/o6-screen";

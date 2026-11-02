@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -11,6 +12,7 @@ import {
   MANAGE_EYEBROW,
   MANAGE_TITLE,
   NO_MANAGE_TEXT,
+  SpacesKnowledgeEditor,
   getManageItem,
 } from "@/modules/knowledge";
 
@@ -24,6 +26,8 @@ interface EditPageProps {
 export default async function KnowledgeEditPage({ params }: EditPageProps) {
   const [viewer, { id }] = await Promise.all([getViewer(), params]);
   const isValid = z.uuid().safeParse(id).success;
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesKnowledgeEditor id={isValid ? id : null} />;
   const result =
     viewer.status === "signed-in" && isValid ? await getManageItem(id) : null;
   const item = result?.ok ? result.data?.item : null;

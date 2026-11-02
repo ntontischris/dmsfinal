@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
@@ -11,6 +12,7 @@ import {
   BlockedTimeForm,
   LoadNotice,
   MissingNotice,
+  SpacesBlockedTime,
   blockedFormValues,
   calendarCaps,
   convertHref,
@@ -23,12 +25,17 @@ export const metadata = { title: "Κλεισμένος χρόνος" };
 const EYEBROW = "A6 · Κλεισμένος χρόνος";
 
 // A6: επεξεργασία κλεισμένου χρόνου. Διαγραφή με επιβεβαίωση· μετατροπή σε Γύρισμα αν το επιτρέπει η βάση.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function BlockedTimePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") {
+    const parsedId = z.uuid().safeParse((await params).id);
+    return <SpacesBlockedTime id={parsedId.success ? parsedId.data : null} />;
+  }
   if (!calendarCaps(viewer).isTeam)
     return (
       <>

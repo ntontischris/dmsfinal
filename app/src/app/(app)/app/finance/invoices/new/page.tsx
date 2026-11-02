@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -13,6 +14,7 @@ import {
   InvoiceClientPicker,
   InvoiceCorrectionScreen,
   InvoiceRegisterForm,
+  SpacesNewInvoice,
   athensToday,
   financeCaps,
   getInvoiceContext,
@@ -31,6 +33,16 @@ export default async function NewInvoicePage({
   searchParams,
 }: NewInvoicePageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  // Στη νέα εμφάνιση (Χώροι, μόνο ομάδα) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesNewInvoice
+        query={{
+          clientId: z.uuid().safeParse(params.client).data,
+          invoiceId: z.uuid().safeParse(params.invoice).data,
+        }}
+      />
+    );
   const caps = financeCaps(viewer);
   const header = (
     <ScreenHeader eyebrow={INVOICE_NEW_EYEBROW} title={INVOICE_NEW_TITLE} />

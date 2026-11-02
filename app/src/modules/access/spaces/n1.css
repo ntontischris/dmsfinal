@@ -1,0 +1,29 @@
+/* N1 Ομάδα (prototype `screens/n1.css`, αυτούσιο) */
+[data-look='spaces'] {
+& .n1-section { margin-top: var(--space-4); }
+& .n1-roles { border: 0; padding: 0; margin: 0; display: grid; gap: var(--space-2); min-width: 0; }
+& .n1-roles legend { font-weight: 600; margin-bottom: var(--space-2); }
+& .n1-role { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); }
+& .n1-role input { margin-top: 0.2rem; flex: none; }
+& .n1-role label { min-width: 0; overflow-wrap: anywhere; }
+& .n1-role[data-locked='true'] label { opacity: 0.7; }
+& .n1-why { display: block; color: var(--color-attention); }
+& .n1-form { display: grid; gap: var(--space-3); max-width: 36rem; }
+& .n1-field { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+& .n1-field .input { width: 100%; }
+& .n1-help { font-size: var(--text-sm); color: var(--color-attention); margin: 0; }
+& .n1-email { overflow-wrap: anywhere; }
+& .n1-danger { border-color: var(--color-attention); }
+& .n1-steps { margin: 0; padding-left: var(--space-4); font-size: var(--text-sm); display: grid; gap: var(--space-1); }
+& .n1-reach { display: block; font-size: var(--text-sm); }
+/* Ύφος ταυτότητας */
+& .n1-roles legend { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; }
+& .n1-why::before, & .n1-help::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.4rem; vertical-align: middle; border-radius: 50%; background: var(--brand-rec); }
+& .n1-danger { border-radius: var(--radius-lg); }
+& .n1-email a, & .n1-reach a { font-weight: 600; text-decoration: none; }
+& .n1-bleed .part-rows { margin-inline: -1.25rem; }
+& .n1-roles .n1-role { min-height: 44px; }
+& .n1-danger .kit-panel { border-color: var(--brand-rec, var(--color-attention)); }
+& .n1-who { display: flex; align-items: center; gap: 0.85rem; margin: 0 0 var(--space-3); }
+& .n1-who-text { display: grid; gap: 0.1rem; }
+}

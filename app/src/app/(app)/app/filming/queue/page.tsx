@@ -1,9 +1,11 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer } from "@/modules/access";
 import {
   QueueCancelRequests,
   QueuePending,
   QueueRescheduleRequests,
+  SpacesFilmingQueue,
   filmingCaps,
   getQueue,
 } from "@/modules/filming";
@@ -17,6 +19,7 @@ const EYEBROW = "E2 · Ουρά έγκρισης";
 // E2: όσα περιμένουν απόφαση της ομάδας: νέες κρατήσεις και αιτήματα ακύρωσης.
 export default async function FilmingQueuePage() {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") return <SpacesFilmingQueue />;
   const caps = filmingCaps(viewer);
   if (!caps.canApprove)
     return (

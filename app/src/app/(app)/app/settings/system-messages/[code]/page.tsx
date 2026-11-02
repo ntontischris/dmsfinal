@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { Panel } from "@/components/ui/panel";
@@ -15,6 +16,7 @@ import {
   SETTINGS_TITLE,
   SYSTEM_MESSAGES_PATH,
   SYSTEM_NO_SWITCH,
+  SpacesSystemMessage,
   SystemMessageBadges,
   SystemMessageEditor,
   editedLine,
@@ -33,6 +35,8 @@ export default async function SystemMessagePage({
   params,
 }: SystemMessagePageProps) {
   const [viewer, { code }] = await Promise.all([getViewer(), params]);
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesSystemMessage code={code} />;
   const header = <ScreenHeader eyebrow={K2_EYEBROW} title={SETTINGS_TITLE} />;
   if (!can(viewer, "automations.manage"))
     return (

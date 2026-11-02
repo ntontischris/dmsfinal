@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -11,6 +12,7 @@ import {
   LOAD_ERROR_TEXT,
   LOAD_ERROR_TITLE,
   NOT_IN_AUDIENCE_TEXT,
+  SpacesKnowledgeItem,
   getItem,
 } from "@/modules/knowledge";
 
@@ -26,6 +28,8 @@ export default async function KnowledgeItemPage({
 }: KnowledgeItemPageProps) {
   const [viewer, { id }] = await Promise.all([getViewer(), params]);
   const isValid = z.uuid().safeParse(id).success;
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesKnowledgeItem id={isValid ? id : null} />;
   const result =
     viewer.status === "signed-in" && isValid ? await getItem(id) : null;
   if (result?.ok && result.data)

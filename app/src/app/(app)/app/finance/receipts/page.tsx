@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, getViewer } from "@/modules/access";
@@ -10,6 +11,7 @@ import {
   ReceiptForm,
   ReceiptList,
   ReceiptsCsvButton,
+  SpacesReceipts,
   financeCaps,
   listClientOptions,
   listPaymentMethods,
@@ -20,8 +22,10 @@ export const metadata = { title: RECEIPTS_TITLE };
 
 // I4: οι Εισπράξεις. Η λίστα θέλει «Βλέπει Οικονομικά» και «Βλέπει ποσά»· η καταχώρηση και η διόρθωση «Καταχωρεί Εισπράξεις».
 // Η βάση ελέγχει κάθε RPC· εδώ μόνο φαίνεται ό,τι δικαιούται ο θεατής.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function ReceiptsPage() {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") return <SpacesReceipts />;
   const caps = financeCaps(viewer);
   const header = (
     <ScreenHeader eyebrow={RECEIPTS_EYEBROW} title={RECEIPTS_TITLE} />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
@@ -12,6 +13,7 @@ import {
   LibraryScreen,
   NO_ACCOUNT_TEXT,
   SearchScreen,
+  SpacesKnowledge,
   getLibrary,
   parseQuery,
   searchKnowledge,
@@ -54,6 +56,8 @@ export default async function KnowledgePage({
   searchParams,
 }: KnowledgePageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesKnowledge q={parseQuery(params.q)} />;
   const header = (
     <ScreenHeader eyebrow={LIBRARY_EYEBROW} title={LIBRARY_TITLE}>
       {can(viewer, "knowledge.manage") && (

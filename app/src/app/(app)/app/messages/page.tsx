@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { AccessNotice, getViewer } from "@/modules/access";
 import {
@@ -14,6 +15,7 @@ import {
   parseClientTab,
   parseRequestView,
   parseTab,
+  SpacesInbox,
 } from "@/modules/messages";
 
 export const metadata = { title: INBOX_TITLE };
@@ -24,10 +26,18 @@ interface MessagesPageProps {
 
 // J1 για την ομάδα (Εισερχόμενα: «Συνομιλίες» και «Με ανέφεραν»), J3 για τον Χρήστη πελάτη με «Βλέπει Συνομιλία»,
 // αλλιώς ενημέρωση (και για τον Λογιστή). Η βάση αποφασίζει ποιος βλέπει τι.
+// Στη νέα εμφάνιση (Χώροι, μόνο για την ομάδα) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function MessagesPage({
   searchParams,
 }: MessagesPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesInbox
+        tab={parseTab(params.tab)}
+        view={parseRequestView(params.view)}
+      />
+    );
   const view = messagesViewOf(viewer);
   if (view === "client") {
     return (

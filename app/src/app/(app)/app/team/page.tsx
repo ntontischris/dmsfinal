@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { Panel, StatGrid } from "@/components/ui/panel";
@@ -15,16 +16,31 @@ import {
   listInvitations,
   listRoles,
   listTeamUsers,
+  SpacesTeam,
 } from "@/modules/access";
-import { GDPR_PATH, GDPR_TITLE } from "@/modules/gdpr";
+import { GDPR_PATH, GDPR_TITLE, SpacesGdprRequests } from "@/modules/gdpr";
 
 export const metadata = { title: "Ομάδα" };
 
 const header = <ScreenHeader eyebrow="N1 · Ομάδα και Πρόσβαση" title="Ομάδα" />;
 
 // N1 Ομάδα: οι Χρήστες ομάδας, οι προσκλήσεις, η πρόσκληση νέου Χρήστη, απενεργοποίηση. Για όποιον «Προσκαλεί και απενεργοποιεί Χρήστες ομάδας».
-export default async function TeamPage() {
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+export default async function TeamPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") {
+    const { status } = await searchParams;
+    return (
+      <SpacesTeam
+        status={typeof status === "string" ? status : undefined}
+        gdprRequests={<SpacesGdprRequests />}
+      />
+    );
+  }
   if (!can(viewer, "access.team"))
     return (
       <>

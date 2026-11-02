@@ -14,3 +14,4 @@ export { PERIOD_LABELS as AUDIT_PERIOD_LABELS } from "./labels";
 export { parseAuditExport } from "./schema";
 export { AuditScreen } from "./components/audit-screen";
 export { AuditHistoryLink } from "./components/history-link";
+export { SpacesAudit } from "./spaces/p1-screen";

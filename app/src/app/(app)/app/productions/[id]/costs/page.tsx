@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer } from "@/modules/access";
@@ -32,6 +34,9 @@ export default async function ProductionCostsPage({
 
   const parsed = z.uuid().safeParse((await params).id);
   if (!parsed.success) return <CostMissing eyebrow={EYEBROW} />;
+  // Νέα εμφάνιση: το G3 ζει σε μία οθόνη με επιλογή Παραγωγής.
+  if ((await lookOf(viewer)) === "spaces")
+    redirect(`/app/productions/costs?production=${parsed.data}`);
 
   const detail = await getCostDetail(parsed.data);
   if (!detail.ok) return <CostLoadError />;

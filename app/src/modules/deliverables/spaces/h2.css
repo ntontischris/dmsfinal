@@ -1,0 +1,29 @@
+/* H2 Παραδοτέο, όψη ομάδας (prototype screens/h2.css, αυτούσιο) */
+[data-look='spaces'] {
+/* Σελίδα Παραδοτέου, όψη ομάδας (H2). Μόνο τα ουδέτερα tokens του globals.css. */
+& .h2 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+& .h2 .card { min-width: 0; margin-bottom: var(--space-4); }
+& .h2 .input, .h2 .select { max-width: 100%; }
+& .h2-header { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); min-width: 0; }
+& .h2-header h1 { margin: 0; }
+& .h2-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+& .h2-inline { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .h2-form { display: flex; flex-direction: column; gap: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-3); margin: var(--space-2) 0; width: 100%; max-width: 32rem; min-width: 0; }
+& .h2-form label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+& .h2-form .input { width: 100%; }
+& .h2-check { flex-direction: row !important; align-items: center; }
+& .h2-error { color: var(--color-attention); font-size: var(--text-sm); }
+& .h2-memo { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid color-mix(in oklab, var(--color-accent) 35%, transparent); border-radius: var(--radius-lg); background: color-mix(in oklab, var(--color-accent) 7%, var(--color-surface-raised)); font-size: var(--text-sm); }
+& .h2-warn { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-attention); border-radius: var(--radius-lg); font-size: var(--text-sm); }
+& .h2-comment p { margin: var(--space-1) 0 0; }
+& .h2-tab { background: none; border: 0; border-bottom: 2px solid transparent; font: inherit; font-size: var(--text-sm); cursor: pointer; }
+& .h2-tab[aria-current='page'] { color: var(--color-text); font-weight: 600; border-bottom-color: var(--color-accent); }
+& .h2-choice { display: flex; flex-direction: column; gap: var(--space-1); }
+& .h2 h3 { margin: var(--space-3) 0 var(--space-2); }
+& .h2-back { margin: 0 0 var(--space-3); font-size: var(--text-sm); }
+/* Ύφος ταυτότητας */
+& .h2-tab { border-radius: 999px; border-bottom: 0; padding: 0.4rem 0.9rem; min-height: 44px; }
+& .h2-tab[aria-current='page'] { background: color-mix(in oklab, var(--color-accent) 16%, transparent); }
+& .h2-back a, .h2 .card a:not(.button) { text-decoration: none; font-weight: 600; }
+& .h2-back a:hover, .h2 .card a:not(.button):hover { color: var(--color-accent); }
+}

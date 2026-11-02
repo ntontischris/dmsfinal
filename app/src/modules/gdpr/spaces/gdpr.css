@@ -1,0 +1,13 @@
+/* Αιτήματα GDPR: οι κανόνες της N1 (prototype `screens/n1.css`) που χρησιμοποιεί η σελίδα, αυτούσιοι */
+[data-look='spaces'] {
+& .n1-section { margin-top: var(--space-4); }
+& .n1-form { display: grid; gap: var(--space-3); max-width: 36rem; }
+& .n1-field { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+& .n1-field .input { width: 100%; }
+& .n1-help { font-size: var(--text-sm); color: var(--color-attention); margin: 0; }
+& .n1-danger { border-color: var(--color-attention); }
+& .n1-help::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.4rem; vertical-align: middle; border-radius: 50%; background: var(--brand-rec); }
+& .n1-danger { border-radius: var(--radius-lg); }
+& .n1-bleed .part-rows { margin-inline: -1.25rem; }
+& .n1-danger .kit-panel { border-color: var(--brand-rec, var(--color-attention)); }
+}

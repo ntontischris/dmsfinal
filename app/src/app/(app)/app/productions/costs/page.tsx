@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getViewer } from "@/modules/access";
@@ -10,6 +11,7 @@ import {
   CostLoadError,
   CostNoAccess,
   GROUP_LABELS,
+  SpacesCosts,
   costsCaps,
   listCostRows,
   parseCostGroup,
@@ -27,15 +29,19 @@ const EMPTY_TEXT: Readonly<Record<CostGroup, string>> = {
 };
 
 // G3: κόστος και ώρες όλων των Παραγωγών, σε τρεις ομάδες. Η ομάδα ζει στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype, με την Παραγωγή στο ?production=· αλλιώς η σημερινή.
 export default async function CostsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
+  const query = await searchParams;
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesCosts production={typeof query.production === "string" ? query.production : undefined} />;
   if (!costsCaps(viewer).canView) return <CostNoAccess viewer={viewer} eyebrow={EYEBROW} />;
 
-  const group = parseCostGroup((await searchParams).group);
+  const group = parseCostGroup(query.group);
   const rows = await listCostRows(group);
   if (!rows.ok) return <CostLoadError />;
 

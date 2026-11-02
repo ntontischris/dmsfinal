@@ -1,3 +1,4 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, can, getViewer } from "@/modules/access";
@@ -7,6 +8,7 @@ import {
   LOAD_FAILED_TEXT,
   NO_MANAGE_TEXT,
   SETTINGS_TITLE,
+  SpacesSystemMessages,
   SystemMessageList,
   getSystemMessages,
 } from "@/modules/notifications";
@@ -17,6 +19,7 @@ export const metadata = { title: "Ρυθμίσεις · Μηνύματα συσ�
 // K2 Μηνύματα συστήματος (#173): πάντα ενεργά, αλλάζει μόνο το κείμενο. Μόνο όποιος «Διαχειρίζεται Αυτοματισμούς».
 export default async function SystemMessagesPage() {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") return <SpacesSystemMessages />;
   const header = <ScreenHeader eyebrow={K2_EYEBROW} title={SETTINGS_TITLE} />;
   if (!can(viewer, "automations.manage"))
     return (

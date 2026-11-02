@@ -1,0 +1,36 @@
+/* K1 Αυτοματισμοί (prototype `screens/k1.css`) */
+[data-look='spaces'] {
+& .k1-group { min-width: 0; }
+& .k1-group h2 { font-size: var(--text-sm); margin: 0 0 var(--space-2); }
+& .k1-event { min-width: 0; overflow-wrap: anywhere; }
+& .k1-event a { color: inherit; display: block; text-decoration: none; min-width: 0; }
+& .k1-event-top, & .k1-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-width: 0; }
+& .k1-num { color: var(--color-text-muted); min-width: 2ch; }
+& .k1-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); min-width: 0; }
+& .k1-filters a[aria-current='true'] { font-weight: 600; border-color: var(--color-accent); }
+& .k1-auto { min-width: 0; overflow-wrap: anywhere; }
+& .k1-auto textarea { width: 100%; max-width: 100%; box-sizing: border-box; min-height: 4.5rem; resize: vertical; }
+& .k1-auto .input { max-width: 100%; box-sizing: border-box; }
+& .k1-auto label { display: block; font-size: var(--text-sm); color: var(--color-text-muted); margin: var(--space-2) 0 var(--space-1); }
+& .k1-switch { display: inline-flex; gap: var(--space-2); align-items: center; font-size: var(--text-sm); }
+& .k1-error { color: var(--color-attention); font-size: var(--text-sm); margin: var(--space-1) 0; }
+& .k1-field-error { border-color: var(--color-attention); }
+& .k1-vars { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+& .k1-vars code { font-size: var(--text-sm); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0 var(--space-2); }
+& .k1-wait { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .k1-wait .input { width: 6rem; }
+& .k1-holiday { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; min-width: 0; }
+/* Ύφος ταυτότητας: φίλτρα-χάπια, χωρίς υπογραμμίσεις */
+& .k1-group h2 { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+& .k1-filters a { padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong); font-weight: 600; text-decoration: none; color: var(--color-text); }
+& .k1-filters a:hover { background: color-mix(in oklab, var(--color-text) 8%, transparent); }
+& .k1-filters a[aria-current='true'] { background: var(--color-text); color: var(--color-bg); border-color: transparent; }
+& .k1-event a { font-weight: 600; text-decoration: none; }
+& .k1-event a:hover { color: var(--color-accent); }
+& .k1-vars code { border-radius: 999px; }
+& .k1-error::before, & .k2-error::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.4rem; vertical-align: middle; border-radius: 50%; background: var(--brand-rec); }
+/* Στη γραμμή λίστας: ο αριθμός Γεγονότος ως πρόσθετο lead, διακόπτες σε κεφαλίδα Panel */
+& .k1-num { min-width: 2ch; font-weight: 800; color: var(--color-accent); font-variant-numeric: tabular-nums; }
+& .kit-panel-head .k1-switch { text-transform: none; letter-spacing: 0; color: var(--color-text); }
+& .k1-switch { min-height: 44px; }
+}

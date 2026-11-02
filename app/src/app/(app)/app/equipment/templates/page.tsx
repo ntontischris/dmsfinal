@@ -1,7 +1,9 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer } from "@/modules/access";
 import {
   MutedNote,
+  SpacesEquipmentTemplates,
   TemplateList,
   equipmentCaps,
   listItems,
@@ -19,8 +21,10 @@ const READ_ONLY_NOTE =
   "Μόνο ανάγνωση: τα Πρότυπα τα φτιάχνει όποιος δεσμεύει εξοπλισμό ή διαχειρίζεται απόθεμα.";
 
 // F3: τα Πρότυπα εξοπλισμού. Τα αποσυρμένα αντικείμενα μένουν μέσα, με το σήμα τους.
+// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function EquipmentTemplatesPage() {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") return <SpacesEquipmentTemplates />;
   const caps = equipmentCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} eyebrow={EYEBROW} />;
 

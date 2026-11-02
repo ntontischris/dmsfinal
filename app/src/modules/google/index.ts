@@ -8,3 +8,4 @@ export { GoogleDeletionsList } from "./components/google-deletions-list";
 export { GoogleRulesForm } from "./components/google-rules-form";
 export { GoogleSettingsCard } from "./components/google-settings-card";
 export { GoogleSyncCard } from "./components/google-sync-card";
+export { SpacesGoogleDeletions } from "./spaces/a7-screen";

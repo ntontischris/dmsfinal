@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { buttonVariants } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   InvoiceFilterTabs,
   InvoiceTable,
   InvoiceTotals,
+  SpacesInvoices,
   VoidedInvoicesCard,
   financeCaps,
   financeViewOf,
@@ -32,7 +34,7 @@ import { ClientInvoicesScreen } from "./client-screen";
 export const metadata = { title: INVOICES_TITLE };
 
 interface InvoicesPageProps {
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; client?: string; month?: string }>;
 }
 
 // I2: τα Τιμολόγια. Ο Χρήστης πελάτη με «Βλέπει Οικονομικά» βλέπει τη δική του όψη. Η ομάδα θέλει «Βλέπει Οικονομικά» και «Βλέπει ποσά»· η καταχώρηση θέλει «Καταχωρεί Τιμολόγια».
@@ -42,6 +44,17 @@ export default async function InvoicesPage({
 }: InvoicesPageProps) {
   const [viewer, params] = await Promise.all([getViewer(), searchParams]);
   if (financeViewOf(viewer) === "client") return <ClientInvoicesScreen />;
+  // Στη νέα εμφάνιση (Χώροι, μόνο ομάδα) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return (
+      <SpacesInvoices
+        query={{
+          filter: parseInvoiceFilter(params.filter),
+          client: params.client,
+          month: params.month,
+        }}
+      />
+    );
   const caps = financeCaps(viewer);
   if (!caps.canView) {
     return (

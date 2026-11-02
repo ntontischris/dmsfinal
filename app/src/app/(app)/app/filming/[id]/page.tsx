@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { buttonVariants } from "@/components/ui/button";
 import { FormMessage } from "@/components/ui/form-message";
 import { getViewer } from "@/modules/access";
-import { listTemplates } from "@/modules/equipment";
+import { STATUS_LABELS, listTemplates } from "@/modules/equipment";
 import {
   CrewPanel,
   DecisionPanel,
@@ -24,6 +25,7 @@ import {
   listCrewTemplates,
   ReschedulePanel,
   SheetSection,
+  SpacesFilming,
   checkSlot,
   listEquipmentCandidates,
   type FilmingCard,
@@ -45,6 +47,15 @@ export default async function FilmingPage({
   searchParams: Promise<{ done?: string | string[] }>;
 }) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") {
+    const parsedId = z.uuid().safeParse((await params).id);
+    return (
+      <SpacesFilming
+        id={parsedId.success ? parsedId.data : null}
+        equipment={{ statusLabels: STATUS_LABELS, listTemplates }}
+      />
+    );
+  }
   const caps = filmingCaps(viewer);
   if (!caps.canView)
     return (

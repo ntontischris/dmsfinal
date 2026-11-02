@@ -1,0 +1,32 @@
+[data-look='spaces'] {
+/* Pipeline στο κινητό: τα Στάδια το ένα κάτω από το άλλο, χωρίς οριζόντια κύλιση */
+@media (max-width: 40rem) {
+  & .kanban { flex-direction: column; align-items: stretch; overflow-x: visible; }
+  & .kanban .kcol { flex: 1 1 auto; }
+}
+
+/* Κάρτα Ευκαιρίας (screens2): τίτλος + ποσό, Πελάτης από κάτω, υποσέλιδο με Υπεύθυνο και προθεσμία */
+& .kcol { background: color-mix(in oklab, var(--color-text) 3%, transparent); }
+& .kcol h3 { color: var(--color-text); font-weight: 700; }
+& .kcol h3 .muted { font-weight: 700; }
+& .kanban .kcard.b3-card, & .grid2 .kcard.b3-card {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 0.75rem; align-content: start;
+}
+& .b3-card > * { min-width: 0; }
+& .b3-card > .b3-title { font-weight: 700; text-decoration: none; color: var(--color-text); overflow-wrap: anywhere; }
+& .b3-card .b3-amount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+& .b3-card > :is(.b3-client, .b3-step, .b3-contact, .b3-foot, select, button, .badge, .badge-with-help) { grid-column: 1 / -1; }
+& .b3-card > .b3-step { font-size: var(--text-xs); margin-block: 0.2rem 0; }
+& .b3-card > select, & .b3-card > button { justify-self: start; margin-top: 0.4rem; }
+& .b3-foot { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.5rem; padding-top: 0.55rem; border-top: 1px solid color-mix(in oklab, var(--color-text) 8%, transparent); }
+& .b3-foot .part-person-name { font-weight: 500; font-size: var(--text-xs); color: var(--color-text-muted); }
+& .b3-foot .part-due { margin-left: auto; font-size: var(--text-xs); }
+& .kcard.b3-card[data-forgotten='true'] { background: color-mix(in oklab, var(--brand-rec, var(--color-danger)) 7%, var(--color-surface-raised)); border-left: 3px solid var(--brand-rec, var(--color-danger)); }
+& .kcard.b3-card[data-forgotten='true']::before { display: none; }
+/* Στενή στήλη: το υποσέλιδο αναδιπλώνεται (Υπεύθυνος και Πηγή πάνω, προθεσμία δεξιά), τίποτα δεν πατά πάνω σε άλλο */
+& .b3-foot { flex-wrap: wrap; row-gap: 0.3rem; }
+& .b3-foot .part-person { min-width: 0; }
+& .b3-foot .part-person-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+& .b3-foot .b3-source { display: inline; white-space: nowrap; }
+& .b3-foot .part-due { margin-left: auto; white-space: nowrap; }
+}

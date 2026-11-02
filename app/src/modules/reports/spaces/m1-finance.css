@@ -1,0 +1,32 @@
+/* M1 Οικονομικές Αναφορές (prototype `screens/m1-finance.css`, αυτούσιο). Μόνο ουδέτερα tokens. */
+[data-look='spaces'] {
+& .m1f-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+& .m1f-card { min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; gap: var(--space-1); }
+& .m1f-card strong { font-size: 1.25rem; }
+& .m1f-chart { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); min-width: 0; }
+& .m1f-month { display: grid; grid-template-columns: minmax(7rem, 10rem) 1fr; align-items: center; gap: var(--space-2); min-width: 0; }
+& .m1f-bars { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+& .m1f-month > span { font-size: var(--text-sm); color: var(--color-text-muted); }
+& .m1f-bar { display: flex; align-items: center; gap: var(--space-2); min-width: 0; font-size: var(--text-sm); }
+& .m1f-fill { height: 0.75rem; border-radius: 999px; background: var(--color-accent); min-width: 2px; flex: none; }
+& .m1f-fill[data-kind="receipts"] { background: var(--color-text-muted); }
+& .m1f-bar em { font-style: normal; overflow-wrap: anywhere; min-width: 0; }
+& .m1f-legend { font-size: var(--text-sm); color: var(--color-text-muted); }
+& .m1f-total td { font-weight: 600; }
+& .m1f-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+& .m1f-export { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+& .m1f-wrap { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 30rem) { & .m1f-month { grid-template-columns: 1fr; } }
+& .m1f-cards .kit-panel { margin-bottom: 0; }
+& .m1f-big { display: block; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+& .m1f-chart { margin-bottom: 0; }
+& .m1f-month[data-current='true'] > span { color: var(--color-accent); font-weight: 700; }
+& .m1f-month[data-current='true'] .m1f-fill:not([data-kind]) { background: var(--brand-periwinkle, var(--color-accent)); }
+& .m1f-table .num { font-variant-numeric: tabular-nums; font-weight: 600; }
+& .m1f-table { margin: 0; }
+& .m1f-total td { font-weight: 800; }
+& .m1f-share { display: block; height: 4px; margin-top: 0.35rem; border-radius: 999px; overflow: hidden; background: color-mix(in oklab, var(--color-text) 10%, transparent); }
+& .m1f-share > span { display: block; height: 100%; border-radius: 999px; background: var(--color-accent); }
+& .m1f-table .part-tile { width: 2.2rem; height: 2.2rem; font-size: 0.8rem; }
+& .m1f-wrap > .kit-panel { margin-bottom: var(--space-4); }
+}

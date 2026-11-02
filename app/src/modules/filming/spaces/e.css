@@ -1,0 +1,52 @@
+/* Οθόνες E2–E7 (Γυρίσματα) και τα κοινά sx-* της λωρίδας E–H: prototype screens/e5.css. */
+[data-look='spaces'] {
+/* Οθόνες E4–E7 (Γυρίσματα). Μόνο τα ουδέτερα tokens του globals.css. */
+& .e { min-width: 0; max-width: 100%; }
+& .e .card { min-width: 0; overflow-wrap: anywhere; }
+& .e-form { display: flex; flex-direction: column; gap: var(--space-3); max-width: 36rem; }
+& .e-form label, .e-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); }
+& .e-form .input { width: 100%; }
+& .e-warn { border: 1px solid color-mix(in oklab, var(--color-attention) 40%, transparent); border-radius: var(--radius-lg); padding: var(--space-2) var(--space-3); background: var(--color-surface-raised); font-size: var(--text-sm); margin: var(--space-2) 0; }
+& .e-info { border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-2) var(--space-3); background: var(--color-surface); font-size: var(--text-sm); margin: var(--space-2) 0; }
+& .e-ok { border: 1px solid color-mix(in oklab, var(--color-accent) 40%, transparent); border-radius: var(--radius-lg); padding: var(--space-2) var(--space-3); background: var(--color-surface-raised); font-size: var(--text-sm); margin: var(--space-2) 0; }
+& .e-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr)); gap: var(--space-2); margin-bottom: var(--space-4); }
+& .e-day { display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: var(--space-2); text-align: left; min-width: 0; }
+& .e-day small { color: var(--color-text-muted); font-size: 0.72rem; line-height: 1.2; overflow-wrap: anywhere; }
+& .e-day[aria-pressed='true'] { border-color: var(--color-accent); font-weight: 600; background: var(--color-surface-raised); }
+& .e-times { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+& .e-times .button[aria-pressed='true'], .e-pick[aria-pressed='true'] { border-color: var(--color-accent); font-weight: 600; background: var(--color-surface-raised); }
+& .e-checks { display: flex; flex-direction: column; gap: var(--space-1); }
+& .e-checks label { flex-direction: row; align-items: center; gap: var(--space-2); }
+& .e-list-link { display: block; text-decoration: none; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: var(--space-2); font-size: var(--text-sm); }
+& .e-list-link[aria-current='true'] { border-color: var(--color-accent); background: var(--color-surface-raised); font-weight: 600; }
+& .e-steps { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; margin: 0; padding: 0; font-size: var(--text-sm); }
+& .e-steps li { display: flex; align-items: center; gap: var(--space-1); color: var(--color-text-muted); }
+& .e-steps li span { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 1px solid var(--color-border); }
+& .e-steps li[aria-current='step'] { color: inherit; font-weight: 700; }
+& .e-steps li[aria-current='step'] span { border-color: var(--color-accent); background: var(--color-surface-raised); }
+& .e-steps li[data-done='true'] span { border-color: var(--color-accent); }
+& .e-legend { font-size: var(--text-sm); margin-bottom: var(--space-3); }
+& .e-legend summary { cursor: pointer; }
+& .e-legend dl { display: grid; gap: var(--space-1); margin: var(--space-2) 0 0; }
+& .e-legend dt { font-weight: 600; display: inline; }
+& .e-legend dt::after { content: ": "; }
+& .e-legend dd { display: inline; margin: 0; color: var(--color-text-muted); }
+/* Ύφος ταυτότητας */
+& .e-list-link { font-weight: 600; text-decoration: none; transition: background-color 120ms ease; }
+& .e-list-link:hover { background: color-mix(in oklab, var(--color-text) 5%, transparent); color: var(--color-accent); }
+& .e-day { border-radius: var(--radius-lg); }
+& .e-legend dt { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; }
+/* screens2 μορφή (κοινά βοηθητικά της λωρίδας E–H) */
+& .sx-pad { padding: var(--space-3) var(--space-4); }
+& .sx-extra { list-style: none; padding: 0.25rem 1.25rem 1rem; display: grid; gap: var(--space-2); min-width: 0; overflow-wrap: anywhere; }
+& .sx-extra .dl { margin: 0; }
+& .sx-extra .note, .sx-extra .muted, .sx-pad .note, .sx-pad .muted { margin: 0; }
+& .sx-actions { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .sx-actions .button { border-radius: 999px; }
+& .sx-actions .button, .sx-extra .button, .sx-pad .button { min-height: 44px; }
+& .sx-line { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; justify-content: space-between; min-width: 0; }
+& .sx-done { opacity: 0.8; }
+& .sx-flat { background: none; border: 0; box-shadow: none; padding: 0; margin: 0; }
+& .sx-dots { letter-spacing: 0.12em; font-weight: 700; color: var(--color-accent); white-space: nowrap; }
+& .sx-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); align-items: start; }
+}

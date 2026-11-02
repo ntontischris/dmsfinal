@@ -1,6 +1,12 @@
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer } from "@/modules/access";
-import { MineList, filmingCaps, listMine } from "@/modules/filming";
+import {
+  MineList,
+  SpacesMine,
+  filmingCaps,
+  listMine,
+} from "@/modules/filming";
 
 import { LoadError, NoAccess } from "../filming-parts";
 
@@ -9,8 +15,16 @@ export const metadata = { title: "Τα Γυρίσματά μου" };
 const EYEBROW = "E6 · Τα Γυρίσματά μου";
 
 // E6: τα ανοιχτά Γυρίσματα όπου είσαι στο Συνεργείο. Επιβεβαιώνεις ή δηλώνεις «δεν μπορώ».
-export default async function MinePage() {
+export default async function MinePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ id?: string | string[] }>;
+}) {
   const viewer = await getViewer();
+  if ((await lookOf(viewer)) === "spaces") {
+    const { id } = await searchParams;
+    return <SpacesMine id={typeof id === "string" ? id : undefined} />;
+  }
   const caps = filmingCaps(viewer);
   if (!caps.canView)
     return (

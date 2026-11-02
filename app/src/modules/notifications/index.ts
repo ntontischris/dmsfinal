@@ -92,3 +92,14 @@ export {
 } from "./components/system-messages-screen";
 export { SystemMessageEditor } from "./components/system-message-editor";
 export { NotificationsTabs, PrefsTab } from "./components/prefs-tab";
+
+// Νέα εμφάνιση (Χώροι): K1, K2, K3 όπως στο prototype.
+export { SpacesAutomations } from "./spaces/k1-screen";
+export { SpacesAutomationEvent } from "./spaces/k1-event";
+export {
+  SpacesSystemMessage,
+  SpacesSystemMessages,
+} from "./spaces/k2-screen";
+export { SpacesSends } from "./spaces/k3-screen";
+// Νέα εμφάνιση (Χώροι): A2 Ειδοποιήσεις όπως στο prototype.
+export { SpacesNotifications } from "./spaces/a2-screen";

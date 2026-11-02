@@ -1,8 +1,10 @@
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { getViewer } from "@/modules/access";
 import { AuditHistoryLink } from "@/modules/audit";
 import {
+  SpacesAgreement,
   agreementCaps,
   getAgreement,
   listProvisionKinds,
@@ -27,6 +29,9 @@ export default async function AgreementPage({
   params: Promise<{ agreementId: string }>;
 }) {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesAgreement agreementId={(await params).agreementId} />;
   const caps = agreementCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} />;
 

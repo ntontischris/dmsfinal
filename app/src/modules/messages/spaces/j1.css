@@ -1,0 +1,25 @@
+[data-look='spaces'] {
+& .j1-new { min-width: 0; }
+& .j1-new label { font-size: var(--text-sm); color: var(--color-text-muted); }
+& .j1-conv { min-width: 0; }
+& .j1-conv a { color: inherit; text-decoration: none; display: block; min-width: 0; }
+& .j1-conv-top, & .j1-conv-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-width: 0; }
+& .j1-conv-top { justify-content: space-between; }
+& .j1-preview { display: block; margin: var(--space-1) 0; overflow-wrap: anywhere; color: var(--color-text-muted); }
+& .j1-views { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+& .j1-req { min-width: 0; overflow-wrap: anywhere; }
+& .j1-req-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-1); }
+& .j1-req p { margin: var(--space-1) 0; }
+& .j1-closing { border-left: 2px solid var(--color-border); padding-left: var(--space-3); font-size: var(--text-sm); margin: var(--space-2) 0; }
+& .j1-mention { min-width: 0; overflow-wrap: anywhere; }
+/* Ύφος ταυτότητας */
+& .j1-closing { border-left: 0; padding-left: 0; }
+& .j1-closing::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-inline-end: 0.5rem; border-radius: 50%; background: var(--color-border-strong); vertical-align: middle; }
+& .j1-conv a:hover { color: var(--color-accent); }
+/* screens2: Εισερχόμενα ως λίστα γραμμών */
+& .j1-preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+& .j1-conv-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: 0.2rem; }
+& .j1-req-text { display: block; margin: 0.15rem 0; font-size: var(--text-sm); color: var(--color-text); overflow-wrap: anywhere; }
+& .j1-closing { display: block; margin-top: 0.3rem; }
+& .j1-closing p { margin: 0.15rem 0; color: var(--color-text); }
+& .j1-closing::before { content: none; } }

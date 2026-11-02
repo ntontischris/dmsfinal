@@ -99,3 +99,10 @@ export {
 export { ClientInvoiceTable } from "./components/client-invoice-table";
 export { LedgerBody } from "./components/ledger-body";
 export { LedgerBackLink, LedgerClients } from "./components/ledger-clients";
+// Χώροι: I1, I2, I3
+export { SpacesInvoices } from "./spaces/i2-screen";
+export { SpacesToInvoice } from "./spaces/i1-screen";
+export { SpacesNewInvoice } from "./spaces/i3-screen";
+// Χώροι: I4, I5
+export { SpacesReceipts } from "./spaces/i4-screen";
+export { SpacesLedger } from "./spaces/i5-screen";

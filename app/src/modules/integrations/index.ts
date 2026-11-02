@@ -9,3 +9,5 @@ export type {
 } from "./connections";
 export { ConnectionsGrid } from "./components/connections-grid";
 export { SubscriptionsSection } from "./components/subscriptions-section";
+// Νέα εμφάνιση (Χώροι): η N5 του prototype (στο μενού O8).
+export { SpacesIntegrations } from "./spaces/n5-screen";

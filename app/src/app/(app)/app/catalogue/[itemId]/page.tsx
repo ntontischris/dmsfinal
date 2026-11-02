@@ -1,7 +1,9 @@
 import { z } from "zod";
 
+import { lookOf } from "@/components/shell/read-look";
 import { getViewer } from "@/modules/access";
 import {
+  SpacesCatalogueItem,
   catalogueCaps,
   getCatalogueItem,
   getCostHint,
@@ -26,6 +28,9 @@ export default async function CatalogueItemPage({
   params: Promise<{ itemId: string }>;
 }) {
   const viewer = await getViewer();
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesCatalogueItem itemId={(await params).itemId} />;
   const caps = catalogueCaps(viewer);
   if (!caps.canView) return <NoAccess viewer={viewer} />;
 

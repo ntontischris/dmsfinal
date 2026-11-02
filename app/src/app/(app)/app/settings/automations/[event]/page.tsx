@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { lookOf } from "@/components/shell/read-look";
 import { ScreenHeader } from "@/components/shell/screen-header";
 import { Notice } from "@/components/ui/notice";
 import { AccessNotice, can, getViewer } from "@/modules/access";
@@ -16,6 +17,7 @@ import {
   NO_EVENT_TITLE,
   NO_MANAGE_TEXT,
   SETTINGS_TITLE,
+  SpacesAutomationEvent,
   getAutomationEvent,
   getCatalog,
   getHolidays,
@@ -41,6 +43,8 @@ const athensYear = (): number =>
 // K1: η σελίδα ενός Γεγονότος με τους Αυτοματισμούς του (και τις Αργίες στο «Αργία»).
 export default async function AutomationEventPage({ params }: EventPageProps) {
   const [viewer, { event }] = await Promise.all([getViewer(), params]);
+  if ((await lookOf(viewer)) === "spaces")
+    return <SpacesAutomationEvent code={decodeURIComponent(event)} />;
   const header = <ScreenHeader eyebrow={K1_EYEBROW} title={SETTINGS_TITLE} />;
   if (!can(viewer, "automations.manage"))
     return (

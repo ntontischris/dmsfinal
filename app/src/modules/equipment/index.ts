@@ -31,3 +31,7 @@ export { ItemStatusPanel } from "./components/item-status-panel";
 export { MutedNote } from "./components/equipment-fields";
 export { NewItemDetails } from "./components/new-item-details";
 export { TemplateList } from "./components/template-list";
+// Νέα εμφάνιση (Χώροι): οι οθόνες F1–F3 του prototype.
+export { SpacesEquipment } from "./spaces/f1-screen";
+export { SpacesEquipmentItem } from "./spaces/f2-screen";
+export { SpacesEquipmentTemplates } from "./spaces/f3-screen";

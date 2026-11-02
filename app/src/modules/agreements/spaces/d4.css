@@ -1,0 +1,7 @@
+/* D4: αποτέλεσμα απόφασης και λίστες παρεκκλίσεων (prototype `screens/d5.css`, όσα χρειάζεται η ουρά) */
+[data-look='spaces'] {
+& .d5-plain { margin: 0; padding-left: var(--space-4); font-size: var(--text-sm); }
+& .d5-plain li { margin-bottom: var(--space-1); }
+& .d4-result { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .d4-result p { margin: 0; }
+}

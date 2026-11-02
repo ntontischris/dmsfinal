@@ -1,0 +1,6 @@
+[data-look='spaces'] {
+/* Ουρές Πωλήσεων: κάθε εκκρεμότητα είναι κάρτα με Entity στην κορυφή */
+& .b5-list { display: grid; gap: var(--space-3); }
+& .b5-list > li.card { padding: var(--space-4) 1.25rem; }
+& .b5-list .card-title { margin-bottom: var(--space-2); }
+}
