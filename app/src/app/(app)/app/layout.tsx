@@ -6,10 +6,7 @@ import { LookToggle } from "@/components/shell/look-toggle";
 import { visibleNav } from "@/components/shell/nav";
 import { readLook } from "@/components/shell/read-look";
 import { SidebarNav } from "@/components/shell/sidebar-nav";
-import { spacesShell, type SpaceLink } from "@/components/shell/spaces";
-import { SpacesShell } from "@/components/shell/spaces-shell";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
-import { ToolLink } from "@/components/shell/tool-link";
 import {
   ClientSwitcher,
   SignOutButton,
@@ -22,6 +19,10 @@ import {
 } from "@/modules/access";
 import { AssistantLauncher } from "@/modules/assistant";
 import { NotificationBell, getBell } from "@/modules/notifications";
+import { newEntryFor } from "@/spaces/data/new-actions";
+import { searchItemsFor } from "@/spaces/data/search";
+import { spacesModel } from "@/spaces/data/spaces";
+import { SpacesShell } from "@/spaces/shell/spaces-shell";
 
 type Bell = Awaited<ReturnType<typeof getBell>> | null;
 
@@ -33,14 +34,16 @@ const allowsRequirement = (viewer: Viewer, requirement: string): boolean => {
   return can(viewer, requirement);
 };
 
-// Μια γραμμή κάτω από τη μπάρα όταν κάτι δεν επιτρέπει την κανονική δουλειά.
+// Τι λέει η γραμμή κάτω από τη μπάρα όταν κάτι δεν επιτρέπει την κανονική δουλειά.
+const noticeText = (viewer: Viewer, memberships: readonly MembershipRow[]): string | null =>
+  viewer.status === "unconfigured"
+    ? "Η βάση δεν έχει συνδεθεί ακόμα: βλέπεις το σύστημα χωρίς δεδομένα."
+    : viewer.status === "signed-in" && !viewer.team && memberships.length === 0
+      ? "Ο λογαριασμός σου δεν έχει ακόμα πρόσβαση στην ομάδα. Ζήτησε πρόσκληση από τον Ιδιοκτήτη."
+      : null;
+
 function ViewerNotice({ viewer, memberships }: { viewer: Viewer; memberships: readonly MembershipRow[] }) {
-  const text =
-    viewer.status === "unconfigured"
-      ? "Η βάση δεν έχει συνδεθεί ακόμα: βλέπεις το σύστημα χωρίς δεδομένα."
-      : viewer.status === "signed-in" && !viewer.team && memberships.length === 0
-        ? "Ο λογαριασμός σου δεν έχει ακόμα πρόσβαση στην ομάδα. Ζήτησε πρόσκληση από τον Ιδιοκτήτη."
-        : null;
+  const text = noticeText(viewer, memberships);
   if (!text) return null;
   return (
     <p
@@ -56,31 +59,9 @@ function ViewerNotice({ viewer, memberships }: { viewer: Viewer; memberships: re
 const canChooseLook = (viewer: Viewer): boolean =>
   viewer.status === "unconfigured" || (viewer.status === "signed-in" && viewer.team !== null);
 
-// Τα εργαλεία πάνω δεξιά της νέας εμφάνισης. Χωρίς καμπανάκι, οι Ειδοποιήσεις μένουν σύνδεσμος, για να μη χαθούν.
-function SpacesTools({ viewer, look, bell, tools, clientRows }: {
-  viewer: Viewer;
-  look: Look;
-  bell: Bell;
-  tools: readonly SpaceLink[];
-  clientRows: readonly MembershipRow[];
-}) {
-  const notifications = tools.find((tool) => tool.code === "A2");
-  const knowledge = tools.find((tool) => tool.code === "A8");
-  return (
-    <>
-      {clientRows.length > 1 && <ClientSwitcher memberships={clientRows} />}
-      {bell?.ok && bell.data ? (
-        <NotificationBell initial={bell.data} />
-      ) : (
-        notifications && <ToolLink href={notifications.href} icon="bell" label={notifications.label} />
-      )}
-      {knowledge && <ToolLink href={knowledge.href} icon="book" label={knowledge.label} />}
-      <ThemeToggle />
-      <LookToggle look={look} />
-      {viewer.status === "signed-in" && <SignOutButton />}
-    </>
-  );
-}
+// Το όνομα στο avatar του μενού προφίλ.
+const nameOf = (viewer: Viewer): string =>
+  viewer.status === "signed-in" ? (viewer.team?.name ?? viewer.email) : "Επισκέπτης";
 
 // Το κέλυφος του συστήματος (πίσω από το /login): μπάρα με τη «λυχνία», πλαϊνή πλοήγηση, περιεχόμενο.
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -99,14 +80,20 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const look: Look = isLookChoosable ? await readLook() : "classic";
   const assistant = assistantAudience && <AssistantLauncher audience={assistantAudience} />;
   if (look === "spaces") {
-    const shell = spacesShell(allows);
+    const model = spacesModel(allows);
+    const tools = {
+      search: searchItemsFor(allows),
+      entry: newEntryFor(allows),
+      tools: model.tools,
+      profile: model.profile,
+      bell: bell?.ok && bell.data ? <NotificationBell initial={bell.data} /> : null,
+      clientSwitcher: clientRows.length > 1 ? <ClientSwitcher memberships={clientRows} /> : null,
+      name: nameOf(viewer),
+      look,
+      canSignOut: viewer.status === "signed-in",
+    };
     return (
-      <SpacesShell
-        shell={shell}
-        tools={<SpacesTools viewer={viewer} look={look} bell={bell} tools={shell.tools} clientRows={clientRows} />}
-        notice={<ViewerNotice viewer={viewer} memberships={clientRows} />}
-        assistant={assistant}
-      >
+      <SpacesShell model={model} tools={tools} notice={noticeText(viewer, clientRows)} assistant={assistant}>
         {children}
       </SpacesShell>
     );

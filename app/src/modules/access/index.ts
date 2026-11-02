@@ -47,6 +47,7 @@ export { RoleEditor } from "./components/role-editor";
 export { RoleList } from "./components/role-list";
 export { SetPasswordForm } from "./components/set-password-form";
 export { SignOutButton } from "./components/sign-out-button";
+export { signOut } from "./actions";
 export { TeamInviteForm } from "./components/team-invite-form";
 export { TeamTable } from "./components/team-table";
 export { TestEmailForm } from "./components/test-email-form";
