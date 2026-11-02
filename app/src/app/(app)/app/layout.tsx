@@ -1,9 +1,15 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import type { Look } from "@/components/shell/look";
+import { LookToggle } from "@/components/shell/look-toggle";
 import { visibleNav } from "@/components/shell/nav";
+import { readLook } from "@/components/shell/read-look";
 import { SidebarNav } from "@/components/shell/sidebar-nav";
+import { spacesShell, type SpaceLink } from "@/components/shell/spaces";
+import { SpacesShell } from "@/components/shell/spaces-shell";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
+import { ToolLink } from "@/components/shell/tool-link";
 import {
   ClientSwitcher,
   SignOutButton,
@@ -16,6 +22,8 @@ import {
 } from "@/modules/access";
 import { AssistantLauncher } from "@/modules/assistant";
 import { NotificationBell, getBell } from "@/modules/notifications";
+
+type Bell = Awaited<ReturnType<typeof getBell>> | null;
 
 // «owner», «team» και «client» δεν είναι Δικαιώματα· όλα τα άλλα ελέγχονται ως Δικαιώματα (ομάδας ή πελάτη).
 const allowsRequirement = (viewer: Viewer, requirement: string): boolean => {
@@ -44,6 +52,36 @@ function ViewerNotice({ viewer, memberships }: { viewer: Viewer; memberships: re
   );
 }
 
+// Η νέα εμφάνιση είναι για την ομάδα (και για την περιήγηση χωρίς βάση)· ο Χρήστης πελάτη μένει στην παλιά προς το παρόν.
+const canChooseLook = (viewer: Viewer): boolean =>
+  viewer.status === "unconfigured" || (viewer.status === "signed-in" && viewer.team !== null);
+
+// Τα εργαλεία πάνω δεξιά της νέας εμφάνισης. Χωρίς καμπανάκι, οι Ειδοποιήσεις μένουν σύνδεσμος, για να μη χαθούν.
+function SpacesTools({ viewer, look, bell, tools, clientRows }: {
+  viewer: Viewer;
+  look: Look;
+  bell: Bell;
+  tools: readonly SpaceLink[];
+  clientRows: readonly MembershipRow[];
+}) {
+  const notifications = tools.find((tool) => tool.code === "A2");
+  const knowledge = tools.find((tool) => tool.code === "A8");
+  return (
+    <>
+      {clientRows.length > 1 && <ClientSwitcher memberships={clientRows} />}
+      {bell?.ok && bell.data ? (
+        <NotificationBell initial={bell.data} />
+      ) : (
+        notifications && <ToolLink href={notifications.href} icon="bell" label={notifications.label} />
+      )}
+      {knowledge && <ToolLink href={knowledge.href} icon="book" label={knowledge.label} />}
+      <ThemeToggle />
+      <LookToggle look={look} />
+      {viewer.status === "signed-in" && <SignOutButton />}
+    </>
+  );
+}
+
 // Το κέλυφος του συστήματος (πίσω από το /login): μπάρα με τη «λυχνία», πλαϊνή πλοήγηση, περιεχόμενο.
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const viewer = await getViewer();
@@ -55,9 +93,25 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // A9: ο Βοηθός για Χρήστη ομάδας και για Χρήστη πελάτη με Πελάτη (η βάση ξαναελέγχει σε κάθε ερώτηση).
   const assistantAudience =
     viewer.status !== "signed-in" ? null : viewer.team ? "team" : clientRows.length > 0 ? "client" : null;
-  const sections = visibleNav((requirement) =>
-    viewer.status === "unconfigured" ? true : allowsRequirement(viewer, requirement),
-  );
+  const allows = (requirement: string) =>
+    viewer.status === "unconfigured" ? true : allowsRequirement(viewer, requirement);
+  const isLookChoosable = canChooseLook(viewer);
+  const look: Look = isLookChoosable ? await readLook() : "classic";
+  const assistant = assistantAudience && <AssistantLauncher audience={assistantAudience} />;
+  if (look === "spaces") {
+    const shell = spacesShell(allows);
+    return (
+      <SpacesShell
+        shell={shell}
+        tools={<SpacesTools viewer={viewer} look={look} bell={bell} tools={shell.tools} clientRows={clientRows} />}
+        notice={<ViewerNotice viewer={viewer} memberships={clientRows} />}
+        assistant={assistant}
+      >
+        {children}
+      </SpacesShell>
+    );
+  }
+  const sections = visibleNav(allows);
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b bg-card px-4 py-2">
@@ -80,6 +134,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           )}
           {bell?.ok && bell.data && <NotificationBell initial={bell.data} />}
           <ThemeToggle />
+          {isLookChoosable && <LookToggle look={look} />}
           {viewer.status === "signed-in" && <SignOutButton />}
         </div>
       </header>
@@ -90,7 +145,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </aside>
         <main className="w-full min-w-0 max-w-6xl p-4 pb-16 md:p-6 md:pb-16">{children}</main>
       </div>
-      {assistantAudience && <AssistantLauncher audience={assistantAudience} />}
+      {assistant}
     </div>
   );
 }
