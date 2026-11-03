@@ -36,13 +36,13 @@ test("οι κάρτες μοιράζονται σε επείγοντα, σε α�
   expect(ids(zones.info)).toEqual(["week"]);
 });
 
-test("οι τεχνικές κάρτες χωρίς πρόβλημα πάνε στο «Περισσότερα»", () => {
+test("οι τεχνικές κάρτες χωρίς πρόβλημα πάνε στο «Περισσότερα»· η Υγεία μένει ορατή", () => {
   const zones = zonesOf([
-    built("health", "status", [], { isTechnical: true }),
+    built("health", "status", []),
     built("google", "action", [calm], { isTechnical: true }),
   ]);
-  expect(ids(zones.more)).toEqual(["health", "google"]);
-  expect(zones.info).toEqual([]);
+  expect(ids(zones.more)).toEqual(["google"]);
+  expect(ids(zones.info)).toEqual(["health"]);
 });
 
 test("τεχνική κάρτα με πρόβλημα μένει στα επείγοντα", () => {

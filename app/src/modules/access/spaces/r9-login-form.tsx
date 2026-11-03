@@ -6,7 +6,6 @@ import { useKeptForm } from "@/lib/use-kept-form";
 
 import {
   sendMagicLink,
-  signInWithGoogle,
   signInWithPassword,
 } from "../actions";
 import { FormMsg } from "./r-msg";
@@ -79,12 +78,6 @@ export function SpacesLoginForm({ next }: { next: string }) {
           disabled={isSending}
         >
           {isSending ? "Αποστολή…" : "Στείλτε μου σύνδεσμο εισόδου"}
-        </button>
-      </form>
-      <form action={signInWithGoogle} className="r-form">
-        <input type="hidden" name="next" value={next} />
-        <button className="site-button" data-quiet="true" type="submit">
-          Συνέχεια με Google
         </button>
       </form>
       <p className="r-muted">Η είσοδος γίνεται μόνο με πρόσκληση.</p>

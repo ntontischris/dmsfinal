@@ -12,7 +12,7 @@ export interface Zones<T extends BuiltCard> {
   urgent: readonly T[];
   waiting: readonly T[];
   info: readonly T[];
-  // Τεχνικές κάρτες χωρίς πρόβλημα (Υγεία, Google): κλειστές στο «Περισσότερα».
+  // Τεχνικές κάρτες χωρίς πρόβλημα (Διαγραφές Google): κλειστές στο «Περισσότερα». Η Υγεία φαίνεται πάντα.
   more: readonly T[];
 }
 

@@ -13,7 +13,6 @@ import {
 export const metadata = { title: "Είσοδος" };
 
 const LINK_ERRORS: Record<string, string> = {
-  google: "Η σύνδεση με Google δεν ολοκληρώθηκε. Δοκίμασε ξανά.",
   demo: "Η είσοδος επίδειξης δεν είναι διαθέσιμη τώρα.",
 };
 

@@ -41,7 +41,7 @@ export const cardDefOf = (card: TodayCard): CardDef => ({
   title: card.label,
   source: codeOfPath(card.link.split("?")[0]) ?? "",
   kind: KINDS[card.kind],
-  isTechnical: card.kind === "health" || TECHNICAL.has(card.code),
+  isTechnical: TECHNICAL.has(card.code),
 });
 
 const rowOf = (item: CardItem): CardRow => ({

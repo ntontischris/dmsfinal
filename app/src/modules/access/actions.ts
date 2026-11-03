@@ -49,20 +49,6 @@ export async function sendMagicLink(_: FormState, form: FormData): Promise<FormS
   return { notice: LINK_SENT };
 }
 
-export async function signInWithGoogle(form: FormData): Promise<void> {
-  const supabase = await createSupabase();
-  if (!supabase) redirect("/login");
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: await callbackUrl(safeNext(String(form.get("next") ?? ""))) },
-  });
-  if (error || !data.url) {
-    console.error("signInWithOAuth", error?.message);
-    redirect("/login?error=google");
-  }
-  redirect(data.url);
-}
-
 // «Δες ως…» (demo.ts): ο κωδικός και το email δεν φτάνουν ποτέ στον browser.
 export async function signInAsDemo(form: FormData): Promise<void> {
   const login = readDemoLogins()[Number(form.get("demo"))];

@@ -68,7 +68,7 @@ describe("cardDefOf", () => {
       ),
     ).toMatchObject({
       kind: "status",
-      isTechnical: true,
+      isTechnical: false,
       source: "K3",
     });
     expect(cardDefOf(cardOf({ code: "google_deletions" })).isTechnical).toBe(
