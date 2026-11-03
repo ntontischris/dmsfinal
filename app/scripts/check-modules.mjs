@@ -70,8 +70,37 @@ export function findModuleViolations(files) {
   return violations;
 }
 
+// Αρχείο του server που καλεί συνάρτηση από αρχείο «use client»: στο build περνά, στη σελίδα σκάει
+// («Attempted to call X() from the server»). Τα components (Κεφαλαίο) αποδίδονται, δεν καλούνται, άρα επιτρέπονται.
+const CLIENT_DIRECTIVE = /^\s*["']use client["']/;
+const NAMED_IMPORT = /import\s+(?!type\s)\{([^}]*)\}\s*from\s*["']([^"']+)["']/g;
+
+export function findClientCallViolations(files) {
+  const byPath = new Map(files.map((file) => [file.path.replace(/\.(ts|tsx)$/, ""), file]));
+  const violations = [];
+  for (const file of files) {
+    if (CLIENT_DIRECTIVE.test(file.text) || file.path.includes(".test.")) continue;
+    for (const [, names, spec] of file.text.matchAll(NAMED_IMPORT)) {
+      const target = resolveImport(file.path, spec);
+      const source = target && (byPath.get(target) ?? byPath.get(`${target}/index`));
+      if (!source || !CLIENT_DIRECTIVE.test(source.text)) continue;
+      for (const raw of names.split(",")) {
+        const name = raw.trim().replace(/^type\s+/, "").split(/\s+as\s+/).pop()?.trim() ?? "";
+        if (raw.trim().startsWith("type ") || !/^[a-z]/.test(name)) continue;
+        if (new RegExp(`\\b${name}\\s*\\(`).test(file.text))
+          violations.push(`${file.path}: καλεί «${name}()» από αρχείο «use client» (${source.path})`);
+      }
+    }
+  }
+  return violations;
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = fileURLToPath(new URL("..", import.meta.url));
   const sources = walk(root, [".ts", ".tsx"]).filter((f) => f.path.startsWith("src/"));
-  report("check:modules", [...findModuleViolations(sources), ...findAdminViolations(sources)]);
+  report("check:modules", [
+    ...findModuleViolations(sources),
+    ...findAdminViolations(sources),
+    ...findClientCallViolations(sources),
+  ]);
 }

@@ -9,7 +9,8 @@ import { Badge } from "@/spaces/screens/shared";
 import { respondToCrew } from "../actions-crew";
 import type { E6Sheet as SheetView } from "./e6-adapter";
 import { useRun } from "./e3-run";
-import { LastDone, StatusBadge, responseTone } from "./e3-ui";
+import { responseTone } from "./e3-model";
+import { LastDone, StatusBadge } from "./e3-ui";
 
 // Η όψη του μέλους (prototype `screens/e6-sheet.tsx`): απαντά «επιβεβαιώνω» ή «δεν μπορώ» (με λόγο) στο πραγματικό
 // filming_crew_respond. Το «δεν μπορώ» δεν αλλάζει το Γύρισμα.

@@ -7,7 +7,8 @@ import { Badge } from "@/spaces/screens/shared";
 import { respondToCrew } from "../actions-crew";
 import type { E3Reply as Reply } from "./e3-model";
 import { useRun } from "./e3-run";
-import { LastDone, responseTone } from "./e3-ui";
+import { responseTone } from "./e3-model";
+import { LastDone } from "./e3-ui";
 
 // Η απάντηση του μέλους μέσα στο E3 (όπως η σημερινή σελίδα· ίδια μορφή με την E6): «Επιβεβαιώνω» ή «Δεν μπορώ» με
 // λόγο, στο πραγματικό filming_crew_respond. Το «δεν μπορώ» δεν αλλάζει το Γύρισμα.

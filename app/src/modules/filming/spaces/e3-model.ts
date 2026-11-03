@@ -7,6 +7,7 @@ import type {
   FilmingState,
   ProvisionBalance,
 } from "../types";
+import type { BadgeTone } from "@/spaces/screens/shared";
 
 const WEEKDAY = new Intl.DateTimeFormat("el-GR", {
   weekday: "long",
@@ -111,3 +112,11 @@ export const notesOf = (
   ].flatMap((note) =>
     note.text ? [{ label: note.label, text: note.text }] : [],
   );
+
+// Τόνος κατάστασης απάντησης Συνεργείου. Εδώ και όχι στο e3-ui («use client»), γιατί το καλεί και η σελίδα στον server.
+export const responseTone = (response: string): BadgeTone | undefined =>
+  response === "επιβεβαιώνω"
+    ? "strong"
+    : response === "δεν μπορώ"
+      ? "attention"
+      : "waiting";

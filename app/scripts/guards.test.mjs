@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { findDesignViolations } from "./check-design.mjs";
-import { findAdminViolations, findModuleViolations } from "./check-modules.mjs";
+import { findAdminViolations, findClientCallViolations, findModuleViolations } from "./check-modules.mjs";
 import { findSecrets } from "./check-secrets.mjs";
 
 const file = (path, text) => ({ path, text });
@@ -93,5 +93,20 @@ describe("check:secrets", () => {
 
   it("αφήνει ήσυχο τον κανονικό κώδικα", () => {
     expect(findSecrets([file("a.ts", 'const url = process.env.NEXT_PUBLIC_SUPABASE_URL;')])).toEqual([]);
+  });
+});
+
+describe("check:modules, συναρτήσεις από «use client»", () => {
+  const clientFile = file("src/modules/x/ui.tsx", '"use client";\nexport const tone = (v) => v;\nexport function Pill() { return null; }');
+
+  it("απορρίπτει κλήση συνάρτησης «use client» από αρχείο του server", () => {
+    const server = file("src/modules/x/screen.tsx", 'import { tone } from "./ui";\nconst t = tone("a");');
+    expect(findClientCallViolations([clientFile, server])).toHaveLength(1);
+  });
+
+  it("δέχεται component από αρχείο «use client» και κλήση μέσα σε άλλο αρχείο «use client»", () => {
+    const server = file("src/modules/x/screen.tsx", 'import { Pill } from "./ui";\nconst p = Pill();');
+    const client = file("src/modules/x/other.tsx", '"use client";\nimport { tone } from "./ui";\nconst t = tone("a");');
+    expect(findClientCallViolations([clientFile, server, client])).toEqual([]);
   });
 });
