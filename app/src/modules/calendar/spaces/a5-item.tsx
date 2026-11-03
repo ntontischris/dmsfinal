@@ -12,10 +12,17 @@ interface A5ItemProps {
   compact?: boolean;
 }
 
+// Χωρίς ώρα: η κατάσταση της μέρας και το Επόμενο βήμα (έχει μόνο μέρα). Η προθεσμία είναι «όλη μέρα», όπως στο prototype.
+const UNTIMED = new Set(["closed", "day", "nextStep"]);
+
 const timeLabel = (item: Item): string | null => {
-  if (item.kind === "closed" || item.kind === "day") return null;
+  if (UNTIMED.has(item.kind)) return null;
   return item.from ? `${item.from}–${item.to ?? ""}` : "όλη μέρα";
 };
+
+// Το Είδος φαίνεται ως σήμανση μόνο όταν ο τίτλος δεν το λέει ήδη (κλεισμένος χρόνος χωρίς τίτλο παίρνει το Είδος ως τίτλο).
+const markOf = (item: Item): string | null =>
+  item.mark && item.mark !== item.title ? item.mark : null;
 
 function StatusBadge({ item }: { item: Item }) {
   if (item.kind === "day" && item.status) return <Badge>{item.status}</Badge>;
@@ -27,9 +34,11 @@ function StatusBadge({ item }: { item: Item }) {
 
 export function A5Item({ item, compact = false }: A5ItemProps) {
   const time = timeLabel(item);
+  const mark = markOf(item);
   const content = (
     <>
       {time && <span className="a5-time">{time}</span>}
+      {mark && <span className="a5-mark">{mark}</span>}
       <span className="a5-title">{item.title}</span>
       {!compact && item.detail && (
         <span className="a5-detail">{item.detail}</span>
@@ -56,7 +65,8 @@ const RANGE_TONE_FADED = new Set(["busy", "closed"]);
 
 // Μία γραμμή της λίστας (screens2): ώρα μπροστά, τίτλος + λεπτομέρεια, κατάσταση δεξιά.
 export function A5Row({ item }: { item: Item }) {
-  const hasRange = item.kind !== "closed" && item.kind !== "day";
+  const hasRange = !UNTIMED.has(item.kind);
+  const sub = [markOf(item), item.detail].filter(Boolean).join(" · ");
   const lead =
     hasRange && item.from ? (
       <TimeLead start={item.from} end={item.to ?? undefined} />
@@ -68,7 +78,7 @@ export function A5Row({ item }: { item: Item }) {
       lead={lead}
       title={item.title}
       href={item.href ?? undefined}
-      sub={item.detail ?? undefined}
+      sub={sub || undefined}
       aside={<StatusBadge item={item} />}
       isHighlighted={item.status === PENDING_STATUS}
       isFaded={RANGE_TONE_FADED.has(item.kind)}

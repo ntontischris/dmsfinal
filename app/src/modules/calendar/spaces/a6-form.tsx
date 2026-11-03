@@ -7,7 +7,7 @@ import { useKeptForm } from "@/lib/use-kept-form";
 
 import { saveBlockedTime } from "../actions-blocked";
 import type { BlockedTimeValues } from "../components/blocked-time-form";
-import type { CalendarMember } from "../types";
+import type { BlockedKind, CalendarMember } from "../types";
 import { ConflictWarning, useConflicts } from "./a6-conflicts";
 import { draftOf, formFieldsOf, validateDraft, type Draft } from "./a6-model";
 
@@ -22,6 +22,38 @@ interface A6FormProps {
   canPickPerson: boolean;
   viewerId: string | null;
   cancelHref: string;
+  kinds: readonly BlockedKind[];
+}
+
+// Το Είδος από τη λίστα των Ρυθμίσεων (O4). Τα αποσυρμένα φαίνονται μόνο αν τα έχει ήδη αυτός ο κλεισμένος χρόνος.
+function KindField({
+  kinds,
+  value,
+  onChange,
+}: {
+  kinds: readonly BlockedKind[];
+  value: string;
+  onChange: (kindId: string) => void;
+}) {
+  const shown = kinds.filter((kind) => !kind.retired || kind.id === value);
+  return (
+    <label className="a6-field">
+      Είδος
+      <select
+        className="select"
+        name="kindId"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">Χωρίς Είδος</option>
+        {shown.map((kind) => (
+          <option key={kind.id} value={kind.id}>
+            {kind.retired ? `${kind.label} (αποσύρθηκε)` : kind.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 }
 
 function PersonField({
@@ -189,6 +221,11 @@ export function A6Form(props: A6FormProps) {
         canPick={canPickPerson}
         onChange={(personId) => update({ personId })}
       />
+      <KindField
+        kinds={props.kinds}
+        value={draft.kindId}
+        onChange={(kindId) => update({ kindId })}
+      />
       <WhenFields draft={draft} update={update} />
       <label className="a6-field">
         Τίτλος
@@ -199,8 +236,8 @@ export function A6Form(props: A6FormProps) {
           onChange={(e) => update({ label: e.target.value })}
         />
         <span className="muted">
-          Φαίνεται μόνο σε εσένα και σε όσους κλείνουν χρόνο άλλων. Οι υπόλοιποι
-          βλέπουν «Απασχολημένος». Μη γράφεις κάτι ευαίσθητο, π.χ. γράψε
+          Ο τίτλος και το Είδος φαίνονται μόνο σε εσένα και σε όσους κλείνουν
+          χρόνο άλλων. Οι υπόλοιποι βλέπουν «Απασχολημένος». Μη γράφεις κάτι ευαίσθητο, π.χ. γράψε
           «Προσωπικό».
         </span>
       </label>

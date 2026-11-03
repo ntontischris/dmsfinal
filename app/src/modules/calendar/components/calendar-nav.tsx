@@ -10,6 +10,8 @@ import { calendarHref, type CalendarParams, type LayerKey } from "../url-state";
 const LAYER_LABEL: Record<LayerKey, string> = {
   filmings: "Γυρίσματα",
   blocked: "Κλεισμένος χρόνος",
+  nextSteps: "Επόμενα βήματα",
+  deadlines: "Προθεσμίες",
   busy: "Ομάδα",
 };
 

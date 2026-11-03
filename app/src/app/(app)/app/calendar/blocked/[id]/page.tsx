@@ -59,6 +59,7 @@ function BlockedTimeDetails({ time }: { time: BlockedTime }) {
     ...blockedFormValues(time),
     userId: time.userId,
     title: time.title ?? "",
+    kindId: time.kindId ?? "",
   };
   return (
     <>

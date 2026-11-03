@@ -92,4 +92,9 @@
 & .a5-list { display: grid; gap: 0; }
 & .a5-list .part-title { font-weight: 600; }
 & .a5-plain { font-weight: 400; }
-& .a5-side .part-rows { margin-inline: -1.25rem; } }
+& .a5-side .part-rows { margin-inline: -1.25rem; }
+/* Επόμενα βήματα (Πωλήσεις): όπως οι προθεσμίες, με τελεία έμφασης· το Είδος κλεισμένου χρόνου ως ετικέτα */
+& .a5-item[data-kind='nextStep'] { border: 0; background: transparent; padding-inline: var(--space-2); }
+& .a5-item[data-kind='nextStep'] .a5-title { font-weight: 400; }
+& .a5-item[data-kind='nextStep'] .a5-title::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-inline-end: 0.4rem; border-radius: 50%; background: var(--color-accent); vertical-align: middle; }
+& .a5-mark { padding: 0 var(--space-2); border: 1px solid var(--color-border); border-radius: 999px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); } }

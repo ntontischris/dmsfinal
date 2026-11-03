@@ -20,6 +20,7 @@ const WEEK_OF_DAY = (day: string): string =>
 const readBlockedForm = (form: FormData) => ({
   id: String(form.get("id") ?? ""),
   userId: String(form.get("userId") ?? ""),
+  kindId: String(form.get("kindId") ?? ""),
   day: String(form.get("day") ?? ""),
   untilDay: String(form.get("untilDay") ?? ""),
   allDay: form.get("allDay") === "on",
@@ -34,7 +35,8 @@ export async function saveBlockedTime(
 ): Promise<FormState> {
   const parsed = blockedFormSchema.safeParse(readBlockedForm(form));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
-  const { id, userId, day, untilDay, allDay, from, to, title } = parsed.data;
+  const { id, userId, kindId, day, untilDay, allDay, from, to, title } =
+    parsed.data;
   const span = blockedSpan({ day, untilDay, allDay, from, to });
   const outcome = await callRpc("blocked_time_save", {
     p_id: id,
@@ -43,6 +45,7 @@ export async function saveBlockedTime(
     p_ends: span.endsAt,
     p_all_day: allDay,
     p_title: title,
+    p_kind: kindId,
   });
   if (!outcome.ok) return { error: outcome.error };
   revalidateAppLayout();

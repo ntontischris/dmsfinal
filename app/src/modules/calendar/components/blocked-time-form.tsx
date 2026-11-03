@@ -14,6 +14,8 @@ import type { CalendarMember } from "../types";
 export interface BlockedTimeValues extends BlockedFormFields {
   userId: string;
   title: string;
+  // Το Είδος (κενό = χωρίς Είδος). Η κλασική φόρμα δεν το αλλάζει· μόνο το κρατά στην αποθήκευση.
+  kindId?: string;
 }
 
 interface BlockedTimeFormProps {
@@ -76,6 +78,9 @@ export function BlockedTimeForm({
       className="max-w-xl gap-4"
     >
       {id && <input type="hidden" name="id" value={id} />}
+      {values.kindId && (
+        <input type="hidden" name="kindId" value={values.kindId} />
+      )}
       <PersonField
         people={people}
         personName={personName}

@@ -9,7 +9,7 @@ const DAYS = ["2026-10-12", "2026-10-13", "2026-10-14"];
 const teamData = (overrides: Partial<CalendarData> = {}): CalendarData => ({
   isTeam: true,
   filmings: [
-    { id: "f1", startsAt: "2026-10-12T06:00:00Z", hours: 3, state: "pending", title: "Ακρόπολη", isMine: true },
+    { id: "f1", startsAt: "2026-10-12T06:00:00Z", hours: 3, state: "pending", title: "Ακρόπολη", isMine: true, crewIds: [] },
   ],
   blocked: [
     {
@@ -21,15 +21,21 @@ const teamData = (overrides: Partial<CalendarData> = {}): CalendarData => ({
       allDay: true,
       title: null,
       isMine: false,
+      kindId: null,
+      kindLabel: null,
     },
   ],
   busy: [
     { userId: "u2", userName: "Άννα", startsAt: "2026-10-12T07:00:00Z", endsAt: "2026-10-12T09:00:00Z" },
   ],
+  nextSteps: [],
+  deadlines: [],
   days: [{ day: "2026-10-14", status: "holiday", holidayName: "Αγίου Δημητρίου" }],
   canBlockOthers: false,
   canBook: true,
   team: [],
+  people: [],
+  me: "me",
   google: null,
   ...overrides,
 });
@@ -37,7 +43,7 @@ const teamData = (overrides: Partial<CalendarData> = {}): CalendarData => ({
 const dayOf = (
   date: string,
   data: CalendarData,
-  layers: readonly LayerKey[] = ["filmings", "blocked", "busy"],
+  layers: readonly LayerKey[] = ["filmings", "blocked", "nextSteps", "deadlines", "busy"],
 ) =>
   buildCalendarDays(data, DAYS, layers).find((day) => day.date === date);
 
@@ -66,7 +72,7 @@ describe("buildCalendarDays", () => {
 
   it("should give a link to the blocked time only when the viewer can edit it", () => {
     const own = teamData({
-      blocked: [{ id: "b9", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T06:00:00Z", endsAt: "2026-10-12T08:00:00Z", allDay: false, title: "Ιατρείο", isMine: true }],
+      blocked: [{ id: "b9", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T06:00:00Z", endsAt: "2026-10-12T08:00:00Z", allDay: false, title: "Ιατρείο", isMine: true, kindId: null, kindLabel: null }],
     });
     expect(dayOf("2026-10-12", own)?.entries.find((entry) => entry.kind === "blocked")).toMatchObject({
       href: "/app/calendar/blocked/b9",
@@ -92,5 +98,35 @@ describe("buildCalendarDays", () => {
   it("should carry the status and the holiday name of a day", () => {
     expect(dayOf("2026-10-14", teamData())).toMatchObject({ status: "holiday", holidayName: "Αγίου Δημητρίου" });
     expect(dayOf("2026-10-12", teamData())?.status).toBeNull();
+  });
+
+  it("should name a blocked time by its kind and keep the kind as a mark", () => {
+    const kinded = teamData({
+      blocked: [{ id: "b2", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T06:00:00Z", endsAt: "2026-10-12T07:00:00Z", allDay: false, title: null, isMine: true, kindId: "k1", kindLabel: "Ραντεβού" }],
+    });
+    expect(dayOf("2026-10-12", kinded)?.entries.find((entry) => entry.kind === "blocked")).toMatchObject({
+      title: "Ραντεβού",
+      mark: "Ραντεβού",
+    });
+  });
+
+  it("should place a next step and a deadline on their day with a link to their page", () => {
+    const data = teamData({
+      nextSteps: [{ id: "o1", day: "2026-10-13", step: "Τηλέφωνο", opportunityTitle: "Μηνιαίο", clientName: "Κυψέλη", managerId: "u2", managerName: "Άννα", isMine: false }],
+      deadlines: [{ id: "d1", day: "2026-10-13", title: "Reel", clientName: "Κυψέλη", assigneeId: "me", assigneeName: "Εγώ", isMine: true }],
+    });
+    const entries = dayOf("2026-10-13", data)?.entries ?? [];
+    expect(entries.find((entry) => entry.kind === "nextStep")).toMatchObject({
+      title: "Επόμενο βήμα: Τηλέφωνο",
+      detail: "Κυψέλη · Μηνιαίο · Άννα",
+      href: "/app/pipeline/o1",
+    });
+    expect(entries.find((entry) => entry.kind === "deadline")).toMatchObject({
+      title: "Προθεσμία: Reel",
+      detail: "Κυψέλη",
+      time: "όλη μέρα",
+      href: "/app/deliverables/d1",
+    });
+    expect(dayOf("2026-10-13", data, ["blocked"])?.entries.map((entry) => entry.kind)).toEqual(["blocked"]);
   });
 });

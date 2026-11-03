@@ -20,11 +20,12 @@ import { O4Rules } from "./o4-rules";
 
 import "./o4.css";
 
-const AUDITED = ["filming_settings", "booking_exceptions"];
+const AUDITED = ["filming_settings", "booking_exceptions", "blocked_time_kinds"];
 const AUDIT_HREF = "/app/audit?area=settings";
 const ENTITY_LABELS = {
   filming_settings: "Ρυθμίσεις Γυρισμάτων",
   booking_exceptions: "Εξαίρεση Ωραρίου",
+  blocked_time_kinds: "Είδος κλεισμένου χρόνου",
 };
 
 function Parts({ part }: { part: O4Part }) {
@@ -44,8 +45,14 @@ function Parts({ part }: { part: O4Part }) {
   );
 }
 
-async function Body({ part, google }: { part: O4Part; google: ReactNode }) {
-  if (part === "google") return google;
+interface Slots {
+  google: ReactNode;
+  calendar: ReactNode;
+}
+
+async function Body({ part, slots }: { part: O4Part; slots: Slots }) {
+  if (part === "google") return slots.google;
+  if (part === "calendar") return slots.calendar;
   if (part === "rules") {
     const settings = await getFilmingSettings();
     if (!settings.ok) return <ErrorNotice what="τις Ρυθμίσεις Γυρισμάτων" />;
@@ -60,14 +67,17 @@ async function Body({ part, google }: { part: O4Part; google: ReactNode }) {
   );
 }
 
-// O4 Ρυθμίσεις › Γυρίσματα στη νέα εμφάνιση (prototype `screens/O4.tsx`): τέσσερα μέρη με ?part=, για όποιον
-// «Διαχειρίζεται Ρυθμίσεις». Το μέρος του Google έρχεται έτοιμο από τη σελίδα (το Google εισάγει ήδη τα Γυρίσματα).
+// O4 Ρυθμίσεις › Γυρίσματα στη νέα εμφάνιση (prototype `screens/O4.tsx`): μέρη με ?part=, για όποιον
+// «Διαχειρίζεται Ρυθμίσεις». Τα μέρη του Google και των Ειδών κλεισμένου χρόνου έρχονται έτοιμα από τη σελίδα
+// (το Google και το Ημερολόγιο εισάγουν ήδη τα Γυρίσματα).
 export async function SpacesFilmingSettings({
   part,
   google,
+  calendar,
 }: {
   part: string | undefined;
   google: ReactNode;
+  calendar: ReactNode;
 }) {
   const viewer = await getViewer();
   if (!filmingCaps(viewer).canManageSettings)
@@ -85,7 +95,7 @@ export async function SpacesFilmingSettings({
       <SpacesSettingsTabs code="O4" />
       <div className="o4">
         <Parts part={current} />
-        <Body part={current} google={google} />
+        <Body part={current} slots={{ google, calendar }} />
       </div>
       {changes.ok && (
         <SpacesRecentChanges

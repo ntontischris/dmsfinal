@@ -1,4 +1,4 @@
-import { getViewer } from "@/modules/access";
+import { can, getViewer, type Viewer } from "@/modules/access";
 import { athensDate, filmingCaps, formatDateTime } from "@/modules/filming";
 import { getGoogleView } from "@/modules/google";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
@@ -6,13 +6,20 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { buildCalendarDays } from "../calendar-days";
 import { calendarCaps } from "../caps";
 import { datesOf, rangeOf } from "../date-range";
+import { forPerson, personOptions } from "../person-filter";
 import { getCalendarView, getLinkStatus } from "../queries";
 import type { CalendarData } from "../types";
 import { parseCalendarParams, type CalendarParams } from "../url-state";
 import { A5Filters, A5Nav, A5Tabs, A5Toolbar } from "./a5-chrome";
 import { A5Google } from "./a5-google";
 import { CalendarLinkCard } from "./a5-link";
-import { a5ItemsOf, hasEvents, layerOptions, type A5Item } from "./a5-model";
+import {
+  a5ItemsOf,
+  hasEvents,
+  layerOptions,
+  type A5Item,
+  type LayerAccess,
+} from "./a5-model";
 import { A5List, A5Month, A5Week } from "./a5-views";
 
 import "./a5.css";
@@ -84,6 +91,16 @@ async function Sidebar({ data }: { data: CalendarData }) {
   );
 }
 
+// Οι στρώσεις που έχουν νόημα για τον Χρήστη, με τα Δικαιώματα που ελέγχει η βάση για Ευκαιρίες και Παραδοτέα.
+// Ευκαιρίες βλέπει όποιος τις διαχειρίζεται ή αναθέτει (το «Βλέπει Πελάτες» μόνο του, π.χ. Λογιστής, όχι).
+const layerAccessOf = (viewer: Viewer, data: CalendarData): LayerAccess => ({
+  seesNextSteps:
+    can(viewer, "clients.manage") || can(viewer, "clients.transfer"),
+  seesDeadlines:
+    can(viewer, "deliverables.work") || can(viewer, "deliverables.review"),
+  hasBusy: data.busy.length > 0,
+});
+
 // A5 Ημερολόγιο στη νέα εμφάνιση (prototype `screens/A5.tsx`): Εβδομάδα, Μήνας, Λίστα με τα στοιχεία που δίνει η βάση
 // για τον θεατή (calendar_view). Τα επίπεδα ζουν στη διεύθυνση (?layers=), όπως στην παλιά εμφάνιση.
 export async function SpacesCalendar({ query }: { query: RawQuery }) {
@@ -108,7 +125,7 @@ export async function SpacesCalendar({ query }: { query: RawQuery }) {
     );
   const data = view.data;
   const days = buildCalendarDays(
-    data,
+    forPerson(data, params.person),
     datesOf(params.view, params.date),
     params.layers,
   );
@@ -128,7 +145,8 @@ export async function SpacesCalendar({ query }: { query: RawQuery }) {
         {data.isTeam ? (
           <A5Filters
             params={params}
-            options={layerOptions(data.busy.length > 0)}
+            options={layerOptions(layerAccessOf(viewer, data))}
+            people={personOptions(data.people, data.me)}
           />
         ) : (
           <p className="note">{CLIENT_NOTE}</p>

@@ -11,6 +11,7 @@ export const O4_PARTS = [
   { id: "rules", label: "Κανόνες" },
   { id: "hours", label: "Ωράριο και Χωρητικότητα" },
   { id: "holidays", label: "Αργίες" },
+  { id: "calendar", label: "Είδη κλεισμένου χρόνου" },
   { id: "google", label: "Ημερολόγιο Google" },
 ] as const;
 

@@ -11,6 +11,7 @@ import {
   getFilmingSettings,
   SpacesFilmingSettings,
 } from "@/modules/filming";
+import { SpacesBlockedKinds } from "@/modules/calendar";
 import { SettingsTabs } from "@/modules/settings";
 import { GoogleRulesForm, SpacesGoogleRules, getGoogleView } from "@/modules/google";
 
@@ -27,7 +28,13 @@ export default async function FilmingSettingsPage({
   const viewer = await getViewer();
   // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
   if ((await lookOf(viewer)) === "spaces")
-    return <SpacesFilmingSettings part={(await searchParams).part} google={<SpacesGoogleRules />} />;
+    return (
+      <SpacesFilmingSettings
+        part={(await searchParams).part}
+        google={<SpacesGoogleRules />}
+        calendar={<SpacesBlockedKinds />}
+      />
+    );
   const header = <ScreenHeader eyebrow="Ρυθμίσεις" title="Ρυθμίσεις" />;
   if (!filmingCaps(viewer).canManageSettings)
     return (

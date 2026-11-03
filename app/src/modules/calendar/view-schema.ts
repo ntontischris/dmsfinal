@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type {
   BlockedConflict,
+  BlockedKind,
   BlockedTime,
   CalendarData,
   CalendarGoogle,
@@ -17,6 +18,8 @@ const filmingSchema = z.object({
   state: z.string(),
   title: z.string().nullable(),
   isMine: z.boolean(),
+  // Τα Γυρίσματα του Πελάτη δεν έχουν Συνεργείο.
+  crewIds: z.array(z.string()).default([]),
 });
 
 const blockedSchema = z.object({
@@ -27,6 +30,29 @@ const blockedSchema = z.object({
   endsAt: z.string(),
   allDay: z.boolean(),
   title: z.string().nullable(),
+  isMine: z.boolean(),
+  kindId: z.string().nullable(),
+  kindLabel: z.string().nullable(),
+});
+
+const nextStepSchema = z.object({
+  id: z.string(),
+  day: z.string(),
+  step: z.string(),
+  opportunityTitle: z.string(),
+  clientName: z.string(),
+  managerId: z.string().nullable(),
+  managerName: z.string().nullable(),
+  isMine: z.boolean(),
+});
+
+const deadlineSchema = z.object({
+  id: z.string(),
+  day: z.string(),
+  title: z.string(),
+  clientName: z.string().nullable(),
+  assigneeId: z.string().nullable(),
+  assigneeName: z.string().nullable(),
   isMine: z.boolean(),
 });
 
@@ -61,10 +87,14 @@ const teamViewSchema = z
     filmings: z.array(filmingSchema),
     blocked: z.array(blockedSchema),
     busy: z.array(busySchema),
+    nextSteps: z.array(nextStepSchema),
+    deadlines: z.array(deadlineSchema),
     days: z.array(teamDaySchema),
     canBlockOthers: z.boolean(),
     canBook: z.boolean(),
     team: z.array(memberSchema),
+    people: z.array(memberSchema),
+    me: z.string().nullable(),
     google: googleSchema,
   })
   .transform((view): CalendarData => ({ ...view, isTeam: true }));
@@ -82,10 +112,14 @@ const clientViewSchema = z
       filmings: view.filmings,
       blocked: [],
       busy: [],
+      nextSteps: [],
+      deadlines: [],
       days: view.days.map((day) => ({ ...day, holidayName: null })),
       canBlockOthers: false,
       canBook: view.canBook,
       team: [],
+      people: [],
+      me: null,
       google: view.google,
     }),
   );
@@ -101,11 +135,17 @@ const blockedTimeSchema: z.ZodType<BlockedTime> = z.object({
   endsAt: z.string(),
   allDay: z.boolean(),
   title: z.string().nullable(),
+  kindId: z.string().nullable(),
+  kindLabel: z.string().nullable(),
   canEdit: z.boolean(),
   canConvert: z.boolean(),
 });
 
 export const blockedTimeViewSchema = blockedTimeSchema.nullable();
+
+export const blockedKindsSchema: z.ZodType<BlockedKind[]> = z.array(
+  z.object({ id: z.string(), label: z.string(), retired: z.boolean() }),
+);
 
 export const blockedConflictsSchema: z.ZodType<BlockedConflict[]> = z.array(
   z.object({

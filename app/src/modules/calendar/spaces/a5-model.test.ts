@@ -19,6 +19,7 @@ const entry = (overrides: Partial<CalendarEntry> = {}): CalendarEntry => ({
   time: "10:00–12:30",
   title: "Κυψέλη Καφέ",
   detail: null,
+  mark: null,
   isPending: false,
   href: "/app/filming/1",
   ...overrides,
@@ -112,15 +113,43 @@ describe("helpers", () => {
     expect(fmtLong("2026-11-03")).toBe("Τρίτη 03/11");
   });
 
+  const NONE = { seesNextSteps: false, seesDeadlines: false, hasBusy: false };
+
   it("should offer the team layer only when there is busy time", () => {
-    expect(layerOptions(false).map((option) => option.key)).toEqual(["filmings", "blocked"]);
-    expect(layerOptions(true).map((option) => option.key)).toEqual(["filmings", "blocked", "busy"]);
+    expect(layerOptions(NONE).map((option) => option.key)).toEqual(["filmings", "blocked"]);
+    expect(layerOptions({ ...NONE, hasBusy: true }).map((option) => option.key)).toEqual(["filmings", "blocked", "busy"]);
+  });
+
+  it("should offer next steps and deadlines only to those who may see them", () => {
+    const all = layerOptions({ seesNextSteps: true, seesDeadlines: true, hasBusy: true });
+    expect(all.map((option) => option.label)).toEqual([
+      "Γυρίσματα",
+      "Ρεπό, άδειες",
+      "Επόμενα βήματα",
+      "Προθεσμίες",
+      "Ομάδα",
+    ]);
+    expect(layerOptions({ ...NONE, seesDeadlines: true }).map((option) => option.key)).toEqual([
+      "filmings",
+      "blocked",
+      "deadlines",
+    ]);
+  });
+
+  it("should carry the kind of a blocked time as its mark", () => {
+    const [item] = a5ItemsOf(
+      [day({ entries: [entry({ key: "blocked-3", kind: "blocked", mark: "Ραντεβού" })] })],
+      true,
+      false,
+    );
+    expect(item?.mark).toBe("Ραντεβού");
   });
 
   it("should toggle a layer and summarise what is hidden", () => {
     expect(toggledLayers(["filmings", "blocked"], "blocked")).toEqual(["filmings"]);
     expect(toggledLayers(["filmings"], "blocked")).toEqual(["filmings", "blocked"]);
-    expect(filtersSummary(layerOptions(false), ["filmings", "blocked"])).toBe("όλα");
-    expect(filtersSummary(layerOptions(true), ["filmings"])).toBe("2 κρυμμένα");
+    expect(filtersSummary(layerOptions(NONE), ["filmings", "blocked"])).toBe("όλα");
+    expect(filtersSummary(layerOptions({ ...NONE, hasBusy: true }), ["filmings"])).toBe("2 κρυμμένα");
+    expect(filtersSummary(layerOptions(NONE), ["filmings", "blocked"], "Εγώ")).toBe("Εγώ · όλα");
   });
 });

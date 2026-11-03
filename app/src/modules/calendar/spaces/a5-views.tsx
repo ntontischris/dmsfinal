@@ -21,7 +21,7 @@ import {
 } from "./a5-model";
 
 // Οι τρεις προβολές του prototype (`screens/a5-week.tsx`, `a5-month.tsx`, `a5-list.tsx`) με πραγματικά στοιχεία.
-// Ο φόρτος ομάδας/ατόμου του prototype λείπει: η βάση δεν δίνει προθεσμίες ούτε φόρτο ανά άτομο.
+// Ο φόρτος ομάδας/ατόμου του prototype λείπει: η βάση δεν δίνει φόρτο ανά άτομο.
 
 interface ViewProps {
   params: CalendarParams;
