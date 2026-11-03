@@ -63,6 +63,8 @@ export function findModuleViolations(files) {
       const spec = match[1] ?? match[2];
       const deep = spec.match(/^@\/modules\/([^/]+)\/.+/);
       if (deep && deep[1] !== own) violations.push(`${file.path}: «${spec}» (μόνο «@/modules/${deep[1]}»)`);
+      // Οι γραμματοσειρές έρχονται από τα πακέτα Fontsource· το next/font/google κατεβάζει από τη Google στο build και αποτυγχάνει.
+      if (spec === "next/font/google") violations.push(`${file.path}: «next/font/google» (γραμματοσειρές μόνο από @fontsource-variable)`);
       if (own && spec.startsWith("..") && /(^|\/)\.\.\/\.\.\//.test(spec))
         violations.push(`${file.path}: «${spec}» (σχετικό import έξω από το module)`);
     }

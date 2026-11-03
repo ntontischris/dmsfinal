@@ -20,6 +20,10 @@ describe("check:modules", () => {
     expect(findModuleViolations([file("src/modules/sales/a.ts", 'import { y } from "@/modules/sales/queries";')])).toEqual([]);
   });
 
+  it("απορρίπτει γραμματοσειρές από το next/font/google", () => {
+    expect(findModuleViolations([file("src/app/layout.tsx", 'import { Manrope } from "next/font/google";')])).toHaveLength(1);
+  });
+
   it("απορρίπτει σχετικό import που βγαίνει από το module", () => {
     expect(findModuleViolations([file("src/modules/sales/a.ts", 'import { z } from "../../modules/finance/b";')])).toHaveLength(1);
   });

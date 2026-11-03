@@ -5,6 +5,16 @@
    Τα ονόματα ακολουθούν τη σύμβαση του shadcn, ώστε τα components του να δουλεύουν χωρίς αλλαγές. */
 @custom-variant dark (&:where(:root:not([data-theme='light']) *));
 
+/* Γραμματοσειρές από τα πακέτα Fontsource (root layout): Inter Tight για το κείμενο, JetBrains Mono για ετικέτες,
+   Manrope για τη νέα εμφάνιση (κλάση spaces-sans στο κέλυφος και στις δημόσιες σελίδες). */
+:root {
+  --font-kit-sans: 'Inter Tight Variable';
+  --font-kit-mono: 'JetBrains Mono Variable';
+}
+.spaces-sans {
+  --font-kit-sans: 'Manrope Variable';
+}
+
 :root {
   color-scheme: dark;
   --background: oklch(13% 0.006 260);
