@@ -24,7 +24,10 @@ test("02 · το Ημερολόγιο έχει Επόμενα βήματα, Πρ
   await page.goto(`/app/calendar?view=list&date=${DAY}`);
   await page.locator(".a5-filters > summary").click();
   for (const label of ["Γυρίσματα", "Ρεπό, άδειες", "Επόμενα βήματα", "Προθεσμίες", "Εγώ", "Όλοι"])
-    await expect(page.locator(".a5-filters").getByRole("link", { name: label, exact: true })).toBeVisible();
+    // Τα ενεργά επίπεδα γράφουν «✓ » μπροστά.
+    await expect(
+      page.locator(".a5-filters .a5-chip").filter({ hasText: new RegExp(`^(✓ )?${label}$`) }),
+    ).toBeVisible();
 });
 
 test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού», το βλέπει με το Είδος του και το σβήνει", async ({ page }) => {
