@@ -80,6 +80,7 @@ export async function SpacesNewBlockedTime({ query }: { query: RawQuery }) {
           people={canPickPerson ? view.data.team : []}
           personName={viewer.team.name}
           canPickPerson={canPickPerson}
+          viewerId={viewer.userId}
           cancelHref={weekOf(date)}
         />
       </div>
@@ -101,7 +102,13 @@ function Convert({ time }: { time: BlockedTime }) {
   );
 }
 
-function Details({ time }: { time: BlockedTime }) {
+function Details({
+  time,
+  viewerId,
+}: {
+  time: BlockedTime;
+  viewerId: string | null;
+}) {
   const day = athensDate(time.startsAt);
   const values = {
     ...blockedFormValues(time),
@@ -126,6 +133,7 @@ function Details({ time }: { time: BlockedTime }) {
           people={[]}
           personName={time.userName}
           canPickPerson={false}
+          viewerId={viewerId}
           cancelHref={weekOf(day)}
         />
       ) : (
@@ -167,7 +175,10 @@ export async function SpacesBlockedTime({ id }: { id: string | null }) {
   if (time.data === null) return missing;
   return (
     <div data-spaces>
-      <Details time={time.data} />
+      <Details
+        time={time.data}
+        viewerId={viewer.status === "signed-in" ? viewer.userId : null}
+      />
     </div>
   );
 }

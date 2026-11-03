@@ -72,3 +72,12 @@ export const formFieldsOf = (
   to: draft.allDay ? "" : draft.to,
   title: draft.label,
 });
+
+// Τα πεδία της προειδοποίησης «στο Συνεργείο»: πάντα με το άτομο, χωρίς τίτλο (δεν αλλάζει την επικάλυψη). Όσο η φόρμα
+// έχει λάθος, null: δεν ρωτάμε τη βάση για μισές ημερομηνίες.
+export const conflictFieldsOf = (
+  draft: Draft,
+): Readonly<Record<string, string>> | null =>
+  validateDraft(draft) === null
+    ? { ...formFieldsOf(draft, true), title: "" }
+    : null;

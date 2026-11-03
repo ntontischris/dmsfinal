@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-import type { BlockedTime, CalendarData, CalendarGoogle, CalendarLinkStatus } from "./types";
+import type {
+  BlockedConflict,
+  BlockedTime,
+  CalendarData,
+  CalendarGoogle,
+  CalendarLinkStatus,
+} from "./types";
 
 // Τα JSON των RPC του Ημερολογίου, όπως έρχονται από τη βάση. Ό,τι δεν ταιριάζει δεν φτάνει στην οθόνη.
 
@@ -100,6 +106,16 @@ const blockedTimeSchema: z.ZodType<BlockedTime> = z.object({
 });
 
 export const blockedTimeViewSchema = blockedTimeSchema.nullable();
+
+export const blockedConflictsSchema: z.ZodType<BlockedConflict[]> = z.array(
+  z.object({
+    id: z.string(),
+    title: z.string().nullable(),
+    startsAt: z.string(),
+    endsAt: z.string(),
+    state: z.string(),
+  }),
+);
 
 export const linkStatusSchema: z.ZodType<CalendarLinkStatus> = z.object({
   exists: z.boolean(),

@@ -72,6 +72,23 @@ export interface BlockedTime {
   canConvert: boolean;
 }
 
+// Γύρισμα που πέφτει πάνω στον κλεισμένο χρόνο, όπου το άτομο είναι στο Συνεργείο (blocked_time_conflicts).
+export interface BlockedConflict {
+  id: string;
+  title: string | null;
+  startsAt: string;
+  endsAt: string;
+  state: string;
+}
+
+// Η γραμμή της προειδοποίησης στη φόρμα A6, έτοιμη για εμφάνιση.
+export interface ConflictLine {
+  id: string;
+  title: string;
+  when: string;
+  href: string;
+}
+
 export interface CalendarLinkStatus {
   exists: boolean;
   createdAt: string | null;

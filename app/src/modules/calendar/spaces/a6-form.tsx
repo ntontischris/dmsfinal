@@ -8,11 +8,11 @@ import { useKeptForm } from "@/lib/use-kept-form";
 import { saveBlockedTime } from "../actions-blocked";
 import type { BlockedTimeValues } from "../components/blocked-time-form";
 import type { CalendarMember } from "../types";
+import { ConflictWarning, useConflicts } from "./a6-conflicts";
 import { draftOf, formFieldsOf, validateDraft, type Draft } from "./a6-model";
 
 // Η φόρμα του prototype (`screens/a6-form.tsx`) με την πραγματική αποθήκευση (saveBlockedTime). Μετά την επιτυχία
-// ο server γυρνά στην εβδομάδα της μέρας. Η προειδοποίηση «είσαι στο Συνεργείο» του prototype λείπει: η οθόνη δεν
-// έχει τα Συνεργεία στα χέρια της.
+// ο server γυρνά στην εβδομάδα της μέρας. Η προειδοποίηση «είσαι στο Συνεργείο» ρωτά τη βάση όσο αλλάζουν μέρα και ώρα.
 
 interface A6FormProps {
   id: string | null;
@@ -20,6 +20,7 @@ interface A6FormProps {
   people: readonly CalendarMember[];
   personName: string | null;
   canPickPerson: boolean;
+  viewerId: string | null;
   cancelHref: string;
 }
 
@@ -141,8 +142,12 @@ export function A6Form(props: A6FormProps) {
   const [draft, setDraft] = useState<Draft>(() => draftOf(props.values));
   const [problem, setProblem] = useState<string | null>(null);
   const { state, isPending, onSubmit, formRef } = useKeptForm(saveBlockedTime);
+  const conflicts = useConflicts(draft);
   const update = (change: Partial<Draft>) =>
     setDraft((prev) => ({ ...prev, ...change }));
+  const pickedName =
+    props.people.find((member) => member.userId === draft.personId)?.name ??
+    props.personName;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     const found = validateDraft(draft);
@@ -202,6 +207,11 @@ export function A6Form(props: A6FormProps) {
       <p className="note">
         Κάθε ρεπό ή άδεια μπαίνει μία φορά· δεν επαναλαμβάνεται μόνο του.
       </p>
+      <ConflictWarning
+        lines={conflicts}
+        personName={pickedName}
+        isSelf={draft.personId === props.viewerId}
+      />
       {error && (
         <p className="a6-error" role="alert">
           {error}
