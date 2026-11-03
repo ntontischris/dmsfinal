@@ -164,3 +164,19 @@ export const j3SentNoticeOf = (
     ? `Το Αίτημα στάλθηκε. ${who} Θα δεις εδώ πότε ολοκληρωθεί ή αν απορριφθεί.`
     : `Το μήνυμα στάλθηκε. ${who} Θα δεις την απάντηση εδώ.`;
 };
+
+// Σειρά της Συνομιλίας, στη διεύθυνση (`?order=old`): προεπιλογή τα νεότερα πρώτα (φόρμα πάνω),
+// αλλιώς χρονολογικά με τη φόρμα κάτω, όπως στη σημερινή οθόνη.
+export type J3Order = "new" | "old";
+
+export const parseJ3Order = (value: string | undefined): J3Order =>
+  value === "old" ? "old" : "new";
+
+// Η χρονική σειρά έρχεται παλαιότερο πρώτο· για «νεότερα πρώτα» αντιστρέφεται (χωρίς να πειραχτεί το αρχικό).
+export const orderedOf = <T>(
+  chronological: readonly T[],
+  order: J3Order,
+): T[] => (order === "old" ? [...chronological] : [...chronological].reverse());
+
+export const j3OrderHrefOf = (order: J3Order, tabPath: string): string =>
+  order === "old" ? `${tabPath}?order=old` : tabPath;

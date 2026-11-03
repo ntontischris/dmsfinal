@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import type { FilmingRow } from "../types";
 import { e1FilmingOf, tabCountLabel, visibleViews } from "./e1-adapter";
 import {
+  clientSignalsOf,
   clientStatusLook,
   daysLateLabel,
   groupFilmings,
@@ -68,7 +69,9 @@ describe("groupFilmings", () => {
     const groups = groupFilmings(rows, NOW, { isClient: true });
     expect(groups.map((g) => g.label)).not.toContain("Θέλουν «έγινε»");
     expect(
-      groups.find((g) => g.label === "Σεπτέμβριος 2026 · πέρασαν")?.filmings.map((f) => f.id),
+      groups
+        .find((g) => g.label === "Σεπτέμβριος 2026 · πέρασαν")
+        ?.filmings.map((f) => f.id),
     ).toContain("late");
   });
 
@@ -140,9 +143,22 @@ test("ο εγκρίνων βλέπει τα «Αναμένουν έγκριση�
   expect(tabCountLabel(100)).toBe("100+");
 });
 
-test("ο πελάτης δεν έχει την προβολή «Θέλουν «έγινε»»", () => {
-  expect(visibleViews(false, true).map((v) => v.id)).not.toContain("needs_outcome");
+test("όλοι έχουν την προβολή «Θέλουν «έγινε»», και ο πελάτης (όπως η σημερινή σελίδα)", () => {
   expect(visibleViews(false).map((v) => v.id)).toContain("needs_outcome");
+  expect(visibleViews(true).map((v) => v.id)).toContain("needs_outcome");
+});
+
+test("τα σήματα του πελάτη: όσα δίνει η βάση, με τις λέξεις της σημερινής σελίδας", () => {
+  const signals = clientSignalsOf(
+    filming({
+      signals: { ...rowOf().signals, isExtra: true, cancelRequest: true },
+    }),
+  );
+  expect(signals).toEqual([
+    { key: "isExtra", label: "Έξτρα", isAttention: false },
+    { key: "cancelRequest", label: "Αίτημα ακύρωσης", isAttention: true },
+  ]);
+  expect(clientSignalsOf(filming())).toEqual([]);
 });
 
 describe("clientStatusLook", () => {
@@ -156,7 +172,9 @@ describe("clientStatusLook", () => {
   });
 
   test("το αίτημα ακύρωσης του πελάτη φαίνεται ως «ζητήθηκε ακύρωση»", () => {
-    const asked = filming({ signals: { ...rowOf().signals, cancelRequest: true } });
+    const asked = filming({
+      signals: { ...rowOf().signals, cancelRequest: true },
+    });
     expect(clientStatusLook(asked)).toEqual({
       tone: "pending",
       icon: "?",

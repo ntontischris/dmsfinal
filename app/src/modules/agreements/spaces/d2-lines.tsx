@@ -86,7 +86,6 @@ function AddLine({
   kinds,
   options,
 }: Omit<LinesProps, "isOptionsFailed">) {
-  const [isFree, setIsFree] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const selected = options.find((option) => option.itemId === selectedId);
   return (
@@ -125,20 +124,9 @@ function AddLine({
             <span className="muted">{optionSummary(selected, kinds)}</span>
           )}
         </D2Form>
-        {agreement.can.editPrices && (
-          <button
-            type="button"
-            className="button"
-            aria-pressed={isFree}
-            onClick={() => setIsFree(!isFree)}
-          >
-            Ελεύθερη γραμμή
-          </button>
-        )}
       </div>
-      {isFree && agreement.can.editPrices && (
-        <FreeLineForm agreementId={agreement.id} />
-      )}
+      {/* Όπως η σημερινή σελίδα: η φόρμα της ελεύθερης γραμμής φαίνεται πάντα σε όποιον βάζει τιμές, χωρίς διακόπτη. */}
+      {agreement.can.editPrices && <FreeLineForm agreementId={agreement.id} />}
     </>
   );
 }

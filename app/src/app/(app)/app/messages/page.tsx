@@ -13,6 +13,7 @@ import {
   messagesCaps,
   messagesViewOf,
   parseClientTab,
+  parseJ3Order,
   parseRequestView,
   parseTab,
   SpacesClientMessages,
@@ -22,7 +23,7 @@ import {
 export const metadata = { title: INBOX_TITLE };
 
 interface MessagesPageProps {
-  searchParams: Promise<{ tab?: string; view?: string }>;
+  searchParams: Promise<{ tab?: string; view?: string; order?: string }>;
 }
 
 // J1 για την ομάδα (Εισερχόμενα: «Συνομιλίες» και «Με ανέφεραν»), J3 για τον Χρήστη πελάτη με «Βλέπει Συνομιλία»,
@@ -35,7 +36,10 @@ export default async function MessagesPage({
   const view = messagesViewOf(viewer);
   if ((await lookOf(viewer)) === "spaces")
     return view === "client" ? (
-      <SpacesClientMessages tab={parseClientTab(params.tab)} />
+      <SpacesClientMessages
+        tab={parseClientTab(params.tab)}
+        order={parseJ3Order(params.order)}
+      />
     ) : (
       <SpacesInbox
         tab={parseTab(params.tab)}

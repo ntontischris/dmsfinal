@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { canSeeClientWork, type Viewer } from "@/modules/access";
+import { can, canSeeClientWork, type Viewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
 import { Panel } from "@/spaces/kit/panel";
 import { ListRow, RowList } from "@/spaces/kit/parts";
@@ -82,12 +82,15 @@ export async function SpacesClientDeliverables({ viewer }: { viewer: Viewer }) {
   const waiting = waitingOf(result.data);
   return wrap(
     <div className="h34">
-      <header className="h34-header">
-        <p className="note">
-          Θέλεις κάτι καινούργιο;{" "}
-          <Link href={hrefOf("J3")}>Ζήτα το από την ομάδα</Link>.
-        </p>
-      </header>
+      {/* Μόνο με «Βλέπει Συνομιλία»: χωρίς αυτό η Συνομιλία (J3) δεν ανοίγει. */}
+      {can(viewer, "c.chatRead") && (
+        <header className="h34-header">
+          <p className="note">
+            Θέλεις κάτι καινούργιο;{" "}
+            <Link href={hrefOf("J3")}>Ζήτα το από την ομάδα</Link>.
+          </p>
+        </header>
+      )}
       {groups.length === 0 ? (
         <StateNotice kind="empty" title="Δεν υπάρχουν ακόμα Παραδοτέα">
           <p>Θα εμφανιστούν εδώ μόλις η ομάδα σου στείλει το πρώτο.</p>

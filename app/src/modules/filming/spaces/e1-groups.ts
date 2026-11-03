@@ -1,5 +1,6 @@
+import { activeSignals } from "../helpers";
 import { STATE_LABELS } from "../labels";
-import type { FilmingSignals, FilmingState } from "../types";
+import type { FilmingFlags, FilmingSignals, FilmingState } from "../types";
 
 // Ομαδοποίηση της λίστας Γυρισμάτων (E1, prototype `screens/e1-groups.ts`): ό,τι θέλει «έγινε» πρώτα, μετά τα επόμενα
 // και τα παλιά ανά μήνα. Καθαρές συναρτήσεις πάνω στη γραμμή της νέας εμφάνισης (βλ. e1-adapter).
@@ -189,3 +190,17 @@ export const signalsOf = (
       : []),
   ];
 };
+
+// Τα σήματα του πελάτη όπως στη σημερινή σελίδα: όσα δίνει η βάση για αυτόν, με τις λέξεις της (Έξτρα, Αίτημα ακύρωσης…).
+export interface ClientSignal {
+  key: keyof FilmingFlags;
+  label: string;
+  // Θέλει προσοχή (όλα εκτός από το «Έξτρα»).
+  isAttention: boolean;
+}
+
+export const clientSignalsOf = (filming: E1Filming): readonly ClientSignal[] =>
+  activeSignals(filming.signals).map((signal) => ({
+    ...signal,
+    isAttention: signal.key !== "isExtra",
+  }));

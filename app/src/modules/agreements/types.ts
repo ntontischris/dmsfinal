@@ -142,6 +142,7 @@ export type PublicResult =                   // αποτέλεσμα των δη
   | { status: LinkStatus };
 export interface AgreementCaps {              // από τα Δικαιώματα, μόνο για να κρύβει κουμπιά
   canView: boolean; canDraft: boolean; canDeviate: boolean; canSeeAmounts: boolean; canSeeCost: boolean; canManageCost: boolean; canManageSettings: boolean; canSeeProductions: boolean;
+  isClient: boolean;                          // Χρήστης πελάτη με «Βλέπει Συμφωνίες» (c.agreements): μόνο η όψη πελάτη
 }
 export interface AgreementRowView {           // γραμμή της D1 έτοιμη για εμφάνιση (περνά σε client component)
   id: string; href: string; clientName: string; clientHref: string; title: string; kindLabel: string; statusLabel: string; bucket: Bucket;

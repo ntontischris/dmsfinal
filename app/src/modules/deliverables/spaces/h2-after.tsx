@@ -123,7 +123,7 @@ export function H2Cancel({ detail }: PanelProps) {
           </label>
           <label>
             Η Παροχή
-            <select className="select" name="outcome" defaultValue="consumed">
+            <select className="select" name="outcome" defaultValue="returned">
               <option value="consumed">καταναλώθηκε</option>
               <option value="returned">επιστρέφει στην επόμενη Περίοδο</option>
             </select>

@@ -36,6 +36,7 @@ export { ThreadScreen } from "./components/thread-screen";
 export { SpacesInbox } from "./spaces/j1-screen";
 export { SpacesThread } from "./spaces/j2-screen";
 export { SpacesClientMessages } from "./spaces/j3-screen";
+export { parseJ3Order } from "./spaces/j3-adapter";
 export { SpacesMessageSettings } from "./spaces/settings-screen";
 // Σύνοψη της Συνομιλίας ενός Πελάτη για άλλες οθόνες (B2, B4).
 export {

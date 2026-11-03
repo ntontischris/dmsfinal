@@ -4,11 +4,11 @@ import type { ProvisionKind } from "../types";
 
 // Τα Είδη Παροχής της O3 στη μορφή του prototype (`screens/o3-types.tsx`): κατάσταση, χρήσεις και η γραμμή στοιχείων.
 
-export type KindStatus = "Νέα" | "Σε χρήση" | "Αποσύρθηκε";
+export type KindStatus = "Νέο" | "Σε χρήση" | "Αποσύρθηκε";
 
 export const kindStatusOf = (kind: ProvisionKind, uses: number): KindStatus => {
   if (kind.isRetired) return "Αποσύρθηκε";
-  return uses > 0 ? "Σε χρήση" : "Νέα";
+  return uses > 0 ? "Σε χρήση" : "Νέο";
 };
 
 const measureText = (kind: ProvisionKind): string =>

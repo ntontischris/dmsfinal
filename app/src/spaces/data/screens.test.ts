@@ -59,7 +59,7 @@ describe("isCodeVisible: από τα Δικαιώματα του NAV", () => {
   });
 
   it("κωδικός του prototype χωρίς σελίδα δεν φαίνεται ποτέ", () => {
-    expect(isCodeVisible("I6", () => true)).toBe(false);
+    expect(isCodeVisible("Q2", () => true)).toBe(false);
     expect(isCodeVisible("Q1", () => true)).toBe(false);
   });
 });

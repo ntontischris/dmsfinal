@@ -1,0 +1,28 @@
+/* I6 «Έξοδα και Κόστος ώρας» και I7 «Κερδοφορία» (prototype screens/i67.css, αυτούσιο). Μόνο tokens. */
+[data-look='spaces'] {
+& .i67-big { font-size: 2rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+& .i67-cat { min-width: 0; }
+& .i67-item { border-top: 1px solid color-mix(in oklab, var(--color-text) 7%, transparent); padding: var(--space-2) 0; min-width: 0; }
+& .i67-line { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; padding: var(--space-1) 0; min-width: 0; }
+& .i67-line > span, & .i67-line > .input { min-width: 0; overflow-wrap: anywhere; }
+& .i67-line .i67-label { flex: 1 1 10rem; }
+& .i67-amount { width: 7rem; text-align: right; }
+& .i67-total { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; font-weight: 600; }
+& .i67-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+& .i67-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+& .i67-cell { min-width: 0; overflow-wrap: anywhere; }
+& .i67-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+& .i67-wrap { min-width: 0; overflow-wrap: anywhere; }
+& .i67-undo { position: sticky; bottom: var(--space-3); z-index: 2; background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); backdrop-filter: blur(8px); box-shadow: 0 -6px 16px color-mix(in oklab, var(--color-text) 12%, transparent); }
+
+/* screens2 */
+& .i67-glass, & .i67-flat { margin: 0; }
+& .i67-glass { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); backdrop-filter: blur(4px); }
+& .i67-glass .rtable { margin: 0; }
+& .i67-money { font-weight: 700; font-variant-numeric: tabular-nums; }
+& .i67-glass .part-tile { width: 2.2rem; height: 2.2rem; font-size: 0.8rem; }
+& .i67-big { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+& .i67-cat { margin-bottom: var(--space-4); }
+& .i67-cat-sum { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+& .i67-cat-body .i67-total { padding-bottom: var(--space-2); }
+}

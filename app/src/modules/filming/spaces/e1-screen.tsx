@@ -104,7 +104,7 @@ function Groups({
 
 // E1 Γυρίσματα στη νέα εμφάνιση (prototype `screens/E1.tsx`): ομάδες «Θέλουν «έγινε»», επόμενα και παλιά ανά μήνα.
 // Η βάση φιλτράρει ανά καρτέλα και αποφασίζει τι βλέπει ο Χρήστης. Ο Χρήστης πελάτη βλέπει τη δική του όψη (prototype `isClient`):
-// τη λωρίδα του Χώρου «Γυρίσματα» πελάτη, χωρίς «Θέλουν «έγινε»», Συνεργείο ή σήματα. Η κάρτα υπολοίπου του prototype λείπει
+// τη λωρίδα του Χώρου «Γυρίσματα» πελάτη, χωρίς Συνεργείο· με την προβολή «Θέλουν «έγινε»» και τα σήματα της σημερινής σελίδας. Η κάρτα υπολοίπου του prototype λείπει
 // (η λίστα της βάσης δεν δίνει υπόλοιπο Παροχής ανά Περίοδο).
 export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
   const viewer = await getViewer();
@@ -118,7 +118,7 @@ export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
       </div>
     );
   const isClient = isClientViewer(viewer);
-  const views = visibleViews(caps.canApprove, isClient);
+  const views = visibleViews(caps.canApprove);
   const [strip, ...results] = await Promise.all([
     getSpaceStrip(codesOfSpace(isClient ? "c-filming" : "production")),
     ...views.map((view) => listFilmings(view.id)),

@@ -8,6 +8,7 @@ import { StatusHelp } from "@/spaces/screens/status-help";
 
 import { NO_CLIENT_LABEL } from "../labels";
 import {
+  clientSignalsOf,
   clientStatusLook,
   daysLateLabel,
   signalsOf,
@@ -20,7 +21,7 @@ import { weekdayOf } from "./e1-format";
 import "./e1.css";
 
 // Η λίστα Γυρισμάτων της νέας εμφάνισης (prototype `screens/e1-table.tsx`). Ο πελάτης βλέπει την Παραγωγή ως τίτλο,
-// χωρίς Συνεργείο και σήματα· η λίστα της βάσης δεν φέρνει τόπο ούτε σημείωση πελάτη, άρα χωρίς δεύτερη γραμμή.
+// χωρίς Συνεργείο, με τα σήματα της σημερινής σελίδας· η λίστα της βάσης δεν φέρνει τόπο ούτε σημείωση πελάτη, άρα χωρίς δεύτερη γραμμή.
 
 const TONE_OF: Readonly<Record<StatusLook["tone"], BadgeTone | undefined>> = {
   problem: "attention",
@@ -93,6 +94,24 @@ function Signals({ filming, nowMs }: { filming: E1Filming; nowMs: number }) {
   );
 }
 
+// Τα σήματα του πελάτη (σημερινή σελίδα), χωρίς «Λύσε το»: δεν είναι δική του δουλειά να τα λύσει.
+function ClientSignals({ filming }: { filming: E1Filming }) {
+  const signals = clientSignalsOf(filming);
+  if (signals.length === 0) return null;
+  return (
+    <span className="e1-signals">
+      {signals.map((signal) => (
+        <Badge
+          key={signal.key}
+          tone={signal.isAttention ? "attention" : "strong"}
+        >
+          {signal.label}
+        </Badge>
+      ))}
+    </span>
+  );
+}
+
 function FilmingLead({
   filming,
   isLate,
@@ -157,7 +176,9 @@ export function E1Table({
               <>
                 {filming.id === nextId && <Badge tone="strong">Επόμενο</Badge>}
                 <Badge tone={TONE_OF[look.tone]}>{look.label}</Badge>
-                {!isClient && (
+                {isClient ? (
+                  <ClientSignals filming={filming} />
+                ) : (
                   <>
                     <Crew filming={filming} />
                     <Signals filming={filming} nowMs={nowMs} />

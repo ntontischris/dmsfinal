@@ -48,7 +48,16 @@ const Ref = ({ list, id }: { list: ListName; id: string }) => (
   </>
 );
 
-function MoveButtons({ list, item }: { list: ListName; item: ListItem }) {
+// Το μήνυμα επιτυχίας της μετακίνησης ανεβαίνει στη λίστα, όπως στη σημερινή σελίδα· το τελευταίο αντικαθιστά το προηγούμενο.
+function MoveButtons({
+  list,
+  item,
+  notify,
+}: {
+  list: ListName;
+  item: ListItem;
+  notify: Notify;
+}) {
   return (
     <>
       {(["up", "down"] as const).map((direction) => (
@@ -58,7 +67,7 @@ function MoveButtons({ list, item }: { list: ListName; item: ListItem }) {
           submitLabel={direction === "up" ? "↑" : "↓"}
           ariaLabel={`${direction === "up" ? "Πάνω" : "Κάτω"}: ${item.label}`}
           className="o2-inline"
-          onDone={() => undefined}
+          onDone={(text) => notify("move", text)}
         >
           <Ref list={list} id={item.id} />
           <input type="hidden" name="direction" value={direction} />
@@ -218,7 +227,9 @@ function ItemRow({
       lead={
         <span className="o2-order">
           {index + 1}
-          {status !== "Αποσύρθηκε" && <MoveButtons list={list} item={item} />}
+          {status !== "Αποσύρθηκε" && (
+            <MoveButtons list={list} item={item} notify={notify} />
+          )}
         </span>
       }
       title={item.label}

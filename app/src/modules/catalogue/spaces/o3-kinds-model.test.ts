@@ -19,7 +19,7 @@ const kind = (overrides: Partial<ProvisionKind> = {}): ProvisionKind => ({
 
 describe("kindStatusOf", () => {
   it("should call an unused kind new", () => {
-    expect(kindStatusOf(kind(), 0)).toBe("Νέα");
+    expect(kindStatusOf(kind(), 0)).toBe("Νέο");
   });
 
   it("should call a used kind in use", () => {

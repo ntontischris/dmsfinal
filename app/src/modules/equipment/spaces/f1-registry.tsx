@@ -3,16 +3,18 @@
 import { useState } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Entity } from "@/spaces/kit/parts";
+import { Entity, ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 
-import { filterItems } from "../helpers";
+import { groupEquipmentUnits, groupLabel, matchesItemFilter } from "../helpers";
 import { STATUS_LABELS } from "../labels";
 import {
   EQUIPMENT_STATUSES,
   type EquipmentCategory,
   type EquipmentItemRow,
   type EquipmentStatus,
+  type RegistryRow,
+  type UnitGroup,
 } from "../types";
 import { F1Categories } from "./f1-categories";
 import { F1NewItem } from "./f1-new-item";
@@ -29,14 +31,76 @@ const ALL = "all";
 const isStatus = (value: string): value is EquipmentStatus =>
   EQUIPMENT_STATUSES.some((status) => status === value);
 
+const rowKey = (row: RegistryRow): string =>
+  row.kind === "item"
+    ? row.item.id
+    : (row.group.units[0]?.id ?? row.group.baseName);
+
+function ItemLine({ item }: { item: EquipmentItemRow }) {
+  return (
+    <tr>
+      <td data-label="Αντικείμενο">
+        <Entity
+          name={item.name}
+          href={hrefOf("F2", { id: item.id })}
+          sub={item.code ?? undefined}
+        />
+      </td>
+      <td data-label="Κατηγορία">
+        {item.categoryName}
+        {item.categoryRetired && <span className="muted"> (αποσυρμένη)</span>}
+      </td>
+      <td data-label="Κατάσταση">
+        <Badge tone={statusTone(item.status)}>
+          {STATUS_LABELS[item.status]}
+        </Badge>
+      </td>
+    </tr>
+  );
+}
+
+// Ομάδα μονάδων (όπως η σημερινή σελίδα): μία γραμμή με το πλήθος, που ανοίγει για κάθε μονάδα με την Κατάστασή της.
+function GroupLine({ group }: { group: UnitGroup }) {
+  return (
+    <tr>
+      <td colSpan={3} data-label="Μονάδες">
+        <details>
+          <summary>
+            <strong>{groupLabel(group)}</strong>{" "}
+            <span className="muted">{group.categoryName}</span>
+          </summary>
+          <RowList>
+            {group.shown.map((unit) => (
+              <ListRow
+                key={unit.id}
+                href={hrefOf("F2", { id: unit.id })}
+                title={unit.name}
+                sub={unit.code ?? undefined}
+                aside={
+                  <Badge tone={statusTone(unit.status)}>
+                    {STATUS_LABELS[unit.status]}
+                  </Badge>
+                }
+              />
+            ))}
+          </RowList>
+        </details>
+      </td>
+    </tr>
+  );
+}
+
 // Το μητρώο (prototype `f1-registry.tsx`) με τα πραγματικά αντικείμενα. Χωρίς φίλτρο Κατάστασης κρύβονται τα αποσυρμένα.
+// Οι μονάδες του ίδιου αντικειμένου («… #1», «… #2») ομαδοποιούνται, όπως στη σημερινή σελίδα.
 export function F1Registry({ canManage, items, categories }: F1RegistryProps) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>(ALL);
   const [status, setStatus] = useState<EquipmentStatus | typeof ALL>(ALL);
   const [isAdding, setIsAdding] = useState(false);
 
-  const visible = filterItems(items, { query, categoryId: category, status });
+  const visible = groupEquipmentUnits(items, (item) =>
+    matchesItemFilter(item, { query, categoryId: category, status }),
+  );
 
   return (
     <>
@@ -127,23 +191,13 @@ export function F1Registry({ canManage, items, categories }: F1RegistryProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {visible.map((item) => (
-                    <tr key={item.id}>
-                      <td data-label="Αντικείμενο">
-                        <Entity
-                          name={item.name}
-                          href={hrefOf("F2", { id: item.id })}
-                          sub={item.code ?? undefined}
-                        />
-                      </td>
-                      <td data-label="Κατηγορία">{item.categoryName}</td>
-                      <td data-label="Κατάσταση">
-                        <Badge tone={statusTone(item.status)}>
-                          {STATUS_LABELS[item.status]}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
+                  {visible.map((row) =>
+                    row.kind === "item" ? (
+                      <ItemLine key={rowKey(row)} item={row.item} />
+                    ) : (
+                      <GroupLine key={rowKey(row)} group={row.group} />
+                    ),
+                  )}
                 </tbody>
               </table>
             </div>

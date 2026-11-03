@@ -4,7 +4,9 @@ import { lookOf } from "@/components/shell/read-look";
 import { getViewer } from "@/modules/access";
 import { AuditHistoryLink } from "@/modules/audit";
 import {
+  ClientAgreementPage,
   SpacesAgreement,
+  SpacesClientAgreement,
   agreementCaps,
   getAgreement,
   listProvisionKinds,
@@ -28,15 +30,17 @@ export default async function AgreementPage({
 }: {
   params: Promise<{ agreementId: string }>;
 }) {
-  const viewer = await getViewer();
-  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
-  if ((await lookOf(viewer)) === "spaces")
-    return <SpacesAgreement agreementId={(await params).agreementId} />;
+  const [viewer, { agreementId }] = await Promise.all([getViewer(), params]);
+  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη έχει τη δική του όψη.
+  const look = await lookOf(viewer);
   const caps = agreementCaps(viewer);
-  if (!caps.canView) return <NoAccess viewer={viewer} />;
-
-  const { agreementId } = await params;
   const id = z.uuid().safeParse(agreementId);
+  if (caps.isClient && look === "spaces")
+    return <SpacesClientAgreement agreementId={agreementId} />;
+  if (caps.isClient)
+    return id.success ? <ClientAgreementPage agreementId={id.data} /> : <Missing />;
+  if (look === "spaces") return <SpacesAgreement agreementId={agreementId} />;
+  if (!caps.canView) return <NoAccess viewer={viewer} />;
   if (!id.success) return <Missing />;
 
   const [found, kinds] = await Promise.all([

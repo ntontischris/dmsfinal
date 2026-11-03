@@ -1,7 +1,9 @@
 // Καθαρά κομμάτια της σελίδας Γυρίσματος (prototype `screens/e3-model.tsx`, `e3-notes.ts`), πάνω στην κάρτα της βάσης.
 
 import type {
+  CrewMember,
   CrewResponse,
+  FilmingCard,
   FilmingState,
   ProvisionBalance,
 } from "../types";
@@ -63,3 +65,49 @@ export const balanceOf = (provision: ProvisionBalance): E3Balance => ({
   left: provision.balance,
   kindLabel: provision.kind.label,
 });
+
+export interface E3Reply {
+  version: number;
+  // Απάντησε στην τρέχουσα έκδοση του Δελτίου.
+  isAnswered: boolean;
+  canConfirm: boolean;
+  canDecline: boolean;
+}
+
+// Η απάντηση του μέλους στο E3, όπως στη σημερινή σελίδα: μόνο σε ανοιχτό Γύρισμα με εκδομένο Δελτίο. Ό,τι ήδη ισχύει
+// για την τρέχουσα έκδοση δεν ξαναστέλνεται.
+export const replyOf = (
+  member: CrewMember | undefined,
+  state: FilmingState,
+  sheetVersion: number | null,
+): E3Reply | null => {
+  if (!member || !isOpenState(state) || sheetVersion === null) return null;
+  const isAnswered = member.version === sheetVersion;
+  return {
+    version: sheetVersion,
+    isAnswered,
+    canConfirm: member.response !== "confirmed" || !isAnswered,
+    canDecline: member.response !== "declined" || !isAnswered,
+  };
+};
+
+export interface E3Note {
+  label: string;
+  text: string;
+}
+
+// Οι «Σημειώσεις» της σημερινής σελίδας: μόνο όσες υπάρχουν. Την εσωτερική τη δίνει η βάση μόνο όπου επιτρέπεται.
+export const notesOf = (
+  card: Pick<
+    FilmingCard,
+    "clientNote" | "internalNote" | "rejectedReason" | "cancelledReason"
+  >,
+): E3Note[] =>
+  [
+    { label: "Σημείωση Πελάτη", text: card.clientNote },
+    { label: "Εσωτερική σημείωση", text: card.internalNote },
+    { label: "Λόγος απόρριψης", text: card.rejectedReason },
+    { label: "Λόγος ακύρωσης", text: card.cancelledReason },
+  ].flatMap((note) =>
+    note.text ? [{ label: note.label, text: note.text }] : [],
+  );

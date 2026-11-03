@@ -17,7 +17,6 @@ import { LastDone } from "./e3-ui";
 interface E3SheetProps {
   filmingId: string;
   sheet: SheetView;
-  internalNote: string | null;
 }
 
 // Η λίστα λήψεων: με Δικαίωμα επεξεργασίας κάθε αλλαγή αποθηκεύεται αμέσως (όπως στο prototype)· αλλιώς της τελευταίας έκδοσης.
@@ -113,7 +112,7 @@ function ShotList({
 
 // Δελτίο γυρίσματος (prototype `screens/e3-sheet.tsx`): εκδόσεις, αποστολή/νέα έκδοση, shot list, σημειώσεις.
 // Όλα πάνω στα πραγματικά saveSheet / issueSheet· η βάση αποφασίζει ποιος επεξεργάζεται και ποιος εκδίδει.
-export function E3Sheet({ filmingId, sheet, internalNote }: E3SheetProps) {
+export function E3Sheet({ filmingId, sheet }: E3SheetProps) {
   const [shots, setShots] = useState<SheetShot[]>([...sheet.shots]);
   const [crewNote, setCrewNote] = useState(sheet.crewNote ?? "");
   const [change, setChange] = useState("");
@@ -218,20 +217,6 @@ export function E3Sheet({ filmingId, sheet, internalNote }: E3SheetProps) {
         <p>{shownNote ?? <span className="muted">Καμία.</span>}</p>
       )}
       <LastDone log={result ? [result.text] : []} tone={result?.tone ?? "ok"} />
-      <E3InternalNote note={internalNote} />
     </Panel>
-  );
-}
-
-// Η εσωτερική σημείωση: μόνο για την ομάδα (η βάση τη δίνει μόνο όπου επιτρέπεται).
-export function E3InternalNote({ note }: { note: string | null }) {
-  return (
-    <>
-      <h3>Εσωτερική σημείωση</h3>
-      <p>{note ?? <span className="muted">Καμία.</span>}</p>
-      <p className="muted">
-        Μόνο για την ομάδα. Ο πελάτης δεν βλέπει το Δελτίο ούτε τη σημείωση.
-      </p>
-    </>
   );
 }

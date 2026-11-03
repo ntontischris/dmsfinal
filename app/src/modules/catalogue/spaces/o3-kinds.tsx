@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 import { INITIAL_FORM_STATE, type FormState } from "@/lib/form-state";
+import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Panel } from "@/spaces/kit/panel";
@@ -29,7 +30,7 @@ import {
 import "./o3-kinds.css";
 
 // Είδη Παροχής της O3 στη νέα εμφάνιση (prototype `screens/o3-types.tsx`), με τις πραγματικές ενέργειες της κλασικής:
-// προσθήκη, επεξεργασία, σειρά ↑↓, Νέα → διαγραφή, Σε χρήση → απόσυρση, αποσυρμένο → επανενεργοποίηση (ADR 0015).
+// προσθήκη, επεξεργασία, σειρά ↑↓, Νέο → διαγραφή, Σε χρήση → απόσυρση, αποσυρμένο → επανενεργοποίηση (ADR 0015).
 
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
@@ -37,7 +38,7 @@ const SETTINGS_HREF = "/app/settings/agreements";
 const DELIVERABLES_HREF = "/app/settings/deliverables";
 
 const TONE: Readonly<Record<KindStatus, BadgeTone>> = {
-  Νέα: "waiting",
+  Νέο: "waiting",
   "Σε χρήση": "ok",
   Αποσύρθηκε: "faded",
 };
@@ -167,6 +168,8 @@ function KindForm({
   const { state, isPending, onSubmit, formRef } = useKeptForm(action, {
     resetOnSuccess: !kind,
   });
+  // Επεξεργασία: η «Αποθήκευση» ανάβει μόνο μετά από αλλαγή, όπως στην κλασική.
+  const isChanged = useFormChanged(formRef, state.notice ? state : undefined);
   return (
     <form ref={formRef} className="stack" onSubmit={onSubmit}>
       {kind && <input type="hidden" name="id" value={kind.id} />}
@@ -176,7 +179,7 @@ function KindForm({
           type="submit"
           className="button"
           data-primary="true"
-          disabled={isPending}
+          disabled={isPending || (kind !== undefined && !isChanged)}
         >
           {isPending ? `${submitLabel}…` : submitLabel}
         </button>
@@ -221,7 +224,7 @@ function StatusAction({
         label="Επανενεργοποίηση"
       />
     );
-  if (status === "Νέα")
+  if (status === "Νέο")
     return (
       <RowAction
         action={deleteKind}
@@ -278,7 +281,7 @@ function KindRow({
       }
       aside={
         <>
-          {status !== "Νέα" && <span className="part-sub">{uses} χρήσεις</span>}
+          {status !== "Νέο" && <span className="part-sub">{uses} χρήσεις</span>}
           <Badge tone={TONE[status]}>{status}</Badge>
           <button
             type="button"

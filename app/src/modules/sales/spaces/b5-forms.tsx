@@ -64,8 +64,12 @@ export function useDoneNotes() {
   const [notes, setNotes] = useState<readonly { id: string; text: string }[]>(
     [],
   );
+  // Ίδιο id → το νέο μήνυμα αντικαθιστά το παλιό (π.χ. διαδοχικές μετακινήσεις).
   const add = (id: string, text: string) =>
-    setNotes((current) => [...current, { id, text }]);
+    setNotes((current) => [
+      ...current.filter((note) => note.id !== id),
+      { id, text },
+    ]);
   const isDone = (id: string) => notes.some((note) => note.id === id);
   const view = notes.map((note) => (
     <p key={note.id} className="note" role="status">
