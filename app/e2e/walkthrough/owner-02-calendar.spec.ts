@@ -31,7 +31,8 @@ test("02 · το Ημερολόγιο έχει Επόμενα βήματα, Πρ
 });
 
 test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού», το βλέπει με το Είδος του και το σβήνει", async ({ page }) => {
-  const title = `Ραντεβού δοκιμής ${project()}`;
+  // Δικός του τίτλος σε κάθε προσπάθεια, χωρίς τη λέξη του Είδους, για να ελέγχεται χωριστά.
+  const title = `Συνάντηση δοκιμής ${project()} ${test.info().retry}`;
   await page.goto(`/app/calendar/blocked/new?date=${DAY}`);
   const titleBox = page.getByLabel("Τίτλος");
   // Οι τιμές της φόρμας ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
@@ -49,9 +50,9 @@ test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού», το β
   await expect(page).toHaveURL(/\/app\/calendar/);
 
   await page.goto(`/app/calendar?view=list&date=${DAY}`);
-  const item = page.getByRole("link", { name: new RegExp(title) });
+  const item = page.getByRole("link", { name: title, exact: true });
   await expect(item).toBeVisible();
-  await expect(page.locator(".a5-mark", { hasText: "Ραντεβού" }).first()).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ has: item })).toContainText("Ραντεβού");
 
   await item.click();
   await expect(page.getByLabel("Τίτλος")).toHaveValue(title);
@@ -63,5 +64,5 @@ test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού», το β
   await confirm.getByRole("button", { name: "Διαγραφή", exact: true }).click();
   await expect(page).toHaveURL(/\/app\/calendar/);
   await page.goto(`/app/calendar?view=list&date=${DAY}`);
-  await expect(page.getByRole("link", { name: new RegExp(title) })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: title, exact: true })).toHaveCount(0);
 });
