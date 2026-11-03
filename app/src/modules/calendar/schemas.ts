@@ -19,6 +19,8 @@ export const blockedFormSchema = z
   .object({
     id: optionalUuid,
     userId: optionalUuid,
+    // Το Είδος (Ρεπό, Ραντεβού…)· κενό = χωρίς Είδος. Η βάση ελέγχει ότι είναι ενεργό.
+    kindId: optionalUuid,
     day,
     untilDay: optionalDay,
     allDay: z.boolean(),
@@ -49,3 +51,14 @@ export const blockedDeleteSchema = z.object({
   id: z.uuid(),
   day: day,
 });
+
+// Είδη κλεισμένου χρόνου (Ρυθμίσεις › Γυρίσματα): ονομασία έως 40 χαρακτήρες, όπως στη βάση.
+const KIND_LABEL_LIMIT = 40;
+const KIND_LABEL_MESSAGE = `Γράψε ονομασία Είδους από 1 έως ${KIND_LABEL_LIMIT} χαρακτήρες`;
+
+export const kindFormSchema = z.object({
+  id: optionalUuid,
+  label: z.string().trim().min(1, KIND_LABEL_MESSAGE).max(KIND_LABEL_LIMIT, KIND_LABEL_MESSAGE),
+});
+
+export const kindIdSchema = z.object({ id: z.uuid("Το Είδος δεν βρέθηκε") });

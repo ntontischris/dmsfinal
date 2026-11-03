@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { BlockedTimeValues } from "../components/blocked-time-form";
-import { draftOf, formFieldsOf, isFullDay, validateDraft, type Draft } from "./a6-model";
+import {
+  conflictFieldsOf,
+  draftOf,
+  formFieldsOf,
+  isFullDay,
+  validateDraft,
+  type Draft,
+} from "./a6-model";
 
 const values = (overrides: Partial<BlockedTimeValues> = {}): BlockedTimeValues => ({
   day: "2026-11-03",
@@ -79,5 +86,24 @@ describe("draftOf and formFieldsOf", () => {
     expect(fields.userId).toBe("");
     expect(fields.untilDay).toBe("");
     expect(fields.allDay).toBe("");
+  });
+});
+
+describe("conflictFieldsOf (προειδοποίηση Συνεργείου)", () => {
+  it("should always send the person and never the title", () => {
+    expect(conflictFieldsOf(draft())).toEqual({
+      userId: "u-1",
+      day: "2026-11-03",
+      untilDay: "",
+      allDay: "",
+      from: "09:00",
+      to: "10:00",
+      title: "",
+    });
+  });
+
+  it("should not ask the database while the form has a mistake", () => {
+    expect(conflictFieldsOf(draft({ date: "0002-11-03" }))).toBeNull();
+    expect(conflictFieldsOf(draft({ from: "11:00", to: "10:00" }))).toBeNull();
   });
 });

@@ -20,6 +20,8 @@ const ENTRY_TONE: Record<EntryKind, string> = {
   filming: "border-primary/45 bg-primary/5",
   blocked: "border-border-strong bg-card",
   busy: "border-dashed border-border bg-muted/50 text-muted-foreground",
+  nextStep: "border-border bg-card",
+  deadline: "border-border bg-card",
 };
 
 export const shortDayLabel = (date: string): string =>

@@ -7,8 +7,12 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { blockedFormValues, convertHref } from "../blocked-form";
 import { calendarCaps } from "../caps";
-import { getBlockedTime, getCalendarView } from "../queries";
-import type { BlockedTime } from "../types";
+import {
+  getBlockedKinds,
+  getBlockedTime,
+  getCalendarView,
+} from "../queries";
+import type { BlockedKind, BlockedTime } from "../types";
 import { parseCalendarParams } from "../url-state";
 import { A6Delete } from "./a6-delete";
 import { A6Form } from "./a6-form";
@@ -54,8 +58,11 @@ export async function SpacesNewBlockedTime({ query }: { query: RawQuery }) {
     return <Denied />;
   const today = athensDate(new Date());
   const { date } = parseCalendarParams(query, today);
-  const view = await getCalendarView({ from: today, to: today });
-  if (!view.ok)
+  const [view, kinds] = await Promise.all([
+    getCalendarView({ from: today, to: today }),
+    getBlockedKinds(),
+  ]);
+  if (!view.ok || !kinds.ok)
     return (
       <div data-spaces>
         <ErrorNotice what="το Ημερολόγιο" />
@@ -80,7 +87,9 @@ export async function SpacesNewBlockedTime({ query }: { query: RawQuery }) {
           people={canPickPerson ? view.data.team : []}
           personName={viewer.team.name}
           canPickPerson={canPickPerson}
+          viewerId={viewer.userId}
           cancelHref={weekOf(date)}
+          kinds={kinds.data}
         />
       </div>
     </div>
@@ -101,13 +110,23 @@ function Convert({ time }: { time: BlockedTime }) {
   );
 }
 
-function Details({ time }: { time: BlockedTime }) {
+function Details({
+  time,
+  viewerId,
+  kinds,
+}: {
+  time: BlockedTime;
+  viewerId: string | null;
+  kinds: readonly BlockedKind[];
+}) {
   const day = athensDate(time.startsAt);
   const values = {
     ...blockedFormValues(time),
     userId: time.userId,
     title: time.title ?? "",
+    kindId: time.kindId ?? "",
   };
+  const label = time.title ?? time.kindLabel ?? "Κλεισμένος χρόνος";
   return (
     <div className="a6">
       <div className="toolbar">
@@ -116,6 +135,7 @@ function Details({ time }: { time: BlockedTime }) {
         </Link>
         <span className="muted grow">
           {time.userName ?? "Κλεισμένος χρόνος"} ·{" "}
+          {time.kindLabel && `${time.kindLabel} · `}
           {formatDateTime(time.startsAt)} – {formatDateTime(time.endsAt)}
         </span>
       </div>
@@ -126,7 +146,9 @@ function Details({ time }: { time: BlockedTime }) {
           people={[]}
           personName={time.userName}
           canPickPerson={false}
+          viewerId={viewerId}
           cancelHref={weekOf(day)}
+          kinds={kinds}
         />
       ) : (
         <StateNotice kind="empty" title="Μόνο ανάγνωση">
@@ -138,7 +160,7 @@ function Details({ time }: { time: BlockedTime }) {
         <A6Delete
           id={time.id}
           day={day}
-          label={time.title ?? "Κλεισμένος χρόνος"}
+          label={label}
         />
       )}
     </div>
@@ -157,8 +179,11 @@ export async function SpacesBlockedTime({ id }: { id: string | null }) {
     </div>
   );
   if (id === null) return missing;
-  const time = await getBlockedTime(id);
-  if (!time.ok)
+  const [time, kinds] = await Promise.all([
+    getBlockedTime(id),
+    getBlockedKinds(),
+  ]);
+  if (!time.ok || !kinds.ok)
     return (
       <div data-spaces>
         <ErrorNotice what="ο κλεισμένος χρόνος" />
@@ -167,7 +192,11 @@ export async function SpacesBlockedTime({ id }: { id: string | null }) {
   if (time.data === null) return missing;
   return (
     <div data-spaces>
-      <Details time={time.data} />
+      <Details
+        time={time.data}
+        viewerId={viewer.status === "signed-in" ? viewer.userId : null}
+        kinds={kinds.data}
+      />
     </div>
   );
 }

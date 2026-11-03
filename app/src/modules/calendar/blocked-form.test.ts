@@ -41,6 +41,8 @@ describe("blockedFormValues", () => {
     endsAt: "2026-10-12T09:00:00.000Z",
     allDay: false,
     title: null,
+    kindId: null,
+    kindLabel: null,
     canEdit: true,
     canConvert: false,
     ...overrides,

@@ -12,6 +12,8 @@ export interface Draft {
   to: string;
   allDay: boolean;
   label: string;
+  // Το Είδος· κενό = χωρίς Είδος («Κλεισμένος χρόνος»). Στέλνεται από το ίδιο το πεδίο (name="kindId").
+  kindId: string;
 }
 
 const DEFAULT_FROM = "09:00";
@@ -25,6 +27,7 @@ export const draftOf = (values: BlockedTimeValues): Draft => ({
   to: values.allDay ? DEFAULT_TO : values.to,
   allDay: values.allDay,
   label: values.title,
+  kindId: values.kindId ?? "",
 });
 
 // Το πεδίο ημερομηνίας δίνει "" ή χρονιά όπως 0002 όσο γράφεις: ό,τι δεν είναι πλήρης μέρα αγνοείται.
@@ -72,3 +75,12 @@ export const formFieldsOf = (
   to: draft.allDay ? "" : draft.to,
   title: draft.label,
 });
+
+// Τα πεδία της προειδοποίησης «στο Συνεργείο»: πάντα με το άτομο, χωρίς τίτλο (δεν αλλάζει την επικάλυψη). Όσο η φόρμα
+// έχει λάθος, null: δεν ρωτάμε τη βάση για μισές ημερομηνίες.
+export const conflictFieldsOf = (
+  draft: Draft,
+): Readonly<Record<string, string>> | null =>
+  validateDraft(draft) === null
+    ? { ...formFieldsOf(draft, true), title: "" }
+    : null;

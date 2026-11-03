@@ -3,6 +3,7 @@ import Link from "next/link";
 import { hrefOf } from "@/spaces/data/screens";
 
 import { CALENDAR_VIEWS, rangeOf, shiftAnchor, titleOf } from "../date-range";
+import { personLabel, type PersonOption } from "../person-filter";
 import { calendarHref, type CalendarParams } from "../url-state";
 import {
   filtersSummary,
@@ -102,6 +103,27 @@ export function A5Nav({
 interface A5FiltersProps {
   params: CalendarParams;
   options: readonly LayerOption[];
+  // Κενό για όσους βλέπουν μόνο τον εαυτό τους: τότε δεν φαίνεται φίλτρο ατόμου.
+  people: readonly PersonOption[];
+}
+
+// Το φίλτρο ατόμου του prototype (`screens/a5-filters.tsx` PersonFilter): «Εγώ», «Όλοι», ένα μέλος.
+function PersonFilter({ params, people }: A5FiltersProps) {
+  return (
+    <div className="a5-filter">
+      <span className="muted">Άτομο:</span>
+      {people.map((option) => (
+        <Link
+          key={option.id ?? "all"}
+          className="a5-chip"
+          href={calendarHref(params, { person: option.id })}
+          aria-current={params.person === option.id}
+        >
+          {option.label}
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 function LayerFilter({ params, options }: A5FiltersProps) {
@@ -131,14 +153,19 @@ function LayerFilter({ params, options }: A5FiltersProps) {
 
 // Τα φίλτρα σε κλειστό μενού, για να φαίνονται πρώτα οι μέρες. Μόνο για την ομάδα.
 export function A5Filters(props: A5FiltersProps) {
+  const hasPeople = props.people.length > 0;
+  const person = hasPeople
+    ? personLabel(props.people, props.params.person)
+    : null;
   return (
     <details className="a5-filters">
       <summary>
         Φίλτρα{" "}
         <span className="muted">
-          ({filtersSummary(props.options, props.params.layers)})
+          ({filtersSummary(props.options, props.params.layers, person)})
         </span>
       </summary>
+      {hasPeople && <PersonFilter {...props} />}
       <LayerFilter {...props} />
     </details>
   );

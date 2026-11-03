@@ -1,4 +1,4 @@
-import { athensDate, athensTime } from "@/modules/filming";
+import { athensDate, athensTime, athensToIso } from "@/modules/filming";
 
 import { addDays, daysBetween } from "./date-range";
 import type { CalendarData } from "./types";
@@ -7,7 +7,7 @@ import type { LayerKey } from "./url-state";
 // Το μοντέλο της οθόνης: για κάθε μέρα της περιόδου, η κατάστασή της και τα στοιχεία της, κατά επίπεδο.
 // Καθαρές συναρτήσεις· τα links και οι ετικέτες μπαίνουν εδώ για να ελέγχονται με τεστ.
 
-export type EntryKind = "filming" | "blocked" | "busy";
+export type EntryKind = "filming" | "blocked" | "busy" | "nextStep" | "deadline";
 
 export interface CalendarEntry {
   key: string;
@@ -16,6 +16,8 @@ export interface CalendarEntry {
   time: string;
   title: string;
   detail: string | null;
+  // Η σήμανση του Είδους κλεισμένου χρόνου (π.χ. «Ραντεβού»)· null όταν δεν έχει.
+  mark: string | null;
   isPending: boolean;
   href: string | null;
 }
@@ -62,6 +64,7 @@ function filmingPlaced(data: CalendarData): PlacedEntry[] {
       time: timeSpan(filming.startsAt, filmingEnd(filming.startsAt, filming.hours)),
       title: filming.title ?? "Γύρισμα",
       detail: null,
+      mark: null,
       isPending: filming.state === "pending",
       href: `/app/filming/${filming.id}`,
     },
@@ -77,8 +80,9 @@ function blockedPlaced(data: CalendarData): PlacedEntry[] {
       kind: "blocked",
       startsAt: block.startsAt,
       time: block.allDay ? ALL_DAY_LABEL : timeSpan(block.startsAt, block.endsAt),
-      title: block.title ?? "Κλεισμένος χρόνος",
+      title: block.title ?? block.kindLabel ?? "Κλεισμένος χρόνος",
       detail: block.isMine ? null : block.userName,
+      mark: block.kindLabel,
       isPending: false,
       href: block.isMine || data.canBlockOthers ? `/app/calendar/blocked/${block.id}` : null,
     },
@@ -96,8 +100,50 @@ function busyPlaced(data: CalendarData): PlacedEntry[] {
       time: timeSpan(busy.startsAt, busy.endsAt),
       title: "Απασχολημένος",
       detail: busy.userName,
+      mark: null,
       isPending: false,
       href: null,
+    },
+  }));
+}
+
+const joined = (parts: readonly (string | null)[]): string | null =>
+  parts.filter((part) => part !== null && part !== "").join(" · ") || null;
+
+// Επόμενο βήμα Ευκαιρίας: χωρίς ώρα, ανοίγει την Ευκαιρία (B4).
+function nextStepPlaced(data: CalendarData): PlacedEntry[] {
+  return data.nextSteps.map((step) => ({
+    layer: "nextSteps",
+    days: [step.day],
+    entry: {
+      key: `next-${step.id}`,
+      kind: "nextStep",
+      startsAt: athensToIso(step.day, "00:00"),
+      time: "",
+      title: `Επόμενο βήμα: ${step.step}`,
+      detail: joined([step.clientName, step.opportunityTitle, step.isMine ? null : step.managerName]),
+      mark: null,
+      isPending: false,
+      href: `/app/pipeline/${step.id}`,
+    },
+  }));
+}
+
+// Προθεσμία Παραδοτέου: όλη η μέρα, ανοίγει το Παραδοτέο (H2).
+function deadlinePlaced(data: CalendarData): PlacedEntry[] {
+  return data.deadlines.map((deadline) => ({
+    layer: "deadlines",
+    days: [deadline.day],
+    entry: {
+      key: `deadline-${deadline.id}`,
+      kind: "deadline",
+      startsAt: athensToIso(deadline.day, "00:00"),
+      time: ALL_DAY_LABEL,
+      title: `Προθεσμία: ${deadline.title}`,
+      detail: joined([deadline.clientName, deadline.isMine ? null : deadline.assigneeName]),
+      mark: null,
+      isPending: false,
+      href: `/app/deliverables/${deadline.id}`,
     },
   }));
 }
@@ -107,7 +153,13 @@ function entriesByDay(
   data: CalendarData,
   layers: readonly LayerKey[],
 ): Map<string, CalendarEntry[]> {
-  const placed = [...filmingPlaced(data), ...blockedPlaced(data), ...busyPlaced(data)];
+  const placed = [
+    ...filmingPlaced(data),
+    ...blockedPlaced(data),
+    ...nextStepPlaced(data),
+    ...deadlinePlaced(data),
+    ...busyPlaced(data),
+  ];
   const byDay = new Map<string, CalendarEntry[]>();
   for (const item of placed.filter((candidate) => layers.includes(candidate.layer))) {
     for (const day of item.days) byDay.set(day, [...(byDay.get(day) ?? []), item.entry]);

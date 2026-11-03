@@ -1,11 +1,18 @@
 // A5 (νέα εμφάνιση): οι πραγματικές μέρες του Ημερολογίου (buildCalendarDays) στα στοιχεία του prototype (`screens/a5-*`).
-// Καθαρές συναρτήσεις. Ό,τι δεν έχει πηγή στη βάση (προθεσμίες, φόρτος ανά άτομο) δεν εμφανίζεται.
+// Καθαρές συναρτήσεις. Ό,τι δεν έχει πηγή στη βάση (φόρτος ανά άτομο) δεν εμφανίζεται.
 
 import type { CalendarDay } from "../calendar-days";
 import { dayStatusLabel } from "../labels";
 import type { LayerKey } from "../url-state";
 
-export type A5Kind = "filming" | "blocked" | "busy" | "closed" | "day";
+export type A5Kind =
+  | "filming"
+  | "blocked"
+  | "busy"
+  | "nextStep"
+  | "deadline"
+  | "closed"
+  | "day";
 
 export interface A5Item {
   id: string;
@@ -15,6 +22,8 @@ export interface A5Item {
   to: string | null;
   title: string;
   detail: string | null;
+  // Το Είδος κλεισμένου χρόνου (π.χ. «Ραντεβού»), ως σήμανση δίπλα στον τίτλο· αλλιώς null.
+  mark: string | null;
   // «αναμένει έγκριση» για Γύρισμα που περιμένει, η κατάσταση της μέρας για τον Πελάτη· αλλιώς null.
   status: string | null;
   href: string | null;
@@ -62,6 +71,7 @@ const dayItemOf = (
     to: null,
     title: label,
     detail: null,
+    mark: null,
     status: isTeam ? null : label.toLocaleLowerCase("el"),
     href:
       !isTeam && day.status === "free" && canBook
@@ -84,6 +94,7 @@ export const a5ItemsOf = (
       ...spanOf(entry.time),
       title: entry.title,
       detail: entry.detail,
+      mark: entry.mark,
       status: entry.isPending ? PENDING_STATUS : null,
       href: entry.href,
     }));
@@ -116,14 +127,28 @@ export interface LayerOption {
 const LAYER_LABELS: Readonly<Record<LayerKey, string>> = {
   filmings: "Γυρίσματα",
   blocked: "Ρεπό, άδειες",
+  nextSteps: "Επόμενα βήματα",
+  deadlines: "Προθεσμίες",
   busy: "Ομάδα",
 };
 
-// Το «Ομάδα» (απασχολημένος) φαίνεται μόνο όταν υπάρχει κάτι να δείξει, όπως στη σημερινή οθόνη.
-export const layerOptions = (hasBusy: boolean): LayerOption[] =>
-  (hasBusy
-    ? (["filmings", "blocked", "busy"] as const)
-    : (["filmings", "blocked"] as const)
+export interface LayerAccess {
+  // Βλέπει Ευκαιρίες (Πελάτες και Πωλήσεις) / Παραδοτέα· αλλιώς η στρώση θα ήταν πάντα άδεια.
+  seesNextSteps: boolean;
+  seesDeadlines: boolean;
+  // Το «Ομάδα» (απασχολημένος) φαίνεται μόνο όταν υπάρχει κάτι να δείξει, όπως στη σημερινή οθόνη.
+  hasBusy: boolean;
+}
+
+export const layerOptions = (access: LayerAccess): LayerOption[] =>
+  (
+    [
+      "filmings",
+      "blocked",
+      ...(access.seesNextSteps ? (["nextSteps"] as const) : []),
+      ...(access.seesDeadlines ? (["deadlines"] as const) : []),
+      ...(access.hasBusy ? (["busy"] as const) : []),
+    ] as const
   ).map((key) => ({ key, label: LAYER_LABELS[key] }));
 
 export const toggledLayers = (
@@ -134,13 +159,15 @@ export const toggledLayers = (
     ? active.filter((layer) => layer !== key)
     : [...active, key];
 
-// Η γραμμή του κλειστού μενού φίλτρων: «όλα» ή «N κρυμμένα».
+// Η γραμμή του κλειστού μενού φίλτρων: το άτομο (αν υπάρχει φίλτρο ατόμου) και «όλα» ή «N κρυμμένα».
 export const filtersSummary = (
   options: readonly LayerOption[],
   active: readonly LayerKey[],
+  person: string | null = null,
 ): string => {
   const hidden = options.filter(
     (option) => !active.includes(option.key),
   ).length;
-  return hidden === 0 ? "όλα" : `${hidden} κρυμμένα`;
+  const layers = hidden === 0 ? "όλα" : `${hidden} κρυμμένα`;
+  return person ? `${person} · ${layers}` : layers;
 };

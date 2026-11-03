@@ -9,8 +9,16 @@ describe("parseCalendarParams", () => {
     expect(parseCalendarParams({}, TODAY)).toEqual({
       view: "week",
       date: TODAY,
-      layers: ["filmings", "blocked", "busy"],
+      layers: ["filmings", "blocked", "nextSteps", "deadlines", "busy"],
+      person: null,
     });
+  });
+
+  it("should keep the person as «me» or a member id and drop anything else", () => {
+    const member = "0f8fad5b-d9cb-469f-a165-70867728950e";
+    expect(parseCalendarParams({ person: "me" }, TODAY).person).toBe("me");
+    expect(parseCalendarParams({ person: member }, TODAY).person).toBe(member);
+    expect(parseCalendarParams({ person: "Νίκος" }, TODAY).person).toBeNull();
   });
 
   it("should fall back to the defaults when the view or the day is not valid", () => {
@@ -36,9 +44,16 @@ describe("parseCalendarParams", () => {
 
 describe("calendarHref", () => {
   it("should write the view, the day and the layers", () => {
-    const params = { view: "week" as const, date: TODAY, layers: ["filmings" as const] };
+    const params = { view: "week" as const, date: TODAY, layers: ["filmings" as const], person: null };
     expect(calendarHref(params, { view: "list" })).toBe(
       "/app/calendar?view=list&date=2026-10-11&layers=filmings",
+    );
+  });
+
+  it("should write the person only when one is picked", () => {
+    const params = { view: "week" as const, date: TODAY, layers: ["filmings" as const], person: null };
+    expect(calendarHref(params, { person: "me" })).toBe(
+      "/app/calendar?view=week&date=2026-10-11&layers=filmings&person=me",
     );
   });
 });

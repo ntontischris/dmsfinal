@@ -66,7 +66,12 @@ export default async function CalendarPage({
     params.layers,
   );
   const isEmpty =
-    data.filmings.length + data.blocked.length + data.busy.length === 0;
+    data.filmings.length +
+      data.blocked.length +
+      data.busy.length +
+      data.nextSteps.length +
+      data.deadlines.length ===
+    0;
 
   return (
     <>
@@ -118,11 +123,15 @@ export default async function CalendarPage({
   );
 }
 
-// Το «Ομάδα» (απασχολημένος) φαίνεται μόνο όταν υπάρχει κάτι να δείξει.
+// Το «Ομάδα» (απασχολημένος), τα Επόμενα βήματα και οι Προθεσμίες φαίνονται μόνο όταν υπάρχει κάτι να δείξουν.
 function availableLayers(data: CalendarData): readonly LayerKey[] {
-  return data.busy.length > 0
-    ? ["filmings", "blocked", "busy"]
-    : ["filmings", "blocked"];
+  return [
+    "filmings",
+    "blocked",
+    ...(data.nextSteps.length > 0 ? (["nextSteps"] as const) : []),
+    ...(data.deadlines.length > 0 ? (["deadlines"] as const) : []),
+    ...(data.busy.length > 0 ? (["busy"] as const) : []),
+  ];
 }
 
 const createdLabel = (status: CalendarLinkStatus | null): string | null =>
