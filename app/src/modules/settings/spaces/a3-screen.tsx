@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import {
   getViewer,
+  isOwner,
   listClientUsers,
   listMemberships,
   listMyRoleNames,
@@ -25,6 +26,8 @@ import "./a3.css";
 
 export const PROFILE_HREF = "/app/settings/profile";
 export const SWITCH_CLIENT_HREF = "/app/settings/switch-client";
+// Τους Ρόλους τους αλλάζει μόνο ο Ιδιοκτήτης (N4, nav.ts «owner»).
+const ROLES_HREF = "/app/team/roles";
 
 type SignedIn = Extract<Viewer, { status: "signed-in" }>;
 
@@ -106,6 +109,7 @@ export async function SpacesProfile() {
       </div>
     );
   const isClient = viewer.team === null;
+  const canManageRoles = isOwner(viewer);
   const [part, link] = await Promise.all([
     isClient ? clientPart(viewer) : teamPart(viewer),
     getLinkStatus(),
@@ -139,10 +143,16 @@ export async function SpacesProfile() {
       </Panel>
       <Panel label="Οι Ρόλοι μου">
         <p>{part.roles.join(", ") || "—"}</p>
-        <p className="muted">
-          Τους Ρόλους δεν τους αλλάζεις εσύ. Αν θες αλλαγή, ζήτησέ την από τη
-          Διαχείριση.
-        </p>
+        {canManageRoles ? (
+          <p>
+            <Link href={ROLES_HREF}>Ρόλοι και Δικαιώματα</Link>
+          </p>
+        ) : (
+          <p className="muted">
+            Τους Ρόλους δεν τους αλλάζεις εσύ. Αν θες αλλαγή, ζήτησέ την από τη
+            Διαχείριση.
+          </p>
+        )}
       </Panel>
       {isClient && part.memberships.length > 0 && (
         <Panel label="Οι Πελάτες μου" isFlush>

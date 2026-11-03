@@ -78,25 +78,29 @@ export function Customize({
                   )}
                 </span>
                 <span className="btn-row">
-                  {isShown && index > 0 && (
-                    <button
-                      type="button"
-                      className="button"
-                      onClick={() => setShown(moved(shown, card.id, -1))}
-                      aria-label={`${card.title} πιο πάνω`}
-                    >
-                      ↑
-                    </button>
-                  )}
-                  {isShown && index >= 0 && index < movable.length - 1 && (
-                    <button
-                      type="button"
-                      className="button"
-                      onClick={() => setShown(moved(shown, card.id, 1))}
-                      aria-label={`${card.title} πιο κάτω`}
-                    >
-                      ↓
-                    </button>
+                  {isMovable(card) ? (
+                    <>
+                      <button
+                        type="button"
+                        className="button"
+                        disabled={!isShown || index <= 0}
+                        onClick={() => setShown(moved(shown, card.id, -1))}
+                        aria-label={`${card.title} πιο πάνω`}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="button"
+                        disabled={!isShown || index >= movable.length - 1}
+                        onClick={() => setShown(moved(shown, card.id, 1))}
+                        aria-label={`${card.title} πιο κάτω`}
+                      >
+                        ↓
+                      </button>
+                    </>
+                  ) : (
+                    <span className="muted">πάντα πρώτη</span>
                   )}
                   <button
                     type="button"

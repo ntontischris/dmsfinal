@@ -9,10 +9,12 @@ interface BuiltCard {
 }
 
 export interface Zones<T extends BuiltCard> {
+  // Η Υγεία όταν δεν καίει: πάντα ορατή, πάνω από τις ζώνες (BP/08 «Σήμερα» #4).
+  status: readonly T[];
   urgent: readonly T[];
   waiting: readonly T[];
   info: readonly T[];
-  // Τεχνικές κάρτες χωρίς πρόβλημα (Υγεία, Google): κλειστές στο «Περισσότερα».
+  // Τεχνικές κάρτες χωρίς πρόβλημα (Διαγραφές Google): κλειστές στο «Περισσότερα».
   more: readonly T[];
 }
 
@@ -21,6 +23,7 @@ const isRed = ({ card, content }: BuiltCard): boolean =>
 
 const zoneOf = (item: BuiltCard): keyof Zones<BuiltCard> => {
   if (isRed(item)) return "urgent";
+  if (item.card.kind === "status") return "status";
   if (item.card.isTechnical) return "more";
   return item.card.kind === "action" ? "waiting" : "info";
 };
@@ -63,6 +66,7 @@ export function zonesOf<T extends BuiltCard>(items: readonly T[]): Zones<T> {
   const pick = (zone: keyof Zones<T>) =>
     items.filter((item) => zoneOf(item) === zone);
   return {
+    status: pick("status"),
     urgent: pick("urgent"),
     waiting: pick("waiting"),
     info: pick("info"),
