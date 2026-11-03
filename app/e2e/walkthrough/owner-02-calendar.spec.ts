@@ -36,7 +36,7 @@ test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού», το β
   const titleBox = page.getByLabel("Τίτλος");
   // Οι τιμές της φόρμας ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
   await expect(async () => {
-    await page.getByLabel("Είδος").selectOption({ label: "Ραντεβού" });
+    await page.locator('select[name="kindId"]').selectOption({ label: "Ραντεβού" });
     await page.getByLabel("Μερικές ώρες (π.χ. γιατρός)").check();
     await page.getByLabel("Μέρα", { exact: true }).fill(DAY);
     await page.getByLabel("Από", { exact: true }).fill("10:00");
