@@ -50,15 +50,18 @@ insert into public.filmings (id, production_id, starts_at, hours, origin, state)
   ('00000000-0000-0000-0000-0000000000b2', '00000000-0000-0000-0000-0000000000c1', '2027-01-05 15:00+02', 2, 'team', 'pending'),
   ('00000000-0000-0000-0000-0000000000b4', '00000000-0000-0000-0000-0000000000c1', '2027-01-05 18:00+02', 2, 'team', 'scheduled'),
   ('00000000-0000-0000-0000-0000000000b5', '00000000-0000-0000-0000-0000000000c1', '2027-01-06 09:00+02', 2, 'team', 'scheduled');
-insert into public.filmings (id, production_id, starts_at, hours, origin, state, cancelled_at, cancelled_side, cancelled_reason)
-values ('00000000-0000-0000-0000-0000000000b3', '00000000-0000-0000-0000-0000000000c1', '2027-01-05 12:00+02', 2, 'team',
-        'cancelled', now(), 'team', 'Δοκιμή');
+-- Το b3 ακυρώνεται αφού μπει το Συνεργείο του: σε κλειστό Γύρισμα η βάση δεν δέχεται αλλαγές.
+insert into public.filmings (id, production_id, starts_at, hours, origin, state) values
+  ('00000000-0000-0000-0000-0000000000b3', '00000000-0000-0000-0000-0000000000c1', '2027-01-05 12:00+02', 2, 'team', 'scheduled');
 insert into public.filming_crew (filming_id, user_id, response, reason, responded_at) values
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a2', 'pending', null, null),
   ('00000000-0000-0000-0000-0000000000b2', '00000000-0000-0000-0000-0000000000a2', 'confirmed', null, now()),
   ('00000000-0000-0000-0000-0000000000b3', '00000000-0000-0000-0000-0000000000a2', 'pending', null, null),
   ('00000000-0000-0000-0000-0000000000b4', '00000000-0000-0000-0000-0000000000a2', 'declined', 'Δοκιμή', now()),
   ('00000000-0000-0000-0000-0000000000b5', '00000000-0000-0000-0000-0000000000a3', 'pending', null, null);
+update public.filmings
+   set state = 'cancelled', cancelled_at = now(), cancelled_side = 'team', cancelled_reason = 'Δοκιμή'
+ where id = '00000000-0000-0000-0000-0000000000b3';
 
 -- ───────────── Άρνηση ─────────────
 set local role anon;
