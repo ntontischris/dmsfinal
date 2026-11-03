@@ -17,7 +17,7 @@ test.beforeEach(async ({ context, page }) => {
 test("02 · οι Ρυθμίσεις έχουν τα Είδη κλεισμένου χρόνου", async ({ page }) => {
   await page.goto("/app/settings/filming?part=calendar");
   for (const kind of ["Ρεπό", "Άδεια", "Ραντεβού", "Τηλεφώνημα", "Άλλο"])
-    await expect(page.getByLabel(`Νέα ονομασία: ${kind}`, { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: `Μετονομασία: ${kind}`, exact: true })).toBeVisible();
 });
 
 test("02 · το Ημερολόγιο έχει Επόμενα βήματα, Προθεσμίες και φίλτρο ατόμου", async ({ page }) => {
