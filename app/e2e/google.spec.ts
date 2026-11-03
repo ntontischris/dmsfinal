@@ -38,10 +38,13 @@ test("Ρυθμίσεις › Ενσωματώσεις δείχνει ότι λε
   await shot(page, "google-integrations");
 });
 
-// Η φόρμα ενεργοποιεί το κουμπί μόνο μετά από αλλαγή· μια επιλογή πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγίνεται.
+// Το κουμπί φαίνεται μόνο μετά από αλλαγή· μια επιλογή πριν ζωντανέψει η σελίδα χάνεται. Στην επανάληψη
+// περνάμε πρώτα από την άλλη τιμή, αλλιώς η ίδια τιμή ξανά δεν μετρά ως αλλαγή.
 async function chooseAndSave(page: Page, value: string) {
   const save = page.getByRole("button", { name: "Αποθήκευση Κανόνων Google" });
+  const other = value === "none" ? "blocked" : "none";
   await expect(async () => {
+    await newEventSelect(page).selectOption(other);
     await newEventSelect(page).selectOption(value);
     await expect(save).toBeEnabled({ timeout: 1_000 });
   }).toPass();
