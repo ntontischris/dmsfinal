@@ -46,9 +46,10 @@ import {
   hoursLabel,
   notesOf,
   replyOf,
+  responseTone,
 } from "./e3-model";
 import { E3Reply } from "./e3-reply";
-import { StatusBadge, responseTone } from "./e3-ui";
+import { StatusBadge } from "./e3-ui";
 
 import "./e.css";
 import "./e3.css";

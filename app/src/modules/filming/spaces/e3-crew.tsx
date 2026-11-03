@@ -11,7 +11,8 @@ import type { CrewMember, CrewTemplate, FilmingCard, NamedRef } from "../types";
 import { countLabel } from "./e1-format";
 import { RESPONSE_WORDS, emptyCrewNote, isOpenState } from "./e3-model";
 import { useRun } from "./e3-run";
-import { LastDone, Warning, responseTone } from "./e3-ui";
+import { responseTone } from "./e3-model";
+import { LastDone, Warning } from "./e3-ui";
 
 // Το Συνεργείο του Γυρίσματος (prototype `screens/e3-crew.tsx`). Η βάση ορίζει το Συνεργείο ολόκληρο (filming_crew_set)·
 // «Προσθήκη» και «Αφαίρεση» στέλνουν τη νέα λίστα. Την απάντηση τη γράφει μόνο το ίδιο το μέλος (E6).

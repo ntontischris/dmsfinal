@@ -24,14 +24,6 @@ export function StatusBadge({ look }: { look: StatusLook }) {
   return <Badge tone={LOOK_TONE[look.tone]}>{look.label}</Badge>;
 }
 
-// Τόνος κατάστασης απάντησης Συνεργείου.
-export const responseTone = (response: string): BadgeTone | undefined =>
-  response === "επιβεβαιώνω"
-    ? "strong"
-    : response === "δεν μπορώ"
-      ? "attention"
-      : "waiting";
-
 interface ReasonFormProps {
   label: string;
   confirmLabel: string;
