@@ -59,6 +59,9 @@ function ZonedCards({
   const urgent = splitUrgent(zones.urgent);
   return (
     <>
+      {zones.status.length > 0 && (
+        <div className="a1-grid">{zones.status.map(renderCard)}</div>
+      )}
       {zones.urgent.length > 0 && (
         <section className="a1-zone" data-zone="urgent">
           <h2 className="a1-zone-title">{ZONE_TITLES.urgent}</h2>
@@ -109,7 +112,13 @@ function ZonedCards({
 // Η σειρά που φαίνονται στη σελίδα, ώστε να μένει η πρώτη εμφάνιση κάθε στοιχείου.
 const zonesInOrder = (items: readonly Built[]): readonly Built[] => {
   const zones = zonesOf(items);
-  return [...zones.urgent, ...zones.waiting, ...zones.info, ...zones.more];
+  return [
+    ...zones.status,
+    ...zones.urgent,
+    ...zones.waiting,
+    ...zones.info,
+    ...zones.more,
+  ];
 };
 
 function Hello({

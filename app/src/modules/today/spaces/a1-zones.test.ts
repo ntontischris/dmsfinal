@@ -42,7 +42,8 @@ test("οι τεχνικές κάρτες χωρίς πρόβλημα πάνε σ
     built("google", "action", [calm], { isTechnical: true }),
   ]);
   expect(ids(zones.more)).toEqual(["google"]);
-  expect(ids(zones.info)).toEqual(["health"]);
+  expect(ids(zones.status)).toEqual(["health"]);
+  expect(zones.info).toEqual([]);
 });
 
 test("τεχνική κάρτα με πρόβλημα μένει στα επείγοντα", () => {

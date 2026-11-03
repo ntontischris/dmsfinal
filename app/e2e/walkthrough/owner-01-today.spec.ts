@@ -54,16 +54,19 @@ test("01 · στο Προφίλ ο Ιδιοκτήτης έχει σύνδεσμ�
 
 test("01 · το «Νέο» και η Αναζήτηση ανοίγουν από τη Σήμερα", async ({ page }) => {
   await signIn(page, OWNER);
-  const newMenu = page.getByText("Νέο", { exact: true }).first();
+  const newMenu = page.getByRole("button", { name: "Νέο", exact: true });
+  const newFilming = page.getByRole("link", { name: "Νέο Γύρισμα" });
+  // Πάτημα πριν ζωντανέψει η σελίδα χάνεται· ξαναπατάμε μόνο όσο το μενού μένει κλειστό.
   await expect(async () => {
-    await newMenu.click();
-    await expect(page.getByRole("link", { name: "Νέο Γύρισμα" })).toBeVisible({ timeout: 1_000 });
+    if (!(await newFilming.isVisible())) await newMenu.click();
+    await expect(newFilming).toBeVisible({ timeout: 1_000 });
   }).toPass();
   await expect(page.getByRole("link", { name: "Καταχώρηση Τιμολογίου" })).toBeVisible();
 
   await page.keyboard.press("Escape");
+  const searchBox = page.getByLabel("Αναζήτηση", { exact: true });
   await expect(async () => {
-    await page.getByRole("button", { name: "Αναζήτηση (Ctrl+K)" }).click();
-    await expect(page.getByLabel("Αναζήτηση", { exact: true })).toBeVisible({ timeout: 1_000 });
+    if (!(await searchBox.isVisible())) await page.getByRole("button", { name: "Αναζήτηση (Ctrl+K)" }).click();
+    await expect(searchBox).toBeVisible({ timeout: 1_000 });
   }).toPass();
 });
