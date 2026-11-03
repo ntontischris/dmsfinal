@@ -41,6 +41,8 @@ const data = (overrides: Partial<CalendarData> = {}): CalendarData => ({
       isMine: true,
       kindId: null,
       kindLabel: null,
+      kindColor: null,
+      kindIcon: null,
     },
     {
       id: "b-u2",
@@ -52,6 +54,8 @@ const data = (overrides: Partial<CalendarData> = {}): CalendarData => ({
       isMine: false,
       kindId: null,
       kindLabel: null,
+      kindColor: null,
+      kindIcon: null,
     },
   ],
   busy: [{ userId: "u2", userName: "Άννα", ...SPAN }],

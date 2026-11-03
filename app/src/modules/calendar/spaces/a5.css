@@ -98,3 +98,36 @@
 & .a5-item[data-kind='nextStep'] .a5-title { font-weight: 400; }
 & .a5-item[data-kind='nextStep'] .a5-title::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-inline-end: 0.4rem; border-radius: 50%; background: var(--color-accent); vertical-align: middle; }
 & .a5-mark { padding: 0 var(--space-2); border: 1px solid var(--color-border); border-radius: 999px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); } }
+
+[data-look='spaces'] {
+/* Σχέδιο «3B» (owner 02): ο κλεισμένος χρόνος με Είδος γεμάτος στο χρώμα του Είδους (--tone από το data-tone, kind-tone.css),
+   τα Γυρίσματα στο χρώμα έμφασης, τα Επόμενα βήματα και οι Προθεσμίες με διακεκομμένο περίγραμμα. Χωρίς Είδος και το
+   «Απασχολημένος» μένουν ουδέτερα. Το εικονίδιο μπαίνει μπροστά από τον τίτλο. Μόνο tokens. */
+& .a5-icon { margin-inline-end: 0.3rem; font-weight: 400; }
+& .a5-item[data-kind='filming'] { --tone: var(--color-accent); }
+& .a5-item[data-kind='nextStep'] { --tone: var(--kind-pink); }
+& .a5-item[data-kind='deadline'] { --tone: var(--kind-red); }
+& .a5-item:is([data-kind='filming'], [data-kind='blocked'][data-tone]) { background: color-mix(in srgb, var(--tone) 22%, var(--color-surface)); border: 1px solid color-mix(in srgb, var(--tone) 55%, transparent); }
+& .a5-item[data-kind='filming'][data-pending='true'] { border-style: dashed; }
+& .a5-item:is([data-kind='nextStep'], [data-kind='deadline']) { background: transparent; border: 1.5px dashed var(--tone); padding: var(--space-1) var(--space-2); }
+& .a5-item:is([data-kind='nextStep'], [data-kind='deadline']) .a5-title::before { content: none; }
+& .a5-dot[data-kind='nextStep'] { background: var(--kind-pink); }
+& .a5-dot[data-kind='deadline'] { background: var(--kind-red); }
+& .a5-dot[data-kind='blocked'] { background: var(--color-text-muted); }
+& .a5-dot[data-kind='blocked'][data-tone] { background: var(--tone); }
+
+/* Λίστα: η γραμμή παίρνει το ύφος από το εικονίδιο του τίτλου (data-row-*), γιατί η γραμμή είναι κοινό κομμάτι του kit. */
+& .a5-list .part-row:has([data-row-tone='teal']) { --tone: var(--kind-teal); }
+& .a5-list .part-row:has([data-row-tone='green']) { --tone: var(--kind-green); }
+& .a5-list .part-row:has([data-row-tone='amber']) { --tone: var(--kind-amber); }
+& .a5-list .part-row:has([data-row-tone='violet']) { --tone: var(--kind-violet); }
+& .a5-list .part-row:has([data-row-tone='grey']) { --tone: var(--kind-grey); }
+& .a5-list .part-row:has([data-row-tone='blue']) { --tone: var(--kind-blue); }
+& .a5-list .part-row:has([data-row-tone='pink']) { --tone: var(--kind-pink); }
+& .a5-list .part-row:has([data-row-tone='red']) { --tone: var(--kind-red); }
+& .a5-list .part-row:has([data-row-kind='filming']) { --tone: var(--color-accent); }
+& .a5-list .part-row:has([data-row-kind='nextStep']) { --tone: var(--kind-pink); }
+& .a5-list .part-row:has([data-row-kind='deadline']) { --tone: var(--kind-red); }
+& .a5-list .part-row:has(:is([data-row-tone], [data-row-kind='filming'])) { background: color-mix(in srgb, var(--tone) 18%, transparent); }
+& .a5-list .part-row:has(:is([data-row-kind='nextStep'], [data-row-kind='deadline'])) { outline: 1.5px dashed var(--tone); outline-offset: -4px; }
+}

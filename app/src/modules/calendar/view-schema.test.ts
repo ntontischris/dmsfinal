@@ -66,6 +66,7 @@ describe("calendarViewSchema", () => {
     const view = calendarViewSchema.parse(teamJson);
     expect(view.isTeam).toBe(true);
     expect(view.blocked[0]?.kindLabel).toBe("Ραντεβού");
+    expect(view.blocked[0]?.kindColor).toBeNull();
     expect(view.filmings[0]?.crewIds).toEqual(["u2"]);
     expect(view.nextSteps).toHaveLength(1);
     expect(view.deadlines).toHaveLength(1);
@@ -91,9 +92,21 @@ describe("calendarViewSchema", () => {
 });
 
 describe("blockedKindsSchema", () => {
-  it("should read the kinds with their retired flag", () => {
+  it("should read the kinds with their retired flag, colour and icon", () => {
+    expect(
+      blockedKindsSchema.parse([
+        { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙" },
+      ]),
+    ).toEqual([
+      { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙" },
+    ]);
+  });
+
+  it("should give a neutral grey kind without icon when the database has no style yet", () => {
     expect(
       blockedKindsSchema.parse([{ id: "k1", label: "Ρεπό", retired: false }]),
-    ).toEqual([{ id: "k1", label: "Ρεπό", retired: false }]);
+    ).toEqual([
+      { id: "k1", label: "Ρεπό", retired: false, color: "grey", icon: null },
+    ]);
   });
 });

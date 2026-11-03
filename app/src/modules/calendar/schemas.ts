@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { KIND_COLORS, KIND_ICON_LIMIT } from "./kind-style";
+
 // Τα πεδία της φόρμας Κλεισμένου χρόνου. Η βάση ξανελέγχει όλα· εδώ φεύγουν τα λάθος σχήματα πριν από την κλήση.
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -62,3 +64,16 @@ export const kindFormSchema = z.object({
 });
 
 export const kindIdSchema = z.object({ id: z.uuid("Το Είδος δεν βρέθηκε") });
+
+// Ύφος Είδους (σχέδιο «3B»): χρώμα μόνο από την παλέτα· εικονίδιο έως 4 χαρακτήρες (όπως τα μετρά η βάση), κενό = χωρίς.
+const ICON_MESSAGE = `Το εικονίδιο έχει έως ${KIND_ICON_LIMIT} χαρακτήρες`;
+
+export const kindStyleSchema = z.object({
+  id: z.uuid("Το Είδος δεν βρέθηκε"),
+  color: z.enum(KIND_COLORS, "Διάλεξε χρώμα από την παλέτα"),
+  icon: z
+    .string()
+    .trim()
+    .refine((value) => [...value].length <= KIND_ICON_LIMIT, ICON_MESSAGE)
+    .transform((value) => value || null),
+});

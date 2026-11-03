@@ -16,6 +16,7 @@ import type { BlockedKind, BlockedTime } from "../types";
 import { parseCalendarParams } from "../url-state";
 import { A6Delete } from "./a6-delete";
 import { A6Form } from "./a6-form";
+import { pickedKindOf } from "./a6-model";
 
 import "./a6.css";
 
@@ -83,6 +84,7 @@ export async function SpacesNewBlockedTime({ query }: { query: RawQuery }) {
             to: DEFAULT_TO,
             title: "",
             userId: viewer.userId,
+            kindId: pickedKindOf(query.kind, kinds.data),
           }}
           people={canPickPerson ? view.data.team : []}
           personName={viewer.team.name}

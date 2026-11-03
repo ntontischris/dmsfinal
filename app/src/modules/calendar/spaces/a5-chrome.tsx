@@ -4,10 +4,12 @@ import { hrefOf } from "@/spaces/data/screens";
 
 import { CALENDAR_VIEWS, rangeOf, shiftAnchor, titleOf } from "../date-range";
 import { personLabel, type PersonOption } from "../person-filter";
+import type { BlockedKind } from "../types";
 import { calendarHref, type CalendarParams } from "../url-state";
 import {
   filtersSummary,
   fmtLong,
+  quickAddsOf,
   toggledLayers,
   type LayerOption,
 } from "./a5-model";
@@ -20,21 +22,40 @@ export interface A5ToolbarProps {
   canNewFilming: boolean;
   canBook: boolean;
   date: string;
+  // Τα Είδη κλεισμένου χρόνου (μόνο για την ομάδα): ένα κουμπί «+ <Είδος>» ανά ενεργό Είδος.
+  kinds: readonly BlockedKind[];
+}
+
+// Σχέδιο «3B»: τα κουμπιά γρήγορης προσθήκης ανά Είδος, στο χρώμα του. Χωρίς ενεργά Είδη μένει το ένα κουμπί.
+function QuickAdds({ kinds, date, canBlockOthers }: A5ToolbarProps) {
+  const adds = quickAddsOf(kinds, date);
+  if (adds.length === 0)
+    return (
+      <Link className="button" href={hrefOf("A6", { date })}>
+        {canBlockOthers
+          ? "Ρεπό / Άδεια / Μη διαθέσιμος"
+          : "Ρεπό / Άδεια / Δεν είμαι διαθέσιμος"}
+      </Link>
+    );
+  return adds.map((add) => (
+    <Link
+      key={add.id}
+      className="kind-add"
+      data-tone={add.tone ?? undefined}
+      href={add.href}
+    >
+      {add.label}
+    </Link>
+  ));
 }
 
 export function A5Toolbar(props: A5ToolbarProps) {
   return (
     <div className="toolbar">
-      {props.isTeam && (
-        <Link className="button" href={hrefOf("A6", { date: props.date })}>
-          {props.canBlockOthers
-            ? "Ρεπό / Άδεια / Μη διαθέσιμος"
-            : "Ρεπό / Άδεια / Δεν είμαι διαθέσιμος"}
-        </Link>
-      )}
+      {props.isTeam && <QuickAdds {...props} />}
       {props.isTeam && props.canNewFilming && (
         <Link className="button" data-primary="true" href={hrefOf("E4")}>
-          Νέο Γύρισμα
+          + Γύρισμα
         </Link>
       )}
       {!props.isTeam && props.canBook && (

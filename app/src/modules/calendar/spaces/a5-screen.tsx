@@ -7,7 +7,7 @@ import { buildCalendarDays } from "../calendar-days";
 import { calendarCaps } from "../caps";
 import { datesOf, rangeOf } from "../date-range";
 import { forPerson, personOptions } from "../person-filter";
-import { getCalendarView, getLinkStatus } from "../queries";
+import { getBlockedKinds, getCalendarView, getLinkStatus } from "../queries";
 import type { CalendarData } from "../types";
 import { parseCalendarParams, type CalendarParams } from "../url-state";
 import { A5Filters, A5Nav, A5Tabs, A5Toolbar } from "./a5-chrome";
@@ -23,6 +23,7 @@ import {
 import { A5List, A5Month, A5Week } from "./a5-views";
 
 import "./a5.css";
+import "./kind-tone.css";
 
 type RawQuery = Readonly<Record<string, string | string[] | undefined>>;
 
@@ -39,7 +40,7 @@ function EmptyHint({ isTeam }: { isTeam: boolean }) {
     >
       <p>
         {isTeam
-          ? "Για ρεπό, άδεια ή ραντεβού, πάτα «Ρεπό / Άδεια»."
+          ? "Για ρεπό, άδεια ή ραντεβού, πάτα ένα από τα κουμπιά «+» πάνω."
           : "Κλείσε Γύρισμα για να εμφανιστεί εδώ."}
       </p>
     </StateNotice>
@@ -116,7 +117,11 @@ export async function SpacesCalendar({ query }: { query: RawQuery }) {
     );
   const today = athensDate(new Date());
   const params = parseCalendarParams(query, today);
-  const view = await getCalendarView(rangeOf(params.view, params.date));
+  // Τα Είδη μόνο για την ομάδα (κουμπιά «+ <Είδος>»)· αν δεν φορτώσουν, μένει το ένα κουμπί «Ρεπό / Άδεια».
+  const [view, kinds] = await Promise.all([
+    getCalendarView(rangeOf(params.view, params.date)),
+    caps.isTeam ? getBlockedKinds() : null,
+  ]);
   if (!view.ok)
     return (
       <div data-spaces>
@@ -139,6 +144,7 @@ export async function SpacesCalendar({ query }: { query: RawQuery }) {
           canNewFilming={filmingCaps(viewer).canBook}
           canBook={data.canBook}
           date={params.date}
+          kinds={kinds?.ok ? kinds.data : []}
         />
         <A5Tabs params={params} />
         <A5Nav params={params} today={today} />

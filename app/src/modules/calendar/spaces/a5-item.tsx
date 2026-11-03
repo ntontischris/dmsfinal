@@ -24,6 +24,22 @@ const timeLabel = (item: Item): string | null => {
 const markOf = (item: Item): string | null =>
   item.mark && item.mark !== item.title ? item.mark : null;
 
+// Σχέδιο «3B»: το εικονίδιο μπροστά από τον τίτλο (του Είδους, ή 🎬 / ➜ / ⏱). Κρυφό για τους αναγνώστες οθόνης, ώστε
+// το όνομα του συνδέσμου να μένει ο τίτλος. Στη λίστα κρατά και το χρώμα της γραμμής (data-row-*).
+function Icon({ item }: { item: Item }) {
+  if (!item.icon && !item.tone) return null;
+  return (
+    <span
+      className="a5-icon"
+      aria-hidden="true"
+      data-row-kind={item.kind}
+      data-row-tone={item.tone ?? undefined}
+    >
+      {item.icon}
+    </span>
+  );
+}
+
 function StatusBadge({ item }: { item: Item }) {
   if (item.kind === "day" && item.status) return <Badge>{item.status}</Badge>;
   if (item.kind !== "filming") return null;
@@ -39,7 +55,10 @@ export function A5Item({ item, compact = false }: A5ItemProps) {
     <>
       {time && <span className="a5-time">{time}</span>}
       {mark && <span className="a5-mark">{mark}</span>}
-      <span className="a5-title">{item.title}</span>
+      <span className="a5-title">
+        <Icon item={item} />
+        {item.title}
+      </span>
       {!compact && item.detail && (
         <span className="a5-detail">{item.detail}</span>
       )}
@@ -49,6 +68,7 @@ export function A5Item({ item, compact = false }: A5ItemProps) {
   const props = {
     className: "a5-item",
     "data-kind": item.kind,
+    "data-tone": item.tone ?? undefined,
     "data-status": item.status ?? undefined,
     "data-pending": item.status === PENDING_STATUS,
   };
@@ -76,7 +96,12 @@ export function A5Row({ item }: { item: Item }) {
   return (
     <ListRow
       lead={lead}
-      title={item.title}
+      title={
+        <>
+          <Icon item={item} />
+          {item.title}
+        </>
+      }
       href={item.href ?? undefined}
       sub={sub || undefined}
       aside={<StatusBadge item={item} />}

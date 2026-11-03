@@ -3,7 +3,7 @@
 import type { FormState } from "@/lib/form-state";
 
 import { callRpc, revalidateAppLayout } from "./action-support";
-import { kindFormSchema, kindIdSchema } from "./schemas";
+import { kindFormSchema, kindIdSchema, kindStyleSchema } from "./schemas";
 
 // Είδη κλεισμένου χρόνου (Ρυθμίσεις › Γυρίσματα): προσθήκη, μετονομασία, απόσυρση, επαναφορά. Χωρίς διαγραφή,
 // όπως οι Τρόποι είσπραξης: ό,τι χρησιμοποιήθηκε μένει στα παλιά.
@@ -11,6 +11,7 @@ import { kindFormSchema, kindIdSchema } from "./schemas";
 const KIND_SAVED = "Το Είδος αποθηκεύτηκε.";
 const KIND_RETIRED = "Το Είδος αποσύρθηκε. Ο παλιός κλεισμένος χρόνος το κρατά.";
 const KIND_RESTORED = "Το Είδος επανήλθε.";
+const KIND_STYLED = "Το χρώμα και το εικονίδιο αποθηκεύτηκαν.";
 
 const fieldOf = (form: FormData, key: string): string => String(form.get(key) ?? "");
 
@@ -37,4 +38,18 @@ export async function restoreBlockedKind(_: FormState, form: FormData): Promise<
   const parsed = kindIdSchema.safeParse({ id: fieldOf(form, "id") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   return finish("blocked_time_kind_restore", { p_id: parsed.data.id }, KIND_RESTORED);
+}
+
+export async function styleBlockedKind(_: FormState, form: FormData): Promise<FormState> {
+  const parsed = kindStyleSchema.safeParse({
+    id: fieldOf(form, "id"),
+    color: fieldOf(form, "color"),
+    icon: fieldOf(form, "icon"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  return finish(
+    "blocked_time_kind_style",
+    { p_id: parsed.data.id, p_color: parsed.data.color, p_icon: parsed.data.icon },
+    KIND_STYLED,
+  );
 }

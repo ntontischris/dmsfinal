@@ -9,6 +9,7 @@ import {
   groupByDate,
   hasEvents,
   layerOptions,
+  quickAddsOf,
   toggledLayers,
 } from "./a5-model";
 
@@ -20,6 +21,8 @@ const entry = (overrides: Partial<CalendarEntry> = {}): CalendarEntry => ({
   title: "Κυψέλη Καφέ",
   detail: null,
   mark: null,
+  tone: null,
+  icon: null,
   isPending: false,
   href: "/app/filming/1",
   ...overrides,
@@ -143,6 +146,48 @@ describe("helpers", () => {
       false,
     );
     expect(item?.mark).toBe("Ραντεβού");
+  });
+
+  it("should carry the colour and icon of a kind, and give the fixed icons of the design to the other layers", () => {
+    const items = a5ItemsOf(
+      [
+        day({
+          entries: [
+            entry({ key: "blocked-3", kind: "blocked", tone: "amber", icon: "🤝" }),
+            entry({ key: "blocked-4", kind: "blocked" }),
+            entry({ key: "busy-1", kind: "busy" }),
+            entry({ key: "filming-1" }),
+            entry({ key: "next-1", kind: "nextStep" }),
+            entry({ key: "deadline-1", kind: "deadline" }),
+          ],
+        }),
+      ],
+      true,
+      false,
+    );
+    expect(items.map((item) => [item.kind, item.tone, item.icon])).toEqual([
+      ["blocked", "amber", "🤝"],
+      ["blocked", null, null],
+      ["busy", null, null],
+      ["filming", null, "🎬"],
+      ["nextStep", null, "➜"],
+      ["deadline", null, "⏱"],
+    ]);
+  });
+
+  it("should give one quick-add per active kind that opens the form with the kind picked", () => {
+    const adds = quickAddsOf(
+      [
+        { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙" },
+        { id: "k2", label: "Παλιό", retired: true, color: "red", icon: null },
+        { id: "k3", label: "Άλλο", retired: false, color: "magenta", icon: null },
+      ],
+      "2027-03-10",
+    );
+    expect(adds).toEqual([
+      { id: "k1", label: "+ Ρεπό", tone: "teal", href: "/app/calendar/blocked/new?date=2027-03-10&kind=k1" },
+      { id: "k3", label: "+ Άλλο", tone: null, href: "/app/calendar/blocked/new?date=2027-03-10&kind=k3" },
+    ]);
   });
 
   it("should toggle a layer and summarise what is hidden", () => {

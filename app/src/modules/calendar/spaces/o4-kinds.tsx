@@ -14,6 +14,7 @@ import {
   saveBlockedKind,
 } from "../actions-kinds";
 import type { BlockedKind } from "../types";
+import { KindBadge, KindStyleForm } from "./o4-kind-style";
 
 // Τα Είδη κλεισμένου χρόνου στις Ρυθμίσεις › Γυρίσματα, στη μορφή του ListEditor του prototype (`screens/o-shared.tsx`),
 // όπως οι Τρόποι είσπραξης της O6: προσθήκη, μετονομασία, απόσυρση και επαναφορά· χωρίς διαγραφή.
@@ -22,7 +23,7 @@ type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
 const MAX_LABEL = 40;
 const KINDS_NOTE =
-  "Το Είδος διαλέγεται στο «Ρεπό / Άδεια» και φαίνεται στο Ημερολόγιο, μόνο σε όσους βλέπουν και τον τίτλο. Οι υπόλοιποι βλέπουν «Απασχολημένος». Ένα Είδος δεν διαγράφεται· αποσύρεται, και ο παλιός κλεισμένος χρόνος το κρατά.";
+  "Κάθε ενεργό Είδος έχει δικό του κουμπί «+ Είδος» στο Ημερολόγιο και φαίνεται εκεί με το χρώμα και το εικονίδιό του, μόνο σε όσους βλέπουν και τον τίτλο. Οι υπόλοιποι βλέπουν «Απασχολημένος». Ένα Είδος δεν διαγράφεται· αποσύρεται, και ο παλιός κλεισμένος χρόνος το κρατά.";
 
 function FormNote({ state }: { state: FormState }) {
   const text = state.error ?? state.notice;
@@ -84,29 +85,54 @@ function RowAction({
   );
 }
 
+type Editing = "rename" | "style" | null;
+
 function KindRow({ kind, index }: { kind: BlockedKind; index: number }) {
-  const [isRenaming, setIsRenaming] = useState(false);
+  const [editing, setEditing] = useState<Editing>(null);
+  const toggle = (next: Exclude<Editing, null>) =>
+    setEditing((current) => (current === next ? null : next));
+  const sub = kind.retired ? undefined : editing === "rename" ? (
+    <RenameForm kind={kind} />
+  ) : editing === "style" ? (
+    <KindStyleForm kind={kind} />
+  ) : undefined;
   return (
     <ListRow
       isFaded={kind.retired}
       lead={<span>{index + 1}</span>}
-      title={kind.label}
-      sub={isRenaming && !kind.retired ? <RenameForm kind={kind} /> : undefined}
+      title={
+        <>
+          <KindBadge kind={kind} />
+          {kind.label}
+        </>
+      }
+      sub={sub}
       aside={
         <>
           <Badge tone={kind.retired ? "faded" : "ok"}>
             {kind.retired ? "Αποσύρθηκε" : "Σε χρήση"}
           </Badge>
           {!kind.retired && (
-            <button
-              type="button"
-              className="button"
-              aria-expanded={isRenaming}
-              aria-label={`Μετονομασία: ${kind.label}`}
-              onClick={() => setIsRenaming((current) => !current)}
-            >
-              Μετονομασία
-            </button>
+            <>
+              <button
+                type="button"
+                className="button"
+                aria-expanded={editing === "rename"}
+                aria-label={`Μετονομασία: ${kind.label}`}
+                onClick={() => toggle("rename")}
+              >
+                Μετονομασία
+              </button>
+              <button
+                type="button"
+                className="button"
+                aria-expanded={editing === "style"}
+                aria-label={`Χρώμα και εικονίδιο: ${kind.label}`}
+                onClick={() => toggle("style")}
+              >
+                Χρώμα
+              </button>
+            </>
           )}
           <RowAction
             action={kind.retired ? restoreBlockedKind : retireBlockedKind}

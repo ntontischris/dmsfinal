@@ -179,3 +179,30 @@
   --tint-ok-60: oklch(from var(--color-ok) l c h / 0.6);
 }
 }
+
+/* Παλέτα των Ειδών κλεισμένου χρόνου (σχέδιο «3B», owner 02): τα κλειδιά που αποθηκεύει η βάση (blocked_time_kinds.color)
+   σε αποχρώσεις, για σκοτεινό και φωτεινό θέμα. Ίδιες τιμές με το prototype calendar-variants (--k-*). Τα Επόμενα βήματα
+   παίρνουν το pink και οι Προθεσμίες το red. */
+[data-look='spaces'] {
+& {
+  --kind-teal: #3cc6c6;
+  --kind-green: #5fd38a;
+  --kind-amber: #f2b54a;
+  --kind-violet: #b495ff;
+  --kind-grey: #9aa3b5;
+  --kind-blue: #8f9cff;
+  --kind-pink: #ff7fbf;
+  --kind-red: #ff8a70;
+}
+
+:root[data-theme='light'] & {
+  --kind-teal: #138a8a;
+  --kind-green: #2f8a46;
+  --kind-amber: #b7791f;
+  --kind-violet: #7b4fd1;
+  --kind-grey: #6b7280;
+  --kind-blue: #4f5fd6;
+  --kind-pink: #c2417e;
+  --kind-red: #d04b33;
+}
+}

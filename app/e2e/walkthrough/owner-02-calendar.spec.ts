@@ -5,6 +5,8 @@ import { useSpacesLook } from "./spaces";
 
 // Περιήγηση Ιδιοκτήτη, διαδρομή 02: Ημερολόγιο και Ρεπό / Άδεια (docs/walkthrough/owner.md).
 const OWNER = "owner@example.com";
+const OWNER_NAME = "Γιώργος Ιδιοκτήτης";
+const PRODUCTION = "production@example.com";
 const DAY = "2027-03-10";
 
 test.describe.configure({ mode: "serial" });
@@ -16,8 +18,10 @@ test.beforeEach(async ({ context, page }) => {
 
 test("02 · οι Ρυθμίσεις έχουν τα Είδη κλεισμένου χρόνου", async ({ page }) => {
   await page.goto("/app/settings/filming?part=calendar");
-  for (const kind of ["Ρεπό", "Άδεια", "Ραντεβού", "Τηλεφώνημα", "Άλλο"])
+  for (const kind of ["Ρεπό", "Άδεια", "Ραντεβού", "Τηλεφώνημα", "Άλλο"]) {
     await expect(page.getByRole("button", { name: `Μετονομασία: ${kind}`, exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: `Χρώμα και εικονίδιο: ${kind}`, exact: true })).toBeVisible();
+  }
 });
 
 test("02 · το Ημερολόγιο έχει Επόμενα βήματα, Προθεσμίες και φίλτρο ατόμου", async ({ page }) => {
@@ -30,14 +34,22 @@ test("02 · το Ημερολόγιο έχει Επόμενα βήματα, Πρ
     ).toBeVisible();
 });
 
-test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού», το βλέπει με το Είδος του και το σβήνει", async ({ page }) => {
+test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού» από το «+ Ραντεβού», οι άλλοι το βλέπουν «Απασχολημένος», και το σβήνει", async ({
+  context,
+  page,
+}) => {
   // Δικός του τίτλος σε κάθε προσπάθεια, χωρίς τη λέξη του Είδους, για να ελέγχεται χωριστά.
   const title = `Συνάντηση δοκιμής ${project()} ${test.info().retry}`;
-  await page.goto(`/app/calendar/blocked/new?date=${DAY}`);
+  // Σχέδιο «3B»: ένα κουμπί ανά Είδος στο Ημερολόγιο, που ανοίγει τη φόρμα με το Είδος ήδη διαλεγμένο.
+  await page.goto(`/app/calendar?view=week&date=${DAY}`);
+  await page.getByRole("link", { name: "+ Ραντεβού", exact: true }).click();
+  await expect(page).toHaveURL(/\/app\/calendar\/blocked\/new\?.*kind=/);
+  const kindSelect = page.locator('select[name="kindId"]');
+  await expect(kindSelect.locator("option:checked")).toHaveText("Ραντεβού");
+
   const titleBox = page.getByLabel("Τίτλος");
   // Οι τιμές της φόρμας ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
   await expect(async () => {
-    await page.locator('select[name="kindId"]').selectOption({ label: "Ραντεβού" });
     await page.getByLabel("Μερικές ώρες (π.χ. γιατρός)").check();
     await page.getByLabel("Μέρα", { exact: true }).fill(DAY);
     await page.getByLabel("Από", { exact: true }).fill("10:00");
@@ -46,14 +58,34 @@ test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού», το β
     await expect(titleBox).toHaveValue(title, { timeout: 1_000 });
     await expect(page.getByLabel("Από", { exact: true })).toHaveValue("10:00", { timeout: 1_000 });
   }).toPass();
+  await expect(kindSelect.locator("option:checked")).toHaveText("Ραντεβού");
   await page.getByRole("button", { name: "Αποθήκευση" }).click();
   await expect(page).toHaveURL(/\/app\/calendar/);
 
   await page.goto(`/app/calendar?view=list&date=${DAY}`);
   const item = page.getByRole("link", { name: title, exact: true });
   await expect(item).toBeVisible();
-  await expect(page.getByRole("listitem").filter({ has: item })).toContainText("Ραντεβού");
+  const row = page.getByRole("listitem").filter({ has: item });
+  await expect(row).toContainText("Ραντεβού");
+  await expect(row.locator('[data-row-tone="amber"]')).toHaveCount(1);
 
+  // «Δες το και ως…»: η Παραγωγή βλέπει μόνο «Απασχολημένος», χωρίς τίτλο, Είδος ή το χρώμα του. Άλλος Χρήστης στην
+  // ίδια καρτέλα: νέα σύνδεση από την αρχή, στη νέα εμφάνιση.
+  await context.clearCookies();
+  await useSpacesLook(context);
+  await signIn(page, PRODUCTION);
+  await page.goto(`/app/calendar?view=list&date=${DAY}`);
+  const list = page.locator(".a5-list");
+  const busy = list.getByRole("listitem").filter({ hasText: "Απασχολημένος" }).filter({ hasText: OWNER_NAME });
+  await expect(busy.first()).toBeVisible();
+  await expect(busy.first().locator("[data-row-tone]")).toHaveCount(0);
+  await expect(list).not.toContainText(title);
+  await expect(list).not.toContainText("Ραντεβού");
+
+  await context.clearCookies();
+  await useSpacesLook(context);
+  await signIn(page, OWNER);
+  await page.goto(`/app/calendar?view=list&date=${DAY}`);
   await item.click();
   await expect(page.getByLabel("Τίτλος")).toHaveValue(title);
   const confirm = page.getByRole("alertdialog");
