@@ -1,6 +1,7 @@
 import { athensDate, athensTime, athensToIso } from "@/modules/filming";
 
 import { addDays, daysBetween } from "./date-range";
+import { kindToneOf, type KindColor } from "./kind-style";
 import type { CalendarData } from "./types";
 import type { LayerKey } from "./url-state";
 
@@ -18,6 +19,9 @@ export interface CalendarEntry {
   detail: string | null;
   // Η σήμανση του Είδους κλεισμένου χρόνου (π.χ. «Ραντεβού»)· null όταν δεν έχει.
   mark: string | null;
+  // Το ύφος του Είδους: κλειδί της παλέτας (kind-style.ts) και εικονίδιο. Μόνο κλεισμένος χρόνος με Είδος· αλλιώς null.
+  tone: KindColor | null;
+  icon: string | null;
   isPending: boolean;
   href: string | null;
 }
@@ -65,6 +69,8 @@ function filmingPlaced(data: CalendarData): PlacedEntry[] {
       title: filming.title ?? "Γύρισμα",
       detail: null,
       mark: null,
+      tone: null,
+      icon: null,
       isPending: filming.state === "pending",
       href: `/app/filming/${filming.id}`,
     },
@@ -83,6 +89,8 @@ function blockedPlaced(data: CalendarData): PlacedEntry[] {
       title: block.title ?? block.kindLabel ?? "Κλεισμένος χρόνος",
       detail: block.isMine ? null : block.userName,
       mark: block.kindLabel,
+      tone: block.kindId ? kindToneOf(block.kindColor) : null,
+      icon: block.kindId ? block.kindIcon : null,
       isPending: false,
       href: block.isMine || data.canBlockOthers ? `/app/calendar/blocked/${block.id}` : null,
     },
@@ -101,6 +109,8 @@ function busyPlaced(data: CalendarData): PlacedEntry[] {
       title: "Απασχολημένος",
       detail: busy.userName,
       mark: null,
+      tone: null,
+      icon: null,
       isPending: false,
       href: null,
     },
@@ -123,6 +133,8 @@ function nextStepPlaced(data: CalendarData): PlacedEntry[] {
       title: `Επόμενο βήμα: ${step.step}`,
       detail: joined([step.clientName, step.opportunityTitle, step.isMine ? null : step.managerName]),
       mark: null,
+      tone: null,
+      icon: null,
       isPending: false,
       href: `/app/pipeline/${step.id}`,
     },
@@ -142,6 +154,8 @@ function deadlinePlaced(data: CalendarData): PlacedEntry[] {
       title: `Προθεσμία: ${deadline.title}`,
       detail: joined([deadline.clientName, deadline.isMine ? null : deadline.assigneeName]),
       mark: null,
+      tone: null,
+      icon: null,
       isPending: false,
       href: `/app/deliverables/${deadline.id}`,
     },

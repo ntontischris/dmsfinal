@@ -23,6 +23,8 @@ const teamData = (overrides: Partial<CalendarData> = {}): CalendarData => ({
       isMine: false,
       kindId: null,
       kindLabel: null,
+      kindColor: null,
+      kindIcon: null,
     },
   ],
   busy: [
@@ -72,7 +74,7 @@ describe("buildCalendarDays", () => {
 
   it("should give a link to the blocked time only when the viewer can edit it", () => {
     const own = teamData({
-      blocked: [{ id: "b9", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T06:00:00Z", endsAt: "2026-10-12T08:00:00Z", allDay: false, title: "Ιατρείο", isMine: true, kindId: null, kindLabel: null }],
+      blocked: [{ id: "b9", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T06:00:00Z", endsAt: "2026-10-12T08:00:00Z", allDay: false, title: "Ιατρείο", isMine: true, kindId: null, kindLabel: null, kindColor: null, kindIcon: null }],
     });
     expect(dayOf("2026-10-12", own)?.entries.find((entry) => entry.kind === "blocked")).toMatchObject({
       href: "/app/calendar/blocked/b9",
@@ -102,12 +104,25 @@ describe("buildCalendarDays", () => {
 
   it("should name a blocked time by its kind and keep the kind as a mark", () => {
     const kinded = teamData({
-      blocked: [{ id: "b2", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T06:00:00Z", endsAt: "2026-10-12T07:00:00Z", allDay: false, title: null, isMine: true, kindId: "k1", kindLabel: "Ραντεβού" }],
+      blocked: [{ id: "b2", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T06:00:00Z", endsAt: "2026-10-12T07:00:00Z", allDay: false, title: null, isMine: true, kindId: "k1", kindLabel: "Ραντεβού", kindColor: "amber", kindIcon: "🤝" }],
     });
     expect(dayOf("2026-10-12", kinded)?.entries.find((entry) => entry.kind === "blocked")).toMatchObject({
       title: "Ραντεβού",
       mark: "Ραντεβού",
+      tone: "amber",
+      icon: "🤝",
     });
+  });
+
+  it("should give a neutral style to a blocked time without kind or with an unknown colour", () => {
+    const data = teamData({
+      blocked: [
+        { id: "b3", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T06:00:00Z", endsAt: "2026-10-12T07:00:00Z", allDay: false, title: "Χωρίς", isMine: true, kindId: null, kindLabel: null, kindColor: null, kindIcon: null },
+        { id: "b4", userId: "me", userName: "Εγώ", startsAt: "2026-10-12T08:00:00Z", endsAt: "2026-10-12T09:00:00Z", allDay: false, title: "Παλιό", isMine: true, kindId: "k9", kindLabel: "Άλλο", kindColor: "magenta", kindIcon: "•" },
+      ],
+    });
+    const blocked = (dayOf("2026-10-12", data)?.entries ?? []).filter((entry) => entry.kind === "blocked");
+    expect(blocked.map((entry) => [entry.tone, entry.icon])).toEqual([[null, null], [null, "•"]]);
   });
 
   it("should place a next step and a deadline on their day with a link to their page", () => {

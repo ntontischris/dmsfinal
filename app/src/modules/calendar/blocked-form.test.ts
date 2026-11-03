@@ -43,6 +43,8 @@ describe("blockedFormValues", () => {
     title: null,
     kindId: null,
     kindLabel: null,
+    kindColor: null,
+    kindIcon: null,
     canEdit: true,
     canConvert: false,
     ...overrides,

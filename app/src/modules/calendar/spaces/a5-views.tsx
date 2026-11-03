@@ -71,7 +71,12 @@ function Dots({ dayItems }: { dayItems: readonly Item[] }) {
   return (
     <div className="a5-dots" aria-hidden="true">
       {dayItems.slice(0, 3).map((item) => (
-        <span key={item.id} className="a5-dot" data-kind={item.kind} />
+        <span
+          key={item.id}
+          className="a5-dot"
+          data-kind={item.kind}
+          data-tone={item.tone ?? undefined}
+        />
       ))}
       <span className="a5-count">{dayItems.length}</span>
     </div>

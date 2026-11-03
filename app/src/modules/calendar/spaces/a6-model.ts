@@ -3,6 +3,7 @@
 // (όπως στο σχήμα του server), γι' αυτό ο κανόνας «ο τίτλος είναι υποχρεωτικός» του prototype λείπει.
 
 import type { BlockedTimeValues } from "../components/blocked-time-form";
+import type { BlockedKind } from "../types";
 
 export interface Draft {
   personId: string;
@@ -84,3 +85,12 @@ export const conflictFieldsOf = (
   validateDraft(draft) === null
     ? { ...formFieldsOf(draft, true), title: "" }
     : null;
+
+// Σχέδιο «3B»: το «+ <Είδος>» του Ημερολογίου ανοίγει τη φόρμα με `?kind=<id>`. Μόνο ενεργό Είδος· αλλιώς χωρίς Είδος.
+export const pickedKindOf = (
+  raw: string | string[] | undefined,
+  kinds: readonly BlockedKind[],
+): string => {
+  const id = Array.isArray(raw) ? raw[0] : raw;
+  return kinds.find((kind) => kind.id === id && !kind.retired)?.id ?? "";
+};

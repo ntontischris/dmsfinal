@@ -1,8 +1,12 @@
 // A5 (νέα εμφάνιση): οι πραγματικές μέρες του Ημερολογίου (buildCalendarDays) στα στοιχεία του prototype (`screens/a5-*`).
 // Καθαρές συναρτήσεις. Ό,τι δεν έχει πηγή στη βάση (φόρτος ανά άτομο) δεν εμφανίζεται.
 
+import { hrefOf } from "@/spaces/data/screens";
+
 import type { CalendarDay } from "../calendar-days";
+import { kindToneOf, type KindColor } from "../kind-style";
 import { dayStatusLabel } from "../labels";
+import type { BlockedKind } from "../types";
 import type { LayerKey } from "../url-state";
 
 export type A5Kind =
@@ -24,12 +28,22 @@ export interface A5Item {
   detail: string | null;
   // Το Είδος κλεισμένου χρόνου (π.χ. «Ραντεβού»), ως σήμανση δίπλα στον τίτλο· αλλιώς null.
   mark: string | null;
+  // Σχέδιο «3B»: το χρώμα (κλειδί παλέτας) του Είδους κλεισμένου χρόνου και το εικονίδιο μπροστά από τον τίτλο.
+  tone: KindColor | null;
+  icon: string | null;
   // «αναμένει έγκριση» για Γύρισμα που περιμένει, η κατάσταση της μέρας για τον Πελάτη· αλλιώς null.
   status: string | null;
   href: string | null;
 }
 
 export const PENDING_STATUS = "αναμένει έγκριση";
+
+// Τα σταθερά εικονίδια του σχεδίου για ό,τι δεν είναι Είδος κλεισμένου χρόνου (το Είδος έχει το δικό του, από τις Ρυθμίσεις).
+const FIXED_ICONS: Readonly<Partial<Record<A5Kind, string>>> = {
+  filming: "🎬",
+  nextStep: "➜",
+  deadline: "⏱",
+};
 const ALL_DAY = "όλη μέρα";
 
 const WEEKDAYS_LONG = [
@@ -72,6 +86,8 @@ const dayItemOf = (
     title: label,
     detail: null,
     mark: null,
+    tone: null,
+    icon: null,
     status: isTeam ? null : label.toLocaleLowerCase("el"),
     href:
       !isTeam && day.status === "free" && canBook
@@ -95,6 +111,8 @@ export const a5ItemsOf = (
       title: entry.title,
       detail: entry.detail,
       mark: entry.mark,
+      tone: entry.tone,
+      icon: entry.icon ?? FIXED_ICONS[entry.kind] ?? null,
       status: entry.isPending ? PENDING_STATUS : null,
       href: entry.href,
     }));
@@ -171,3 +189,24 @@ export const filtersSummary = (
   const layers = hidden === 0 ? "όλα" : `${hidden} κρυμμένα`;
   return person ? `${person} · ${layers}` : layers;
 };
+
+export interface QuickAdd {
+  id: string;
+  label: string;
+  tone: KindColor | null;
+  href: string;
+}
+
+// Σχέδιο «3B»: ένα κουμπί «+ <Είδος>» ανά ενεργό Είδος, που ανοίγει τη φόρμα A6 με το Είδος ήδη διαλεγμένο.
+export const quickAddsOf = (
+  kinds: readonly BlockedKind[],
+  date: string,
+): QuickAdd[] =>
+  kinds
+    .filter((kind) => !kind.retired)
+    .map((kind) => ({
+      id: kind.id,
+      label: `+ ${kind.label}`,
+      tone: kindToneOf(kind.color),
+      href: hrefOf("A6", { date, kind: kind.id }),
+    }));

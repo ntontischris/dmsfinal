@@ -6,6 +6,7 @@ import {
   draftOf,
   formFieldsOf,
   isFullDay,
+  pickedKindOf,
   validateDraft,
   type Draft,
 } from "./a6-model";
@@ -105,5 +106,23 @@ describe("conflictFieldsOf (προειδοποίηση Συνεργείου)", (
   it("should not ask the database while the form has a mistake", () => {
     expect(conflictFieldsOf(draft({ date: "0002-11-03" }))).toBeNull();
     expect(conflictFieldsOf(draft({ from: "11:00", to: "10:00" }))).toBeNull();
+  });
+});
+
+describe("pickedKindOf", () => {
+  const kinds = [
+    { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙" },
+    { id: "k2", label: "Παλιό", retired: true, color: "grey", icon: null },
+  ];
+
+  it("should preselect the active kind of the quick-add link", () => {
+    expect(pickedKindOf("k1", kinds)).toBe("k1");
+    expect(pickedKindOf(["k1", "k2"], kinds)).toBe("k1");
+  });
+
+  it("should leave the kind empty for a retired, unknown or missing kind", () => {
+    expect(pickedKindOf("k2", kinds)).toBe("");
+    expect(pickedKindOf("nope", kinds)).toBe("");
+    expect(pickedKindOf(undefined, kinds)).toBe("");
   });
 });

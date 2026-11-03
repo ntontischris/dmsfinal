@@ -23,6 +23,9 @@ export interface BlockedEntry {
   // Το Είδος (Ρεπό, Ραντεβού…)· null για τον κλεισμένο χρόνο χωρίς Είδος (π.χ. παλιό ή από το Google).
   kindId: string | null;
   kindLabel: string | null;
+  // Το ύφος του Είδους (κλειδί παλέτας, εικονίδιο), με την ίδια ιδιωτικότητα με την ονομασία.
+  kindColor: string | null;
+  kindIcon: string | null;
 }
 
 export interface BusyEntry {
@@ -103,6 +106,8 @@ export interface BlockedTime {
   title: string | null;
   kindId: string | null;
   kindLabel: string | null;
+  kindColor: string | null;
+  kindIcon: string | null;
   canEdit: boolean;
   canConvert: boolean;
 }
@@ -112,6 +117,9 @@ export interface BlockedKind {
   id: string;
   label: string;
   retired: boolean;
+  // Κλειδί της παλέτας του σχεδίου (kind-style.ts) και σύντομο εικονίδιο ή null.
+  color: string;
+  icon: string | null;
 }
 
 // Γύρισμα που πέφτει πάνω στον κλεισμένο χρόνο, όπου το άτομο είναι στο Συνεργείο (blocked_time_conflicts).

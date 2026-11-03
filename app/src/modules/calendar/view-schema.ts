@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { DEFAULT_KIND_COLOR } from "./kind-style";
 import type {
   BlockedConflict,
   BlockedKind,
@@ -10,6 +11,12 @@ import type {
 } from "./types";
 
 // Τα JSON των RPC του Ημερολογίου, όπως έρχονται από τη βάση. Ό,τι δεν ταιριάζει δεν φτάνει στην οθόνη.
+
+// Το ύφος του Είδους (20261104150000). Με προεπιλογή, ώστε μια βάση χωρίς τη μετάβαση να δίνει ουδέτερο ύφος.
+const kindStyleFields = {
+  kindColor: z.string().nullable().default(null),
+  kindIcon: z.string().nullable().default(null),
+};
 
 const filmingSchema = z.object({
   id: z.string(),
@@ -33,6 +40,7 @@ const blockedSchema = z.object({
   isMine: z.boolean(),
   kindId: z.string().nullable(),
   kindLabel: z.string().nullable(),
+  ...kindStyleFields,
 });
 
 const nextStepSchema = z.object({
@@ -137,6 +145,7 @@ const blockedTimeSchema: z.ZodType<BlockedTime> = z.object({
   title: z.string().nullable(),
   kindId: z.string().nullable(),
   kindLabel: z.string().nullable(),
+  ...kindStyleFields,
   canEdit: z.boolean(),
   canConvert: z.boolean(),
 });
@@ -144,7 +153,13 @@ const blockedTimeSchema: z.ZodType<BlockedTime> = z.object({
 export const blockedTimeViewSchema = blockedTimeSchema.nullable();
 
 export const blockedKindsSchema: z.ZodType<BlockedKind[]> = z.array(
-  z.object({ id: z.string(), label: z.string(), retired: z.boolean() }),
+  z.object({
+    id: z.string(),
+    label: z.string(),
+    retired: z.boolean(),
+    color: z.string().default(DEFAULT_KIND_COLOR),
+    icon: z.string().nullable().default(null),
+  }),
 );
 
 export const blockedConflictsSchema: z.ZodType<BlockedConflict[]> = z.array(
