@@ -6,7 +6,7 @@ import {
   matchesQuery,
   type FilterGroup,
   type FilterOption,
-} from "./filter-panel-model";
+} from "./filter-bar-model";
 
 const option = (label: string, isCurrent = false): FilterOption => ({
   label,

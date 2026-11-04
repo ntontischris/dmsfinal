@@ -1,6 +1,8 @@
 // J2 (νέα εμφάνιση): η πραγματική Συνομιλία (messages_thread) στα σχήματα του prototype. Καθαρές συναρτήσεις· οι κανόνες
 // (ποιος σημειώνει Αίτημα, ποια ετικέτα προεπιλέγεται) είναι ίδιοι με της σημερινής οθόνης.
 
+import type { FilterGroup } from "@/spaces/kit/filter-bar";
+
 import { formatSize } from "../attachment-rules";
 import {
   attachmentHref,
@@ -221,30 +223,36 @@ export const j2HeaderOf = (
   sub: `Υπεύθυνος Πελάτη: ${client.managerName ?? NO_MANAGER} · Κατάσταση: ${CLIENT_STATUS[client.status] ?? client.status}`,
 });
 
-export interface J2Chip {
-  key: string;
-  label: string;
-  href: string;
-  isCurrent: boolean;
-}
-
-// Τα φίλτρα του prototype: Όλα, μία ανά ετικέτα με ορατά Μηνύματα, Χωρίς ετικέτα (όχι σε μερική όψη), Εσωτερικά.
-export const j2ChipsOf = (
+// Τα φίλτρα του prototype ως μία κάρτα «Παραγωγή»: όλα, μία επιλογή ανά ετικέτα με ορατά Μηνύματα, Χωρίς ετικέτα (όχι σε
+// μερική όψη), Εσωτερικά.
+export const j2FilterOf = (
   clientId: string,
   chips: readonly ProductionChip[],
   active: MessageFilters,
   hideUntagged: boolean,
-): J2Chip[] => {
+): FilterGroup => {
   const isTagged = active.production !== undefined;
-  return [
-    {
-      key: "all",
-      label: "Όλα",
+  return {
+    label: "Παραγωγή",
+    isSearchable: true,
+    all: {
+      label: "όλα",
       href: threadHref(clientId),
       isCurrent: !isTagged && active.filter === "all",
     },
+    options: j2OptionsOf(clientId, chips, active, hideUntagged),
+  };
+};
+
+const j2OptionsOf = (
+  clientId: string,
+  chips: readonly ProductionChip[],
+  active: MessageFilters,
+  hideUntagged: boolean,
+): FilterGroup["options"] => {
+  const isTagged = active.production !== undefined;
+  return [
     ...chips.map((chip) => ({
-      key: chip.id,
       label: chip.title,
       href: threadHref(clientId, { production: chip.id }),
       isCurrent: active.production === chip.id,
@@ -253,14 +261,12 @@ export const j2ChipsOf = (
       ? []
       : [
           {
-            key: "untagged",
             label: "Χωρίς ετικέτα",
             href: threadHref(clientId, { filter: "untagged" }),
             isCurrent: !isTagged && active.filter === "untagged",
           },
         ]),
     {
-      key: "internal",
       label: "Εσωτερικά",
       href: threadHref(clientId, { filter: "internal" }),
       isCurrent: !isTagged && active.filter === "internal",

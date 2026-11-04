@@ -1,5 +1,5 @@
 import { getViewer } from "@/modules/access";
-import { FilterPanel } from "@/spaces/kit/filter-panel";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { financeViewOf } from "../caps";
@@ -59,12 +59,14 @@ export async function SpacesClientInvoices({
   const unpaidNote = query.filter === "unpaid" ? unpaidNoteOf(all) : null;
   return (
     <div data-spaces>
-      <FilterPanel
+      <FilterBar
         name="i2-filters"
-        status={statusGroupOf(current, all)}
-        filters={months.length > 1 ? [monthGroupOf(current, months)] : []}
+        filters={[
+          statusGroupOf(current, all),
+          ...(months.length > 1 ? [monthGroupOf(current, months)] : []),
+        ]}
         clearHref={i2ClearHref(current)}
-      >
+      />
         {unpaidNote && <p className="note">{unpaidNote}</p>}
         {rows.length === 0 ? (
           <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
@@ -80,7 +82,6 @@ export async function SpacesClientInvoices({
             showClient={false}
           />
         )}
-      </FilterPanel>
     </div>
   );
 }

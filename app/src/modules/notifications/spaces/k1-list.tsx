@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, StateNotice } from "@/spaces/screens/shared";
@@ -24,42 +23,41 @@ interface FiltersProps {
   only: OnlyFilter | undefined;
 }
 
-// Τα φίλτρα του prototype (`k1-list.tsx`). Η αναζήτηση του prototype δεν έχει ανάγνωση πίσω της και λείπει.
+// Τα φίλτρα του prototype (`k1-list.tsx`) σε μία σειρά καρτών. Η αναζήτηση του prototype δεν έχει ανάγνωση πίσω της και
+// λείπει.
 export function K1Filters({ catalog, group, only }: FiltersProps) {
+  const [all, ...rest] = ONLY_LABELS;
+  const toOption = (o: (typeof ONLY_LABELS)[number]) => ({
+    label: o.label,
+    href: k1Href(group, o.id),
+    isCurrent: only === o.id,
+  });
   return (
-    <>
-      <nav className="k1-filters" aria-label="Ομάδα Γεγονότων">
-        <Link
-          className="button"
-          aria-current={!group}
-          href={k1Href(undefined, only)}
-        >
-          Όλες οι ομάδες
-        </Link>
-        {catalog.groups.map((g) => (
-          <Link
-            key={g.code}
-            className="button"
-            aria-current={group === g.code}
-            href={k1Href(g.code, only)}
-          >
-            {groupTitle(g)}
-          </Link>
-        ))}
-      </nav>
-      <nav className="k1-filters" aria-label="Φίλτρο">
-        {ONLY_LABELS.map((o) => (
-          <Link
-            key={o.label}
-            className="button"
-            aria-current={only === o.id}
-            href={k1Href(group, o.id)}
-          >
-            {o.label}
-          </Link>
-        ))}
-      </nav>
-    </>
+    <FilterBar
+      name="k1-filters"
+      filters={[
+        {
+          label: "Ομάδα Γεγονότων",
+          isSearchable: true,
+          all: {
+            label: "όλες",
+            href: k1Href(undefined, only),
+            isCurrent: !group,
+          },
+          options: catalog.groups.map((g) => ({
+            label: groupTitle(g),
+            href: k1Href(g.code, only),
+            isCurrent: group === g.code,
+          })),
+        },
+        {
+          label: "Αυτοματισμοί",
+          all: all && { ...toOption(all), label: "όλοι" },
+          options: rest.map(toOption),
+        },
+      ]}
+      clearHref={k1Href(undefined, undefined)}
+    />
   );
 }
 

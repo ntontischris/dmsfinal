@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { getViewer } from "@/modules/access";
-import { FilterPanel, type FilterGroup } from "@/spaces/kit/filter-panel";
+import { FilterBar, type FilterGroup } from "@/spaces/kit/filter-bar";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { getSends } from "../queries-sends";
@@ -89,8 +89,7 @@ function groupsOf(query: SendsQuery, page: SendsPage) {
     })),
   };
   return {
-    status,
-    filters: [client, channel],
+    filters: [status, client, channel],
     clearHref: href({ client: null, channel: null }),
   };
 }
@@ -107,33 +106,32 @@ function Log({
   const last = page.items.at(-1);
   return (
     <>
-      <FilterPanel name="k3-filters" {...groupsOf(query, page)}>
-        <p className="note">{TAB_NOTES[query.tab]}</p>
-        {page.items.length > 0 ? (
-          <SendTable
-            sends={page.items}
-            hasRetry={query.tab === "failed"}
-            canRetry={canRetry}
-          />
-        ) : (
-          <StateNotice kind="empty" title="Καμία αποστολή εδώ">
-            Δεν υπάρχει τίποτα για αυτά τα φίλτρα.
-          </StateNotice>
-        )}
-        {page.hasMore && last && (
-          <p className="btn-row">
-            <Link
-              className="button"
-              href={sendsHref({
-                ...query,
-                cursor: { at: last.at, id: last.id },
-              })}
-            >
-              {query.tab === "scheduled" ? "Επόμενα" : "Παλαιότερα"}
-            </Link>
-          </p>
-        )}
-      </FilterPanel>
+      <FilterBar name="k3-filters" {...groupsOf(query, page)} />
+      <p className="note">{TAB_NOTES[query.tab]}</p>
+      {page.items.length > 0 ? (
+        <SendTable
+          sends={page.items}
+          hasRetry={query.tab === "failed"}
+          canRetry={canRetry}
+        />
+      ) : (
+        <StateNotice kind="empty" title="Καμία αποστολή εδώ">
+          Δεν υπάρχει τίποτα για αυτά τα φίλτρα.
+        </StateNotice>
+      )}
+      {page.hasMore && last && (
+        <p className="btn-row">
+          <Link
+            className="button"
+            href={sendsHref({
+              ...query,
+              cursor: { at: last.at, id: last.id },
+            })}
+          >
+            {query.tab === "scheduled" ? "Επόμενα" : "Παλαιότερα"}
+          </Link>
+        </p>
+      )}
       <p className="note">
         Κρατιέται 12 μήνες: μόνο τι, σε ποιον, πότε και αποτέλεσμα, όχι το σώμα
         του μηνύματος. Ο πελάτης δεν βλέπει Ιστορικό. Ανά Πελάτη υπάρχει στη

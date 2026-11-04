@@ -238,21 +238,12 @@ test("03 · «Πιθανό διπλό» φαίνεται και στον νέο 
   await deleteClient(page, existingId, existing);
 });
 
-// Σε στενή οθόνη η στήλη φίλτρων κρύβεται πίσω από το «Φίλτρα»· το κουμπί ζωντανεύει μόλις φορτώσει η σελίδα.
-async function filtersSide(page: Page) {
-  const side = page.getByRole("complementary", { name: "Φίλτρα" });
-  if (project() !== "mobile") return side;
-  await expect(async () => {
-    if (!(await side.isVisible()))
-      await page.getByRole("button", { name: /^Φίλτρα/ }).click();
-    await expect(side).toBeVisible({ timeout: 1_000 });
-  }).toPass();
-  return side;
-}
+// Η σειρά φίλτρων πάνω από τα αποτελέσματα· κάθε κάρτα ανοίγει τη λίστα της από κάτω.
+const filtersRow = (page: Page) =>
+  page.getByRole("group", { name: "Φίλτρα", exact: true });
 
 async function openCard(page: Page, label: string) {
-  const side = await filtersSide(page);
-  const card = side.locator("details").filter({
+  const card = filtersRow(page).locator("details").filter({
     has: page.locator("summary", { hasText: label }),
   });
   await expect(async () => {
@@ -291,7 +282,12 @@ test("03 · φίλτρα: κάθε Κατάσταση στη λίστα Πελα
     .click();
   await expect(page).toHaveURL(/status=active/);
   await expect(row).toHaveCount(0);
-  await page.getByRole("link", { name: "Βγάλε το φίλτρο Κατάσταση" }).click();
+  await (
+    await openCard(page, "Κατάσταση")
+  )
+    .getByRole("link", { name: /^όλες/ })
+    .click();
+  await expect(page).not.toHaveURL(/status=/);
   await expect(row).toBeVisible();
   await (
     await openCard(page, "Μηνιαίο πακέτο")
@@ -303,8 +299,12 @@ test("03 · φίλτρα: κάθε Κατάσταση στη λίστα Πελα
 
   // «Τι στάλθηκε»: Κατάσταση και Κανάλι, χωρίς «Πελάτης» (είναι ένας).
   await page.goto(`/app/clients/${clientId}?tab=dispatches`);
-  const side = await filtersSide(page);
-  await expect(side.locator("summary", { hasText: "Πελάτης" })).toHaveCount(0);
+  await expect(
+    filtersRow(page).locator("summary", { hasText: "Κανάλι" }),
+  ).toBeVisible();
+  await expect(
+    filtersRow(page).locator("summary", { hasText: "Πελάτης" }),
+  ).toHaveCount(0);
   await (
     await openCard(page, "Κανάλι")
   )

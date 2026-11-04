@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
@@ -44,21 +43,19 @@ export function PackSection(props: { today: string; query: ExportQuery }) {
           Ό,τι χρειάζεται ο λογιστής για έναν μήνα, με ένα κουμπί. Αρχικά
           επιλέγεται ο τελευταίος μήνας που έκλεισε· διάλεξε άλλον αν θέλεις.
         </p>
-        <nav className="m2-chips" aria-label="Μήνας">
-          <span className="muted">Μήνας:</span>
-          {months.map((m) => (
-            <Link
-              key={m}
-              className="badge"
-              data-tone={m === month ? "strong" : undefined}
-              aria-current={m === month ? "true" : undefined}
-              href={m2Href(props.query, { month: m })}
-            >
-              {m === month && <span aria-hidden="true">✓ </span>}
-              {packMonthLabel(m, current)}
-            </Link>
-          ))}
-        </nav>
+        <FilterBar
+          label="Μήνας"
+          filters={[
+            {
+              label: "Μήνας",
+              options: months.map((m) => ({
+                label: packMonthLabel(m, current),
+                href: m2Href(props.query, { month: m }),
+                isCurrent: m === month,
+              })),
+            },
+          ]}
+        />
         {month === current && (
           <p className="note">
             Ο μήνας δεν έχει κλείσει ακόμα· το πακέτο έχει ό,τι υπάρχει ως

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { FilterPanel } from "@/spaces/kit/filter-panel";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { Badge, ErrorNotice } from "@/spaces/screens/shared";
 
@@ -40,41 +40,40 @@ export async function SpacesClientSends({
   const { items, hasMore } = result.data;
   return (
     <Panel label="Τι στάλθηκε στον Πελάτη">
-      <FilterPanel
+      <FilterBar
         name="b2-sends-filters"
         {...clientSendsGroups(clientId, filter)}
-      >
-        {items.length === 0 ? (
-          <p>
-            {isClientSendsFiltered(filter)
-              ? "Δεν υπάρχει τίποτα για αυτά τα φίλτρα."
-              : CLIENT_SENDS_EMPTY}
-          </p>
-        ) : (
-          <>
-            <p>{sendsSummary(items, hasMore)}</p>
-            <ItemRows
-              items={items.map((send) => ({
-                id: send.id,
-                lead: (
-                  <time className="part-sub" dateTime={send.at}>
-                    {formatWhen(send.at)}
-                  </time>
-                ),
-                title: whatOf(send),
-                sub: send.recipientName ?? undefined,
-                aside: (
-                  <Badge
-                    tone={send.state === "failed" ? "attention" : undefined}
-                  >
-                    {STATE_LABELS[send.state]}
-                  </Badge>
-                ),
-              }))}
-            />
-          </>
-        )}
-      </FilterPanel>
+      />
+      {items.length === 0 ? (
+        <p>
+          {isClientSendsFiltered(filter)
+            ? "Δεν υπάρχει τίποτα για αυτά τα φίλτρα."
+            : CLIENT_SENDS_EMPTY}
+        </p>
+      ) : (
+        <>
+          <p>{sendsSummary(items, hasMore)}</p>
+          <ItemRows
+            items={items.map((send) => ({
+              id: send.id,
+              lead: (
+                <time className="part-sub" dateTime={send.at}>
+                  {formatWhen(send.at)}
+                </time>
+              ),
+              title: whatOf(send),
+              sub: send.recipientName ?? undefined,
+              aside: (
+                <Badge
+                  tone={send.state === "failed" ? "attention" : undefined}
+                >
+                  {STATE_LABELS[send.state]}
+                </Badge>
+              ),
+            }))}
+          />
+        </>
+      )}
       <p className="muted">
         {CLIENT_SENDS_NOTE}
         {hasHistoryLink && (

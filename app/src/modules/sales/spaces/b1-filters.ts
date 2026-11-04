@@ -1,7 +1,7 @@
-// Φίλτρα της λίστας Πελατών (B1) στο κοινό πάνελ φίλτρων: Κατάσταση, γύρισμα αυτόν τον μήνα, μηνιαίο πακέτο.
+// Φίλτρα της λίστας Πελατών (B1) στην κοινή σειρά φίλτρων: Κατάσταση, γύρισμα αυτόν τον μήνα, μηνιαίο πακέτο.
 // Ζουν στη διεύθυνση (?status=, ?noshoot=1, ?monthly=1, μαζί με την αναζήτηση ?q=) και στενεύουν τις γραμμές που ήρθαν.
 
-import type { FilterGroup } from "@/spaces/kit/filter-panel";
+import type { FilterGroup } from "@/spaces/kit/filter-bar";
 import { hrefOf } from "@/spaces/data/screens";
 
 import type { ClientStatus } from "../types";

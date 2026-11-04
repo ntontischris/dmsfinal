@@ -1,8 +1,8 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { getViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { financeCaps } from "../caps";
@@ -21,23 +21,26 @@ const Spaces = ({ children }: { children: ReactNode }) => (
   <div data-spaces>{children}</div>
 );
 
+// Η Καρτέλα ανήκει σε έναν Πελάτη: μία κάρτα «Πελάτης» με αναζήτηση, αντί για μία καρτέλα ανά Πελάτη.
 function ClientPicker(props: {
   clients: readonly LedgerClient[];
   current: string;
 }) {
   return (
-    <nav className="tabs" aria-label="Πελάτης">
-      {props.clients.map((c) => (
-        <Link
-          key={c.id}
-          className="tab"
-          aria-current={c.id === props.current ? "page" : undefined}
-          href={hrefOf("I5", { client: c.id })}
-        >
-          {c.name}
-        </Link>
-      ))}
-    </nav>
+    <FilterBar
+      label="Καρτέλα Πελάτη"
+      filters={[
+        {
+          label: "Πελάτης",
+          isSearchable: true,
+          options: props.clients.map((c) => ({
+            label: c.name,
+            href: hrefOf("I5", { client: c.id }),
+            isCurrent: c.id === props.current,
+          })),
+        },
+      ]}
+    />
   );
 }
 

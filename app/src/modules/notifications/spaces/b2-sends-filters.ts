@@ -1,7 +1,7 @@
 // Φίλτρα της καρτέλας «Τι στάλθηκε» στη Σελίδα Πελάτη: Κατάσταση και Κανάλι, όπως στο Ιστορικό αποστολών (K3).
 // Ζουν στη διεύθυνση της καρτέλας (?tab=dispatches&state=…&channel=…). Χωρίς «Πελάτης»: η καρτέλα είναι ενός Πελάτη.
 
-import type { FilterGroup } from "@/spaces/kit/filter-panel";
+import type { FilterGroup } from "@/spaces/kit/filter-bar";
 import { hrefOf } from "@/spaces/data/screens";
 
 import { parseSendsChannel, type SendsChannel } from "../sends-helpers";

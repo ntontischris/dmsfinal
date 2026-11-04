@@ -3,8 +3,8 @@ import { z } from "zod";
 
 import { getViewer } from "@/modules/access";
 import { getCostHint } from "@/modules/catalogue";
-import { Panel } from "@/spaces/kit/panel";
 import { hrefOf } from "@/spaces/data/screens";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { costsCaps } from "../caps";
@@ -15,6 +15,7 @@ import {
   defaultIdOf,
   internalEstimateOf,
   isInternalRow,
+  pickerFilterOf,
   pickerGroupsOf,
   savedValueOf,
   type CostSettings,
@@ -24,7 +25,7 @@ import { G3Workbench } from "./g3-workbench";
 
 import "./g3.css";
 
-// G3 Κόστος και ώρες στη νέα εμφάνιση (prototype `screens/G3.tsx`): πάνω οι Παραγωγές σε τρεις ομάδες, από κάτω ο
+// G3 Κόστος και ώρες στη νέα εμφάνιση (prototype `screens/G3.tsx`): πάνω η κάρτα «Παραγωγή» (τρεις ομάδες, με αναζήτηση), από κάτω ο
 // πάγκος της επιλεγμένης (?production=). Οι ομάδες, τα νούμερα και το Δικαίωμα έρχονται από τη βάση.
 
 function Picker({
@@ -35,31 +36,10 @@ function Picker({
   currentId: string;
 }) {
   return (
-    <nav className="g3-picker" aria-label="Παραγωγές">
-      {groups.map((group) =>
-        group.items.length === 0 ? null : (
-          <Panel
-            key={group.title}
-            label={group.title}
-            aside={group.items.length}
-          >
-            <ul className="g3-chips">
-              {group.items.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href={item.href}
-                    aria-current={item.id === currentId ? "page" : undefined}
-                  >
-                    {item.title}
-                    {item.isInternal && " (εσωτερική)"}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        ),
-      )}
-    </nav>
+    <FilterBar
+      label="Παραγωγές"
+      filters={[pickerFilterOf(groups, currentId)]}
+    />
   );
 }
 
