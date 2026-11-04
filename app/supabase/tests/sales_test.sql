@@ -504,7 +504,7 @@ select is(
     where pair -> 'candidate' ->> 'name' = 'Κίνηση Gym'),
   'Κίνηση Gym ~ Γυμναστήριο Κίνηση', 'Κάθε εκκρεμότητα δείχνει τον νέο και τον υπάρχοντα Πελάτη'
 );
-select is((select count(*)::int from public.sales_client_list() where is_possible_duplicate), 2, 'Η Διαχείριση βλέπει το σήμα στη λίστα');
+select is((select count(*)::int from public.sales_client_list() where is_possible_duplicate), 4, 'Η Διαχείριση βλέπει το σήμα στη λίστα, στον νέο και στον υπάρχοντα Πελάτη');
 select lives_ok(
   format($$ select public.sales_resolve_duplicate(%L) $$,
     (select f.id from public.client_duplicate_flags f where f.client_id = (current_setting('t.r8')::jsonb ->> 'client_id')::uuid)),

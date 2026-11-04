@@ -81,14 +81,15 @@ function SourceField({ sources }: { sources: readonly ListItem[] }) {
   );
 }
 
-// Τι ζητάει, από πού ήρθε και το Επόμενο βήμα: όσα θέλει κάθε Ευκαιρία (ADR 0009).
-function OpportunityFields({ sources }: { sources: readonly ListItem[] }) {
+// Τι ζητάει, από πού ήρθε και το Επόμενο βήμα: όσα θέλει κάθε Ευκαιρία (ADR 0009). Η Πηγή ρωτιέται μόνο για νέο
+// Πελάτη (sources)· για υπάρχοντα η βάση παίρνει την Πηγή από την οποία ήρθε.
+function OpportunityFields({ sources }: { sources?: readonly ListItem[] }) {
   return (
     <>
       <Field label="Τι ζητάει">
         <textarea className="input" name="title" rows={2} />
       </Field>
-      <SourceField sources={sources} />
+      {sources && <SourceField sources={sources} />}
       <input type="hidden" name="referredBy" value="" />
       <Field label="Επόμενο βήμα">
         <input className="input" name="nextStep" autoComplete="off" />
@@ -134,9 +135,20 @@ function NewClientForm({ sources }: { sources: readonly ListItem[] }) {
           autoComplete="off"
         />
       </Field>
-      {["legalName", "city", "afm"].map((name) => (
-        <input key={name} type="hidden" name={name} value="" />
-      ))}
+      <Field label="Επωνυμία">
+        <input className="input" name="legalName" autoComplete="off" />
+      </Field>
+      <Field label="Πόλη">
+        <input className="input" name="city" autoComplete="off" />
+      </Field>
+      <Field label="ΑΦΜ (προαιρετικό)">
+        <input
+          className="input"
+          name="afm"
+          inputMode="numeric"
+          autoComplete="off"
+        />
+      </Field>
       <OpportunityFields sources={sources} />
     </LeadForm>
   );
@@ -144,10 +156,8 @@ function NewClientForm({ sources }: { sources: readonly ListItem[] }) {
 
 function ExistingClientForm({
   clients,
-  sources,
 }: {
   clients: readonly PickerClient[];
-  sources: readonly ListItem[];
 }) {
   const [choice, setChoice] = useState("");
   const client = clients.find((candidate) => candidate.id === choice);
@@ -179,7 +189,7 @@ function ExistingClientForm({
             Η Ευκαιρία ανοίγει στον Πελάτη σου «{client.name}».
           </p>
           <input type="hidden" name="clientId" value={client.id} />
-          <OpportunityFields sources={sources} />
+          <OpportunityFields />
         </LeadForm>
       )}
       {client && !client.isMine && (
@@ -197,7 +207,6 @@ function ExistingClientForm({
             <Field label="Σχόλιο">
               <input className="input" name="comment" autoComplete="off" />
             </Field>
-            <SourceField sources={sources} />
           </LeadForm>
         </div>
       )}
@@ -266,7 +275,7 @@ export function NewOpportunity({
           {mode === "new" ? (
             <NewClientForm sources={activeSources} />
           ) : (
-            <ExistingClientForm clients={clients} sources={activeSources} />
+            <ExistingClientForm clients={clients} />
           )}
         </section>
       )}

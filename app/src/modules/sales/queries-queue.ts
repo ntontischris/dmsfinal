@@ -24,7 +24,9 @@ const queueRowSchema = z.object({
     .nullable(),
 });
 
-const flagSchema = z.array(z.object({ client_id: z.string() }));
+const flagSchema = z.array(
+  z.object({ client_id: z.string(), matches_client_id: z.string() }),
+);
 
 export async function listQueue(): Promise<ReadResult<QueueItem[]>> {
   const supabase = await createSupabase();
@@ -42,14 +44,20 @@ export async function listQueue(): Promise<ReadResult<QueueItem[]>> {
         .order("created_at"),
       (data) => z.array(queueRowSchema).parse(data),
     ),
-    // Τα σήματα τα βλέπει μόνο όποιος «Συγχωνεύει Πελάτες»· για τους άλλους η λίστα είναι κενή.
+    // Τα σήματα τα βλέπει μόνο όποιος «Συγχωνεύει Πελάτες»· για τους άλλους η λίστα είναι κενή. Το σήμα φαίνεται και
+    // στις δύο μεριές (νέος και υπάρχων Πελάτης), όπως στη λίστα Πελατών.
     read(
       "listQueue.flags",
       supabase
         .from("client_duplicate_flags")
-        .select("client_id")
+        .select("client_id, matches_client_id")
         .is("resolved_at", null),
-      (data) => new Set(flagSchema.parse(data).map((flag) => flag.client_id)),
+      (data) =>
+        new Set(
+          flagSchema
+            .parse(data)
+            .flatMap((flag) => [flag.client_id, flag.matches_client_id]),
+        ),
     ),
   ]);
   if (!queue.ok || !flags.ok) return { ok: false };

@@ -78,7 +78,7 @@ export async function createOpportunity(
     p_client_id: isNewClient ? null : input.clientId,
     p_client: isNewClient && client.success ? toClientJson(client.data) : null,
     p_title: input.title,
-    p_source_id: input.sourceId,
+    p_source_id: input.sourceId === "" ? null : input.sourceId,
     p_referred_by: input.referredBy,
     p_next_step: input.nextStep,
     p_next_step_due: input.nextStepDue,

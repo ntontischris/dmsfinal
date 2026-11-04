@@ -84,7 +84,7 @@ export async function requestAccess(
     p_client: input.clientId,
     p_topic: input.topic,
     p_comment: input.comment,
-    p_source_id: input.sourceId,
+    p_source_id: input.sourceId === "" ? null : input.sourceId,
   });
   return finishWith(outcome, "Το αίτημα στάλθηκε στη Διαχείριση.");
 }

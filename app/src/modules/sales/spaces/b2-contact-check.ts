@@ -4,14 +4,18 @@ export interface ContactDraft {
   name: string;
   phone: string;
   email: string;
+  legalName: string;
   city: string;
+  afm: string;
 }
 
 const LABELS: Readonly<Record<keyof ContactDraft, string>> = {
   name: "κύριο πρόσωπο",
   phone: "τηλέφωνο",
   email: "email",
+  legalName: "επωνυμία",
   city: "πόλη",
+  afm: "ΑΦΜ",
 };
 
 export const contactErrors = (draft: ContactDraft): readonly string[] => {

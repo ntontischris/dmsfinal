@@ -26,14 +26,21 @@ export const nextStepSchema = z.object({
   nextStepDue: z.iso.date("Διάλεξε ημερομηνία για το Επόμενο βήμα."),
 });
 
+// "" = χωρίς Πηγή: για υπάρχοντα Πελάτη η βάση παίρνει την Πηγή του (από πού ήρθε).
+const optionalSource = z.union([z.literal(""), z.uuid("Διάλεξε Πηγή.")]);
+
 export const createOpportunitySchema = z
   .object({
     clientId: z.union([z.literal(""), z.uuid()]), // "" = νέος Πελάτης (τότε ισχύει και το clientFieldsSchema)
     title: text.min(1, "Γράψε τον τίτλο της Ευκαιρίας."),
-    sourceId: z.uuid("Διάλεξε Πηγή."),
+    sourceId: optionalSource,
     referredBy: text,
   })
-  .extend(nextStepSchema.shape);
+  .extend(nextStepSchema.shape)
+  .refine((v) => v.clientId !== "" || v.sourceId !== "", {
+    message: "Διάλεξε Πηγή.",
+    path: ["sourceId"],
+  });
 
 export const updateClientSchema = clientFieldsSchema.extend({
   clientId: z.uuid(),
@@ -75,7 +82,7 @@ export const requestAccessSchema = z.object({
   clientId: z.uuid(),
   topic: text.min(1, "Γράψε τι αφορά."),
   comment: text,
-  sourceId: z.uuid("Διάλεξε Πηγή."),
+  sourceId: optionalSource,
 });
 
 export const assignSchema = z.object({
