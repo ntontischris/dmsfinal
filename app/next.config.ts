@@ -17,7 +17,12 @@ const proposalHeaders = [
 
 // Το PDF Τιμολογίου (έως 4 MB) ανεβαίνει μέσα από server action· το Vercel κόβει σώματα πάνω από 4,5 MB.
 const nextConfig: NextConfig = {
-  experimental: { serverActions: { bodySizeLimit: "5mb" } },
+  experimental: {
+    serverActions: { bodySizeLimit: "5mb" },
+    // Ταχύτητα: μια οθόνη που είδες πριν από λίγο ξανανοίγει αμέσως (πίσω/μπρος, μενού) για 30″. Κάθε αλλαγή που κάνεις
+    // (server action με revalidatePath) την ξαναφορτώνει· αλλαγές άλλων φαίνονται το αργότερο σε 30″.
+    staleTimes: { dynamic: 30 },
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
