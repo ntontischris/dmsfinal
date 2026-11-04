@@ -117,7 +117,11 @@ test("φίλτρα · στις Αποστολές ο Ιδιοκτήτης ψάχ
     page.getByRole("link", { name: "Καθαρισμός φίλτρων" }),
   ).toBeVisible();
   await expect(
-    page.locator("tr").filter({ hasText: "Ελένη Αποστολών" }).first(),
+    page
+      .getByRole("main")
+      .getByRole("listitem")
+      .filter({ hasText: "Ελένη Αποστολών" })
+      .first(),
   ).toBeVisible();
 
   await remove.click();
