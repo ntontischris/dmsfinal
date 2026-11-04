@@ -10,6 +10,7 @@ import {
   ClientsTable,
   NewOpportunity,
   SpacesClients,
+  parseB1Filters,
   listClients,
   listSalesLists,
   salesCaps,
@@ -102,15 +103,24 @@ function SettingsLink() {
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; new?: string; deleted?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    new?: string;
+    deleted?: string;
+    status?: string;
+    noshoot?: string;
+    monthly?: string;
+  }>;
 }) {
   const viewer = await getViewer();
-  const { q, new: newStamp, deleted } = await searchParams;
+  const params = await searchParams;
+  const { q, new: newStamp, deleted } = params;
   const query = typeof q === "string" ? q.trim() : "";
   if ((await lookOf(viewer)) === "spaces")
     return (
       <SpacesClients
         query={query}
+        filters={parseB1Filters(params)}
         newStamp={typeof newStamp === "string" ? newStamp : undefined}
         isDeleted={deleted === "1"}
       />

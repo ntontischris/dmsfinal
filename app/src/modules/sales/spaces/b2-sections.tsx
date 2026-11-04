@@ -127,23 +127,19 @@ export function AgreementsSection({
 export function OpportunitiesSection({
   client,
   rows,
-  sources,
+  canCreate,
 }: {
   client: { id: string; name: string };
   rows: readonly B2OpportunityRow[];
-  // null = ο Χρήστης δεν ανοίγει νέα Ευκαιρία.
-  sources: readonly ListItem[] | null;
+  // false = ο Χρήστης δεν ανοίγει νέα Ευκαιρία.
+  canCreate: boolean;
 }) {
   return (
     <Panel
       label="Ευκαιρίες"
       aside={
-        sources !== null ? (
-          <ClientNewOpportunity
-            clientId={client.id}
-            clientName={client.name}
-            sources={sources}
-          />
+        canCreate ? (
+          <ClientNewOpportunity clientId={client.id} clientName={client.name} />
         ) : undefined
       }
     >

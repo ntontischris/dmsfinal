@@ -3,26 +3,22 @@
 import { useState } from "react";
 
 import { requestAccess } from "../actions-clients";
-import type { ListItem } from "../types";
 import { SpacesActionForm } from "./spaces-form";
 
 interface AccessRequestProps {
   clientId: string;
   ownerName: string | null;
-  sources: readonly ListItem[];
   topicPrompt?: string;
 }
 
 // Αίτημα πρόσβασης σε Πελάτη άλλου πωλητή (prototype `screens/access-request.tsx`), με την πραγματική ενέργεια.
-// Η Πηγή μπαίνει γιατί το αίτημα γίνεται Ευκαιρία αν εγκριθεί.
+// Η Πηγή δεν ρωτιέται: ο Πελάτης υπάρχει, και η βάση δίνει στο αίτημα (και στην Ευκαιρία της έγκρισης) την Πηγή του.
 export function AccessRequest({
   clientId,
   ownerName,
-  sources,
   topicPrompt = "Τι αφορά η Ευκαιρία;",
 }: AccessRequestProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const active = sources.filter((source) => !source.isRetired);
   if (!isOpen)
     return (
       <button
@@ -52,21 +48,6 @@ export function AccessRequest({
           placeholder="Σχόλιο προς τη Διαχείριση"
           aria-label="Σχόλιο"
         />
-        <select
-          className="select"
-          name="sourceId"
-          aria-label="Πηγή"
-          defaultValue=""
-        >
-          <option value="" disabled>
-            Διάλεξε Πηγή
-          </option>
-          {active.map((source) => (
-            <option key={source.id} value={source.id}>
-              {source.label}
-            </option>
-          ))}
-        </select>
       </SpacesActionForm>
       <div className="btn-row">
         <button

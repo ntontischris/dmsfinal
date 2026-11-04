@@ -7,6 +7,7 @@ import {
   deleteClientSchema,
   mergeSchema,
   nextStepSchema,
+  requestAccessSchema,
 } from "./schemas";
 
 const UUID_A = "11111111-1111-4111-8111-111111111111";
@@ -105,6 +106,41 @@ describe("createOpportunitySchema", () => {
       nextStepDue: "2026-10-12",
     });
     expect(result.success).toBe(true);
+  });
+  it("ζητά Πηγή για νέο Πελάτη", () => {
+    const result = createOpportunitySchema.safeParse({
+      clientId: "",
+      title: "Βίντεο εγκαινίων",
+      sourceId: "",
+      referredBy: "",
+      nextStep: "Πρώτη κλήση",
+      nextStepDue: "2026-10-12",
+    });
+    expect(result.error?.issues[0]?.message).toBe("Διάλεξε Πηγή.");
+  });
+  it("δεν ζητά Πηγή για υπάρχοντα Πελάτη", () => {
+    const result = createOpportunitySchema.safeParse({
+      clientId: UUID_B,
+      title: "Νέο πακέτο",
+      sourceId: "",
+      referredBy: "",
+      nextStep: "Πρώτη κλήση",
+      nextStepDue: "2026-10-12",
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("requestAccessSchema", () => {
+  it("δέχεται Αίτημα χωρίς Πηγή (η βάση παίρνει την Πηγή του Πελάτη)", () => {
+    expect(
+      requestAccessSchema.safeParse({
+        clientId: UUID_A,
+        topic: "Καμπάνια",
+        comment: "",
+        sourceId: "",
+      }).success,
+    ).toBe(true);
   });
 });
 

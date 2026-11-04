@@ -1,7 +1,7 @@
 -- Ειδοποιήσεις Kε #174: Ιστορικό αποστολών (K3, καρτέλα Πελάτη), «Ξαναστείλε», Γεγονότα Υγείας 50–53, διατήρηση 12 μηνών.
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι έλεγχοι Υγείας και ο καθαρισμός παίρνουν σταθερό p_now.
 begin;
-select plan(74);
+select plan(79);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή (χωρίς Δικαίωμα) · a3 Πωλήσεις (Υπεύθυνος Πελάτη 1) · a4 μόνο «Διαχειρίζεται Αυτοματισμούς»
@@ -177,6 +177,24 @@ select is(public.t_ids(public.client_sends('00000000-0000-0000-0000-0000000000c1
 select is(public.t_keys(public.client_sends('00000000-0000-0000-0000-0000000000c1')),
   array['at', 'channel', 'eventLabel', 'eventType', 'id', 'kind', 'recipientName', 'source', 'state'],
   'Η καρτέλα του Πελάτη έχει μόνο Πότε / Τι / Παραλήπτη / Κατάσταση');
+-- Φίλτρα της καρτέλας (s11): Κανάλι και Κατάσταση, όπως στο K3.
+select ok(
+  (select bool_and(i ->> 'channel' = 'email') and count(*) > 0
+     from jsonb_array_elements(public.client_sends('00000000-0000-0000-0000-0000000000c1', p_channel => 'email') -> 'items') i),
+  'Κανάλι email: μόνο email');
+select is(
+  jsonb_array_length(public.client_sends('00000000-0000-0000-0000-0000000000c1', p_channel => 'email') -> 'items')
+  + jsonb_array_length(public.client_sends('00000000-0000-0000-0000-0000000000c1', p_channel => 'notification') -> 'items'),
+  jsonb_array_length(public.client_sends('00000000-0000-0000-0000-0000000000c1') -> 'items'),
+  'Ειδοποίηση και email μαζί δίνουν όλες τις αποστολές');
+select is(
+  (select count(*)::int from jsonb_array_elements(public.client_sends('00000000-0000-0000-0000-0000000000c1', p_tab => 'failed') -> 'items') i
+    where i ->> 'state' <> 'failed'),
+  0, 'Κατάσταση «Απέτυχαν»: μόνο αποτυχίες');
+select throws_ok($$ select public.client_sends('00000000-0000-0000-0000-0000000000c1', p_tab => 'scheduled') $$, 'P0001', null,
+  'Άγνωστη κατάσταση: σφάλμα');
+select throws_ok($$ select public.client_sends('00000000-0000-0000-0000-0000000000c2', p_channel => 'email') $$, '42501', null,
+  'Τα φίλτρα δεν ανοίγουν Πελάτη που δεν βλέπει');
 
 -- ───────────── Αποστολή απέτυχε οριστικά (51) ─────────────
 select public.email_outbox_done('00000000-0000-0000-0000-00000000ee01', false, 'Μυστικό θέμα', 'Ο πάροχος απέρριψε τη διεύθυνση');

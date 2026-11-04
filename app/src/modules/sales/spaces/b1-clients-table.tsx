@@ -1,20 +1,18 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 
 import { Entity, Meter, Person } from "@/spaces/kit/parts";
 import { Badge, fmtDate, type BadgeTone } from "@/spaces/screens/shared";
 
 import type { B1Columns, B1Row } from "./b1-adapter";
+import type { B1Filters } from "./b1-filters";
 
 interface ClientsTableProps extends B1Columns {
+  // Οι γραμμές μετά τα φίλτρα (πάνελ φίλτρων της οθόνης).
   rows: readonly B1Row[];
   // Η αναζήτηση ζει στη διεύθυνση (?q=), όπως στην παλιά εμφάνιση: ψάχνει η βάση, όχι μόνο οι 100 πρώτοι.
   query: string;
+  filters: B1Filters;
 }
-
-const STATUSES = ["Όλοι", "Υποψήφιος", "Ενεργός", "Ανενεργός"] as const;
 
 // Η κατάσταση ως χάπι: ενεργός = έμφαση, υποψήφιος = περιμένει, ανενεργός = ξεθωριασμένο.
 const STATUS_TONE: Readonly<Record<string, BadgeTone>> = {
@@ -23,79 +21,49 @@ const STATUS_TONE: Readonly<Record<string, BadgeTone>> = {
   Ανενεργός: "faded",
 };
 
-// Ο πίνακας Πελατών του prototype (`screens/b1-clients-table.tsx`) με πραγματικές γραμμές. Τα φίλτρα κατάστασης και μήνα
-// στενεύουν τις γραμμές που ήρθαν· η αναζήτηση στέλνεται στη βάση.
+// Η αναζήτηση κρατά τα φίλτρα που ισχύουν.
+function SearchForm({ query, filters }: { query: string; filters: B1Filters }) {
+  return (
+    <form className="toolbar" method="get" action="/app/clients" role="search">
+      <input
+        className="input grow"
+        type="search"
+        name="q"
+        placeholder="Αναζήτηση πελάτη…"
+        aria-label="Αναζήτηση πελάτη"
+        defaultValue={query}
+        autoComplete="off"
+      />
+      {filters.status && (
+        <input type="hidden" name="status" value={filters.status} />
+      )}
+      {filters.isNoShoot && <input type="hidden" name="noshoot" value="1" />}
+      {filters.isMonthly && <input type="hidden" name="monthly" value="1" />}
+    </form>
+  );
+}
+
+// Ο πίνακας Πελατών του prototype (`screens/b1-clients-table.tsx`) με πραγματικές γραμμές. Τα φίλτρα είναι στο πάνελ
+// φίλτρων της οθόνης· η αναζήτηση στέλνεται στη βάση.
 export function ClientsTable(props: ClientsTableProps) {
   const {
-    rows,
+    rows: visible,
     query,
+    filters,
     showOwner,
     showOpportunities,
     showAgreements,
     showBalance,
   } = props;
-  const [status, setStatus] = useState<(typeof STATUSES)[number]>("Όλοι");
-  const [onlyNoShoot, setOnlyNoShoot] = useState(false);
-  const [onlyMonthly, setOnlyMonthly] = useState(false);
-
-  const visible = rows.filter(
-    (row) =>
-      (status === "Όλοι" || row.status === status) &&
-      (!onlyNoShoot || !!row.month?.hasNoShoot) &&
-      (!onlyMonthly || row.month !== null),
-  );
 
   return (
     <>
-      <form
-        className="toolbar"
-        method="get"
-        action="/app/clients"
-        role="search"
-      >
-        <input
-          className="input grow"
-          type="search"
-          name="q"
-          placeholder="Αναζήτηση πελάτη…"
-          aria-label="Αναζήτηση πελάτη"
-          defaultValue={query}
-          autoComplete="off"
-        />
-        <select
-          className="select"
-          aria-label="Κατάσταση Πελάτη"
-          value={status}
-          onChange={(event) =>
-            setStatus(event.target.value as (typeof STATUSES)[number])
-          }
-        >
-          {STATUSES.map((item) => (
-            <option key={item}>{item}</option>
-          ))}
-        </select>
-        <label className="b1-filter">
-          <input
-            type="checkbox"
-            checked={onlyNoShoot}
-            onChange={(event) => setOnlyNoShoot(event.target.checked)}
-          />{" "}
-          Μόνο όσοι δεν έχουν γύρισμα αυτόν τον μήνα
-        </label>
-        <label className="b1-filter">
-          <input
-            type="checkbox"
-            checked={onlyMonthly}
-            onChange={(event) => setOnlyMonthly(event.target.checked)}
-          />{" "}
-          Μόνο με μηνιαίο πακέτο
-        </label>
-      </form>
+      <SearchForm query={query} filters={filters} />
       {visible.length === 0 ? (
         <p className="muted">
-          {onlyNoShoot
+          {filters.isNoShoot
             ? "Όλοι οι μηνιαίοι Πελάτες έχουν γύρισμα αυτόν τον μήνα (έγινε ή κλεισμένο)."
-            : "Κανένας Πελάτης δεν ταιριάζει με την αναζήτηση."}
+            : "Κανένας Πελάτης δεν ταιριάζει με την αναζήτηση και τα φίλτρα."}
         </p>
       ) : (
         <div className="scroll">

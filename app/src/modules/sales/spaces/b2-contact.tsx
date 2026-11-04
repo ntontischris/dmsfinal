@@ -21,11 +21,13 @@ const draftOf = (client: ClientDetail): ContactDraft => ({
   name: client.contactName,
   phone: client.contactPhone,
   email: client.contactEmail,
+  legalName: client.legalName,
   city: client.city,
+  afm: client.afm ?? "",
 });
 
 // Κύριο πρόσωπο του Πελάτη (prototype `screens/b2-contact.tsx`), με «Αλλαγή στοιχείων» επί τόπου πάνω στην
-// πραγματική ενέργεια· τα υπόλοιπα στοιχεία του Πελάτη πάνε όπως είναι.
+// πραγματική ενέργεια: επαφή, Επωνυμία, Πόλη και ΑΦΜ, όπως η Επεξεργασία της κλασικής εμφάνισης· το όνομα πάει όπως είναι.
 export function ClientContact({ client, canEdit }: ClientContactProps) {
   const contact = draftOf(client);
   const [draft, setDraft] = useState(contact);
@@ -60,10 +62,10 @@ export function ClientContact({ client, canEdit }: ClientContactProps) {
   };
 
   const field = (
-    key: "name" | "phone" | "email",
+    key: keyof ContactDraft,
     name: string,
     label: string,
-    type: string,
+    type = "text",
   ) => (
     <label className="field">
       <span>{label}</span>
@@ -82,12 +84,12 @@ export function ClientContact({ client, canEdit }: ClientContactProps) {
       <form ref={formRef} className="stack" onSubmit={handleSubmit}>
         <input type="hidden" name="clientId" value={client.id} />
         <input type="hidden" name="name" value={client.name} />
-        <input type="hidden" name="legalName" value={client.legalName} />
-        <input type="hidden" name="city" value={client.city} />
-        <input type="hidden" name="afm" value={client.afm ?? ""} />
-        {field("name", "contactName", "Κύριο πρόσωπο", "text")}
+        {field("name", "contactName", "Κύριο πρόσωπο")}
         {field("phone", "contactPhone", "Τηλέφωνο", "tel")}
         {field("email", "contactEmail", "Email", "email")}
+        {field("legalName", "legalName", "Επωνυμία")}
+        {field("city", "city", "Πόλη")}
+        {field("afm", "afm", "ΑΦΜ (προαιρετικό)")}
         {(errors.length > 0 || state.error) && (
           <ul className="note" role="alert">
             {errors.map((error) => (

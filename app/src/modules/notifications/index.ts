@@ -48,6 +48,10 @@ export { getSends } from "./queries-sends";
 export { SendsScreen } from "./components/sends-screen";
 export { ClientSends } from "./components/client-sends";
 export { SpacesClientSends } from "./spaces/b2-sends";
+export {
+  parseClientSendsFilter,
+  type ClientSendsFilter,
+} from "./spaces/b2-sends-filters";
 
 // K1 Αυτοματισμοί, K2 Μηνύματα συστήματος, A2 Προτιμήσεις (#173).
 export type {

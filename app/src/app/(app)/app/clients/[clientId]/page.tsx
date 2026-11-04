@@ -7,7 +7,7 @@ import { Split } from "@/components/ui/inspector";
 import { ClientUsersSection, can, getViewer, isOwner, type Viewer } from "@/modules/access";
 import { AuditHistoryLink } from "@/modules/audit";
 import { GdprClientPanel } from "@/modules/gdpr";
-import { canSeeClientSends, sendsCaps } from "@/modules/notifications";
+import { canSeeClientSends, parseClientSendsFilter, sendsCaps } from "@/modules/notifications";
 import {
   ClientInspector,
   SpacesClient,
@@ -132,13 +132,19 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; state?: string; channel?: string }>;
 }) {
   const viewer = await getViewer();
   // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
   if ((await lookOf(viewer)) === "spaces") {
-    const [{ clientId: spacesId }, { tab: spacesTab }] = await Promise.all([params, searchParams]);
-    return <SpacesClient clientId={spacesId} tab={typeof spacesTab === "string" ? spacesTab : undefined} />;
+    const [{ clientId: spacesId }, query] = await Promise.all([params, searchParams]);
+    return (
+      <SpacesClient
+        clientId={spacesId}
+        tab={typeof query.tab === "string" ? query.tab : undefined}
+        sendsFilter={parseClientSendsFilter(query)}
+      />
+    );
   }
   const caps = salesCaps(viewer);
   if (!caps.canViewClients) return <NoAccess viewer={viewer} />;

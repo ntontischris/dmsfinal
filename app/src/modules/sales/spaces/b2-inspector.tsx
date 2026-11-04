@@ -97,6 +97,12 @@ export function ClientInspector({
   );
 }
 
+// Ο τίτλος φαίνεται (όχι μόνο aria-label), για να βρίσκεται η γραμμή στη σελίδα.
 export function RelationshipSteps({ steps }: { steps: readonly Step[] }) {
-  return <Steps label="Σχέση με τον Πελάτη" steps={steps} />;
+  return (
+    <section className="b2-relationship">
+      <h2>Σχέση με τον Πελάτη</h2>
+      <Steps label="Σχέση με τον Πελάτη" steps={steps} />
+    </section>
+  );
 }
