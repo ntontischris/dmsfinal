@@ -101,14 +101,7 @@ const rightsOf = (viewer: Viewer, client: ClientDetail): B2TabRights => ({
 });
 
 // Ο Πελάτης άλλου πωλητή: φαίνεται η ύπαρξή του και ο Υπεύθυνος, όχι τα στοιχεία (ADR 0007).
-async function TakenClient({
-  card,
-  caps,
-}: {
-  card: ClientRow;
-  caps: SalesCaps;
-}) {
-  const lists = caps.canManage ? await listSalesLists() : null;
+function TakenClient({ card, caps }: { card: ClientRow; caps: SalesCaps }) {
   return (
     <Frame>
       <div className="card-title">
@@ -117,12 +110,8 @@ async function TakenClient({
       </div>
       <StateNotice kind="denied" title="Ο Πελάτης ανήκει σε άλλον πωλητή">
         <p>{takenMessage(card.managerName)}</p>
-        {lists?.ok && (
-          <AccessRequest
-            clientId={card.id}
-            ownerName={card.managerName}
-            sources={lists.data.sources}
-          />
+        {caps.canManage && (
+          <AccessRequest clientId={card.id} ownerName={card.managerName} />
         )}
         <BackToList />
       </StateNotice>
