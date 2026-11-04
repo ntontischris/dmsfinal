@@ -120,6 +120,8 @@ export interface BlockedKind {
   // Κλειδί της παλέτας του σχεδίου (kind-style.ts) και σύντομο εικονίδιο ή null.
   color: string;
   icon: string | null;
+  // «Μπορεί να γίνει Γύρισμα»: δείχνει τη «Μετατροπή σε Γύρισμα» στον κλεισμένο χρόνο αυτού του Είδους.
+  becomesFilming: boolean;
 }
 
 // Γύρισμα που πέφτει πάνω στον κλεισμένο χρόνο, όπου το άτομο είναι στο Συνεργείο (blocked_time_conflicts).

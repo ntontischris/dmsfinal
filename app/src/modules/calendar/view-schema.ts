@@ -159,6 +159,7 @@ export const blockedKindsSchema: z.ZodType<BlockedKind[]> = z.array(
     retired: z.boolean(),
     color: z.string().default(DEFAULT_KIND_COLOR),
     icon: z.string().nullable().default(null),
+    becomesFilming: z.boolean().default(false),
   }),
 );
 

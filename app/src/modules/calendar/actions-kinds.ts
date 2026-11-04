@@ -11,7 +11,7 @@ import { kindFormSchema, kindIdSchema, kindStyleSchema } from "./schemas";
 const KIND_SAVED = "Το Είδος αποθηκεύτηκε.";
 const KIND_RETIRED = "Το Είδος αποσύρθηκε. Ο παλιός κλεισμένος χρόνος το κρατά.";
 const KIND_RESTORED = "Το Είδος επανήλθε.";
-const KIND_STYLED = "Το χρώμα και το εικονίδιο αποθηκεύτηκαν.";
+const KIND_STYLED = "Το Είδος αποθηκεύτηκε.";
 
 const fieldOf = (form: FormData, key: string): string => String(form.get(key) ?? "");
 
@@ -45,11 +45,17 @@ export async function styleBlockedKind(_: FormState, form: FormData): Promise<Fo
     id: fieldOf(form, "id"),
     color: fieldOf(form, "color"),
     icon: fieldOf(form, "icon"),
+    becomesFilming: form.get("becomesFilming") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   return finish(
     "blocked_time_kind_style",
-    { p_id: parsed.data.id, p_color: parsed.data.color, p_icon: parsed.data.icon },
+    {
+      p_id: parsed.data.id,
+      p_color: parsed.data.color,
+      p_icon: parsed.data.icon,
+      p_becomes_filming: parsed.data.becomesFilming,
+    },
     KIND_STYLED,
   );
 }

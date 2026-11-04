@@ -24,6 +24,28 @@ test("02 · οι Ρυθμίσεις έχουν τα Είδη κλεισμένο�
   }
 });
 
+test("02 · το εικονίδιο διαλέγεται από λίστα, και μόνο όποιο Είδος το επιτρέπει γίνεται Γύρισμα", async ({ page }) => {
+  await page.goto("/app/settings/filming?part=calendar");
+  for (const [kind, icon, isConvertible] of [
+    ["Ρεπό", "🌙", false],
+    ["Ραντεβού", "🤝", true],
+  ] as const) {
+    const open = page.getByRole("button", { name: `Χρώμα και εικονίδιο: ${kind}`, exact: true });
+    const form = page.locator("form.kind-style").filter({ hasText: `Εικονίδιο: ${kind}` });
+    await expect(async () => {
+      if (!(await form.isVisible())) await open.click();
+      await expect(form).toBeVisible({ timeout: 1_000 });
+    }).toPass();
+    await expect(form.getByRole("radio", { name: icon, exact: true })).toBeChecked();
+    await expect(form.getByRole("radio", { name: "Χωρίς εικονίδιο", exact: true })).toBeVisible();
+    const convert = form.getByRole("checkbox", { name: /Μπορεί να γίνει Γύρισμα/ });
+    if (isConvertible) await expect(convert).toBeChecked();
+    else await expect(convert).not.toBeChecked();
+    await open.click();
+    await expect(form).toBeHidden();
+  }
+});
+
 test("02 · το Ημερολόγιο έχει Επόμενα βήματα, Προθεσμίες και φίλτρο ατόμου", async ({ page }) => {
   await page.goto(`/app/calendar?view=list&date=${DAY}`);
   await page.locator(".a5-filters > summary").click();
@@ -88,6 +110,8 @@ test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού» από �
   await page.goto(`/app/calendar?view=list&date=${DAY}`);
   await item.click();
   await expect(page.getByLabel("Τίτλος")).toHaveValue(title);
+  // Το Ραντεβού «Μπορεί να γίνει Γύρισμα» (ρύθμιση του Είδους).
+  await expect(page.getByRole("link", { name: "Μετατροπή σε Γύρισμα" })).toBeVisible();
   const confirm = page.getByRole("alertdialog");
   await expect(async () => {
     if (!(await confirm.isVisible())) await page.getByRole("button", { name: "Διαγραφή", exact: true }).click();

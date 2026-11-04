@@ -17,6 +17,12 @@ export type KindColor = (typeof KIND_COLORS)[number];
 export const DEFAULT_KIND_COLOR: KindColor = "grey";
 export const KIND_ICON_LIMIT = 4;
 
+// Τα εικονίδια που διαλέγει κανείς με ένα πάτημα στις Ρυθμίσεις. Ένα δικό σου (έως 4 χαρακτήρες) γράφεται στο «Δικό σου».
+export const KIND_ICONS = [
+  "🌙", "🏖", "🤝", "📞", "•", "🎬", "📷", "🎤", "✈", "🚗",
+  "🏥", "🎓", "🏠", "☕", "💼", "📅", "⭐", "🔧", "🎉", "📦",
+] as const;
+
 export const KIND_COLOR_LABELS: Readonly<Record<KindColor, string>> = {
   teal: "Τιρκουάζ",
   green: "Πράσινο",

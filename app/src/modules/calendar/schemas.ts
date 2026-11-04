@@ -76,4 +76,6 @@ export const kindStyleSchema = z.object({
     .trim()
     .refine((value) => [...value].length <= KIND_ICON_LIMIT, ICON_MESSAGE)
     .transform((value) => value || null),
+  // Κενό = μένει ως έχει (η βάση το κρατά).
+  becomesFilming: z.boolean().optional(),
 });

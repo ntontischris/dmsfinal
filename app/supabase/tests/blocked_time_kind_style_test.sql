@@ -69,10 +69,10 @@ select throws_ok(format('select public.blocked_time_kind_style(%L, %L, null)', g
 -- ───────────── Αλλαγή (oracle) ─────────────
 select lives_ok(format('select public.blocked_time_kind_style(%L, %L, %L)', current_setting('t.meet'), 'pink', ' ☕ '),
   'Ο Ιδιοκτήτης αλλάζει χρώμα και εικονίδιο');
-select is(public.t_kind('Ραντεβού') - 'id', '{"label": "Ραντεβού", "retired": false, "color": "pink", "icon": "☕"}'::jsonb,
+select is(public.t_kind('Ραντεβού') - 'id', '{"label": "Ραντεβού", "retired": false, "color": "pink", "icon": "☕", "becomesFilming": true}'::jsonb,
   'Η λίστα δίνει το νέο χρώμα και το εικονίδιο χωρίς κενά');
 select set_config('t.gym', public.blocked_time_kind_save(null, 'Γυμναστήριο')::text, true);
-select is(public.t_kind('Γυμναστήριο') - 'id', '{"label": "Γυμναστήριο", "retired": false, "color": "grey", "icon": null}'::jsonb,
+select is(public.t_kind('Γυμναστήριο') - 'id', '{"label": "Γυμναστήριο", "retired": false, "color": "grey", "icon": null, "becomesFilming": false}'::jsonb,
   'Νέο Είδος: γκρι, χωρίς εικονίδιο');
 
 -- ───────────── Ποιος βλέπει το ύφος ─────────────
