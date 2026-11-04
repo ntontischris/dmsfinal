@@ -8,9 +8,9 @@
 -- Τι αλλάζει: μόνο η γλώσσα. Το σώμα, τα ορίσματα, ο τύπος επιστροφής, το stable, το security definer, το strict,
 -- το search_path, τα δικαιώματα εκτέλεσης και τα σχόλια μένουν ίδια.
 --  • `#variable_conflict use_column`: όπως στη `language sql`, όταν ένα όρισμα έχει το όνομα στήλης κερδίζει η στήλη.
---  • Συνάρτηση μίας τιμής: η sql επιστρέφει την πρώτη γραμμή (ή null). Το ίδιο κάνει το `(select … limit 1)`.
---  • Συνάρτηση λίστας: `return query` με το ίδιο ερώτημα.
--- Μένουν sql: όσες έχουν πολλές εντολές, σώμα `begin atomic`, ή άλλες ρυθμίσεις από το `search_path = ''`.
+--  • Η sql επιστρέφει την πρώτη γραμμή (ή null). Το ίδιο κάνει το `(select … limit 1)`, με την ίδια μετατροπή τύπου.
+-- Μένουν sql: οι συναρτήσεις λίστας (το `return query` της plpgsql θέλει ακριβώς ίδιους τύπους στηλών, η sql τους
+-- μετατρέπει), όσες έχουν πολλές εντολές, σώμα `begin atomic`, ή άλλες ρυθμίσεις από το `search_path = ''`.
 -- Η authz.user_scope γράφεται με το χέρι στο τέλος (η πιο συχνή κλήση): οι δύο έλεγχοι μέσα της χωρίς άλλες κλήσεις.
 
 do $convert$
@@ -24,7 +24,6 @@ begin
            format('%I.%I', n.nspname, p.proname) as fname,
            pg_get_function_arguments(p.oid) as args,
            pg_get_function_result(p.oid) as result,
-           p.proretset,
            p.prosecdef,
            p.proisstrict,
            p.proparallel,
@@ -39,16 +38,12 @@ begin
        and p.prokind = 'f'
        and coalesce(p.prosrc, '') <> ''
        and p.proconfig = array['search_path=""']
-       and (p.proretset or t.typtype in ('b', 'd', 'e'))
+       and not p.proretset
+       and t.typtype in ('b', 'd', 'e')
   loop
     v_body := f.body;
     continue when v_body like '%;%' or v_body like '%$fn$%';
-    v_src := case
-      when f.proretset then
-        E'#variable_conflict use_column\nbegin\n  return query\n' || v_body || E'\n;\nend'
-      else
-        E'#variable_conflict use_column\nbegin\n  return (select _q.* from (\n' || v_body || E'\n  ) _q limit 1);\nend'
-    end;
+    v_src := E'#variable_conflict use_column\nbegin\n  return (select _q.* from (\n' || v_body || E'\n  ) _q limit 1);\nend';
     execute format(
       'create or replace function %s(%s) returns %s language plpgsql stable %s %s %s set search_path = '''' as $fn$%s$fn$',
       f.fname,

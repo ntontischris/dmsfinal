@@ -29,7 +29,8 @@ select is(
       and p.prokind = 'f'
       and coalesce(p.prosrc, '') <> ''
       and p.proconfig = array['search_path=""']
-      and (p.proretset or t.typtype in ('b', 'd', 'e'))
+      and not p.proretset
+      and t.typtype in ('b', 'd', 'e')
       and regexp_replace(p.prosrc, ';\s*$', '') not like '%;%'),
   null,
   'Καμία stable συνάρτηση authz μίας εντολής δεν έμεινε language sql'
