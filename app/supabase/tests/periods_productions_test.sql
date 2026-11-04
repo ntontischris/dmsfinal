@@ -274,9 +274,12 @@ select is(
 select is((select unused_provisions from public.agreements where id = current_setting('t.a2')::uuid), 'next_period', 'Οι Όροι της Συμφωνίας: επόμενη Περίοδος');
 
 -- Προσομοίωση κατανάλωσης: 2 reel στην πρώτη Περίοδο (με το χέρι μέσα στη συναλλαγή, όπως θα κάνει το Γύρισμα).
-create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns numeric
+-- Το υπόλοιπο μετράει τις Περιόδους της Συμφωνίας με ένα πέρασμα (authz.kind_units_by_period): εκεί μπαίνει η προσομοίωση.
+create or replace function authz.kind_units_by_period(p_agreement uuid, p_kind uuid)
+returns table (period_id uuid, n integer, used numeric, reserved numeric)
 language sql stable security definer set search_path = ''
-as $$ select case when p_period = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 2::numeric else 0::numeric end; $$;
+as $$ select pe.id, pe.n, case when pe.id = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 2::numeric else 0::numeric end, authz.period_provision_reserved(pe.id, p_kind)
+       from public.agreement_periods pe where pe.agreement_id = p_agreement; $$;
 
 select is(
   (select b.balance::integer from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), 10,
@@ -529,9 +532,11 @@ select is(
 
 -- ───────────── Αρνητικό υπόλοιπο και Συμφωνία που έληξε ─────────────
 -- Κατανάλωση πάνω από το δοσμένο: το leftover της p1 γίνεται -3· το next_period το κόβει στο 0 για την p2.
-create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns numeric
+create or replace function authz.kind_units_by_period(p_agreement uuid, p_kind uuid)
+returns table (period_id uuid, n integer, used numeric, reserved numeric)
 language sql stable security definer set search_path = ''
-as $$ select case when p_period = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 15::numeric else 0::numeric end; $$;
+as $$ select pe.id, pe.n, case when pe.id = current_setting('t.p1')::uuid and p_kind = current_setting('t.reel')::uuid then 15::numeric else 0::numeric end, authz.period_provision_reserved(pe.id, p_kind)
+       from public.agreement_periods pe where pe.agreement_id = p_agreement; $$;
 select is(
   (select b.balance::integer from authz.period_balance(current_setting('t.p1')::uuid, current_setting('t.reel')::uuid) b), -3,
   'Η κατανάλωση πάνω από το δοσμένο δίνει αρνητικό υπόλοιπο Περιόδου'
@@ -540,9 +545,11 @@ select is(
   (select b.carried::integer from authz.period_balance(current_setting('t.p2')::uuid, current_setting('t.reel')::uuid) b), 0,
   'Το αρνητικό leftover δεν μεταφέρεται (next_period κόβει στο 0)'
 );
-create or replace function authz.period_provision_used(p_period uuid, p_kind uuid) returns numeric
+create or replace function authz.kind_units_by_period(p_agreement uuid, p_kind uuid)
+returns table (period_id uuid, n integer, used numeric, reserved numeric)
 language sql stable security definer set search_path = ''
-as $$ select 0::numeric; $$;
+as $$ select pe.id, pe.n, 0::numeric, authz.period_provision_reserved(pe.id, p_kind)
+       from public.agreement_periods pe where pe.agreement_id = p_agreement; $$;
 
 -- Συμφωνία που έληξε (χωρίς triggers, όπως στην αλλαγή Όρου): το backfill της migration τη γεννά (Π2).
 set local session_replication_role = 'replica';

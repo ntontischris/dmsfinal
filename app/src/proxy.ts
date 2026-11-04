@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { supabaseConfig } from "@/lib/supabase/config";
+import { timedFetch } from "@/lib/supabase/timed-fetch";
 
 // Σε κάθε αίτημα: ανανεώνει τη συνεδρία, και κλειδώνει το σύστημα (/app) για όποιον δεν έχει συνδεθεί.
 // Είναι μόνο ο πρώτος φραγμός· τι βλέπει ο καθένας το αποφασίζει η βάση (RLS).
@@ -11,6 +12,7 @@ export async function proxy(request: NextRequest) {
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(config.url, config.key, {
+    global: { fetch: timedFetch },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (list) => {

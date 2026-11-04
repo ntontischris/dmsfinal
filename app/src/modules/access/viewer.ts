@@ -49,8 +49,12 @@ export const getViewer = cache(async (): Promise<Viewer> => {
   const supabase = await createSupabase();
   if (!supabase) return { status: "unconfigured" };
 
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { status: "anonymous" };
+  // getClaims: επαληθεύει την υπογραφή του token τοπικά (κλειδί της βάσης, κρατημένο στη μνήμη) αντί για κλήση στο Auth
+  // σε κάθε αίτημα. Ίδια εμπιστοσύνη με τη βάση, που κρίνει κάθε ανάγνωση από το ίδιο token (auth.uid()).
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) return { status: "anonymous" };
+  const auth = { user: { id: claims.sub, email: typeof claims.email === "string" ? claims.email : undefined } };
 
   const [memberResult, permissionsResult] = await Promise.all([
     supabase
