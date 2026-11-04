@@ -40,7 +40,11 @@ export function FilterBarFrame({
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
+    // Πάτημα σε άλλη κάρτα της σειράς: την κλείνει το `name` όταν ανοίξει η νέα. Αν κλείναμε εδώ, η σειρά θα
+    // μαζευόταν πριν το κλικ (στο κινητό η ανοιχτή κάρτα πιάνει όλη τη σειρά) και το κλικ θα έπεφτε αλλού.
     const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Element;
+      if (target.closest?.("summary") && root.contains(target)) return;
       for (const card of openCardsOf(root))
         if (!card.contains(event.target as Node)) card.open = false;
     };
