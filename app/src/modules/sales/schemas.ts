@@ -100,6 +100,11 @@ export const decideAccessSchema = z
     path: ["comment"],
   });
 
+export const deleteClientSchema = z.object({
+  clientId: z.uuid(),
+  confirmName: text.min(1, "Γράψε το όνομα του Πελάτη για επιβεβαίωση."),
+});
+
 export const resolveDuplicateSchema = z.object({ flagId: z.uuid() });
 
 export const mergeSchema = z

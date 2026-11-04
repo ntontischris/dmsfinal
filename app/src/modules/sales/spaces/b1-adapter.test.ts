@@ -10,6 +10,7 @@ const caps = (overrides: Partial<SalesCaps> = {}): SalesCaps => ({
   manageScope: "all",
   canTransfer: false,
   canMerge: true,
+  canDelete: false,
   canManageSettings: false,
   ...overrides,
 });

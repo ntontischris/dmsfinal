@@ -102,13 +102,19 @@ function SettingsLink() {
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; new?: string }>;
+  searchParams: Promise<{ q?: string; new?: string; deleted?: string }>;
 }) {
   const viewer = await getViewer();
-  const { q, new: newStamp } = await searchParams;
+  const { q, new: newStamp, deleted } = await searchParams;
   const query = typeof q === "string" ? q.trim() : "";
   if ((await lookOf(viewer)) === "spaces")
-    return <SpacesClients query={query} newStamp={typeof newStamp === "string" ? newStamp : undefined} />;
+    return (
+      <SpacesClients
+        query={query}
+        newStamp={typeof newStamp === "string" ? newStamp : undefined}
+        isDeleted={deleted === "1"}
+      />
+    );
   const caps = salesCaps(viewer);
   if (!caps.canViewClients) return <NoAccess viewer={viewer} />;
 

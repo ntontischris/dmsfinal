@@ -11,6 +11,7 @@ import {
 import { read, type ReadResult } from "./read";
 import type {
   ActivityRow,
+  ClientDeleteState,
   ClientDetail,
   ClientRow,
   Opportunity,
@@ -164,5 +165,23 @@ export async function listClientActivities(
       .order("occurred_at", { ascending: false })
       .limit(limit),
     parseActivities,
+  );
+}
+
+const deleteStateSchema = z.object({
+  canDelete: z.boolean(),
+  deleteBlock: z.string().nullable(),
+});
+
+// Σβήνεται ο Πελάτης ή γιατί όχι: μόνο για όποιον «Διαγράφει Πελάτες» (οι άλλοι παίρνουν άρνηση από τη βάση).
+export async function getClientDeleteState(
+  clientId: string,
+): Promise<ReadResult<ClientDeleteState>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "getClientDeleteState",
+    supabase.rpc("client_delete_state", { p_id: clientId }),
+    (data) => deleteStateSchema.parse(data),
   );
 }

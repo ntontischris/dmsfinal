@@ -19,6 +19,8 @@ interface SpacesClientsProps {
   query: string;
   // Το «+ Νέο → Νέα Ευκαιρία» βάζει νέα τιμή κάθε φορά, ώστε η φόρμα να ανοίγει και αν είσαι ήδη εδώ.
   newStamp: string | undefined;
+  // Μόλις διαγράφηκε Πελάτης (η ενέργεια γυρίζει εδώ με ?deleted=1).
+  isDeleted?: boolean;
 }
 
 // Ο πωλητής με «όσα με αφορούν» διαλέγει μόνο Πελάτες με Υπεύθυνο (οι υπόλοιποι πάνε από το «Χωρίς υπεύθυνο»).
@@ -50,7 +52,11 @@ async function NewOpportunitySlot({
 
 // B1 Πελάτες στη νέα εμφάνιση (prototype `screens/B1.tsx`): όλοι οι Πελάτες με όνομα και Υπεύθυνο, και η εικόνα του καθενός
 // (κατάσταση, πακέτο και μήνας, Συμφωνίες, Υπόλοιπο, τελευταία επαφή) από μία ανάγνωση. Ανοίγουν μόνο όσοι αφορούν τον Χρήστη.
-export async function SpacesClients({ query, newStamp }: SpacesClientsProps) {
+export async function SpacesClients({
+  query,
+  newStamp,
+  isDeleted = false,
+}: SpacesClientsProps) {
   const caps = salesCaps(await getViewer());
   if (!caps.canViewClients)
     return (
@@ -78,6 +84,11 @@ export async function SpacesClients({ query, newStamp }: SpacesClientsProps) {
   return (
     <div data-spaces>
       <Strip stats={strip.stats} now={strip.now} />
+      {isDeleted && (
+        <p className="note" role="status">
+          Ο Πελάτης διαγράφηκε.
+        </p>
+      )}
       <div className="toolbar">
         <span className="muted grow">
           {caps.manageScope === "mine" &&

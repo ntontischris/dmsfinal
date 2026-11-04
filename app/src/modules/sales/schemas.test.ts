@@ -4,6 +4,7 @@ import {
   clientFieldsSchema,
   createOpportunitySchema,
   decideAccessSchema,
+  deleteClientSchema,
   mergeSchema,
   nextStepSchema,
 } from "./schemas";
@@ -104,5 +105,29 @@ describe("createOpportunitySchema", () => {
       nextStepDue: "2026-10-12",
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("deleteClientSchema", () => {
+  it("δέχεται Πελάτη και όνομα επιβεβαίωσης χωρίς κενά στις άκρες", () => {
+    const parsed = deleteClientSchema.safeParse({
+      clientId: UUID_A,
+      confirmName: "  Κυψέλη Καφέ ",
+    });
+    expect(parsed.success && parsed.data.confirmName).toBe("Κυψέλη Καφέ");
+  });
+  it("ζητά το όνομα του Πελάτη", () => {
+    const parsed = deleteClientSchema.safeParse({
+      clientId: UUID_A,
+      confirmName: "   ",
+    });
+    expect(parsed.error?.issues[0]?.message).toBe(
+      "Γράψε το όνομα του Πελάτη για επιβεβαίωση.",
+    );
+  });
+  it("αρνείται άκυρο Πελάτη", () => {
+    expect(
+      deleteClientSchema.safeParse({ clientId: "x", confirmName: "Α" }).success,
+    ).toBe(false);
   });
 });

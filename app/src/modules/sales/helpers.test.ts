@@ -33,6 +33,7 @@ const ADMIN = viewerWith({
   "clients.manage": "all",
   "clients.transfer": "all",
   "clients.merge": "all",
+  "clients.delete": "all",
   "settings.manage": "all",
 });
 const ACCOUNTANT = viewerWith({ "clients.view": "all" });
@@ -119,6 +120,7 @@ describe("salesCaps", () => {
       manageScope: null,
       canTransfer: false,
       canMerge: false,
+      canDelete: false,
       canManageSettings: false,
     };
     expect(salesCaps({ status: "anonymous" })).toEqual(none);
@@ -140,6 +142,7 @@ describe("salesCaps", () => {
       manageScope: "mine",
       canTransfer: false,
       canMerge: false,
+      canDelete: false,
       canManageSettings: false,
     });
   });
@@ -151,6 +154,7 @@ describe("salesCaps", () => {
       manageScope: "all",
       canTransfer: true,
       canMerge: true,
+      canDelete: true,
       canManageSettings: true,
     });
   });
