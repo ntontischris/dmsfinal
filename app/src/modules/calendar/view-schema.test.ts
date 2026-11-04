@@ -95,18 +95,18 @@ describe("blockedKindsSchema", () => {
   it("should read the kinds with their retired flag, colour and icon", () => {
     expect(
       blockedKindsSchema.parse([
-        { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙" },
+        { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙", becomesFilming: true },
       ]),
     ).toEqual([
-      { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙" },
+      { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙", becomesFilming: true },
     ]);
   });
 
-  it("should give a neutral grey kind without icon when the database has no style yet", () => {
+  it("should give a neutral grey kind without icon, not convertible to a filming, when the database has no style yet", () => {
     expect(
       blockedKindsSchema.parse([{ id: "k1", label: "Ρεπό", retired: false }]),
     ).toEqual([
-      { id: "k1", label: "Ρεπό", retired: false, color: "grey", icon: null },
+      { id: "k1", label: "Ρεπό", retired: false, color: "grey", icon: null, becomesFilming: false },
     ]);
   });
 });

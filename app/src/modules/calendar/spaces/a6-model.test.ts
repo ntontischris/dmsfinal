@@ -111,8 +111,8 @@ describe("conflictFieldsOf (προειδοποίηση Συνεργείου)", (
 
 describe("pickedKindOf", () => {
   const kinds = [
-    { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙" },
-    { id: "k2", label: "Παλιό", retired: true, color: "grey", icon: null },
+    { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙", becomesFilming: false },
+    { id: "k2", label: "Παλιό", retired: true, color: "grey", icon: null, becomesFilming: false },
   ];
 
   it("should preselect the active kind of the quick-add link", () => {

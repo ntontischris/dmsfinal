@@ -178,9 +178,9 @@ describe("helpers", () => {
   it("should give one quick-add per active kind that opens the form with the kind picked", () => {
     const adds = quickAddsOf(
       [
-        { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙" },
-        { id: "k2", label: "Παλιό", retired: true, color: "red", icon: null },
-        { id: "k3", label: "Άλλο", retired: false, color: "magenta", icon: null },
+        { id: "k1", label: "Ρεπό", retired: false, color: "teal", icon: "🌙", becomesFilming: false },
+        { id: "k2", label: "Παλιό", retired: true, color: "red", icon: null, becomesFilming: false },
+        { id: "k3", label: "Άλλο", retired: false, color: "magenta", icon: null, becomesFilming: false },
       ],
       "2027-03-10",
     );
