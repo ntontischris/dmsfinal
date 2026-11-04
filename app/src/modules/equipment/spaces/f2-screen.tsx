@@ -10,6 +10,7 @@ import {
   type FilmingRow,
 } from "@/modules/filming";
 import { hrefOf } from "@/spaces/data/screens";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { equipmentCaps } from "../caps";
@@ -48,7 +49,7 @@ function Missing() {
   );
 }
 
-// Τα αντικείμενα για τη λωρίδα επιλογής: όσα είναι σε χρήση, και το τρέχον ακόμα κι αν αποσύρθηκε.
+// Η κάρτα «Αντικείμενο» με αναζήτηση: όσα είναι σε χρήση, και το τρέχον ακόμα κι αν αποσύρθηκε.
 function Picker({
   items,
   current,
@@ -57,23 +58,24 @@ function Picker({
   current: string;
 }) {
   return (
-    <nav aria-label="Αντικείμενα">
-      <ul className="e3-picker">
-        {items
-          .filter((other) => other.status !== "retired" || other.id === current)
-          .map((other) => (
-            <li key={other.id}>
-              <Link
-                className="chip"
-                data-current={other.id === current}
-                href={hrefOf("F2", { id: other.id })}
-              >
-                {other.name}
-              </Link>
-            </li>
-          ))}
-      </ul>
-    </nav>
+    <FilterBar
+      label="Αντικείμενα"
+      filters={[
+        {
+          label: "Αντικείμενο",
+          isSearchable: true,
+          options: items
+            .filter(
+              (other) => other.status !== "retired" || other.id === current,
+            )
+            .map((other) => ({
+              label: other.name,
+              href: hrefOf("F2", { id: other.id }),
+              isCurrent: other.id === current,
+            })),
+        },
+      ]}
+    />
   );
 }
 

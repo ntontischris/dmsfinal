@@ -6,6 +6,7 @@ import {
   defaultIdOf,
   estimateOf,
   internalEstimateOf,
+  pickerFilterOf,
   pickerGroupsOf,
   savedValueOf,
 } from "./g3-adapter";
@@ -59,6 +60,24 @@ describe("pickerGroupsOf", () => {
       isInternal: true,
     });
     expect(defaultIdOf(groups)).toBe("p-2");
+  });
+
+  it("should list every production in one card, marking the current one and its group", () => {
+    const filter = pickerFilterOf(
+      pickerGroupsOf({
+        needs_hours: [row({ productionId: "p-1", title: "Social" })],
+        overrun: [row({ productionId: "p-2", client: null, title: "Showreel" })],
+        rest: [row({ productionId: "p-3", title: "Podcast" })],
+      }),
+      "p-2",
+    );
+    expect(filter.label).toBe("Παραγωγή");
+    expect(filter.isSearchable).toBe(true);
+    expect(filter.options).toEqual([
+      expect.objectContaining({ label: "Social", hint: "θέλει ώρες", isCurrent: false }),
+      expect.objectContaining({ label: "Showreel (εσωτερική)", hint: "υπέρβαση", isCurrent: true }),
+      expect.objectContaining({ label: "Podcast", hint: undefined, isCurrent: false }),
+    ]);
   });
 
   it("should have no default when there is no production", () => {

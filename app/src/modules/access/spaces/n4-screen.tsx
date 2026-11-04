@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
 import { hrefOf } from "@/spaces/data/screens";
@@ -378,28 +379,24 @@ function NewRoleChips({
         Το είδος δεν αλλάζει μετά τη δημιουργία. Ένας Ρόλος ομάδας δεν γίνεται
         Ρόλος πελάτη, ούτε το αντίστροφο.
       </p>
-      <div className="n4-chips" role="group" aria-label="Αφετηρία">
-        <span className="muted">Ξεκίνα:</span>
-        <Link
-          className="badge"
-          data-tone={chip(!source)}
-          aria-current={!source ? "true" : undefined}
-          href={newRoleHref(kind)}
-        >
-          από το μηδέν
-        </Link>
-        {sources.map((def) => (
-          <Link
-            key={def.id}
-            className="badge"
-            data-tone={chip(def.id === source?.id)}
-            aria-current={def.id === source?.id ? "true" : undefined}
-            href={newRoleHref(kind, def.id)}
-          >
-            Αντίγραφο του «{def.name}»
-          </Link>
-        ))}
-      </div>
+      <FilterBar
+        label="Αφετηρία"
+        filters={[
+          {
+            label: "Ξεκίνα",
+            all: {
+              label: "από το μηδέν",
+              href: newRoleHref(kind),
+              isCurrent: !source,
+            },
+            options: sources.map((def) => ({
+              label: `Αντίγραφο του «${def.name}»`,
+              href: newRoleHref(kind, def.id),
+              isCurrent: def.id === source?.id,
+            })),
+          },
+        ]}
+      />
       {kind === "team" && (
         <p className="muted">
           Ο Ιδιοκτήτης δεν αντιγράφεται: όσα κάνει μόνο αυτός δεν δίνονται σε

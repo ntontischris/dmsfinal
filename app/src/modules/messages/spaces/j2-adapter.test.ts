@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { MessageRequest, Thread, ThreadMessage } from "../view-schema";
 import {
-  j2ChipsOf,
+  j2FilterOf,
   j2DefaultTag,
   j2MessageOf,
   j2RequestOf,
@@ -161,16 +161,32 @@ describe("j2RequestOf", () => {
   });
 });
 
-describe("j2ChipsOf", () => {
-  it("should hide the untagged chip in a partial view and mark the active tag", () => {
-    const chips = j2ChipsOf(
+describe("j2FilterOf", () => {
+  it("should hide the untagged option in a partial view and mark the active tag", () => {
+    const group = j2FilterOf(
       "c-1",
       [{ id: "p-1", title: "Social" }],
       { filter: "all", production: "p-1" },
       true,
     );
-    expect(chips.map((chip) => chip.key)).toEqual(["all", "p-1", "internal"]);
-    expect(chips.find((chip) => chip.isCurrent)?.key).toBe("p-1");
+    expect(group.label).toBe("Παραγωγή");
+    expect(group.all?.isCurrent).toBe(false);
+    expect(group.options.map((option) => option.label)).toEqual([
+      "Social",
+      "Εσωτερικά",
+    ]);
+    expect(group.options.find((option) => option.isCurrent)?.label).toBe(
+      "Social",
+    );
+  });
+
+  it("should offer untagged messages and start on «όλα» without a filter", () => {
+    const group = j2FilterOf("c-1", [], { filter: "all" }, false);
+    expect(group.all).toMatchObject({ label: "όλα", isCurrent: true });
+    expect(group.options.map((option) => option.label)).toEqual([
+      "Χωρίς ετικέτα",
+      "Εσωτερικά",
+    ]);
   });
 });
 

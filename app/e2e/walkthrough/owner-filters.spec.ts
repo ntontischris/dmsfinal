@@ -4,8 +4,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { project, signIn } from "../sales-parts";
 import { useSpacesLook } from "./spaces";
 
-// Περιήγηση Ιδιοκτήτη: φίλτρα σε μαλακές κάρτες (παραλλαγή 2), στις Αποστολές. Ο Πελάτης «Πελάτης Αποστολών {project}»
-// και η «Ελένη Αποστολών» έρχονται από το seed· ένα Μήνυμα της ομάδας και ο επεξεργαστής της ουράς γράφουν μία αποστολή.
+// Περιήγηση Ιδιοκτήτη: φίλτρα σε κάρτες σε μία σειρά πάνω από τα αποτελέσματα (παραλλαγή 1, 2026-11-04). Στις Αποστολές
+// ο Πελάτης «Πελάτης Αποστολών {project}» και η «Ελένη Αποστολών» έρχονται από το seed· ένα Μήνυμα της ομάδας και ο
+// επεξεργαστής της ουράς γράφουν μία αποστολή. Στους Πελάτες ο πίνακας κρατά όλο το πλάτος.
 const OWNER = "owner@example.com";
 const SENDS_PATH = "/app/settings/sends";
 
@@ -61,16 +62,12 @@ async function sendFor(clientName: string): Promise<string> {
   return clientId;
 }
 
-// Σε στενή οθόνη η στήλη φίλτρων κρύβεται πίσω από το «Φίλτρα»· το κουμπί ζωντανεύει μόλις φορτώσει η σελίδα.
-async function filtersSide(page: Page) {
-  const side = page.getByRole("complementary", { name: "Φίλτρα" });
-  if (project() !== "mobile") return side;
-  await expect(async () => {
-    if (!(await side.isVisible()))
-      await page.getByRole("button", { name: /^Φίλτρα/ }).click();
-    await expect(side).toBeVisible({ timeout: 1_000 });
-  }).toPass();
-  return side;
+// Μία κάρτα της σειράς «Φίλτρα», με την ετικέτα της.
+function cardOf(page: Page, label: string) {
+  return page
+    .getByRole("group", { name: "Φίλτρα", exact: true })
+    .locator("details")
+    .filter({ has: page.locator("summary", { hasText: label }) });
 }
 
 test.beforeEach(async ({ context, page }) => {
@@ -78,7 +75,7 @@ test.beforeEach(async ({ context, page }) => {
   await signIn(page, OWNER);
 });
 
-test("φίλτρα · στις Αποστολές ο Ιδιοκτήτης ψάχνει Πελάτη στην κάρτα «Πελάτης», τον διαλέγει και τον βγάζει με ✕", async ({
+test("φίλτρα · στις Αποστολές ο Ιδιοκτήτης ανοίγει την κάρτα «Πελάτης», ψάχνει, διαλέγει και καθαρίζει", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -86,24 +83,32 @@ test("φίλτρα · στις Αποστολές ο Ιδιοκτήτης ψάχ
   const clientId = await sendFor(clientName);
 
   await page.goto(SENDS_PATH);
-  const side = await filtersSide(page);
-  // Η Κατάσταση είναι η πρώτη κάρτα και ανοιχτή· οι άλλες κλειστές δείχνουν «όλοι/όλα».
+  // Κλειστές κάρτες με την τρέχουσα τιμή: η Κατάσταση στα «Στάλθηκαν», ο Πελάτης στο «όλοι».
+  const status = cardOf(page, "Κατάσταση");
+  const client = cardOf(page, "Πελάτης");
+  await expect(status.locator("summary")).toContainText("Στάλθηκαν");
+  await expect(client.locator("summary")).toContainText("όλοι");
   await expect(
-    side.getByRole("link", { name: "Στάλθηκαν", exact: true }),
-  ).toHaveAttribute("aria-current", "true");
+    page.getByRole("link", { name: "Καθαρισμός φίλτρων" }),
+  ).toHaveCount(0);
 
-  const group = side.locator("details").filter({
-    has: page.locator("summary", { hasText: "Πελάτης" }),
-  });
-  await expect(group.locator("summary")).toContainText("όλοι");
-  await group.locator("summary").click();
-  await expect(group).toHaveAttribute("open", "");
-  // Ανοίγει μία κάρτα κάθε φορά: η Κατάσταση κλείνει.
-  await expect(side.locator("details[open]")).toHaveCount(1);
+  // Ανοίγει μία κάρτα κάθε φορά, και κλείνει με Escape (μόλις ζωντανέψει η σελίδα).
+  await status.locator("summary").click();
+  await expect(status).toHaveAttribute("open", "");
+  await client.locator("summary").click();
+  await expect(client).toHaveAttribute("open", "");
+  await expect(status).not.toHaveAttribute("open", "");
+  await expect(async () => {
+    if ((await client.getAttribute("open")) === null)
+      await client.locator("summary").click();
+    await page.keyboard.press("Escape");
+    await expect(client).not.toHaveAttribute("open", "", { timeout: 1_000 });
+  }).toPass();
 
-  const search = group.getByRole("searchbox", { name: "Αναζήτηση: Πελάτης" });
-  const options = group.getByRole("link");
-  // Η αναζήτηση φιλτράρει μόλις ζωντανέψει η σελίδα: μένουν το «όλοι» και ο Πελάτης.
+  await client.locator("summary").click();
+  const search = client.getByRole("searchbox", { name: "Αναζήτηση: Πελάτης" });
+  const options = client.getByRole("link");
+  // Η αναζήτηση φιλτράρει: μένουν το «όλοι» και ο Πελάτης.
   await expect(async () => {
     await search.fill(clientName);
     await expect(options).toHaveCount(2, { timeout: 1_000 });
@@ -111,11 +116,9 @@ test("φίλτρα · στις Αποστολές ο Ιδιοκτήτης ψάχ
   await options.filter({ hasText: clientName }).click();
 
   await expect(page).toHaveURL(new RegExp(`client=${clientId}`));
-  const remove = page.getByRole("link", { name: "Βγάλε το φίλτρο Πελάτης" });
-  await expect(remove.locator("..")).toContainText(`Πελάτης: ${clientName}`);
-  await expect(
-    page.getByRole("link", { name: "Καθαρισμός φίλτρων" }),
-  ).toBeVisible();
+  // Η κάρτα κλείνει και δείχνει τον Πελάτη στην ετικέτα της.
+  await expect(client).not.toHaveAttribute("open", "");
+  await expect(client.locator("summary")).toContainText(clientName);
   await expect(
     page
       .getByRole("main")
@@ -124,7 +127,34 @@ test("φίλτρα · στις Αποστολές ο Ιδιοκτήτης ψάχ
       .first(),
   ).toBeVisible();
 
-  await remove.click();
+  await page.getByRole("link", { name: "Καθαρισμός φίλτρων" }).click();
   await expect(page).not.toHaveURL(/client=/);
-  await expect(remove).toHaveCount(0);
+  await expect(client.locator("summary")).toContainText("όλοι");
+  await expect(
+    page.getByRole("link", { name: "Καθαρισμός φίλτρων" }),
+  ).toHaveCount(0);
+});
+
+test("φίλτρα · στους Πελάτες η σειρά φίλτρων είναι πάνω από τον πίνακα και ο πίνακας κρατά όλο το πλάτος", async ({
+  page,
+}) => {
+  await page.goto("/app/clients");
+  const search = page.getByRole("searchbox", { name: "Αναζήτηση πελάτη" });
+  const table = page.locator("table.b1-table");
+  await expect(table).toBeVisible();
+  const searchBox = await search.boundingBox();
+  const tableBox = await table.boundingBox();
+  if (!searchBox || !tableBox) throw new Error("Λείπει η αναζήτηση ή ο πίνακας");
+  // Η σειρά είναι πάνω από τον πίνακα, όχι στήλη δίπλα του: ίδια αριστερή άκρη.
+  expect(Math.abs(tableBox.x - searchBox.x)).toBeLessThan(4);
+  expect(tableBox.y).toBeGreaterThan(searchBox.y + searchBox.height);
+  if (project() === "mobile") return;
+  // Σε φαρδιά οθόνη αναζήτηση και κάρτες χωρούν σε μία σειρά.
+  const tops = await page
+    .getByRole("group", { name: "Φίλτρα", exact: true })
+    .locator("summary")
+    .evaluateAll((items) => items.map((item) => item.getBoundingClientRect().top));
+  expect(tops.length).toBe(3);
+  for (const top of tops) expect(Math.abs(top - tops[0]!)).toBeLessThan(searchBox.height);
+  expect(Math.abs(tops[0]! - searchBox.y)).toBeLessThan(searchBox.height);
 });

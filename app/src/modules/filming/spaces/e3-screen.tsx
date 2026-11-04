@@ -3,6 +3,7 @@ import { Fragment } from "react";
 
 import { getViewer, isClientViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { Avatar, ListRow, Meter, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
@@ -377,7 +378,7 @@ function History({ card }: { card: FilmingCard }) {
   );
 }
 
-// Τα άλλα ανοιχτά Γυρίσματα, για γρήγορη αλλαγή (prototype: «Άλλα Γυρίσματα»).
+// Τα άλλα ανοιχτά Γυρίσματα, για γρήγορη αλλαγή (prototype: «Άλλα Γυρίσματα»): μία κάρτα «Γύρισμα» με αναζήτηση.
 function Others({
   rows,
   currentId,
@@ -385,24 +386,22 @@ function Others({
   rows: readonly FilmingRow[];
   currentId: string;
 }) {
-  const others = rows.filter((row) => row.id !== currentId);
-  if (others.length === 0) return null;
+  if (!rows.some((row) => row.id !== currentId)) return null;
   return (
-    <details className="e3-others">
-      <summary>Άλλα Γυρίσματα ({others.length})</summary>
-      <nav aria-label="Γυρίσματα">
-        <ul className="e3-picker">
-          {others.map((row) => (
-            <li key={row.id}>
-              <Link className="chip" href={hrefOf("E3", { id: row.id })}>
-                {row.client?.name ?? NO_CLIENT_LABEL} ·{" "}
-                {fmtDay(athensDate(row.startsAt))} · {stateWord(row.state)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </details>
+    <FilterBar
+      label="Γυρίσματα"
+      filters={[
+        {
+          label: "Γύρισμα",
+          isSearchable: true,
+          options: rows.map((row) => ({
+            label: `${row.client?.name ?? NO_CLIENT_LABEL} · ${fmtDay(athensDate(row.startsAt))} · ${stateWord(row.state)}`,
+            href: hrefOf("E3", { id: row.id }),
+            isCurrent: row.id === currentId,
+          })),
+        },
+      ]}
+    />
   );
 }
 

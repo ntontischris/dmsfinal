@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
@@ -104,15 +105,22 @@ function CoverChoice({ row, options, selection }: ClosePanelProps) {
     <div className="l3-choice">
       <h3>1. Καλύφθηκε από…</h3>
       <div className="l3-options">
-        {options.map((option) => (
-          <Link
-            key={option.id}
-            href={closeHref({ close: row.id, by: option.id })}
-            aria-current={option.id === selection.by}
-          >
-            {optionLabel(option, row.isPublicQuestion)}
-          </Link>
-        ))}
+        {options.length > 0 && (
+          <FilterBar
+            label="Καλύφθηκε από"
+            filters={[
+              {
+                label: "Στοιχείο",
+                isSearchable: true,
+                options: options.map((option) => ({
+                  label: optionLabel(option, row.isPublicQuestion),
+                  href: closeHref({ close: row.id, by: option.id }),
+                  isCurrent: option.id === selection.by,
+                })),
+              },
+            ]}
+          />
+        )}
         <Link href={hrefOf("L1")}>Νέο Άρθρο</Link>
       </div>
       {options.length === 0 && (

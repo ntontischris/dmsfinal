@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { getViewer } from "@/modules/access";
-import { FilterCard } from "@/spaces/kit/filter-panel";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Entity } from "@/spaces/kit/parts";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
@@ -36,8 +36,8 @@ import { MessageBubble } from "./j-message";
 import { MessageActions } from "./j2-actions";
 import {
   j2ChangeOf,
-  j2ChipsOf,
   j2DefaultTag,
+  j2FilterOf,
   j2HeaderOf,
   j2MessageOf,
   j2SideOf,
@@ -71,28 +71,34 @@ function Header({
       <h2 className="card-title">Συνομιλία:</h2>
       <Entity name={header.name} href={header.href} sub={header.sub} />
       <div className="j2-switch">
-        <Link className="button" href={MESSAGES_PATH}>
-          Όλες οι Συνομιλίες
-        </Link>
-        {others.length > 1 && (
-          <FilterCard
-            group={{
-              label: "Πελάτης",
-              isSearchable: true,
-              options: others.map((row) => ({
-                label: row.clientName,
-                href: threadHref(row.clientId),
-                isCurrent: row.clientId === thread.client.id,
-              })),
-            }}
-          />
-        )}
+        <FilterBar
+          label="Άλλη Συνομιλία"
+          filters={
+            others.length > 1
+              ? [
+                  {
+                    label: "Πελάτης",
+                    isSearchable: true,
+                    options: others.map((row) => ({
+                      label: row.clientName,
+                      href: threadHref(row.clientId),
+                      isCurrent: row.clientId === thread.client.id,
+                    })),
+                  },
+                ]
+              : []
+          }
+        >
+          <Link className="button" href={MESSAGES_PATH}>
+            Όλες οι Συνομιλίες
+          </Link>
+        </FilterBar>
       </div>
     </section>
   );
 }
 
-function Chips({
+function ProductionFilter({
   thread,
   filters,
 }: {
@@ -100,27 +106,11 @@ function Chips({
   filters: MessageFilters;
 }) {
   const chips = productionChips(thread.messages);
-  const active = chips.find((chip) => chip.id === filters.production);
   return (
-    <>
-      <ul className="j2-chips" aria-label="Φίλτρα">
-        {j2ChipsOf(thread.client.id, chips, filters, thread.partial).map(
-          (chip) => (
-            <li key={chip.key}>
-              <Link href={chip.href} aria-current={chip.isCurrent}>
-                {chip.label}
-              </Link>
-            </li>
-          ),
-        )}
-      </ul>
-      {filters.production && (
-        <p className="muted">
-          Φιλτράρισμα: {active?.title ?? "Παραγωγή"} ·{" "}
-          <Link href={threadHref(thread.client.id)}>Καθαρισμός φίλτρου</Link>
-        </p>
-      )}
-    </>
+    <FilterBar
+      filters={[j2FilterOf(thread.client.id, chips, filters, thread.partial)]}
+      clearHref={threadHref(thread.client.id)}
+    />
   );
 }
 
@@ -222,7 +212,7 @@ export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
         others={inbox.ok ? inbox.data.items : []}
       />
       {thread.partial && <p className="note">{PARTIAL_BANNER}</p>}
-      <Chips thread={thread} filters={filters} />
+      <ProductionFilter thread={thread} filters={filters} />
       <div className="j2-layout">
         <div className="j2-thread">
           <Timeline thread={thread} filters={filters} candidates={candidates} />

@@ -1,6 +1,6 @@
 import { getViewer } from "@/modules/access";
 import { getSpaceStrip } from "@/modules/today";
-import { FilterPanel } from "@/spaces/kit/filter-panel";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { codesOfSpace } from "@/spaces/data/spaces";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { Strip } from "@/spaces/shell/strip";
@@ -11,7 +11,7 @@ import { listSalesLists } from "../queries-lists";
 import { listClientOverviews } from "../queries-overview";
 import type { ClientRow, SalesCaps } from "../types";
 import { b1ColumnsOf, b1RowsOf } from "./b1-adapter";
-import { ClientsTable } from "./b1-clients-table";
+import { ClientsSearch, ClientsTable } from "./b1-clients-table";
 import { applyB1Filters, b1FilterGroups, type B1Filters } from "./b1-filters";
 import { NewOpportunity } from "./b1-new-opportunity";
 
@@ -120,17 +120,19 @@ export async function SpacesClients({
           </p>
         </StateNotice>
       ) : (
-        <FilterPanel
-          name="b1-filters"
-          {...b1FilterGroups(rows, query, filters)}
-        >
+        <>
+          <FilterBar
+            name="b1-filters"
+            {...b1FilterGroups(rows, query, filters)}
+          >
+            <ClientsSearch query={query} filters={filters} />
+          </FilterBar>
           <ClientsTable
             rows={applyB1Filters(rows, filters)}
-            query={query}
             filters={filters}
             {...b1ColumnsOf(rows, caps)}
           />
-        </FilterPanel>
+        </>
       )}
       {clients.data.length >= 100 && (
         <p className="muted">

@@ -7,10 +7,8 @@ import type { B1Columns, B1Row } from "./b1-adapter";
 import type { B1Filters } from "./b1-filters";
 
 interface ClientsTableProps extends B1Columns {
-  // Οι γραμμές μετά τα φίλτρα (πάνελ φίλτρων της οθόνης).
+  // Οι γραμμές μετά τα φίλτρα (σειρά φίλτρων της οθόνης).
   rows: readonly B1Row[];
-  // Η αναζήτηση ζει στη διεύθυνση (?q=), όπως στην παλιά εμφάνιση: ψάχνει η βάση, όχι μόνο οι 100 πρώτοι.
-  query: string;
   filters: B1Filters;
 }
 
@@ -21,10 +19,17 @@ const STATUS_TONE: Readonly<Record<string, BadgeTone>> = {
   Ανενεργός: "faded",
 };
 
-// Η αναζήτηση κρατά τα φίλτρα που ισχύουν.
-function SearchForm({ query, filters }: { query: string; filters: B1Filters }) {
+// Η αναζήτηση ζει στη διεύθυνση (?q=), όπως στην παλιά εμφάνιση: ψάχνει η βάση, όχι μόνο οι 100 πρώτοι.
+// Μπαίνει πρώτη στη σειρά φίλτρων και κρατά τα φίλτρα που ισχύουν.
+export function ClientsSearch({
+  query,
+  filters,
+}: {
+  query: string;
+  filters: B1Filters;
+}) {
   return (
-    <form className="toolbar" method="get" action="/app/clients" role="search">
+    <form className="kit-fb-search" method="get" action="/app/clients" role="search">
       <input
         className="input grow"
         type="search"
@@ -43,12 +48,11 @@ function SearchForm({ query, filters }: { query: string; filters: B1Filters }) {
   );
 }
 
-// Ο πίνακας Πελατών του prototype (`screens/b1-clients-table.tsx`) με πραγματικές γραμμές. Τα φίλτρα είναι στο πάνελ
-// φίλτρων της οθόνης· η αναζήτηση στέλνεται στη βάση.
+// Ο πίνακας Πελατών του prototype (`screens/b1-clients-table.tsx`) με πραγματικές γραμμές, σε όλο το πλάτος. Τα φίλτρα
+// και η αναζήτηση είναι στη σειρά φίλτρων από πάνω.
 export function ClientsTable(props: ClientsTableProps) {
   const {
     rows: visible,
-    query,
     filters,
     showOwner,
     showOpportunities,
@@ -58,7 +62,6 @@ export function ClientsTable(props: ClientsTableProps) {
 
   return (
     <>
-      <SearchForm query={query} filters={filters} />
       {visible.length === 0 ? (
         <p className="muted">
           {filters.isNoShoot

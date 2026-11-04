@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 import { FilterOptions } from "./filter-options";
-import { matchesQuery, type FilterOption } from "./filter-panel-model";
+import { matchesQuery, type FilterOption } from "./filter-bar-model";
 
-// Ομάδα με πολλές επιλογές (π.χ. Πελάτες): πεδίο αναζήτησης πάνω από τη λίστα· το «όλοι» μένει πάντα.
+// Κάρτα με πολλές επιλογές (π.χ. Πελάτες): πεδίο αναζήτησης πάνω από τη λίστα· το «όλοι» μένει πάντα.
 export function FilterSearch({
   label,
   all,
@@ -21,7 +21,7 @@ export function FilterSearch({
     <>
       <input
         type="search"
-        className="input kit-fp-search"
+        className="input kit-fb-find"
         aria-label={`Αναζήτηση: ${label}`}
         placeholder="Ψάξε…"
         autoComplete="off"
@@ -29,7 +29,7 @@ export function FilterSearch({
         onChange={(event) => setQuery(event.target.value)}
       />
       <FilterOptions options={all ? [all, ...shown] : shown} />
-      {shown.length === 0 && <p className="kit-fp-empty">Κανένα αποτέλεσμα</p>}
+      {shown.length === 0 && <p className="kit-fb-empty">Κανένα αποτέλεσμα</p>}
     </>
   );
 }

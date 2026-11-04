@@ -1,9 +1,6 @@
 [data-look='spaces'] {
 /* Στυλ της οθόνης J2 «Συνομιλία». */
 
-& .j2-chips { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
-& .j2-chips a { display: inline-block; padding: 0 var(--space-3); border: 1px solid var(--color-border); border-radius: 999px; text-decoration: none; overflow-wrap: anywhere; }
-& .j2-chips a[aria-current='true'] { border-color: var(--color-accent); font-weight: 600; }
 
 & .j2-layout { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 60rem) { & .j2-layout { grid-template-columns: minmax(0, 1fr) 18rem; align-items: start; } }
@@ -25,7 +22,7 @@
 
 & .j2-side a { overflow-wrap: anywhere; }
 & .j2-switch { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: start; margin-top: var(--space-2); }
-& .j2-switch .kit-fp-group { flex: 1 1 16rem; max-width: 24rem; }
+& .j2-switch .kit-fb { margin-bottom: 0; }
 
 /* Η φόρμα μένει ορατή στο κάτω μέρος· ο διακόπτης δείχνει καθαρά την επιλογή (χρώμα και ✓). */
 & .j2-composer { position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -6px 16px color-mix(in oklab, var(--color-text) 12%, transparent); }
@@ -35,9 +32,6 @@
 & .j2-composer[data-internal='true'] .j2-seg button[aria-pressed='true'] { background: var(--color-attention); color: var(--color-bg); }
 & .j2-to { margin: 0; font-size: var(--text-sm); }
 /* Ύφος ταυτότητας */
-& .j2-chips a { font-weight: 600; transition: background-color 120ms ease; }
-& .j2-chips a:hover { color: var(--color-accent); }
-& .j2-chips a[aria-current='true'] { background: color-mix(in oklab, var(--color-accent) 16%, transparent); }
 & .j2-req, & .j2-composer { border-radius: var(--radius-lg); }
 & .j2-composer[data-internal='true'] { border: 1px dashed var(--color-attention); }
 & .j2-side a { text-decoration: none; font-weight: 600; }

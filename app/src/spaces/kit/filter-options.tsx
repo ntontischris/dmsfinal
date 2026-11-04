@@ -1,27 +1,29 @@
 import Link from "next/link";
 
-import type { FilterOption } from "./filter-panel-model";
+import type { FilterOption } from "./filter-bar-model";
 
-// Η λίστα μιας ανοιχτής ομάδας φίλτρων: κυκλάκι επιλογής, όνομα, αχνός αριθμός δεξιά.
+// Η λίστα μιας ανοιχτής κάρτας φίλτρου: κυκλάκι επιλογής, όνομα, αχνός αριθμός (ή λέξη) δεξιά.
 export function FilterOptions({
   options,
 }: {
   options: readonly FilterOption[];
 }) {
   return (
-    <ul className="kit-fp-list">
+    <ul className="kit-fb-list">
       {options.map((option) => (
         <li key={option.href}>
           <Link
-            className="kit-fp-opt"
+            className="kit-fb-opt"
             href={option.href}
             scroll={false}
             aria-current={option.isCurrent ? "true" : undefined}
           >
-            <span className="kit-fp-radio" aria-hidden="true" />
-            <span className="kit-fp-name">{option.label}</span>
-            {option.count !== undefined && (
-              <span className="kit-fp-count">{option.count}</span>
+            <span className="kit-fb-radio" aria-hidden="true" />
+            <span className="kit-fb-name">{option.label}</span>
+            {(option.count ?? option.hint) !== undefined && (
+              <span className="kit-fb-count">
+                {option.count ?? option.hint}
+              </span>
             )}
           </Link>
         </li>

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { can, getViewer, type Viewer } from "@/modules/access";
 import { getSpaceStrip } from "@/modules/today";
-import { FilterPanel, type FilterGroup } from "@/spaces/kit/filter-panel";
+import { FilterBar, type FilterGroup } from "@/spaces/kit/filter-bar";
 import { hrefOf } from "@/spaces/data/screens";
 import { codesOfSpace } from "@/spaces/data/spaces";
 import { ErrorNotice, StateNotice, fmtMoney } from "@/spaces/screens/shared";
@@ -212,36 +212,35 @@ export async function SpacesInvoices({
         today={today}
         viewer={viewer}
       />
-      <FilterPanel
+      <FilterBar
         name="i2-filters"
-        status={statusGroupOf(current, all)}
         filters={[
+          statusGroupOf(current, all),
           clientGroupOf(current, listed),
           ...(months.length > 1 ? [monthGroupOf(current, months)] : []),
         ]}
         clearHref={i2ClearHref(current)}
-      >
-        {unpaidNote && <p className="note">{unpaidNote}</p>}
-        <div className="toolbar">
-          {caps.canRegisterInvoices && (
-            <Link className="button" data-primary="true" href={hrefOf("I3")}>
-              Καταχώρηση Τιμολογίου
-            </Link>
-          )}
-          <CsvButton rows={rows} />
-        </div>
-        {rows.length === 0 ? (
-          <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
-            Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο.
-          </StateNotice>
-        ) : (
-          <InvoiceTable
-            rows={rows}
-            today={today}
-            canEdit={caps.canRegisterInvoices}
-          />
+      />
+      {unpaidNote && <p className="note">{unpaidNote}</p>}
+      <div className="toolbar">
+        {caps.canRegisterInvoices && (
+          <Link className="button" data-primary="true" href={hrefOf("I3")}>
+            Καταχώρηση Τιμολογίου
+          </Link>
         )}
-      </FilterPanel>
+        <CsvButton rows={rows} />
+      </div>
+      {rows.length === 0 ? (
+        <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
+          Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο.
+        </StateNotice>
+      ) : (
+        <InvoiceTable
+          rows={rows}
+          today={today}
+          canEdit={caps.canRegisterInvoices}
+        />
+      )}
       {voided?.ok === true && (
         <VoidedCard
           items={voided.data}

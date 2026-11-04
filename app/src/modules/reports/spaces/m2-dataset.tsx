@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AUDIT_PATH, AUDIT_TITLE } from "@/modules/audit";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
@@ -37,6 +38,26 @@ interface ChipsProps {
   }[];
 }
 
+// Πολλές επιλογές (Σύνολα, Περίοδοι): μία κάρτα με λίστα από κάτω, όπως τα φίλτρα της εφαρμογής.
+function Choice({ query, label, current, options }: ChipsProps) {
+  return (
+    <FilterBar
+      label={label}
+      filters={[
+        {
+          label,
+          options: options.map((o) => ({
+            label: o.label,
+            href: m2Href(query, o.change),
+            isCurrent: o.value === current,
+          })),
+        },
+      ]}
+    />
+  );
+}
+
+// Δύο επιλογές (Μορφή): κουμπάκια δίπλα-δίπλα.
 function Chips({ query, label, current, options }: ChipsProps) {
   return (
     <nav className="m2-chips" aria-label={label}>
@@ -103,7 +124,7 @@ export function DatasetSection(props: DatasetSectionProps) {
         <ol className="m2-steps">
           <li>
             <strong>1. Τι θέλεις να εξάγεις</strong>
-            <Chips
+            <Choice
               query={query}
               label="Σύνολο δεδομένων"
               current={dataset.code}
@@ -125,7 +146,7 @@ export function DatasetSection(props: DatasetSectionProps) {
           {showsPeriod && (
             <li>
               <strong>2. Περίοδος</strong>
-              <Chips
+              <Choice
                 query={query}
                 label="Περίοδος"
                 current={period}

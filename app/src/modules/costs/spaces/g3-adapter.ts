@@ -2,6 +2,7 @@
 // κόστους (cost_hint) στα σχήματα του prototype. Καθαρές συναρτήσεις.
 
 import { hrefOf } from "@/spaces/data/screens";
+import type { FilterGroup } from "@/spaces/kit/filter-bar";
 
 import type { CostGroup, CostRow } from "../types";
 import type { CostBasis, CostFigure, HoursValue } from "./g3-model";
@@ -20,13 +21,19 @@ export interface PickerItem {
 
 export interface PickerGroup {
   title: string;
+  // Σύντομη λέξη της ομάδας δίπλα σε κάθε Παραγωγή της κάρτας· οι «υπόλοιπες» δεν γράφουν τίποτα.
+  hint?: string;
   items: readonly PickerItem[];
 }
 
 // Οι τίτλοι των ομάδων όπως στο prototype· η ομάδα κάθε Παραγωγής την κρίνει η βάση.
-export const G3_GROUPS: readonly { group: CostGroup; title: string }[] = [
-  { group: "needs_hours", title: "Θέλουν Πραγματικές ώρες" },
-  { group: "overrun", title: "Υπέρβαση κόστους" },
+export const G3_GROUPS: readonly {
+  group: CostGroup;
+  title: string;
+  hint?: string;
+}[] = [
+  { group: "needs_hours", title: "Θέλουν Πραγματικές ώρες", hint: "θέλει ώρες" },
+  { group: "overrun", title: "Υπέρβαση κόστους", hint: "υπέρβαση" },
   { group: "rest", title: "Οι υπόλοιπες" },
 ];
 
@@ -45,10 +52,28 @@ export const pickerItemOf = (row: CostRow): PickerItem => ({
 export const pickerGroupsOf = (
   rows: Readonly<Record<CostGroup, readonly CostRow[]>>,
 ): readonly PickerGroup[] =>
-  G3_GROUPS.map(({ group, title }) => ({
+  G3_GROUPS.map(({ group, title, hint }) => ({
     title,
+    hint,
     items: rows[group].map(pickerItemOf),
   }));
+
+// Η κάρτα «Παραγωγή»: όλες οι Παραγωγές με τη σειρά των ομάδων, με αναζήτηση· η επιλεγμένη στην ετικέτα της.
+export const pickerFilterOf = (
+  groups: readonly PickerGroup[],
+  currentId: string,
+): FilterGroup => ({
+  label: "Παραγωγή",
+  isSearchable: true,
+  options: groups.flatMap((group) =>
+    group.items.map((item) => ({
+      label: item.isInternal ? `${item.title} (εσωτερική)` : item.title,
+      href: item.href,
+      isCurrent: item.id === currentId,
+      hint: group.hint,
+    })),
+  ),
+});
 
 // Χωρίς ?production ανοίγει η πρώτη Παραγωγή της πρώτης μη κενής ομάδας.
 export const defaultIdOf = (
