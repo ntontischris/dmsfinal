@@ -174,6 +174,28 @@ test("03 · νέα Ευκαιρία σε υπάρχοντα Πελάτη δεν 
     .click();
   await expect(page).toHaveURL(/\/app\/pipeline\/[0-9a-f-]+$/);
 
+  // Το ίδιο και η «Νέα Ευκαιρία» μέσα στη Σελίδα Πελάτη: ο Πελάτης υπάρχει, άρα καμία Πηγή.
+  await page.goto(`/app/clients/${clientId}?tab=opportunities`);
+  const inside = page.locator("form", {
+    has: page.locator('input[name="nextStep"]'),
+  });
+  await expect(async () => {
+    if (!(await inside.isVisible()))
+      await page
+        .getByRole("button", { name: "Νέα Ευκαιρία", exact: true })
+        .click();
+    await expect(inside).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  await expect(inside.locator('[name="sourceId"]')).toHaveCount(0);
+  await field(inside, "Τι αφορά * (π.χ. Μηνιαίο πακέτο social)").fill(
+    "Τρίτο βίντεο",
+  );
+  await field(inside, "Επόμενο βήμα * (π.χ. Κλήση για απάντηση)").fill("Κλήση");
+  await inside
+    .getByRole("button", { name: "Άνοιγμα Ευκαιρίας", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/app\/pipeline\/[0-9a-f-]+$/);
+
   await deleteClient(page, clientId, name);
 });
 

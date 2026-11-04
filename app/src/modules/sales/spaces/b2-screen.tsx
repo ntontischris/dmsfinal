@@ -255,7 +255,7 @@ function TabContent({
     return (
       <OpportunitiesSection
         client={client}
-        sources={canEdit && card ? (data.lists?.sources ?? null) : null}
+        canCreate={canEdit && card !== null}
         rows={opportunityRows({
           opportunities: data.opportunities,
           stageLabels: labelsOf(data.lists?.stages ?? []),
