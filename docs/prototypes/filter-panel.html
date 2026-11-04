@@ -1,0 +1,365 @@
+<title>Φίλτρα χωρίς χάπια</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: η οθόνη της εφαρμογής (Χώροι, σκούρα) με εναλλασσόμενη μπάρα φίλτρων· κάτω σταθερός διακόπτης παραλλαγής. */
+:root{
+  --bg:#0a1020; --panel:#101a2f; --panel-2:#16223b; --line:#24324f; --fg:#e8edf7; --muted:#8d9ab5;
+  --on:#f4f6fb; --on-fg:#0a1020; --accent:#ff4a3d; --focus:#9fb4ff; --ok:#4fd1a1; --warn:#ffb547;
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 120px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.proto{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;color:var(--muted);font-size:13.5px;display:flex;flex-direction:column;gap:6px}
+.proto b{color:var(--fg)}
+.screens{display:flex;gap:6px;flex-wrap:wrap}
+.screens button{background:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;color:var(--muted)}
+.screens button[aria-pressed=true]{background:var(--panel-2);color:var(--fg);border-color:var(--focus)}
+.crumb{color:var(--muted);font-size:13px}
+h1{font-size:clamp(34px,6vw,56px);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1}
+h1 i{color:var(--accent);font-style:normal}
+.state{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;overflow-x:auto;white-space:nowrap}
+.state b{color:var(--ok);font-weight:500}
+/* αποτελέσματα */
+.results{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;min-width:0}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--line)}
+td{padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--panel-2);color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.more{padding:10px 14px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+/* κοινά */
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{background:none;border:0;border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--muted);white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--on);color:var(--on-fg);font-weight:600}
+.cnt{font-family:var(--mono);font-size:11.5px;opacity:.75;margin-left:4px}
+.link{background:none;border:0;color:var(--focus);cursor:pointer;padding:4px 2px;font-size:14px}
+.tok{display:inline-flex;align-items:center;gap:6px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:3px 6px 3px 11px;font-size:13.5px;white-space:nowrap}
+.tok small{color:var(--muted)}
+.tok button{background:none;border:0;cursor:pointer;color:var(--muted);width:22px;height:22px;border-radius:50%;line-height:1}
+.tok button:hover{background:var(--line);color:var(--fg)}
+/* A */
+.a-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.dd{position:relative}
+.dd-btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px;cursor:pointer}
+.dd-btn.on{border-color:var(--focus)}
+.dd-btn small{color:var(--muted)}
+.pop{position:absolute;top:calc(100% + 6px);left:0;z-index:20;width:min(320px,calc(100vw - 32px));background:var(--panel-2);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.45);padding:8px;display:flex;flex-direction:column;gap:6px}
+.search{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.opts{max-height:260px;overflow:auto;display:flex;flex-direction:column}
+.opt{display:flex;justify-content:space-between;gap:10px;background:none;border:0;text-align:left;padding:7px 9px;border-radius:7px;cursor:pointer}
+.opt:hover{background:var(--line)}
+.opt[aria-pressed=true]{background:var(--on);color:var(--on-fg);font-weight:600}
+.opt .cnt{opacity:.6}
+.lbl{color:var(--muted);font-size:13.5px}
+/* B */
+.b-grid{display:grid;grid-template-columns:250px minmax(0,1fr);gap:18px;align-items:start}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:16px}
+.side h3{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.side section{display:flex;flex-direction:column;gap:4px}
+.side .opt{padding:6px 8px}
+.b-toggle{display:none}
+.g-side{gap:6px;padding:8px}
+.g-side h3{padding:6px 8px 2px}
+.acc{border-radius:10px}
+.acc.open{background:var(--panel-2)}
+.acc-h,.menu-row{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;background:none;border:0;border-radius:10px;padding:10px;cursor:pointer;text-align:left;font-weight:600}
+.acc-h:hover,.menu-row:hover{background:var(--panel-2)}
+.acc-v{color:var(--muted);font-weight:400;font-size:13px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-v.set{color:var(--focus);font-weight:600}
+.chev{color:var(--muted);width:14px;text-align:center}
+.acc-b{display:flex;flex-direction:column;gap:6px;padding:0 6px 8px}
+.acc-b .opts{max-height:340px}
+.menu{display:flex;flex-direction:column;gap:2px}
+.gtabs{display:flex;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.gtabs button{flex:1;position:relative;background:none;border:0;border-radius:8px;padding:7px 4px;cursor:pointer;color:var(--muted);font-size:13px;white-space:nowrap}
+.gtabs button[aria-pressed=true]{background:var(--on);color:var(--on-fg);font-weight:600}
+/* Γύρος 3: τέσσερα ύφη του B1 */
+.p-side{display:flex;flex-direction:column;min-width:0}
+.p-h{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;background:none;border:0;cursor:pointer;text-align:left;padding:12px 4px}
+.p-k{font-weight:600}
+.p-v{color:var(--muted);font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-v.set{color:var(--fg);font-weight:600}
+.chev{color:var(--muted);font-size:15px;text-align:center;width:16px}
+.p-b{display:flex;flex-direction:column;gap:8px;padding:0 0 14px}
+.p-search{width:100%;box-sizing:border-box;background:transparent;border:0;border-bottom:1px solid var(--line);padding:7px 2px;outline:none}
+.p-search:focus{border-color:var(--focus)}
+.p-list{display:flex;flex-direction:column;max-height:320px;overflow:auto}
+.p-opt{display:flex;align-items:center;gap:10px;background:none;border:0;text-align:left;cursor:pointer;padding:6px 4px;color:var(--muted);border-radius:6px}
+.p-opt:hover{color:var(--fg)}
+.p-opt[aria-pressed=true]{color:var(--fg);font-weight:600}
+.p-l{flex:1;min-width:0}
+.p-c{font-family:var(--mono);font-size:11.5px;opacity:.6;font-variant-numeric:tabular-nums}
+/* 1 γραμμές */
+.p-line .p-g,.p-chips .p-g{border-bottom:1px solid var(--line)}
+.p-line .p-h,.p-chips .p-h{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k c" "v c"}
+.p-line .p-k,.p-chips .p-k{grid-area:k;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.p-line .p-v,.p-chips .p-v{grid-area:v;font-size:15px;color:var(--fg);font-weight:500}
+.p-line .p-v.set,.p-chips .p-v.set{color:var(--focus)}
+.p-line .chev,.p-chips .chev{grid-area:c}
+.mk{width:14px;color:var(--ok);font-weight:700}
+/* 2 κάρτες */
+.p-card{gap:8px}
+.p-card .p-g{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 12px}
+.p-card .p-g.open{border-color:color-mix(in srgb,var(--focus) 45%,var(--line))}
+.p-card .p-h{grid-template-columns:minmax(0,1fr) auto auto}
+.p-chip{font-size:12.5px;padding:2px 10px;border-radius:999px;background:var(--panel-2);color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-chip.set{background:var(--on);color:var(--on-fg);font-weight:600}
+.rd{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);flex:none;box-sizing:border-box}
+.rd.on{border:4px solid var(--focus)}
+.p-card .p-search{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+/* 3 μία γραμμή */
+.p-mono .p-h{grid-template-columns:auto minmax(12px,1fr) auto auto;padding:10px 2px}
+.p-mono .p-k{font-weight:500}
+.p-dots{border-bottom:1px dotted var(--line);height:0;align-self:center;margin-top:6px}
+.p-mono .p-v{max-width:150px}
+.p-mono .p-opt{border-radius:0;border-left:2px solid transparent;padding-left:10px}
+.p-mono .p-opt[aria-pressed=true]{border-left-color:var(--accent)}
+.p-mono .p-c{opacity:0;transition:opacity .15s}
+.p-mono .p-opt:hover .p-c,.p-mono .p-opt:focus-visible .p-c{opacity:.6}
+/* 4 πυκνό */
+.p-chips .p-list{flex-direction:row;flex-wrap:wrap;gap:6px;max-height:none}
+.p-chips .p-opt{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;gap:6px}
+.p-chips .p-opt[aria-pressed=true]{background:var(--on);color:var(--on-fg);border-color:var(--on)}
+.p-chips .p-l{flex:none}
+.p-side .link{align-self:flex-start;margin-top:8px}
+.dot{position:absolute;top:4px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.b-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+/* C */
+.c-box{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 10px;position:relative}
+.c-box:focus-within{border-color:var(--focus)}
+.c-box input{flex:1;min-width:160px;background:none;border:0;outline:none;padding:6px 4px}
+.c-sug{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.45);padding:6px;display:flex;flex-direction:column;max-height:300px;overflow:auto}
+.c-sug .opt small{color:var(--muted);font-weight:400}
+.c-quick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px}
+.c-quick button{background:none;border:1px dashed var(--line);border-radius:999px;padding:4px 11px;cursor:pointer;color:var(--muted)}
+.c-quick button:hover{color:var(--fg);border-color:var(--muted)}
+.c-tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.c-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 2px;cursor:pointer;color:var(--muted);margin-bottom:-1px}
+.c-tabs button[aria-pressed=true]{color:var(--fg);border-color:var(--accent);font-weight:600}
+/* διακόπτης */
+.switch{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;align-items:center;gap:6px;background:#fff;color:#0a1020;border-radius:999px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:calc(100vw - 32px)}
+.switch button{border:0;background:#e9ecf3;color:#0a1020;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;flex:none}
+.switch span{padding:0 10px;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.why{color:var(--muted);font-size:14px;max-width:70ch;margin:0}
+@media (max-width:760px){
+  .b-grid{grid-template-columns:1fr}
+  .b-toggle{display:inline-flex}
+  .side.closed{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="proto">
+    <div><b>Πρωτότυπο, δεν είναι η εφαρμογή.</b> Γύρος 3: τέσσερις πιο λιτές εκδοχές του B1 (κλειστές ομάδες, ανοίγει μία). Η λειτουργία είναι ίδια, αλλάζει μόνο η εμφάνιση. Όλα δουλεύουν με κλικ, τα δεδομένα είναι ψεύτικα.</div>
+    <div>Άλλαξε παραλλαγή με τη λευκή μπάρα κάτω ή με τα βελάκια ← →. Με τα κουμπιά εδώ δοκιμάζεις την ίδια παραλλαγή σε άλλη οθόνη:</div>
+    <div class="screens" id="screens"></div>
+  </div>
+  <div>
+    <div class="crumb" id="crumb"></div>
+    <h1 id="title"></h1>
+  </div>
+  <p class="why" id="why"></p>
+  <div id="ui"></div>
+  <div class="state" id="state"></div>
+  <div id="res"></div>
+</div>
+
+<div class="switch" role="group" aria-label="Παραλλαγή">
+  <button id="prev" aria-label="Προηγούμενη παραλλαγή">←</button>
+  <span id="vlabel"></span>
+  <button id="next" aria-label="Επόμενη παραλλαγή">→</button>
+</div>
+
+<script>
+const CLIENTS=["Studio Γιόγκα Ανάσα","Αρτοποιείο Μελίσσι","Γυμναστήριο Κίνηση Plus","Εκπαιδευτήριο Νέοι Ορίζοντες","Ελαιουργείο Χρυσή Σταγόνα","Κατασκευαστική Θεμέλιο","Καφεκοπτείο Ρόδι","Κοσμηματοπωλείο Αστέρι","Κτήμα Αμπελώνες Ολύμπου","Μουσική Σχολή Αρμονία","Ξενοδοχείο Γαλάζιο Ακρογιάλι","Οδοντιατρείο Χαμόγελο","Ταβέρνα Το Λιμανάκι"];
+const VARIANTS=[
+  {key:"line",name:"1 — Γραμμές, χωρίς κουτί",why:"Χωρίς πλαίσιο γύρω από τη στήλη, μόνο λεπτές γραμμές ανάμεσα στις ομάδες. Πάνω το όνομα της ομάδας με μικρά γράμματα, από κάτω η επιλογή σου με κανονικά. Στη λίστα, αυτό που έχεις διαλέξει παίρνει ✓ και τα υπόλοιπα μένουν αχνά."},
+  {key:"card",name:"2 — Μαλακές κάρτες",why:"Κάθε ομάδα είναι μια ήπια κάρτα και η επιλογή σου φαίνεται ως ετικέτα δεξιά. Η λίστα έχει κυκλάκια επιλογής (○ ●), όπως οι φόρμες."},
+  {key:"mono",name:"3 — Μία γραμμή ανά ομάδα",why:"Το πιο λιτό: κάθε ομάδα είναι μία γραμμή, «Πελάτης ……… όλοι ▾». Στη λίστα, η επιλογή σου έχει μια κόκκινη γραμμή αριστερά. Οι αριθμοί φαίνονται μόνο όταν περνάς το ποντίκι από πάνω."},
+  {key:"chips",name:"4 — Πυκνό, ετικέτες μέσα στην ομάδα",why:"Όπως το 1, αλλά μέσα στην ανοιχτή ομάδα οι επιλογές μπαίνουν ως μικρές ετικέτες, μαζεμένες στη στήλη. Χωράνε πολλές χωρίς κύλιση, και το χάος μένει κλεισμένο μέσα στην ομάδα."}
+];
+const VARIANTS_OLD=[
+  {key:"b1",name:"B1 — Κλειστές ομάδες, ανοίγει μία",why:"Η στήλη δείχνει μόνο τους τίτλους των ομάδων: Κατάσταση, Κανάλι, Πελάτης. Δίπλα σε κάθε τίτλο γράφει τι έχεις διαλέξει. Πατάς έναν τίτλο και ανοίγει από κάτω όλη η λίστα του, ενώ οι άλλες ομάδες κλείνουν."},
+  {key:"b2",name:"B2 — Μπαίνεις μέσα στην ομάδα",why:"Η στήλη είναι ένα μενού με τις ομάδες. Πατάς «Πελάτης» και η στήλη γεμίζει μόνο με τους Πελάτες. Μόλις διαλέξεις, γυρίζει πίσω στο μενού. Με το «← Όλα τα φίλτρα» γυρίζεις και χωρίς να διαλέξεις."},
+  {key:"b3",name:"B3 — Ομάδες δίπλα-δίπλα, λίστα από κάτω",why:"Πάνω στη στήλη οι ομάδες στέκονται δίπλα-δίπλα σαν καρτέλες, και μια τελεία δείχνει όπου έχεις φίλτρο. Από κάτω φαίνεται ολόκληρη η λίστα της ομάδας που πάτησες."}
+];
+const MONTHS=["Νοέ 2026","Οκτ 2026","Σεπ 2026","Αύγ 2026","Ιούλ 2026"];
+const PRODS=["Social Μηνιαίο","Podcast","Διαφημιστικό","Εγκαίνια"];
+const pick=(a,i)=>a[i%a.length];
+const rowsOf=k=>Array.from({length:42},(_,i)=>{
+  const client=CLIENTS[(i*5+(i%4))%13];
+  if(k==="sends")return{client,status:i%11===0?"Απέτυχαν":i%4===0?"Προγραμματισμένα":"Στάλθηκαν",channel:i%3===0?"email":"Ειδοποίηση",
+    main:pick(["Υπενθύμιση Γυρίσματος","Νέο Τιμολόγιο","Παράδοση βίντεο","Ευχές γιορτής","Λήξη Συμφωνίας"],i),date:`${(i*3)%28+1} Οκτ`};
+  if(k==="invoices")return{client,status:pick(["Ανοιχτά","Εξοφλημένα","Εξοφλημένα","Ληξιπρόθεσμα"],i),month:pick(MONTHS,i>>1),
+    main:`ΤΠΥ-${1040+i}`,date:`${(380+i*45)%1500+250} €`};
+  return{client,status:pick(["Αδιάβαστες","Απαντημένες","Περιμένουν απάντηση"],i),production:pick(PRODS,i),
+    main:pick(["Πότε είναι το επόμενο γύρισμα;","Στείλαμε τα πλάνα","Αλλαγή ώρας","Ευχαριστούμε!"],i),date:`${(i*2)%28+1} Οκτ`};
+});
+const SCREENS={
+  sends:{label:"Αποστολές",title:"Εταιρεία",crumb:"Εταιρεία › Ρυθμίσεις › Αποστολές",status:{options:["Στάλθηκαν","Προγραμματισμένα","Απέτυχαν"],all:null},
+    filters:[{key:"client",label:"Πελάτης",many:true},{key:"channel",label:"Κανάλι",options:["Ειδοποίηση","email"]}],
+    cols:["Αποστολή","Πελάτης","Κανάλι","Ημερομηνία"],cells:r=>[r.main,r.client,`<span class="tag">${r.channel}</span>`,r.date]},
+  invoices:{label:"Τιμολόγια",title:"Χρήματα",crumb:"Χρήματα › Τιμολόγια",status:{options:["Ανοιχτά","Ληξιπρόθεσμα","Εξοφλημένα"],all:"Όλα"},
+    filters:[{key:"client",label:"Πελάτης",many:true},{key:"month",label:"Μήνας έκδοσης",options:MONTHS}],
+    cols:["Τιμολόγιο","Πελάτης","Μήνας","Ποσό"],cells:r=>[r.main,r.client,r.month,r.date]},
+  messages:{label:"Συνομιλίες",title:"Μηνύματα",crumb:"Μηνύματα › Συνομιλίες",status:{options:["Αδιάβαστες","Περιμένουν απάντηση","Απαντημένες"],all:"Όλες"},
+    filters:[{key:"client",label:"Πελάτης",many:true},{key:"production",label:"Παραγωγή",options:PRODS}],
+    cols:["Τελευταίο μήνυμα","Πελάτης","Παραγωγή","Ημερομηνία"],cells:r=>[r.main,r.client,`<span class="tag">${r.production}</span>`,r.date]}
+};
+for(const s of Object.values(SCREENS)){s.rows=rowsOf(Object.keys(SCREENS).find(k=>SCREENS[k]===s));for(const f of s.filters)if(f.many)f.options=CLIENTS}
+
+const st={v:0,screen:"sends",status:{},sel:{},open:null,q:"",bOpen:false,bAll:false};
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const scr=()=>SCREENS[st.screen];
+const sel=()=>st.sel[st.screen]||(st.sel[st.screen]={});
+const statusOf=()=>st.status[st.screen]??(scr().status.all||scr().status.options[0]);
+const match=(r,skip)=>{const s=sel();for(const f of scr().filters){if(f.key===skip)continue;if(s[f.key]&&r[f.key]!==s[f.key])return false}return true};
+const byStatus=r=>{const v=statusOf();return v===scr().status.all||r.status===v};
+const visible=()=>scr().rows.filter(r=>byStatus(r)&&match(r));
+const countStatus=o=>scr().rows.filter(r=>match(r)&&(o===scr().status.all||r.status===o)).length;
+const countOpt=(f,o)=>scr().rows.filter(r=>byStatus(r)&&match(r,f.key)&&r[f.key]===o).length;
+const statusList=()=>scr().status.all?[scr().status.all,...scr().status.options]:scr().status.options;
+const setSel=(k,v)=>{sel()[k]=v||null;st.open=null;st.q=""};
+const active=()=>scr().filters.filter(f=>sel()[f.key]);
+const optBtn=(f,o,act,small)=>`<button class="opt" data-set="${f.key}" data-val="${esc(o)}" aria-pressed="${sel()[f.key]===o}">${small?`<span>${esc(o)}</span>`:esc(o)}<span class="cnt">${countOpt(f,o)}</span></button>`;
+const tokens=()=>active().map(f=>`<span class="tok"><small>${f.label}:</small> ${esc(sel()[f.key])}<button data-set="${f.key}" data-val="" aria-label="Βγάλε το φίλτρο ${f.label}">✕</button></span>`).join("");
+
+const groups=()=>[{key:"__status",label:"Κατάσταση"},...scr().filters];
+const current=g=>g.key==="__status"?statusOf():(sel()[g.key]||(g.many?"όλοι":"όλα"));
+const isSet=g=>g.key!=="__status"&&!!sel()[g.key];
+function optionsHtml(g){
+  if(g.key==="__status")return statusList().map(o=>`<button class="opt" data-status="${esc(o)}" aria-pressed="${statusOf()===o}">${esc(o)}<span class="cnt">${countStatus(o)}</span></button>`).join("");
+  const q=st.q.toLowerCase();
+  const list=g.options.filter(o=>o.toLowerCase().includes(q));
+  return`${g.many?`<input class="search" id="b-q" placeholder="Ψάξε ${g.label.toLowerCase()}…" value="${esc(st.q)}" autocomplete="off">`:""}<div class="opts"><button class="opt" data-set="${g.key}" data-val="" aria-pressed="${!sel()[g.key]}">${g.many?"όλοι":"όλα"}</button>${list.map(o=>optBtn(g,o)).join("")||`<div class="empty">Κανένα αποτέλεσμα</div>`}</div>`;
+}
+function shell(side){
+  return`<div class="b-grid"><aside class="side g-side ${st.bOpen?"":"closed"}">${side}</aside><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><div class="b-head"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button class="dd-btn b-toggle" data-btoggle>Φίλτρα${active().length?` (${active().length})`:""}</button><strong>${esc(statusOf())}</strong>${tokens()}</div>${active().length?`<button class="link" data-clear>Καθαρισμός</button>`:""}</div><div id="bres"></div></div></div>`;
+}
+const STYLE=()=>VARIANTS[st.v].key;
+function pOpt(attrs,label,count,on){
+  const s=STYLE(), mark=s==="line"?`<span class="mk">${on?"✓":""}</span>`:s==="card"?`<span class="rd ${on?"on":""}"></span>`:"";
+  return`<button class="p-opt" ${attrs} aria-pressed="${on}">${mark}<span class="p-l">${esc(label)}</span>${count==null?"":`<span class="p-c">${count}</span>`}</button>`;
+}
+function pOptions(g){
+  if(g.key==="__status")return`<div class="p-list">${statusList().map(o=>pOpt(`data-status="${esc(o)}"`,o,countStatus(o),statusOf()===o)).join("")}</div>`;
+  const q=st.q.toLowerCase(), list=g.options.filter(o=>o.toLowerCase().includes(q)), all=g.many?"όλοι":"όλα";
+  return`${g.many?`<input class="p-search" id="b-q" placeholder="Ψάξε…" value="${esc(st.q)}" autocomplete="off">`:""}<div class="p-list">${pOpt(`data-set="${g.key}" data-val=""`,all,null,!sel()[g.key])}${list.map(o=>pOpt(`data-set="${g.key}" data-val="${esc(o)}"`,o,countOpt(g,o),sel()[g.key]===o)).join("")||`<div class="empty">Κανένα αποτέλεσμα</div>`}</div>`;
+}
+function pHead(g,open){
+  const s=STYLE(), v=esc(current(g)), set=isSet(g)?"set":"";
+  if(s==="line"||s==="chips")return`<button class="p-h" data-grp="${g.key}" aria-expanded="${open}"><span class="p-k">${g.label}</span><span class="p-v ${set}">${v}</span><span class="chev">${open?"−":"+"}</span></button>`;
+  if(s==="card")return`<button class="p-h" data-grp="${g.key}" aria-expanded="${open}"><span class="p-k">${g.label}</span><span class="p-chip ${set}">${v}</span><span class="chev">${open?"▴":"▾"}</span></button>`;
+  return`<button class="p-h" data-grp="${g.key}" aria-expanded="${open}"><span class="p-k">${g.label}</span><span class="p-dots"></span><span class="p-v ${set}">${v}</span><span class="chev">${open?"▴":"▾"}</span></button>`;
+}
+function variantP(){
+  const side=groups().map(g=>{const open=st.grp===g.key;return`<section class="p-g ${open?"open":""}">${pHead(g,open)}${open?`<div class="p-b">${pOptions(g)}</div>`:""}</section>`}).join("");
+  return`<div class="b-grid"><aside class="p-side p-${STYLE()} ${st.bOpen?"":"closed"}">${side}${active().length?`<button class="link" data-clear>Καθαρισμός φίλτρων</button>`:""}</aside><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><div class="b-head"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button class="dd-btn b-toggle" data-btoggle>Φίλτρα${active().length?` (${active().length})`:""}</button><strong>${esc(statusOf())}</strong>${tokens()}</div></div><div id="bres"></div></div></div>`;
+}
+function variantB1(){
+  return shell(groups().map(g=>{const open=st.grp===g.key;return`<section class="acc ${open?"open":""}"><button class="acc-h" data-grp="${g.key}" aria-expanded="${open}"><span>${g.label}</span><span class="acc-v ${isSet(g)?"set":""}">${esc(current(g))}</span><span class="chev">${open?"▴":"▾"}</span></button>${open?`<div class="acc-b">${optionsHtml(g)}</div>`:""}</section>`}).join(""));
+}
+function variantB2(){
+  const g=groups().find(x=>x.key===st.grp);
+  if(!g)return shell(`<h3>Φίλτρα</h3><div class="menu">${groups().map(x=>`<button class="menu-row" data-grp="${x.key}"><span>${x.label}</span><span class="acc-v ${isSet(x)?"set":""}">${esc(current(x))}</span><span class="chev">›</span></button>`).join("")}</div>`);
+  return shell(`<button class="link" data-back style="align-self:flex-start">← Όλα τα φίλτρα</button><h3>${g.label}</h3><div class="acc-b">${optionsHtml(g)}</div>`);
+}
+function variantB3(){
+  const g=groups().find(x=>x.key===st.grp)||groups()[0];
+  return shell(`<div class="gtabs">${groups().map(x=>`<button data-grp="${x.key}" aria-pressed="${x.key===g.key}">${x.label}${isSet(x)?`<span class="dot" aria-label="έχει φίλτρο"></span>`:""}</button>`).join("")}</div><div class="acc-b">${optionsHtml(g)}</div>`);
+}
+function variantA(){
+  const s=scr();
+  const seg=`<div class="seg">${statusList().map(o=>`<button data-status="${esc(o)}" aria-pressed="${statusOf()===o}">${esc(o)}<span class="cnt">${countStatus(o)}</span></button>`).join("")}</div>`;
+  const parts=s.filters.map(f=>{
+    if(!f.many&&f.options.length<=3)return`<span class="lbl">${f.label}</span><div class="seg"><button data-set="${f.key}" data-val="" aria-pressed="${!sel()[f.key]}">όλα</button>${f.options.map(o=>`<button data-set="${f.key}" data-val="${esc(o)}" aria-pressed="${sel()[f.key]===o}">${esc(o)}</button>`).join("")}</div>`;
+    const open=st.open===f.key, q=st.q.toLowerCase();
+    const list=f.options.filter(o=>o.toLowerCase().includes(q));
+    return`<div class="dd"><button class="dd-btn ${sel()[f.key]?"on":""}" data-open="${f.key}" aria-expanded="${open}"><small>${f.label}:</small> ${esc(sel()[f.key]||"όλοι")} ▾</button>${open?`<div class="pop">${f.many?`<input class="search" id="a-q" placeholder="Ψάξε ${f.label.toLowerCase()}…" value="${esc(st.q)}" autocomplete="off">`:""}<div class="opts"><button class="opt" data-set="${f.key}" data-val="" aria-pressed="${!sel()[f.key]}">όλοι</button>${list.map(o=>optBtn(f,o)).join("")||`<div class="empty">Κανένα αποτέλεσμα</div>`}</div></div>`:""}</div>`;
+  }).join("");
+  return`<div style="display:flex;flex-direction:column;gap:14px">${seg}<div class="a-bar">${parts}${active().length?`<button class="link" data-clear>Καθαρισμός</button>`:""}</div></div>`;
+}
+function variantB(){
+  const s=scr();
+  const sec=f=>{
+    if(!f.many)return`<section><h3>${f.label}</h3><button class="opt" data-set="${f.key}" data-val="" aria-pressed="${!sel()[f.key]}">όλα</button>${f.options.map(o=>optBtn(f,o)).join("")}</section>`;
+    const q=st.q.toLowerCase();
+    const ranked=[...f.options].sort((a,b)=>countOpt(f,b)-countOpt(f,a));
+    const list=q?ranked.filter(o=>o.toLowerCase().includes(q)):st.bAll?ranked:ranked.slice(0,6);
+    if(sel()[f.key]&&!list.includes(sel()[f.key]))list.unshift(sel()[f.key]);
+    return`<section><h3>${f.label}</h3><input class="search" id="b-q" placeholder="Ψάξε…" value="${esc(st.q)}" autocomplete="off"><button class="opt" data-set="${f.key}" data-val="" aria-pressed="${!sel()[f.key]}">όλοι</button>${list.map(o=>optBtn(f,o)).join("")}${!q?`<button class="link" data-ball>${st.bAll?"Λιγότεροι":`Όλοι οι ${f.options.length}`}</button>`:""}</section>`;
+  };
+  const side=`<aside class="side ${st.bOpen?"":"closed"}"><section><h3>Κατάσταση</h3>${statusList().map(o=>`<button class="opt" data-status="${esc(o)}" aria-pressed="${statusOf()===o}">${esc(o)}<span class="cnt">${countStatus(o)}</span></button>`).join("")}</section>${s.filters.map(sec).join("")}</aside>`;
+  return`<div class="b-grid">${side}<div style="display:flex;flex-direction:column;gap:12px;min-width:0"><div class="b-head"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button class="dd-btn b-toggle" data-btoggle>Φίλτρα${active().length?` (${active().length})`:""}</button><strong>${esc(statusOf())}</strong>${tokens()}</div>${active().length?`<button class="link" data-clear>Καθαρισμός</button>`:""}</div><div id="bres"></div></div></div>`;
+}
+function variantC(){
+  const s=scr(), q=st.q.trim().toLowerCase();
+  const sug=q?s.filters.flatMap(f=>f.options.filter(o=>o.toLowerCase().includes(q)).map(o=>({f,o}))).slice(0,8):[];
+  const tabs=`<div class="c-tabs">${statusList().map(o=>`<button data-status="${esc(o)}" aria-pressed="${statusOf()===o}">${esc(o)}<span class="cnt">${countStatus(o)}</span></button>`).join("")}</div>`;
+  const quick=[{f:s.filters[1],o:s.filters[1].options[s.filters[1].options.length-1]},...[...CLIENTS].sort((a,b)=>countOpt(s.filters[0],b)-countOpt(s.filters[0],a)).slice(0,2).map(o=>({f:s.filters[0],o}))];
+  return`<div style="display:flex;flex-direction:column;gap:12px">${tabs}<div class="c-box">${tokens()}<input id="c-q" placeholder="${active().length?"Πρόσθεσε φίλτρο…":"Φίλτρο: γράψε Πελάτη, "+s.filters[1].label.toLowerCase()+"…"}" value="${esc(st.q)}" autocomplete="off">${sug.length?`<div class="c-sug">${sug.map(({f,o})=>`<button class="opt" data-set="${f.key}" data-val="${esc(o)}"><span><small>${f.label} · </small>${esc(o)}</span><span class="cnt">${countOpt(f,o)}</span></button>`).join("")}</div>`:q?`<div class="c-sug"><div class="empty">Τίποτα για «${esc(st.q)}»</div></div>`:""}</div><div class="c-quick"><span class="lbl">Συχνά:</span>${quick.map(({f,o})=>`<button data-set="${f.key}" data-val="${esc(o)}">${esc(o)}</button>`).join("")}${active().length?`<button class="link" data-clear style="border:0">Καθαρισμός</button>`:""}</div></div>`;
+}
+function results(){
+  const s=scr(), rows=visible();
+  if(!rows.length)return`<div class="results"><div class="empty">Δεν υπάρχει τίποτα με αυτά τα φίλτρα.</div></div>`;
+  const shown=rows.slice(0,8);
+  return`<div class="results"><div class="tbl"><table><thead><tr>${s.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>${shown.map(r=>`<tr>${s.cells(r).map((c,i)=>`<td class="${i===3?"num":""}">${i===2||i===3?c:esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${rows.length>8?`<div class="more">και άλλες ${rows.length-8}…</div>`:""}</div>`;
+}
+function render(){
+  const focusId=document.activeElement?.id, caret=document.activeElement?.selectionStart;
+  const s=scr(), V=VARIANTS[st.v];
+  document.getElementById("screens").innerHTML=Object.entries(SCREENS).map(([k,x])=>`<button data-screen="${k}" aria-pressed="${k===st.screen}">${x.label}</button>`).join("");
+  document.getElementById("crumb").textContent=s.crumb;
+  document.getElementById("title").innerHTML=`${s.title}<i>.</i>`;
+  document.getElementById("why").textContent=V.why;
+  document.getElementById("vlabel").textContent=V.name;
+  document.getElementById("ui").innerHTML=variantP();
+  const res=results(), slot=document.getElementById("bres");
+  if(slot){slot.innerHTML=res;document.getElementById("res").innerHTML=""}else document.getElementById("res").innerHTML=res;
+  const n=visible().length;
+  document.getElementById("state").innerHTML=`Παραλλαγή <b>${V.key.toUpperCase()}</b> · Οθόνη <b>${s.label}</b> · Κατάσταση = <b>${esc(statusOf())}</b>${active().map(f=>` · ${f.label} = <b>${esc(sel()[f.key])}</b>`).join("")} · <b>${n}</b> από ${s.rows.length}`;
+  if(focusId){const el=document.getElementById(focusId);if(el){el.focus();if(caret!=null&&el.setSelectionRange)el.setSelectionRange(caret,caret)}}
+  try{history.replaceState(null,"","#"+V.key)}catch(e){}
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");
+  if(!t){if(!e.target.closest(".pop,.c-box"))if(st.open){st.open=null;st.q="";render()}return}
+  const d=t.dataset;
+  if(d.screen){st.screen=d.screen;st.q="";st.open=null;st.grp="__status"}
+  else if(d.grp){st.grp=st.grp===d.grp?null:d.grp;st.q="";if(groups().find(x=>x.key===d.grp)?.many)setTimeout(()=>document.getElementById("b-q")?.focus())}
+  else if(d.status!=null)st.status[st.screen]=d.status;
+  else if(d.set)setSel(d.set,d.val);
+  else if(d.open){st.open=st.open===d.open?null:d.open;st.q="";if(st.open)setTimeout(()=>document.getElementById("a-q")?.focus())}
+  else if(d.clear!=null){st.sel[st.screen]={}}
+  else if(d.ball!=null)st.bAll=!st.bAll;
+  else if(d.btoggle!=null)st.bOpen=!st.bOpen;
+  else if(t.id==="prev")go(-1);
+  else if(t.id==="next")go(1);
+  else return;
+  render();
+});
+document.addEventListener("input",e=>{if(["a-q","b-q","c-q"].includes(e.target.id)){st.q=e.target.value;render()}});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){st.open=null;st.q="";render();return}
+  if(e.target.closest("input,textarea,[contenteditable]")){
+    if(e.key==="Backspace"&&e.target.id==="c-q"&&!e.target.value&&active().length){setSel(active().at(-1).key,null);render()}
+    if(e.key==="Enter"&&e.target.id==="c-q"){const b=document.querySelector(".c-sug .opt");if(b)b.click()}
+    return}
+  if(e.key==="ArrowLeft"){go(-1);render()}
+  if(e.key==="ArrowRight"){go(1);render()}
+});
+function go(d){st.v=(st.v+d+VARIANTS.length)%VARIANTS.length;st.open=null;st.q="";st.grp="__status"}
+st.grp="__status";
+const h=location.hash.slice(1);const hi=VARIANTS.findIndex(v=>v.key===h);if(hi>=0)st.v=hi;
+render();
+</script>
