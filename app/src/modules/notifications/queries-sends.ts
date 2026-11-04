@@ -1,5 +1,6 @@
 import { createSupabase } from "@/lib/supabase/server";
 
+import type { ClientSendsFilter } from "./spaces/b2-sends-filters";
 import type { SendsCursor, SendsQuery } from "./sends-helpers";
 import { read, type ReadResult } from "./read";
 import {
@@ -36,6 +37,7 @@ export async function getSends(
 export async function getClientSends(
   clientId: string,
   cursor: SendsCursor | null,
+  filter: ClientSendsFilter = { state: "all", channel: null },
 ): Promise<ReadResult<ClientSendsPage | null>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
@@ -46,6 +48,8 @@ export async function getClientSends(
       p_before: cursor?.at ?? null,
       p_before_id: cursor?.id ?? null,
       p_limit: CLIENT_SENDS_PAGE_SIZE,
+      p_tab: filter.state,
+      p_channel: filter.channel,
     }),
     parseClientSendsPage,
   );

@@ -1,5 +1,6 @@
 import { getViewer } from "@/modules/access";
 import { getSpaceStrip } from "@/modules/today";
+import { FilterPanel } from "@/spaces/kit/filter-panel";
 import { codesOfSpace } from "@/spaces/data/spaces";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { Strip } from "@/spaces/shell/strip";
@@ -11,12 +12,15 @@ import { listClientOverviews } from "../queries-overview";
 import type { ClientRow, SalesCaps } from "../types";
 import { b1ColumnsOf, b1RowsOf } from "./b1-adapter";
 import { ClientsTable } from "./b1-clients-table";
+import { applyB1Filters, b1FilterGroups, type B1Filters } from "./b1-filters";
 import { NewOpportunity } from "./b1-new-opportunity";
 
 import "./b1.css";
 
 interface SpacesClientsProps {
   query: string;
+  // Τα φίλτρα της διεύθυνσης (?status=, ?noshoot=1, ?monthly=1).
+  filters: B1Filters;
   // Το «+ Νέο → Νέα Ευκαιρία» βάζει νέα τιμή κάθε φορά, ώστε η φόρμα να ανοίγει και αν είσαι ήδη εδώ.
   newStamp: string | undefined;
   // Μόλις διαγράφηκε Πελάτης (η ενέργεια γυρίζει εδώ με ?deleted=1).
@@ -54,6 +58,7 @@ async function NewOpportunitySlot({
 // (κατάσταση, πακέτο και μήνας, Συμφωνίες, Υπόλοιπο, τελευταία επαφή) από μία ανάγνωση. Ανοίγουν μόνο όσοι αφορούν τον Χρήστη.
 export async function SpacesClients({
   query,
+  filters,
   newStamp,
   isDeleted = false,
 }: SpacesClientsProps) {
@@ -115,7 +120,17 @@ export async function SpacesClients({
           </p>
         </StateNotice>
       ) : (
-        <ClientsTable rows={rows} query={query} {...b1ColumnsOf(rows, caps)} />
+        <FilterPanel
+          name="b1-filters"
+          {...b1FilterGroups(rows, query, filters)}
+        >
+          <ClientsTable
+            rows={applyB1Filters(rows, filters)}
+            query={query}
+            filters={filters}
+            {...b1ColumnsOf(rows, caps)}
+          />
+        </FilterPanel>
       )}
       {clients.data.length >= 100 && (
         <p className="muted">

@@ -19,6 +19,7 @@ import { SpacesGdprClientSection } from "@/modules/gdpr";
 import { messagesCaps } from "@/modules/messages";
 import {
   SpacesClientSends,
+  type ClientSendsFilter,
   canSeeClientSends,
   sendsCaps,
 } from "@/modules/notifications";
@@ -76,6 +77,8 @@ import "./b2.css";
 interface SpacesClientProps {
   clientId: string;
   tab: string | undefined;
+  // Τα φίλτρα της καρτέλας «Τι στάλθηκε».
+  sendsFilter: ClientSendsFilter;
 }
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
@@ -221,6 +224,7 @@ interface TabInput {
   data: Loaded;
   allowed: readonly B2Tab[];
   today: string;
+  sendsFilter: ClientSendsFilter;
 }
 
 function TabContent({
@@ -233,6 +237,7 @@ function TabContent({
   data,
   allowed,
   today,
+  sendsFilter,
 }: TabInput) {
   if (tab === "users")
     return (
@@ -262,6 +267,7 @@ function TabContent({
       <SpacesClientSends
         clientId={client.id}
         hasHistoryLink={sendsCaps(viewer).canView}
+        filter={sendsFilter}
       />
     );
   if (tab === "ledger" && data.ledger)
@@ -318,12 +324,14 @@ async function ClientView({
   card,
   caps,
   tab,
+  sendsFilter,
 }: {
   viewer: Viewer;
   client: ClientDetail;
   card: ClientRow | null;
   caps: SalesCaps;
   tab: string | undefined;
+  sendsFilter: ClientSendsFilter;
 }) {
   const access = clientAccess(caps, client);
   const isGranted = access === "granted";
@@ -425,6 +433,7 @@ async function ClientView({
             data={data}
             allowed={allowed}
             today={today}
+            sendsFilter={sendsFilter}
           />
         </div>
       </div>
@@ -434,7 +443,11 @@ async function ClientView({
 
 // B2 Σελίδα Πελάτη στη νέα εμφάνιση (prototype `screens/B2.tsx`): πλαϊνή στήλη με την ταυτότητα, λωρίδα, σχέση με τον
 // Πελάτη και καρτέλες. Η πρόσβαση αποφασίζεται στη βάση, όπως στη σημερινή σελίδα.
-export async function SpacesClient({ clientId, tab }: SpacesClientProps) {
+export async function SpacesClient({
+  clientId,
+  tab,
+  sendsFilter,
+}: SpacesClientProps) {
   const viewer = await getViewer();
   const caps = salesCaps(viewer);
   if (!caps.canViewClients)
@@ -479,6 +492,7 @@ export async function SpacesClient({ clientId, tab }: SpacesClientProps) {
       card={card.data}
       caps={caps}
       tab={tab}
+      sendsFilter={sendsFilter}
     />
   );
 }
