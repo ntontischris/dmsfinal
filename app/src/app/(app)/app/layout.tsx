@@ -59,11 +59,12 @@ const nameOf = (viewer: Viewer): string =>
 
 // Το κέλυφος του συστήματος (πίσω από το /login): μπάρα με τη «λυχνία», πλαϊνή πλοήγηση, περιεχόμενο.
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const viewer = await getViewer();
+  // Α9: καμπανάκι για ομάδα και πελάτη· null όταν ο Χρήστης δεν έχει Ειδοποιήσεις. Ζητείται μαζί με τον θεατή
+  // (το /app το βλέπει μόνο συνδεδεμένος, το proxy στέλνει τους άλλους στο /login).
+  const [viewer, bellResult] = await Promise.all([getViewer(), getBell()]);
   const memberships = viewer.status === "signed-in" && !viewer.team ? await listMemberships() : null;
   const clientRows = memberships?.ok ? memberships.data : [];
-  // Α9: καμπανάκι για ομάδα και πελάτη· null όταν ο Χρήστης δεν έχει Ειδοποιήσεις.
-  const bell = viewer.status === "signed-in" ? await getBell() : null;
+  const bell = viewer.status === "signed-in" ? bellResult : null;
   // Χωρίς βάση φαίνονται όλες οι οθόνες, για να περιηγείται κανείς το σύστημα· η καθεμία λέει ότι λείπει η βάση.
   // A9: ο Βοηθός για Χρήστη ομάδας και για Χρήστη πελάτη με Πελάτη (η βάση ξαναελέγχει σε κάθε ερώτηση).
   const assistantAudience =
