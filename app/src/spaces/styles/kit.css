@@ -129,4 +129,40 @@
 & a.kit-stat { position: relative; }
 & a.kit-stat::after { content: '→' / ''; position: absolute; top: var(--space-3); right: var(--space-4); color: var(--color-text-muted); transition: translate 150ms ease; }
 & a.kit-stat:hover::after { translate: 3px 0; color: var(--color-text); }
+
+/* Φίλτρα σε μαλακές κάρτες (παραλλαγή 2 του Ιδιοκτήτη): στήλη ομάδων δίπλα στα αποτελέσματα, ανοίγει μία κάθε φορά */
+& .kit-fp { display: grid; gap: var(--space-3) var(--space-4); grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "side" "main"; align-items: start; min-width: 0; }
+& .kit-fp-head { grid-area: head; display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-width: 0; }
+& .kit-fp-side { grid-area: side; display: grid; gap: var(--space-2); min-width: 0; }
+& .kit-fp-main { grid-area: main; min-width: 0; }
+@media (min-width: 60rem) {
+  & .kit-fp { grid-template-columns: 16rem minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: "side head" "side main"; }
+  & .kit-fp-toggle { display: none; }
+}
+@media (max-width: 59.99rem) { & .kit-fp[data-open='false'] > .kit-fp-side { display: none; } }
+& .kit-fp-group { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0 var(--space-3); min-width: 0; }
+& .kit-fp-group[open] { border-color: color-mix(in oklab, var(--color-focus) 45%, var(--color-border)); }
+& .kit-fp-group > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--space-2); align-items: center; padding: var(--space-3) 0; cursor: pointer; list-style: none; font-weight: 600; }
+& .kit-fp-group > summary::-webkit-details-marker { display: none; }
+& .kit-fp-chev::before { content: '▾'; color: var(--color-text-muted); }
+& .kit-fp-group[open] .kit-fp-chev::before { content: '▴'; }
+& .kit-fp-chip { max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px var(--space-3); border-radius: 999px; background: var(--color-surface-raised); color: var(--color-text-muted); font-size: var(--text-xs); font-weight: 500; }
+& .kit-fp-chip[data-set='true'] { background: var(--color-text); color: var(--color-bg); font-weight: 600; }
+& .kit-fp-body { display: grid; gap: var(--space-2); padding-bottom: var(--space-3); min-width: 0; }
+& .kit-fp-search { width: 100%; box-sizing: border-box; }
+& .kit-fp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 20rem; overflow: auto; }
+& .kit-fp-opt { display: flex; align-items: center; gap: var(--space-3); padding: 0.4rem var(--space-1); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: var(--text-sm); text-decoration: none; }
+& .kit-fp-opt:hover { color: var(--color-text); background: var(--color-surface-raised); }
+& .kit-fp-opt[aria-current='true'] { color: var(--color-text); font-weight: 600; }
+& .kit-fp-radio { flex: none; box-sizing: border-box; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--color-border-strong); }
+& .kit-fp-opt[aria-current='true'] .kit-fp-radio { border: 4px solid var(--color-focus); }
+& .kit-fp-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+& .kit-fp-count { font: 500 var(--text-xs) var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-text-muted); opacity: 0.75; }
+& .kit-fp-empty { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+& .kit-fp-token { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px var(--space-1) 2px var(--space-3); border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface-raised); font-size: var(--text-sm); white-space: nowrap; max-width: 100%; }
+& .kit-fp-token small { font-size: inherit; color: var(--color-text-muted); }
+& .kit-fp-token a { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; color: var(--color-text-muted); text-decoration: none; }
+& .kit-fp-token a:hover { background: var(--color-border-strong); color: var(--color-text); }
+& .kit-fp-clear { font-size: var(--text-sm); color: var(--color-accent); }
+@media (pointer: coarse) { & .kit-fp-opt { min-height: 44px; } & .kit-fp-token a { width: 44px; height: 44px; } }
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getViewer } from "@/modules/access";
+import { FilterCard } from "@/spaces/kit/filter-panel";
 import { Entity } from "@/spaces/kit/parts";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
@@ -73,18 +74,19 @@ function Header({
         <Link className="button" href={MESSAGES_PATH}>
           Όλες οι Συνομιλίες
         </Link>
-        {others.length > 1 && <span className="muted">Πελάτης:</span>}
-        {others.length > 1 &&
-          others.map((row) => (
-            <Link
-              key={row.clientId}
-              className="chip"
-              aria-current={row.clientId === thread.client.id}
-              href={threadHref(row.clientId)}
-            >
-              {row.clientName}
-            </Link>
-          ))}
+        {others.length > 1 && (
+          <FilterCard
+            group={{
+              label: "Πελάτης",
+              isSearchable: true,
+              options: others.map((row) => ({
+                label: row.clientName,
+                href: threadHref(row.clientId),
+                isCurrent: row.clientId === thread.client.id,
+              })),
+            }}
+          />
+        )}
       </div>
     </section>
   );

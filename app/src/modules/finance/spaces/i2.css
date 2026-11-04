@@ -30,11 +30,6 @@
 & .i2-reminder-preview { display: grid; gap: var(--space-2); margin: 0; font-size: var(--text-sm); }
 & .i2-reminder-preview p { margin: 0; }
 & .i2-reminders { margin: 0; padding-left: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
-& .i2-client-filter { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); font-size: var(--text-sm); }
-& .i2-client-filter a { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong); font-weight: 600; text-decoration: none; color: var(--color-text); transition: background-color 120ms ease; }
-& .i2-client-filter a:hover { background: color-mix(in oklab, var(--color-text) 8%, transparent); }
-& .i2-client-filter a[aria-current='true'] { background: color-mix(in oklab, var(--color-accent) 18%, transparent); border-color: var(--color-accent); }
-@media (pointer: coarse) { & .i2-client-filter a { min-height: 44px; } }
 /* Πίνακας τιμολογίων: ήρεμο γυάλινο πάνελ (όπως ListPanel στα screens2) */
 & .scroll:has(> .i2-table) { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); backdrop-filter: blur(4px); }
 & .i2-table { margin: 0; }
