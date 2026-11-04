@@ -158,5 +158,7 @@
 & .kit-fb-count { font: 500 var(--text-xs) var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-text-muted); opacity: 0.75; white-space: nowrap; }
 & .kit-fb-empty { margin: 0; padding: var(--space-1) var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); }
 & .kit-fb-clear { font-size: var(--text-sm); color: var(--color-accent); padding: var(--space-1) 2px; }
+/* Στο στενό: η ανοιχτή κάρτα πιάνει όλη τη σειρά και η λίστα της σπρώχνει τα υπόλοιπα κάτω, ώστε να μη σκεπάζει τις άλλες κάρτες. */
+@media (max-width: 40rem) { & .kit-fb-card[open] { flex-basis: 100%; } & .kit-fb-card[open] > summary { width: 100%; box-sizing: border-box; } & .kit-fb-pop { position: static; width: 100%; margin-top: var(--space-1); box-shadow: none; translate: none !important; } }
 @media (pointer: coarse) { & .kit-fb-opt { min-height: 44px; } & .kit-fb-card > summary { min-height: 44px; box-sizing: border-box; } }
 }
