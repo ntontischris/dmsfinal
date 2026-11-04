@@ -1,4 +1,5 @@
 import { getViewer } from "@/modules/access";
+import { FilterPanel } from "@/spaces/kit/filter-panel";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { financeViewOf } from "../caps";
@@ -9,8 +10,18 @@ import {
 import { getClientInvoices } from "../ledger-queries";
 import { athensToday } from "../money";
 import { clientInvoiceRowOf } from "./i2-client-adapter";
-import { byMonth, invoiceMonthsOf, unpaidNoteOf, visibleInvoices } from "./i2-model";
-import { FilterTabs, MonthFilter, type SpacesInvoicesQuery } from "./i2-screen";
+import {
+  byMonth,
+  invoiceMonthsOf,
+  unpaidNoteOf,
+  visibleInvoices,
+} from "./i2-model";
+import {
+  i2ClearHref,
+  monthGroupOf,
+  statusGroupOf,
+  type SpacesInvoicesQuery,
+} from "./i2-screen";
 import { InvoiceTable } from "./i2-table";
 
 import "./i245.css";
@@ -48,23 +59,28 @@ export async function SpacesClientInvoices({
   const unpaidNote = query.filter === "unpaid" ? unpaidNoteOf(all) : null;
   return (
     <div data-spaces>
-      <FilterTabs query={current} all={all} />
-      {unpaidNote && <p className="note">{unpaidNote}</p>}
-      {months.length > 1 && <MonthFilter query={current} months={months} />}
-      {rows.length === 0 ? (
-        <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
-          {listed.length === 0
-            ? CLIENT_INVOICES_EMPTY_TEXT
-            : "Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο."}
-        </StateNotice>
-      ) : (
-        <InvoiceTable
-          rows={rows}
-          today={athensToday()}
-          canEdit={false}
-          showClient={false}
-        />
-      )}
+      <FilterPanel
+        name="i2-filters"
+        status={statusGroupOf(current, all)}
+        filters={months.length > 1 ? [monthGroupOf(current, months)] : []}
+        clearHref={i2ClearHref(current)}
+      >
+        {unpaidNote && <p className="note">{unpaidNote}</p>}
+        {rows.length === 0 ? (
+          <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
+            {listed.length === 0
+              ? CLIENT_INVOICES_EMPTY_TEXT
+              : "Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο."}
+          </StateNotice>
+        ) : (
+          <InvoiceTable
+            rows={rows}
+            today={athensToday()}
+            canEdit={false}
+            showClient={false}
+          />
+        )}
+      </FilterPanel>
     </div>
   );
 }

@@ -24,7 +24,8 @@
 & .j2-error { margin: 0; font-size: var(--text-sm); color: var(--color-attention); font-weight: 600; }
 
 & .j2-side a { overflow-wrap: anywhere; }
-& .j2-switch { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: var(--space-2); }
+& .j2-switch { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: start; margin-top: var(--space-2); }
+& .j2-switch .kit-fp-group { flex: 1 1 16rem; max-width: 24rem; }
 
 /* Η φόρμα μένει ορατή στο κάτω μέρος· ο διακόπτης δείχνει καθαρά την επιλογή (χρώμα και ✓). */
 & .j2-composer { position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -6px 16px color-mix(in oklab, var(--color-text) 12%, transparent); }

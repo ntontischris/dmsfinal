@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { can, getViewer, type Viewer } from "@/modules/access";
 import { getSpaceStrip } from "@/modules/today";
-import { Segmented } from "@/spaces/kit/segmented";
+import { FilterPanel, type FilterGroup } from "@/spaces/kit/filter-panel";
 import { hrefOf } from "@/spaces/data/screens";
 import { codesOfSpace } from "@/spaces/data/spaces";
 import { ErrorNotice, StateNotice, fmtMoney } from "@/spaces/screens/shared";
@@ -105,85 +105,60 @@ async function Totals({ totals, receipts, today, viewer }: TotalsProps) {
   );
 }
 
-export function FilterTabs({
-  query,
-  all,
-}: {
-  query: SpacesInvoicesQuery;
-  all: readonly InvoiceItem[];
-}) {
-  return (
-    <Segmented
-      label="Φίλτρο Τιμολογίων"
-      options={INVOICE_FILTERS.map((f) => ({
-        label: FILTER_LABELS[f],
-        isCurrent: f === query.filter,
-        count: visibleInvoices(all, f).length,
-        href: i2Href({ ...query, filter: f }),
-      }))}
-    />
-  );
-}
+// Κατάσταση Τιμολογίων με αριθμούς (μέσα στον τρέχοντα Πελάτη και μήνα).
+export const statusGroupOf = (
+  query: SpacesInvoicesQuery,
+  all: readonly InvoiceItem[],
+): FilterGroup => ({
+  label: "Κατάσταση",
+  options: INVOICE_FILTERS.map((f) => ({
+    label: FILTER_LABELS[f],
+    isCurrent: f === query.filter,
+    count: visibleInvoices(all, f).length,
+    href: i2Href({ ...query, filter: f }),
+  })),
+});
 
 // Φίλτρο Πελάτη: μόνο όσοι Πελάτες έχουν Τιμολόγια.
-function ClientFilter({
-  query,
-  items,
-}: {
-  query: SpacesInvoicesQuery;
-  items: readonly InvoiceItem[];
-}) {
-  return (
-    <nav className="i2-client-filter" aria-label="Πελάτης">
-      <span className="muted">Πελάτης:</span>
-      <Link
-        href={i2Href({ ...query, client: undefined })}
-        aria-current={!query.client}
-      >
-        όλοι
-      </Link>
-      {clientsWithInvoices(items).map((c) => (
-        <Link
-          key={c.id}
-          href={i2Href({ ...query, client: c.id })}
-          aria-current={query.client === c.id}
-        >
-          {c.name}
-        </Link>
-      ))}
-    </nav>
-  );
-}
+const clientGroupOf = (
+  query: SpacesInvoicesQuery,
+  items: readonly InvoiceItem[],
+): FilterGroup => ({
+  label: "Πελάτης",
+  isSearchable: true,
+  all: {
+    label: "όλοι",
+    href: i2Href({ ...query, client: undefined }),
+    isCurrent: !query.client,
+  },
+  options: clientsWithInvoices(items).map((c) => ({
+    label: c.name,
+    href: i2Href({ ...query, client: c.id }),
+    isCurrent: query.client === c.id,
+  })),
+});
 
 // Φίλτρο μήνα έκδοσης: μόνο οι μήνες που έχουν Τιμολόγια.
-export function MonthFilter({
-  query,
-  months,
-}: {
-  query: SpacesInvoicesQuery;
-  months: readonly string[];
-}) {
-  return (
-    <nav className="i2-client-filter" aria-label="Μήνας έκδοσης">
-      <span className="muted">Μήνας έκδοσης:</span>
-      <Link
-        href={i2Href({ ...query, month: undefined })}
-        aria-current={!query.month}
-      >
-        όλοι
-      </Link>
-      {months.map((m) => (
-        <Link
-          key={m}
-          href={i2Href({ ...query, month: m })}
-          aria-current={query.month === m}
-        >
-          {fmtMonth(m)}
-        </Link>
-      ))}
-    </nav>
-  );
-}
+export const monthGroupOf = (
+  query: SpacesInvoicesQuery,
+  months: readonly string[],
+): FilterGroup => ({
+  label: "Μήνας έκδοσης",
+  all: {
+    label: "όλοι",
+    href: i2Href({ ...query, month: undefined }),
+    isCurrent: !query.month,
+  },
+  options: months.map((m) => ({
+    label: fmtMonth(m),
+    href: i2Href({ ...query, month: m }),
+    isCurrent: query.month === m,
+  })),
+});
+
+// Χωρίς Πελάτη και μήνα, στην ίδια Κατάσταση.
+export const i2ClearHref = (query: SpacesInvoicesQuery): string =>
+  i2Href({ filter: query.filter });
 
 const denied = (
   <div data-spaces>
@@ -237,29 +212,36 @@ export async function SpacesInvoices({
         today={today}
         viewer={viewer}
       />
-      <FilterTabs query={current} all={all} />
-      {unpaidNote && <p className="note">{unpaidNote}</p>}
-      <ClientFilter query={current} items={listed} />
-      {months.length > 1 && <MonthFilter query={current} months={months} />}
-      <div className="toolbar">
-        {caps.canRegisterInvoices && (
-          <Link className="button" data-primary="true" href={hrefOf("I3")}>
-            Καταχώρηση Τιμολογίου
-          </Link>
+      <FilterPanel
+        name="i2-filters"
+        status={statusGroupOf(current, all)}
+        filters={[
+          clientGroupOf(current, listed),
+          ...(months.length > 1 ? [monthGroupOf(current, months)] : []),
+        ]}
+        clearHref={i2ClearHref(current)}
+      >
+        {unpaidNote && <p className="note">{unpaidNote}</p>}
+        <div className="toolbar">
+          {caps.canRegisterInvoices && (
+            <Link className="button" data-primary="true" href={hrefOf("I3")}>
+              Καταχώρηση Τιμολογίου
+            </Link>
+          )}
+          <CsvButton rows={rows} />
+        </div>
+        {rows.length === 0 ? (
+          <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
+            Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο.
+          </StateNotice>
+        ) : (
+          <InvoiceTable
+            rows={rows}
+            today={today}
+            canEdit={caps.canRegisterInvoices}
+          />
         )}
-        <CsvButton rows={rows} />
-      </div>
-      {rows.length === 0 ? (
-        <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
-          Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο.
-        </StateNotice>
-      ) : (
-        <InvoiceTable
-          rows={rows}
-          today={today}
-          canEdit={caps.canRegisterInvoices}
-        />
-      )}
+      </FilterPanel>
       {voided?.ok === true && (
         <VoidedCard
           items={voided.data}
