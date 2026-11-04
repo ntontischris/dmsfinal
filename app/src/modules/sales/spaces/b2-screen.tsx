@@ -31,12 +31,14 @@ import { athensToday, clientAccess, salesCaps, takenMessage } from "../helpers";
 import {
   getClient,
   getClientCard,
+  getClientDeleteState,
   listClientOpportunities,
 } from "../queries-clients";
 import { listSalesLists } from "../queries-lists";
 import { listClientOverviews } from "../queries-overview";
 import { listAssignableUsers } from "../queries-queue";
 import type {
+  ClientDeleteState,
   ClientDetail,
   ClientRow,
   Opportunity,
@@ -58,6 +60,7 @@ import {
   type B2Tab,
   type B2TabRights,
 } from "./b2-adapter";
+import { ClientDelete } from "./b2-delete";
 import { ClientInspector, RelationshipSteps } from "./b2-inspector";
 import { ActivitiesTab, ProductionsTab } from "./b2-tabs";
 import {
@@ -159,6 +162,8 @@ interface Loaded {
   nextFilming: string | null;
   lists: SalesLists | null;
   assignable: Awaited<ReturnType<typeof listAssignableUsers>> | null;
+  // null = ο Χρήστης δεν «Διαγράφει Πελάτες» ή δεν φόρτωσε.
+  deleteState: ClientDeleteState | null;
   failed: string[];
 }
 
@@ -167,21 +172,30 @@ async function loadClient(
   rights: B2TabRights,
   caps: SalesCaps,
 ): Promise<Loaded> {
-  const [opportunities, agreements, ledger, overviews, lists, assignable] =
-    await Promise.all([
-      listClientOpportunities(client.id),
-      rights.agreements ? listAgreements({ clientId: client.id }) : null,
-      rights.ledger ? getLedger(client.id) : null,
-      listClientOverviews([client.id]),
-      listSalesLists(),
-      caps.canTransfer ? listAssignableUsers() : null,
-    ]);
+  const [
+    opportunities,
+    agreements,
+    ledger,
+    overviews,
+    lists,
+    assignable,
+    deleteState,
+  ] = await Promise.all([
+    listClientOpportunities(client.id),
+    rights.agreements ? listAgreements({ clientId: client.id }) : null,
+    rights.ledger ? getLedger(client.id) : null,
+    listClientOverviews([client.id]),
+    listSalesLists(),
+    caps.canTransfer ? listAssignableUsers() : null,
+    caps.canDelete ? getClientDeleteState(client.id) : null,
+  ]);
   const overview = overviews.ok ? overviews.data[0] : undefined;
   const failed = [
     !opportunities.ok && "οι Ευκαιρίες",
     agreements && !agreements.ok && "οι Συμφωνίες",
     ledger && !ledger.ok && "η Καρτέλα Πελάτη",
     !lists.ok && "τα Στάδια και οι Πηγές",
+    deleteState && !deleteState.ok && "η Διαγραφή Πελάτη",
   ].filter((what): what is string => typeof what === "string");
   return {
     opportunities: opportunities.ok ? opportunities.data : [],
@@ -198,6 +212,7 @@ async function loadClient(
     nextFilming: overview?.nextFilming ?? null,
     lists: lists.ok ? lists.data : null,
     assignable,
+    deleteState: deleteState?.ok ? deleteState.data : null,
     failed,
   };
 }
@@ -365,11 +380,20 @@ async function ClientView({
             data.agreements ? activeAgreementText(data.agreements) : null
           }
           extra={
-            <SpacesHistoryLink
-              viewer={viewer}
-              entity="clients"
-              id={client.id}
-            />
+            <>
+              {data.deleteState && (
+                <ClientDelete
+                  clientId={client.id}
+                  clientName={client.name}
+                  block={data.deleteState.deleteBlock}
+                />
+              )}
+              <SpacesHistoryLink
+                viewer={viewer}
+                entity="clients"
+                id={client.id}
+              />
+            </>
           }
         />
         <div className="b2-main">

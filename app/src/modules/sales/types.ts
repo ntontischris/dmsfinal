@@ -152,7 +152,13 @@ export interface SalesCaps {
   manageScope: "all" | "mine" | null;
   canTransfer: boolean; // clients.transfer
   canMerge: boolean; // clients.merge
+  canDelete: boolean; // clients.delete
   canManageSettings: boolean; // settings.manage
+}
+// Σβήνεται ο Πελάτης; deleteBlock = ο λόγος που δεν σβήνεται (κείμενο της βάσης), ή null.
+export interface ClientDeleteState {
+  canDelete: boolean;
+  deleteBlock: string | null;
 }
 export type ClientAccess = "all" | "owner" | "granted";
 export interface BoardColumn {

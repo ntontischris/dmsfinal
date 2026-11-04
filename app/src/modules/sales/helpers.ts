@@ -86,6 +86,7 @@ const NO_CAPS: SalesCaps = {
   manageScope: null,
   canTransfer: false,
   canMerge: false,
+  canDelete: false,
   canManageSettings: false,
 };
 
@@ -100,6 +101,7 @@ export const salesCaps = (viewer: Viewer): SalesCaps => {
     manageScope: grants["clients.manage"] ?? null,
     canTransfer: has("clients.transfer"),
     canMerge: has("clients.merge"),
+    canDelete: has("clients.delete"),
     canManageSettings: has("settings.manage"),
   };
 };

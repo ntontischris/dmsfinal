@@ -1,9 +1,18 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import type { FormState } from "@/lib/form-state";
 
-import { callRpc, finishWith, firstIssue, pick } from "./action-support";
 import {
+  callRpc,
+  finishWith,
+  firstIssue,
+  pick,
+  refreshSales,
+} from "./action-support";
+import {
+  deleteClientSchema,
   requestAccessSchema,
   transferSchema,
   updateClientSchema,
@@ -78,4 +87,23 @@ export async function requestAccess(
     p_source_id: input.sourceId,
   });
   return finishWith(outcome, "Το αίτημα στάλθηκε στη Διαχείριση.");
+}
+
+// Διαγραφή Πελάτη που μπήκε κατά λάθος: η βάση ελέγχει Δικαίωμα, όνομα και ότι δεν έχει δουλειά ή χρήμα.
+// Μετά την επιτυχία γυρίζει στη λίστα, γιατί η σελίδα του Πελάτη δεν υπάρχει πια.
+export async function deleteClient(
+  _: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = deleteClientSchema.safeParse(
+    pick(form, ["clientId", "confirmName"]),
+  );
+  if (!parsed.success) return firstIssue(parsed.error);
+  const outcome = await callRpc("client_delete", {
+    p_id: parsed.data.clientId,
+    p_confirm_name: parsed.data.confirmName,
+  });
+  if (!outcome.ok) return outcome.state;
+  refreshSales();
+  redirect("/app/clients?deleted=1");
 }
