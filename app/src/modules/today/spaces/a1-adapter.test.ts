@@ -6,7 +6,6 @@ import {
   builtOf,
   cardDefOf,
   needsItems,
-  weekGlance,
 } from "./a1-adapter";
 import { nowOf } from "./a1-now";
 import { zonesOf } from "./a1-zones";
@@ -154,25 +153,6 @@ describe("needsItems", () => {
     expect(needsItems(cardOf({ count: 0, kind: "week" }))).toBe(true);
     expect(needsItems(cardOf({ hidden: true }))).toBe(false);
     expect(needsItems(cardOf({ failed: true, count: null }))).toBe(false);
-  });
-});
-
-describe("weekGlance", () => {
-  it("«Η εβδομάδα» είναι οι κάρτες εβδομάδας με το πλήθος τους", () => {
-    const cards = [
-      cardOf(),
-      cardOf({
-        code: "week_filming",
-        kind: "week",
-        label: "Γυρίσματα των επόμενων 7 ημερών",
-        link: "/app/filming",
-        count: 3,
-      }),
-      cardOf({ code: "w2", kind: "week", hidden: true }),
-    ];
-    expect(weekGlance(cards)).toEqual([
-      { label: "3 Γυρίσματα των επόμενων 7 ημερών", href: "/app/filming" },
-    ]);
   });
 });
 

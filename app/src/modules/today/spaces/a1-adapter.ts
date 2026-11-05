@@ -88,23 +88,6 @@ export const needsItems = (card: TodayCard): boolean =>
   !card.failed &&
   !(card.kind === "action" && (card.count ?? 0) === 0);
 
-export interface WeekPart {
-  label: string;
-  href: string;
-}
-
-// «Η εβδομάδα»: οι κάρτες εβδομάδας της βάσης (π.χ. Γυρίσματα των επόμενων 7 ημερών) σε μία γραμμή, κάθε κομμάτι πατήσιμο.
-export const weekGlance = (cards: readonly TodayCard[]): readonly WeekPart[] =>
-  cards
-    .filter(
-      (card) =>
-        card.kind === "week" &&
-        !card.hidden &&
-        !card.failed &&
-        card.count !== null,
-    )
-    .map((card) => ({ label: `${card.count} ${card.label}`, href: card.link }));
-
 const ATHENS = new Intl.DateTimeFormat("sv-SE", {
   timeZone: "Europe/Athens",
   year: "numeric",

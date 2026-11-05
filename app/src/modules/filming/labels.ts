@@ -22,6 +22,7 @@ export const STATE_LABELS: Readonly<Record<FilmingState, string>> = {
 
 export const TAB_LABELS: Readonly<Record<FilmingTab, string>> = {
   open: "Ανοιχτά",
+  week: "Επόμενες 7 ημέρες",
   pending: "Αναμένουν έγκριση",
   needs_outcome: "Θέλουν «έγινε»",
   closed: "Κλεισμένα",
@@ -30,6 +31,7 @@ export const TAB_LABELS: Readonly<Record<FilmingTab, string>> = {
 
 export const TAB_EMPTY_TEXT: Readonly<Record<FilmingTab, string>> = {
   open: "Κανένα ανοιχτό Γύρισμα.",
+  week: "Κανένα Γύρισμα τις επόμενες 7 ημέρες.",
   pending: "Κανένα Γύρισμα δεν περιμένει έγκριση.",
   needs_outcome: "Κανένα Γύρισμα δεν θέλει σήμανση «έγινε».",
   closed: "Κανένα κλεισμένο Γύρισμα.",

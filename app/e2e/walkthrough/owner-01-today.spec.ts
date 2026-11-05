@@ -70,3 +70,13 @@ test("01 · το «Νέο» και η Αναζήτηση ανοίγουν από
     await expect(searchBox).toBeVisible({ timeout: 1_000 });
   }).toPass();
 });
+
+test("01 · η Σήμερα δεν έχει διπλή γραμμή «Η εβδομάδα» και τα Γυρίσματα έχουν την προβολή «Επόμενες 7 ημέρες»", async ({
+  page,
+}) => {
+  await signIn(page, OWNER);
+  await expect(page.getByRole("heading", { name: HEALTH })).toBeVisible();
+  await expect(page.getByText("Η εβδομάδα:")).toHaveCount(0);
+  await page.goto("/app/filming?tab=week");
+  await expect(page.getByRole("link", { name: /^Επόμενες 7 ημέρες/ })).toHaveAttribute("aria-current", "page");
+});

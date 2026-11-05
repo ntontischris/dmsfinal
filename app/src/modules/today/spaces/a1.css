@@ -46,8 +46,6 @@
 /* Τα χρήματα του μήνα πρώτα και στο κινητό (το Τώρα μετά). */
 & .a1-strip[data-money-first='true'] .strip .now-tile { order: 0; }
 & .a1-now-extra { margin: calc(var(--space-4) * -1) 0 var(--space-4); display: flex; justify-content: flex-end; }
-/* Η εβδομάδα με μια ματιά: μία γραμμή, κάθε κομμάτι πατήσιμο. */
-& .a1-week { margin: 0 0 var(--space-4); font-size: var(--text-sm); overflow-wrap: anywhere; }
 
 /* Ύφος ταυτότητας (screens2): ήρεμες κάρτες, REC τελεία για το επείγον, χωρίς υπογραμμίσεις */
 & .a1-card[data-urgent='true'] .kit-panel, & .a1-card[data-kind='error'] .kit-panel, & .a1-card[data-kind='status'] .kit-panel { border-left: 1px solid var(--color-border); }
@@ -62,9 +60,7 @@
 & .a1-card-foot a:not(.button) { padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong); font-weight: 600; text-decoration: none; color: var(--color-text); }
 & .a1-card-foot a:not(.button):hover { background: color-mix(in oklab, var(--color-text) 8%, transparent); }
 & .a1-hello p { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
-& .a1-hello a:not(.button), & .a1-week a { text-decoration: none; color: var(--color-accent); }
-& .a1-week { color: var(--color-text-muted); }
-& .a1-week strong { color: var(--color-text); }
+& .a1-hello a:not(.button) { text-decoration: none; color: var(--color-accent); }
 & .a1-zone { margin-top: var(--space-6); }
 & .a1-zone-title { display: inline-flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; }
 & .a1-zone[data-zone='urgent'] > .a1-zone-title { color: var(--color-text); }
