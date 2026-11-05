@@ -1,5 +1,6 @@
 // «Μόνο εσύ μπορείς» (#241 Σ2): οι γραμμές των καρτών απόφασης σε μία λίστα, με σειρά σημασίας.
-// Πρώτα ό,τι έχει ποσό (μεγαλύτερο πρώτα), μετά το παλαιότερο, μετά τα υπόλοιπα με τη σειρά των καρτών.
+// Πρώτα ό,τι έχει ποσό (μεγαλύτερο πρώτα), μετά ό,τι περιμένει περισσότερο (waitingSince, αλλιώς at), μετά τα υπόλοιπα
+// με τη σειρά των καρτών.
 
 import type { CardContent, CardDef, CardRow } from "./a1-model";
 
@@ -22,10 +23,12 @@ export interface RankedDecisions {
 
 export const DECISIONS_SHOWN = 5;
 
-const classOf = (row: CardRow): number =>
-  row.amountCents !== undefined ? 0 : row.at !== undefined ? 1 : 2;
+const sinceOf = (row: CardRow): string | undefined => row.waitingSince ?? row.at;
 
-const timeOf = (row: CardRow): number => Date.parse(row.at ?? "");
+const classOf = (row: CardRow): number =>
+  row.amountCents !== undefined ? 0 : sinceOf(row) !== undefined ? 1 : 2;
+
+const timeOf = (row: CardRow): number => Date.parse(sinceOf(row) ?? "");
 
 const byImportance = (a: Decision, b: Decision): number =>
   classOf(a) - classOf(b) ||

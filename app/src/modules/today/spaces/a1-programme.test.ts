@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { athensStamp } from "./a1-adapter";
 import type { CardRow } from "./a1-model";
-import { programmeOf } from "./a1-programme";
+import {
+  programmeDateOf,
+  programmeOf,
+  programmeRowsOf,
+} from "./a1-programme";
 
 // Ώρα Ελλάδας τον Νοέμβριο: UTC+2.
 const filming = (label: string, at: string): CardRow => ({
@@ -56,6 +60,58 @@ describe("programmeOf", () => {
     const programme = programmeOf([], at("2026-11-05T08:00:00Z"));
     expect(programme.slots).toEqual([]);
     expect(programme.next).toBeNull();
+  });
+
+  it("με όλα τα Γυρίσματα της μέρας (today_programme): όλα, όχι μόνο τα 3 της κάρτας", () => {
+    const day = [
+      filming("τρίτο", "2026-11-05T15:00:00+00:00"),
+      filming("πρώτο", "2026-11-05T06:00:00+00:00"),
+      filming("δεύτερο", "2026-11-05T09:00:00+00:00"),
+      filming("τέταρτο", "2026-11-05T17:00:00+00:00"),
+    ];
+    const programme = programmeOf(ROWS, at("2026-11-05T08:00:00Z"), day);
+    expect(programme.slots.map((slot) => slot.label)).toEqual([
+      "πρώτο",
+      "δεύτερο",
+      "τρίτο",
+      "τέταρτο",
+    ]);
+  });
+
+  it("programmeDateOf: η μέρα που ζητά το πρόγραμμα", () => {
+    expect(programmeDateOf(at("2026-11-05T15:59:00Z"))).toEqual({
+      day: "today",
+      date: "2026-11-05",
+    });
+    expect(programmeDateOf(at("2026-11-30T16:00:00Z"))).toEqual({
+      day: "tomorrow",
+      date: "2026-12-01",
+    });
+  });
+
+  it("programmeRowsOf: υπότιτλος και Συνεργείο στη γραμμή", () => {
+    expect(
+      programmeRowsOf({
+        day: "2026-11-05",
+        items: [
+          {
+            id: "f1",
+            title: "Αθηνά, Κατάστημα",
+            at: "2026-11-05T08:00:00+00:00",
+            subtitle: "αναμένει έγκριση",
+            crew: ["Πέτρος", "Σοφία"],
+            link: "/app/filming/f1",
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        label: "Αθηνά, Κατάστημα",
+        href: "/app/filming/f1",
+        at: "2026-11-05T08:00:00+00:00",
+        note: "αναμένει έγκριση · Πέτρος, Σοφία",
+      },
+    ]);
   });
 
   it("γραμμές χωρίς ώρα δεν μπαίνουν στο πρόγραμμα", () => {

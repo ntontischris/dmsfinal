@@ -80,4 +80,15 @@
 & .a1-other-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
 & .a1-other-list li { display: flex; gap: var(--space-2); align-items: baseline; justify-content: space-between; min-width: 0; }
 & .a1-other-list a { text-decoration: none; color: var(--color-text); overflow-wrap: anywhere; }
-& .a1-other-count { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--color-text-muted); flex: none; } }
+& .a1-other-count { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--color-text-muted); flex: none; }
+/* Κομμάτι 2 (#241): Χρήματα και Η ομάδα δίπλα-δίπλα, οι μπάρες των οφειλετών και ο ρυθμός του μήνα. */
+& .a1-pair { display: grid; gap: 0 var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 60rem) { & .a1-pair:has(> :nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+& .a1-money-total { margin: 0; font-size: var(--text-sm); color: var(--color-text-muted); }
+& .a1-money-total strong { font-size: 1.5rem; font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
+& .a1-bar { display: block; height: 4px; margin-top: 0.3rem; border-radius: 999px; background: color-mix(in oklab, var(--color-text) 10%, transparent); overflow: hidden; }
+& .a1-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--color-danger); }
+& .a1-pace { position: relative; display: block; height: 8px; border-radius: 999px; background: color-mix(in oklab, var(--color-text) 10%, transparent); }
+& .a1-pace-fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-accent); }
+& .a1-pace-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--color-text); }
+}

@@ -6,6 +6,7 @@ import { Panel } from "@/spaces/kit/panel";
 import { formatCents } from "../helpers";
 import type { OtherCard, QuietCard } from "./a1-brief";
 import type { RankedDecisions } from "./a1-decisions";
+import { decisionFactOf } from "./a1-facts";
 import type { CardContent } from "./a1-model";
 import type { Programme } from "./a1-programme";
 
@@ -13,7 +14,14 @@ import type { Programme } from "./a1-programme";
 
 const MONEY_SHOWN = 3;
 
-export function DecisionsPanel({ ranked }: { ranked: RankedDecisions }) {
+// today: «ΕΕΕΕ-ΜΜ-ΗΗ» (Αθήνα), για το «Περιμένει N ημέρες».
+export function DecisionsPanel({
+  ranked,
+  today,
+}: {
+  ranked: RankedDecisions;
+  today: string;
+}) {
   return (
     <div className="a1-brief-panel" data-part="decisions">
       <Panel
@@ -30,7 +38,7 @@ export function DecisionsPanel({ ranked }: { ranked: RankedDecisions }) {
                   key={`${row.cardId}${row.href}${row.label}`}
                   lead={<span className="a1-rank">{index + 1}</span>}
                   title={row.label}
-                  sub={[row.cardTitle, row.meta].filter(Boolean).join(" · ")}
+                  sub={decisionFactOf(row, today) || row.cardTitle}
                   aside={
                     <Link
                       className="button"
@@ -103,6 +111,7 @@ export function ProgrammePanel({
   );
 }
 
+// Όταν τα Χρήματα (today_money) δεν φόρτωσαν: οι γραμμές της κάρτας «Ληξιπρόθεσμα Τιμολόγια».
 export function MoneyPanel({ content }: { content: CardContent }) {
   return (
     <div className="a1-brief-panel" data-part="money">

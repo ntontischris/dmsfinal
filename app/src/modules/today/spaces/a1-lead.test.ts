@@ -39,6 +39,25 @@ describe("leadOf", () => {
     );
   });
 
+  it("με τα Χρήματα: το ποσό και οι πελάτες αντί για το πλήθος", () => {
+    expect(
+      leadOf({
+        filming: { day: "today", count: 2 },
+        decisions: 3,
+        overdue: 6,
+        money: {
+          overdueCents: 394_000,
+          overdueCount: 6,
+          clientCount: 3,
+          debtors: [],
+          month: { month: 11, day: 5, days: 30, collectedCents: 0, expectedCents: 0 },
+        },
+      }),
+    ).toBe(
+      "Σήμερα έχεις 2 Γυρίσματα. 3 αποφάσεις περιμένουν μόνο εσένα. Ληξιπρόθεσμα 3.940 € από 3 πελάτες.",
+    );
+  });
+
   it("κομμάτι χωρίς κάρτα (ή χωρίς αριθμό) λείπει", () => {
     expect(leadOf({ filming: null, decisions: 2, overdue: null })).toBe(
       "2 αποφάσεις περιμένουν μόνο εσένα.",
