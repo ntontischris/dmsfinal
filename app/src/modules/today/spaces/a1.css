@@ -111,4 +111,15 @@
 :root & .a1-brief-panel[data-part='team'] .badge[data-tone='attention']::before { display: block; content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-rec); opacity: 1; box-shadow: none; flex: none; }
 /* Οι μπάρες των οφειλετών σε Periwinkle, όχι κόκκινες */
 :root & .a1-brief-panel[data-part='money'] .a1-bar > span { background: var(--brand-periwinkle); }
+/* Κάθε πάνελ ξεχωρίζει από τον τίτλο του: κεφαλίδα στο χρώμα του, εικονίδιο σε κύκλο, τίτλος στο χρώμα του (ίδιο μέγεθος) */
+:root & .a1-brief-panel { --a1-ink: var(--a1-hue); }
+:root[data-theme='light'] & .a1-brief-panel { --a1-ink: var(--brand-midnight); }
+:root & .a1-brief-panel .kit-panel-head { background: color-mix(in oklab, var(--a1-hue) 12%, var(--color-surface-raised)); border-bottom-color: color-mix(in oklab, var(--a1-hue) 24%, transparent); }
+:root & .a1-brief-panel .kit-panel-head h2 { position: relative; display: flex; align-items: center; min-height: 1.75rem; padding-left: 2.25rem; color: var(--a1-ink); font-weight: 800; }
+:root & .a1-brief-panel .kit-panel-head h2::before { content: ''; position: absolute; left: 0; top: 50%; width: 1.75rem; height: 1.75rem; margin-top: -0.875rem; border-radius: 50%; background: color-mix(in oklab, var(--a1-hue) 22%, transparent); }
+:root & .a1-brief-panel .kit-panel-head h2::after { content: ''; position: absolute; left: 0.375rem; top: 50%; width: 1rem; height: 1rem; margin-top: -0.5rem; background: var(--a1-ink); -webkit-mask: var(--a1-icon) center / contain no-repeat; mask: var(--a1-icon) center / contain no-repeat; }
+:root & .a1-brief-panel[data-part='decisions'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8 12.5l2.7 2.7L16 9.5'/%3E%3C/svg%3E"); }
+:root & .a1-brief-panel[data-part='programme'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7h3l2-3h8l2 3h3v12H3z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E"); }
+:root & .a1-brief-panel[data-part='money'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6.5A7 7 0 1018 17.5'/%3E%3Cpath d='M4 10h10M4 14h10'/%3E%3C/svg%3E"); }
+:root & .a1-brief-panel[data-part='team'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5'/%3E%3Cpath d='M16 4.5a3.5 3.5 0 010 7M18 14.8c1.9.8 3.1 2.6 3.5 5.2'/%3E%3C/svg%3E"); }
 }
