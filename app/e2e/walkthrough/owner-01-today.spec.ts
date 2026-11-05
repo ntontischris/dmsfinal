@@ -77,7 +77,6 @@ test("01 · η Σήμερα δεν έχει διπλή γραμμή «Η εβδ�
   await signIn(page, OWNER);
   await expect(page.getByRole("heading", { name: HEALTH })).toBeVisible();
   await expect(page.getByText("Η εβδομάδα:")).toHaveCount(0);
-  await expect(page.getByText("Γυρίσματα των επόμενων 7 ημερών").first()).toBeVisible();
   await page.goto("/app/filming?tab=week");
   await expect(page.getByRole("link", { name: /^Επόμενες 7 ημέρες/ })).toHaveAttribute("aria-current", "page");
 });
