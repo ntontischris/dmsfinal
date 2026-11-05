@@ -14,6 +14,9 @@ export interface CardRow {
   // Τα ακατέργαστα της βάσης: η σειρά των αποφάσεων (ποσό, παλαιότερο) και η ώρα του Γυρίσματος στο πρόγραμμα.
   at?: string;
   amountCents?: number;
+  // Από πότε περιμένει η απόφαση, και (μόνο κράτηση) αν η ώρα χωρά ακόμα (#241 Σ7).
+  waitingSince?: string;
+  isSlotFree?: boolean;
 }
 
 export interface CardContent {

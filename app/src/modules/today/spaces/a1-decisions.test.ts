@@ -40,6 +40,33 @@ describe("rankDecisions", () => {
     ]);
   });
 
+  it("χωρίς ποσό: όποιο περιμένει περισσότερο (waitingSince) πριν από την ώρα του (at)", () => {
+    const ranked = rankDecisions([
+      cardOf("filming", [
+        rowOf("κράτηση αύριο, ζητήθηκε χθες", {
+          at: "2026-11-06T10:00:00+00:00",
+          waitingSince: "2026-11-04T10:00:00+00:00",
+        }),
+      ]),
+      cardOf("access", [
+        rowOf("πρόσβαση εδώ και 10 μέρες", {
+          at: "2026-10-26T10:00:00+00:00",
+          waitingSince: "2026-10-26T10:00:00+00:00",
+        }),
+      ]),
+      cardOf("gdpr", [
+        rowOf("χωρίς waitingSince, παλιό at", {
+          at: "2026-11-01T10:00:00+00:00",
+        }),
+      ]),
+    ]);
+    expect(ranked.shown.map((row) => row.label)).toEqual([
+      "πρόσβαση εδώ και 10 μέρες",
+      "χωρίς waitingSince, παλιό at",
+      "κράτηση αύριο, ζητήθηκε χθες",
+    ]);
+  });
+
   it("κάθε γραμμή ξέρει την κάρτα της", () => {
     const [row] = rankDecisions([cardOf("a", [rowOf("ένα")])]).shown;
     expect(row).toMatchObject({ cardId: "a", cardTitle: "Κάρτα a" });

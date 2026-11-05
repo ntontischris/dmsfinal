@@ -1,6 +1,8 @@
 // «Το πρόγραμμα» (#241 Σ3): ως τις 18:00 (ώρα Ελλάδας) τα σημερινά Γυρίσματα, μετά τα αυριανά, με σειρά ώρας.
 // Άδεια μέρα: το επόμενο Γύρισμα. Οι στιγμές είναι «ΕΕΕΕ-ΜΜ-ΗΗTΩΩ:ΛΛ» σε ώρα Ελλάδας (athensStamp).
+// Τα Γυρίσματα της μέρας έρχονται όλα από το today_programme (#241 κομμάτι 2)· η κάρτα της εβδομάδας δίνει μόνο 3.
 
+import type { TodayProgramme } from "../view-schema";
 import { athensStamp } from "./a1-adapter";
 import type { CardRow } from "./a1-model";
 
@@ -52,16 +54,41 @@ const slotsOf = (rows: readonly CardRow[]): readonly Slot[] =>
     })
     .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
 
-export function programmeOf(
-  rows: readonly CardRow[],
+// Ποια μέρα δείχνει το πρόγραμμα τη στιγμή stamp: ως τις 18:00 η σημερινή, μετά η αυριανή.
+export const programmeDateOf = (
   stamp: string,
-): Programme {
+): { day: ProgrammeDay; date: string } => {
   const today = stamp.slice(0, 10);
   const day: ProgrammeDay =
     Number(stamp.slice(11, 13)) < EVENING_HOUR ? "today" : "tomorrow";
-  const date = day === "today" ? today : nextDate(today);
+  return { day, date: day === "today" ? today : nextDate(today) };
+};
+
+// Τα Γυρίσματα του today_programme ως γραμμές: ο υπότιτλος της βάσης και το Συνεργείο.
+export const programmeRowsOf = (
+  programme: TodayProgramme,
+): readonly CardRow[] =>
+  programme.items.map((item) => {
+    const note = [item.subtitle, item.crew.join(", ")]
+      .filter(Boolean)
+      .join(" · ");
+    return {
+      label: item.title,
+      href: item.link,
+      at: item.at,
+      ...(note ? { note } : {}),
+    };
+  });
+
+// dayRows: όλα τα Γυρίσματα της μέρας (today_programme)· χωρίς αυτά, όσα έχει η κάρτα της εβδομάδας.
+export function programmeOf(
+  rows: readonly CardRow[],
+  stamp: string,
+  dayRows: readonly CardRow[] | null = null,
+): Programme {
+  const { day, date } = programmeDateOf(stamp);
   const all = slotsOf(rows);
-  const slots = all.filter((slot) => slot.date === date);
+  const slots = slotsOf(dayRows ?? rows).filter((slot) => slot.date === date);
   const later = all.find((slot) => slot.date > date);
   return {
     day,

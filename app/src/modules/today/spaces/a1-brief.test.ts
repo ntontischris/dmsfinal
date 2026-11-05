@@ -35,11 +35,13 @@ const builtOf = (
 const brief = (
   built: ReturnType<typeof builtOf>[],
   failed: readonly string[] = [],
+  hasMoneyPanel = false,
 ) =>
   briefOf({
     built,
     failed: new Set(failed),
     groupOf: (code) => GROUPS[code],
+    hasMoneyPanel,
   });
 
 describe("briefOf", () => {
@@ -99,6 +101,12 @@ describe("briefOf", () => {
     ]);
     expect(result.money).toBeNull();
     expect(result.overdue).toBe(0);
+  });
+
+  it("με τα Χρήματα φορτωμένα, το κομμάτι μένει και χωρίς ληξιπρόθεσμα (ρυθμός του μήνα)", () => {
+    const result = brief([builtOf("overdue_invoices", 0)], [], true);
+    expect(result.money?.card.id).toBe("overdue_invoices");
+    expect(result.quiet).toEqual([]);
   });
 
   it("η Υγεία πάνω μόνο όταν κάτι χάλασε· αλλιώς ήσυχη γραμμή στο «Και άλλα»", () => {

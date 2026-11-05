@@ -40,6 +40,19 @@ test("01 · η Σήμερα είναι ενημέρωση: αποφάσεις, �
   await expect(page.getByRole("heading", { name: HEALTH }).or(more.getByRole("link", { name: HEALTH }))).toHaveCount(1);
 });
 
+test("01 · η Σήμερα έχει τα Χρήματα (ποσό και ρυθμός του μήνα) και την ομάδα", async ({ page }) => {
+  await signIn(page, OWNER);
+  const money = page.locator("[data-part='money']");
+  await expect(money.getByRole("heading", { name: "Χρήματα" })).toBeVisible();
+  await expect(money.locator(".a1-money-total strong")).toHaveText(/€$/);
+  await expect(money.getByText(/: μπήκαν .+ από .+ που περιμένουμε\.$/)).toBeVisible();
+  const team = page.locator("[data-part='team']");
+  await expect(team.getByRole("heading", { name: "Η ομάδα" })).toBeVisible();
+  await expect(team.getByText("Μόνο όπου κόλλησε κάτι")).toBeVisible();
+  // Η πρόταση της κορυφής λέει τα ληξιπρόθεσμα σε €, όχι σε πλήθος (πριν από το € μη διαιρούμενο κενό: \s).
+  await expect(page.locator(".a1-lead")).toContainText(/Ληξιπρόθεσμα .+\s€ από|Κανένα ληξιπρόθεσμο Τιμολόγιο\./);
+});
+
 test("01 · η Προσαρμογή έχει βελάκια σε κάθε κάρτα που μετακινείται", async ({ page }) => {
   await signIn(page, OWNER);
 

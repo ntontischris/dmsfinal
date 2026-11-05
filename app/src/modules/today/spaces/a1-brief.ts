@@ -44,6 +44,8 @@ interface BriefInput<T extends BuiltCard> {
   built: readonly T[];
   failed: ReadonlySet<string>;
   groupOf: (code: string) => string | undefined;
+  // Τα Χρήματα φορτώθηκαν (today_money): το κομμάτι μένει και χωρίς ληξιπρόθεσμα, για τον ρυθμό του μήνα.
+  hasMoneyPanel?: boolean;
 }
 
 const HEALTH = "health";
@@ -83,6 +85,7 @@ export function briefOf<T extends BuiltCard>({
   built,
   failed,
   groupOf,
+  hasMoneyPanel = false,
 }: BriefInput<T>): Brief<T> {
   const isFailed = (item: T) => failed.has(item.card.id);
   const health = built.find(({ card }) => card.id === HEALTH);
@@ -92,7 +95,7 @@ export function briefOf<T extends BuiltCard>({
     !isFailed(item) &&
     (isDecision(item.card, groupOf) ||
       item.card.id === WEEK ||
-      (item.card.id === MONEY && !isEmpty(item)));
+      (item.card.id === MONEY && (hasMoneyPanel || !isEmpty(item))));
   const unplaced = rest.filter((item) => !placed(item));
   return {
     healthAlert: isHealthBad ? health : null,

@@ -59,6 +59,8 @@ const rowOf = (item: CardItem): CardRow => ({
   ...(item.subtitle ? { note: item.subtitle } : {}),
   ...(item.at ? { at: item.at } : {}),
   ...(item.amountCents !== null ? { amountCents: item.amountCents } : {}),
+  ...(item.waitingSince ? { waitingSince: item.waitingSince } : {}),
+  ...(item.isSlotFree !== null ? { isSlotFree: item.isSlotFree } : {}),
 });
 
 // Το περιεχόμενο μιας κάρτας. Χωρίς data (άδεια κάρτα ενέργειας, δεν χρειάστηκε φόρτωση): μόνο το πλήθος.

@@ -1,13 +1,17 @@
 // Η πρόταση κάτω από τον τίτλο της Σήμερα (#241 Σ1): σταθερές φράσεις με αριθμούς της βάσης.
 // Κάθε κομμάτι μόνο αν ο Χρήστης έχει την κάρτα του (null = λείπει η κάρτα ή ο αριθμός → λείπει η φράση).
 
+import type { TodayMoney } from "../view-schema";
 import { countWord } from "./a1-model";
+import { overdueLeadOf } from "./a1-money";
 import type { ProgrammeDay } from "./a1-programme";
 
 export interface LeadParts {
   filming: { day: ProgrammeDay; count: number } | null;
   decisions: number | null;
   overdue: number | null;
+  // Τα Χρήματα (today_money): η φράση με τα € και τους πελάτες. Λείπουν → η φράση με το πλήθος της κάρτας.
+  money?: TodayMoney | null;
 }
 
 const DAY_WORD: Readonly<Record<ProgrammeDay, string>> = {
@@ -32,11 +36,16 @@ const overdueOf = (count: number): string =>
     ? "Κανένα ληξιπρόθεσμο Τιμολόγιο."
     : `${countWord(count, "ληξιπρόθεσμο Τιμολόγιο", "ληξιπρόθεσμα Τιμολόγια")}.`;
 
-export const leadOf = ({ filming, decisions, overdue }: LeadParts): string =>
+export const leadOf = ({
+  filming,
+  decisions,
+  overdue,
+  money,
+}: LeadParts): string =>
   [
     filming && filmingOf(filming),
     decisions !== null && decisionsOf(decisions),
-    overdue !== null && overdueOf(overdue),
+    money ? overdueLeadOf(money) : overdue !== null && overdueOf(overdue),
   ]
     .filter(Boolean)
     .join(" ");
