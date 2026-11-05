@@ -3,7 +3,7 @@
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Όλες οι ημερομηνίες είναι σταθερές και η ώρα περνά ως p_now,
 -- άρα το τεστ δεν εξαρτάται από τη μέρα εκτέλεσης. Οι κλειστοί πίνακες δεν διαβάζονται ποτέ ως authenticated.
 begin;
-select plan(42);
+select plan(46);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Πωλήσεις (Υπεύθυνος c1, c2, c3) · a4 Πωλήσεις (Υπεύθυνος c4)
@@ -245,6 +245,37 @@ select is(
   (select count(*)::int from public.sales_client_overview(null, timestamptz '2026-03-10 12:00 Europe/Athens')), 0,
   'Χωρίς Πελάτες καμία γραμμή'
 );
+
+-- ───────────── Ελαφριά ανάγνωση του Pipeline: ίδιες γραμμές και ίδια επαφή με την πλήρη εικόνα ─────────────
+create function public.t_lc_diff(p_user text) returns integer
+language plpgsql
+as $$
+declare
+  v_ids uuid[] := array['00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000c2',
+                        '00000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-0000000000c4',
+                        '00000000-0000-0000-0000-00000000ffff']::uuid[];
+  v_n integer;
+begin
+  perform set_config('request.jwt.claims',
+    format('{"sub":"00000000-0000-0000-0000-0000000000%s","role":"authenticated"}', p_user), true);
+  select count(*) into v_n from (
+    (select o.client_id, o.last_contact from public.sales_client_overview(v_ids) o
+     except select l.client_id, l.last_contact from public.sales_client_last_contacts(v_ids) l)
+    union all
+    (select l.client_id, l.last_contact from public.sales_client_last_contacts(v_ids) l
+     except select o.client_id, o.last_contact from public.sales_client_overview(v_ids) o)
+  ) d;
+  return v_n;
+end;
+$$;
+
+select is(public.t_lc_diff('a1'), 0, 'Τελευταία επαφή: ο Ιδιοκτήτης παίρνει ό,τι και στην πλήρη εικόνα');
+select is(public.t_lc_diff('a2'), 0, 'Τελευταία επαφή: ο Λογιστής παίρνει ό,τι και στην πλήρη εικόνα');
+select is(public.t_lc_diff('a3'), 0, 'Τελευταία επαφή: οι Πωλήσεις παίρνουν ό,τι και στην πλήρη εικόνα');
+set local role anon;
+select throws_ok($$ select * from public.sales_client_last_contacts(array[]::uuid[]) $$, '42501', null,
+  'Ο ανώνυμος δεν καλεί την τελευταία επαφή');
+reset role;
 
 select * from finish();
 rollback;

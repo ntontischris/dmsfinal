@@ -67,3 +67,30 @@ export async function listClientOverviews(
     parseClientOverviews,
   );
 }
+
+// Μόνο η τελευταία επαφή ανά Πελάτη (Pipeline): ίδιοι κανόνες με το last_contact της πλήρους εικόνας, χωρίς το κόστος της.
+const lastContactsSchema = z.array(
+  z.object({ client_id: z.string(), last_contact: z.string().nullable() }),
+);
+
+export const parseLastContacts = (
+  data: unknown,
+): Record<string, string | null> =>
+  Object.fromEntries(
+    lastContactsSchema
+      .parse(data)
+      .map((row) => [row.client_id, row.last_contact]),
+  );
+
+export async function listClientLastContacts(
+  ids: readonly string[],
+): Promise<ReadResult<Record<string, string | null>>> {
+  if (ids.length === 0) return { ok: true, data: {} };
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "listClientLastContacts",
+    supabase.rpc("sales_client_last_contacts", { p_ids: [...ids] }),
+    parseLastContacts,
+  );
+}

@@ -5,7 +5,7 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { athensToday, salesCaps } from "../helpers";
 import { listSalesLists } from "../queries-lists";
 import { listPipeline } from "../queries-opportunities";
-import { listClientOverviews } from "../queries-overview";
+import { listClientLastContacts } from "../queries-overview";
 import type { Opportunity, SalesCaps } from "../types";
 import { boardCardsOf } from "./b3-adapter";
 import { PipelineBoard } from "./b3-board";
@@ -25,7 +25,7 @@ const canWorkOn = (caps: SalesCaps, o: Opportunity): boolean =>
   (caps.userId !== null && o.managerId === caps.userId);
 
 // B3 Pipeline στη νέα εμφάνιση (prototype `screens/B3.tsx`): Στήλες ανά Στάδιο, φίλτρα και κλεισμένες. Ποσό από τη
-// Συμφωνία της Ευκαιρίας (μόνο όταν η βάση το δίνει), τελευταία επαφή από την εικόνα του Πελάτη.
+// Συμφωνία της Ευκαιρίας (μόνο όταν η βάση το δίνει), τελευταία επαφή από την ελαφριά ανάγνωση sales_client_last_contacts.
 export async function SpacesPipeline() {
   const viewer = await getViewer();
   const caps = salesCaps(viewer);
@@ -49,7 +49,7 @@ export async function SpacesPipeline() {
       </Frame>
     );
   const all = [...pipeline.data.open, ...pipeline.data.closed];
-  const overviews = await listClientOverviews([
+  const lastContacts = await listClientLastContacts([
     ...new Set(all.map((o) => o.clientId)),
   ]);
   const today = athensToday();
@@ -58,12 +58,7 @@ export async function SpacesPipeline() {
     sourceLabels: labelsOf(lists.data.sources),
     lossLabels: labelsOf(lists.data.lossReasons),
     agreements: agreements?.ok ? agreements.data : [],
-    lastContacts: Object.fromEntries(
-      (overviews.ok ? overviews.data : []).map((overview) => [
-        overview.clientId,
-        overview.lastContact,
-      ]),
-    ),
+    lastContacts: lastContacts.ok ? lastContacts.data : {},
     canWork: (o) => canWorkOn(caps, o),
     today,
   });
