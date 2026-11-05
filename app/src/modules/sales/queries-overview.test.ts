@@ -5,7 +5,11 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabase: async () => ({ rpc: mocks.rpc }),
 }));
 
-import { listClientOverviews, parseClientOverviews } from "./queries-overview";
+import {
+  listClientOverviews,
+  parseClientOverviews,
+  parseLastContacts,
+} from "./queries-overview";
 
 const CLIENT = "11111111-1111-4111-8111-111111111111";
 const KIND = "22222222-2222-4222-8222-222222222222";
@@ -113,5 +117,16 @@ describe("listClientOverviews", () => {
     await expect(listClientOverviews([CLIENT])).resolves.toEqual({
       ok: false,
     });
+  });
+});
+
+describe("parseLastContacts", () => {
+  it("should map each Client to its last contact, null when none", () => {
+    expect(
+      parseLastContacts([
+        { client_id: "c1", last_contact: "2026-02-01T10:00:00+00:00" },
+        { client_id: "c2", last_contact: null },
+      ]),
+    ).toEqual({ c1: "2026-02-01T10:00:00+00:00", c2: null });
   });
 });
