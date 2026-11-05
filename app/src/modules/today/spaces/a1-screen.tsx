@@ -13,32 +13,25 @@ import type { TodayCounts } from "../view-schema";
 import { athensStamp, cardDefOf, type Built } from "./a1-adapter";
 import { CardError, QuietCards, TodayCard } from "./a1-card";
 import { Customize } from "./a1-customize";
+import { TeamBriefing } from "./a1-briefing";
 import { loadCards } from "./a1-load";
 import { greetingAt, vocativeOf, type CardDef } from "./a1-model";
 import { besideNow, nowOf } from "./a1-now";
+import { weekdayOf } from "./a1-programme";
 import { pickStats } from "./a1-stats";
 import { splitUrgent, withoutRepeats, zonesOf } from "./a1-zones";
 
 import "./a1.css";
-
-const WEEKDAYS_LONG = [
-  "Κυριακή",
-  "Δευτέρα",
-  "Τρίτη",
-  "Τετάρτη",
-  "Πέμπτη",
-  "Παρασκευή",
-  "Σάββατο",
-] as const;
-
-const weekdayOf = (date: string): string =>
-  WEEKDAYS_LONG[new Date(`${date}T12:00Z`).getUTCDay()];
 
 // Το μικρό όνομα του Χρήστη ομάδας, στην κλητική.
 const nameOf = (viewer: Viewer): string =>
   viewer.status === "signed-in" && viewer.team
     ? vocativeOf(viewer.team.name.split(" ")[0] ?? "")
     : "";
+
+// Η ομάδα βλέπει τη Σήμερα ως ενημέρωση (#241)· ο Πελάτης κρατά τις κάρτες του όπως ήταν.
+const isTeamOf = (viewer: Viewer): boolean =>
+  viewer.status === "signed-in" && viewer.team !== null;
 
 const ZONE_TITLES = {
   urgent: "Επείγοντα",
@@ -233,7 +226,7 @@ async function TodayCards({ counts }: { counts: TodayCounts }) {
 }
 
 // A1 «Σήμερα» στη νέα εμφάνιση (prototype `screens/A1.tsx`): η αρχική σελίδα κάθε Χρήστη, με τις πραγματικές κάρτες της
-// βάσης (μόνο όσες επιτρέπουν τα Δικαιώματα, με τη σειρά των Προτιμήσεών του).
+// βάσης (μόνο όσες επιτρέπουν τα Δικαιώματα, με τη σειρά των Προτιμήσεών του). Για την ομάδα ενημέρωση, για τον Πελάτη κάρτες.
 export async function SpacesToday({
   isCustomizing,
 }: {
@@ -254,6 +247,15 @@ export async function SpacesToday({
         </StateNotice>
       </div>
     );
+  const customize = isCustomizing && (
+    <Customize
+      available={counts.data.cards.map(cardDefOf)}
+      hiddenAtStart={counts.data.cards
+        .filter((card) => card.hidden)
+        .map((card) => card.code)}
+      isCustomized={counts.data.isCustomized}
+    />
+  );
   return (
     <div data-spaces>
       <Hello
@@ -261,16 +263,14 @@ export async function SpacesToday({
         unread={counts.data.unreadNotifications}
         isEditing={isCustomizing}
       />
-      {isCustomizing && (
-        <Customize
-          available={counts.data.cards.map(cardDefOf)}
-          hiddenAtStart={counts.data.cards
-            .filter((card) => card.hidden)
-            .map((card) => card.code)}
-          isCustomized={counts.data.isCustomized}
-        />
+      {isTeamOf(viewer) ? (
+        <TeamBriefing counts={counts.data}>{customize}</TeamBriefing>
+      ) : (
+        <>
+          {customize}
+          <TodayCards counts={counts.data} />
+        </>
       )}
-      <TodayCards counts={counts.data} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { useSpacesLook } from "./spaces";
 // Περιήγηση Ιδιοκτήτη, διαδρομή 01: Είσοδος, Σήμερα και εργαλεία (docs/walkthrough/owner.md).
 const OWNER = "owner@example.com";
 const HEALTH = "Υγεία συστήματος";
+const DECISIONS = "Μόνο εσύ μπορείς";
 
 test.beforeEach(async ({ context }) => {
   await useSpacesLook(context);
@@ -23,12 +24,24 @@ test("01 · η Είσοδος δεν έχει Google και ο λάθος κωδ
   await expect(page.getByText("Λάθος email ή κωδικός.")).toBeVisible();
 });
 
-test("01 · η Σήμερα δείχνει πάντα την Υγεία και η Προσαρμογή έχει βελάκια σε κάθε κάρτα που μετακινείται", async ({
+test("01 · η Σήμερα είναι ενημέρωση: αποφάσεις, πρόγραμμα και «Και άλλα», χωρίς τη γραμμή με τους αριθμούς", async ({
   page,
 }) => {
   await signIn(page, OWNER);
-  await expect(page.getByRole("heading", { name: HEALTH })).toBeVisible();
-  await expect(page.locator(".a1-more").getByText(HEALTH)).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: DECISIONS })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Το πρόγραμμα" })).toBeVisible();
+  await expect(page.locator(".a1-lead")).toContainText("εσένα");
+  await expect(page.locator(".a1-strip")).toHaveCount(0);
+  const more = page.locator("details.a1-others");
+  await expect(more.locator("summary")).toHaveText(/^Και άλλα/);
+  await more.locator("summary").click();
+  await expect(more.locator(".a1-other-list, .a1-quiet").first()).toBeVisible();
+  // Η Υγεία πάνω μόνο όταν κάτι χάλασε· αλλιώς μία ήσυχη γραμμή μέσα στο «Και άλλα». Πάντα σε ένα από τα δύο.
+  await expect(page.getByRole("heading", { name: HEALTH }).or(more.getByRole("link", { name: HEALTH }))).toHaveCount(1);
+});
+
+test("01 · η Προσαρμογή έχει βελάκια σε κάθε κάρτα που μετακινείται", async ({ page }) => {
+  await signIn(page, OWNER);
 
   await page.getByRole("link", { name: "Προσαρμογή", exact: true }).click();
   const list = page.locator(".a1-custom-list");
@@ -75,7 +88,7 @@ test("01 · η Σήμερα δεν έχει διπλή γραμμή «Η εβδ�
   page,
 }) => {
   await signIn(page, OWNER);
-  await expect(page.getByRole("heading", { name: HEALTH })).toBeVisible();
+  await expect(page.getByRole("heading", { name: DECISIONS })).toBeVisible();
   await expect(page.getByText("Η εβδομάδα:")).toHaveCount(0);
   await page.goto("/app/filming?tab=week");
   await expect(page.getByRole("link", { name: /^Επόμενες 7 ημέρες/ })).toHaveAttribute("aria-current", "page");
