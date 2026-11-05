@@ -7,6 +7,8 @@ import { formatCents } from "../helpers";
 import type { OtherCard, QuietCard } from "./a1-brief";
 import type { RankedDecisions } from "./a1-decisions";
 import { decisionFactOf } from "./a1-facts";
+import { isNewSince, itemKeyOf, laterLineOf } from "./a1-later";
+import { LaterButton, UndoLater } from "./a1-later-buttons";
 import type { CardContent } from "./a1-model";
 import type { Programme } from "./a1-programme";
 
@@ -14,14 +16,30 @@ import type { Programme } from "./a1-programme";
 
 const MONEY_SHOWN = 3;
 
-// today: «ΕΕΕΕ-ΜΜ-ΗΗ» (Αθήνα), για το «Περιμένει N ημέρες».
+function DecisionTitle({ label, isNew }: { label: string; isNew: boolean }) {
+  return (
+    <>
+      {label}
+      {isNew && <span className="a1-new"> νέο</span>}
+    </>
+  );
+}
+
+// stamp: «ΕΕΕΕ-ΜΜ-ΗΗTΩΩ:ΛΛ» (Αθήνα), για το «Περιμένει N ημέρες» και το «ξαναβγαίνουν».
+// seenAt: πότε τελείωσε η προηγούμενη επίσκεψη (Σ8)· later: τα κλειδιά που κρύφτηκαν με «Αργότερα».
 export function DecisionsPanel({
   ranked,
-  today,
+  stamp,
+  seenAt,
+  later,
 }: {
   ranked: RankedDecisions;
-  today: string;
+  stamp: string;
+  seenAt: string | null;
+  later: readonly string[];
 }) {
+  const today = stamp.slice(0, 10);
+  const laterLine = laterLineOf(later.length, stamp);
   return (
     <div className="a1-brief-panel" data-part="decisions">
       <Panel
@@ -37,20 +55,22 @@ export function DecisionsPanel({
                 <ListRow
                   key={`${row.cardId}${row.href}${row.label}`}
                   lead={<span className="a1-rank">{index + 1}</span>}
-                  title={row.label}
-                  sub={decisionFactOf(row, today) || row.cardTitle}
-                  aside={
-                    <Link
-                      className="button"
-                      href={row.href}
-                      aria-label={`Άνοιξε: ${row.label}`}
-                    >
-                      Άνοιξε
-                    </Link>
+                  title={
+                    <DecisionTitle
+                      label={row.label}
+                      isNew={isNewSince(row, seenAt)}
+                    />
                   }
+                  sub={decisionFactOf(row, today) || row.cardTitle}
+                  aside={<DecisionActions row={row} />}
                 />
               ))}
             </RowList>
+          </div>
+        )}
+        {laterLine && (
+          <div className="a1-quiet a1-later-line">
+            {laterLine} · <UndoLater keys={later} />
           </div>
         )}
         {ranked.more && (
@@ -60,6 +80,22 @@ export function DecisionsPanel({
         )}
       </Panel>
     </div>
+  );
+}
+
+function DecisionActions({ row }: { row: RankedDecisions["shown"][number] }) {
+  const itemKey = itemKeyOf(row.cardId, row);
+  return (
+    <span className="a1-decision-actions">
+      {itemKey && <LaterButton itemKey={itemKey} label={row.label} />}
+      <Link
+        className="button"
+        href={row.href}
+        aria-label={`Άνοιξε: ${row.label}`}
+      >
+        Άνοιξε
+      </Link>
+    </span>
   );
 }
 

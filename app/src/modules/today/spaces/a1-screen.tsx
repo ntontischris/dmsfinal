@@ -118,10 +118,13 @@ function Hello({
   viewer,
   unread,
   isEditing,
+  newChip = null,
 }: {
   viewer: Viewer;
   unread: number;
   isEditing: boolean;
+  // «N νέα από την τελευταία φορά» (#241 Σ8), μόνο για την ομάδα.
+  newChip?: string | null;
 }) {
   const stamp = athensStamp(new Date());
   const name = nameOf(viewer);
@@ -134,6 +137,7 @@ function Hello({
           · {weekdayOf(stamp.slice(0, 10))} {fmtDate(stamp)},{" "}
           {stamp.slice(11, 16)}
         </span>
+        {newChip && <span className="a1-new-chip">{newChip}</span>}
       </p>
       <div className="btn-row">
         <Link href={hrefOf("A2")}>
@@ -256,17 +260,26 @@ export async function SpacesToday({
       isCustomized={counts.data.isCustomized}
     />
   );
+  const unread = counts.data.unreadNotifications;
   return (
     <div data-spaces>
-      <Hello
-        viewer={viewer}
-        unread={counts.data.unreadNotifications}
-        isEditing={isCustomizing}
-      />
       {isTeamOf(viewer) ? (
-        <TeamBriefing counts={counts.data}>{customize}</TeamBriefing>
+        <TeamBriefing
+          counts={counts.data}
+          hello={(newChip) => (
+            <Hello
+              viewer={viewer}
+              unread={unread}
+              isEditing={isCustomizing}
+              newChip={newChip}
+            />
+          )}
+        >
+          {customize}
+        </TeamBriefing>
       ) : (
         <>
+          <Hello viewer={viewer} unread={unread} isEditing={isCustomizing} />
           {customize}
           <TodayCards counts={counts.data} />
         </>

@@ -9,7 +9,7 @@ import { createSupabase } from "@/lib/supabase/server";
 
 import { CardView } from "./components/card-view";
 import { getTodayCard } from "./queries";
-import { prefsSchema } from "./schemas";
+import { itemKeySchema, itemKeysSchema, prefsSchema } from "./schemas";
 import { todayCardSchema } from "./view-schema";
 
 const UNCONFIGURED_TEXT = "Η βάση δεν έχει συνδεθεί ακόμα.";
@@ -74,4 +74,33 @@ export async function retryTodayCard(input: unknown): Promise<ReactNode | null |
     console.error("retryTodayCard:", error);
     return undefined;
   }
+}
+
+// «Αργότερα» μιας απόφασης (#241 Σ8): κρύβεται ως αύριο το πρωί (08:00 Αθήνας) μόνο για τον ίδιο τον Χρήστη.
+export async function snoozeTodayItem(
+  _state: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const key = itemKeySchema.safeParse(form.get("key"));
+  if (!key.success) return { error: "Άγνωστη απόφαση." };
+  const failure = await callRpc("today_snooze", { p_key: key.data });
+  if (failure) return failure;
+  revalidatePath(TODAY_PATH);
+  return { notice: "Για αργότερα." };
+}
+
+// «Αναίρεση»: οι αποφάσεις που κρύφτηκαν ξαναφαίνονται αμέσως.
+export async function unsnoozeTodayItems(
+  _state: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const keys = itemKeysSchema.safeParse(form.getAll("key").map(String));
+  if (!keys.success) return { error: "Άγνωστη απόφαση." };
+  const failures = await Promise.all(
+    keys.data.map((key) => callRpc("today_unsnooze", { p_key: key })),
+  );
+  const failure = failures.find((item) => item !== null);
+  if (failure) return failure;
+  revalidatePath(TODAY_PATH);
+  return { notice: "Ξαναφαίνονται." };
 }
