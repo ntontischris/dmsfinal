@@ -9,6 +9,11 @@ export interface CardRow {
   meta?: string;
   href: string;
   isUrgent?: boolean;
+  // Μόνο το subtitle της βάσης, χωρίς ώρα και ποσό (το meta τα έχει όλα μαζί).
+  note?: string;
+  // Τα ακατέργαστα της βάσης: η σειρά των αποφάσεων (ποσό, παλαιότερο) και η ώρα του Γυρίσματος στο πρόγραμμα.
+  at?: string;
+  amountCents?: number;
 }
 
 export interface CardContent {
