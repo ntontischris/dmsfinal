@@ -44,11 +44,14 @@ $$;
 
 -- Το επόμενο 08:00 της Αθήνας μετά το p_now.
 create function authz.today_next_morning(p_now timestamptz) returns timestamptz
-language sql stable set search_path = ''
+language plpgsql stable set search_path = ''
 as $$
-  select ((case when (p_now at time zone 'Europe/Athens')::time < time '08:00'
-                then (p_now at time zone 'Europe/Athens')::date
-                else (p_now at time zone 'Europe/Athens')::date + 1 end) + time '08:00') at time zone 'Europe/Athens';
+declare
+  v_local timestamp := p_now at time zone 'Europe/Athens';
+begin
+  return ((case when v_local::time < time '08:00' then v_local::date else v_local::date + 1 end) + time '08:00')
+         at time zone 'Europe/Athens';
+end;
 $$;
 
 -- ───────────── Νέο από την τελευταία φορά ─────────────
