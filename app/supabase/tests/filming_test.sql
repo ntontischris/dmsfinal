@@ -2,7 +2,7 @@
 -- Ίχνος (κεφ. 3, ADR 0007, 0010, 0015). Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή.
 -- Ώρες: όλα σχετικά με τη σημερινή μέρα (Ώρα Ελλάδας), ώστε το τεστ να περνά οποιαδήποτε μέρα τρέξει.
 begin;
-select plan(294);
+select plan(297);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος των Παραγωγών της Συμφωνίας Α) · e3 Πωλήσεις (Υπεύθυνος του Πελάτη f1)
@@ -722,6 +722,8 @@ select throws_ok($$ select public.filmings_view('open', 0) $$, 'P0001', 'Η σε
 reset role;
 insert into public.filmings (production_id, starts_at, hours, origin, state)
 values (current_setting('t.pi')::uuid, now() - interval '2 days', 1, 'team', 'scheduled');
+insert into public.filmings (production_id, starts_at, hours, origin, state)
+values (current_setting('t.pi')::uuid, now() + interval '10 days', 1, 'team', 'scheduled');
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 select ok(
@@ -740,6 +742,14 @@ select ok(
 );
 select is(jsonb_array_length(public.filmings_view('needs_outcome')), 1, 'Το «Θέλουν έγινε» δείχνει το Γύρισμα με έναρξη στο παρελθόν');
 select set_config('t.v_open', jsonb_array_length(public.filmings_view('open'))::text, true);
+select set_config('t.v_week', jsonb_array_length(public.filmings_view('week'))::text, true);
+select ok(
+  (select coalesce(bool_and(t >= pt), true) from (
+     select (e ->> 'startsAt')::timestamptz as t, lag((e ->> 'startsAt')::timestamptz) over (order by ord) as pt
+       from jsonb_array_elements(public.filmings_view('week')) with ordinality as x (e, ord)) z
+   where pt is not null),
+  'Οι «Επόμενες 7 ημέρες» έρχονται από το πιο κοντινό'
+);
 select set_config('t.v_closed', jsonb_array_length(public.filmings_view('closed'))::text, true);
 select set_config('t.v_all', jsonb_array_length(public.filmings_view('all'))::text, true);
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
@@ -753,6 +763,16 @@ select is(
   (select count(*)::int from public.filmings where state in ('pending', 'scheduled')),
   'Η ομάδα βλέπει όλα τα ανοιχτά Γυρίσματα'
 );
+select is(
+  current_setting('t.v_week')::int,
+  (select count(*)::int from public.filmings
+    where state in ('pending', 'scheduled')
+      and (starts_at at time zone 'Europe/Athens')::date
+          between (now() at time zone 'Europe/Athens')::date and (now() at time zone 'Europe/Athens')::date + 6),
+  'Οι «Επόμενες 7 ημέρες» είναι τα ανοιχτά Γυρίσματα από σήμερα ως σήμερα + 6'
+);
+select ok(current_setting('t.v_week')::int < current_setting('t.v_open')::int,
+  'Ένα ανοιχτό Γύρισμα σε 10 μέρες δεν μπαίνει στις «Επόμενες 7 ημέρες»');
 select is(
   current_setting('t.v_all')::int, (select count(*)::int from public.filmings), 'Η καρτέλα «Όλα» έχει όλα τα Γυρίσματα για τη ομάδα'
 );

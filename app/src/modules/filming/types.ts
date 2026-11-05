@@ -16,6 +16,7 @@ export type FilmingState = (typeof FILMING_STATES)[number];
 
 export const FILMING_TABS = [
   "open",
+  "week",
   "pending",
   "needs_outcome",
   "closed",

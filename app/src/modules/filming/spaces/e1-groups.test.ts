@@ -143,6 +143,14 @@ test("ο εγκρίνων βλέπει τα «Αναμένουν έγκριση�
   expect(tabCountLabel(100)).toBe("100+");
 });
 
+test("η προβολή «Επόμενες 7 ημέρες» έρχεται αμέσως μετά τα «Ανοιχτά»", () => {
+  expect(
+    visibleViews(false)
+      .map((v) => v.id)
+      .slice(0, 2),
+  ).toEqual(["open", "week"]);
+});
+
 test("όλοι έχουν την προβολή «Θέλουν «έγινε»», και ο πελάτης (όπως η σημερινή σελίδα)", () => {
   expect(visibleViews(false).map((v) => v.id)).toContain("needs_outcome");
   expect(visibleViews(true).map((v) => v.id)).toContain("needs_outcome");

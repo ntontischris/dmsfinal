@@ -10,7 +10,7 @@ import { arrangeToday } from "../layout";
 import { CUSTOMIZE_PATH } from "../labels";
 import { getTodayCounts } from "../queries";
 import type { TodayCounts } from "../view-schema";
-import { athensStamp, cardDefOf, weekGlance, type Built } from "./a1-adapter";
+import { athensStamp, cardDefOf, type Built } from "./a1-adapter";
 import { CardError, QuietCards, TodayCard } from "./a1-card";
 import { Customize } from "./a1-customize";
 import { loadCards } from "./a1-load";
@@ -186,7 +186,6 @@ async function TodayCards({ counts }: { counts: TodayCounts }) {
   const nowCta = now
     ? shown.find(({ card }) => card.id === now.cardId)?.content.cta
     : undefined;
-  const week = weekGlance(counts.cards);
   return (
     <>
       {layout.isAllClear && (
@@ -205,17 +204,6 @@ async function TodayCards({ counts }: { counts: TodayCounts }) {
           </p>
         )}
       </div>
-      {week.length > 0 && (
-        <p className="a1-week">
-          <strong>Η εβδομάδα:</strong>{" "}
-          {week.map((part, index) => (
-            <span key={part.label}>
-              {index > 0 && " · "}
-              <Link href={part.href}>{part.label}</Link>
-            </span>
-          ))}
-        </p>
-      )}
       {layout.isAllHidden ? (
         <StateNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
           Πάτα «Προσαρμογή» για να εμφανίσεις όσες θέλεις, ή{" "}

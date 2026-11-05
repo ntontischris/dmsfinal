@@ -33,6 +33,7 @@ export interface E1View {
 // Οι προβολές του prototype, με τις καρτέλες της βάσης (ίδιο ?tab= με την παλιά σελίδα).
 export const E1_VIEWS: readonly E1View[] = [
   { id: "open", label: "Ανοιχτά" },
+  { id: "week", label: "Επόμενες 7 ημέρες" },
   { id: "pending", label: "Αναμένουν έγκριση" },
   { id: "needs_outcome", label: "Θέλουν «έγινε»" },
   { id: "closed", label: "Έγιναν ή ακυρώθηκαν" },

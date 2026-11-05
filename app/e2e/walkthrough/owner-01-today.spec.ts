@@ -70,3 +70,15 @@ test("01 · το «Νέο» και η Αναζήτηση ανοίγουν από
     await expect(searchBox).toBeVisible({ timeout: 1_000 });
   }).toPass();
 });
+
+test("01 · η Σήμερα δεν έχει διπλή γραμμή «Η εβδομάδα» και η κάρτα ανοίγει μόνο τις επόμενες 7 ημέρες", async ({
+  page,
+}) => {
+  await signIn(page, OWNER);
+  await expect(page.getByRole("heading", { name: HEALTH })).toBeVisible();
+  await expect(page.getByText("Η εβδομάδα:")).toHaveCount(0);
+  const all = page.getByRole("link", { name: /^Όλα.*: Γυρίσματα των επόμενων 7 ημερών$/ });
+  await expect(all).toHaveAttribute("href", "/app/filming?tab=week");
+  await all.click();
+  await expect(page.getByRole("link", { name: /^Επόμενες 7 ημέρες/ })).toHaveAttribute("aria-current", "page");
+});
