@@ -53,7 +53,7 @@ describe("paceOf", () => {
   it("η φράση του μήνα και πού θα έπρεπε να είμαστε", () => {
     const pace = paceOf(moneyOf());
     expect(pace.sentence).toBe(
-      "Νοέμβριος: μπήκαν 1.200 € από 4.800 € που περιμένουμε.",
+      "Νοέμβριος: μπήκαν 1.200 € από 4.800 € που λήγουν αυτόν τον μήνα.",
     );
     expect(pace.share).toBe(0.25);
     expect(pace.shouldBe).toBeCloseTo(5 / 30);
@@ -90,6 +90,25 @@ describe("paceOf", () => {
     );
     expect(pace.verdict).toBeNull();
     expect(pace.share).toBe(0);
+    expect(pace.sentence).toBe(
+      "Φεβρουάριος: δεν λήγει κανένα Τιμολόγιο αυτόν τον μήνα.",
+    );
+  });
+
+  it("εισπράχθηκαν = εξοφλημένο μέρος των ίδιων Τιμολογίων, ποτέ πάνω από τα αναμενόμενα", () => {
+    const pace = paceOf(
+      moneyOf({
+        month: {
+          month: 11,
+          day: 30,
+          days: 30,
+          collectedCents: 480_000,
+          expectedCents: 480_000,
+        },
+      }),
+    );
+    expect(pace.share).toBe(1);
+    expect(pace.verdict).toBe("Μπροστά από τον ρυθμό του μήνα.");
   });
 });
 
