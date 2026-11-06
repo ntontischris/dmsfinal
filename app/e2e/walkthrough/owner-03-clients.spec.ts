@@ -10,7 +10,8 @@ import {
 import { useSpacesLook } from "./spaces";
 
 // Περιήγηση Ιδιοκτήτη, διαδρομή 03: Πελάτες. Νέος Πελάτης με Επωνυμία, Πόλη και ΑΦΜ· νέα Ευκαιρία σε υπάρχοντα χωρίς
-// Πηγή· «Πιθανό διπλό» και στις δύο μεριές· η γραμμή «Σχέση με τον Πελάτη» με ορατό τίτλο. Ένας Πελάτης που μπήκε
+// Πηγή· «Πιθανό διπλό» και στις δύο μεριές· η γραμμή «Σχέση με τον Πελάτη» με ορατό τίτλο, η κορυφή-ενημέρωση και οι
+// πέντε καρτέλες (οι παλιές διευθύνσεις ?tab= πέφτουν στη σωστή). Ένας Πελάτης που μπήκε
 // κατά λάθος σβήνεται· ένας με δουλειά όχι. Φίλτρα σε κάρτες στη λίστα και στο «Τι στάλθηκε». Ό,τι φτιάχνει το τεστ το σβήνει στο τέλος.
 const OWNER = "owner@example.com";
 
@@ -90,15 +91,28 @@ async function createClient(page: Page, client: NewClient): Promise<string> {
   return clientId;
 }
 
+// «Μεταβίβαση Πελάτη», «Ιστορικό αλλαγών» και «Διαγραφή Πελάτη» ζουν στο «⋯» της κεφαλίδας.
+async function openMoreMenu(page: Page) {
+  const menu = page.locator("details", {
+    has: page.locator('summary[aria-label="Περισσότερες ενέργειες"]'),
+  });
+  await expect(async () => {
+    if ((await menu.getAttribute("open")) === null)
+      await menu.locator("summary").click();
+    await expect(menu).toHaveAttribute("open", "", { timeout: 1_000 });
+  }).toPass();
+  return menu;
+}
+
 async function deleteClient(page: Page, clientId: string, name: string) {
   await page.goto(`/app/clients/${clientId}`);
-  const side = inspector(page);
+  const menu = await openMoreMenu(page);
   const dialog = page.getByRole("alertdialog", {
     name: `Διαγραφή Πελάτη: ${name}`,
   });
   await expect(async () => {
     if (!(await dialog.isVisible()))
-      await side
+      await menu
         .getByRole("button", { name: "Διαγραφή Πελάτη", exact: true })
         .click();
     await expect(dialog).toBeVisible({ timeout: 1_000 });
@@ -133,6 +147,21 @@ test("03 · νέος Πελάτης με Επωνυμία, Πόλη και ΑΦ�
   await expect(
     page.getByRole("heading", { name: "Σχέση με τον Πελάτη", exact: true }),
   ).toBeVisible();
+  // Η κορυφή-ενημέρωση: μία πρόταση, το Επόμενο βήμα της Ευκαιρίας και πέντε καρτέλες ανά δουλειά.
+  await expect(
+    page.getByText(/^Σε στάδιο «Πρόταση», με 1 ανοιχτή Ευκαιρία/),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Κλήση, 08/01/2099", { exact: true }),
+  ).toBeVisible();
+  const tabs = page.getByRole("navigation", { name: "Ενότητες Πελάτη" });
+  for (const label of ["Επισκόπηση", "Πωλήσεις", "Επικοινωνία"])
+    await expect(
+      tabs.getByRole("link", { name: label, exact: true }),
+    ).toBeVisible();
+  await expect(
+    tabs.getByRole("link", { name: "Επισκόπηση", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
 
   const edit = side.locator("form", { has: page.locator('input[name="afm"]') });
   await expect(async () => {
@@ -224,7 +253,13 @@ test("03 · σημείωση κατευθείαν στον Πελάτη, με π
     name,
     email: `walk-${Date.now()}@simeiosi.example.gr`,
   });
+  // Η παλιά διεύθυνση της καρτέλας Δραστηριότητες ανοίγει την «Επικοινωνία».
   await page.goto(`/app/clients/${clientId}?tab=activities`);
+  await expect(
+    page
+      .getByRole("navigation", { name: "Ενότητες Πελάτη" })
+      .getByRole("link", { name: "Επικοινωνία", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   const form = page.locator("form", {
     has: page.getByRole("button", { name: "Καταγραφή", exact: true }),
   });
@@ -280,7 +315,13 @@ test("03 · νέα Ευκαιρία σε υπάρχοντα Πελάτη δεν 
   await expect(page).toHaveURL(/\/app\/pipeline\/[0-9a-f-]+$/);
 
   // Το ίδιο και η «Νέα Ευκαιρία» μέσα στη Σελίδα Πελάτη: ο Πελάτης υπάρχει, άρα καμία Πηγή.
+  // Η παλιά διεύθυνση της καρτέλας Ευκαιρίες ανοίγει τις «Πωλήσεις»· η «Νέα Ευκαιρία» είναι μία, στην κεφαλίδα.
   await page.goto(`/app/clients/${clientId}?tab=opportunities`);
+  await expect(
+    page
+      .getByRole("navigation", { name: "Ενότητες Πελάτη" })
+      .getByRole("link", { name: "Πωλήσεις", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   const inside = page.locator("form", {
     has: page.locator('input[name="nextStep"]'),
   });
@@ -409,6 +450,11 @@ test("03 · φίλτρα: κάθε Κατάσταση στη λίστα Πελα
   // «Τι στάλθηκε»: Κατάσταση και Κανάλι, χωρίς «Πελάτης» (είναι ένας).
   await page.goto(`/app/clients/${clientId}?tab=dispatches`);
   await expect(
+    page
+      .getByRole("navigation", { name: "Ενότητες Πελάτη" })
+      .getByRole("link", { name: "Επικοινωνία", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
     filtersRow(page).locator("summary", { hasText: "Κανάλι" }),
   ).toBeVisible();
   await expect(
@@ -456,9 +502,9 @@ test("03 · ένας Πελάτης με δουλειά δεν σβήνεται 
   // Από το seed: έχει Χρήστη πελάτη (και, όταν τρέξουν τα τεστ Κρατήσεων, Συμφωνία). Ο λόγος αλλάζει, το «δεν σβήνεται» όχι.
   const clientId = await clientIdByName(`Πελάτης Κρατήσεων ${project()}`);
   await page.goto(`/app/clients/${clientId}`);
-  const side = inspector(page);
+  const menu = await openMoreMenu(page);
   await expect(
-    side.getByRole("button", { name: "Διαγραφή Πελάτη", exact: true }),
+    menu.getByRole("button", { name: "Διαγραφή Πελάτη", exact: true }),
   ).toBeDisabled();
-  await expect(side.getByText(/^Δεν σβήνεται: /)).toBeVisible();
+  await expect(menu.getByText(/^Δεν σβήνεται: /)).toBeVisible();
 });

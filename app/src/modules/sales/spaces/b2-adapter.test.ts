@@ -6,11 +6,9 @@ import type { Opportunity } from "../types";
 import {
   activeAgreementText,
   allowedTabs,
-  clientStripStats,
   clientSummary,
   opportunityRows,
   relationshipSteps,
-  resolveB2Tab,
   type B2TabRights,
 } from "./b2-adapter";
 
@@ -98,13 +96,6 @@ describe("allowedTabs", () => {
       "agreements",
     ]);
   });
-
-  it("should fall back to the first allowed tab for an unknown or hidden tab", () => {
-    expect(resolveB2Tab("ledger", ["details", "agreements"])).toBe("details");
-    expect(resolveB2Tab("agreements", ["details", "agreements"])).toBe(
-      "agreements",
-    );
-  });
 });
 
 describe("relationshipSteps", () => {
@@ -125,39 +116,6 @@ describe("relationshipSteps", () => {
     expect(
       relationshipSteps([], [agreement()]).map((step) => step.state),
     ).toEqual(["done", "done", "current", "todo"]);
-  });
-});
-
-describe("clientStripStats", () => {
-  it("should show active agreements, balance with overdue and open opportunities", () => {
-    const stats = clientStripStats({
-      clientId: "c-1",
-      agreements: [agreement(), agreement({ id: "a-2", state: "expired" })],
-      ledger: { balance: 1200, overdue: 300, toInvoice: null },
-      opportunities: [
-        opportunity(),
-        opportunity({ id: "o-2", outcome: "lost" }),
-      ],
-      isReadOnly: false,
-    });
-    expect(stats.map((stat) => [stat.label, stat.value, stat.tone])).toEqual([
-      ["Ενεργές Συμφωνίες", "1", undefined],
-      ["Υπόλοιπο", expect.stringContaining("1.200"), "attention"],
-      ["Ανοιχτές Ευκαιρίες", "1", undefined],
-    ]);
-    expect(stats[0]?.href).toBe("/app/clients/c-1?tab=agreements");
-  });
-
-  it("should hide what the user cannot see", () => {
-    expect(
-      clientStripStats({
-        clientId: "c-1",
-        agreements: null,
-        ledger: null,
-        opportunities: [],
-        isReadOnly: true,
-      }),
-    ).toEqual([]);
   });
 });
 

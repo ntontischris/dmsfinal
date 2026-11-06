@@ -3,7 +3,6 @@
 // έρχεται null και η αντίστοιχη γραμμή απλώς λείπει.
 
 import type { AgreementRow } from "@/modules/agreements";
-import type { StatProps } from "@/spaces/kit/panel";
 import type { Step } from "@/spaces/kit/steps";
 import { hrefOf } from "@/spaces/data/screens";
 import { fmtDate, fmtMoney, type BadgeTone } from "@/spaces/screens/shared";
@@ -53,11 +52,6 @@ export const allowedTabs = (
     (id) => rights[id] && (!isGranted || GRANTED_TABS.includes(id)),
   );
 
-export const resolveB2Tab = (
-  value: string | undefined,
-  allowed: readonly B2Tab[],
-): B2Tab => allowed.find((id) => id === value) ?? allowed[0] ?? "details";
-
 const isOpen = (opportunity: Pick<Opportunity, "outcome">): boolean =>
   opportunity.outcome === "open";
 
@@ -86,49 +80,6 @@ export interface B2Ledger {
   overdue: number;
   toInvoice: number | null;
 }
-
-const tabHref = (clientId: string, tab: B2Tab): string =>
-  hrefOf("B2", { id: clientId, tab });
-
-interface StripInput {
-  clientId: string;
-  agreements: readonly Pick<AgreementRow, "state">[] | null;
-  ledger: B2Ledger | null;
-  opportunities: readonly Pick<Opportunity, "outcome">[];
-  isReadOnly: boolean;
-}
-
-// Η λωρίδα: Ενεργές Συμφωνίες, Υπόλοιπο (κόκκινο με ληξιπρόθεσμα) και Ανοιχτές Ευκαιρίες, όσα βλέπει ο Χρήστης.
-export const clientStripStats = (input: StripInput): StatProps[] => {
-  const stats: StatProps[] = [];
-  if (input.agreements !== null)
-    stats.push({
-      label: "Ενεργές Συμφωνίες",
-      value: String(
-        input.agreements.filter((a) => a.state === "active").length,
-      ),
-      href: tabHref(input.clientId, "agreements"),
-    });
-  if (input.ledger !== null) {
-    const isOverdue = input.ledger.overdue > 0;
-    stats.push({
-      label: "Υπόλοιπο",
-      value: fmtMoney(input.ledger.balance),
-      hint: isOverdue
-        ? `ληξιπρόθεσμα: ${fmtMoney(input.ledger.overdue)}`
-        : undefined,
-      tone: isOverdue ? "attention" : undefined,
-      href: tabHref(input.clientId, "ledger"),
-    });
-  }
-  if (!input.isReadOnly)
-    stats.push({
-      label: "Ανοιχτές Ευκαιρίες",
-      value: String(input.opportunities.filter(isOpen).length),
-      href: tabHref(input.clientId, "opportunities"),
-    });
-  return stats;
-};
 
 export interface SummaryLine {
   label: string;

@@ -1,0 +1,51 @@
+/* Πάνελ της Σελίδας Πελάτη στο ύφος της «Σήμερα» (.a1-brief-panel): απαλή απόχρωση, τίτλος με εικονίδιο σε κύκλο.
+   Ίδια μοτίβα με δικά τους ονόματα, γιατί τα modules δεν μοιράζονται CSS. Η «Χρειάζεται προσοχή» με τελεία REC. */
+[data-look='spaces'] {
+:root & .b2-panel { --b2-hue: var(--brand-periwinkle); --b2-tint: 9%; --b2-edge: 20%; --b2-ink: var(--b2-hue); min-width: 0; }
+:root[data-theme='light'] & .b2-panel { --b2-tint: 14%; --b2-edge: 32%; --b2-ink: var(--brand-midnight); }
+:root & .b2-panel .kit-panel {
+  margin: 0;
+  border-color: color-mix(in oklab, var(--b2-hue) var(--b2-edge), transparent);
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, var(--b2-hue) var(--b2-tint), transparent), transparent 70%),
+    var(--color-surface);
+}
+:root & .b2-panel .kit-panel-body { display: flex; flex-direction: column; gap: var(--space-2); }
+:root & .b2-panel .kit-panel-head {
+  background: color-mix(in oklab, var(--b2-hue) 12%, var(--color-surface-raised));
+  border-bottom-color: color-mix(in oklab, var(--b2-hue) 24%, transparent);
+}
+:root & .b2-panel .kit-panel-head h2 {
+  position: relative; display: flex; align-items: center; min-height: 1.75rem; padding-left: 2.25rem;
+  color: var(--b2-ink); font-weight: 800;
+}
+:root & .b2-panel .kit-panel-head h2::before {
+  content: ''; position: absolute; left: 0; top: 50%; width: 1.75rem; height: 1.75rem; margin-top: -0.875rem;
+  border-radius: 50%; background: color-mix(in oklab, var(--b2-hue) 22%, transparent);
+}
+:root & .b2-panel .kit-panel-head h2::after {
+  content: ''; position: absolute; left: 0.375rem; top: 50%; width: 1rem; height: 1rem; margin-top: -0.5rem;
+  background: var(--b2-ink);
+  -webkit-mask: var(--b2-icon) center / contain no-repeat; mask: var(--b2-icon) center / contain no-repeat;
+}
+:root & .b2-panel .kit-panel-head a { text-decoration: none; color: var(--color-accent); text-transform: none; letter-spacing: 0; }
+:root & .b2-panel[data-part='attention'] .kit-panel-head h2::before { background: color-mix(in oklab, var(--brand-rec) 22%, transparent); }
+:root & .b2-panel[data-part='attention'] .kit-panel-head h2::after {
+  -webkit-mask: none; mask: none; width: 7px; height: 7px; left: 0.6rem; margin-top: -3.5px; border-radius: 50%;
+  background: var(--brand-rec);
+}
+
+/* Εικονίδια: σημάδι (προεπιλογή), χρήματα, άνθρωποι, ρολόι */
+:root & .b2-panel {
+  --b2-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8 12.5l2.7 2.7L16 9.5'/%3E%3C/svg%3E");
+}
+:root & .b2-panel[data-part='money'] {
+  --b2-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6.5A7 7 0 1018 17.5'/%3E%3Cpath d='M4 10h10M4 14h10'/%3E%3C/svg%3E");
+}
+:root & .b2-panel[data-part='facts'] {
+  --b2-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5'/%3E%3Cpath d='M16 4.5a3.5 3.5 0 010 7M18 14.8c1.9.8 3.1 2.6 3.5 5.2'/%3E%3C/svg%3E");
+}
+:root & .b2-panel[data-part='log'] {
+  --b2-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E");
+}
+}
