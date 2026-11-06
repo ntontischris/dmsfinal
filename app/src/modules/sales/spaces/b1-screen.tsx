@@ -19,7 +19,7 @@ import "./b1.css";
 
 interface SpacesClientsProps {
   query: string;
-  // Τα φίλτρα της διεύθυνσης (?status=, ?noshoot=1, ?monthly=1).
+  // Τα φίλτρα της διεύθυνσης (?status=, ?noshoot=1, ?package=).
   filters: B1Filters;
   // Το «+ Νέο → Νέα Ευκαιρία» βάζει νέα τιμή κάθε φορά, ώστε η φόρμα να ανοίγει και αν είσαι ήδη εδώ.
   newStamp: string | undefined;

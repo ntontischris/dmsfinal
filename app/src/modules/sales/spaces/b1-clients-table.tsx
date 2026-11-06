@@ -29,7 +29,12 @@ export function ClientsSearch({
   filters: B1Filters;
 }) {
   return (
-    <form className="kit-fb-search" method="get" action="/app/clients" role="search">
+    <form
+      className="kit-fb-search"
+      method="get"
+      action="/app/clients"
+      role="search"
+    >
       <input
         className="input grow"
         type="search"
@@ -43,7 +48,9 @@ export function ClientsSearch({
         <input type="hidden" name="status" value={filters.status} />
       )}
       {filters.isNoShoot && <input type="hidden" name="noshoot" value="1" />}
-      {filters.isMonthly && <input type="hidden" name="monthly" value="1" />}
+      {filters.pkg && (
+        <input type="hidden" name="package" value={filters.pkg} />
+      )}
     </form>
   );
 }

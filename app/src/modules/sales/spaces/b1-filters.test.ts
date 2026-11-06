@@ -5,12 +5,13 @@ import {
   applyB1Filters,
   b1FilterGroups,
   b1Href,
+  NO_PACKAGE,
   parseB1Filters,
   type B1Filters,
 } from "./b1-filters";
 import type { MonthGlance } from "./b1-month";
 
-const NONE: B1Filters = { status: null, isNoShoot: false, isMonthly: false };
+const NONE: B1Filters = { status: null, isNoShoot: false, pkg: null };
 
 const month = (hasNoShoot: boolean): MonthGlance =>
   ({ hasNoShoot, meters: [], next: null, text: "" }) as unknown as MonthGlance;
@@ -19,36 +20,41 @@ const row = (
   id: string,
   status: string | null,
   glance: MonthGlance | null,
-): B1Row => ({ id, name: id, status, month: glance }) as unknown as B1Row;
+  packageName: string | null = null,
+): B1Row =>
+  ({
+    id,
+    name: id,
+    status,
+    month: glance,
+    packageName,
+    activeAgreements: packageName === null ? 0 : 1,
+  }) as unknown as B1Row;
 
 const ROWS = [
-  row("a", "Ενεργός", month(true)),
-  row("b", "Ενεργός", month(false)),
+  row("a", "Ενεργός", month(true), "Social A"),
+  row("b", "Ενεργός", month(false), "Podcast B, Social A"),
   row("c", "Υποψήφιος", null),
   row("d", null, null),
 ];
 
 describe("parseB1Filters", () => {
-  it("διαβάζει Κατάσταση και διακόπτες από τη διεύθυνση", () => {
+  it("διαβάζει Κατάσταση, διακόπτη και Πακέτο από τη διεύθυνση", () => {
     expect(
-      parseB1Filters({ status: "active", noshoot: "1", monthly: "1" }),
-    ).toEqual({
-      status: "active",
-      isNoShoot: true,
-      isMonthly: true,
-    });
+      parseB1Filters({ status: "active", noshoot: "1", package: "Social A" }),
+    ).toEqual({ status: "active", isNoShoot: true, pkg: "Social A" });
   });
-  it("αγνοεί άγνωστη Κατάσταση", () => {
-    expect(parseB1Filters({ status: "x" })).toEqual(NONE);
+  it("αγνοεί άγνωστη Κατάσταση και κενό Πακέτο", () => {
+    expect(parseB1Filters({ status: "x", package: " " })).toEqual(NONE);
   });
 });
 
 describe("b1Href", () => {
   it("κρατά την αναζήτηση μαζί με τα φίλτρα", () => {
     expect(
-      b1Href("Κυψέλη", { ...NONE, status: "inactive", isMonthly: true }),
+      b1Href("Κυψέλη", { ...NONE, status: "inactive", pkg: NO_PACKAGE }),
     ).toBe(
-      "/app/clients?q=%CE%9A%CF%85%CF%88%CE%AD%CE%BB%CE%B7&status=inactive&monthly=1",
+      "/app/clients?q=%CE%9A%CF%85%CF%88%CE%AD%CE%BB%CE%B7&status=inactive&package=-",
     );
   });
   it("χωρίς τίποτα: η καθαρή λίστα", () => {
@@ -57,17 +63,15 @@ describe("b1Href", () => {
 });
 
 describe("applyB1Filters", () => {
-  it("στενεύει ανά Κατάσταση και διακόπτες", () => {
-    expect(
-      applyB1Filters(ROWS, { ...NONE, status: "active" }).map((r) => r.id),
-    ).toEqual(["a", "b"]);
-    expect(
-      applyB1Filters(ROWS, { ...NONE, isNoShoot: true }).map((r) => r.id),
-    ).toEqual(["a"]);
-    expect(
-      applyB1Filters(ROWS, { ...NONE, isMonthly: true }).map((r) => r.id),
-    ).toEqual(["a", "b"]);
-    expect(applyB1Filters(ROWS, NONE)).toHaveLength(4);
+  it("στενεύει ανά Κατάσταση, διακόπτη και Πακέτο", () => {
+    const ids = (filters: B1Filters) =>
+      applyB1Filters(ROWS, filters).map((r) => r.id);
+    expect(ids({ ...NONE, status: "active" })).toEqual(["a", "b"]);
+    expect(ids({ ...NONE, isNoShoot: true })).toEqual(["a"]);
+    expect(ids({ ...NONE, pkg: "Social A" })).toEqual(["a", "b"]);
+    expect(ids({ ...NONE, pkg: "Podcast B" })).toEqual(["b"]);
+    expect(ids({ ...NONE, pkg: NO_PACKAGE })).toEqual(["c", "d"]);
+    expect(ids(NONE)).toHaveLength(4);
   });
 });
 
@@ -80,6 +84,19 @@ describe("b1FilterGroups", () => {
       "Ανενεργός 0",
     ]);
     expect(status?.all?.isCurrent).toBe(true);
+  });
+  it("το Πακέτο δείχνει κάθε Πακέτο της λίστας και «Χωρίς Πακέτο»", () => {
+    const pkg = b1FilterGroups(ROWS, "", NONE).filters[2];
+    expect(pkg?.label).toBe("Πακέτο");
+    expect(pkg?.options.map((o) => `${o.label} ${o.count}`)).toEqual([
+      "Podcast B 1",
+      "Social A 2",
+      "Χωρίς Πακέτο 2",
+    ]);
+  });
+  it("χωρίς Συμφωνίες στη λίστα (δεν τις βλέπει) δεν υπάρχει φίλτρο Πακέτου", () => {
+    const hidden = ROWS.map((r) => ({ ...r, activeAgreements: null }) as B1Row);
+    expect(b1FilterGroups(hidden, "", NONE).filters).toHaveLength(2);
   });
   it("το πλήθος λογαριάζει τα άλλα φίλτρα που ισχύουν", () => {
     const [status, noShoot] = b1FilterGroups(ROWS, "", {
