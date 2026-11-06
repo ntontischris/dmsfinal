@@ -15,6 +15,9 @@ test.beforeEach(async ({ context }) => {
   await useSpacesLook(context);
 });
 
+// Το μήνυμα της φόρμας· όχι ο route announcer του Next, που έχει κι αυτός role="alert".
+const formAlert = (page: Page) => page.locator(".r-msg[role=alert]");
+
 async function changePassword(page: Page, current: string, next: string) {
   await field(page, "Τωρινός κωδικός").fill(current);
   await field(page, "Νέος κωδικός").fill(next);
@@ -34,10 +37,10 @@ test("η αλλαγή κωδικού από το Προφίλ ζητά τον τ
   await expect(page.getByRole("status").filter({ hasText: "Ο κωδικός άλλαξε." })).toBeVisible();
 
   await changePassword(page, NEW_PASSWORD, NEW_PASSWORD);
-  await expect(page.getByRole("alert")).toHaveText("Ο νέος κωδικός πρέπει να είναι διαφορετικός από τον τωρινό.");
+  await expect(formAlert(page)).toHaveText("Ο νέος κωδικός πρέπει να είναι διαφορετικός από τον τωρινό.");
 
   // Επαναφορά στον κωδικό του seed.
   await changePassword(page, NEW_PASSWORD, SEED_PASSWORD);
   await expect(page.getByRole("status").filter({ hasText: "Ο κωδικός άλλαξε." })).toBeVisible();
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(formAlert(page)).toHaveCount(0);
 });
