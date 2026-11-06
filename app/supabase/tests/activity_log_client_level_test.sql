@@ -1,7 +1,7 @@
 -- Δραστηριότητες στον Πελάτη, με ώρα, διόρθωση και διαγραφή (MIG 20261112120000_activity_log_client_level.sql).
 -- Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή. Οι κλειστοί πίνακες διαβάζονται μόνο μετά από reset role.
 begin;
-select plan(30);
+select plan(31);
 
 -- a1 Ιδιοκτήτης · a2 Λογιστής · a3 Άννα (Πωλήσεις, Υπεύθυνη c1) · a4 Νίκος (Πωλήσεις, Υπεύθυνος c3)
 insert into auth.users (id, email) values
@@ -116,7 +116,9 @@ set local role authenticated;
 select public.t_as('a4');
 select is(public.t_seen(current_setting('t.n1')), 0, 'Άλλος πωλητής δεν τη βλέπει');
 select public.t_as('a2');
-select is(public.t_seen(current_setting('t.n1')), 1, 'Όποιος βλέπει τον Πελάτη (Λογιστής) βλέπει τη Δραστηριότητα του Πελάτη');
+select is(public.t_seen(current_setting('t.n1')), 0, 'Ο Λογιστής βλέπει τον Πελάτη αλλά όχι τις Δραστηριότητές του');
+select public.t_as('a3');
+select is(public.t_seen(current_setting('t.n1')), 1, 'Η Υπεύθυνη του Πελάτη τη βλέπει');
 select public.t_as('a3');
 -- Η πιο πρόσφατη επαφή είναι το email της Ευκαιρίας (τώρα)· η σημείωση του Πελάτη είναι 2 μέρες πίσω.
 select ok(

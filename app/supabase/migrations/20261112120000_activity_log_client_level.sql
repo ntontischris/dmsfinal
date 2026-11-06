@@ -2,7 +2,7 @@
 --
 --  1. Δραστηριότητα και κατευθείαν στον Πελάτη, χωρίς Ευκαιρία (opportunity_id null). Μόνο χειροκίνητη (με είδος)·
 --     οι αυτόματες του συστήματος θέλουν πάντα Ευκαιρία. Τη γράφει όποιος δουλεύει τον Πελάτη (authz.can_work_client)
---     και τη βλέπει όποιος βλέπει τον Πελάτη (authz.can_see_client_id).
+--     και τη βλέπουν όσοι βλέπουν τις Ευκαιρίες του Πελάτη (authz.can_see_opportunity_row), όχι π.χ. ο Λογιστής.
 --  2. «Πότε έγινε»: η χειροκίνητη δέχεται ώρα από έναν χρόνο πίσω έως τώρα (5 λεπτά ανοχή για το ρολόι του browser).
 --     Η ώρα καταγραφής κρατιέται χωριστά (created_at).
 --  3. Διόρθωση και διαγραφή: όποιος την έγραψε, μέσα σε 24 ώρες από την καταγραφή· ο Ιδιοκτήτης πάντα. Η διαγραφή είναι
@@ -220,9 +220,9 @@ $$;
 -- ───────────── Ορατότητα ─────────────
 
 drop policy "Τις Δραστηριότητες τις βλέπει όποιος βλέπει την Ευκαιρία" on public.opportunity_activities;
-create policy "Τις Δραστηριότητες τις βλέπει όποιος βλέπει την Ευκαιρία ή, χωρίς Ευκαιρία, τον Πελάτη"
+create policy "Τις Δραστηριότητες τις βλέπει όποιος βλέπει την Ευκαιρία ή, χωρίς Ευκαιρία, τις Ευκαιρίες του Πελάτη"
   on public.opportunity_activities for select to authenticated
-  using (deleted_at is null and case when opportunity_id is null then authz.can_see_client_id(client_id)
+  using (deleted_at is null and case when opportunity_id is null then authz.can_see_opportunity_row(client_id, null)
                                      else authz.can_see_opportunity(opportunity_id) end);
 
 -- Η τελευταία επαφή με τον Πελάτη: η πιο πρόσφατη χειροκίνητη Δραστηριότητα, όχι σβησμένη, σε Ευκαιρία που ο Χρήστης
@@ -235,7 +235,7 @@ begin
     select max(oa.occurred_at) from public.opportunity_activities oa
       left join public.opportunities o on o.id = oa.opportunity_id
      where oa.client_id = p_client and oa.kind_id is not null and oa.deleted_at is null
-       and (oa.opportunity_id is null or authz.can_see_opportunity_row(o.client_id, o.manager_id))
+       and authz.can_see_opportunity_row(oa.client_id, o.manager_id)
   );
 end;
 $$;
