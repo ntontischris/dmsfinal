@@ -64,20 +64,45 @@ function LeadForm({
   );
 }
 
+const SOURCE_DETAIL_LABEL = "Ποια πηγή; (π.χ. ποιος μας σύστησε)";
+
+// Πηγή και, όταν η Πηγή «θέλει περιγραφή» (Ρυθμίσεις › Πωλήσεις), η περιγραφή της ως referredBy.
 function SourceField({ sources }: { sources: readonly ListItem[] }) {
+  const [sourceId, setSourceId] = useState("");
+  const needsDetail =
+    sources.find((source) => source.id === sourceId)?.needsDetail === true;
   return (
-    <Field label="Πηγή">
-      <select className="select" name="sourceId" defaultValue="">
-        <option value="" disabled>
-          Διάλεξε Πηγή
-        </option>
-        {sources.map((source) => (
-          <option key={source.id} value={source.id}>
-            {source.label}
+    <>
+      <Field label="Πηγή">
+        <select
+          className="select"
+          name="sourceId"
+          value={sourceId}
+          onChange={(event) => setSourceId(event.target.value)}
+        >
+          <option value="" disabled>
+            Διάλεξε Πηγή
           </option>
-        ))}
-      </select>
-    </Field>
+          {sources.map((source) => (
+            <option key={source.id} value={source.id}>
+              {source.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      {needsDetail ? (
+        <Field label={SOURCE_DETAIL_LABEL}>
+          <input
+            className="input"
+            name="referredBy"
+            required
+            autoComplete="off"
+          />
+        </Field>
+      ) : (
+        <input type="hidden" name="referredBy" value="" />
+      )}
+    </>
   );
 }
 
@@ -89,8 +114,11 @@ function OpportunityFields({ sources }: { sources?: readonly ListItem[] }) {
       <Field label="Τι ζητάει">
         <textarea className="input" name="title" rows={2} />
       </Field>
-      {sources && <SourceField sources={sources} />}
-      <input type="hidden" name="referredBy" value="" />
+      {sources ? (
+        <SourceField sources={sources} />
+      ) : (
+        <input type="hidden" name="referredBy" value="" />
+      )}
       <Field label="Επόμενο βήμα">
         <input className="input" name="nextStep" autoComplete="off" />
       </Field>
@@ -154,11 +182,7 @@ function NewClientForm({ sources }: { sources: readonly ListItem[] }) {
   );
 }
 
-function ExistingClientForm({
-  clients,
-}: {
-  clients: readonly PickerClient[];
-}) {
+function ExistingClientForm({ clients }: { clients: readonly PickerClient[] }) {
   const [choice, setChoice] = useState("");
   const client = clients.find((candidate) => candidate.id === choice);
   return (

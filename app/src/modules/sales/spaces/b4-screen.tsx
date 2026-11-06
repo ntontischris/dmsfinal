@@ -141,7 +141,7 @@ function Facts({
       <dt>Πηγή</dt>
       <dd>
         {labelOf(lists.sources, opportunity.sourceId)}
-        {opportunity.referredBy && ` (σύσταση από ${opportunity.referredBy})`}
+        {opportunity.referredBy && ` — ${opportunity.referredBy}`}
       </dd>
       <dt>Επόμενο βήμα</dt>
       <dd>

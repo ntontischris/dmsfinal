@@ -18,6 +18,7 @@ const listRowsSchema = z.array(
     sort: z.number(),
     is_system: z.boolean(),
     retired_at: z.string().nullable(),
+    needs_detail: z.boolean().optional(),
   }),
 );
 
@@ -29,14 +30,21 @@ const parseList = (data: unknown): ListItem[] =>
     sort: row.sort,
     isSystem: row.is_system,
     isRetired: row.retired_at !== null,
+    ...(row.needs_detail === undefined
+      ? {}
+      : { needsDetail: row.needs_detail }),
   }));
 
 type Supabase = NonNullable<Awaited<ReturnType<typeof createSupabase>>>;
 
+// Μόνο οι Πηγές έχουν «Θέλει περιγραφή».
+const columnsOf = (table: string): string =>
+  table === "sales_sources" ? `${LIST_COLUMNS}, needs_detail` : LIST_COLUMNS;
+
 const readList = (supabase: Supabase, table: string) =>
   read(
     `list.${table}`,
-    supabase.from(table).select(LIST_COLUMNS).order("sort").order("id"),
+    supabase.from(table).select(columnsOf(table)).order("sort").order("id"),
     parseList,
   );
 

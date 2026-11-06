@@ -33,6 +33,11 @@ export const moveListItemSchema = z.object({
 });
 // Απόσυρση, επανενεργοποίηση και διαγραφή δείχνουν μια τιμή και τίποτα άλλο.
 export const listItemRefSchema = z.object({ list: listNameSchema, id: itemId });
+// «Θέλει περιγραφή» υπάρχει μόνο στις Πηγές.
+export const sourceNeedsDetailSchema = z.object({
+  id: itemId,
+  needsDetail: z.enum(["0", "1"], "Άγνωστη τιμή."),
+});
 export const retireStageSchema = z.object({
   stageId: z.uuid("Το Στάδιο δεν βρέθηκε."),
   moveToId: z.union([z.literal(""), z.uuid("Διάλεξε Στάδιο για τη μεταφορά.")]),
