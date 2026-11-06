@@ -243,9 +243,11 @@ const filtersRow = (page: Page) =>
   page.getByRole("group", { name: "Φίλτρα", exact: true });
 
 async function openCard(page: Page, label: string) {
-  const card = filtersRow(page).locator("details").filter({
-    has: page.locator("summary", { hasText: label }),
-  });
+  const card = filtersRow(page)
+    .locator("details")
+    .filter({
+      has: page.locator("summary", { hasText: label }),
+    });
   await expect(async () => {
     if ((await card.getAttribute("open")) === null)
       await card.locator("summary").click();
@@ -289,13 +291,14 @@ test("03 · φίλτρα: κάθε Κατάσταση στη λίστα Πελα
     .click();
   await expect(page).not.toHaveURL(/status=/);
   await expect(row).toBeVisible();
+  // Ο νέος Πελάτης δεν έχει Συμφωνία: φαίνεται στο «Χωρίς Πακέτο».
   await (
-    await openCard(page, "Μηνιαίο πακέτο")
+    await openCard(page, "Πακέτο")
   )
-    .getByRole("link", { name: /^Μόνο με μηνιαίο πακέτο/ })
+    .getByRole("link", { name: /^Χωρίς Πακέτο/ })
     .click();
-  await expect(page).toHaveURL(/monthly=1/);
-  await expect(row).toHaveCount(0);
+  await expect(page).toHaveURL(/package=-/);
+  await expect(row).toBeVisible();
 
   // «Τι στάλθηκε»: Κατάσταση και Κανάλι, χωρίς «Πελάτης» (είναι ένας).
   await page.goto(`/app/clients/${clientId}?tab=dispatches`);

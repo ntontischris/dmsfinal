@@ -109,7 +109,7 @@ export default async function ClientsPage({
     deleted?: string;
     status?: string;
     noshoot?: string;
-    monthly?: string;
+    package?: string;
   }>;
 }) {
   const viewer = await getViewer();
