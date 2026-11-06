@@ -1,81 +1,17 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 
 import { toAgreementRowView, type AgreementRow } from "@/modules/agreements";
 import { Panel } from "@/spaces/kit/panel";
 import { hrefOf } from "@/spaces/data/screens";
-import { Badge, fmtMoney } from "@/spaces/screens/shared";
+import { Badge } from "@/spaces/screens/shared";
 
 import type { ListItem } from "../types";
 import { ActivityLog, type B2ActivityRow } from "./b2-activity-log";
-import {
-  ATTENTION_LABEL,
-  agreementTone,
-  priceText,
-  type B2Ledger,
-  type B2OpportunityRow,
-  type B2Tab,
-  type SummaryLine,
-} from "./b2-adapter";
+import { agreementTone, priceText, type B2OpportunityRow } from "./b2-adapter";
 import { ClientNewOpportunity } from "./b2-new-opportunity";
 import { ItemRows } from "./lane-rows";
 
 // Οι καρτέλες της Σελίδας Πελάτη (prototype `screens/b2-sections.tsx`) με πραγματικά δεδομένα.
-
-const tabHref = (clientId: string, tab: B2Tab): string =>
-  hrefOf("B2", { id: clientId, tab });
-
-export function DetailsSection({
-  clientId,
-  lines,
-  isPossibleDuplicate,
-  extra,
-}: {
-  clientId: string;
-  lines: readonly SummaryLine[];
-  isPossibleDuplicate: boolean;
-  extra?: ReactNode;
-}) {
-  return (
-    <>
-      <Panel label="Σύνοψη">
-        {isPossibleDuplicate && (
-          <p className="note">
-            Σήμα «Πιθανό διπλό».{" "}
-            <Link href={hrefOf("B6")}>Άνοιγμα στη Συγχώνευση</Link>
-          </p>
-        )}
-        {lines.length === 0 ? (
-          <p className="muted">
-            Τίποτα σε εξέλιξη με τον Πελάτη. Τα στοιχεία επικοινωνίας είναι στη
-            στήλη δίπλα.
-          </p>
-        ) : (
-          <ItemRows
-            items={lines.map((line) => {
-              const needsAttention = line.label === ATTENTION_LABEL;
-              return {
-                id: line.label,
-                title: line.label,
-                sub: needsAttention ? undefined : line.text,
-                isHighlighted: needsAttention,
-                aside: (
-                  <>
-                    {needsAttention && (
-                      <Badge tone="attention">{line.text}</Badge>
-                    )}
-                    <Link href={tabHref(clientId, line.tab)}>Λεπτομέρειες</Link>
-                  </>
-                ),
-              };
-            })}
-          />
-        )}
-      </Panel>
-      {extra}
-    </>
-  );
-}
 
 export function AgreementsSection({
   agreements,
@@ -205,9 +141,7 @@ export function ProductionsSection({
         />
       )}
       <p>
-        <Link href={hrefOf("G1")}>
-          Άνοιγμα στη λίστα Παραγωγών
-        </Link>
+        <Link href={hrefOf("G1")}>Άνοιγμα στη λίστα Παραγωγών</Link>
       </p>
     </Panel>
   );
@@ -220,35 +154,6 @@ export function ChatSection({ clientId }: { clientId: string }) {
       <p>
         <Link href={hrefOf("J2", { id: clientId })}>
           Άνοιγμα της Συνομιλίας
-        </Link>
-      </p>
-    </Panel>
-  );
-}
-
-export function LedgerSection({
-  clientId,
-  ledger,
-  hasEntries,
-}: {
-  clientId: string;
-  ledger: B2Ledger;
-  hasEntries: boolean;
-}) {
-  return (
-    <Panel label="Καρτέλα Πελάτη">
-      <p>
-        {hasEntries
-          ? `Υπόλοιπο ${fmtMoney(ledger.balance)}, ληξιπρόθεσμα ${fmtMoney(ledger.overdue)}${
-              ledger.toInvoice === null
-                ? ""
-                : `, προς τιμολόγηση ${fmtMoney(ledger.toInvoice)}`
-            }.`
-          : "Καμία κίνηση ακόμα."}
-      </p>
-      <p>
-        <Link href={hrefOf("I5", { client: clientId })}>
-          Άνοιγμα της Καρτέλας Πελάτη
         </Link>
       </p>
     </Panel>
@@ -271,8 +176,8 @@ export function ActivitiesSection({
   return (
     <Panel label="Δραστηριότητες">
       <p className="muted">
-        Η Δραστηριότητα γράφεται στον Πελάτη ή σε μία από τις ανοιχτές
-        Ευκαιρίες του. Διορθώνεται ή σβήνεται μέσα σε 24 ώρες.
+        Η Δραστηριότητα γράφεται στον Πελάτη ή σε μία από τις ανοιχτές Ευκαιρίες
+        του. Διορθώνεται ή σβήνεται μέσα σε 24 ώρες.
       </p>
       <ActivityLog
         clientId={clientId}

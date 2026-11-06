@@ -1,13 +1,100 @@
-/* Σελίδα Πελάτη: ο inspector είναι πρώτος στο DOM (πάνω σε κινητό), δεξιά σε desktop */
+/* Σελίδα Πελάτη, «Πέντε ενωμένες καρτέλες»: κεφαλίδα-ενημέρωση, κύρια στήλη με καρτέλες, πλαϊνή στήλη «Στοιχεία».
+   Periwinkle παντού, Butter Yellow μόνο για το γύρισμα, REC μόνο ως τελεία. Τα πάνελ: b2-panels.css. */
 [data-look='spaces'] {
-& .b2-split > .kit-inspector { grid-column: 2; grid-row: 1; }
-& .b2-split > .b2-main { grid-column: 1; grid-row: 1; min-width: 0; }
-& .b2-main { display: grid; gap: var(--space-4); align-content: start; }
-& .b2-main > * { min-width: 0; }
-@media (max-width: 60rem) {
-  & .b2-split > .kit-inspector, & .b2-split > .b2-main { grid-column: 1; grid-row: auto; }
+& .b2 { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
+& .b2 > *, & .b2-main > * { min-width: 0; }
+& .b2-head { display: grid; gap: var(--space-2); }
+& .b2-title { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; min-width: 0; }
+& .b2-title h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+& .b2-title-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-left: auto; }
+& .b2-title-actions > .new-lead, & .b2-title-actions > .b2-note-form { flex-basis: 100%; }
+& .b2-stage { display: inline-flex; gap: var(--space-1); align-items: center; position: relative; }
+& .b2-why > summary {
+  list-style: none; cursor: pointer; display: inline-grid; place-items: center; width: 1.3rem; height: 1.3rem;
+  border-radius: 50%; border: 1px solid var(--color-border-strong); font-size: var(--text-xs); color: var(--color-text-muted);
+}
+& .b2-why > summary::-webkit-details-marker { display: none; }
+& .b2-why[open] > p {
+  position: absolute; z-index: 5; top: 1.8rem; left: 0; width: 16rem; margin: 0; padding: var(--space-3);
+  border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-raised);
+  font-size: var(--text-sm);
 }
 & .b2-relationship h2 { margin: 0 0 var(--space-2); font-size: var(--text-sm); font-weight: 500; color: var(--color-text-muted); }
+& .b2-relationship .kit-steps { margin: 0; max-width: 40rem; }
+& .b2-relationship .kit-step[data-state='done']::before {
+  background: color-mix(in oklab, var(--brand-periwinkle) 18%, transparent);
+  border-color: var(--brand-periwinkle); color: var(--brand-periwinkle);
+}
+& .b2-relationship .kit-step[data-state='done']::after { background: var(--brand-periwinkle); }
+& .b2-lead { margin: 0; max-width: 62ch; font-size: 1.1rem; line-height: 1.45; color: var(--color-text); }
+& .b2-lead-sm { font-size: var(--text-base); }
+& .b2-line { margin: 0; font-size: var(--text-sm); overflow-wrap: anywhere; }
+& .b2-big { margin: 0; font-size: 1.05rem; font-weight: 600; }
+& .b2-num { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+& .b2-rec { color: var(--color-text-muted); font-weight: 500; font-size: var(--text-sm); }
+& .b2-rec::before {
+  content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.35rem; border-radius: 50%;
+  background: var(--brand-rec); vertical-align: middle;
+}
+& .b2-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-end; font-size: var(--text-sm); }
+& .b2-foot a:not(.button) {
+  padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong);
+  font-weight: 600; text-decoration: none; color: var(--color-text);
+}
+& .b2-filming { margin: 0; padding-left: var(--space-3); border-left: 3px solid var(--brand-yellow); font-size: var(--text-sm); }
+
+/* Διάταξη: κύρια στήλη και πλαϊνή δεξιά σε desktop, από κάτω σε κινητό */
+& .b2-split { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 60rem) {
+  & .b2-split { grid-template-columns: minmax(0, 1fr) 20rem; }
+}
+& .b2-main, & .b2-side { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
+& .b2-side > p { margin: 0; }
+/* Ο inspector δεν κολλά εδώ: από κάτω του ακολουθούν άλλα πάνελ, που αλλιώς περνούν πάνω από τη φόρμα του */
+& .b2-side > .kit-inspector { position: static; }
+& .b2-tabs { margin-bottom: 0; }
+& .b2-facts { display: grid; grid-template-columns: 1fr auto; gap: var(--space-1) var(--space-3); margin: 0; font-size: var(--text-sm); }
+& .b2-facts dd { margin: 0; text-align: right; }
+& .b2-jump { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
+& .b2-jump a {
+  padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong);
+  text-decoration: none; color: var(--color-text); font-size: var(--text-sm); font-weight: 600;
+}
+& .b2-section { display: grid; gap: var(--space-4); scroll-margin-top: 5rem; }
 & .b2-periods { margin-top: var(--space-3); }
 & .b2-periods h3 { margin: 0 0 var(--space-2); font-size: var(--text-base); font-weight: 500; }
+& .b2-note-form {
+  flex-basis: 100%; display: grid; gap: var(--space-2); padding: var(--space-3);
+  border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface);
+}
+
+/* Μενού «⋯»: Μεταβίβαση, Ιστορικό, Διαγραφή */
+& .b2-menu { position: relative; }
+& .b2-menu > summary {
+  list-style: none; cursor: pointer; display: inline-grid; place-items: center; min-width: 2.5rem; min-height: 2.25rem;
+  border-radius: 999px; border: 1px solid var(--color-border-strong); font-weight: 700;
+}
+& .b2-menu > summary::-webkit-details-marker { display: none; }
+& .b2-menu-body {
+  position: absolute; z-index: 20; right: 0; top: calc(100% + 0.4rem); display: grid; gap: var(--space-2);
+  min-width: 15rem; max-width: min(22rem, 90vw); padding: var(--space-3);
+  border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-raised);
+}
+/* Η Διαγραφή: τελευταία, ως απλό κείμενο (όχι κόκκινο κουμπί)· η επιβεβαίωση μένει ίδια */
+& .b2-delete { padding-top: var(--space-2); border-top: 1px solid var(--color-border); }
+& .b2-delete > .button[data-danger] {
+  padding: 0; min-height: 0; border: 0; background: none; color: var(--color-text-muted);
+  font-weight: 500; text-decoration: underline; text-underline-offset: 2px;
+}
+
+/* Κύριο πρόσωπο: email και τηλέφωνο χωρίς αναδίπλωση, «Αλλαγή στοιχείων» ως εικονίδιο μολυβιού */
+& .b2-contact { display: block; min-width: 0; }
+& .b2-contact a {
+  display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
+}
+& .b2-contact:not(:has(form)) .button {
+  --b2-pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3C/svg%3E");
+  padding: 0; min-height: 0; border: 0; font-size: 0; width: 1.25rem; height: 1.25rem; background: var(--color-accent);
+  -webkit-mask: var(--b2-pencil) center / 1rem no-repeat; mask: var(--b2-pencil) center / 1rem no-repeat;
+}
 }
