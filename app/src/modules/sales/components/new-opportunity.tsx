@@ -154,7 +154,10 @@ function CreateForm({ clientId, clientName, sources }: CreateFormProps) {
           ))}
         </Select>
       </Field>
-      <Field label="Ποιος τον σύστησε" hint="Μόνο για Σύσταση">
+      <Field
+        label="Ποια πηγή; (π.χ. ποιος μας σύστησε)"
+        hint="Υποχρεωτικό για Πηγές που θέλουν περιγραφή"
+      >
         <Input name="referredBy" autoComplete="off" />
       </Field>
       <Field label="Επόμενο βήμα">

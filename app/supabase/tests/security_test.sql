@@ -148,7 +148,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c4","role":"authenticated"}', true);
 select set_config('t.o1', public.sales_create_opportunity(
   '00000000-0000-0000-0000-0000000000b1', null, 'Βίντεο εγκαινίων',
-  (select id from public.sales_sources where code = 'referral'), '', 'Να στείλω πρόταση', current_date + 3)::text, true);
+  (select id from public.sales_sources where code = 'referral'), 'Κώστας Δοκιμής', 'Να στείλω πρόταση', current_date + 3)::text, true);
 select set_config('t.q1', public.sales_request_access(
   '00000000-0000-0000-0000-0000000000b3', 'Βίντεο για καμπάνια', 'Τον ξέρω από παλιά.',
   (select id from public.sales_sources where code = 'referral'))::text, true);

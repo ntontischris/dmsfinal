@@ -13,6 +13,7 @@ export interface ListItem {
   sort: number;
   isSystem: boolean;
   isRetired: boolean;
+  needsDetail?: boolean; // μόνο Πηγές: θέλει περιγραφή («Ποια πηγή;») στη Νέα Ευκαιρία
 }
 export interface SalesLists {
   stages: ListItem[];

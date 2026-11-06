@@ -15,6 +15,7 @@ import {
   renameListItem,
   retireListItem,
   retireStage,
+  setSourceNeedsDetail,
 } from "../actions-settings";
 import type { ListItem, ListName, ListUsage } from "../types";
 import { RowForm, useDoneNotes } from "./b5-forms";
@@ -141,6 +142,30 @@ function StageRetire({
   );
 }
 
+// Πηγή που δεν λέει μόνη της από πού ήρθε ο Πελάτης («Άλλο», «Σύσταση»): η Νέα Ευκαιρία ζητά περιγραφή.
+function NeedsDetailToggle({
+  item,
+  onDone,
+}: {
+  item: ListItem;
+  onDone: (text: string) => void;
+}) {
+  const isOn = item.needsDetail === true;
+  return (
+    <RowForm
+      action={setSourceNeedsDetail}
+      submitLabel={isOn ? "Θέλει περιγραφή ✓" : "Θέλει περιγραφή"}
+      ariaLabel={`Θέλει περιγραφή: ${item.label} (${isOn ? "ναι" : "όχι"})`}
+      isPrimary={isOn}
+      className="o2-inline"
+      onDone={onDone}
+    >
+      <input type="hidden" name="id" value={item.id} />
+      <input type="hidden" name="needsDetail" value={isOn ? "0" : "1"} />
+    </RowForm>
+  );
+}
+
 interface RowActionsProps {
   list: ListName;
   item: ListItem;
@@ -249,6 +274,9 @@ function ItemRow({
         <>
           <span className="part-sub">{usesText(status, uses)}</span>
           <Badge tone={O2_STATUS_TONE[status]}>{status}</Badge>
+          {list === "sources" && status !== "Αποσύρθηκε" && (
+            <NeedsDetailToggle item={item} onDone={onDone} />
+          )}
           <button
             type="button"
             className="button"

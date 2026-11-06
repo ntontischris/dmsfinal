@@ -87,7 +87,7 @@ const identityFields = ({
     {
       label: "Πηγή",
       value: `${labelOf(lists.sources, opportunity.sourceId)}${
-        opportunity.referredBy ? ` · σύσταση: ${opportunity.referredBy}` : ""
+        opportunity.referredBy ? ` — ${opportunity.referredBy}` : ""
       }`,
     },
     { label: "Υπεύθυνος", value: opportunity.managerName ?? NO_MANAGER_LABEL },
@@ -125,7 +125,11 @@ function WorkForm({
     (stage) => !stage.isRetired || stage.id === opportunity.stageId,
   );
   return (
-    <ActionForm action={updateOpportunity} onlyWhenChanged submitLabel="Αποθήκευση">
+    <ActionForm
+      action={updateOpportunity}
+      onlyWhenChanged
+      submitLabel="Αποθήκευση"
+    >
       <input type="hidden" name="opportunityId" value={opportunity.id} />
       <Field label="Τίτλος">
         <Input name="title" required defaultValue={opportunity.title} />

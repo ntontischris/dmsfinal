@@ -23,6 +23,7 @@ import {
   renameListItemSchema,
   retireStageSchema,
   routingSchema,
+  sourceNeedsDetailSchema,
 } from "./settings-schemas";
 import type { ListName } from "./types";
 
@@ -165,6 +166,31 @@ export async function reactivateListItem(
       .select("label"),
   );
   return done(result, () => SAVED_NOTICE);
+}
+
+export async function setSourceNeedsDetail(
+  _: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = sourceNeedsDetailSchema.safeParse(
+    pick(form, ["id", "needsDetail"]),
+  );
+  if (!parsed.success) return firstIssue(parsed.error);
+  const needsDetail = parsed.data.needsDetail === "1";
+  const result = await onItem(
+    { list: "sources", id: parsed.data.id },
+    ({ supabase, table, id }) =>
+      supabase
+        .from(table)
+        .update({ needs_detail: needsDetail })
+        .eq("id", id)
+        .select("label"),
+  );
+  return done(result, (label) =>
+    needsDetail
+      ? `Η Πηγή «${label}» θέλει πια περιγραφή στη Νέα Ευκαιρία.`
+      : `Η Πηγή «${label}» δεν θέλει πια περιγραφή.`,
+  );
 }
 
 export async function deleteListItem(

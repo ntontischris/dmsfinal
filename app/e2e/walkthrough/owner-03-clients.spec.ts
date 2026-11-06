@@ -149,6 +149,17 @@ test("03 · νέος Πελάτης με Επωνυμία, Πόλη και ΑΦ�
   await deleteClient(page, clientId, name);
 });
 
+test("03 · Πηγή «Άλλο» ζητά περιγραφή, «Τηλέφωνο» όχι", async ({ page }) => {
+  const form = await openNewForm(page);
+  const detail = field(form, "Ποια πηγή; (π.χ. ποιος μας σύστησε)");
+  await expect(detail).toHaveCount(0);
+  await field(form, "Πηγή").selectOption({ label: "Άλλο" });
+  await expect(detail).toBeVisible();
+  await expect(detail).toHaveAttribute("required", "");
+  await field(form, "Πηγή").selectOption({ label: "Τηλέφωνο" });
+  await expect(detail).toHaveCount(0);
+});
+
 test("03 · νέα Ευκαιρία σε υπάρχοντα Πελάτη δεν ρωτά Πηγή", async ({
   page,
 }) => {

@@ -9,6 +9,7 @@ import {
   renameListItemSchema,
   retireStageSchema,
   routingSchema,
+  sourceNeedsDetailSchema,
 } from "./settings-schemas";
 
 const ID = "6f1c2f1e-3b0a-4d6e-9d52-0a1b2c3d4e5f";
@@ -136,5 +137,26 @@ describe("routingSchema", () => {
       routing: "person",
       assigneeId: ID,
     });
+  });
+});
+
+describe("sourceNeedsDetailSchema", () => {
+  it("δέχεται ναι ή όχι για μια Πηγή", () => {
+    expect(sourceNeedsDetailSchema.parse({ id: ID, needsDetail: "1" })).toEqual(
+      { id: ID, needsDetail: "1" },
+    );
+    expect(
+      sourceNeedsDetailSchema.safeParse({ id: ID, needsDetail: "0" }).success,
+    ).toBe(true);
+  });
+
+  it("απορρίπτει άλλη τιμή ή λάθος id", () => {
+    expect(
+      sourceNeedsDetailSchema.safeParse({ id: ID, needsDetail: "true" })
+        .success,
+    ).toBe(false);
+    expect(
+      sourceNeedsDetailSchema.safeParse({ id: "x", needsDetail: "1" }).success,
+    ).toBe(false);
   });
 });
