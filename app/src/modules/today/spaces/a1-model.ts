@@ -5,6 +5,8 @@
 export type CardKind = "action" | "info" | "status";
 
 export interface CardRow {
+  // Το id της γραμμής στη βάση: με τον κωδικό της κάρτας κάνει το κλειδί του «Αργότερα» (#241 Σ8).
+  id?: string;
   label: string;
   meta?: string;
   href: string;

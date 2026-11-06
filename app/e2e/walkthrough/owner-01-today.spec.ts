@@ -45,12 +45,42 @@ test("01 · η Σήμερα έχει τα Χρήματα (ποσό και ρυθ
   const money = page.locator("[data-part='money']");
   await expect(money.getByRole("heading", { name: "Χρήματα" })).toBeVisible();
   await expect(money.locator(".a1-money-total strong")).toHaveText(/€$/);
-  await expect(money.getByText(/: μπήκαν .+ από .+ που περιμένουμε\.$/)).toBeVisible();
+  // Ο ρυθμός μετρά μόνο τα Τιμολόγια που λήγουν τον μήνα· όταν δεν λήγει κανένα, το λέει (και δεν έχει μετρητή).
+  await expect(
+    money.getByText(/: (μπήκαν .+ από .+ που λήγουν αυτόν τον μήνα|δεν λήγει κανένα Τιμολόγιο αυτόν τον μήνα)\.$/),
+  ).toBeVisible();
   const team = page.locator("[data-part='team']");
   await expect(team.getByRole("heading", { name: "Η ομάδα" })).toBeVisible();
   await expect(team.getByText("Μόνο όπου κόλλησε κάτι")).toBeVisible();
   // Η πρόταση της κορυφής λέει τα ληξιπρόθεσμα σε €, όχι σε πλήθος (πριν από το € μη διαιρούμενο κενό: \s).
   await expect(page.locator(".a1-lead")).toContainText(/Ληξιπρόθεσμα .+\s€ από|Κανένα ληξιπρόθεσμο Τιμολόγιο\./);
+});
+
+// «Αργότερα» (#241 Σ8). Οι αποφάσεις του Ιδιοκτήτη υπάρχουν πάντα: το e2e/seed.mjs αφήνει Ευκαιρίες της φόρμας στην ουρά
+// «Χωρίς υπεύθυνο». Δεν βασιζόμαστε σε ημερομηνίες ή τίτλους: παίρνουμε την πρώτη απόφαση, όποια κι αν είναι. Στο τέλος
+// (και αν κάτι αποτύχει) η Αναίρεση αφήνει τη βάση όπως ήταν, για τα επόμενα τεστ του ίδιου shard.
+test("01 · το «Αργότερα» κρύβει μια απόφαση ως αύριο το πρωί και η Αναίρεση τη φέρνει πίσω", async ({ page }) => {
+  await signIn(page, OWNER);
+  const decisions = page.locator("[data-part='decisions']");
+  const later = decisions.getByRole("button", { name: /^Αργότερα: / });
+  const quiet = decisions.locator(".a1-later-line");
+  await expect(later.first()).toBeVisible();
+  const name = (await later.first().getAttribute("aria-label")) ?? "";
+  const same = decisions.getByRole("button", { name, exact: true });
+  const before = await same.count();
+  try {
+    await later.first().click();
+    await expect(same).toHaveCount(before - 1);
+    await expect(quiet).toHaveText(/^1 για αργότερα · ξαναβγαίνει (αύριο|στις 8) το πρωί · Αναίρεση$/);
+    await quiet.getByRole("button", { name: "Αναίρεση", exact: true }).click();
+    await expect(quiet).toHaveCount(0);
+    await expect(same).toHaveCount(before);
+  } finally {
+    if ((await quiet.count()) > 0) {
+      await quiet.getByRole("button", { name: /^Αναίρεση/ }).click();
+      await expect(quiet).toHaveCount(0);
+    }
+  }
 });
 
 test("01 · η Προσαρμογή έχει βελάκια σε κάθε κάρτα που μετακινείται", async ({ page }) => {

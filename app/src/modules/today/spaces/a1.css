@@ -103,8 +103,8 @@
 }
 /* Η πρώτη απόφαση: λίγο πιο φωτισμένη, το «Άνοιξε» γεμάτο Periwinkle με Midnight Navy κείμενο */
 :root & .a1-brief-panel[data-part='decisions'] .part-row:first-child { background: color-mix(in oklab, var(--brand-periwinkle) 10%, transparent); }
-:root & .a1-brief-panel[data-part='decisions'] .part-row:first-child .button { background: var(--brand-periwinkle); color: var(--brand-midnight); border-color: transparent; }
-:root & .a1-brief-panel[data-part='decisions'] .part-row:first-child .button:hover { filter: brightness(1.1); }
+:root & .a1-brief-panel[data-part='decisions'] .part-row:first-child .button:not([data-ghost='true']) { background: var(--brand-periwinkle); color: var(--brand-midnight); border-color: transparent; }
+:root & .a1-brief-panel[data-part='decisions'] .part-row:first-child .button:not([data-ghost='true']):hover { filter: brightness(1.1); }
 /* «πίσω»: μικρή REC τελεία μπροστά, κείμενο στο κανονικό χρώμα· η «ουρά» ήρεμη, όχι κίτρινη */
 :root & .a1-brief-panel[data-part='team'] .badge:is([data-tone='attention'], [data-tone='waiting']) { border-color: var(--color-border-strong); background: none; color: var(--color-text); }
 :root & .a1-brief-panel[data-part='team'] .badge[data-tone='waiting'] { color: var(--color-text-muted); }
@@ -122,4 +122,15 @@
 :root & .a1-brief-panel[data-part='programme'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7h3l2-3h8l2 3h3v12H3z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E"); }
 :root & .a1-brief-panel[data-part='money'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6.5A7 7 0 1018 17.5'/%3E%3Cpath d='M4 10h10M4 14h10'/%3E%3C/svg%3E"); }
 :root & .a1-brief-panel[data-part='team'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5'/%3E%3Cpath d='M16 4.5a3.5 3.5 0 010 7M18 14.8c1.9.8 3.1 2.6 3.5 5.2'/%3E%3C/svg%3E"); }
+/* Κομμάτι 3 (#241 Σ8): «νέο» (ετικέτα Periwinkle όπως του kit), το σήμα δίπλα στην ημερομηνία, το ήσυχο «Αργότερα»
+   δίπλα στο «Άνοιξε» και η Αναίρεση ως σύνδεσμος μέσα στην ήσυχη γραμμή. */
+& .a1-new { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-accent); white-space: nowrap; }
+& .a1-new-chip { display: inline-block; margin-left: var(--space-2); padding: 0.1rem 0.6rem; border: 1px solid color-mix(in oklab, var(--color-accent) 40%, transparent); border-radius: 999px; background: color-mix(in oklab, var(--color-accent) 10%, transparent); color: var(--color-accent); font-size: 0.75rem; font-weight: 600; vertical-align: middle; white-space: nowrap; }
+& .a1-decision-actions { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .a1-later-form { display: inline-flex; gap: var(--space-2); align-items: center; }
+:root & .button[data-ghost='true'] { border-color: transparent; color: var(--color-text-muted); font-weight: 500; }
+:root & .button[data-ghost='true']:hover { color: var(--color-text); background: color-mix(in oklab, var(--color-text) 8%, transparent); }
+& .a1-later-line { margin-top: var(--space-2); }
+& .a1-link-button { padding: 0; border: 0; background: none; font: inherit; color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+& .a1-link-button:disabled { opacity: 0.6; cursor: default; }
 }

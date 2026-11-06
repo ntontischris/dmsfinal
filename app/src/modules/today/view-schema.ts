@@ -143,6 +143,16 @@ export const todayProgrammeSchema = z.object({
   ),
 });
 
+// «Νέο» και «Αργότερα» (#241 Σ8): public.today_mark_seen (πότε τελείωσε η προηγούμενη επίσκεψη, null την πρώτη φορά)
+// και public.today_snoozed (τα κλειδιά που κρύβονται ακόμα).
+export const seenAtSchema = z.string().nullable();
+export const snoozedSchema = z.array(z.string());
+
+export interface TodayVisit {
+  seenAt: string | null;
+  snoozed: readonly string[];
+}
+
 export type TodayCard = z.infer<typeof todayCardSchema>;
 export type TodayCounts = z.output<typeof todayCountsSchema>;
 export type CardItem = z.output<typeof cardItemSchema>;
@@ -158,6 +168,12 @@ export const parseTodayCounts = (data: unknown): TodayCounts =>
 
 export const parseCardData = (data: unknown): CardData =>
   cardDataSchema.parse(data);
+
+export const parseSeenAt = (data: unknown): string | null =>
+  seenAtSchema.parse(data);
+
+export const parseSnoozed = (data: unknown): readonly string[] =>
+  snoozedSchema.parse(data);
 
 export const parseTodayMoney = (data: unknown): TodayMoney =>
   todayMoneySchema.parse(data);

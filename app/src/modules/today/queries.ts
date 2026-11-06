@@ -1,8 +1,12 @@
+import { cache } from "react";
+
 import { createSupabase } from "@/lib/supabase/server";
 
 import { read, type ReadResult } from "./read";
 import {
   parseCardData,
+  parseSeenAt,
+  parseSnoozed,
   parseTodayCounts,
   parseTodayMoney,
   parseTodayProgramme,
@@ -12,6 +16,7 @@ import {
   type TodayMoney,
   type TodayProgramme,
   type TodayTeam,
+  type TodayVisit,
 } from "./view-schema";
 
 // Ανάγνωση της «Σήμερα». Όλα περνούν από RPC· η βάση αποφασίζει ποιες κάρτες επιτρέπονται.
@@ -60,3 +65,29 @@ export async function getTodayProgramme(
     parseTodayProgramme,
   );
 }
+
+// «Νέο» και «Αργότερα» (#241 Σ8): γράφει την επίσκεψη και διαβάζει τι κρύβεται. Μία φορά ανά αίτημα (cache): η σελίδα
+// δεν πρέπει να «ξαναδεί» τον εαυτό της. Αν κάτι αποτύχει, απλώς κανένα «νέο» και κανένα «Αργότερα»· η Σήμερα δεν σπάει.
+const NO_VISIT: TodayVisit = { seenAt: null, snoozed: [] };
+
+async function readVisit(): Promise<TodayVisit> {
+  const supabase = await createSupabase();
+  if (!supabase) return NO_VISIT;
+  const [seen, snoozed] = await Promise.all([
+    read("markTodaySeen", supabase.rpc("today_mark_seen"), parseSeenAt),
+    read("getTodaySnoozed", supabase.rpc("today_snoozed"), parseSnoozed),
+  ]);
+  return {
+    seenAt: seen.ok ? seen.data : null,
+    snoozed: snoozed.ok ? (snoozed.data ?? []) : [],
+  };
+}
+
+export const getTodayVisit = cache(async (): Promise<TodayVisit> => {
+  try {
+    return await readVisit();
+  } catch (error) {
+    console.error("getTodayVisit:", error);
+    return NO_VISIT;
+  }
+});

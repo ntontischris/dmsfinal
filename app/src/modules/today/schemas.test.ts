@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { moved, toggled } from "./customize-model";
-import { prefsSchema } from "./schemas";
+import { itemKeySchema, itemKeysSchema, prefsSchema } from "./schemas";
 import {
   parseCardData,
+  parseSeenAt,
+  parseSnoozed,
   parseTodayCounts,
   parseTodayMoney,
   parseTodayProgramme,
@@ -131,5 +133,28 @@ describe("customize model", () => {
   it("should toggle a hidden card", () => {
     expect(toggled(["a"], "a")).toEqual([]);
     expect(toggled([], "a")).toEqual(["a"]);
+  });
+});
+
+describe("«Αργότερα» (Σ8)", () => {
+  it("δέχεται μόνο κλειδιά «κάρτα:id»", () => {
+    expect(
+      itemKeySchema.safeParse("filming_approvals:booking:4f1c").success,
+    ).toBe(true);
+    expect(itemKeySchema.safeParse("Κάρτα:1").success).toBe(false);
+    expect(itemKeySchema.safeParse("unassigned:").success).toBe(false);
+    expect(itemKeySchema.safeParse("unassigned:με κενό").success).toBe(false);
+    expect(itemKeysSchema.safeParse([]).success).toBe(false);
+  });
+
+  it("η επίσκεψη και τα κρυμμένα από τη βάση", () => {
+    expect(parseSeenAt(null)).toBeNull();
+    expect(parseSeenAt("2026-11-05T08:00:00+00:00")).toBe(
+      "2026-11-05T08:00:00+00:00",
+    );
+    expect(parseSnoozed(["unassigned:opportunity:1"])).toEqual([
+      "unassigned:opportunity:1",
+    ]);
+    expect(() => parseSnoozed([1])).toThrow();
   });
 });

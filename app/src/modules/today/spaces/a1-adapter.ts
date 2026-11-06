@@ -45,6 +45,7 @@ export const cardDefOf = (card: TodayCard): CardDef => ({
 });
 
 const rowOf = (item: CardItem): CardRow => ({
+  id: item.id,
   label: item.title,
   meta:
     [

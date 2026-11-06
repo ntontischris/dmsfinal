@@ -2,7 +2,7 @@
 -- και το waiting_since / slot_free στις γραμμές απόφασης. Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 -- Σταθερό p_now: 2026-03-10 10:00 UTC (Αθήνα: Τρίτη 10/3, 12:00).
 begin;
-select plan(39);
+select plan(41);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 Παραγωγή · a3 Πωλήσεις · a4 Λογιστής · a5 Παραγωγή · a6 ανενεργός · a7 μόνο Ευκαιρίες «όλα»
@@ -188,15 +188,20 @@ select is(authz.today_money(public.t_uid('a1'), public.t_now()) -> 'debtors',
                        'days', 9, 'link', '/app/finance/ledger?client=00000000-0000-0000-0000-0000000000c1')),
   'Οφειλέτες: ο μεγαλύτερος πρώτος, με τις μέρες του παλαιότερου και την Καρτέλα του');
 select is(authz.today_money(public.t_uid('a1'), public.t_now()) -> 'month',
-  jsonb_build_object('month', 3, 'day', 10, 'days', 31, 'collected_cents', 5000, 'expected_cents', 82400),
-  'Μήνας: μπήκαν 50 € (όχι η διαγραμμένη, όχι του Φεβρουαρίου) από 824 € (50 + 124 + 400 + 250 που λήγουν ως 31/3)');
+  jsonb_build_object('month', 3, 'day', 10, 'days', 31, 'collected_cents', 5000, 'expected_cents', 42400),
+  'Μήνας: από 424 € που λήγουν τον Μάρτιο (124 + 300) μπήκαν 50 € (του Τ-3)· όχι το παλιό ληξιπρόθεσμο του Φεβρουαρίου');
 -- Μαντείο: ίδια πλήθη με την κάρτα και ίδιο σύνολο με τις Εισπράξεις του πίνακα.
 select is((authz.today_money(public.t_uid('a1'), public.t_now()) ->> 'overdue_count')::integer,
   authz.today_count_overdue_invoices(public.t_uid('a1'), null, public.t_now()), 'Ίδιο πλήθος με την κάρτα Ληξιπρόθεσμα');
-select is((authz.today_money(public.t_uid('a1'), public.t_now()) -> 'month' ->> 'collected_cents')::bigint,
-  (select round(sum(r.amount) * 100)::bigint from public.receipts r
-    where r.deleted_at is null and r.received_on between date '2026-03-01' and date '2026-03-10'),
-  'Μπήκαν = οι Εισπράξεις του Μαρτίου ως σήμερα');
+select is((authz.today_money(public.t_uid('a1'), public.t_now()) -> 'month' ->> 'expected_cents')::bigint,
+  (select round(sum(i.total) * 100)::bigint from public.invoices i
+    where i.voided_at is null and i.kind = 'invoice' and i.due_date between date '2026-03-01' and date '2026-03-31'),
+  'Μαντείο: περιμένουμε = το ποσό των μη ακυρωμένων Τιμολογίων που λήγουν τον Μάρτιο');
+select is(authz.today_money(public.t_uid('a1'), timestamptz '2026-04-10 10:00+00') -> 'month',
+  jsonb_build_object('month', 4, 'day', 10, 'days', 30, 'collected_cents', 0, 'expected_cents', 20000),
+  'Απρίλιος: λήγει μόνο το Τ-4 (200 €), απλήρωτο· η Είσπραξη του Μαρτίου πήγε στο παλαιότερο Τ-3');
+select is(authz.today_money(public.t_uid('a1'), timestamptz '2026-05-10 10:00+00') -> 'month' -> 'expected_cents', '0'::jsonb,
+  'Μάιος: δεν λήγει κανένα Τιμολόγιο → περιμένουμε 0');
 select is((authz.today_money(public.t_uid('a1'), public.t_now()) ->> 'overdue_cents')::bigint,
   (select round(sum(s.remaining) * 100)::bigint from authz.invoice_standings(null, date '2026-03-10') s where s.status = 'overdue'),
   'Σύνολο = το υπόλοιπο των ληξιπρόθεσμων');
