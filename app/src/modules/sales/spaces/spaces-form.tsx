@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import type { FormState } from "@/lib/form-state";
 import { useKeptForm } from "@/lib/use-kept-form";
 
+import { ClosedDayChoice } from "./closed-day-choice";
+
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
 interface SpacesActionFormProps {
@@ -36,6 +38,9 @@ export function SpacesActionForm({
         <ul className="note" role="alert">
           <li>{state.error}</li>
         </ul>
+      )}
+      {state.closedDay && (
+        <ClosedDayChoice closedDay={state.closedDay} isPending={isPending} />
       )}
       {state.notice && (
         <p className="note" role="status">

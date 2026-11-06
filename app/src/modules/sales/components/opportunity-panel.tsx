@@ -131,6 +131,11 @@ function WorkForm({
       submitLabel="Αποθήκευση"
     >
       <input type="hidden" name="opportunityId" value={opportunity.id} />
+      <input
+        type="hidden"
+        name="previousDue"
+        value={opportunity.nextStepDue ?? ""}
+      />
       <Field label="Τίτλος">
         <Input name="title" required defaultValue={opportunity.title} />
       </Field>

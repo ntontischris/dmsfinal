@@ -109,6 +109,8 @@ export async function fillNewOpportunity(page: Page, P: string) {
   await field(page, "Τίτλος Ευκαιρίας").fill(`Βίντεο παρουσίασης ${P}`);
   await field(page, "Πηγή").selectOption({ label: "Instagram" });
   await field(page, "Επόμενο βήμα").fill("Πρώτο τηλεφώνημα");
+  // Μέρα που δεν είναι ποτέ κλειστή (Πέμπτη, όχι αργία): καμία προειδοποίηση κλειστής μέρας.
+  await field(page, "Ημερομηνία επόμενου βήματος").fill("2099-01-08");
 }
 
 // Κουμπί με ακριβές όνομα: το `name` του getByRole ταιριάζει αλλιώς σε υπο-κείμενο (π.χ. «Απόσυρση» και «Μεταφορά και απόσυρση»).

@@ -7,6 +7,7 @@ import type { FormState } from "@/lib/form-state";
 
 import {
   callRpc,
+  closedDayWarning,
   finishWith,
   firstIssue,
   pick,
@@ -73,6 +74,8 @@ export async function createOpportunity(
   const isNewClient = input.clientId === "";
   const client = clientFieldsSchema.safeParse(pick(form, CLIENT_KEYS));
   if (isNewClient && !client.success) return firstIssue(client.error);
+  const warning = await closedDayWarning(form, input.nextStepDue);
+  if (warning) return warning;
 
   const outcome = await callRpc("sales_create_opportunity", {
     p_client_id: isNewClient ? null : input.clientId,
@@ -112,6 +115,8 @@ export async function updateOpportunity(
   );
   if (!parsed.success) return firstIssue(parsed.error);
   const input = parsed.data;
+  const warning = await closedDayWarning(form, input.nextStepDue);
+  if (warning) return warning;
   const outcome = await callRpc("sales_update_opportunity", {
     p_opportunity: input.opportunityId,
     p_title: input.title,
@@ -177,6 +182,8 @@ export async function followUpOpportunity(
   );
   if (!parsed.success) return firstIssue(parsed.error);
   const input = parsed.data;
+  const warning = await closedDayWarning(form, input.nextStepDue);
+  if (warning) return warning;
   const outcome = await callRpc("sales_follow_up", {
     p_lost: input.lostId,
     p_title: input.title,

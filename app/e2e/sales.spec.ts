@@ -128,7 +128,7 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
 
   await button(page, "Νέα Ευκαιρία από αυτήν").click();
   await field(page, "Επόμενο βήμα").fill("Νέα επαφή");
-  await field(page, "Ημερομηνία επόμενου βήματος").fill("2099-01-01");
+  await field(page, "Ημερομηνία επόμενου βήματος").fill("2099-01-08");
   await button(page, "Άνοιγμα Ευκαιρίας").click();
 
   await expect(page).not.toHaveURL(lostUrl);

@@ -4,6 +4,8 @@ import type { z } from "zod";
 import type { FormState } from "@/lib/form-state";
 import { createSupabase } from "@/lib/supabase/server";
 
+import { shouldCheckClosedDay, toClosedDay } from "./closed-day";
+
 // Κοινά βοηθητικά των actions-*.ts. Δεν είναι αρχείο "use server": εξάγει και σταθερές.
 
 export const UNCONFIGURED: FormState = {
@@ -72,3 +74,16 @@ export const finishWith = (outcome: RpcOutcome, notice: string): FormState => {
   refreshSales();
   return { notice };
 };
+
+// Επόμενο βήμα σε κλειστή μέρα: γυρίζει την προειδοποίηση αντί να γράψει. Αν ο έλεγχος αποτύχει, η φόρμα συνεχίζει
+// (ήπιο: ποτέ δεν εμποδίζει).
+export async function closedDayWarning(
+  form: FormData,
+  day: string,
+): Promise<FormState | null> {
+  if (!shouldCheckClosedDay(form, day)) return null;
+  const outcome = await callRpc("day_closed_reason", { p_day: day });
+  if (!outcome.ok) return null;
+  const closedDay = toClosedDay(day, outcome.data);
+  return closedDay ? { closedDay } : null;
+}

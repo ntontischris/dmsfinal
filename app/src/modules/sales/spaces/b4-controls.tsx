@@ -91,6 +91,7 @@ export function NextStepEditor({
         <input type="hidden" name="opportunityId" value={opportunityId} />
         <input type="hidden" name="title" value={title} />
         <input type="hidden" name="stageId" value={stageId} />
+        <input type="hidden" name="previousDue" value={nextStepDue ?? ""} />
         <input
           className="input grow"
           name="nextStep"

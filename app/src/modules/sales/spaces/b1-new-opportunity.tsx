@@ -9,6 +9,7 @@ import { requestAccess } from "../actions-clients";
 import { createOpportunity } from "../actions-opportunities";
 import { athensToday, takenMessage } from "../helpers";
 import type { ListItem, PickerClient } from "../types";
+import { ClosedDayChoice } from "./closed-day-choice";
 
 type Mode = "new" | "existing";
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
@@ -46,6 +47,9 @@ function LeadForm({
         <ul className="note" role="alert">
           <li>{state.error}</li>
         </ul>
+      )}
+      {state.closedDay && (
+        <ClosedDayChoice closedDay={state.closedDay} isPending={isPending} />
       )}
       {state.notice && (
         <p className="note" role="status">
