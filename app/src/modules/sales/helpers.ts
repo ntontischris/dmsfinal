@@ -44,6 +44,12 @@ export const athensToday = (now: Date = new Date()): string => {
   return `${p.year}-${p.month}-${p.day}`;
 };
 
+// Η στιγμή σε ώρα Αθήνας, όπως τη θέλει ένα <input type="datetime-local"> («ΕΕΕΕ-ΜΜ-ΗΗTΩΩ:ΛΛ»).
+export const athensLocal = (instant: Date | string = new Date()): string => {
+  const p = athensParts(new Date(instant));
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+};
+
 // Ξεχασμένη = ανοιχτή Ευκαιρία με Επόμενο βήμα που η ημερομηνία του πέρασε (ίδια μέρα δεν μετράει).
 export const isForgotten = (
   opportunity: { outcome: Outcome; nextStepDue: string | null },

@@ -195,6 +195,64 @@ test("03 · Επόμενο βήμα σε αργία: προειδοποίηση 
   await deleteClient(page, await clientIdByName(name), name);
 });
 
+// Ώρα Αθήνας μιας στιγμής: όπως τη γράφει το datetime-local και όπως τη δείχνει η γραμμή.
+const athensClock = (ms: number) => {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Athens",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date(ms))
+      .map((part) => [part.type, part.value]),
+  );
+  return {
+    local: `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`,
+    shown: `${p.day}/${p.month}/${p.year}, ${p.hour}:${p.minute}`,
+  };
+};
+
+test("03 · σημείωση κατευθείαν στον Πελάτη, με παλιότερη ώρα, και διαγραφή της", async ({
+  page,
+}) => {
+  const name = `Κάβα Σημειώσεων ${stamp()}`;
+  const clientId = await createClient(page, {
+    name,
+    email: `walk-${Date.now()}@simeiosi.example.gr`,
+  });
+  await page.goto(`/app/clients/${clientId}?tab=activities`);
+  const form = page.locator("form", {
+    has: page.getByRole("button", { name: "Καταγραφή", exact: true }),
+  });
+  await expect(form).toBeVisible();
+  const text = `Πέρασε από το μαγαζί ${stamp()}`;
+  const when = athensClock(Date.now() - 2 * 86_400_000);
+  await form.getByLabel("Είδος Δραστηριότητας").selectOption({
+    label: "Σημείωση",
+  });
+  await form.getByLabel("Κείμενο Δραστηριότητας").fill(text);
+  await form.getByLabel("Πότε έγινε").fill(when.local);
+  await expect(form.getByLabel("Σε ποια Ευκαιρία γράφεται")).toHaveValue("");
+  await form.getByRole("button", { name: "Καταγραφή", exact: true }).click();
+
+  const row = page.locator("li", { hasText: text });
+  await expect(row).toBeVisible();
+  await expect(row).toContainText(`${when.shown} · Σημείωση`);
+  // Στον Πελάτη, όχι σε Ευκαιρία: η γραμμή δεν γράφει τίτλο Ευκαιρίας.
+  await expect(row).not.toContainText("Βίντεο δοκιμής");
+  await row
+    .getByRole("button", { name: `Διαγραφή: ${text}`, exact: true })
+    .click();
+  await expect(page.getByText("Διαγράφηκε.")).toBeVisible();
+  await expect(page.locator("li", { hasText: text })).toHaveCount(0);
+
+  await deleteClient(page, clientId, name);
+});
+
 test("03 · νέα Ευκαιρία σε υπάρχοντα Πελάτη δεν ρωτά Πηγή", async ({
   page,
 }) => {

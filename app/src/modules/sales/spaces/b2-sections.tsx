@@ -256,11 +256,13 @@ export function LedgerSection({
 }
 
 export function ActivitiesSection({
+  clientId,
   rows,
   canLog,
   kinds,
   openOpportunities,
 }: {
+  clientId: string;
   rows: readonly B2ActivityRow[];
   canLog: boolean;
   kinds: readonly ListItem[];
@@ -269,11 +271,11 @@ export function ActivitiesSection({
   return (
     <Panel label="Δραστηριότητες">
       <p className="muted">
-        {openOpportunities.length > 0
-          ? "Κάθε Δραστηριότητα γράφεται σε μία από τις ανοιχτές Ευκαιρίες του Πελάτη."
-          : "Για να καταγράψεις Δραστηριότητα χρειάζεται ανοιχτή Ευκαιρία."}
+        Η Δραστηριότητα γράφεται στον Πελάτη ή σε μία από τις ανοιχτές
+        Ευκαιρίες του. Διορθώνεται ή σβήνεται μέσα σε 24 ώρες.
       </p>
       <ActivityLog
+        clientId={clientId}
         rows={rows}
         canLog={canLog}
         kinds={kinds}

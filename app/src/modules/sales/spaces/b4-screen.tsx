@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { z } from "zod";
 
-import { getViewer } from "@/modules/access";
+import { getViewer, isOwner } from "@/modules/access";
 import {
   SpacesProposalPanel,
   agreementCaps,
@@ -18,13 +18,7 @@ import {
   fmtDate,
 } from "@/spaces/screens/shared";
 
-import {
-  athensToday,
-  describeActivity,
-  formatDate,
-  isForgotten,
-  salesCaps,
-} from "../helpers";
+import { athensToday, isForgotten, salesCaps } from "../helpers";
 import { NO_MANAGER_LABEL, OUTCOME_LABELS } from "../labels";
 import { getActivityLookups, listSalesLists } from "../queries-lists";
 import {
@@ -39,6 +33,7 @@ import type {
   SalesCaps,
   SalesLists,
 } from "../types";
+import { toActivityRows } from "./activity-rows";
 import { ActivityLog } from "./b2-activity-log";
 import {
   CloseLost,
@@ -100,6 +95,7 @@ interface WorkbenchProps {
   activities: readonly ActivityRow[];
   lookups: ActivityLookups;
   caps: SalesCaps;
+  isOwner: boolean;
   canCreateProposal: boolean;
   proposal: AgreementsRead<ProposalSummary | null>;
 }
@@ -184,6 +180,7 @@ function Workbench({
   activities,
   lookups,
   caps,
+  isOwner: viewerIsOwner,
   canCreateProposal,
   proposal,
 }: WorkbenchProps) {
@@ -194,15 +191,13 @@ function Workbench({
   const lossReason = opportunity.lossReasonId
     ? labelOf(lists.lossReasons, opportunity.lossReasonId)
     : null;
-  const rows = activities.map((activity) => {
-    const described = describeActivity(activity, lookups);
-    return {
-      id: activity.id,
-      when: formatDate(activity.occurredAt),
-      kind: described.kind,
-      text: described.text,
-      by: activity.actorName ?? "Σύστημα",
-    };
+  const rows = toActivityRows(activities, lookups, {
+    who: {
+      userId: caps.userId,
+      isOwner: viewerIsOwner,
+      canManage: caps.canManage,
+    },
+    showOpportunity: false,
   });
   return (
     <Frame>
@@ -342,6 +337,7 @@ export async function SpacesOpportunity({
       activities={activities.data}
       lookups={lookups.data}
       caps={caps}
+      isOwner={isOwner(viewer)}
       canCreateProposal={agreements.canDraft}
       proposal={proposal}
     />

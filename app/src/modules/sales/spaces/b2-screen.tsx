@@ -283,6 +283,11 @@ function TabContent({
       <ActivitiesTab
         clientId={client.id}
         canLog={canEdit}
+        who={{
+          userId: caps.userId,
+          isOwner: isOwner(viewer),
+          canManage: caps.canManage,
+        }}
         kinds={data.lists?.activityKinds ?? []}
         openOpportunities={data.opportunities
           .filter(

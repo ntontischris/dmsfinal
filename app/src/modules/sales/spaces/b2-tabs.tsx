@@ -5,10 +5,10 @@ import {
 } from "@/modules/productions";
 import { ErrorNotice } from "@/spaces/screens/shared";
 
-import { describeActivity, formatDate } from "../helpers";
 import { getActivityLookups } from "../queries-lists";
 import { listClientActivities } from "../queries-clients";
 import type { ListItem } from "../types";
+import { toActivityRows, type ActivityWho } from "./activity-rows";
 import { ActivitiesSection, ProductionsSection } from "./b2-sections";
 
 // Οι καρτέλες της B2 που φορτώνουν δικά τους δεδομένα μόνο όταν ανοίγουν.
@@ -42,11 +42,13 @@ export async function ProductionsTab({ clientId }: { clientId: string }) {
 export async function ActivitiesTab({
   clientId,
   canLog,
+  who,
   kinds,
   openOpportunities,
 }: {
   clientId: string;
   canLog: boolean;
+  who: ActivityWho;
   kinds: readonly ListItem[];
   openOpportunities: readonly { id: string; title: string }[];
 }) {
@@ -56,20 +58,13 @@ export async function ActivitiesTab({
   ]);
   if (!activities.ok || !lookups.ok)
     return <ErrorNotice what="οι Δραστηριότητες" />;
-  const rows = activities.data.map((activity) => {
-    const described = describeActivity(activity, lookups.data);
-    return {
-      id: activity.id,
-      when: formatDate(activity.occurredAt),
-      kind: described.kind,
-      text: activity.opportunityTitle
-        ? `${described.text} (${activity.opportunityTitle})`
-        : described.text,
-      by: activity.actorName ?? "Σύστημα",
-    };
+  const rows = toActivityRows(activities.data, lookups.data, {
+    who,
+    showOpportunity: true,
   });
   return (
     <ActivitiesSection
+      clientId={clientId}
       rows={rows}
       canLog={canLog}
       kinds={kinds}

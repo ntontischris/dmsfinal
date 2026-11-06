@@ -11,7 +11,7 @@ export const OPPORTUNITY_COLUMNS =
   "id, client_id, title, stage_id, source_id, referred_by, manager_id, outcome, loss_reason_id, next_step, next_step_due, follows_opportunity_id, closed_at, created_at, client:clients!opportunities_client_id_fkey(name, manager_id), manager:team_users!opportunities_manager_id_fkey(name)";
 
 export const ACTIVITY_COLUMNS =
-  "id, opportunity_id, occurred_at, kind_id, event, body, previous_id, subject_id, actor:team_users!opportunity_activities_actor_id_fkey(name), opportunity:opportunities!opportunity_activities_opportunity_id_fkey(title)";
+  "id, opportunity_id, occurred_at, created_at, edited_at, actor_id, kind_id, event, body, previous_id, subject_id, actor:team_users!opportunity_activities_actor_id_fkey(name), opportunity:opportunities!opportunity_activities_opportunity_id_fkey(title)";
 
 const OPEN_LIMIT = 500;
 const CLOSED_LIMIT = 30;
@@ -39,8 +39,11 @@ const opportunitySchema = z.object({
 
 const activitySchema = z.object({
   id: z.string(),
-  opportunity_id: z.string(),
+  opportunity_id: z.string().nullable(),
   occurred_at: z.string(),
+  created_at: z.string(),
+  edited_at: z.string().nullable(),
+  actor_id: z.string().nullable(),
   kind_id: z.string().nullable(),
   event: z
     .enum(["created", "stage_changed", "assigned", "lost", "agreement"])
@@ -88,6 +91,9 @@ export const parseActivities = (data: unknown): ActivityRow[] =>
       opportunityId: row.opportunity_id,
       opportunityTitle: row.opportunity?.title ?? null,
       occurredAt: row.occurred_at,
+      createdAt: row.created_at,
+      isEdited: row.edited_at !== null,
+      actorId: row.actor_id,
       actorName: row.actor?.name ?? null,
       kindId: row.kind_id,
       event: row.event,

@@ -74,9 +74,12 @@ export interface Pipeline {
 
 export interface ActivityRow {
   id: string;
-  opportunityId: string;
+  opportunityId: string | null; // null = κατευθείαν στον Πελάτη
   opportunityTitle: string | null;
   occurredAt: string;
+  createdAt: string; // η ώρα καταγραφής (από αυτήν μετράει το 24ωρο της διόρθωσης)
+  isEdited: boolean;
+  actorId: string | null;
   actorName: string | null;
   kindId: string | null;
   event: ActivityEvent | null;
