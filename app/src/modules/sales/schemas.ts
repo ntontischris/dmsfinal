@@ -59,11 +59,36 @@ export const moveStageSchema = z.object({
   stageId: z.uuid("Διάλεξε Στάδιο."),
 });
 
-export const logActivitySchema = z.object({
-  opportunityId: z.uuid(),
+// «Πότε έγινε» από <input type="datetime-local">, σε ώρα Αθήνας· "" = τώρα.
+const LOCAL_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+const occurredAt = z
+  .string()
+  .refine((v) => v === "" || LOCAL_TIME.test(v), "Διάλεξε πότε έγινε.");
+const activityFields = {
   kindId: z.uuid("Διάλεξε είδος Δραστηριότητας."),
   body: text.min(1, "Γράψε τι έγινε."),
+  occurredAt,
+};
+
+// Σε Ευκαιρία (opportunityId) ή κατευθείαν στον Πελάτη (clientId, με opportunityId "").
+export const logActivitySchema = z
+  .object({
+    opportunityId: z.union([z.literal(""), z.uuid()]),
+    clientId: z.union([z.literal(""), z.uuid()]),
+    ...activityFields,
+  })
+  .refine((v) => v.opportunityId !== "" || v.clientId !== "", {
+    message: "Διάλεξε Πελάτη ή Ευκαιρία.",
+    path: ["opportunityId"],
+  });
+
+export const editActivitySchema = z.object({
+  activityId: z.uuid(),
+  ...activityFields,
+  occurredAt: z.string().regex(LOCAL_TIME, "Διάλεξε πότε έγινε."),
 });
+
+export const activityRefSchema = z.object({ activityId: z.uuid() });
 
 export const closeLostSchema = z.object({
   opportunityId: z.uuid(),

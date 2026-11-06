@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import type { FormState } from "@/lib/form-state";
+import { athensToIso } from "@/modules/filming";
 
 import {
   callRpc,
@@ -15,9 +16,11 @@ import {
 } from "./action-support";
 import { takenMessage } from "./helpers";
 import {
+  activityRefSchema,
   clientFieldsSchema,
   closeLostSchema,
   createOpportunitySchema,
+  editActivitySchema,
   followUpSchema,
   logActivitySchema,
   moveStageSchema,
@@ -147,15 +150,55 @@ export async function logActivity(
   form: FormData,
 ): Promise<FormState> {
   const parsed = logActivitySchema.safeParse(
-    pick(form, ["opportunityId", "kindId", "body"]),
+    pick(form, ["opportunityId", "clientId", "kindId", "body", "occurredAt"]),
   );
   if (!parsed.success) return firstIssue(parsed.error);
+  const input = parsed.data;
   const outcome = await callRpc("sales_log_activity", {
-    p_opportunity: parsed.data.opportunityId,
-    p_kind_id: parsed.data.kindId,
-    p_body: parsed.data.body,
+    p_opportunity: input.opportunityId === "" ? null : input.opportunityId,
+    p_kind_id: input.kindId,
+    p_body: input.body,
+    p_client: input.clientId === "" ? null : input.clientId,
+    p_occurred_at:
+      input.occurredAt === "" ? null : localToIso(input.occurredAt),
   });
   return finishWith(outcome, "Καταγράφηκε.");
+}
+
+// «ΕΕΕΕ-ΜΜ-ΗΗTΩΩ:ΛΛ» ώρας Αθήνας → στιγμή.
+const localToIso = (local: string): string => {
+  const [date, time] = local.split("T");
+  return athensToIso(date, time);
+};
+
+export async function editActivity(
+  _: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = editActivitySchema.safeParse(
+    pick(form, ["activityId", "kindId", "body", "occurredAt"]),
+  );
+  if (!parsed.success) return firstIssue(parsed.error);
+  const input = parsed.data;
+  const outcome = await callRpc("sales_edit_activity", {
+    p_id: input.activityId,
+    p_kind_id: input.kindId,
+    p_body: input.body,
+    p_occurred_at: localToIso(input.occurredAt),
+  });
+  return finishWith(outcome, "Διορθώθηκε.");
+}
+
+export async function deleteActivity(
+  _: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = activityRefSchema.safeParse(pick(form, ["activityId"]));
+  if (!parsed.success) return firstIssue(parsed.error);
+  const outcome = await callRpc("sales_delete_activity", {
+    p_id: parsed.data.activityId,
+  });
+  return finishWith(outcome, "Διαγράφηκε.");
 }
 
 export async function closeOpportunityLost(

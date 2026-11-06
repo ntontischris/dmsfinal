@@ -5,6 +5,8 @@ import {
   createOpportunitySchema,
   decideAccessSchema,
   deleteClientSchema,
+  editActivitySchema,
+  logActivitySchema,
   mergeSchema,
   nextStepSchema,
   requestAccessSchema,
@@ -165,5 +167,49 @@ describe("deleteClientSchema", () => {
     expect(
       deleteClientSchema.safeParse({ clientId: "x", confirmName: "Α" }).success,
     ).toBe(false);
+  });
+});
+
+describe("logActivitySchema", () => {
+  const K = "6f1c2f1e-3b0a-4d6e-9d52-0a1b2c3d4e5f";
+  const C = "7f1c2f1e-3b0a-4d6e-9d52-0a1b2c3d4e5f";
+  const base = { kindId: K, body: "Κλήση", occurredAt: "" };
+
+  it("δέχεται Δραστηριότητα κατευθείαν στον Πελάτη, με ώρα", () => {
+    const parsed = logActivitySchema.safeParse({
+      ...base,
+      opportunityId: "",
+      clientId: C,
+      occurredAt: "2026-11-04T10:30",
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it("θέλει Πελάτη ή Ευκαιρία και ώρα σε σωστή μορφή", () => {
+    expect(
+      logActivitySchema.safeParse({ ...base, opportunityId: "", clientId: "" })
+        .success,
+    ).toBe(false);
+    expect(
+      logActivitySchema.safeParse({
+        ...base,
+        opportunityId: "",
+        clientId: C,
+        occurredAt: "4/11/2026",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("η διόρθωση θέλει πάντα ώρα", () => {
+    expect(
+      editActivitySchema.safeParse({ ...base, activityId: C }).success,
+    ).toBe(false);
+    expect(
+      editActivitySchema.safeParse({
+        ...base,
+        activityId: C,
+        occurredAt: "2026-11-04T10:30",
+      }).success,
+    ).toBe(true);
   });
 });
