@@ -182,15 +182,38 @@ export async function createRole(
   redirect(`/app/team/roles/${data.id}`);
 }
 
+const deleteRoleSchema = z.object({
+  id: z.uuid({ error: "Ο Ρόλος δεν βρέθηκε." }),
+  // Κενό = χωρίς μετακίνηση (ο Ρόλος δεν πρέπει να τον έχει κανείς).
+  moveTo: z
+    .string()
+    .transform((value) => value || null)
+    .pipe(z.uuid({ error: "Διάλεξε σε ποιον Ρόλο θα πάνε." }).nullable()),
+});
+
+// Μία κλήση (role_delete): η βάση ελέγχει «μόνο ο Ιδιοκτήτης», τους Ρόλους που δεν σβήνονται και τον προορισμό,
+// μετακινεί όσους τον έχουν και τον σβήνει. Το «τον έχουν ακόμα…» (P0001) λέει ήδη τα πλήθη.
 export async function deleteRole(
   _: FormState,
   form: FormData,
 ): Promise<FormState> {
-  const id = z.uuid().safeParse(form.get("id"));
-  if (!id.success) return { error: "Ο Ρόλος δεν βρέθηκε." };
+  const parsed = deleteRoleSchema.safeParse({
+    id: form.get("id"),
+    moveTo: form.get("moveTo") ?? "",
+  });
+  if (!parsed.success)
+    return { error: parsed.error.issues[0]?.message ?? "Ο Ρόλος δεν βρέθηκε." };
   const supabase = await createSupabase();
   if (!supabase) return UNCONFIGURED;
-  const { error } = await supabase.from("roles").delete().eq("id", id.data);
+  const { error } = await supabase.rpc("role_delete", {
+    p_role_id: parsed.data.id,
+    p_move_to: parsed.data.moveTo,
+  });
+  if (error?.code === "23503")
+    return {
+      error:
+        "Κάποιος πήρε τον Ρόλο μόλις τώρα. Άνοιξε ξανά τη σελίδα και ξαναδοκίμασε.",
+    };
   if (error) return { error: messageOf(error, "Ο Ρόλος δεν διαγράφηκε.") };
   revalidatePath("/app/team", "layout");
   redirect("/app/team/roles");

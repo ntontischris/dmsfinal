@@ -1,17 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { useKeptForm } from "@/lib/use-kept-form";
 import { Panel } from "@/spaces/kit/panel";
 
-import { INITIAL_FORM_STATE, type FormState } from "../schemas";
+import type { FormState } from "../schemas";
 import type { PermissionDef, RoleSummary } from "../queries";
 import { affectedText } from "../role-affected";
 import {
   createRole,
-  deleteRole,
   saveRole,
   setUserRoles,
   type RoleSaveState,
@@ -195,48 +194,6 @@ export function GiveRoleForm({
         {isPending ? "Αποθήκευση…" : "Δώσε τον Ρόλο"}
       </button>
       <Message state={state} />
-    </form>
-  );
-}
-
-// Η επιβεβαίωση της διαγραφής (deleteRole). Η βάση ξαναελέγχει ότι δεν τον έχει κανείς.
-export function DeleteConfirm({
-  role,
-  backHref,
-}: {
-  role: RoleSummary;
-  backHref: string;
-}) {
-  const [state, action, isDeleting] = useActionState(
-    deleteRole,
-    INITIAL_FORM_STATE,
-  );
-  return (
-    <form
-      action={action}
-      className="n4-confirm"
-      role="alertdialog"
-      aria-label="Επιβεβαίωση"
-    >
-      <input type="hidden" name="id" value={role.id} />
-      <p>
-        Να διαγραφεί ο Ρόλος «{role.name}»; Δεν τον έχει κανείς. Η διαγραφή
-        γράφεται στο Ίχνος.
-      </p>
-      <Message state={state} />
-      <div className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-danger="true"
-          disabled={isDeleting}
-        >
-          {isDeleting ? "Διαγραφή…" : "Ναι, διαγραφή"}
-        </button>
-        <Link className="button" href={backHref}>
-          Άκυρο
-        </Link>
-      </div>
     </form>
   );
 }

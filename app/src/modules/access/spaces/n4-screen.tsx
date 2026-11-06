@@ -10,6 +10,7 @@ import { initialsOf } from "@/spaces/shell/avatar";
 import {
   getRole,
   listPermissions,
+  listRoleUsage,
   listRoles,
   listTeamUsers,
   type PermissionDef,
@@ -17,9 +18,13 @@ import {
   type RoleSummary,
   type TeamUserRow,
 } from "../queries";
+import { EMPTY_USAGE, type RoleUsage } from "../role-usage";
 import { can, getViewer, isOwner } from "../viewer";
 import {
-  deleteBlock,
+  deletePlan,
+  KIND_LABEL,
+  moveLabel,
+  moveTargets,
   newRoleHref,
   pickKind,
   pluralUsers,
@@ -28,8 +33,8 @@ import {
   roleHref,
   ROLES_PATH,
 } from "./n4-adapter";
+import { DeleteRoleConfirm } from "./n4-delete-form";
 import {
-  DeleteConfirm,
   GiveRoleForm,
   NewRoleForm,
   RoleEditForm,
@@ -94,9 +99,40 @@ interface RoleListProps {
   roles: readonly RoleSummary[];
   permissions: readonly PermissionDef[];
   users: readonly TeamUserRow[];
+  usage: Readonly<Record<string, RoleUsage>>;
 }
 
-function RoleList({ title, kind, roles, permissions, users }: RoleListProps) {
+// Ρόλος ομάδας: οι ενεργοί Χρήστες του. Ρόλος πελάτη: οι Χρήστες πελάτη του (από τη βάση).
+const holderCount = (
+  role: RoleSummary,
+  users: readonly TeamUserRow[],
+  usage: RoleUsage,
+): number =>
+  role.kind === "team" ? activeHolders(role, users) : usage.clientUsers;
+
+// «Διαγραφή» στη λίστα μόνο για Ρόλο που δεν τον έχει κανείς· οι άλλοι διαγράφονται από τη σελίδα τους.
+function QuickDelete({ role, usage }: { role: RoleSummary; usage: RoleUsage }) {
+  if (deletePlan(role, usage).kind !== "free") return null;
+  return (
+    <Link
+      className="button"
+      data-danger="true"
+      href={`${roleHref(role.id)}?confirm=delete`}
+      aria-label={`Διαγραφή του Ρόλου «${role.name}»`}
+    >
+      Διαγραφή
+    </Link>
+  );
+}
+
+function RoleList({
+  title,
+  kind,
+  roles,
+  permissions,
+  users,
+  usage,
+}: RoleListProps) {
   return (
     <Panel
       label={title}
@@ -121,12 +157,16 @@ function RoleList({ title, kind, roles, permissions, users }: RoleListProps) {
               sub={`${def.description}${def.kind === "team" ? ` · ${roleReachText(def, permissions)}` : ""}`}
               aside={
                 <>
-                  {def.kind === "team" && (
-                    <span className="part-sub">
-                      {pluralUsers(activeHolders(def, users))}
-                    </span>
-                  )}
+                  <span className="part-sub">
+                    {pluralUsers(
+                      holderCount(def, users, usage[def.id] ?? EMPTY_USAGE),
+                    )}
+                  </span>
                   <RoleBadges role={def} />
+                  <QuickDelete
+                    role={def}
+                    usage={usage[def.id] ?? EMPTY_USAGE}
+                  />
                 </>
               }
             />
@@ -161,12 +201,13 @@ function OwnerOnlySection() {
 
 export async function SpacesRoles() {
   if (!isOwner(await getViewer())) return <Denied />;
-  const [roles, permissions, users] = await Promise.all([
+  const [roles, permissions, users, usage] = await Promise.all([
     listRoles(),
     listPermissions(),
     listTeamUsers(),
+    listRoleUsage(),
   ]);
-  if (!roles.ok || !permissions.ok || !users.ok)
+  if (!roles.ok || !permissions.ok || !users.ok || !usage.ok)
     return (
       <div data-spaces>
         <ErrorNotice what="τους Ρόλους" />
@@ -190,6 +231,7 @@ export async function SpacesRoles() {
         roles={pick("team")}
         permissions={permissions.data}
         users={users.data}
+        usage={usage.data}
       />
       <RoleList
         title="Ρόλοι πελάτη"
@@ -197,6 +239,7 @@ export async function SpacesRoles() {
         roles={pick("client")}
         permissions={permissions.data}
         users={users.data}
+        usage={usage.data}
       />
       <OwnerOnlySection />
       <p className="note">
@@ -245,38 +288,73 @@ function HoldersSection({
   );
 }
 
+interface DeleteSectionProps {
+  role: RoleSummary;
+  roles: readonly RoleSummary[];
+  usage: RoleUsage;
+  isConfirming: boolean;
+}
+
+function DeleteIntro({ move, href }: { move: string | null; href: string }) {
+  return (
+    <>
+      <p className="muted">
+        {move ?? "Δεν τον έχει κανείς, οπότε διαγράφεται."}
+      </p>
+      <Link className="button" data-danger="true" href={href}>
+        Διαγραφή Ρόλου
+      </Link>
+    </>
+  );
+}
+
+// Πάντα υπάρχει δρόμος: ελεύθερος Ρόλος διαγράφεται, Ρόλος που τον έχουν διαγράφεται με μετακίνηση.
+// Όχι ο Ιδιοκτήτης και όχι ο «Πλήρης» (μία γραμμή με τον λόγο).
 function DeleteSection({
   role,
-  holderCount,
+  roles,
+  usage,
   isConfirming,
-}: {
-  role: RoleSummary;
-  holderCount: number;
-  isConfirming: boolean;
-}) {
-  const block = deleteBlock(role, holderCount);
+}: DeleteSectionProps) {
+  const plan = deletePlan(role, usage);
+  if (plan.kind === "blocked")
+    return (
+      <Panel label="Διαγραφή Ρόλου">
+        <p className="muted">{plan.reason}</p>
+      </Panel>
+    );
+  const targets = moveTargets(role, roles);
+  const kindLabel = KIND_LABEL[role.kind];
+  const move =
+    plan.kind === "move"
+      ? { label: moveLabel(plan), usage: plan.usage, targets }
+      : null;
+  if (move && targets.length === 0)
+    return (
+      <Panel label="Διαγραφή Ρόλου">
+        <p className="muted">
+          Τον έχουν {move.usage}, και δεν υπάρχει άλλος Ρόλος {kindLabel} για να
+          πάνε. Φτιάξε πρώτα έναν.
+        </p>
+      </Panel>
+    );
   return (
     <Panel label="Διαγραφή Ρόλου">
-      {block ? (
-        <>
-          <p className="muted">{block}</p>
-          <button type="button" className="button" data-danger="true" disabled>
-            Διαγραφή Ρόλου
-          </button>
-        </>
-      ) : isConfirming ? (
-        <DeleteConfirm role={role} backHref={roleHref(role.id)} />
+      {isConfirming ? (
+        <DeleteRoleConfirm
+          role={role}
+          backHref={roleHref(role.id)}
+          move={move}
+        />
       ) : (
-        <>
-          <p className="muted">Δεν τον έχει κανείς, οπότε διαγράφεται.</p>
-          <Link
-            className="button"
-            data-danger="true"
-            href={`${roleHref(role.id)}?confirm=delete`}
-          >
-            Διαγραφή Ρόλου
-          </Link>
-        </>
+        <DeleteIntro
+          href={`${roleHref(role.id)}?confirm=delete`}
+          move={
+            move
+              ? `Τον έχουν ${move.usage}. Με τη διαγραφή πάνε σε άλλον Ρόλο ${kindLabel} που διαλέγεις.`
+              : null
+          }
+        />
       )}
     </Panel>
   );
@@ -302,12 +380,14 @@ export async function SpacesRole({
   confirm: string | undefined;
 }) {
   if (!isOwner(await getViewer())) return <Denied />;
-  const [role, permissions, users] = await Promise.all([
+  const [role, permissions, users, roles, usage] = await Promise.all([
     getRole(roleId),
     listPermissions(),
     listTeamUsers(),
+    listRoles(),
+    listRoleUsage(),
   ]);
-  if (!role.ok || !permissions.ok || !users.ok)
+  if (!role.ok || !permissions.ok || !users.ok || !roles.ok || !usage.ok)
     return (
       <div data-spaces>
         <ErrorNotice what="ο Ρόλος" />
@@ -336,7 +416,8 @@ export async function SpacesRole({
       )}
       <DeleteSection
         role={current}
-        holderCount={current.holders.length}
+        roles={roles.data}
+        usage={usage.data[current.id] ?? EMPTY_USAGE}
         isConfirming={confirm === "delete"}
       />
     </div>

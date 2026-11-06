@@ -7,6 +7,7 @@ import {
   type DeactivationPreview,
 } from "./deactivation";
 import { isScope, type Grants } from "./permissions";
+import { roleUsageMapSchema, type RoleUsage } from "./role-usage";
 
 // Ανάγνωση Ρόλων, Δικαιωμάτων και Χρηστών ομάδας. Ό,τι επιστρέφει το φιλτράρει ήδη η βάση (RLS).
 
@@ -150,6 +151,19 @@ export async function getRole(
         .eq("id", id)
         .maybeSingle(),
     (data) => (data ? toRole(roleSchema.parse(data)) : null),
+  );
+}
+
+// Ποιος έχει κάθε Ρόλο (ομάδας και πελάτη, προσκλήσεις, Γνώση), ανά id Ρόλου. Μόνο ο Ιδιοκτήτης.
+export async function listRoleUsage(): Promise<
+  ReadResult<Record<string, RoleUsage>>
+> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "listRoleUsage",
+    async () => await supabase.rpc("role_usage"),
+    (data) => roleUsageMapSchema.parse(data),
   );
 }
 
