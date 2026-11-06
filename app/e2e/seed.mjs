@@ -553,3 +553,15 @@ for (const P of ["desktop", "mobile"]) {
   await insertPlain("production_members", { production_id: productionId, user_id: ids["production@example.com"] });
 }
 console.log("seed: Παραγωγές");
+
+// ───────────── Αλλαγή κωδικού από το Προφίλ: ένας Χρήστης ανά project για το e2e/profile-password.spec.ts ─────────────
+// Δικός του Χρήστης, ώστε η αλλαγή κωδικού να μην αγγίζει την είσοδο κανενός άλλου τεστ.
+const productionRole = roles.find((role) => role.name === "Παραγωγή")?.id;
+for (const P of ["desktop", "mobile"]) {
+  const email = `password.${P}@example.com`;
+  const { data: created, error: userError } = await admin.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
+  if (userError) throw userError;
+  await insertPlain("team_users", { user_id: created.user.id, name: `Κωδικός ${P}`, email });
+  await insertPlain("team_user_roles", { user_id: created.user.id, role_id: productionRole });
+}
+console.log("seed: Αλλαγή κωδικού");

@@ -3,6 +3,7 @@
 import { useKeptForm } from "@/lib/use-kept-form";
 
 import { requestPasswordReset, setPassword } from "../actions";
+import type { PasswordContext } from "../password-change";
 import { MIN_PASSWORD } from "../schemas";
 import { FormMsg } from "./r-msg";
 
@@ -32,9 +33,41 @@ export function SpacesResetForm() {
   );
 }
 
-// Νέος κωδικός: μετά από πρόσκληση ή επαναφορά.
-export function SpacesSetPasswordForm() {
-  const { state, isPending, onSubmit, formRef } = useKeptForm(setPassword);
+function PasswordField({ label, name, isNew = true }: { label: string; name: string; isNew?: boolean }) {
+  return (
+    <label>
+      <span>{label}</span>
+      <input
+        className="input"
+        type="password"
+        name={name}
+        autoComplete={isNew ? "new-password" : "current-password"}
+        minLength={isNew ? MIN_PASSWORD : undefined}
+        required
+      />
+    </label>
+  );
+}
+
+// Δεν θυμάται τον τωρινό (ή η αλλαγή θέλει πρόσφατη επιβεβαίωση): σύνδεσμος αλλαγής στο δικό του email.
+function SendChangeLink({ email }: { email: string }) {
+  const { state, isPending, onSubmit, formRef } = useKeptForm(requestPasswordReset);
+  return (
+    <form ref={formRef} onSubmit={onSubmit} className="r-form">
+      <p className="r-muted">Δεν θυμάσαι τον τωρινό κωδικό; Σου στέλνουμε σύνδεσμο αλλαγής στο {email}.</p>
+      <input type="hidden" name="email" value={email} />
+      <FormMsg state={state} />
+      <button className="button" type="submit" disabled={isPending}>
+        {isPending ? "Αποστολή…" : "Στείλε μου σύνδεσμο αλλαγής"}
+      </button>
+    </form>
+  );
+}
+
+// Νέος κωδικός: μετά από πρόσκληση ή επαναφορά («link»), ή αλλαγή από το Προφίλ («profile») με τον τωρινό κωδικό.
+export function SpacesSetPasswordForm({ context, email }: { context: PasswordContext; email: string }) {
+  const isProfile = context === "profile";
+  const { state, isPending, onSubmit, formRef } = useKeptForm(setPassword, { resetOnSuccess: isProfile });
   return (
     <>
       <p className="r-muted">
@@ -42,33 +75,15 @@ export function SpacesSetPasswordForm() {
         κανόνας.
       </p>
       <form ref={formRef} onSubmit={onSubmit} className="r-form">
-        <label>
-          <span>Νέος κωδικός</span>
-          <input
-            className="input"
-            type="password"
-            name="password"
-            autoComplete="new-password"
-            minLength={MIN_PASSWORD}
-            required
-          />
-        </label>
-        <label>
-          <span>Ξανά ο κωδικός</span>
-          <input
-            className="input"
-            type="password"
-            name="confirm"
-            autoComplete="new-password"
-            minLength={MIN_PASSWORD}
-            required
-          />
-        </label>
+        {isProfile && <PasswordField label="Τωρινός κωδικός" name="current" isNew={false} />}
+        <PasswordField label="Νέος κωδικός" name="password" />
+        <PasswordField label="Ξανά ο κωδικός" name="confirm" />
         <FormMsg state={state} />
         <button className="site-button" type="submit" disabled={isPending}>
-          {isPending ? "Αποθήκευση…" : "Αποθήκευση και είσοδος"}
+          {isPending ? "Αποθήκευση…" : isProfile ? "Αλλαγή κωδικού" : "Αποθήκευση και είσοδος"}
         </button>
       </form>
+      {isProfile && <SendChangeLink email={email} />}
     </>
   );
 }

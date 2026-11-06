@@ -61,6 +61,7 @@ export { AuthPage } from "./spaces/r-frame";
 export { SpacesLoginForm } from "./spaces/r9-login-form";
 export { SpacesDemoLogins } from "./spaces/r9-demo";
 export { SpacesResetForm, SpacesSetPasswordForm } from "./spaces/r10-forms";
+export { getPasswordContext } from "./password-context";
 export { SpacesDeadLink } from "./spaces/r13-dead-link";
 // N2 Χρήστες πελάτη (μέσα στη B2) και N3 Συνάδελφοι στη νέα εμφάνιση.
 export { SpacesClientUsers } from "./spaces/n2-screen";

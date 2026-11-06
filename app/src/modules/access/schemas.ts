@@ -10,15 +10,20 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Γράψε τον κωδικό σου."),
 });
 
-export const newPasswordSchema = z
-  .object({
-    password: z.string().min(MIN_PASSWORD, `Ο κωδικός θέλει τουλάχιστον ${MIN_PASSWORD} χαρακτήρες.`),
-    confirm: z.string(),
-  })
-  .refine((value) => value.password === value.confirm, {
-    message: "Οι δύο κωδικοί δεν ταιριάζουν.",
-    path: ["confirm"],
-  });
+const newPasswordFields = {
+  password: z.string().min(MIN_PASSWORD, `Ο κωδικός θέλει τουλάχιστον ${MIN_PASSWORD} χαρακτήρες.`),
+  confirm: z.string(),
+};
+const samePair = (value: { password: string; confirm: string }) => value.password === value.confirm;
+const pairMismatch = { message: "Οι δύο κωδικοί δεν ταιριάζουν.", path: ["confirm"] };
+
+// Νέος κωδικός από σύνδεσμο email (πρόσκληση, επαναφορά).
+export const newPasswordSchema = z.object(newPasswordFields).refine(samePair, pairMismatch);
+
+// Αλλαγή από το Προφίλ: ζητά και τον τωρινό κωδικό.
+export const changePasswordSchema = z
+  .object({ ...newPasswordFields, current: z.string().min(1, "Γράψε τον τωρινό σου κωδικό.") })
+  .refine(samePair, pairMismatch);
 
 // Επιστροφή μετά την είσοδο μόνο μέσα στο σύστημα: ποτέ σε εξωτερική διεύθυνση.
 export const safeNext = (next: string | null | undefined): string =>

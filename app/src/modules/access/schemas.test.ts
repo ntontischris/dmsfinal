@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loginSchema, newPasswordSchema, safeNext } from "./schemas";
+import { changePasswordSchema, loginSchema, newPasswordSchema, safeNext } from "./schemas";
 
 describe("safeNext", () => {
   it("κρατά μια διεύθυνση του συστήματος", () => {
@@ -30,5 +30,20 @@ describe("είσοδος", () => {
   it("θέλει έγκυρο email", () => {
     expect(loginSchema.safeParse({ email: "όχι-email", password: "x" }).success).toBe(false);
     expect(loginSchema.safeParse({ email: "maria@example.com", password: "x" }).success).toBe(true);
+  });
+});
+
+describe("αλλαγή κωδικού από το Προφίλ", () => {
+  const pair = { password: "μακρύς-κωδικός", confirm: "μακρύς-κωδικός" };
+
+  it("θέλει τον τωρινό κωδικό", () => {
+    expect(changePasswordSchema.safeParse(pair).success).toBe(false);
+    expect(changePasswordSchema.safeParse({ ...pair, current: "" }).success).toBe(false);
+    expect(changePasswordSchema.safeParse({ ...pair, current: "παλιός" }).success).toBe(true);
+  });
+
+  it("κρατά τους κανόνες του νέου κωδικού", () => {
+    expect(changePasswordSchema.safeParse({ password: "short", confirm: "short", current: "x" }).success).toBe(false);
+    expect(changePasswordSchema.safeParse({ ...pair, confirm: "άλλος-κωδικός!", current: "x" }).success).toBe(false);
   });
 });
