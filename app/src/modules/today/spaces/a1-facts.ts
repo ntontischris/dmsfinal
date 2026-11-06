@@ -57,7 +57,7 @@ const sentenceOf = (text: string): string => {
 
 type FactRow = Pick<
   CardRow,
-  "amountCents" | "at" | "note" | "waitingSince" | "isSlotFree"
+  "id" | "amountCents" | "at" | "note" | "waitingSince" | "isSlotFree" | "suggestion"
 > & { cardId: string };
 
 const leadOf = (row: FactRow): string | null => {
@@ -69,6 +69,19 @@ const leadOf = (row: FactRow): string | null => {
   return row.note ? sentenceOf(row.note) : null;
 };
 
+// Ακύρωση ↔ μετάθεση (Σ9): λέει μόνο ότι η θέση «χωράει», ποτέ ότι ο πελάτης τη θέλει.
+// Στη γραμμή της ακύρωσης η θέση είναι η ώρα της γραμμής· στη γραμμή της μετάθεσης γράφεται η θέση.
+export const suggestionFactOf = (row: FactRow): string | null => {
+  const suggestion = row.suggestion;
+  if (row.cardId !== "filming_approvals" || !suggestion) return null;
+  if (!row.id?.startsWith("reschedule:"))
+    return `Η θέση που αδειάζει χωράει τη μετάθεση του ${suggestion.client}.`;
+  const slot = slotOf(suggestion.startsAt);
+  if (!slot) return null;
+  const freed = suggestion.isFreed ? "άδειασε" : "αδειάζει";
+  return `Θέση που ${freed}: ${slot} Χωράει αυτή τη μετάθεση.`;
+};
+
 export const decisionFactOf = (row: FactRow, today: string): string =>
   [
     leadOf(row),
@@ -76,6 +89,7 @@ export const decisionFactOf = (row: FactRow, today: string): string =>
     row.cardId === "filming_approvals" && row.isSlotFree
       ? "Η ώρα είναι ακόμα ελεύθερη."
       : null,
+    suggestionFactOf(row),
   ]
     .filter(Boolean)
     .join(" ");

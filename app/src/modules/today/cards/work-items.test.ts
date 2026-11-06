@@ -12,6 +12,7 @@ const item = (overrides: Partial<CardItem>): CardItem => ({
   amountCents: null,
   waitingSince: null,
   isSlotFree: null,
+  suggestion: null,
   link: "/app/deliverables/d1",
   ...overrides,
 });

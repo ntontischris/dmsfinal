@@ -88,6 +88,16 @@ function DecisionActions({ row }: { row: RankedDecisions["shown"][number] }) {
   return (
     <span className="a1-decision-actions">
       {itemKey && <LaterButton itemKey={itemKey} label={row.label} />}
+      {row.suggestion && (
+        <Link
+          className="button"
+          data-ghost="true"
+          href={row.suggestion.href}
+          aria-label={`Πρότεινε αυτή την ώρα: ${row.label}`}
+        >
+          Πρότεινε αυτή την ώρα
+        </Link>
+      )}
       <Link
         className="button"
         href={row.href}

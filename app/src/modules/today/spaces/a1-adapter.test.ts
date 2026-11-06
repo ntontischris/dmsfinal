@@ -32,6 +32,7 @@ const itemOf = (overrides: Partial<CardItem> = {}): CardItem => ({
   amountCents: null,
   waitingSince: null,
   isSlotFree: null,
+  suggestion: null,
   link: "/app/pipeline/o-1",
   ...overrides,
 });

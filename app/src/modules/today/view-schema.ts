@@ -45,9 +45,19 @@ export const cardItemSchema = z
     waiting_since: z.string().nullable().optional(),
     // Μόνο κράτηση: η ώρα της χωρά ακόμα (Ωράριο και Χωρητικότητα).
     slot_free: z.boolean().nullable().optional(),
+    // Ακύρωση ↔ μετάθεση (#241 Σ9): η θέση που αδειάζει χωρά ανοιχτό αίτημα μετάθεσης. Μόνο πρόταση.
+    suggest: z
+      .object({
+        client: z.string(),
+        starts_at: z.string(),
+        is_freed: z.boolean(),
+        link: appLink,
+      })
+      .nullable()
+      .optional(),
     link: appLink,
   })
-  .transform(({ amount_cents, subtitle, at, title, waiting_since, slot_free, ...item }) => ({
+  .transform(({ amount_cents, subtitle, at, title, waiting_since, slot_free, suggest, ...item }) => ({
     ...item,
     title: title ?? item.id,
     subtitle: subtitle ?? null,
@@ -55,6 +65,9 @@ export const cardItemSchema = z
     amountCents: amount_cents ?? null,
     waitingSince: waiting_since ?? null,
     isSlotFree: slot_free ?? null,
+    suggestion: suggest
+      ? { client: suggest.client, startsAt: suggest.starts_at, isFreed: suggest.is_freed, href: suggest.link }
+      : null,
   }));
 
 export const cardDataSchema = z.object({

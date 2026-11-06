@@ -19,6 +19,18 @@ export interface CardRow {
   // Από πότε περιμένει η απόφαση, και (μόνο κράτηση) αν η ώρα χωρά ακόμα (#241 Σ7).
   waitingSince?: string;
   isSlotFree?: boolean;
+  // Ακύρωση ↔ μετάθεση (#241 Σ9): η θέση που αδειάζει χωρά ανοιχτό αίτημα μετάθεσης. Μόνο πρόταση, τίποτα αυτόματο.
+  suggestion?: MoveSuggestion;
+}
+
+export interface MoveSuggestion {
+  // Ο Πελάτης της μετάθεσης.
+  client: string;
+  // Η θέση που αδειάζει (ή άδειασε, isFreed).
+  startsAt: string;
+  isFreed: boolean;
+  // Η σελίδα του Γυρίσματος της μετάθεσης.
+  href: string;
 }
 
 export interface CardContent {
