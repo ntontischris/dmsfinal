@@ -84,6 +84,41 @@ describe("view schemas", () => {
     });
     expect(data.items[0]).toMatchObject({ waitingSince: "2026-11-02T10:00:00+00:00", isSlotFree: true });
   });
+
+  it("should read a move suggestion and reject one that links outside the app", () => {
+    const itemWith = (link: string) => ({
+      id: "cancel:k1",
+      title: "Πελάτης: ζητά ακύρωση",
+      urgent: false,
+      link: "/app/filming/queue",
+      suggest: {
+        filming_id: "m1",
+        client: "Ξενοδοχείο Γαλάζιο Ακρογιάλι",
+        starts_at: "2026-11-11T10:00:00+00:00",
+        is_freed: false,
+        link,
+      },
+    });
+    const data = parseCardData({ code: "filming_approvals", count: 1, items: [itemWith("/app/filming/m1")] });
+    expect(data.items[0].suggestion).toEqual({
+      client: "Ξενοδοχείο Γαλάζιο Ακρογιάλι",
+      startsAt: "2026-11-11T10:00:00+00:00",
+      isFreed: false,
+      href: "/app/filming/m1",
+    });
+    expect(() =>
+      parseCardData({ code: "filming_approvals", count: 1, items: [itemWith("https://example.com")] }),
+    ).toThrow();
+  });
+
+  it("should leave the suggestion empty when the row has none", () => {
+    const data = parseCardData({
+      code: "filming_approvals",
+      count: 1,
+      items: [{ id: "booking:f1", urgent: false, link: "/app/filming/queue" }],
+    });
+    expect(data.items[0].suggestion).toBeNull();
+  });
 });
 
 describe("briefing parts (PRD 241)", () => {

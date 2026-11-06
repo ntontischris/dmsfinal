@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { decisionFactOf, daysWord, waitingOf } from "./a1-facts";
+import {
+  decisionFactOf,
+  daysWord,
+  suggestionFactOf,
+  waitingOf,
+} from "./a1-facts";
 
 // Τα ποσά του Intl έχουν μη διαιρούμενο κενό (U+00A0) πριν από το €.
 
@@ -116,5 +121,58 @@ describe("decisionFactOf", () => {
 
   it("χωρίς τίποτα από τη βάση: κενό", () => {
     expect(decisionFactOf({ cardId: "x" }, TODAY)).toBe("");
+  });
+});
+
+describe("suggestionFactOf", () => {
+  const suggestion = {
+    client: "Ξενοδοχείο Γαλάζιο Ακρογιάλι",
+    startsAt: "2026-11-11T10:00:00+00:00",
+    isFreed: false,
+    href: "/app/filming/m1",
+  };
+
+  it("ακύρωση: η θέση που αδειάζει χωράει τη μετάθεση του άλλου Πελάτη", () => {
+    expect(
+      decisionFactOf(
+        {
+          id: "cancel:k1",
+          cardId: "filming_approvals",
+          at: "2026-11-11T10:00:00+00:00",
+          waitingSince: "2026-11-04T10:00:00+00:00",
+          suggestion,
+        },
+        TODAY,
+      ),
+    ).toBe(
+      "Τετάρτη 11/11, 12:00. Περιμένει 1 ημέρα. Η θέση που αδειάζει χωράει τη μετάθεση του Ξενοδοχείο Γαλάζιο Ακρογιάλι.",
+    );
+  });
+
+  it("μετάθεση: γράφει τη θέση, και αν άδειασε ήδη", () => {
+    expect(
+      suggestionFactOf({ id: "reschedule:m1", cardId: "filming_approvals", suggestion }),
+    ).toBe("Θέση που αδειάζει: Τετάρτη 11/11, 12:00. Χωράει αυτή τη μετάθεση.");
+    expect(
+      suggestionFactOf({
+        id: "reschedule:m1",
+        cardId: "filming_approvals",
+        suggestion: { ...suggestion, isFreed: true },
+      }),
+    ).toBe("Θέση που άδειασε: Τετάρτη 11/11, 12:00. Χωράει αυτή τη μετάθεση.");
+  });
+
+  it("ποτέ «ο πελάτης το θέλει»· χωρίς πρόταση ή σε άλλη κάρτα: καμία φράση", () => {
+    const fact = suggestionFactOf({ id: "cancel:k1", cardId: "filming_approvals", suggestion });
+    expect(fact).not.toMatch(/θέλει|ζήτησε/);
+    expect(suggestionFactOf({ id: "cancel:k1", cardId: "filming_approvals" })).toBeNull();
+    expect(suggestionFactOf({ id: "x", cardId: "unassigned", suggestion })).toBeNull();
+    expect(
+      suggestionFactOf({
+        id: "reschedule:m1",
+        cardId: "filming_approvals",
+        suggestion: { ...suggestion, startsAt: "όχι-ημερομηνία" },
+      }),
+    ).toBeNull();
   });
 });
