@@ -1,0 +1,570 @@
+/* PROTOTYPE — throwaway, three variants of the Client page via ?variant=.
+   Ύφος «Σήμερα» (a1.css): ίδια μοτίβα με δικά τους ονόματα, γιατί τα modules δεν μοιράζονται CSS.
+   Periwinkle παντού, Butter Yellow μόνο για το γύρισμα, REC μόνο ως τελεία. */
+[data-look="spaces"] {
+  & .b2p {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+    min-width: 0;
+    padding-bottom: 7rem;
+  }
+  & .b2p > *,
+  & .b2p-main > * {
+    min-width: 0;
+  }
+  & .b2p-head {
+    display: grid;
+    gap: var(--space-2);
+  }
+  & .b2p-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    align-items: center;
+    min-width: 0;
+  }
+  & .b2p-title h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+  & .b2p-title-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+    margin-left: auto;
+  }
+  & .b2p-title-actions > .new-lead,
+  & .b2p-title-actions > .b2p-note-form {
+    flex-basis: 100%;
+  }
+  & .b2p-stage {
+    display: inline-flex;
+    gap: var(--space-1);
+    align-items: center;
+    position: relative;
+  }
+  & .b2p-why > summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-grid;
+    place-items: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-border-strong);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  & .b2p-why > summary::-webkit-details-marker {
+    display: none;
+  }
+  & .b2p-why[open] > p {
+    position: absolute;
+    z-index: 5;
+    top: 1.8rem;
+    left: 0;
+    width: 16rem;
+    margin: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    font-size: var(--text-sm);
+  }
+  & .b2p-lead {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 1.1rem;
+    line-height: 1.45;
+    color: var(--color-text);
+  }
+  & .b2p-lead-sm {
+    font-size: var(--text-base);
+  }
+  & .b2p-line {
+    margin: 0;
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+  }
+  & .b2p-big {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  & .b2p-num {
+    font-family: var(--font-kit-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  & .b2p-rec {
+    color: var(--color-text-muted);
+    font-weight: 500;
+    font-size: var(--text-sm);
+  }
+  & .b2p-rec::before,
+  & .b2p-rec-dot::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 0.35rem;
+    border-radius: 50%;
+    background: var(--brand-rec);
+    vertical-align: middle;
+  }
+  & .b2p-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    justify-content: flex-end;
+    font-size: var(--text-sm);
+  }
+  & .b2p-foot a:not(.button) {
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-strong);
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-text);
+  }
+  & .b2p-steps .kit-steps {
+    margin: 0;
+    max-width: 40rem;
+  }
+  & .b2p-steps .kit-step[data-state="done"]::before {
+    background: color-mix(in oklab, var(--brand-periwinkle) 18%, transparent);
+    border-color: var(--brand-periwinkle);
+    color: var(--brand-periwinkle);
+  }
+  & .b2p-steps .kit-step[data-state="done"]::after {
+    background: var(--brand-periwinkle);
+  }
+  & .b2p-filming {
+    margin: 0;
+    padding-left: var(--space-3);
+    border-left: 3px solid var(--brand-yellow);
+    font-size: var(--text-sm);
+  }
+
+  /* Πάνελ με απόχρωση και εικονίδιο σε κύκλο, όπως .a1-brief-panel */
+  :root & .b2p-panel {
+    --b2p-hue: var(--brand-periwinkle);
+    --b2p-tint: 9%;
+    --b2p-edge: 20%;
+    --b2p-ink: var(--b2p-hue);
+    min-width: 0;
+  }
+  :root[data-theme="light"] & .b2p-panel {
+    --b2p-tint: 14%;
+    --b2p-edge: 32%;
+    --b2p-ink: var(--brand-midnight);
+  }
+  :root & .b2p-panel .kit-panel {
+    margin: 0;
+    border-color: color-mix(
+      in oklab,
+      var(--b2p-hue) var(--b2p-edge),
+      transparent
+    );
+    background:
+      radial-gradient(
+        120% 90% at 0% 0%,
+        color-mix(in oklab, var(--b2p-hue) var(--b2p-tint), transparent),
+        transparent 70%
+      ),
+      var(--color-surface);
+  }
+  :root & .b2p-panel .kit-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  :root & .b2p-panel .kit-panel-head {
+    background: color-mix(
+      in oklab,
+      var(--b2p-hue) 12%,
+      var(--color-surface-raised)
+    );
+    border-bottom-color: color-mix(in oklab, var(--b2p-hue) 24%, transparent);
+  }
+  :root & .b2p-panel .kit-panel-head h2 {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 1.75rem;
+    padding-left: 2.25rem;
+    color: var(--b2p-ink);
+    font-weight: 800;
+  }
+  :root & .b2p-panel .kit-panel-head h2::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: -0.875rem;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--b2p-hue) 22%, transparent);
+  }
+  :root & .b2p-panel .kit-panel-head h2::after {
+    content: "";
+    position: absolute;
+    left: 0.375rem;
+    top: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.5rem;
+    background: var(--b2p-ink);
+    -webkit-mask: var(--b2p-icon) center / contain no-repeat;
+    mask: var(--b2p-icon) center / contain no-repeat;
+  }
+  :root & .b2p-panel .kit-panel-head a {
+    text-decoration: none;
+    color: var(--color-accent);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  :root & .b2p-panel[data-part="attention"] .kit-panel-head h2::before {
+    background: color-mix(in oklab, var(--brand-rec) 22%, transparent);
+  }
+  :root & .b2p-panel[data-part="attention"] .kit-panel-head h2::after {
+    -webkit-mask: none;
+    mask: none;
+    width: 7px;
+    height: 7px;
+    left: 0.6rem;
+    margin-top: -3.5px;
+    border-radius: 50%;
+    background: var(--brand-rec);
+  }
+  :root & .b2p-panel {
+    --b2p-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8 12.5l2.7 2.7L16 9.5'/%3E%3C/svg%3E");
+  }
+  :root & .b2p-panel[data-part="money"] {
+    --b2p-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6.5A7 7 0 1018 17.5'/%3E%3Cpath d='M4 10h10M4 14h10'/%3E%3C/svg%3E");
+  }
+  :root & .b2p-panel:is([data-part="contact"], [data-part="facts"]) {
+    --b2p-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5'/%3E%3Cpath d='M16 4.5a3.5 3.5 0 010 7M18 14.8c1.9.8 3.1 2.6 3.5 5.2'/%3E%3C/svg%3E");
+  }
+  :root & .b2p-panel:is([data-part="log"], [data-part="now"]) {
+    --b2p-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E");
+  }
+
+  /* Διατάξεις */
+  & .b2p-split {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+  @media (min-width: 60rem) {
+    & .b2p-split {
+      grid-template-columns: minmax(0, 1fr) 20rem;
+    }
+    & .b2p-split[data-side="start"] {
+      grid-template-columns: 20rem minmax(0, 1fr);
+    }
+  }
+  & .b2p-main {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+    min-width: 0;
+  }
+  & .b2p-side {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+    min-width: 0;
+  }
+  & .b2p-side > p {
+    margin: 0;
+  }
+  & .b2p-pair {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+  & .b2p-pair:empty {
+    display: none;
+  }
+  @media (min-width: 60rem) {
+    & .b2p-pair:has(> :nth-child(2)) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  & .b2p-tabs {
+    margin-bottom: 0;
+  }
+  & .b2p-tabs[data-scroll="true"] {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  & .b2p-facts {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-1) var(--space-3);
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+  & .b2p-facts dd {
+    margin: 0;
+    text-align: right;
+  }
+  & .b2p-jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  & .b2p-jump a {
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-strong);
+    text-decoration: none;
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  & .b2p-section {
+    display: grid;
+    gap: var(--space-4);
+    scroll-margin-top: 5rem;
+  }
+  & .b2p-now {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--space-2) var(--space-3);
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+  & .b2p-now dt {
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+  & .b2p-now dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  & .b2p-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  & .b2p-call {
+    display: grid;
+    gap: var(--space-2);
+  }
+  & .b2p-call .button {
+    justify-content: center;
+    font-size: var(--text-base);
+    min-height: 2.75rem;
+  }
+  & .b2p-note-form {
+    flex-basis: 100%;
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  /* Κύριο πρόσωπο: χωρίς αναδίπλωση (Α), σε μία γραμμή (Γ), «Αλλαγή στοιχείων» ως κείμενο ή εικονίδιο */
+  & .b2p-contact {
+    display: block;
+    min-width: 0;
+  }
+  & .b2p-contact a {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+  & .b2p-contact > .button,
+  & .b2p-contact form + * {
+    margin-top: 0;
+  }
+  & .b2p-contact:not(:has(form)) .button {
+    padding: 0;
+    min-height: 0;
+    border: 0;
+    background: none;
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  & .b2p-contact[data-style="icon"]:not(:has(form)) .button {
+    font-size: 0;
+    text-decoration: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: var(--color-accent);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3C/svg%3E")
+      center / 1rem no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3C/svg%3E")
+      center / 1rem no-repeat;
+  }
+  & .b2p-contact[data-style="row"]:not(:has(form)) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    align-items: baseline;
+  }
+  & .b2p-contact[data-style="row"]:not(:has(form)) br {
+    display: none;
+  }
+
+  /* Μενού «⋯» και «Περισσότερα ▾» */
+  & .b2p-menu {
+    position: relative;
+  }
+  & .b2p-menu > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  & .b2p-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+  & .b2p-menu:not(.b2p-more-tabs) > summary {
+    display: inline-grid;
+    place-items: center;
+    min-width: 2.5rem;
+    min-height: 2.25rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-strong);
+    font-weight: 700;
+  }
+  & .b2p-menu-body {
+    position: absolute;
+    z-index: 20;
+    right: 0;
+    top: calc(100% + 0.4rem);
+    display: grid;
+    gap: var(--space-2);
+    min-width: 15rem;
+    max-width: min(22rem, 90vw);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+  }
+  & .b2p-more-tabs .b2p-menu-body {
+    left: 0;
+    right: auto;
+  }
+  & .b2p-menu-body > a:not(.button) {
+    text-decoration: none;
+    color: var(--color-text);
+    padding: var(--space-1) 0;
+  }
+  & .b2p-split[data-side="start"] .b2p-side .b2p-menu-body {
+    left: 0;
+    right: auto;
+  }
+  /* Η Διαγραφή: τελευταία, ως απλό κείμενο (όχι κόκκινο κουμπί)· η επιβεβαίωση μένει ίδια */
+  & .b2p-delete {
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
+  }
+  & .b2p-delete > .button[data-danger] {
+    padding: 0;
+    min-height: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Ο διακόπτης: επίτηδες έξω από το σχέδιο */
+  & .b2p-switcher {
+    position: fixed;
+    z-index: 100;
+    left: 50%;
+    bottom: 1rem;
+    transform: translateX(-50%);
+    display: grid;
+    gap: var(--space-2);
+    justify-items: center;
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+  }
+  & .b2p-bar {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    padding: 0.35rem;
+    border-radius: 999px;
+    background: var(--color-text);
+    color: var(--color-bg);
+    box-shadow: 0 10px 30px
+      color-mix(in oklab, var(--brand-midnight) 65%, transparent);
+  }
+  & .b2p-bar button {
+    min-height: 2.25rem;
+    padding: 0 0.9rem;
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--color-bg) 12%, transparent);
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  & .b2p-bar button:hover {
+    background: color-mix(in oklab, var(--color-bg) 24%, transparent);
+  }
+  & .b2p-bar-label {
+    padding: 0 var(--space-2);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  & .b2p-bar .b2p-bar-think {
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  & .b2p-think {
+    width: min(34rem, calc(100vw - 2rem));
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--color-text);
+    color: var(--color-bg);
+    box-shadow: 0 10px 30px
+      color-mix(in oklab, var(--brand-midnight) 65%, transparent);
+    font-size: var(--text-sm);
+  }
+  & .b2p-think h3 {
+    margin: 0 0 var(--space-1);
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  & .b2p-think p {
+    margin: 0 0 var(--space-3);
+    line-height: 1.45;
+  }
+  & .b2p-think ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: var(--space-1);
+  }
+}

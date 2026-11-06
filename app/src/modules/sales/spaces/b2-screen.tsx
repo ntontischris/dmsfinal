@@ -72,6 +72,14 @@ import {
   OpportunitiesSection,
 } from "./b2-sections";
 
+import { B2ProtoView } from "./b2-proto-view";
+import { ProtoSwitcher } from "./b2-proto-switcher";
+import {
+  isProtoEnabled,
+  parseVariant,
+  type ProtoVariant,
+} from "./b2-proto-model";
+
 import "./b2.css";
 
 interface SpacesClientProps {
@@ -79,6 +87,8 @@ interface SpacesClientProps {
   tab: string | undefined;
   // Τα φίλτρα της καρτέλας «Τι στάλθηκε».
   sendsFilter: ClientSendsFilter;
+  // PROTOTYPE: ?variant=a|b|c (αγνοείται στην παραγωγή).
+  variant?: string;
 }
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
@@ -146,7 +156,7 @@ function Merged({ client }: { client: ClientDetail }) {
   );
 }
 
-interface Loaded {
+export interface Loaded {
   opportunities: Opportunity[];
   agreements: AgreementRow[] | null;
   ledger: (B2Ledger & { hasEntries: boolean }) | null;
@@ -214,7 +224,7 @@ const labelsOf = (
 ): Record<string, string> =>
   Object.fromEntries(items.map((item) => [item.id, item.label]));
 
-interface TabInput {
+export interface TabInput {
   tab: B2Tab;
   viewer: Viewer;
   client: ClientDetail;
@@ -227,7 +237,7 @@ interface TabInput {
   sendsFilter: ClientSendsFilter;
 }
 
-function TabContent({
+export function TabContent({
   tab,
   viewer,
   client,
@@ -330,6 +340,7 @@ async function ClientView({
   caps,
   tab,
   sendsFilter,
+  variant,
 }: {
   viewer: Viewer;
   client: ClientDetail;
@@ -337,6 +348,7 @@ async function ClientView({
   caps: SalesCaps;
   tab: string | undefined;
   sendsFilter: ClientSendsFilter;
+  variant: ProtoVariant | null;
 }) {
   const access = clientAccess(caps, client);
   const isGranted = access === "granted";
@@ -350,6 +362,40 @@ async function ClientView({
   const mine = isGranted
     ? data.opportunities.find((o) => o.managerId === caps.userId)
     : undefined;
+  // PROTOTYPE: οι παραλλαγές μόνο στην κανονική όψη (όχι με πρόσβαση μέσω Ευκαιρίας).
+  if (variant !== null && !isGranted)
+    return (
+      <Frame>
+        <B2ProtoView
+          variant={variant}
+          viewer={viewer}
+          client={client}
+          card={card}
+          caps={caps}
+          canEdit={canEdit}
+          isReadOnly={isReadOnly}
+          data={data}
+          allowed={allowed}
+          tab={tab}
+          today={today}
+          renderTab={(item) => (
+            <TabContent
+              tab={item}
+              viewer={viewer}
+              client={client}
+              card={card}
+              caps={caps}
+              canEdit={canEdit}
+              data={data}
+              allowed={allowed}
+              today={today}
+              sendsFilter={sendsFilter}
+            />
+          )}
+        />
+        <ProtoSwitcher current={variant} />
+      </Frame>
+    );
   return (
     <Frame>
       <Strip
@@ -442,6 +488,7 @@ async function ClientView({
           />
         </div>
       </div>
+      {isProtoEnabled() && <ProtoSwitcher current={null} />}
     </Frame>
   );
 }
@@ -452,6 +499,7 @@ export async function SpacesClient({
   clientId,
   tab,
   sendsFilter,
+  variant,
 }: SpacesClientProps) {
   const viewer = await getViewer();
   const caps = salesCaps(viewer);
@@ -498,6 +546,7 @@ export async function SpacesClient({
       caps={caps}
       tab={tab}
       sendsFilter={sendsFilter}
+      variant={isProtoEnabled() ? parseVariant(variant) : null}
     />
   );
 }

@@ -132,7 +132,7 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; state?: string; channel?: string }>;
+  searchParams: Promise<{ tab?: string; state?: string; channel?: string; variant?: string }>;
 }) {
   const viewer = await getViewer();
   // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
@@ -143,6 +143,7 @@ export default async function ClientPage({
         clientId={spacesId}
         tab={typeof query.tab === "string" ? query.tab : undefined}
         sendsFilter={parseClientSendsFilter(query)}
+        variant={typeof query.variant === "string" ? query.variant : undefined}
       />
     );
   }
