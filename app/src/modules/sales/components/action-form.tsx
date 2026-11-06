@@ -9,6 +9,8 @@ import type { FormState } from "@/lib/form-state";
 import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 
+import { ClosedDayChoice } from "../spaces/closed-day-choice";
+
 interface ActionFormProps {
   action: (state: FormState, form: FormData) => Promise<FormState>;
   submitLabel: string;
@@ -48,6 +50,9 @@ export function ActionForm({
     >
       {children}
       <FormMessage state={state} />
+      {state.closedDay && (
+        <ClosedDayChoice closedDay={state.closedDay} isPending={isPending} />
+      )}
       {showSubmit && (
         <div>
           <Button

@@ -34,6 +34,9 @@ const validAfm = (): string => {
   return `${head}${(sum % 11) % 10}`;
 };
 
+// Επόμενο βήμα σε μέρα που δεν είναι ποτέ κλειστή (Πέμπτη, όχι αργία), ώστε να μη βγει η προειδοποίηση κλειστής μέρας.
+const OPEN_DAY = "2099-01-08";
+
 // Τηλέφωνο που δεν έχει κανείς άλλος (μόνο το ζευγάρι του τεστ το μοιράζεται).
 const uniquePhone = (): string => `69${String(Date.now()).slice(-8)}`;
 
@@ -73,6 +76,7 @@ async function createClient(page: Page, client: NewClient): Promise<string> {
   await form.locator('textarea[name="title"]').fill("Βίντεο δοκιμής");
   await field(form, "Πηγή").selectOption({ label: "Τηλέφωνο" });
   await field(form, "Επόμενο βήμα").fill("Κλήση");
+  await form.locator('input[name="nextStepDue"]').fill(OPEN_DAY);
   await form
     .getByRole("button", {
       name: "Δημιουργία Πελάτη και Ευκαιρίας",
@@ -160,6 +164,37 @@ test("03 · Πηγή «Άλλο» ζητά περιγραφή, «Τηλέφων�
   await expect(detail).toHaveCount(0);
 });
 
+// Ο Δεκαπενταύγουστος είναι αργία όποιο κι αν είναι το Ωράριο (καμία εξαίρεση το 2099).
+test("03 · Επόμενο βήμα σε αργία: προειδοποίηση και μετακίνηση στην επόμενη ανοιχτή", async ({
+  page,
+}) => {
+  const name = `Ζαχαροπλαστείο Αργίας ${stamp()}`;
+  const form = await openNewForm(page);
+  await field(form, "Όνομα πελάτη ή επιχείρησης").fill(name);
+  await field(form, "Κύριο πρόσωπο").fill("Σοφία Δοκιμής");
+  await field(form, "Email").fill(`walk-${Date.now()}@argia.example.gr`);
+  await form.locator('textarea[name="title"]').fill("Βίντεο δοκιμής");
+  await field(form, "Πηγή").selectOption({ label: "Τηλέφωνο" });
+  await field(form, "Επόμενο βήμα").fill("Κλήση");
+  await form.locator('input[name="nextStepDue"]').fill("2099-08-15");
+  await form
+    .getByRole("button", {
+      name: "Δημιουργία Πελάτη και Ευκαιρίας",
+      exact: true,
+    })
+    .click();
+  await expect(
+    form.getByText("Η 15/08/2099 είναι αργία: Δεκαπενταύγουστος."),
+  ).toBeVisible();
+  await expect(
+    form.getByRole("button", { name: "Κράτα το όπως είναι", exact: true }),
+  ).toBeVisible();
+  await form.getByRole("button", { name: /^Πήγαινέ το στην / }).click();
+  await expect(page).toHaveURL(/\/app\/pipeline\/[0-9a-f-]+$/);
+  await expect(page.getByText("15/08/2099")).toHaveCount(0);
+  await deleteClient(page, await clientIdByName(name), name);
+});
+
 test("03 · νέα Ευκαιρία σε υπάρχοντα Πελάτη δεν ρωτά Πηγή", async ({
   page,
 }) => {
@@ -180,6 +215,7 @@ test("03 · νέα Ευκαιρία σε υπάρχοντα Πελάτη δεν 
   await expect(field(form, "Πηγή")).toHaveCount(0);
   await form.locator('textarea[name="title"]').fill("Δεύτερο βίντεο");
   await field(form, "Επόμενο βήμα").fill("Κλήση");
+  await form.locator('input[name="nextStepDue"]').fill(OPEN_DAY);
   await form
     .getByRole("button", { name: "Δημιουργία Ευκαιρίας", exact: true })
     .click();
@@ -202,6 +238,7 @@ test("03 · νέα Ευκαιρία σε υπάρχοντα Πελάτη δεν 
     "Τρίτο βίντεο",
   );
   await field(inside, "Επόμενο βήμα * (π.χ. Κλήση για απάντηση)").fill("Κλήση");
+  await inside.locator('input[name="nextStepDue"]').fill(OPEN_DAY);
   await inside
     .getByRole("button", { name: "Άνοιγμα Ευκαιρίας", exact: true })
     .click();
