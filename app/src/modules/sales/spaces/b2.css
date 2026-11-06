@@ -50,6 +50,8 @@
 }
 & .b2-main, & .b2-side { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
 & .b2-side > p { margin: 0; }
+/* Ο inspector δεν κολλά εδώ: από κάτω του ακολουθούν άλλα πάνελ, που αλλιώς περνούν πάνω από τη φόρμα του */
+& .b2-side > .kit-inspector { position: static; }
 & .b2-tabs { margin-bottom: 0; }
 & .b2-facts { display: grid; grid-template-columns: 1fr auto; gap: var(--space-1) var(--space-3); margin: 0; font-size: var(--text-sm); }
 & .b2-facts dd { margin: 0; text-align: right; }
