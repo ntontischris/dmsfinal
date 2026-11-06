@@ -2,34 +2,32 @@
 
 import { useSyncExternalStore } from "react";
 
-import { toggleTheme } from "@/components/shell/theme-toggle";
+import {
+  chooseTheme,
+  readThemePreference,
+  THEME_CHANGE_EVENT,
+} from "@/components/shell/theme-toggle";
+import type { ThemePreference } from "@/components/shell/theme";
 
-type Theme = "dark" | "light";
-
-const THEMES: readonly { id: Theme; label: string }[] = [
+const THEMES: readonly { id: ThemePreference; label: string }[] = [
   { id: "dark", label: "Σκοτεινό" },
   { id: "light", label: "Φωτεινό" },
+  { id: "system", label: "Όπως η συσκευή" },
 ];
 
-const readTheme = (): Theme =>
-  document.documentElement.dataset.theme === "light" ? "light" : "dark";
-
-// Το θέμα ζει στο data-theme του <html>· η σελίδα ξαναζωγραφίζει όταν αλλάξει (και από το μενού προφίλ).
+// Η επιλογή ζει στον browser· η σελίδα ξαναζωγραφίζει όταν αλλάξει (και από το μενού προφίλ).
 const subscribe = (onChange: () => void): (() => void) => {
-  const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["data-theme"],
-  });
-  return () => observer.disconnect();
+  window.addEventListener(THEME_CHANGE_EVENT, onChange);
+  return () => window.removeEventListener(THEME_CHANGE_EVENT, onChange);
 };
 
 // «Θέμα» του A3: ίδια αποθήκευση με τον διακόπτη του μενού προφίλ (στον browser), με την τρέχουσα επιλογή σημειωμένη.
 export function ThemeChoice() {
-  const theme = useSyncExternalStore(subscribe, readTheme, () => "dark");
-  const handleChoose = (next: Theme) => {
-    if (next !== readTheme()) toggleTheme();
-  };
+  const theme = useSyncExternalStore(
+    subscribe,
+    readThemePreference,
+    (): ThemePreference => "dark",
+  );
   return (
     <div className="a3-choice">
       {THEMES.map((item) => (
@@ -38,7 +36,7 @@ export function ThemeChoice() {
           className="button"
           type="button"
           aria-current={item.id === theme}
-          onClick={() => handleChoose(item.id)}
+          onClick={() => chooseTheme(item.id)}
         >
           {item.label}
         </button>

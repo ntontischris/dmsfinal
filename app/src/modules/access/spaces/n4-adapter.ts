@@ -2,6 +2,12 @@
 // (`screens/n4-shared.tsx`, `n4-role-people.tsx`). Καθαρές συναρτήσεις· τους κανόνες τους ξαναελέγχει η βάση.
 
 import type { RoleKind, RoleSummary, TeamUserRow } from "../queries";
+import {
+  usagePeople,
+  usageText,
+  usageTotal,
+  type RoleUsage,
+} from "../role-usage";
 
 export const ROLES_PATH = "/app/team/roles";
 
@@ -66,16 +72,44 @@ export const roleCandidates = (
           roleIds: [...user.roleIds, role.id],
         }));
 
-// Γιατί δεν διαγράφεται· null = διαγράφεται. Ίδιοι κανόνες με τη βάση (και με την παλιά σελίδα).
-export const deleteBlock = (
-  role: RoleSummary,
-  holderCount: number,
-): string | null => {
+// Γιατί δεν διαγράφεται ποτέ· null = διαγράφεται (ίσως με μετακίνηση). Ίδιοι κανόνες με τη βάση (role_delete).
+export const deleteBlock = (role: RoleSummary): string | null => {
   if (role.isOwner)
     return "Ο Ιδιοκτήτης δεν διαγράφεται: υπάρχει πάντα τουλάχιστον ένας.";
   if (role.kind === "client" && role.isBuiltin)
     return "Ο «Πλήρης» δεν διαγράφεται: είναι ο Ρόλος με τον οποίο προσκαλείται αυτόματα ο Υπογράφων της πρώτης υπογεγραμμένης Συμφωνίας. Μπορείς να τον μετονομάσεις.";
-  if (holderCount > 0)
-    return `Τον έχουν ${pluralUsers(holderCount)}: μετακίνησε πρώτα τους ${pluralUsers(holderCount)} σε άλλον Ρόλο.`;
   return null;
 };
+
+export interface MoveTarget {
+  id: string;
+  name: string;
+}
+
+// Πού μπορούν να πάνε όσοι έχουν τον Ρόλο: άλλος Ρόλος ίδιου είδους, όχι ο Ιδιοκτήτης.
+export const moveTargets = (
+  role: RoleSummary,
+  roles: readonly RoleSummary[],
+): readonly MoveTarget[] =>
+  roles
+    .filter((r) => r.kind === role.kind && r.id !== role.id && !r.isOwner)
+    .map((r) => ({ id: r.id, name: r.name }));
+
+export type DeletePlan =
+  | { kind: "blocked"; reason: string }
+  | { kind: "free" }
+  | { kind: "move"; people: number; usage: string };
+
+// Τι δείχνει η «Διαγραφή Ρόλου»: ποτέ (με τον λόγο), αμέσως (δεν τον έχει κανείς), ή μετακίνηση και διαγραφή.
+export const deletePlan = (role: RoleSummary, usage: RoleUsage): DeletePlan => {
+  const reason = deleteBlock(role);
+  if (reason) return { kind: "blocked", reason };
+  if (usageTotal(usage) === 0) return { kind: "free" };
+  return { kind: "move", people: usagePeople(usage), usage: usageText(usage) };
+};
+
+// «Μετακίνησε τους 3 σε…»· χωρίς ανθρώπους (μόνο προσκλήσεις ή Γνώση) λέει τι μετακινείται.
+export const moveLabel = (plan: Extract<DeletePlan, { kind: "move" }>): string =>
+  plan.people > 0
+    ? `Μετακίνησε ${plan.people === 1 ? "τον 1 Χρήστη" : `τους ${plan.people} Χρήστες`} σε…`
+    : "Μετακίνησέ τα σε…";
