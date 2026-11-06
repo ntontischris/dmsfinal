@@ -1,5 +1,6 @@
 "use server";
 
+import { isAuthWeakPasswordError } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 import { createSupabase } from "@/lib/supabase/server";
@@ -7,7 +8,8 @@ import { createSupabase } from "@/lib/supabase/server";
 import { claimOnEntry } from "./claim";
 import { readDemoLogins } from "./demo";
 import { appOrigin as origin } from "@/lib/app-origin";
-import { emailSchema, loginSchema, newPasswordSchema, safeNext, type FormState } from "./schemas";
+import { contextFromAmr, LINK_EXPIRED, passwordChangeError } from "./password-change";
+import { changePasswordSchema, emailSchema, loginSchema, newPasswordSchema, safeNext, type FormState } from "./schemas";
 
 // Οι ενέργειες εισόδου (R9, R10). Κανένα μήνυμα δεν αποκαλύπτει αν υπάρχει λογαριασμός (κεφ. 9).
 
@@ -78,17 +80,29 @@ export async function requestPasswordReset(_: FormState, form: FormData): Promis
   return { notice: LINK_SENT };
 }
 
+// Το πλαίσιο (σύνδεσμος ή Προφίλ) βγαίνει από το επαληθευμένο token, ποτέ από τη φόρμα.
 export async function setPassword(_: FormState, form: FormData): Promise<FormState> {
-  const parsed = newPasswordSchema.safeParse({ password: form.get("password"), confirm: form.get("confirm") });
-  if (!parsed.success) return firstError(parsed.error.issues);
   const supabase = await createSupabase();
   if (!supabase) return UNCONFIGURED;
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  if (!claims?.sub) return { error: LINK_EXPIRED };
+  const context = contextFromAmr(claims.amr);
 
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  const fields = { password: form.get("password"), confirm: form.get("confirm"), current: form.get("current") };
+  const parsed = (context === "profile" ? changePasswordSchema : newPasswordSchema).safeParse(fields);
+  if (!parsed.success) return firstError(parsed.error.issues);
+
+  const { password } = parsed.data;
+  const current = context === "profile" ? String(fields.current) : undefined;
+  const { error } = await supabase.auth.updateUser(current ? { password, current_password: current } : { password });
   if (error) {
-    console.error("updateUser", error.message);
-    return { error: "Ο σύνδεσμος έληξε ή ο κωδικός δεν έγινε δεκτός. Ζήτησε νέο σύνδεσμο." };
+    // Μόνο κωδικός και status του σφάλματος στα logs, ποτέ ο κωδικός.
+    console.error("updateUser", error.status, error.code);
+    const reasons = isAuthWeakPasswordError(error) ? error.reasons : [];
+    return passwordChangeError({ code: error.code, name: error.name, reasons });
   }
+  if (context === "profile") return { notice: "Ο κωδικός άλλαξε." };
   await claimOnEntry(supabase);
   redirect("/app");
 }
