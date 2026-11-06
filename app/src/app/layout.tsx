@@ -8,15 +8,14 @@ import "@fontsource-variable/inter-tight/wght.css";
 import "@fontsource-variable/jetbrains-mono/wght.css";
 import "@fontsource-variable/manrope/wght.css";
 
+import { THEME_SCRIPT } from "@/components/shell/theme";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "DMS", template: "%s · DMS" },
   robots: { index: false, follow: false },
 };
-
-// Διαβάζει το αποθηκευμένο θέμα πριν ζωγραφιστεί η σελίδα, για να μην αναβοσβήνει.
-const THEME_SCRIPT = `try{if(localStorage.getItem('theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

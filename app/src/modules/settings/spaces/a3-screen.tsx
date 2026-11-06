@@ -119,10 +119,11 @@ export async function SpacesProfile() {
     <div data-spaces className="stack">
       <DetailsCard name={part.name} email={viewer.email} />
       <LoginCard />
-      <Panel label="Γλώσσα και θέμα">
+      {/* Η γλώσσα υπάρχει μόνο για Χρήστες πελάτη και αλλάζει μόνο τα email που παίρνουν. */}
+      <Panel label={part.language ? "Γλώσσα email και θέμα" : "Θέμα"}>
         {part.language && (
           <>
-            <h3>Γλώσσα</h3>
+            <h3>Γλώσσα των email</h3>
             <SpacesLanguageChoice current={part.language} />
           </>
         )}
