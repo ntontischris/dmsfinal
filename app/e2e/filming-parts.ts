@@ -164,9 +164,12 @@ export const crewRow = (page: Page, name: string): Locator =>
 
 // Προσθέτει άτομο στο Συνεργείο της E3. Η επιλογή ζει στο React· ό,τι διαλεχτεί πριν ζωντανέψει η σελίδα χάνεται.
 export async function addToCrew(page: Page, name: string): Promise<void> {
+  const crew = page.locator("section", {
+    has: page.getByRole("heading", { name: "Συνεργείο", exact: true }),
+  });
   await expect(async () => {
-    await page.getByLabel("Άτομο", { exact: true }).selectOption({ label: name });
-    await expect(button(page, "Προσθήκη")).toBeEnabled({ timeout: 1_000 });
+    await crew.getByLabel("Άτομο", { exact: true }).selectOption({ label: name });
+    await expect(button(crew, "Προσθήκη")).toBeEnabled({ timeout: 1_000 });
   }).toPass();
-  await button(page, "Προσθήκη").click();
+  await button(crew, "Προσθήκη").click();
 }
