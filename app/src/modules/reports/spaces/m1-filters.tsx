@@ -3,7 +3,7 @@ import { FilterBar, type FilterGroup } from "@/spaces/kit/filter-bar";
 import { reportHref, type PeriodCode, type ReportQuery } from "../url";
 import type { ClientRef, ReportPeriod } from "../view-schema";
 import type { SellerRef } from "../sales-schema";
-import { periodLabelWithDates } from "./m1-adapter";
+import { periodOptionLabel } from "./m1-adapter";
 
 // Τα φίλτρα ζουν στη διεύθυνση: ένας σελιδοδείκτης ξανανοίγει την ίδια Αναφορά με τα ίδια φίλτρα (prototype
 // `screens/m1-filters.tsx`), σε μία σειρά καρτών. Περίοδοι, Πελάτες και Πωλητές έρχονται από τη βάση· ό,τι δεν έδωσε,
@@ -26,7 +26,7 @@ const periodGroupOf = (
 ): FilterGroup => ({
   label: "Περίοδος",
   options: periods.map((p) => ({
-    label: periodLabelWithDates(p),
+    label: periodOptionLabel(p),
     href: reportHref({ ...query, period: p.code }),
     isCurrent: p.code === query.period,
   })),

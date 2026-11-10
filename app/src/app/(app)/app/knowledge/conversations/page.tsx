@@ -1,16 +1,6 @@
-import { lookOf } from "@/components/shell/read-look";
-import { ScreenHeader } from "@/components/shell/screen-header";
-import { Notice } from "@/components/ui/notice";
-import { AccessNotice, getViewer } from "@/modules/access";
 import {
-  CONVERSATIONS_EYEBROW,
-  CONVERSATIONS_LOAD_ERROR,
   CONVERSATIONS_TITLE,
-  ConversationsScreen,
-  LOAD_ERROR_TEXT,
-  NO_CONVERSATIONS_ACCESS_TEXT,
   SpacesConversations,
-  getConversations,
   parseAudienceTab,
   parseDone,
   parsePage,
@@ -26,41 +16,12 @@ interface ConversationsPageProps {
 export default async function ConversationsPage({
   searchParams,
 }: ConversationsPageProps) {
-  const [viewer, params] = await Promise.all([getViewer(), searchParams]);
-  const audience = parseAudienceTab(params.tab);
-  if ((await lookOf(viewer)) === "spaces")
-    return (
-      <SpacesConversations
-        audience={audience}
-        page={parsePage(params.page)}
-        done={parseDone(params.done)}
-      />
-    );
-  const result =
-    viewer.status === "signed-in"
-      ? await getConversations(audience, parsePage(params.page))
-      : null;
+  const params = await searchParams;
   return (
-    <>
-      <ScreenHeader
-        eyebrow={CONVERSATIONS_EYEBROW}
-        title={CONVERSATIONS_TITLE}
-      />
-      {result?.ok === false ? (
-        <Notice kind="error" title={CONVERSATIONS_LOAD_ERROR}>
-          <p className="m-0">{LOAD_ERROR_TEXT}</p>
-        </Notice>
-      ) : result?.data ? (
-        <ConversationsScreen
-          list={result.data}
-          audience={audience}
-          done={parseDone(params.done)}
-        />
-      ) : (
-        <AccessNotice viewer={viewer}>
-          <p className="m-0">{NO_CONVERSATIONS_ACCESS_TEXT}</p>
-        </AccessNotice>
-      )}
-    </>
+    <SpacesConversations
+      audience={parseAudienceTab(params.tab)}
+      page={parsePage(params.page)}
+      done={parseDone(params.done)}
+    />
   );
 }

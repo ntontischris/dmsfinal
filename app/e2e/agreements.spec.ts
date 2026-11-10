@@ -3,13 +3,16 @@ import { expect, test } from "@playwright/test";
 import {
   LINK_URL,
   SIGNATORY,
+  actionsBar,
   addCatalogueLine,
   addFreeLine,
   asVisitor,
   currentStep,
   draftProposal,
+  inSpacesContext,
   openAgreementByTitle,
   openOpportunity,
+  openWith,
   sendAndReadLink,
 } from "./agreements-parts";
 import {
@@ -27,15 +30,8 @@ import {
   signOutsideSystem,
 } from "./agreements-flows-parts";
 import { control, openItem, panel, screenHeader } from "./catalogue-parts";
-import {
-  button,
-  card,
-  inContext,
-  project,
-  shot,
-  signIn,
-  tableRow,
-} from "./sales-parts";
+import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Συμφωνίες και υπογραφή (D1, D2, D4, D5), Ρυθμίσεις › Συμφωνίες (O3) και η πρόταση της B4 από άκρη σε άκρη. Φανταστικά στοιχεία.
 // Τους Πελάτες και τις Ευκαιρίες τους φτιάχνει το e2e/seed.mjs· κάθε Συμφωνία γράφεται από την οθόνη (βοηθητικά: e2e/agreements-parts.ts).
@@ -45,6 +41,11 @@ const NOT_ALLOWED = "Χωρίς δικαίωμα";
 // Τα τεστ γράφουν στην ίδια βάση: μια επανάληψη θα έβρισκε τα δεδομένα της πρώτης προσπάθειας μισοαλλαγμένα
 // και θα έκρυβε το πραγματικό λάθος. Τα τεστ τρέχουν με τη σειρά του αρχείου.
 test.describe.configure({ retries: 0 });
+
+// Όλες οι οθόνες εδώ είναι στη νέα εμφάνιση (Χώροι)· κάθε άλλο context τη βάζει μόνο του (inSpacesContext, asVisitor).
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
 test("η Άννα φτάνει από την Ευκαιρία ως την υπογραφή του πελάτη", async ({
   page,
@@ -59,7 +60,13 @@ test("η Άννα φτάνει από την Ευκαιρία ως την υπο
 
   const lines = panel(page, "Γραμμές");
   await expect(lines).toContainText(/1\.300,00\s€/);
-  await expect(lines).toContainText("2 Γυρίσματα, 8 reels");
+  // Οι Παροχές της γραμμής (2 Γυρίσματα, 8 reels): σε όποιον γράφει την πρόταση είναι πεδία ανά είδος.
+  await expect(
+    lines.getByLabel("Ποσότητα Γυρίσματα", { exact: true }),
+  ).toHaveValue("2");
+  await expect(lines.getByLabel("Ποσότητα reels", { exact: true })).toHaveValue(
+    "8",
+  );
   await expect(card(page, "Κόστος και περιθώριο")).toHaveCount(0);
   await expect(page.locator("th", { hasText: "Ώρες" })).toHaveCount(0);
   await expect(button(page, "Αίτημα έγκρισης")).toHaveCount(0);
@@ -68,6 +75,7 @@ test("η Άννα φτάνει από την Ευκαιρία ως την υπο
 
   const visitor = await browser.newContext();
   try {
+    await useSpacesLook(visitor);
     const anon = await visitor.newPage();
     await anon.goto(link);
     await checkPublicDocument(anon, P);
@@ -102,17 +110,17 @@ test("μια Παρέκκλιση θέλει Έγκριση: απόρριψη, �
   await expect(page.getByText("Ζητήθηκε Έγκριση")).toBeVisible();
   await expect(currentStep(page)).toContainText("Αναμένει Έγκριση");
 
-  await inContext(browser, "owner@example.com", (owner) =>
+  await inSpacesContext(browser, "owner@example.com", (owner) =>
     ownerRejects(owner, title),
   );
 
   await page.goto(agreementUrl);
   await expect(currentStep(page)).toContainText("Σύνταξη");
-  await expect(page.getByText("Πολύ ακριβά")).toBeVisible();
+  await expect(page.getByText("Πολύ ακριβά").first()).toBeVisible();
   await button(page, "Αίτημα έγκρισης").click();
   await expect(page.getByText("Ζητήθηκε Έγκριση")).toBeVisible();
 
-  await inContext(browser, "owner@example.com", (owner) =>
+  await inSpacesContext(browser, "owner@example.com", (owner) =>
     ownerApproves(owner, title),
   );
 
@@ -122,7 +130,7 @@ test("μια Παρέκκλιση θέλει Έγκριση: απόρριψη, �
     LINK_URL,
   );
 
-  await inContext(browser, "nikos@example.com", (nikos) =>
+  await inSpacesContext(browser, "nikos@example.com", (nikos) =>
     checkNikosSeesNothing(nikos, P),
   );
 });
@@ -139,7 +147,9 @@ test("ο Σύνδεσμος που ακυρώθηκε, οι αλλαγές κα�
   await addCatalogueLine(page, `Μηνιαία Παρουσία ${P}`);
   const oldLink = await sendAndReadLink(page);
 
-  await button(page, "Νέα αναθεώρηση").click();
+  const revision = page.getByLabel("Τι αλλάζει (προαιρετικά)");
+  await openWith(button(page, "Νέα αναθεώρηση"), revision);
+  await button(page, "Συνέχεια").click();
   await expect(
     page.getByText("Νέα αναθεώρηση: οι παλιοί Σύνδεσμοι"),
   ).toBeVisible();
@@ -159,15 +169,15 @@ test("ο Σύνδεσμος που ακυρώθηκε, οι αλλαγές κα�
 
   const visitor = await browser.newContext();
   try {
+    await useSpacesLook(visitor);
     const anon = await visitor.newPage();
     await anon.goto(newLink);
     await requestChangesAsVisitor(anon);
 
     await page.goto(agreementUrl);
-    await expect(
-      page.getByText("Αιτήματα αλλαγών από τον πελάτη"),
-    ).toBeVisible();
-    await expect(page.getByText("Θέλουμε 10 reels")).toBeVisible();
+    await expect(card(page, "Αιτήματα αλλαγών από τον πελάτη")).toContainText(
+      "Θέλουμε 10 reels",
+    );
     await page.goto("/app/agreements");
     await expect(tableRow(page, title)).toContainText("Ζήτησε αλλαγές");
 
@@ -182,7 +192,9 @@ test("ο Σύνδεσμος που ακυρώθηκε, οι αλλαγές κα�
   await expect(button(page, "Αποστολή")).toHaveCount(0);
   await expect(button(page, "Νέα αναθεώρηση")).toHaveCount(0);
   await openOpportunity(page, title);
-  await expect(page.getByText("Η Ευκαιρία έκλεισε ως χαμένη")).toBeVisible();
+  await expect(
+    page.getByText("Μια χαμένη Ευκαιρία δεν ξανανοίγει."),
+  ).toBeVisible();
 });
 
 test("ο Ιδιοκτήτης καταχωρίζει υπογραφή εκτός συστήματος", async ({
@@ -195,20 +207,20 @@ test("ο Ιδιοκτήτης καταχωρίζει υπογραφή εκτός
   const agreementUrl = await draftProposal(page, { title, kind: "μηνιαία" });
   await addCatalogueLine(page, `Μηνιαία Παρουσία ${P}`);
 
-  await inContext(browser, "admin@example.com", async (admin) => {
+  await inSpacesContext(browser, "admin@example.com", async (admin) => {
     await admin.goto(agreementUrl);
     await expect(card(admin, "Κόστος και περιθώριο")).toBeVisible();
     await expect(control(admin, "Ώρες γυρίσματος")).toHaveCount(0);
   });
 
-  await inContext(browser, "owner@example.com", async (owner) => {
+  await inSpacesContext(browser, "owner@example.com", async (owner) => {
     await owner.goto(agreementUrl);
     await expect(control(owner, "Ώρες γυρίσματος")).toBeVisible();
     await expect(control(owner, "Ώρες μοντάζ")).toBeVisible();
 
     await signOutsideSystem(owner, P);
     await expect(
-      screenHeader(owner).getByText("ενεργή", { exact: true }),
+      screenHeader(owner).locator(".badge", { hasText: /^ενεργή$/ }),
     ).toBeVisible();
     await expect(
       owner.getByText(`εκτός συστήματος: symfonia-${P}.pdf`),
@@ -217,7 +229,9 @@ test("ο Ιδιοκτήτης καταχωρίζει υπογραφή εκτός
   });
 
   await page.goto(agreementUrl);
-  await expect(button(page, "Υπογράφηκε εκτός συστήματος")).toHaveCount(0);
+  await expect(
+    button(actionsBar(page), "Υπογράφηκε εκτός συστήματος"),
+  ).toHaveCount(0);
 });
 
 test("η Διαχείριση βλέπει κόστος και περιθώριο της υπογεγραμμένης Συμφωνίας", async ({
@@ -245,7 +259,7 @@ test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις π
   for (const title of [
     "Όροι Συμφωνίας",
     "Πολιτική Γυρισμάτων του πελάτη",
-    "Προεπιλογές τιμολόγησης και πρότασης",
+    "Προεπιλογές τιμολόγησης",
     "Είδη Παροχής",
     "Όριο αλλαγών",
   ])
@@ -255,22 +269,23 @@ test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις π
   await changePaymentDays(page);
   await changeReelRounds(page);
 
+  // Η γραμμή του είδους «reel»: σε χρήση, με τον αριθμό των χρήσεων.
+  const reel = panel(page, "Είδη Παροχής")
+    .locator("li")
+    .filter({ has: page.locator(".part-title", { hasText: /^reel$/ }) });
   await expect(
-    tableRow(panel(page, "Είδη Παροχής"), "reel").getByText(/Σε χρήση σε \d+/),
+    reel.getByText("Σε χρήση", { exact: true }).first(),
   ).toBeVisible();
+  await expect(reel.getByText(/^\d+ χρήσεις$/)).toBeVisible();
   await openItem(page, `Μηνιαία Παρουσία ${P}`);
   await expect(page.getByText(/Συμφωνίες το έχουν αντιγράψει/)).toBeVisible();
 
-  await inContext(
-    browser,
-    "sales@example.com",
-    async (sales) => {
-      await sales.goto("/app/settings/agreements");
-      await expect(
-        sales.getByRole("heading", { name: NOT_ALLOWED, exact: true }),
-      ).toBeVisible();
-    },
-  );
+  await inSpacesContext(browser, "sales@example.com", async (sales) => {
+    await sales.goto("/app/settings/agreements");
+    await expect(
+      sales.getByRole("heading", { name: NOT_ALLOWED, exact: true }),
+    ).toBeVisible();
+  });
 });
 
 test("ο Έλεγχος ετοιμότητας μένει στις 12 γραμμές χωρίς γραμμή για τις Συμφωνίες", async ({
@@ -278,9 +293,9 @@ test("ο Έλεγχος ετοιμότητας μένει στις 12 γραμμ
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/readiness");
-  const list = card(page, "Πριν το άνοιγμα σε πελάτες");
-  await expect(list.getByRole("listitem")).toHaveCount(12);
+  const list = card(page, "Τι πρέπει να είναι έτοιμο");
+  await expect(list.locator("li.part-row")).toHaveCount(12);
   await expect(
-    list.getByRole("listitem").filter({ hasText: /Συμφωνί/ }),
+    list.locator("li.part-row").filter({ hasText: /Συμφωνί/ }),
   ).toHaveCount(0);
 });

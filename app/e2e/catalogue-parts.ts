@@ -23,13 +23,28 @@ export const panel = (scope: Page, title: string): Locator =>
 export const screenHeader = (page: Page): Locator =>
   page.locator("header", { has: page.getByRole("heading", { level: 1 }) });
 
+// Η κεφαλίδα της Σελίδας Πακέτου ή Υπηρεσίας (C2) στους Χώρους: ο τίτλος του στοιχείου και τα σήματά του.
+export const itemHeader = (page: Page): Locator =>
+  page
+    .locator("div.card-title", {
+      has: page.getByRole("heading", { level: 2 }),
+    })
+    .first();
+
+// Μια γραμμή λίστας των Χώρων (ListRow) με τον τίτλο της ακριβώς.
+// Το `has` ψάχνει μέσα στη γραμμή, άρα ο εσωτερικός locator ξεκινά από τη σελίδα, όχι από το scope.
+export const rowTitled = (scope: Page | Locator, title: string): Locator => {
+  const page = "goto" in scope ? scope : scope.page();
+  return scope.locator("li.part-row").filter({
+    has: page.locator(".part-title").getByText(title, { exact: true }),
+  });
+};
+
 export async function openItem(page: Page, name: string): Promise<void> {
   await page.goto("/app/catalogue");
   await page.getByRole("link", { name, exact: true }).click();
   await expect(page).toHaveURL(ITEM_URL);
-  await expect(
-    page.getByRole("heading", { level: 1, name, exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
 }
 
 // Το Πακέτο που διαλέγει το «Νέο Πακέτο», με μία Παροχή `reel`. Η τιμή 900 κρατά τον Κατάλογο έτοιμο.
@@ -37,7 +52,7 @@ export async function fillNewPackage(page: Page, name: string): Promise<void> {
   await control(page, "Όνομα").fill(name);
   await control(page, "Τιμή χωρίς ΦΠΑ").fill("900");
   await page.getByRole("button", { name: "Προσθήκη Παροχής" }).click();
-  await control(page, "Είδος Παροχής").selectOption({ label: "reel" });
+  await control(page, "Είδος Παροχής").selectOption({ label: "reels" });
   await control(page, "Ποσότητα").fill("4");
 }
 
@@ -50,7 +65,7 @@ export async function publishArchiveRestore(
   const { itemUrl, name } = item;
   await page.goto(itemUrl);
   const pub = panel(page, "Δημόσιο");
-  await pub.getByRole("checkbox", { name: /^Δημόσιο/ }).check();
+  await pub.locator("#c2-is-public").check();
   await button(pub, "Αποθήκευση").click();
   await expect(pub.getByRole("alert")).toContainText(
     "Ένα δημόσιο Πακέτο θέλει σύντομη περιγραφή στα ελληνικά.",
@@ -58,7 +73,7 @@ export async function publishArchiveRestore(
   await control(pub, "Σύντομη περιγραφή").fill("Μηνιαίο πακέτο για δοκιμή.");
   await button(pub, "Αποθήκευση").click();
   await expect(pub.getByRole("status")).toContainText("Αποθηκεύτηκε");
-  const header = screenHeader(page);
+  const header = itemHeader(page);
   await expect(header.getByText("Δημόσιο", { exact: true })).toBeVisible();
 
   await button(page, "Αρχειοθέτηση").click();

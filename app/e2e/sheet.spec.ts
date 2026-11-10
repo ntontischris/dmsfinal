@@ -82,7 +82,7 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
   await inSpaces(browser, "production@example.com", async (producer) => {
     await visit(producer, filmingUrl);
     const mine = panel(producer, "Είσαι στο Συνεργείο");
-    await expect(mine.getByText("Περιμένει απάντηση", { exact: true })).toBeVisible();
+    await expect(mine.getByText("Περιμένει απάντηση", { exact: true }).first()).toBeVisible();
     await button(mine, "Επιβεβαιώνω").click();
     await expect(mine.getByText("επιβεβαιώνω", { exact: true }).first()).toBeVisible();
     await expect(button(mine, "Επιβεβαιώνω")).toHaveCount(0);

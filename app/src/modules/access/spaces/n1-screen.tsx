@@ -129,6 +129,8 @@ interface SpacesTeamUserProps {
   confirm: string | undefined;
   gdprSection: ReactNode;
   gdprConfirm: ReactNode;
+  // «Ιστορικό αλλαγών» του Χρήστη στο Ίχνος (μόνο για όποιον «Βλέπει ίχνος ενεργειών»), από το module audit.
+  history?: ReactNode;
 }
 
 const pickConfirm = (value: string | undefined): DetailConfirm =>
@@ -140,6 +142,7 @@ export async function SpacesTeamUser({
   confirm,
   gdprSection,
   gdprConfirm,
+  history,
 }: SpacesTeamUserProps) {
   const viewer = await getViewer();
   if (!can(viewer, "access.team")) return <Denied />;
@@ -190,6 +193,7 @@ export async function SpacesTeamUser({
         confirm={pickConfirm(confirm)}
         gdprSection={gdprSection}
         gdprConfirm={gdprConfirm}
+        history={history}
       />
     </div>
   );

@@ -36,8 +36,3 @@ export const sortItemsByDate = (
     (a, b) =>
       a.billableOn.localeCompare(b.billableOn) || a.id.localeCompare(b.id),
   );
-
-// Ημερομηνία της γραμμής (ημέρα, χωρίς ζώνη): η UTC μεσάνυχτα κρατά την ίδια μέρα σε κάθε περιβάλλον.
-const DATE = new Intl.DateTimeFormat("el-GR", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" });
-
-export const formatBillableDate = (isoDay: string): string => DATE.format(new Date(`${isoDay}T00:00:00Z`));

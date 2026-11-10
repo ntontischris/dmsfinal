@@ -6,6 +6,7 @@ import { hrefOf } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { getCatalog } from "../queries-automations";
+import { KSubnav } from "./k-subnav";
 import { Catalogue, K1Filters } from "./k1-list";
 import { parseGroup, parseOnly } from "./k1-model";
 
@@ -36,6 +37,7 @@ export function K1Note() {
 export function K1Frame({ children }: { children: ReactNode }) {
   return (
     <div data-spaces>
+      <KSubnav current="automations" />
       {children}
       <K1Note />
     </div>

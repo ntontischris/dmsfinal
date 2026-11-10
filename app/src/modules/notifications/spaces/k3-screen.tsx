@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { getViewer } from "@/modules/access";
+import { can, getViewer } from "@/modules/access";
 import { FilterBar, type FilterGroup } from "@/spaces/kit/filter-bar";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
@@ -24,6 +24,7 @@ import {
   TAB_NOTES,
 } from "../sends-labels";
 import type { SendsPage } from "../sends-schema";
+import { KSubnav } from "./k-subnav";
 import { SendTable } from "./k3-table";
 
 import "./k3.css";
@@ -151,7 +152,8 @@ export interface SendsParams {
 
 // K3 Ιστορικό αποστολών στη νέα εμφάνιση (prototype `screens/K3.tsx`): στήλη φίλτρων (Κατάσταση, Πελάτης, Κανάλι), «Ξαναστείλε».
 export async function SpacesSends({ params }: { params: SendsParams }) {
-  const caps = sendsCaps(await getViewer());
+  const viewer = await getViewer();
+  const caps = sendsCaps(viewer);
   if (!caps.canView) return <Denied />;
   const query: SendsQuery = {
     tab: parseSendsTab(params.tab),
@@ -168,8 +170,10 @@ export async function SpacesSends({ params }: { params: SendsParams }) {
     );
   // null = η βάση λέει «χωρίς Δικαίωμα».
   if (!result.data) return <Denied />;
+  // Οι καρτέλες μόνο για όποιον ανοίγει και τους Αυτοματισμούς· όποιος έρχεται από την Υγεία βλέπει μόνο το Ιστορικό.
   return (
     <div data-spaces>
+      {can(viewer, "automations.manage") && <KSubnav current="sends" />}
       <Log query={query} page={result.data} canRetry={caps.canRetry} />
     </div>
   );

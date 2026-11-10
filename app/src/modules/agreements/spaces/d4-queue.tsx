@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { Entity, Person } from "@/spaces/kit/parts";
 import { hrefOf } from "@/spaces/data/screens";
-import { Badge } from "@/spaces/screens/shared";
+import { Badge, StateNotice } from "@/spaces/screens/shared";
 
 import { decideApproval } from "../actions-flow";
 import { describeDeviation, formatDate, formatMoney } from "../helpers";
@@ -295,8 +295,14 @@ export function ApprovalQueue({
     readonly { item: ApprovalItem; decision: Decision }[]
   >([]);
   const waiting = items.filter(
-    (item) => !decided.some((done) => done.item.agreementId === item.agreementId),
+    (item) =>
+      !decided.some((done) => done.item.agreementId === item.agreementId),
   );
+  // Η ουρά μένει πάντα στη σελίδα, ώστε η απάντηση στην τελευταία πρόταση να φαίνεται και όταν η λίστα αδειάσει.
+  if (waiting.length === 0 && decided.length === 0)
+    return (
+      <StateNotice kind="empty" title="Καμία πρόταση δεν περιμένει Έγκριση." />
+    );
   return (
     <>
       {decided.map(({ item, decision }) => (

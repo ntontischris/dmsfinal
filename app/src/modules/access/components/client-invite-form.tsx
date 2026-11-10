@@ -7,7 +7,7 @@ import { useKeptForm } from "@/lib/use-kept-form";
 
 import { inviteClientUser } from "../invitation-actions";
 
-import type { RoleOption } from "./team-invite-form";
+import type { RoleOption } from "../role-choices";
 
 // N2/N3 Πρόσκληση Χρήστη πελάτη. Κενός Ρόλος = «Πλήρης». Η λίστα Ρόλων έρχεται έτοιμη από τη σελίδα.
 export function ClientInviteForm({ clientId, roles }: { clientId: string; roles: readonly RoleOption[] }) {

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import {
   button,
@@ -7,23 +7,46 @@ import {
   fillNewOpportunity,
   field,
   formRouting,
-  inContext,
+  inSpacesContext,
   inspector,
-  listItem,
+  openNewLead,
   project,
   shot,
   signIn,
   tableRow,
 } from "./sales-parts";
 import { panel } from "./catalogue-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
-// Πελάτες και Ευκαιρίες (B1–B6) και Ρυθμίσεις › Πωλήσεις (O2) από άκρη σε άκρη. Φανταστικά στοιχεία.
+// Πελάτες και Ευκαιρίες (B1–B6) και Ρυθμίσεις › Πωλήσεις (O2) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Φανταστικά στοιχεία.
 // Τους Πελάτες και τις Ευκαιρίες που διαβάζονται εδώ τους φτιάχνει το e2e/seed.mjs (βοηθητικά: e2e/sales-parts.ts).
 const PIPELINE_URL = /\/app\/pipeline\/[0-9a-f-]{36}$/;
 
 // Τα τεστ γράφουν στην ίδια βάση: μια επανάληψη θα έβρισκε τα δεδομένα της πρώτης προσπάθειας μισοαλλαγμένα
 // και θα έκρυβε το πραγματικό λάθος.
 test.describe.configure({ retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
+
+// Η κάρτα μιας Ευκαιρίας στις Στήλες του Pipeline (B3).
+const boardCard = (page: Page, title: string): Locator =>
+  page.locator(".kcard", { hasText: title });
+
+// Ένα ζευγάρι των Πιθανών διπλών (B6): οι δύο πλευρές του έχουν για τίτλο το όνομα του Πελάτη.
+const duplicatePair = (page: Page, name: string): Locator =>
+  page
+    .locator("section", { has: page.locator(".compare") })
+    .filter({ has: page.getByRole("heading", { name, exact: true }) });
+
+// Μια γραμμή λίστας των Ρυθμίσεων (O2) με ακριβή τίτλο.
+const settingsRow = (scope: Locator, title: string): Locator =>
+  scope.locator("li", {
+    has: scope
+      .page()
+      .locator(".part-title", { hasText: new RegExp(`^${title}$`) }),
+  });
 
 test("οι πωλητές βλέπουν τους Πελάτες των άλλων ως «Κατειλημμένους»", async ({
   page,
@@ -36,7 +59,7 @@ test("οι πωλητές βλέπουν τους Πελάτες των άλλω
   ).toBeVisible();
 
   const taken = tableRow(page, `Ταβέρνα Αρμύρα ${P}`);
-  await expect(taken).toContainText("Κατειλημμένος");
+  await expect(taken).toContainText("Ανήκει σε άλλον πωλητή");
   await expect(taken).toContainText("Νίκος Πωλήσεις");
   await expect(taken.getByRole("link")).toHaveCount(0);
   await shot(page, "b1-sales");
@@ -67,17 +90,28 @@ test("το Pipeline δείχνει τις ξεχασμένες Ευκαιρίε�
   await signIn(page, "sales@example.com");
   await page.goto("/app/pipeline");
 
-  const forgotten = listItem(page, `Βίντεο εγκαινίων ${P}`);
-  await expect(forgotten.getByText("Ξεχασμένη", { exact: true })).toBeVisible();
-  await expect(page.getByText(`Έξτρα reels ${P}`)).toHaveCount(0);
+  const forgotten = boardCard(page, `Βίντεο εγκαινίων ${P}`);
   await expect(
-    page.getByText("Κερδισμένη δεν μπαίνει με το χέρι"),
+    forgotten.locator(".badge", { hasText: /^Ξεχασμένη$/ }),
   ).toBeVisible();
+  await expect(page.getByText(`Έξτρα reels ${P}`)).toHaveCount(0);
+  await expect(page.getByText("δεν μπαίνει με το χέρι")).toBeVisible();
 
-  await page.getByRole("link", { name: /Μόνο ξεχασμένες/ }).click();
-  await expect(page).toHaveURL(/forgotten=1/);
+  // Το φίλτρο ζει στη σελίδα: το πάτημα πριν ζωντανέψει η σελίδα χάνεται, γι' αυτό ξαναπατιέται.
+  const onlyForgotten = page
+    .getByRole("group", { name: "Ποιες Ευκαιρίες" })
+    .getByRole("button", { name: /^Ξεχασμένες/ });
+  await expect(async () => {
+    await onlyForgotten.click();
+    await expect(onlyForgotten).toHaveAttribute("aria-pressed", "true", {
+      timeout: 1_000,
+    });
+  }).toPass();
   await expect(
-    page.getByRole("link", { name: `Βίντεο εγκαινίων ${P}`, exact: true }),
+    card(page, "Πάρε τηλέφωνο").getByRole("link", {
+      name: `Βίντεο εγκαινίων ${P}`,
+      exact: true,
+    }),
   ).toBeVisible();
   await shot(page, "b3-pipeline");
 });
@@ -87,11 +121,10 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
 }) => {
   const P = project();
   await signIn(page, "sales@example.com");
-  await page.goto("/app/clients");
-  await button(page, "Νέα Ευκαιρία").click();
+  const form = await openNewLead(page);
 
-  await fillNewOpportunity(page, P);
-  await button(page, "Δημιουργία Ευκαιρίας").click();
+  await fillNewOpportunity(form, P);
+  await button(form, "Δημιουργία Πελάτη και Ευκαιρίας").click();
 
   await expect(page).toHaveURL(PIPELINE_URL);
   await expect(
@@ -100,43 +133,83 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   await expect(page.getByRole("button", { name: /Κερδισμένη/ })).toHaveCount(0);
 
   const activities = card(page, "Δραστηριότητες");
-  await field(activities, "Είδος Δραστηριότητας").selectOption({
-    label: "Κλήση",
-  });
-  await field(activities, "Τι έγινε;").fill(`Μίλησα με τη Σοφία ${P}`);
+  await activities
+    .getByLabel("Είδος Δραστηριότητας")
+    .selectOption({ label: "Κλήση" });
+  await activities
+    .getByLabel("Κείμενο Δραστηριότητας")
+    .fill(`Μίλησα με τη Σοφία ${P}`);
   await button(activities, "Καταγραφή").click();
   await expect(page.getByText(`Μίλησα με τη Σοφία ${P}`)).toBeVisible();
 
-  const work = card(page, "Δουλειά στην Ευκαιρία");
-  await field(work, "Στάδιο").selectOption({ label: "Πρώτη επαφή" });
-  await button(work, "Αποθήκευση").click();
+  // Το Στάδιο αλλάζει με την επιλογή, χωρίς κουμπί.
+  await page
+    .getByLabel("Στάδιο", { exact: true })
+    .selectOption({ label: "Πρώτη επαφή" });
   await expect(
     page.getByText("Αλλαγή Σταδίου: «Νέα» → «Πρώτη επαφή»."),
   ).toBeVisible();
   await shot(page, "b4-opportunity");
 
+  // Μετονομασία της Ευκαιρίας: κρατά Στάδιο και Επόμενο βήμα.
+  await button(page, "Μετονομασία").click();
+  const titleField = page.getByLabel("Τίτλος Ευκαιρίας", { exact: true });
+  await titleField.fill(`Βίντεο παρουσίασης και reels ${P}`);
+  await button(page.locator("form", { has: titleField }), "Αποθήκευση").click();
+  await expect(
+    page.getByRole("heading", {
+      name: `Βίντεο παρουσίασης και reels ${P}`,
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Στάδιο", { exact: true }).locator("option:checked"),
+  ).toHaveText("Πρώτη επαφή");
+  await expect(page.getByText("Πρώτο τηλεφώνημα, 08/01/2099")).toBeVisible();
+
   const lostUrl = page.url();
   await button(page, "Κλείσιμο ως χαμένη").click();
   await field(page, "Λόγος απώλειας").selectOption({ label: "Τιμή" });
-  await button(page, "Επιβεβαίωση κλεισίματος").click();
+  await button(page, "Κλείσιμο ως χαμένη").click();
   await expect(
-    page.getByRole("heading", {
-      name: "Η Ευκαιρία έκλεισε ως χαμένη",
-      exact: true,
-    }),
+    page.getByText("Μια χαμένη Ευκαιρία δεν ξανανοίγει."),
   ).toBeVisible();
 
   await button(page, "Νέα Ευκαιρία από αυτήν").click();
   await field(page, "Επόμενο βήμα").fill("Νέα επαφή");
-  await field(page, "Ημερομηνία επόμενου βήματος").fill("2099-01-08");
-  await button(page, "Άνοιγμα Ευκαιρίας").click();
+  await field(page, "Πότε (υπενθύμιση)").fill("2099-01-08");
+  await button(page, "Άνοιγμα νέας Ευκαιρίας").click();
 
   await expect(page).not.toHaveURL(lostUrl);
   await expect(page).toHaveURL(PIPELINE_URL);
   await expect(page.locator("dt", { hasText: "Συνεχίζει" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Κερδισμένη/ })).toHaveCount(0);
-  // Το πάνελ «Πρόταση» (B4): η Άννα μπορεί να συντάξει, άρα βλέπει τη φόρμα δημιουργίας.
-  await expect(panel(page, "Πρόταση")).toContainText("Σύνταξη πρότασης");
+  // Το πάνελ «Πρόταση» (B4): η Άννα μπορεί να συντάξει, άρα βλέπει το «Νέα πρόταση».
+  await expect(button(panel(page, "Πρόταση"), "Νέα πρόταση")).toBeVisible();
+
+  // Το όνομα του Πελάτη αλλάζει από τη σελίδα του («Αλλαγή στοιχείων»).
+  await page
+    .getByRole("link", { name: `Νέος Πελάτης ${P}`, exact: true })
+    .click();
+  const side = inspector(page);
+  const edit = side.locator("form", { has: page.locator('input[name="afm"]') });
+  await expect(async () => {
+    if (!(await edit.isVisible()))
+      await button(side, "Αλλαγή στοιχείων").click();
+    await expect(edit).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  await field(edit, "Όνομα πελάτη ή επιχείρησης").fill(
+    `Νέος Πελάτης Α.Ε. ${P}`,
+  );
+  await button(edit, "Αποθήκευση").click();
+  await expect(
+    side
+      .getByRole("status")
+      .filter({ hasText: `όνομα Νέος Πελάτης Α.Ε. ${P}` }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: `Νέος Πελάτης Α.Ε. ${P}` }),
+  ).toBeVisible();
 });
 
 test("Αίτημα πρόσβασης: ο πωλητής ζητά, η Διαχείριση εγκρίνει", async ({
@@ -149,16 +222,21 @@ test("Αίτημα πρόσβασης: ο πωλητής ζητά, η Διαχε
 
   await signIn(page, "sales@example.com");
   await page.goto(clientUrl);
-  await field(page, "Τι αφορά").fill(topic);
-  await field(page, "Πηγή").selectOption({ label: "Τηλέφωνο" });
-  await button(page, "Αίτημα πρόσβασης").click();
+  const topicField = page.getByLabel("Τι αφορά η Ευκαιρία", { exact: true });
+  await expect(async () => {
+    if (!(await topicField.isVisible()))
+      await button(page, "Αίτημα πρόσβασης").click();
+    await expect(topicField).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  await topicField.fill(topic);
+  await button(page, "Αποστολή αιτήματος").click();
   await expect(
     page.getByText("Το αίτημα στάλθηκε στη Διαχείριση"),
   ).toBeVisible();
 
-  await inContext(browser, "admin@example.com", async (admin) => {
+  await inSpacesContext(browser, "admin@example.com", async (admin) => {
     await admin.goto("/app/unassigned");
-    const request = listItem(card(admin, "Αιτήματα πρόσβασης"), topic);
+    const request = admin.locator("li.card", { hasText: topic });
     await expect(request).toContainText(`Γυμναστήριο Κίνηση ${P}`);
     await button(request, "Έγκριση").click();
     await expect(request).toHaveCount(0);
@@ -166,10 +244,10 @@ test("Αίτημα πρόσβασης: ο πωλητής ζητά, η Διαχε
 
   await page.goto(clientUrl);
   await expect(inspector(page)).toContainText("Νίκος Πωλήσεις");
+  // Η παλιά διεύθυνση της καρτέλας Ευκαιρίες ανοίγει τις «Πωλήσεις»· εκεί είναι η Ευκαιρία της έγκρισης.
   await page.goto(`${clientUrl}?tab=opportunities`);
-  // Ο τίτλος γράφεται και στη σημείωση πρόσβασης (GrantedNote)· η Ευκαιρία είναι ο σύνδεσμος της λίστας.
   await expect(
-    page.getByRole("link", { name: topic, exact: true }),
+    page.getByRole("link", { name: topic, exact: true }).first(),
   ).toBeVisible();
   await expect(page.getByText(`Έξτρα reels ${P}`)).toHaveCount(0);
 });
@@ -183,28 +261,30 @@ test("η ουρά «Χωρίς υπεύθυνο»: η Διαχείριση αν�
   await signIn(page, "admin@example.com");
   await page.goto("/app/unassigned");
 
-  const item = listItem(card(page, "Ευκαιρίες χωρίς Υπεύθυνο"), title);
+  const item = page.locator("li.card", {
+    has: page.getByRole("link", { name: title, exact: true }),
+  });
   await expect(item).toContainText("Νέος Πελάτης");
-  // Το aria-label δίνει όνομα στο select, γι' αυτό το exact ταιριάζει· χωρίς αυτό θα ταίριαζε και σε τίτλο που περιέχει τον δικό μας.
   await item
-    .getByLabel(`Νέος Υπεύθυνος: ${title}`, { exact: true })
+    .getByLabel("Υπεύθυνος", { exact: true })
     .selectOption({ label: "Νίκος Πωλήσεις" });
   await button(item, "Ανάθεση").click();
   await expect(item).toHaveCount(0);
   await page.reload();
   await expect(
-    listItem(card(page, "Ευκαιρίες χωρίς Υπεύθυνο"), title),
+    page.getByRole("link", { name: title, exact: true }),
   ).toHaveCount(0);
   await shot(page, "b5-queue");
 
-  await inContext(browser, "sales@example.com", async (seller) => {
+  await inSpacesContext(browser, "sales@example.com", async (seller) => {
     await seller.goto("/app/unassigned");
     await expect(
-      seller.getByRole("heading", { name: "Χωρίς δικαίωμα", exact: true }),
+      seller.getByRole("heading", { name: "Χωρίς πρόσβαση", exact: true }),
     ).toBeVisible();
-    const nav = seller.getByRole("navigation", { name: "Οθόνες" });
+    // Οι ουρές της λίστας Πελατών («Χωρίς υπεύθυνο», «Πιθανά διπλά») δεν φαίνονται σε όποιον δεν τις δικαιούται.
+    await seller.goto("/app/clients");
     await expect(
-      nav.getByRole("link", { name: /Χωρίς υπεύθυνο|Πιθανά διπλά/ }),
+      seller.getByRole("link", { name: /^(Χωρίς υπεύθυνο|Πιθανά διπλά)$/ }),
     ).toHaveCount(0);
   });
 });
@@ -214,20 +294,14 @@ test("τα Πιθανά διπλά: το «Είναι άλλος» κλείνε�
   await signIn(page, "admin@example.com");
   await page.goto("/app/clients/duplicates");
 
-  const pair = page.locator("section").filter({
-    has: page.getByRole("heading", {
-      name: new RegExp(`^Καφέ Αθήναιον ${P} ~`),
-    }),
-  });
+  const pair = duplicatePair(page, `Καφέ Αθήναιον ${P}`);
   await expect(pair).toContainText("ίδιο τηλέφωνο");
   await shot(page, "b6-duplicates");
   await button(pair, "Είναι άλλος").click();
   await expect(pair).toHaveCount(0);
 
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: new RegExp(`^Καφέ Αθήναιον ${P} ~`) }),
-  ).toHaveCount(0);
+  await expect(duplicatePair(page, `Καφέ Αθήναιον ${P}`)).toHaveCount(0);
 });
 
 test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάνε οι νέες Ευκαιρίες", async ({
@@ -235,7 +309,7 @@ test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάν
   browser,
 }) => {
   const P = project();
-  await inContext(browser, "sales@example.com", async (seller) => {
+  await inSpacesContext(browser, "sales@example.com", async (seller) => {
     await seller.goto("/app/settings/sales");
     await expect(
       seller.getByRole("heading", { name: "Χωρίς δικαίωμα", exact: true }),
@@ -250,33 +324,43 @@ test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάν
     .click();
   await expect(page).toHaveURL(/\/app\/settings\/sales$/);
 
-  const sources = card(page, "Πηγές");
-  await field(sources, "Νέα τιμή").fill(`Έκθεση ${P}`);
+  const sources = panel(page, "Πηγές");
+  const newValue = sources.getByLabel("Νέα τιμή", { exact: true });
+  await expect(async () => {
+    if (!(await newValue.isVisible()))
+      await button(sources, "+ Νέα τιμή").click();
+    await expect(newValue).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  await newValue.fill(`Έκθεση ${P}`);
   await button(sources, "Προσθήκη").click();
-  const added = tableRow(sources, `Έκθεση ${P}`);
-  await expect(added.getByText("Νέα", { exact: true })).toBeVisible();
+  const added = settingsRow(sources, `Έκθεση ${P}`);
+  await expect(added.locator(".badge", { hasText: /^Νέα$/ })).toBeVisible();
   await button(added, "Διαγραφή").click();
   await expect(added).toHaveCount(0);
   // Η γραμμή έφυγε με την ανανέωση· το μήνυμά της πρέπει να μείνει ορατό στη λίστα.
   await expect(sources.getByText(`«Έκθεση ${P}» διαγράφηκε`)).toBeVisible();
 
-  const phone = tableRow(sources, "Τηλέφωνο");
-  await expect(phone.getByText(/Σε χρήση σε \d+/)).toBeVisible();
+  const phone = settingsRow(sources, "Τηλέφωνο");
+  await expect(phone.getByText(/^\d+ χρήσ(η|εις)$/)).toBeVisible();
   await expect(button(phone, "Απόσυρση")).toBeVisible();
   await expect(button(phone, "Διαγραφή")).toHaveCount(0);
   await shot(page, "o2-sales");
 
   // Η ρύθμιση γράφεται στη βάση και δεν πρέπει να μείνει στην ουρά ό,τι κι αν συμβεί (τα άλλα τεστ περιμένουν «Ιδιοκτήτης»).
-  const routing = card(page, "Νέες Ευκαιρίες από τη φόρμα");
-  const choice = field(routing, "Νέες Ευκαιρίες από τη φόρμα πάνε σε");
+  const routing = panel(page, "Νέες Ευκαιρίες από τη φόρμα");
+  const choice = routing.getByLabel("Νέες Ευκαιρίες από τη φόρμα πάνε σε");
   try {
     await choice.selectOption({ label: "Χωρίς υπεύθυνο" });
     await button(routing, "Αποθήκευση").click();
     await expect(routing.getByRole("status")).toContainText("Αποθηκεύτηκε");
     await expect.poll(formRouting).toBe("queue");
   } finally {
-    await choice.selectOption({ label: "Ιδιοκτήτης" });
-    await button(routing, "Αποθήκευση").click();
-    await expect.poll(formRouting).toBe("owner");
+    // Το «Αποθήκευση» ανάβει μόνο όταν κάτι αλλάξει: επιστροφή μόνο αν η ρύθμιση δεν είναι ήδη «Ιδιοκτήτης».
+    if ((await formRouting()) !== "owner") {
+      await page.reload();
+      await choice.selectOption({ label: "Ιδιοκτήτης" });
+      await button(routing, "Αποθήκευση").click();
+      await expect.poll(formRouting).toBe("owner");
+    }
   }
 });

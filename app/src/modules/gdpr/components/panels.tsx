@@ -29,27 +29,6 @@ const RegisterLink = () => (
   </p>
 );
 
-export async function GdprTeamUserPanel({ userId }: { userId: string }) {
-  const subjects = await getGdprSubjects();
-  if (!subjects.ok) return <LoadFailed />;
-  const user = subjects.data.teamUsers.find((row) => row.id === userId);
-  if (!user) return null;
-  return (
-    <Panel label={PANEL_LABEL}>
-      <div className="grid gap-3">
-        <SubjectActions
-          kind="team_user"
-          id={user.id}
-          name={user.name}
-          block={user.block}
-        />
-        <p className="m-0 text-sm text-muted-foreground">{ZIP_NOTE}</p>
-        <RegisterLink />
-      </div>
-    </Panel>
-  );
-}
-
 export async function GdprClientPanel({ clientId }: { clientId: string }) {
   const subjects = await getGdprSubjects();
   if (!subjects.ok) return <LoadFailed />;

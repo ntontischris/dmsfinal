@@ -117,23 +117,6 @@ export {
 } from "./queries-agreements";
 export { getPublicProposal } from "./queries-public";
 export { getDefaults } from "./queries-settings";
-export { ActionForm } from "./components/action-form";
-export { ProposalDocument } from "./components/proposal-document";
-export { AgreementsTable } from "./components/agreements-table";
-export { AgreementHeader } from "./components/agreement-header";
-export { AgreementActions } from "./components/agreement-actions";
-export { LinesSection } from "./components/lines-section";
-export { CostSection } from "./components/cost-section";
-export { DeviationsSection } from "./components/deviations-section";
-export { TermsSection } from "./components/terms-section";
-export { ScheduleSection } from "./components/schedule-section";
-export { PeopleSection } from "./components/people-section";
-export { OutboxSection } from "./components/outbox-section";
-export { HistorySections } from "./components/history-sections";
-export { ProposalPreview } from "./components/proposal-preview";
-export { ApprovalQueue } from "./components/approval-queue";
-export { ProposalPanel } from "./components/proposal-panel";
-export { PublicProposalView } from "./components/public-proposal";
 export { TermsCard } from "./components/terms-card";
 export { PolicyCard } from "./components/policy-card";
 export { PricingCard } from "./components/pricing-card";
@@ -147,7 +130,6 @@ export { SpacesProposalLink } from "./spaces/d5-screen";
 // Η όψη του Χρήστη πελάτη («Βλέπει Συμφωνίες»): μόνο ανάγνωση, από τις client_agreements_view / client_agreement_view.
 export { SpacesClientAgreements } from "./spaces/d1-client-screen";
 export { SpacesClientAgreement } from "./spaces/d2-client-screen";
-export { ClientAgreementPage, ClientAgreementsList } from "./components/client-agreements";
 export { getClientAgreement, listClientAgreements } from "./queries-client";
 export type {
   ClientAgreement,

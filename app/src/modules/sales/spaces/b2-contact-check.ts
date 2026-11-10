@@ -1,6 +1,7 @@
 // «Αλλαγή στοιχείων» στη Σελίδα Πελάτη: τι λείπει, και τι άλλαξε μετά την αποθήκευση.
 
 export interface ContactDraft {
+  clientName: string;
   name: string;
   phone: string;
   email: string;
@@ -10,6 +11,7 @@ export interface ContactDraft {
 }
 
 const LABELS: Readonly<Record<keyof ContactDraft, string>> = {
+  clientName: "όνομα",
   name: "κύριο πρόσωπο",
   phone: "τηλέφωνο",
   email: "email",
@@ -20,14 +22,21 @@ const LABELS: Readonly<Record<keyof ContactDraft, string>> = {
 
 export const contactErrors = (draft: ContactDraft): readonly string[] => {
   const errors: string[] = [];
+  if (draft.clientName.trim() === "") errors.push("Γράψε το όνομα του Πελάτη.");
   const email = draft.email.trim();
-  if (draft.name.trim() === "") errors.push("Γράψε το όνομα του κύριου προσώπου.");
-  if (draft.phone.trim() === "" && email === "") errors.push("Γράψε τηλέφωνο ή email.");
-  if (email !== "" && !email.includes("@")) errors.push("Το email δεν μοιάζει σωστό.");
+  if (draft.name.trim() === "")
+    errors.push("Γράψε το όνομα του κύριου προσώπου.");
+  if (draft.phone.trim() === "" && email === "")
+    errors.push("Γράψε τηλέφωνο ή email.");
+  if (email !== "" && !email.includes("@"))
+    errors.push("Το email δεν μοιάζει σωστό.");
   return errors;
 };
 
-export const contactSavedText = (before: ContactDraft, after: ContactDraft): string => {
+export const contactSavedText = (
+  before: ContactDraft,
+  after: ContactDraft,
+): string => {
   const changed = (Object.keys(LABELS) as (keyof ContactDraft)[])
     .filter((key) => before[key].trim() !== after[key].trim())
     .map((key) => `${LABELS[key]} ${after[key].trim()}`);

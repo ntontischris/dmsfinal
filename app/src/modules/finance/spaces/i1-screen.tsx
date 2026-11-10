@@ -2,6 +2,7 @@ import { getViewer } from "@/modules/access";
 import { ErrorNotice, StateNotice, fmtMoney } from "@/spaces/screens/shared";
 
 import { sortClientsByOldest } from "../billables-helpers";
+import { BILLABLES_NO_ACCESS_TEXT } from "../billables-labels";
 import { getBillables } from "../billables-queries";
 import { financeCaps } from "../caps";
 import { ClientGroup } from "./i1-group";
@@ -18,7 +19,7 @@ export async function SpacesToInvoice() {
     return (
       <div data-spaces>
         <StateNotice kind="denied" title="Χωρίς δικαίωμα">
-          Το «Προς τιμολόγηση» είναι για την ομάδα.
+          {BILLABLES_NO_ACCESS_TEXT}
         </StateNotice>
       </div>
     );

@@ -1,16 +1,21 @@
 import { expect, test } from "@playwright/test";
 
-import { fieldOf, openNewInternal } from "./productions-parts";
-import { button, card, project, signIn } from "./sales-parts";
+import { button, project, signIn } from "./sales-parts";
+import { clickUntil } from "./today-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
-// Σήμερα Σγ (#182): οι κάρτες «Η δουλειά μου». Ο Ιδιοκτήτης φτιάχνει ένα πρόχειρο Παραδοτέο σε δική του Εσωτερική
-// Παραγωγή· η κάρτα «Παραδοτέα για μένα» το μετρά και το «Άνοιγμα →» οδηγεί στην ουρά H1 «Για μένα».
-// Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
+// Σήμερα Σγ (#182) στη νέα εμφάνιση (Χώροι): οι κάρτες «Η δουλειά μου» μαζεύονται στο «Και άλλα». Ο Ιδιοκτήτης φτιάχνει
+// ένα πρόχειρο Παραδοτέο σε δική του Εσωτερική Παραγωγή· η γραμμή «Παραδοτέα για μένα» το μετρά και οδηγεί στην ουρά H1
+// «Για μένα». Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
 const MY_DELIVERABLES = "Παραδοτέα για μένα";
 
-test("ένα νέο Παραδοτέο φαίνεται στην κάρτα «Παραδοτέα για μένα» και το «Άνοιγμα →» πηγαίνει στην ουρά", async ({
+test("ένα νέο Παραδοτέο μετρά στο «Παραδοτέα για μένα» και ο σύνδεσμος πηγαίνει στην ουρά", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -20,21 +25,28 @@ test("ένα νέο Παραδοτέο φαίνεται στην κάρτα «Π
 
   await signIn(page, "owner@example.com");
   await page.goto("/app/productions");
-  const newProduction = await openNewInternal(page);
-  await fieldOf(newProduction, "Τίτλος").fill(PRODUCTION);
-  await fieldOf(newProduction, "Υπεύθυνος").selectOption({
-    label: "Γιώργος Ιδιοκτήτης",
+  const newProduction = page.locator("form", {
+    has: page.getByRole("heading", { name: "Νέα Εσωτερική Παραγωγή" }),
   });
+  await clickUntil(
+    button(page, "Νέα Εσωτερική Παραγωγή"),
+    newProduction.getByLabel("Τίτλος"),
+  );
+  await newProduction.getByLabel("Τίτλος").fill(PRODUCTION);
+  await newProduction
+    .getByLabel("Υπεύθυνος")
+    .selectOption({ label: "Γιώργος Ιδιοκτήτης" });
   await button(newProduction, "Δημιουργία").click();
   await expect(
-    page.getByRole("heading", { level: 1, name: PRODUCTION, exact: true }),
+    page.getByRole("heading", { level: 1, name: PRODUCTION }),
   ).toBeVisible();
-  await page.getByText("Νέο Παραδοτέο", { exact: true }).click();
-  const create = page.locator("details", {
-    hasText: "Στοιχεία νέου Παραδοτέου",
+
+  const create = page.locator("form", {
+    has: button(page, "Δημιουργία Παραδοτέου"),
   });
-  await fieldOf(create, "Τίτλος").fill(DELIVERABLE);
-  await button(create, "Δημιουργία").click();
+  await clickUntil(button(page, "Νέο Παραδοτέο"), create.getByLabel("Τίτλος"));
+  await create.getByLabel("Τίτλος").fill(DELIVERABLE);
+  await button(create, "Δημιουργία Παραδοτέου").click();
   await expect(create.getByRole("status")).toContainText(
     "Το Παραδοτέο δημιουργήθηκε.",
   );
@@ -43,11 +55,15 @@ test("ένα νέο Παραδοτέο φαίνεται στην κάρτα «Π
   await expect(
     page.getByRole("heading", { level: 1, name: "Σήμερα" }),
   ).toBeVisible();
-  const myCard = card(page, MY_DELIVERABLES);
-  await expect(myCard).toBeVisible();
-  await expect(myCard.getByRole("listitem").first()).toBeVisible();
+  const others = page.locator("details.a1-others");
+  await others.locator("summary").click();
+  const mine = others.getByRole("listitem").filter({
+    has: page.getByRole("link", { name: MY_DELIVERABLES, exact: true }),
+  });
+  await expect(mine).toBeVisible();
+  await expect(mine.locator(".a1-other-count")).toHaveText(/^[1-9]\d*$/);
 
-  await myCard.getByRole("link", { name: "Άνοιγμα →" }).click();
+  await mine.getByRole("link", { name: MY_DELIVERABLES, exact: true }).click();
   await expect(page).toHaveURL(/\/app\/deliverables\?view=mine$/);
   await expect(
     page.getByRole("link", { name: DELIVERABLE, exact: true }).first(),

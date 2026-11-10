@@ -1,19 +1,25 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
 
-import { fieldOf } from "./productions-parts";
+import { openTab, tabLink } from "./finance-parts";
 import { button, card, project, signIn } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Εισπράξεις (I4) και Τρόποι είσπραξης από άκρη σε άκρη (#150). Τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε
-// Πελάτης και Τρόπος παίρνει όνομα με το project και τη στιγμή. Σειριακά, χωρίς retries.
+// Πελάτης και Τρόπος παίρνει όνομα με το project και τη στιγμή. Σειριακά, χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
 const SETTINGS_PATH = "/app/settings/finance";
 const RECEIPTS_PATH = "/app/finance/receipts";
-const NAV_RECEIPTS_LINK = /Εισπράξεις$/;
+const MONEY = "Χρήματα";
+const RECEIPTS_TAB = "Εισπράξεις";
 const METHODS_CARD = "Τρόποι είσπραξης";
 const RECEIPT_CARD = "Νέα Είσπραξη";
-const PREVIEW = 'section[aria-label="Θα εξοφλήσει"]';
+const PREVIEW = ".i245-preview";
 
 // Το service role μόνο για να φτιάξει τον Πελάτη του τεστ, όπως κάνει και το e2e/sales-parts.ts.
 function serviceClient() {
@@ -48,64 +54,62 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
   await seedClient(CLIENT);
 
   await signIn(page, "owner@example.com");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Οθόνες" })
-      .getByRole("link", { name: NAV_RECEIPTS_LINK }),
-  ).toBeVisible();
 
   await page.goto(SETTINGS_PATH);
   const methods = card(page, METHODS_CARD);
-  await fieldOf(methods, "Νέος τρόπος").fill(METHOD);
+  await button(methods, "+ Νέα τιμή").click();
+  await methods.getByLabel("Νέος τρόπος").fill(METHOD);
   await button(methods, "Προσθήκη τρόπου").click();
   await expect(methods.getByRole("status")).toContainText(
     "Ο τρόπος αποθηκεύτηκε.",
   );
 
-  await page.goto(RECEIPTS_PATH);
+  await openTab(page, MONEY, RECEIPTS_TAB);
+  await expect(page).toHaveURL(new RegExp(`${RECEIPTS_PATH}$`));
   const form = card(page, RECEIPT_CARD);
-  await fieldOf(form, "Πελάτης").selectOption({ label: CLIENT });
-  await fieldOf(form, "Ποσό (€, με ΦΠΑ)").fill("400");
+  await form.getByLabel("Πελάτης").selectOption({ label: CLIENT });
+  await form.getByLabel("Ποσό (€, με ΦΠΑ)").fill("400");
   await expect(page.locator(PREVIEW)).toContainText("υπέρ του πελάτη");
-  await fieldOf(form, "Τρόπος").selectOption({ label: METHOD });
+  await form.getByLabel("Τρόπος").selectOption({ label: METHOD });
   await button(form, "Καταχώρηση Είσπραξης").click();
-  await expect(form.getByRole("status")).toContainText(
-    "Η Είσπραξη καταχωρήθηκε.",
-  );
+  const done = form.getByRole("status");
+  await expect(done).toContainText(/Καταχωρήθηκε 400\s€ από/);
+  await expect(done).toContainText(CLIENT);
 
   const row = page.locator("tr", { hasText: CLIENT });
-  await expect(row).toContainText("400,00");
+  await expect(row).toContainText("400");
 
-  await row.getByText("Διόρθωση", { exact: true }).click();
-  await fieldOf(row, "Ποσό (€, με ΦΠΑ)").fill("450");
-  await fieldOf(row, "Λόγος διόρθωσης (υποχρεωτικός)").fill("Λάθος ποσό");
-  await button(row, "Αποθήκευση διόρθωσης").click();
-  await expect(row.getByRole("status")).toContainText(
-    "Η διόρθωση αποθηκεύτηκε.",
-  );
+  await button(row, "Διόρθωση").click();
+  await row.getByLabel("Ποσό (€, με ΦΠΑ)").fill("450");
+  await row.getByPlaceholder("Λόγος διόρθωσης (υποχρεωτικός)").fill("Λάθος ποσό");
+  await button(row, "Επιβεβαίωση").click();
+  await expect(row).toContainText("Ίχνος: διόρθωση");
+  await expect(row).toContainText("Λόγος: Λάθος ποσό");
 
-  await row.getByText("Διαγραφή", { exact: true }).click();
-  await fieldOf(row, "Λόγος διαγραφής (υποχρεωτικός)").fill(
-    "Καταχωρήθηκε δύο φορές",
-  );
-  await button(row, "Επιβεβαίωση διαγραφής").click();
+  // Μετά τη διόρθωση η γραμμή δείχνει τη νέα τιμή και ξαναδέχεται ενέργεια.
+  await page.reload();
+  await expect(row).toContainText("450");
+  await button(row, "Διαγραφή").click();
+  await row
+    .getByPlaceholder("Λόγος διαγραφής (υποχρεωτικός)")
+    .fill("Καταχωρήθηκε δύο φορές");
+  await button(row, "Επιβεβαίωση").click();
   await expect(page.locator("tr", { hasText: CLIENT })).toContainText(
     "Λόγος: Καταχωρήθηκε δύο φορές",
+  );
+  await page.reload();
+  await expect(page.locator("tr", { hasText: CLIENT })).toContainText(
+    "Διαγράφηκε. Λόγος: Καταχωρήθηκε δύο φορές",
   );
 });
 
 test("οι Πωλήσεις δεν βλέπουν τις Εισπράξεις", async ({ page }) => {
   await signIn(page, "sales@example.com");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Οθόνες" })
-      .getByRole("link", { name: NAV_RECEIPTS_LINK }),
-  ).toHaveCount(0);
-
   await page.goto(RECEIPTS_PATH);
   await expect(
     page.getByText("Οι Εισπράξεις είναι για την ομάδα και τον Λογιστή", {
       exact: false,
     }),
   ).toBeVisible();
+  await expect(tabLink(page, MONEY, RECEIPTS_TAB)).toHaveCount(0);
 });

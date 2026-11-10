@@ -3,6 +3,7 @@
 
 import { fmtMoney } from "@/spaces/screens/shared";
 
+import { PARTIAL_BADGE } from "../labels";
 import type { TurnoverMonth } from "../view-schema";
 
 export const DASH = "—";
@@ -23,6 +24,17 @@ export const periodLabelWithDates = (period: {
   to: string;
 }): string =>
   `${period.label} (${dayMonth(period.from)}–${dayMonth(period.to)}/${period.to.slice(0, 4)})`;
+
+// Στο φίλτρο της M1 η τρέχουσα Περίοδος λέει και «ως σήμερα» (όπως η κλασική): τα ποσά της δεν έχουν κλείσει.
+export const periodOptionLabel = (period: {
+  label: string;
+  from: string;
+  to: string;
+  isPartial: boolean;
+}): string =>
+  period.isPartial
+    ? `${periodLabelWithDates(period)} · ${PARTIAL_BADGE}`
+    : periodLabelWithDates(period);
 
 export interface ChartBar {
   month: string;

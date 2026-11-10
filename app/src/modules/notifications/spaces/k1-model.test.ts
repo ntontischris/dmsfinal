@@ -41,7 +41,8 @@ describe("K1 φίλτρα", () => {
     expect(parseGroup(catalog, "Π")).toBe("Π");
     expect(parseGroup(catalog, "Χ")).toBeUndefined();
     expect(parseOnly("off")).toBe("off");
-    expect(parseOnly("wired")).toBeUndefined();
+    expect(parseOnly("wired")).toBe("wired");
+    expect(parseOnly("all")).toBeUndefined();
   });
 
   it("should filter by group and by «Με ενεργούς», «Προς πελάτη», «Όλοι σβηστοί»", () => {
@@ -55,6 +56,18 @@ describe("K1 φίλτρα", () => {
     ]);
     expect(codes(eventsFor(catalog, undefined, "client"))).toEqual(["a.one"]);
     expect(codes(eventsFor(catalog, "Ι", "off"))).toEqual(["a.two"]);
+  });
+
+  it("should keep only wired events for «Μόνο συνδεδεμένα»", () => {
+    const withUnwired: Catalog = {
+      ...catalog,
+      events: [...catalog.events, event({ code: "c.later", isWired: false })],
+    };
+    expect(codes(eventsFor(withUnwired, undefined, "wired"))).toEqual([
+      "a.one",
+      "a.two",
+      "b.one",
+    ]);
   });
 
   it("should keep the filters in the address", () => {

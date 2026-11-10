@@ -1,14 +1,18 @@
 import { expect, test } from "@playwright/test";
 
-import { switchUser } from "./booking-parts";
+import { switchUserInSpaces } from "./messages-parts";
 import { project, signIn } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Τα Αιτήματα (Jδ, #163) από άκρη σε άκρη. Ο Πελάτης «Πελάτης Αιτημάτων {project}» και ο Χρήστης πελάτη
 // «requests.{project}@example.com» (Πλήρης, Υπεύθυνος του Πελάτη η Άννα) έρχονται από το seed. Σειριακά, χωρίς retries.
 test.describe.configure({ mode: "serial", retries: 0 });
 
 const MESSAGES_PATH = "/app/messages";
-const COMPOSER = "Νέο Μήνυμα";
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
 test("ο πελάτης στέλνει Αίτημα «άλλο», η ομάδα το απορρίπτει με απάντηση και ο πελάτης τη βλέπει", async ({
   page,
@@ -18,22 +22,26 @@ test("ο πελάτης στέλνει Αίτημα «άλλο», η ομάδα 
   const text = `Θέλουμε ένα βίντεο για το event ${P}`;
   const reply = `Δεν προλαβαίνουμε φέτος ${P}`;
 
-  // 1. Ο πελάτης γράφει Μήνυμα και τσεκάρει «Ζητώ κάτι να γίνει (Αίτημα)» με είδος «άλλο».
+  // 1. Ο πελάτης διαλέγει «Ζήτα κάτι να γίνει» με είδος «Κάτι άλλο» και περιγράφει τι χρειάζεται.
   await signIn(page, `requests.${P}@example.com`);
   await page.goto(MESSAGES_PATH);
-  const composer = page.getByRole("region", { name: COMPOSER });
-  await composer.getByLabel("Μήνυμα προς την ομάδα").fill(text);
+  const composer = page.locator("form", {
+    has: page.getByRole("heading", { name: "Νέο μήνυμα", exact: true }),
+  });
   await page.waitForLoadState("networkidle");
-  await composer.getByLabel("Ζητώ κάτι να γίνει (Αίτημα)").check();
-  await expect(composer.getByLabel("Είδος Αιτήματος")).toHaveValue("other");
-  await composer.getByRole("button", { name: "Αποστολή" }).click();
-  await expect(composer.getByRole("status")).toContainText(
-    "Το Αίτημα στάλθηκε.",
-  );
+  await composer.getByRole("button", { name: /^Ζήτα κάτι να γίνει/ }).click();
+  const other = composer.getByRole("radio", { name: "Κάτι άλλο" });
+  await other.check();
+  await expect(other).toBeChecked();
+  await composer.getByLabel("Περίγραψε τι χρειάζεσαι").fill(text);
+  await composer.getByRole("button", { name: "Στείλε το αίτημα" }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Το Αίτημα στάλθηκε." }),
+  ).toBeVisible();
 
   // 2. Το Μήνυμα έγινε Αίτημα: ανοιχτό, χωρίς υπεύθυνο προς τον πελάτη και χωρίς διαγραφή.
   const sent = page.locator("article", { hasText: text });
-  const box = sent.getByRole("region", { name: "Αίτημα: Άλλο" });
+  const box = sent.getByRole("region", { name: "Αίτημα · Άλλο" });
   await expect(box).toContainText("ανοιχτό");
   await expect(box).not.toContainText("Ανατέθηκε");
   await expect(sent.getByRole("button", { name: "Διαγραφή" })).toHaveCount(0);
@@ -49,7 +57,7 @@ test("ο πελάτης στέλνει Αίτημα «άλλο», η ομάδα 
   ).toContainText("ανοιχτό");
 
   // 4. Ο Ιδιοκτήτης το βρίσκει στα «όλα τα ανοιχτά» (υπεύθυνη είναι η Άννα), το ανοίγει και το απορρίπτει με απάντηση.
-  await switchUser(page, "owner@example.com");
+  await switchUserInSpaces(page, "owner@example.com");
   await page.goto(`${MESSAGES_PATH}?tab=requests&view=open`);
   const row = page.getByRole("listitem").filter({ hasText: text });
   await expect(row).toContainText("Υπεύθυνος: Άννα");
@@ -67,7 +75,7 @@ test("ο πελάτης στέλνει Αίτημα «άλλο», η ομάδα 
   await expect(request).toContainText(reply);
 
   // 5. Ο πελάτης βλέπει «Απάντηση της ομάδας: …» στην καρτέλα Αιτήματα, χωρίς υπεύθυνο.
-  await switchUser(page, `requests.${P}@example.com`);
+  await switchUserInSpaces(page, `requests.${P}@example.com`);
   await page.goto(`${MESSAGES_PATH}?tab=requests`);
   const item = page.getByRole("listitem").filter({ hasText: text });
   await expect(item).toContainText("απορρίφθηκε");

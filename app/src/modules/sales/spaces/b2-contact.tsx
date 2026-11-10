@@ -18,6 +18,7 @@ interface ClientContactProps {
 }
 
 const draftOf = (client: ClientDetail): ContactDraft => ({
+  clientName: client.name,
   name: client.contactName,
   phone: client.contactPhone,
   email: client.contactEmail,
@@ -27,16 +28,17 @@ const draftOf = (client: ClientDetail): ContactDraft => ({
 });
 
 // Κύριο πρόσωπο του Πελάτη (prototype `screens/b2-contact.tsx`), με «Αλλαγή στοιχείων» επί τόπου πάνω στην
-// πραγματική ενέργεια: επαφή, Επωνυμία, Πόλη και ΑΦΜ, όπως η Επεξεργασία της κλασικής εμφάνισης· το όνομα πάει όπως είναι.
+// πραγματική ενέργεια: όνομα, επαφή, Επωνυμία, Πόλη και ΑΦΜ.
 export function ClientContact({ client, canEdit }: ClientContactProps) {
   const contact = draftOf(client);
   const [draft, setDraft] = useState(contact);
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState<readonly string[]>([]);
   const [saved, setSaved] = useState<string | null>(null);
-  const [sent, setSent] = useState<{ before: ContactDraft; after: ContactDraft } | null>(
-    null,
-  );
+  const [sent, setSent] = useState<{
+    before: ContactDraft;
+    after: ContactDraft;
+  } | null>(null);
   const { state, isPending, onSubmit, formRef } = useKeptForm(updateClient);
   const [handled, setHandled] = useState(state);
 
@@ -83,7 +85,7 @@ export function ClientContact({ client, canEdit }: ClientContactProps) {
     return (
       <form ref={formRef} className="stack" onSubmit={handleSubmit}>
         <input type="hidden" name="clientId" value={client.id} />
-        <input type="hidden" name="name" value={client.name} />
+        {field("clientName", "name", "Όνομα πελάτη ή επιχείρησης")}
         {field("name", "contactName", "Κύριο πρόσωπο")}
         {field("phone", "contactPhone", "Τηλέφωνο", "tel")}
         {field("email", "contactEmail", "Email", "email")}
