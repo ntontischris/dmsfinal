@@ -17,6 +17,9 @@ import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 // την Ευκαιρία· κάθε Συμφωνία και Γύρισμα γράφεται μέσα από τις οθόνες. Σειριακά και χωρίς retries, όπως τα υπόλοιπα τεστ.
 test.describe.configure({ mode: "serial", retries: 0 });
 
+// Η Συμφωνία υπογράφεται σε δικά της contexts και κάθε Χρήστης μπαίνει ξεχωριστά: η ροή θέλει περισσότερο χρόνο.
+test.setTimeout(90_000);
+
 test.beforeEach(async ({ context }) => {
   await setSpacesLook(context);
 });

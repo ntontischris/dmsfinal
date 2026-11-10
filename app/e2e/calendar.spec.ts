@@ -82,7 +82,7 @@ test("ο Ιδιοκτήτης κλείνει χρόνο, τον βλέπει σ�
   await shot(page, "calendar-week");
   await entryNamed(page, title).click();
   await expect(page).toHaveURL(/\/app\/calendar\/blocked\/[0-9a-f-]{36}$/);
-  await expect(page.getByLabel("Τίτλος", { exact: true })).toHaveValue(title);
+  await expect(page.getByRole("textbox", { name: /^Τίτλος/ })).toHaveValue(title);
 
   // Η διαγραφή ζητά επιβεβαίωση· το κλικ πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγίνεται.
   const confirm = page.getByRole("alertdialog");

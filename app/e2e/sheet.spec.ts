@@ -19,6 +19,9 @@ import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 // παίρνει μία μόνο Συμφωνία): όποιο τρέξει πρώτο την υπογράφει, ώστε να περνά σε οποιοδήποτε shard.
 test.describe.configure({ mode: "serial", retries: 0 });
 
+// Η Συμφωνία υπογράφεται σε δικά της contexts και κάθε Χρήστης μπαίνει ξεχωριστά: η ροή θέλει περισσότερο χρόνο.
+test.setTimeout(90_000);
+
 test.beforeEach(async ({ context }) => {
   await setSpacesLook(context);
 });
