@@ -15,14 +15,22 @@ export const fieldOf = (scope: Page | Locator, label: string): Locator =>
     .locator(`label:has(> span:text-is("${label}"))`)
     .locator("input, select, textarea");
 
+// Ο τίτλος της σελίδας γράφεται με τελεία στο τέλος («Showreel desktop.»).
+const escapeRegex = (text: string): string =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export const productionTitle = (page: Page, title: string): Locator =>
+  page.getByRole("heading", {
+    level: 1,
+    name: new RegExp(`^${escapeRegex(title)}\\.?$`),
+  });
+
 // Η σελίδα της Παραγωγής (G2), από τη λίστα G1. Ο σύνδεσμος έχει τον τίτλο της.
 export async function openProduction(page: Page, title: string): Promise<void> {
   await visit(page, "/app/productions");
   await page.getByRole("link", { name: title, exact: true }).first().click();
   await expect(page).toHaveURL(PRODUCTION_URL);
-  await expect(
-    page.getByRole("heading", { level: 1, name: title, exact: true }),
-  ).toBeVisible();
+  await expect(productionTitle(page, title)).toBeVisible();
 }
 
 // Το «Νέα Εσωτερική Παραγωγή» της G1 ανοίγει τη φόρμα από πάνω· το κουμπί ζωντανεύει μόλις φορτώσει η σελίδα,
@@ -62,9 +70,7 @@ export async function createInternal(
   await form.locator('select[name="ownerId"]').selectOption({ label: owner });
   await form.getByRole("button", { name: "Δημιουργία", exact: true }).click();
   await expect(page).toHaveURL(PRODUCTION_URL);
-  await expect(
-    page.getByRole("heading", { level: 1, name: title, exact: true }),
-  ).toBeVisible();
+  await expect(productionTitle(page, title)).toBeVisible();
 }
 
 // Η φόρμα με υποχρεωτικό λόγο του πάνελ «Κατάσταση» (Παράδοση, Επανάνοιγμα, Ακύρωση): ανοίγει από το κουμπί της,

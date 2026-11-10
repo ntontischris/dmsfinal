@@ -38,7 +38,7 @@ async function addBlockedTime(
   }: { title: string; from: string; to: string; day?: string },
 ): Promise<void> {
   await visit(page, `/app/calendar/blocked/new${day ? `?date=${day}` : ""}`);
-  const titleBox = page.getByLabel("Τίτλος", { exact: true });
+  const titleBox = page.getByRole("textbox", { name: /^Τίτλος/ });
   await expect(async () => {
     await page.getByLabel("Μερικές ώρες (π.χ. γιατρός)").check();
     await page.getByLabel("Από", { exact: true }).fill(from);

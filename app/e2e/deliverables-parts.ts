@@ -42,9 +42,14 @@ export async function createInternalProduction(
       await button(page, "Νέα Εσωτερική Παραγωγή").click();
     await expect(form).toBeVisible({ timeout: 1_000 });
   }).toPass();
-  await form.getByLabel("Τίτλος", { exact: true }).fill(title);
+  // Οι τιμές ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η φόρμα χάνεται, οπότε ξαναγράφεται.
+  const titleBox = form.locator('input[name="title"]');
+  await expect(async () => {
+    await titleBox.fill(title);
+    await expect(titleBox).toHaveValue(title, { timeout: 1_000 });
+  }).toPass();
   await form
-    .getByLabel("Υπεύθυνος", { exact: true })
+    .locator('select[name="ownerId"]')
     .selectOption({ label: "Γιώργος Ιδιοκτήτης" });
   await button(form, "Δημιουργία").click();
   await expect(page).toHaveURL(PRODUCTION_URL);

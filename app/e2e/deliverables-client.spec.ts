@@ -142,8 +142,10 @@ test("ο Ιδιοκτήτης ανεβάζει, ο πελάτης ζητά αλ�
     page.getByText("Η έγκριση είναι οριστική.", { exact: true }),
   ).toBeVisible();
   await button(page, "Επιβεβαιώνω την έγκριση").click();
+  // Με τελικά αρχεία η έγκριση το παραδίδει αμέσως: «Παραδόθηκε ✓» αντί για «Εγκρίθηκε ✓».
+  await expect(page.getByRole("link", { name: "v2 · εγκρίθηκε", exact: true })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Εγκρίθηκε ✓", exact: true }),
+    page.getByRole("heading", { name: /^(Εγκρίθηκε|Παραδόθηκε) ✓$/ }),
   ).toBeVisible();
   await shot(page, "h4-client-approved");
 });

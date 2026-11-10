@@ -129,11 +129,11 @@ export async function bookFilmingFromScreen(
 ): Promise<void> {
   await visit(page, "/app/filming/new");
   const form = newFilmingForm(page);
-  const day = form.getByLabel("Ημερομηνία", { exact: true });
+  const day = form.locator('input[name="date"]');
   await expect(async () => {
     await form.getByLabel("Πελάτης", { exact: true }).selectOption({ label: clientName(P) });
     await day.fill(date);
-    await form.getByLabel("Ώρα έναρξης", { exact: true }).fill(startTimeOf(P));
+    await form.locator('input[name="time"]').fill(startTimeOf(P));
     await expect(day).toHaveValue(date, { timeout: 1_000 });
   }).toPass();
   await button(form, "3 ώρες").click();
