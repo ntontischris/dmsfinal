@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { project, signIn } from "./sales-parts";
-import { clickUntil } from "./today-parts";
+import { clickUntil, openFolds } from "./today-parts";
 import { useSpacesLook } from "./walkthrough/spaces";
 
 // Σήμερα (A1, #180) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Ο Ιδιοκτήτης και ο Χρήστης πελάτη
@@ -16,6 +16,12 @@ test.beforeEach(async ({ context }) => {
 const HEALTH = "Υγεία συστήματος";
 
 // Η Υγεία φαίνεται πάνω ως κάρτα όταν κάτι χάλασε, αλλιώς ως ήσυχη γραμμή μέσα στο «Και άλλα». Πάντα σε ένα από τα δύο.
+// Το «Και άλλα» είναι κλειστό (και ό,τι κρύβει δεν μετρά στους ρόλους), οπότε ανοίγει πριν από τον έλεγχο.
+async function expectHealth(page: Page, count: number): Promise<void> {
+  await openFolds(page);
+  await expect(health(page)).toHaveCount(count);
+}
+
 const health = (page: Page) =>
   page
     .getByRole("heading", { level: 2, name: HEALTH, exact: true })
@@ -61,7 +67,7 @@ test("ο Ιδιοκτήτης βλέπει την Υγεία, την κρύβε�
   await signIn(page, "owner@example.com");
   await expect(todayHeading(page)).toBeVisible();
   await startFromDefault(page);
-  await expect(health(page)).toHaveCount(1);
+  await expectHealth(page, 1);
 
   await openCustomize(page);
   await clickUntil(
@@ -71,11 +77,11 @@ test("ο Ιδιοκτήτης βλέπει την Υγεία, την κρύβε�
   await customizePanel(page).getByRole("button", { name: "Τέλος" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(customizePanel(page)).toHaveCount(0);
-  await expect(health(page)).toHaveCount(0);
+  await expectHealth(page, 0);
 
   await page.reload();
   await expect(todayHeading(page)).toBeVisible();
-  await expect(health(page)).toHaveCount(0);
+  await expectHealth(page, 0);
 
   await openCustomize(page);
   await expect(
@@ -86,12 +92,12 @@ test("ο Ιδιοκτήτης βλέπει την Υγεία, την κρύβε�
     .click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(customizePanel(page)).toHaveCount(0);
-  await expect(health(page)).toHaveCount(1);
+  await expectHealth(page, 1);
 });
 
 test("ο Χρήστης πελάτη ανοίγει τη Σήμερα χωρίς Υγεία", async ({ page }) => {
   await signIn(page, `client.${project()}@example.com`);
   await expect(todayHeading(page)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Όλα καθαρά" })).toBeVisible();
-  await expect(health(page)).toHaveCount(0);
+  await expectHealth(page, 0);
 });

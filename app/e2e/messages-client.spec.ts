@@ -2,8 +2,8 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 
 import { addCatalogueLine, draftProposal } from "./agreements-parts";
 import { signOutsideSystem } from "./agreements-flows-parts";
-import { inSpacesContext, switchUserInSpaces } from "./messages-parts";
-import { project, signIn } from "./sales-parts";
+import { switchUserInSpaces } from "./messages-parts";
+import { inContext, project } from "./sales-parts";
 import { useSpacesLook } from "./walkthrough/spaces";
 
 // Η Συνομιλία του πελάτη (J3) από άκρη σε άκρη (#161). Ο Πελάτης «Πελάτης Συνομιλίας {project}» και ο Χρήστης πελάτη
@@ -30,18 +30,17 @@ const PDF_FIXTURE = "e2e/fixtures/sample-invoice.pdf";
 const PDF_NAME = "sample-invoice.pdf";
 
 // Υπογράφει τη μηνιαία Συμφωνία του Πελάτη Συνομιλίας: ο Πωλητής τη συντάσσει, ο Ιδιοκτήτης την καταχωρίζει.
-async function signedChatAgreement(
-  page: Page,
-  browser: Browser,
-  P: string,
-): Promise<void> {
-  await signIn(page, "sales@example.com");
-  const agreementUrl = await draftProposal(page, {
-    title: `Συνομιλία ${P}`,
-    kind: "μηνιαία",
+// Σε δικά τους contexts με την εμφάνιση που περιμένουν τα βοηθητικά των Συμφωνιών (agreements-parts), όποια κι αν είναι.
+async function signedChatAgreement(browser: Browser, P: string): Promise<void> {
+  let agreementUrl = "";
+  await inContext(browser, "sales@example.com", async (seller) => {
+    agreementUrl = await draftProposal(seller, {
+      title: `Συνομιλία ${P}`,
+      kind: "μηνιαία",
+    });
+    await addCatalogueLine(seller, `Μηνιαία Παρουσία ${P}`);
   });
-  await addCatalogueLine(page, `Μηνιαία Παρουσία ${P}`);
-  await inSpacesContext(browser, "owner@example.com", async (owner) => {
+  await inContext(browser, "owner@example.com", async (owner) => {
     await owner.goto(agreementUrl);
     await signOutsideSystem(owner, P);
   });
@@ -58,7 +57,7 @@ test("ο πελάτης γράφει με ετικέτα Παραγωγής, η 
   const reply = `Απάντηση ομάδας ${P}`;
 
   // 0. Η Συμφωνία και η Παραγωγή του Πελάτη.
-  await signedChatAgreement(page, browser, P);
+  await signedChatAgreement(browser, P);
 
   // 1. Ο Χρήστης πελάτη ανοίγει τον Χώρο «Μηνύματα» από την πλοήγηση: άδεια Συνομιλία.
   await switchUserInSpaces(page, CLIENT_EMAIL(P));
