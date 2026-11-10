@@ -1,0 +1,120 @@
+/* PROTOTYPE — throwaway, three simpler proposal pages via ?variant=.
+   Μόνο τα tokens των Χώρων: Periwinkle για ό,τι ζωντανό, REC μόνο ως τελεία, κίτρινο μόνο για γύρισμα/τώρα (εδώ πουθενά). */
+[data-look='spaces'] {
+  & .d2p { display: grid; gap: var(--space-4); min-width: 0; padding-bottom: 7rem; }
+  & .d2p > * { min-width: 0; }
+  & .d2p .kit-panel { margin-bottom: 0; }
+  & .d2p-h { margin: 0; font-size: 1.15rem; font-weight: 700; }
+  & .d2p-more { margin-top: var(--space-2); }
+  & .d2p-lead { margin: 0; font-size: 1.1rem; line-height: 1.5; max-width: 64ch; }
+
+  /* Κεφαλίδα */
+  & .d2p-header { display: grid; gap: var(--space-1); }
+  & .d2p-crumbs { margin: 0; font-size: var(--text-sm); }
+  & .d2p-title { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; }
+  & .d2p-title h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+
+  /* «Πώς σκέφτεται αυτή η εκδοχή» */
+  & .d2p-think-note { padding: var(--space-3) var(--space-4); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-lg); font-size: var(--text-sm); }
+  & .d2p-think-note p { margin: var(--space-1) 0 0; max-width: 80ch; color: var(--color-text-muted); }
+
+  /* Προειδοποιήσεις: μόνο όταν κάτι δεν πάει καλά. Η REC μόνο ως τελεία σε ό,τι μπλοκάρει την αποστολή. */
+  & .d2p-warnings { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+  & .d2p-warnings li { padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border-strong); border-radius: 14px; background: var(--color-surface-raised); font-size: var(--text-sm); }
+  & .d2p-warnings li[data-blocking='true']::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.5rem; border-radius: 50%; background: var(--brand-rec); vertical-align: middle; }
+  & .d2p-ok { margin: 0; font-weight: 600; }
+
+  /* Συρτάρια «Αλλαγή …» */
+  & .d2p-drawers { display: grid; gap: var(--space-2); }
+  & .d2p-drawer { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); min-width: 0; }
+  & .d2p-drawer > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr auto; gap: var(--space-3); align-items: baseline; padding: var(--space-3) var(--space-4); }
+  & .d2p-drawer > summary::-webkit-details-marker { display: none; }
+  & .d2p-drawer-title { font-weight: 600; }
+  & .d2p-drawer-sum { color: var(--color-text-muted); font-size: var(--text-sm); overflow-wrap: anywhere; }
+  & .d2p-drawer-cta { color: var(--color-accent); font-weight: 600; font-size: var(--text-sm); white-space: nowrap; }
+  & .d2p-drawer[open] > summary { border-bottom: 1px solid var(--color-border); }
+  & .d2p-drawer[open] .d2p-drawer-cta { visibility: hidden; }
+  & .d2p-drawer-body { padding: var(--space-3) var(--space-4); min-width: 0; }
+  & .d2p-drawer-body .kit-panel { border: 0; background: none; margin: 0; }
+  & .d2p-drawer-body .kit-panel-head { display: none; }
+  & .d2p-drawer-body .kit-panel-body { padding: 0; }
+
+  /* Κάρτες Πακέτων */
+  & .d2p-packages { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--space-3); }
+  & .d2p-package { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+  & .d2p-package[data-chosen='true'] { border-color: var(--color-accent); background: var(--color-surface-raised); }
+  & .d2p-chosen { color: var(--color-accent); font-weight: 600; font-size: var(--text-sm); }
+
+  /* Γρήγορη φόρμα «Πότε και σε ποιον» */
+  & .d2p-quick-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; }
+  & .d2p-quick-row > .field { flex: 1 1 12rem; min-width: 0; }
+  & .d2p-live { margin: 0; color: var(--color-accent); font-weight: 600; }
+
+  /* Α: βήματα */
+  & .d2p-stepper { display: grid; gap: var(--space-3); }
+  & .d2p-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+  & .d2p-steps button { width: 100%; height: 100%; display: flex; gap: var(--space-3); align-items: flex-start; text-align: left; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); color: var(--color-text); font: inherit; cursor: pointer; }
+  & .d2p-steps li[data-state='current'] button { border-color: var(--color-accent); background: var(--color-surface-raised); }
+  & .d2p-step-n { display: inline-grid; place-items: center; flex: none; width: 1.8rem; height: 1.8rem; border-radius: 50%; border: 1px solid var(--color-border-strong); font-weight: 700; }
+  & .d2p-steps li[data-state='done'] .d2p-step-n,
+  & .d2p-steps li[data-state='current'] .d2p-step-n { border-color: var(--color-accent); color: var(--color-accent); }
+  & .d2p-step-text { display: grid; gap: 0.15rem; min-width: 0; font-size: var(--text-sm); overflow-wrap: anywhere; }
+  & .d2p-step-body { display: grid; gap: var(--space-4); }
+  & .d2p-step-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+
+  /* Β: κάρτα-σύνοψη */
+  & .d2p-summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem); gap: var(--space-4); }
+  & .d2p-summary-text { display: grid; gap: var(--space-2); align-content: start; }
+  & .d2p-summary-text p { margin: 0; }
+  & .d2p-summary-action .d2-actions { margin: 0; border: 0; padding: 0; background: none; }
+
+  /* Γ: το έγγραφο + λεπτή στήλη */
+  & .d2p-doc-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 20rem); gap: var(--space-4); align-items: start; }
+  & .d2p-doc { display: grid; gap: var(--space-4); padding: var(--space-6, 2rem) var(--space-6, 2rem); border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface); max-width: 52rem; }
+  & .d2p-doc-head h2 { margin: var(--space-1) 0 0; font-size: 1.5rem; }
+  & .d2p-doc-section { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+  & .d2p-doc-section h3 { margin: 0; font-size: var(--text-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-muted); }
+  & .d2p-doc-section p { margin: 0 0 var(--space-1); line-height: 1.5; }
+  & .d2p-doc-big { font-size: 1.25rem; font-weight: 700; }
+  & .d2p-doc-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+  & .d2p-doc-lines li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 var(--space-3); }
+  & .d2p-doc-lines li > span:not(.d2p-doc-amount) { grid-column: 1; color: var(--color-text-muted); font-size: var(--text-sm); }
+  & .d2p-doc-amount { grid-column: 2; grid-row: 1; font-variant-numeric: tabular-nums; font-weight: 600; }
+  & .d2p-doc-empty { color: var(--color-text-muted); font-style: italic; }
+  & .d2p-inline { display: grid; gap: var(--space-2); }
+  & .d2p-inline-text { display: flex; gap: var(--space-3); align-items: baseline; justify-content: space-between; }
+  & .d2p-inline-text > :first-child { flex: 1; min-width: 0; }
+  & .d2p-change { flex: none; padding: 0; border: 0; background: none; color: var(--color-accent); font: inherit; font-size: var(--text-sm); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  & .d2p-inline[data-open='true'] { padding: var(--space-3); border: 1px dashed var(--color-border-strong); border-radius: 14px; }
+  & .d2p-inline-editor { min-width: 0; }
+  & .d2p-inline-editor .kit-panel { margin: 0; }
+  & .d2p-rail { position: sticky; top: var(--space-4); display: grid; gap: var(--space-3); min-width: 0; }
+  & .d2p-rail .d2-actions { margin: 0; }
+  & .d2p-rail .d2p-drawer > summary { grid-template-columns: 1fr auto; }
+  & .d2p-rail .d2p-drawer-sum { grid-column: 1 / -1; grid-row: 2; }
+  & .d2p-paper { border: 1px dashed var(--color-border-strong); border-radius: var(--radius-lg); padding: var(--space-3); }
+
+  @media (max-width: 60rem) {
+    & .d2p-summary,
+    & .d2p-doc-layout { grid-template-columns: minmax(0, 1fr); }
+    & .d2p-rail { position: static; }
+  }
+  @media (max-width: 40rem) {
+    & .d2p-steps { grid-template-columns: minmax(0, 1fr); }
+    & .d2p-drawer > summary { grid-template-columns: 1fr auto; }
+    & .d2p-drawer-sum { grid-column: 1 / -1; grid-row: 2; }
+    & .d2p-doc { padding: var(--space-4); }
+  }
+
+  /* Ο διακόπτης: επίτηδες έξω από το σχέδιο */
+  & .d2p-switcher { position: fixed; z-index: 100; left: 50%; bottom: 1rem; transform: translateX(-50%); display: grid; gap: var(--space-2); justify-items: center; width: max-content; max-width: calc(100vw - 2rem); }
+  & .d2p-bar { display: flex; gap: var(--space-2); align-items: center; padding: 0.35rem; border-radius: 999px; background: var(--color-text); color: var(--color-bg); box-shadow: 0 10px 30px color-mix(in oklab, var(--brand-midnight) 65%, transparent); }
+  & .d2p-bar button { min-height: 2.25rem; padding: 0 0.9rem; border: 0; border-radius: 999px; background: color-mix(in oklab, var(--color-bg) 12%, transparent); color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+  & .d2p-bar button:hover { background: color-mix(in oklab, var(--color-bg) 24%, transparent); }
+  & .d2p-bar-label { padding: 0 var(--space-2); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  & .d2p-bar .d2p-bar-think { background: var(--color-bg); color: var(--color-text); }
+  & .d2p-think { width: min(34rem, calc(100vw - 2rem)); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-text); color: var(--color-bg); box-shadow: 0 10px 30px color-mix(in oklab, var(--brand-midnight) 65%, transparent); font-size: var(--text-sm); }
+  & .d2p-think h3 { margin: 0 0 var(--space-1); font-size: var(--text-xs); letter-spacing: 0.12em; text-transform: uppercase; }
+  & .d2p-think p { margin: 0 0 var(--space-3); line-height: 1.45; }
+  & .d2p-think ul { margin: 0; padding-left: 1.1rem; display: grid; gap: var(--space-1); }
+}

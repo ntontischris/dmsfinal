@@ -36,6 +36,10 @@ import { TermsSection } from "./d2-terms";
 
 import { SpacesProposalDocument } from "./d5-document";
 
+// PROTOTYPE: ?variant=a|b|c (αγνοείται στην παραγωγή).
+import { D2ProtoView } from "./d2-proto-view";
+import { isProtoEnabled, parseVariant } from "./d2-proto-model";
+
 import "./d2.css";
 
 const Frame = ({ children }: { children: ReactNode }) => (
@@ -129,8 +133,10 @@ function Body({ agreement, kinds, caps, extras, origin }: BodyProps) {
 // πραγματικά δεδομένα και actions. Τι επιτρέπεται το λέει το `can` της βάσης, όπως στη σημερινή σελίδα.
 export async function SpacesAgreement({
   agreementId,
+  variant: variantParam,
 }: {
   agreementId: string;
+  variant?: string;
 }) {
   const viewer = await getViewer();
   const caps = agreementCaps(viewer);
@@ -175,6 +181,27 @@ export async function SpacesAgreement({
     loadExtras(found.data, caps),
     requestOrigin(),
   ]);
+  const variant = isProtoEnabled() ? parseVariant(variantParam) : null;
+  const historyLink = (
+    <SpacesHistoryLink viewer={viewer} entity="agreements" id={found.data.id} />
+  );
+  if (variant !== null)
+    return (
+      <Frame>
+        <D2ProtoView
+          variant={variant}
+          ctx={{
+            agreement: found.data,
+            kinds: kinds.data,
+            caps,
+            extras,
+            origin,
+            today: athensToday(),
+            historyLink,
+          }}
+        />
+      </Frame>
+    );
   return (
     <Frame>
       <D2Header
