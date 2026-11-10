@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { card, field, project, shot, signIn, tableRow } from "./sales-parts";
+import { listItem, project, shot, signIn } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // N5 Ενσωματώσεις και συνδρομές (#209) από άκρη σε άκρη. Το CI δεν έχει κλειδιά παρόχων: με INTEGRATIONS_FAKE_PROVIDERS=1
 // (workflow) οι τρεις συνδέσεις μετρούν ως στημένες και το «Έλεγχος τώρα» απαντά χωρίς καμία κλήση δικτύου.
@@ -9,6 +10,20 @@ import { card, field, project, shot, signIn, tableRow } from "./sales-parts";
 const PAGE = "/app/settings/integrations";
 
 test.describe.configure({ retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
+
+// Ένα πάνελ της οθόνης (κάρτα σύνδεσης, Συνδρομές, φόρμα συνδρομής), από τον τίτλο του.
+const card = (scope: Page | Locator, title: string) =>
+  scope
+    .locator("section.kit-panel")
+    .filter({ has: scope.getByRole("heading", { name: title, exact: true }) });
+
+// Η φόρμα μιας κάρτας που έχει το κουμπί ή το πεδίο: το μήνυμά της, όχι μια προειδοποίηση της κάρτας.
+const formWith = (scope: Locator, inner: Locator) =>
+  scope.locator("form", { has: inner });
 
 // Το service role μόνο προετοιμάζει (καθαρίζει το όριο του ελέγχου, αδειάζει το μητρώο), ποτέ δεν κάνει το ίδιο το τεστ.
 function serviceClient() {
@@ -40,6 +55,9 @@ async function clearSubscriptions() {
 const checkButton = (page: Page, title: string) =>
   card(page, title).getByRole("button", { name: "Έλεγχος τώρα" });
 
+const checkForm = (page: Page, title: string) =>
+  formWith(card(page, title), checkButton(page, title));
+
 test("ο Ιδιοκτήτης βλέπει τις έξι κάρτες και κάνει «Έλεγχος τώρα» μία φορά το λεπτό", async ({
   page,
 }) => {
@@ -50,7 +68,7 @@ test("ο Ιδιοκτήτης βλέπει τις έξι κάρτες και κ�
   await signIn(page, "owner@example.com");
   await page.goto(PAGE);
   await expect(
-    page.getByRole("heading", { name: "Ενσωματώσεις και συνδρομές" }),
+    page.getByRole("heading", { name: "Ενσωματώσεις", exact: true }),
   ).toBeVisible();
   for (const name of [
     "Google ημερολόγιο",
@@ -76,14 +94,20 @@ test("ο Ιδιοκτήτης βλέπει τις έξι κάρτες και κ�
   await expect(ai.getByText("openai/gpt-4.1-mini")).toBeVisible();
   await expect(ai.getByRole("meter")).toBeVisible();
   await expect(card(page, "Αποστολή email").getByRole("meter")).toBeVisible();
+  // Από την κάρτα του email, το Ιστορικό αποστολών (K3).
+  await expect(
+    card(page, "Αποστολή email").getByRole("link", {
+      name: "Ιστορικό αποστολών",
+    }),
+  ).toHaveAttribute("href", "/app/settings/sends");
 
   await checkButton(page, title).click();
-  await expect(card(page, title).getByRole("status")).toContainText(
+  await expect(checkForm(page, title).getByRole("status")).toContainText(
     "Η σύνδεση απαντά",
   );
   await expect(card(page, title).getByText(/απάντησε$/)).toBeVisible();
   await checkButton(page, title).click();
-  await expect(card(page, title).getByRole("alert")).toContainText(
+  await expect(checkForm(page, title).getByRole("alert")).toContainText(
     "πριν από λιγότερο από ένα λεπτό",
   );
   await shot(page, "integrations-cards");
@@ -95,33 +119,31 @@ test("ο Ιδιοκτήτης αλλάζει GA4 και Meta Pixel με έλεγ
   await signIn(page, "owner@example.com");
   await page.goto(PAGE);
   const analytics = card(page, "Στατιστικά και διαφήμιση");
-  const ga4 = field(analytics, "Google Analytics, Measurement ID");
-  const pixel = field(analytics, "Meta Pixel ID");
-  const save = analytics.getByRole("button", {
-    name: "Αποθήκευση αναγνωριστικών",
-  });
+  const ga4 = analytics.getByLabel("Google Analytics, Measurement ID");
+  const pixel = analytics.getByLabel("Meta Pixel ID");
+  const ids = formWith(analytics, ga4);
+  const save = ids.getByRole("button", { name: "Αποθήκευση", exact: true });
 
   await ga4.fill("UA-12345-1");
   await save.click();
-  await expect(analytics.getByRole("alert")).toContainText("G-XXXXXXXXXX");
+  await expect(ids.getByRole("alert")).toContainText("G-XXXXXXXXXX");
 
   await ga4.fill("g-e2e123abcd");
   await pixel.fill("12ab");
   await save.click();
-  await expect(analytics.getByRole("alert")).toContainText("μόνο ψηφία");
+  await expect(ids.getByRole("alert")).toContainText("μόνο ψηφία");
 
   await pixel.fill("123456789012345");
   await save.click();
-  await expect(analytics.getByRole("status")).toContainText("αποθηκεύτηκαν");
+  await expect(ids.getByRole("status")).toContainText("αποθηκεύτηκαν");
   await page.reload();
   await expect(
-    field(
-      card(page, "Στατιστικά και διαφήμιση"),
+    card(page, "Στατιστικά και διαφήμιση").getByLabel(
       "Google Analytics, Measurement ID",
     ),
   ).toHaveValue("G-E2E123ABCD");
   await expect(
-    field(card(page, "Στατιστικά και διαφήμιση"), "Meta Pixel ID"),
+    card(page, "Στατιστικά και διαφήμιση").getByLabel("Meta Pixel ID"),
   ).toHaveValue("123456789012345");
 });
 
@@ -132,14 +154,15 @@ async function addSubscription(
   await card(page, "Συνδρομές")
     .getByRole("link", { name: "Νέα συνδρομή" })
     .click();
-  const form = page.getByRole("region", { name: "Νέα συνδρομή" });
-  await field(form, "Πάροχος").fill(values.provider);
-  await field(form, "Πλάνο").fill("Pro");
-  await field(form, "Μηνιαίο κόστος").fill(values.cost);
-  await field(form, "Νόμισμα").fill(values.currency);
-  await form.getByRole("button", { name: "Προσθήκη συνδρομής" }).click();
+  await expect(page).toHaveURL(/\?sub=new/);
+  const form = card(page, "Νέα συνδρομή");
+  await form.getByLabel("Πάροχος").fill(values.provider);
+  await form.getByLabel("Πλάνο").fill("Pro");
+  await form.getByLabel("Μηνιαίο κόστος").fill(values.cost);
+  await form.getByLabel("Νόμισμα").fill(values.currency);
+  await form.getByRole("button", { name: "Αποθήκευση", exact: true }).click();
+  await expect(listItem(page, values.provider)).toBeVisible();
   await expect(form.getByRole("status")).toContainText("προστέθηκε");
-  await expect(tableRow(page, values.provider)).toBeVisible();
 }
 
 test("ο Ιδιοκτήτης κρατά το μητρώο συνδρομών με σύνολα ανά νόμισμα", async ({
@@ -169,10 +192,11 @@ test("ο Ιδιοκτήτης κρατά το μητρώο συνδρομών μ
     currency: "USD",
   });
 
-  const totals = card(page, "Συνδρομές").getByLabel("Σύνολα ανά νόμισμα");
-  await expect(totals).toContainText("Σύνολο μηνιαίως σε EUR");
-  await expect(totals).toContainText("10,00 EUR");
-  await expect(totals).toContainText("25,50 USD");
+  // Τα σύνολα ανά νόμισμα: μία γραμμή «Σύνολο μηνιαίως σε …» ανά νόμισμα.
+  const total = (currency: string) =>
+    listItem(card(page, "Συνδρομές"), `Σύνολο μηνιαίως σε ${currency}`);
+  await expect(total("EUR")).toContainText("10,00");
+  await expect(total("USD")).toContainText("25,50");
   await expect(
     card(page, "Συνδρομές").getByText(
       "Τα νομίσματα δεν αθροίζονται μεταξύ τους.",
@@ -180,16 +204,16 @@ test("ο Ιδιοκτήτης κρατά το μητρώο συνδρομών μ
   ).toBeVisible();
 
   // Αλλαγή: το πλάνο άλλαξε στον πάροχο και καταγράφεται εδώ.
-  await tableRow(page, `Email ${P}`)
+  await listItem(page, `Email ${P}`)
     .getByRole("link", { name: `Επεξεργασία: Email ${P}` })
     .click();
-  const edit = page.getByRole("region", { name: `Επεξεργασία: Email ${P}` });
-  await field(edit, "Μηνιαίο κόστος").fill("4,50");
-  await field(edit, "Πλάνο").fill("Free");
-  await edit.getByRole("button", { name: "Αποθήκευση συνδρομής" }).click();
+  const edit = card(page, `Επεξεργασία: Email ${P}`);
+  await edit.getByLabel("Μηνιαίο κόστος").fill("4,50");
+  await edit.getByLabel("Πλάνο").fill("Free");
+  await edit.getByRole("button", { name: "Αποθήκευση", exact: true }).click();
   await expect(edit.getByRole("status")).toContainText("αποθηκεύτηκε");
-  await expect(totals).toContainText("24,50 USD");
-  await expect(tableRow(page, `Email ${P}`)).toContainText("Free");
+  await expect(total("USD")).toContainText("24,50");
+  await expect(listItem(page, `Email ${P}`)).toContainText("Free");
   await shot(page, "integrations-subscriptions");
 });
 
@@ -200,7 +224,7 @@ test("η Διαχείριση δεν βλέπει τις Ενσωματώσει�
   await page.goto(PAGE);
   await expect(
     page.getByText(
-      "Τις Ενσωματώσεις και τις συνδρομές τις βλέπει μόνο ο Ιδιοκτήτης.",
+      "Τις συνδρομές και τις ενσωματώσεις τις βλέπει και τις αλλάζει μόνο ο Ιδιοκτήτης.",
     ),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Έλεγχος τώρα" })).toHaveCount(

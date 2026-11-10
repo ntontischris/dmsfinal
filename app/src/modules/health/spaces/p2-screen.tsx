@@ -35,6 +35,7 @@ function Banner({ count }: { count: number }) {
       className="p2-banner"
       data-red={count > 0 ? "true" : undefined}
       role="status"
+      aria-label="Σύνοψη Υγείας"
     >
       <Panel
         label={p2BannerTitle(count)}

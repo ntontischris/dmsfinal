@@ -1,10 +1,4 @@
-import { lookOf } from "@/components/shell/read-look";
-import { ScreenHeader } from "@/components/shell/screen-header";
-import { AccessNotice, getViewer } from "@/modules/access";
-import { SpacesAgreementsSettings, agreementCaps } from "@/modules/agreements";
-import { SettingsTabs } from "@/modules/settings";
-
-import { AgreementsSettingsContent } from "./agreements-settings-parts";
+import { SpacesAgreementsSettings } from "@/modules/agreements";
 
 export const metadata = { title: "Ρυθμίσεις · Συμφωνίες" };
 
@@ -14,41 +8,11 @@ export default async function AgreementsSettingsPage({
 }: {
   searchParams: Promise<{ retired?: string; set?: string }>;
 }) {
-  const viewer = await getViewer();
-  // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
-  if ((await lookOf(viewer)) === "spaces") {
-    const { retired: spacesRetired, set: spacesSet } = await searchParams;
-    return (
-      <SpacesAgreementsSettings
-        showRetired={spacesRetired === "1"}
-        set={spacesSet === "one_off" ? "one_off" : "monthly"}
-      />
-    );
-  }
-  const header = <ScreenHeader eyebrow="O3 · Ρυθμίσεις" title="Ρυθμίσεις" />;
-  if (!agreementCaps(viewer).canManageSettings)
-    return (
-      <>
-        {header}
-        <AccessNotice viewer={viewer}>
-          <p className="m-0">
-            Τις Ρυθμίσεις τις βλέπει όποιος «Διαχειρίζεται Ρυθμίσεις».
-          </p>
-        </AccessNotice>
-      </>
-    );
-
   const { retired, set } = await searchParams;
   return (
-    <>
-      {header}
-      <div className="grid gap-4">
-        <SettingsTabs current="agreements" />
-        <AgreementsSettingsContent
-          showRetired={retired === "1"}
-          set={set === "one_off" ? "one_off" : "monthly"}
-        />
-      </div>
-    </>
+    <SpacesAgreementsSettings
+      showRetired={retired === "1"}
+      set={set === "one_off" ? "one_off" : "monthly"}
+    />
   );
 }

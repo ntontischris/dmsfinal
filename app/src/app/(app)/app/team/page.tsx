@@ -1,116 +1,19 @@
-import Link from "next/link";
-
-import { lookOf } from "@/components/shell/read-look";
-import { ScreenHeader } from "@/components/shell/screen-header";
-import { Notice } from "@/components/ui/notice";
-import { Panel, StatGrid } from "@/components/ui/panel";
-import {
-  AccessNotice,
-  InvitationList,
-  TeamInviteForm,
-  TeamTable,
-  can,
-  getViewer,
-  grantableTeamRoles,
-  isOwner,
-  listInvitations,
-  listRoles,
-  listTeamUsers,
-  SpacesTeam,
-} from "@/modules/access";
-import { GDPR_PATH, GDPR_TITLE, SpacesGdprRequests } from "@/modules/gdpr";
+import { SpacesTeam } from "@/modules/access";
+import { SpacesGdprRequests } from "@/modules/gdpr";
 
 export const metadata = { title: "Ομάδα" };
 
-const header = <ScreenHeader eyebrow="N1 · Ομάδα και Πρόσβαση" title="Ομάδα" />;
-
 // N1 Ομάδα: οι Χρήστες ομάδας, οι προσκλήσεις, η πρόσκληση νέου Χρήστη, απενεργοποίηση. Για όποιον «Προσκαλεί και απενεργοποιεί Χρήστες ομάδας».
-// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή.
 export default async function TeamPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const viewer = await getViewer();
-  if ((await lookOf(viewer)) === "spaces") {
-    const { status } = await searchParams;
-    return (
-      <SpacesTeam
-        status={typeof status === "string" ? status : undefined}
-        gdprRequests={<SpacesGdprRequests />}
-      />
-    );
-  }
-  if (!can(viewer, "access.team"))
-    return (
-      <>
-        {header}
-        <AccessNotice viewer={viewer}>
-          <p className="m-0">
-            Την Ομάδα τη βλέπει όποιος «Προσκαλεί και απενεργοποιεί Χρήστες
-            ομάδας».
-          </p>
-        </AccessNotice>
-      </>
-    );
-
-  const [users, roles, invitations] = await Promise.all([
-    listTeamUsers(),
-    listRoles(),
-    listInvitations(null),
-  ]);
-  if (!users.ok || !roles.ok)
-    return (
-      <>
-        {header}
-        <Notice kind="error" title="Δεν φόρτωσε η Ομάδα">
-          <p className="m-0">Τίποτα δεν χάθηκε. Δοκίμασε ξανά σε λίγο.</p>
-        </Notice>
-      </>
-    );
-
-  const active = users.data.filter((user) => user.isActive).length;
-  const grantable =
-    viewer.status === "signed-in" && viewer.team
-      ? grantableTeamRoles(roles.data, viewer.team)
-      : [];
-  const rows = invitations.ok ? invitations.data : [];
+  const { status } = await searchParams;
   return (
-    <>
-      <ScreenHeader eyebrow="N1 · Ομάδα και Πρόσβαση" title="Ομάδα" />
-      <div className="grid gap-4">
-        <StatGrid
-          items={[
-            { label: "Ενεργοί", value: String(active), tone: "ok" },
-            {
-              label: "Απενεργοποιημένοι",
-              value: String(users.data.length - active),
-            },
-          ]}
-        />
-        <p className="m-0 text-sm text-muted-foreground">
-          Αν το email ανήκει σε Χρήστη που έχει απενεργοποιηθεί, η πρόσκληση
-          προτείνει Επανενεργοποίηση με τους Ρόλους που είχε.
-          {isOwner(viewer) && (
-            <>
-              {" "}
-              Τους ίδιους τους Ρόλους τους αλλάζεις στους{" "}
-              <Link href="/app/team/roles">Ρόλους και Δικαιώματα</Link>.
-              Τα αιτήματα πρόσβασης και διαγραφής είναι στα{" "}
-              <Link href={GDPR_PATH}>{GDPR_TITLE}</Link>.
-            </>
-          )}
-        </p>
-        <Panel label="Πρόσκληση Χρήστη ομάδας">
-          <TeamInviteForm roles={grantable} />
-        </Panel>
-        <Panel label="Προσκλήσεις" isFlush>
-          <InvitationList invitations={rows} empty="Καμία πρόσκληση ακόμα." />
-        </Panel>
-        <Panel label="Χρήστες ομάδας" aside={String(users.data.length)} isFlush>
-          <TeamTable users={users.data} roles={roles.data} />
-        </Panel>
-      </div>
-    </>
+    <SpacesTeam
+      status={typeof status === "string" ? status : undefined}
+      gdprRequests={<SpacesGdprRequests />}
+    />
   );
 }

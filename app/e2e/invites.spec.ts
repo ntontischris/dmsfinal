@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
 import { card, field, listItem, project, signIn } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Προσκλήσεις (N1, N2, N3), Χρήστες πελάτη, Ενσωματώσεις (O8) και Send Email Hook από άκρη σε άκρη. Φανταστικά στοιχεία.
 // Οι προσκεκλημένοι μπαίνουν με σύνδεσμο επαναφοράς από το admin API (το email δεν διαβάζεται από τα Mailpit).
@@ -12,6 +13,18 @@ const NEW_PASSWORD = "e2e-new-password-456";
 
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
+
+// Οι προσκλήσεις σε εκκρεμότητα και οι Χρήστες ομάδας της N1.
+const pendingInvites = (page: Page) =>
+  card(page, "Προσκλήσεις σε εκκρεμότητα").last();
+const teamUsers = (page: Page) => card(page, "Χρήστες ομάδας").last();
+
+// Σύνδεσμος της μπάρας των Χώρων ή του μενού προφίλ, και κλειστός: μετράμε τη διεύθυνση, όχι αν φαίνεται.
+const linkTo = (page: Page, href: string) => page.locator(`a[href="${href}"]`);
 
 function serviceClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -35,7 +48,7 @@ async function recoveryHash(email: string): Promise<string> {
   return hash;
 }
 
-// Ο προσκεκλημένος ανοίγει τον σύνδεσμο, ορίζει κωδικό και μπαίνει στο σύστημα (σε δική του συνεδρία).
+// Ο προσκεκλημένος ανοίγει τον σύνδεσμο, ορίζει κωδικό και μπαίνει στο σύστημα (σε δική του συνεδρία, στους Χώρους).
 async function acceptInvite(
   context: BrowserContext,
   email: string,
@@ -97,11 +110,12 @@ async function inviteTeamMember(
   name: string,
 ): Promise<void> {
   await page.goto("/app/team");
-  await field(page, "Ονοματεπώνυμο").fill(name);
-  await field(page, "Email").fill(email);
-  await page.getByLabel("Πωλήσεις", { exact: true }).check();
-  await page.getByRole("button", { name: "Πρόσκληση", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Η πρόσκληση στάλθηκε");
+  const form = page.locator("#n1-invite");
+  await form.getByLabel("Ονοματεπώνυμο", { exact: true }).fill(name);
+  await form.getByLabel("Email", { exact: true }).fill(email);
+  await form.getByLabel("Ρόλος Πωλήσεις", { exact: true }).check();
+  await form.getByRole("button", { name: "Αποστολή πρόσκλησης" }).click();
+  await expect(form.getByRole("status")).toContainText("Η πρόσκληση στάλθηκε");
 }
 
 test("ο Ιδιοκτήτης προσκαλεί Χρήστη ομάδας, ο προσκεκλημένος μπαίνει και η πρόσκληση γίνεται Αποδεκτή", async ({
@@ -112,19 +126,18 @@ test("ο Ιδιοκτήτης προσκαλεί Χρήστη ομάδας, ο �
   const email = `team.${P}.${Date.now()}@example.com`;
   await signIn(page, "owner@example.com");
   await inviteTeamMember(page, email, `Χρήστης ${P}`);
-  await expect(listItem(page, email)).toContainText("Εκκρεμεί");
+  await expect(listItem(pendingInvites(page), email)).toContainText("εκκρεμεί");
 
   const context = await browser.newContext();
+  await useSpacesLook(context);
   const guest = await acceptInvite(context, email);
-  await expect(
-    guest
-      .getByRole("navigation", { name: "Οθόνες" })
-      .getByRole("link", { name: /Πελάτες/ }),
-  ).toBeVisible();
+  await expect(linkTo(guest, "/app/clients")).not.toHaveCount(0);
   await context.close();
 
+  // Αποδεκτή: φεύγει από τις εκκρεμείς και ο Χρήστης είναι ενεργός στην Ομάδα.
   await page.reload();
-  await expect(listItem(page, email)).toContainText("Αποδεκτή");
+  await expect(listItem(pendingInvites(page), email)).toHaveCount(0);
+  await expect(listItem(teamUsers(page), email)).toContainText("ενεργός");
 });
 
 test("η ακυρωμένη πρόσκληση δεν δίνει πρόσβαση", async ({ page, browser }) => {
@@ -132,21 +145,20 @@ test("η ακυρωμένη πρόσκληση δεν δίνει πρόσβασ�
   const email = `cancel.${P}.${Date.now()}@example.com`;
   await signIn(page, "owner@example.com");
   await inviteTeamMember(page, email, `Ακύρωση ${P}`);
-  await listItem(page, email)
+  await listItem(pendingInvites(page), email)
     .getByRole("button", { name: "Ακύρωση", exact: true })
     .click();
   // Το revalidation ξαναφορτώνει τη λίστα: ελέγχουμε τη λίστα, όχι το μήνυμα. Οι ακυρωμένες δεν μένουν σε αυτήν.
-  await expect(listItem(page, email)).toHaveCount(0);
+  await expect(listItem(pendingInvites(page), email)).toHaveCount(0);
 
   const context = await browser.newContext();
+  await useSpacesLook(context);
   const guest = await acceptInvite(context, email);
-  await expect(
-    guest
-      .getByRole("navigation", { name: "Οθόνες" })
-      .getByRole("link", { name: /Ομάδα/ }),
-  ).toHaveCount(0);
+  await expect(linkTo(guest, "/app/team")).toHaveCount(0);
   await guest.goto("/app/team");
-  await expect(guest.getByText("Την Ομάδα τη βλέπει όποιος")).toBeVisible();
+  await expect(
+    guest.getByText("Την Ομάδα τη διαχειρίζονται όσοι έχουν"),
+  ).toBeVisible();
   await context.close();
 });
 
@@ -161,37 +173,55 @@ test("ο Ιδιοκτήτης προσκαλεί Χρήστη πελάτη κα�
   const clientId = await clientForOwner(`Πελάτης Πρόσβασης ${P} ${Date.now()}`);
   const email = `client.${P}.${Date.now()}@example.com`;
   await signIn(page, "owner@example.com");
-  await page.goto(`/app/clients/${clientId}`);
-  const invite = card(page, "Πρόσκληση Χρήστη πελάτη");
+  // Οι Χρήστες πελάτη είναι στην καρτέλα «users» της Σελίδας Πελάτη.
+  await page.goto(`/app/clients/${clientId}?tab=users`);
+  const invite = card(page, "Πρόσκληση Χρήστη πελάτη").last();
   await field(invite, "Ονοματεπώνυμο").fill(`Επαφή ${P}`);
   await field(invite, "Email").fill(email);
-  await invite.getByRole("button", { name: "Πρόσκληση Χρήστη πελάτη" }).click();
-  await expect(page.getByRole("status")).toContainText("Η πρόσκληση στάλθηκε");
+  await invite.getByRole("button", { name: "Αποστολή πρόσκλησης" }).click();
+  await expect(invite.getByRole("status")).toContainText(
+    "Η πρόσκληση στάλθηκε",
+  );
 
   const context = await browser.newContext();
+  await useSpacesLook(context);
   const guest = await acceptInvite(context, email);
-  const nav = guest.getByRole("navigation", { name: "Οθόνες" });
-  // Τα ονόματα των συνδέσμων περιέχουν και τον κωδικό της οθόνης («N3 Συνάδελφοι»)· γι' αυτό ταιριάζουμε με regex.
-  await expect(nav.getByRole("link", { name: /Συνάδελφοι/ })).toBeVisible();
-  await expect(nav.getByRole("link", { name: /Ομάδα/ })).toHaveCount(0);
-  await expect(nav.getByRole("link", { name: /Πελάτες/ })).toHaveCount(0);
+  // Οι Συνάδελφοι ζουν στο μενού προφίλ· Ομάδα και Πελάτες δεν υπάρχουν πουθενά για τον πελάτη.
+  await expect(linkTo(guest, "/app/colleagues")).not.toHaveCount(0);
+  await expect(linkTo(guest, "/app/team")).toHaveCount(0);
+  await expect(linkTo(guest, "/app/clients")).toHaveCount(0);
   await guest.goto("/app/productions");
-  await expect(guest.getByRole("heading", { name: "Παραγωγές" })).toBeVisible();
+  await expect(
+    guest
+      .getByRole("navigation", { name: "Η δουλειά μου" })
+      .getByRole("link", { name: "Παραγωγές" }),
+  ).toHaveAttribute("aria-current", "page");
   await expect(guest.getByText(internalTitle)).toHaveCount(0);
   await context.close();
 });
 
-// «Πότε» του Ιστορικού αποστολών: ώρα Ελλάδας, όπως τη γράφει το K3.
-const athensMinute = (time: number): string =>
-  new Intl.DateTimeFormat("el-GR", {
-    timeZone: "Europe/Athens",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(new Date(time));
+// «Πότε» του Ιστορικού αποστολών: ώρα Ελλάδας, όπως τη γράφει το K3 («15:23» μπροστά, «12/10/2026» στη δεύτερη γραμμή).
+const athensMinute = (time: number): RegExp => {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("el-GR", {
+      timeZone: "Europe/Athens",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+      .formatToParts(new Date(time))
+      .map((part) => [part.type, part.value]),
+  );
+  return new RegExp(
+    `${parts.hour}:${parts.minute}[\\s\\S]*${parts.day}/${parts.month}/${parts.year}`,
+  );
+};
+
+// Μια γραμμή του Ιστορικού αποστολών (K3).
+const sendRows = (page: Page) => page.locator("li.part-row");
 
 test("ο Ιδιοκτήτης στέλνει δοκιμαστικό email και φαίνεται στο Ιστορικό", async ({
   page,
@@ -202,16 +232,19 @@ test("ο Ιδιοκτήτης στέλνει δοκιμαστικό email και
   await page
     .getByRole("button", { name: "Δοκιμαστικό email στον εαυτό μου" })
     .click();
-  await expect(page.getByRole("status")).toContainText("μπήκε στην ουρά");
+  await expect(
+    page.getByRole("status").filter({ hasText: "μπήκε στην ουρά" }),
+  ).toBeVisible();
   // Το Ιστορικό αποστολών (K3, #174): η γραμμή του δοκιμαστικού αυτού του λεπτού, ως «στάλθηκε». Οι ώρες δεν έχουν
-  // ειδικούς χαρακτήρες regex («12/10/2026, 15:23»).
-  const minutes = [clickedAt - 60_000, clickedAt, clickedAt + 60_000].map(athensMinute);
-  const sentNow = page
-    .locator("tr")
+  // ειδικούς χαρακτήρες regex.
+  const minutes = [clickedAt - 60_000, clickedAt, clickedAt + 60_000].map(
+    athensMinute,
+  );
+  const sentNow = sendRows(page)
     .filter({ hasText: "Δοκιμαστικό email" })
     .filter({ hasText: "owner@example.com" })
     .filter({ hasText: "στάλθηκε" })
-    .filter({ hasText: new RegExp(minutes.join("|")) });
+    .filter({ hasText: new RegExp(minutes.map((m) => m.source).join("|")) });
   await expect
     .poll(
       async () => {
@@ -272,6 +305,6 @@ test("το Send Email Hook στέλνει την πρόσκληση και το 
   await signIn(page, "owner@example.com");
   await page.goto("/app/settings/sends?channel=email");
   await expect(
-    page.locator("tr").filter({ hasText: email }).filter({ hasText: "στάλθηκε" }),
+    sendRows(page).filter({ hasText: email }).filter({ hasText: "στάλθηκε" }),
   ).toHaveCount(1);
 });

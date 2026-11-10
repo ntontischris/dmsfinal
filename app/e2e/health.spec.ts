@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 
 import { card, project, signIn } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Υγεία συστήματος (P2, #215) από άκρη σε άκρη. Οι αποτυχημένες αποστολές και το Γεγονός που κόλλησε μπαίνουν με service
 // role (μόνο προετοιμασία), με το όνομα του project, γιατί τα δύο projects μοιράζονται μία βάση. Οι ενέργειες γίνονται
@@ -10,6 +11,10 @@ test.describe.configure({ mode: "serial", retries: 0 });
 
 const PATH = "/app/health";
 const TITLE = "Υγεία συστήματος";
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -60,8 +65,9 @@ async function stuckEvent(P: string): Promise<string> {
   return String(data.id);
 }
 
-async function confirm(page: Page, scope: string, label: string) {
-  const item = page.locator(scope);
+// Η γραμμή μιας αποστολής ή ενός Γεγονότος, από το κείμενό της (όνομα παραλήπτη ή λόγος με το όνομα του project).
+async function confirm(page: Page, text: string, label: string) {
+  const item = page.locator("li.part-row", { hasText: text });
   await item.getByRole("button", { name: label, exact: true }).click();
   await item.getByRole("button", { name: `Ναι: ${label}` }).click();
   await expect(item).toHaveCount(0);
@@ -73,32 +79,36 @@ test("ο Ιδιοκτήτης βλέπει τη μπάρα, αγνοεί, ξαν
   test.setTimeout(120_000);
   const P = project();
   const ignored = `Υγεία Αγνόησε ${P}`;
-  const ignoreId = await failedSend(ignored);
-  const resendId = await failedSend(`Υγεία Ξαναστείλε ${P}`);
-  const eventId = await stuckEvent(P);
+  const resent = `Υγεία Ξαναστείλε ${P}`;
+  await failedSend(ignored);
+  await failedSend(resent);
+  await stuckEvent(P);
 
   await signIn(page, "owner@example.com");
   await page.goto(PATH);
   await expect(
-    page.getByRole("heading", { level: 1, name: TITLE }),
-  ).toBeVisible();
+    page.getByRole("navigation", { name: "Εταιρεία" }).getByRole("link", {
+      name: "Υγεία",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-current", "page");
   await expect(
     page.getByRole("status", { name: "Σύνοψη Υγείας" }),
   ).toContainText(/θέλ(ει|ουν) προσοχή/);
   await expect(page.getByTestId("external-not-set-up")).toBeVisible();
   await expect(
-    card(page, "Αποστολές που απέτυχαν").getByText("θέλει προσοχή"),
+    card(page, "Αποστολές που απέτυχαν").getByText("θέλει προσοχή").first(),
   ).toBeVisible();
 
-  await confirm(page, `[data-send="${ignoreId}"]`, "Αγνόησε");
-  await confirm(page, `[data-send="${resendId}"]`, "Ξαναστείλε");
-  await confirm(page, `[data-event="${eventId}"]`, "Ξαναδοκίμασε");
+  await confirm(page, ignored, "Αγνόησε");
+  await confirm(page, resent, "Ξαναστείλε");
+  await confirm(page, `Κόλλησε ${P}`, "Ξαναδοκίμασε");
 
   // Η αγνοημένη αποστολή μένει στο Ιστορικό αποστολών.
   await page.goto("/app/settings/sends?channel=email");
-  await expect(page.locator("tr", { hasText: ignored }).first()).toContainText(
-    "αγνοήθηκε",
-  );
+  await expect(
+    page.locator("li.part-row", { hasText: ignored }).first(),
+  ).toContainText("αγνοήθηκε");
 });
 
 test("οι Πωλήσεις δεν βλέπουν την Υγεία ούτε τη γραμμή της στο μενού", async ({
@@ -110,13 +120,26 @@ test("οι Πωλήσεις δεν βλέπουν την Υγεία ούτε τ�
     page.getByRole("heading", { name: "Χωρίς δικαίωμα" }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: TITLE })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Υγεία", exact: true }),
+  ).toHaveCount(0);
 });
 
 test("η κάρτα Υγείας στο Σήμερα ανοίγει την Υγεία συστήματος", async ({
   page,
 }) => {
   await signIn(page, "owner@example.com");
-  await card(page, TITLE).getByRole("link", { name: "Άνοιγμα →" }).click();
+  await page.waitForLoadState("networkidle");
+  // Με κάτι προς προσοχή η κάρτα στέκεται πάνω-πάνω· αλλιώς η Υγεία είναι μια γραμμή στο «Και άλλα».
+  const alert = card(page, TITLE).getByRole("link", {
+    name: new RegExp(`: ${TITLE}$`),
+  });
+  if ((await alert.count()) > 0) await alert.click();
+  else {
+    const more = page.locator("details.a1-others");
+    await more.locator("summary").click();
+    await more.getByRole("link", { name: TITLE, exact: true }).click();
+  }
   await expect(page).toHaveURL(/\/app\/health$/);
   await expect(
     page.getByRole("heading", { level: 1, name: TITLE }),

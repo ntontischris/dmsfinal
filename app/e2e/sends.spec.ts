@@ -1,7 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { project, signIn } from "./sales-parts";
+import { card, project, signIn } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ιστορικό αποστολών (K3, #174) από άκρη σε άκρη. Ο Πελάτης «Πελάτης Αποστολών {project}» (Υπεύθυνος ο Ιδιοκτήτης) και ο
 // Χρήστης πελάτη «Ελένη Αποστολών» (Πλήρης) έρχονται από το seed. Ένα Μήνυμα της ομάδας μπαίνει με service role και τρέχει
@@ -9,7 +10,27 @@ import { project, signIn } from "./sales-parts";
 // Ιστορικό. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
+
 const SENDS_PATH = "/app/settings/sends";
+
+const filtersRow = (page: Page) =>
+  page.getByRole("group", { name: "Φίλτρα", exact: true });
+
+// Μια κάρτα φίλτρου ανοίγει με το summary της· ξαναδοκιμάζει ώσπου η σελίδα να ζωντανέψει.
+async function openFilterCard(page: Page, label: string) {
+  const card = filtersRow(page)
+    .locator("details")
+    .filter({ has: page.locator("summary", { hasText: label }) });
+  await expect(async () => {
+    if ((await card.getAttribute("open")) === null)
+      await card.locator("summary").click();
+    await expect(card).toHaveAttribute("open", "", { timeout: 1_000 });
+  }).toPass();
+  return card;
+}
 const RECIPIENT = "Ελένη Αποστολών";
 
 function adminClient(): SupabaseClient {
@@ -70,21 +91,27 @@ test("ο Ιδιοκτήτης βλέπει την αποστολή στο K3, φ
   await signIn(page, "owner@example.com");
   await page.goto(SENDS_PATH);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Ιστορικό αποστολών" }),
-  ).toBeVisible();
-  await expect(
     page
-      .getByRole("navigation", { name: "Ιστορικό αποστολών" })
-      .getByRole("link", { name: "Στάλθηκαν" }),
+      .getByRole("navigation", { name: "Αυτοματισμοί και αποστολές" })
+      .getByRole("link", { name: "Ιστορικό αποστολών" }),
   ).toHaveAttribute("aria-current", "page");
+  await expect(
+    filtersRow(page)
+      .locator("summary", { hasText: "Κατάσταση" })
+      .locator(".kit-fb-chip"),
+  ).toHaveText("Στάλθηκαν");
 
   // Φίλτρο Πελάτη: μόνο οι αποστολές του.
-  await page
-    .getByRole("combobox", { name: "Πελάτης", exact: true })
-    .selectOption({ label: clientName });
-  await page.getByRole("button", { name: "Εφαρμογή" }).click();
+  const clientCard = await openFilterCard(page, "Πελάτης");
+  await clientCard
+    .getByRole("searchbox", { name: "Αναζήτηση: Πελάτης" })
+    .fill(clientName);
+  await clientCard.getByRole("link", { name: clientName }).click();
   await expect(page).toHaveURL(new RegExp(`client=${clientId}`));
-  const row = page.locator("tr").filter({ hasText: RECIPIENT }).first();
+  const row = page
+    .locator("li.part-row")
+    .filter({ hasText: RECIPIENT })
+    .first();
   await expect(row).toContainText("Νέο Μήνυμα");
   await expect(row).toContainText("Ειδοποίηση");
   await expect(row).toContainText("στάλθηκε");
@@ -92,19 +119,17 @@ test("ο Ιδιοκτήτης βλέπει την αποστολή στο K3, φ
     `Καλημέρα από την ομάδα ${P}`,
   );
 
-  // Η καρτέλα «Αποστολές» του Πελάτη.
+  // «Τι στάλθηκε στον Πελάτη», στην καρτέλα «Επικοινωνία» του Πελάτη.
   await page.goto(`/app/clients/${clientId}`);
   await page
-    .getByRole("navigation", { name: "Καρτέλες Πελάτη" })
-    .getByRole("link", { name: "Αποστολές" })
+    .getByRole("navigation", { name: "Ενότητες Πελάτη" })
+    .getByRole("link", { name: "Επικοινωνία" })
     .click();
-  await expect(page).toHaveURL(/tab=sends/);
-  const panel = page.getByRole("main");
+  await expect(page).toHaveURL(/tab=comms/);
+  const panel = card(page, "Τι στάλθηκε στον Πελάτη");
+  await expect(panel).toBeVisible();
   await expect(
-    panel.getByText("Αποστολές προς τους Χρήστες του Πελάτη"),
-  ).toBeVisible();
-  await expect(
-    panel.locator("tr").filter({ hasText: RECIPIENT }).first(),
+    panel.locator("li.part-row").filter({ hasText: RECIPIENT }).first(),
   ).toContainText("Νέο Μήνυμα");
 });
 
@@ -116,7 +141,7 @@ test("χωρίς Δικαίωμα δεν φαίνεται ούτε το K3 ού�
   await expect(
     page.getByRole("heading", { name: "Χωρίς δικαίωμα" }),
   ).toBeVisible();
-  await expect(page.getByRole("table")).toHaveCount(0);
+  await expect(page.locator("li.part-row")).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "Ιστορικό αποστολών" }),
   ).toHaveCount(0);

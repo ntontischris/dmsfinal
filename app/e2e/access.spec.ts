@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { useSpacesLook } from "./walkthrough/spaces";
+
 // Είσοδος, Ομάδα (N1) και Ρόλοι (N4) από άκρη σε άκρη, με τους τρεις φανταστικούς Χρήστες του e2e/seed.mjs.
 const PASSWORD = "e2e-password-123";
 
@@ -10,6 +12,17 @@ async function signIn(page: Page, email: string) {
   await page.getByRole("button", { name: "Είσοδος" }).click();
   await expect(page).toHaveURL(/\/app$/);
 }
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
+
+// Οι καρτέλες του Χώρου «Εταιρεία» στην κεφαλίδα· οι υπόλοιπες οθόνες του Χώρου είναι στο «Περισσότερα».
+const companyTabs = (page: Page) =>
+  page.getByRole("navigation", { name: "Εταιρεία" });
+
+// Σύνδεσμος του Χώρου ή του «Περισσότερα», και κλειστός: μετράμε τη διεύθυνση, όχι αν φαίνεται.
+const linkTo = (page: Page, href: string) => page.locator(`a[href="${href}"]`);
 
 const shot = (page: Page, name: string) =>
   page.screenshot({
@@ -35,12 +48,13 @@ test("λάθος κωδικός: μήνυμα που δεν αποκαλύπτε
 
 test("ο Ιδιοκτήτης βλέπει την Ομάδα και φτιάχνει Ρόλο", async ({ page }) => {
   await signIn(page, "owner@example.com");
-  const nav = page.getByRole("navigation", { name: "Οθόνες" });
-  await expect(
-    nav.getByRole("link", { name: /Ρόλοι και Δικαιώματα/ }),
-  ).toBeVisible();
-
   await page.goto("/app/team");
+  await companyTabs(page)
+    .getByRole("button", { name: "Περισσότερες οθόνες" })
+    .click();
+  await expect(
+    companyTabs(page).getByRole("link", { name: "Ρόλοι και Δικαιώματα" }),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "Άννα Πωλήσεις" })).toBeVisible();
   await shot(page, "n1-owner");
 
@@ -59,9 +73,9 @@ test("ο Ιδιοκτήτης βλέπει την Ομάδα και φτιάχν
     "Κανείς δεν έχει ακόμα αυτόν τον Ρόλο.",
   );
   await page.getByRole("button", { name: "Επιβεβαίωση αποθήκευσης" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "Αποθηκεύτηκε (1 αλλαγή)",
-  );
+  await expect(
+    page.getByRole("status").filter({ hasText: "Αποθηκεύτηκε (1 αλλαγή)" }),
+  ).toBeVisible();
   await shot(page, "n4-role");
 });
 
@@ -78,11 +92,11 @@ test("η Διαχείριση δίνει Ρόλους χωρίς κλιμάκω�
   page,
 }) => {
   await signIn(page, "admin@example.com");
-  const nav = page.getByRole("navigation", { name: "Οθόνες" });
-  await expect(nav.getByRole("link", { name: "Ομάδα" })).toBeVisible();
+  await page.goto("/app/team");
   await expect(
-    nav.getByRole("link", { name: /Ρόλοι και Δικαιώματα/ }),
-  ).toHaveCount(0);
+    companyTabs(page).getByRole("link", { name: "Ομάδα", exact: true }),
+  ).toBeVisible();
+  await expect(linkTo(page, "/app/team/roles")).toHaveCount(0);
 
   await page.goto("/app/team/roles");
   await expect(page.getByText("Χωρίς δικαίωμα")).toBeVisible();
@@ -91,16 +105,16 @@ test("η Διαχείριση δίνει Ρόλους χωρίς κλιμάκω�
   await page.getByRole("link", { name: "Άννα Πωλήσεις" }).click();
   await expect(
     page.getByText(
-      "Κλειδωμένος: τον Ρόλο Ιδιοκτήτης τον δίνει μόνο Ιδιοκτήτης",
+      "Δεν γίνεται: τον Ρόλο Ιδιοκτήτης τον δίνει μόνο Ιδιοκτήτης.",
     ),
   ).toBeVisible();
+  await expect(page.getByLabel("Ρόλος Ιδιοκτήτης", { exact: true })).toBeDisabled();
   await shot(page, "n1-admin-user");
 });
 
 test("οι Πωλήσεις δεν βλέπουν την Ομάδα", async ({ page }) => {
   await signIn(page, "sales@example.com");
-  const nav = page.getByRole("navigation", { name: "Οθόνες" });
-  await expect(nav.getByRole("link", { name: "Ομάδα" })).toHaveCount(0);
+  await expect(linkTo(page, "/app/team")).toHaveCount(0);
   await page.goto("/app/team");
   await expect(page.getByText("Χωρίς δικαίωμα")).toBeVisible();
   await shot(page, "n1-sales");
