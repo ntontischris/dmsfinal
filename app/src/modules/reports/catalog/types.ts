@@ -1,13 +1,11 @@
-import type { ReactNode } from "react";
-
 import type { Viewer } from "@/modules/access";
 
 import type { ExportColumn } from "../export/columns";
 import type { PeriodCode } from "../url";
 
-// Το συμβόλαιο του μητρώου Αναφορών. Μία Αναφορά = ένα αρχείο στο reports/ (π.χ. reports/turnover-monthly.tsx) που
+// Το συμβόλαιο του μητρώου Αναφορών. Μία Αναφορά = ένα αρχείο στο reports/ (π.χ. reports/turnover-monthly.ts) που
 // εξάγει ένα ReportDefinition· η οικογένειά της την προσθέτει στη λίστα της (catalog/finance.ts, catalog/sales.ts).
-// Ο σκελετός της M1 (components/reports-screen.tsx) δεν αλλάζει για νέα Αναφορά.
+// Ο σκελετός της M1 (spaces/m1-screen.tsx) δεν αλλάζει για νέα Αναφορά· το σώμα της το δείχνει η οικογένειά της (spaces/m1-finance.tsx, spaces/m1-sales.tsx).
 
 export type ReportFamily = "finance" | "sales";
 
@@ -17,14 +15,6 @@ export interface ReportFilters {
   clientId?: string;
   // Ο Πωλητής (?seller=) για τις Αναφορές πωλήσεων (Ρβ)· η βάση ελέγχει το Εύρος.
   sellerId?: string;
-}
-
-export interface ReportBodyProps {
-  report: ReportDefinition;
-  filters: ReportFilters;
-  viewer: Viewer;
-  // Ό,τι προσθέτει το catalog/actions.ts (π.χ. τα κουμπιά Εξαγωγής του Ργ), έτοιμο για την Αναφορά.
-  actions: ReactNode;
 }
 
 export interface ReportDefinition {
@@ -37,8 +27,6 @@ export interface ReportDefinition {
   usesPeriod: boolean;
   // Μόνο για να μη δείχνουμε πλακίδιο που θα απαντούσε «χωρίς δικαίωμα»· η βάση ξαναελέγχει σε κάθε RPC (Ρ1).
   isVisible: (viewer: Viewer) => boolean;
-  // Server component: φορτώνει το δικό του RPC και δείχνει δεδομένα, άδειο ή σφάλμα.
-  Body: (props: ReportBodyProps) => Promise<ReactNode>;
   // Εξαγωγή όπως φαίνεται (Ργ). Χωρίς αυτό η Αναφορά δεν έχει κουμπί «Εξαγωγή». Βλ. ReportExportSpec.
   exportSpec?: ReportExportSpec;
 }
@@ -61,9 +49,3 @@ export interface ReportExportSpec {
   totals?: { key: string; label: string };
 }
 
-// Ενέργεια πάνω σε μια Αναφορά (π.χ. «Εξαγωγή σε Excel» στο Ργ). null = δεν ισχύει για αυτή την Αναφορά ή τον θεατή.
-export type ReportAction = (props: {
-  report: ReportDefinition;
-  filters: ReportFilters;
-  viewer: Viewer;
-}) => ReactNode;
