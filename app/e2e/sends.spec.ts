@@ -126,7 +126,8 @@ test("ο Ιδιοκτήτης βλέπει την αποστολή στο K3, φ
     .getByRole("link", { name: "Επικοινωνία" })
     .click();
   await expect(page).toHaveURL(/tab=comms/);
-  const panel = card(page, "Τι στάλθηκε στον Πελάτη");
+  // Η ενότητα της καρτέλας περιέχει το πάνελ με τον ίδιο τίτλο: παίρνουμε το εσωτερικό.
+  const panel = card(page, "Τι στάλθηκε στον Πελάτη").last();
   await expect(panel).toBeVisible();
   await expect(
     panel.locator("li.part-row").filter({ hasText: RECIPIENT }).first(),

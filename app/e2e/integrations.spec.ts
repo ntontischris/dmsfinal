@@ -22,6 +22,7 @@ const card = (scope: Page | Locator, title: string) =>
     .filter({ has: scope.getByRole("heading", { name: title, exact: true }) });
 
 // Η φόρμα μιας κάρτας που έχει το κουμπί ή το πεδίο: το μήνυμά της, όχι μια προειδοποίηση της κάρτας.
+// Το `inner` ψάχνεται μέσα στη φόρμα, άρα ξεκινά από το `page` και όχι από την κάρτα.
 const formWith = (scope: Locator, inner: Locator) =>
   scope.locator("form", { has: inner });
 
@@ -56,7 +57,10 @@ const checkButton = (page: Page, title: string) =>
   card(page, title).getByRole("button", { name: "Έλεγχος τώρα" });
 
 const checkForm = (page: Page, title: string) =>
-  formWith(card(page, title), checkButton(page, title));
+  formWith(
+    card(page, title),
+    page.locator("button", { hasText: /Έλεγχος τώρα|Περιμένε/ }),
+  );
 
 test("ο Ιδιοκτήτης βλέπει τις έξι κάρτες και κάνει «Έλεγχος τώρα» μία φορά το λεπτό", async ({
   page,
@@ -121,7 +125,10 @@ test("ο Ιδιοκτήτης αλλάζει GA4 και Meta Pixel με έλεγ
   const analytics = card(page, "Στατιστικά και διαφήμιση");
   const ga4 = analytics.getByLabel("Google Analytics, Measurement ID");
   const pixel = analytics.getByLabel("Meta Pixel ID");
-  const ids = formWith(analytics, ga4);
+  const ids = formWith(
+    analytics,
+    page.getByLabel("Google Analytics, Measurement ID"),
+  );
   const save = ids.getByRole("button", { name: "Αποθήκευση", exact: true });
 
   await ga4.fill("UA-12345-1");
@@ -230,5 +237,7 @@ test("η Διαχείριση δεν βλέπει τις Ενσωματώσει�
   await expect(page.getByRole("button", { name: "Έλεγχος τώρα" })).toHaveCount(
     0,
   );
-  await expect(page.getByRole("heading", { name: "Συνδρομές", exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Συνδρομές", exact: true }),
+  ).toHaveCount(0);
 });
