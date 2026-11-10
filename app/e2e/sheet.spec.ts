@@ -104,7 +104,7 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
     await visit(producer, filmingUrl);
     const mine = card(producer, "Είσαι στο Συνεργείο");
     await expect(
-      mine.getByText("Περιμένει απάντηση", { exact: true }),
+      mine.getByText("Περιμένει απάντηση", { exact: true }).first(),
     ).toBeVisible();
     await button(mine, "Επιβεβαιώνω").click();
     await expect(button(mine, "Επιβεβαιώνω")).toHaveCount(0);
