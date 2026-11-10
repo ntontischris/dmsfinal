@@ -9,6 +9,7 @@ import { project } from "./sales-parts";
 // χωρίς είσοδο και επιβεβαιώνει. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
+
 function adminClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -8,9 +8,9 @@ import {
 import { z } from "zod";
 
 import { control, panel } from "./catalogue-parts";
-import { button, tableRow } from "./sales-parts";
+import { button, signIn, tableRow } from "./sales-parts";
 
-// Βοηθητικά του e2e/agreements.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές).
+// Βοηθητικά του e2e/agreements.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές), στη νέα εμφάνιση (Χώροι).
 // Οι Πελάτες και οι Ευκαιρίες έρχονται από το e2e/seed.mjs· κάθε Συμφωνία γράφεται από την οθόνη, όπως θα την έγραφε ο πωλητής.
 // Τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το όνομα του project.
 
@@ -42,14 +42,44 @@ export async function openOpportunity(page: Page, title: string) {
   await expect(panel(page, "Πρόταση")).toBeVisible();
 }
 
-// B4 → «Σύνταξη πρότασης» → D2. Επιστρέφει τη διεύθυνση της D2.
+// Ένα κουμπί που ανοίγει κάτι επί τόπου ζωντανεύει μόλις φορτώσει η σελίδα· μέχρι τότε το πάτημα χάνεται, γι' αυτό ξαναπατιέται.
+export async function openWith(trigger: Locator, opened: Locator) {
+  await expect(async () => {
+    if (!(await opened.isVisible())) await trigger.click();
+    await expect(opened).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+}
+
+// Οι ενέργειες στην κορυφή της Σελίδας Συμφωνίας (D2): μια ενότητα χωρίς τίτλο, με όνομα «Ενέργειες».
+export const actionsBar = (page: Page): Locator =>
+  page.getByRole("region", { name: "Ενέργειες", exact: true });
+
+// Ένας άλλος Χρήστης σε δικό του browser context στη νέα εμφάνιση, που κλείνει πάντα όταν τελειώσει το βήμα.
+export async function inSpacesContext(
+  browser: Browser,
+  email: string,
+  run: (page: Page) => Promise<void>,
+) {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    await signIn(page, email);
+    await run(page);
+  } finally {
+    await context.close();
+  }
+}
+
+// B4 → «Νέα πρόταση» → «Σύνταξη πρότασης» → D2. Επιστρέφει τη διεύθυνση της D2.
 export async function draftProposal(
   page: Page,
   proposal: { title: string; kind: "μηνιαία" | "εφάπαξ" },
 ): Promise<string> {
   await openOpportunity(page, proposal.title);
   const form = panel(page, "Πρόταση");
-  await control(form, "Είδος").selectOption({ label: proposal.kind });
+  const kind = control(form, "Είδος");
+  await openWith(button(form, "Νέα πρόταση"), kind);
+  await kind.selectOption({ label: proposal.kind });
   await button(form, "Σύνταξη πρότασης").click();
   await expect(page).toHaveURL(AGREEMENT_URL);
   await expect(
@@ -133,10 +163,23 @@ export async function readSigningCode(page: Page): Promise<string> {
 export const wrongCodeFor = (code: string): string =>
   `${code.slice(0, 5)}${(Number(code[5]) + 1) % 10}`;
 
+// Η Προβολή της λίστας D1 (Ανοιχτές, Προτάσεις, Ενεργές, Κλειστές, Όλες): κουμπιά που φιλτράρουν στον browser.
+export async function chooseView(page: Page, label: string) {
+  const choice = page
+    .getByRole("group", { name: "Ποιες Συμφωνίες", exact: true })
+    .getByRole("button", { name: label, exact: true });
+  await expect(async () => {
+    await choice.click();
+    await expect(choice).toHaveAttribute("aria-pressed", "true", {
+      timeout: 1_000,
+    });
+  }).toPass();
+}
+
 // Ανοίγει τη D2 μιας Συμφωνίας από τη λίστα D1, με τον τίτλο της.
 export async function openAgreementByTitle(page: Page, title: string) {
   await page.goto("/app/agreements");
-  await control(page, "Προβολή").selectOption({ label: "Όλες" });
+  await chooseView(page, "Όλες");
   await tableRow(page, title)
     .getByRole("link", { name: title, exact: true })
     .click();

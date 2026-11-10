@@ -4,12 +4,18 @@ import type { Catalog, CatalogEvent } from "../automation-view-schema";
 // K1 (νέα εμφάνιση): τα φίλτρα του prototype (`screens/k1-model.ts`) πάνω στον πραγματικό κατάλογο (automation_catalog).
 // Καθαρές συναρτήσεις.
 
-export type OnlyFilter = "active" | "client" | "off";
+// «wired» = μόνο τα συνδεδεμένα Γεγονότα (το «Μόνο συνδεδεμένα» της παλιάς οθόνης).
+export type OnlyFilter = "active" | "client" | "off" | "wired";
+
+const ONLY_FILTERS: readonly OnlyFilter[] = [
+  "active",
+  "client",
+  "off",
+  "wired",
+];
 
 export const parseOnly = (value: string | undefined): OnlyFilter | undefined =>
-  value === "active" || value === "client" || value === "off"
-    ? value
-    : undefined;
+  ONLY_FILTERS.find((only) => only === value);
 
 // Μόνο ομάδα που υπάρχει στον κατάλογο.
 export const parseGroup = (
@@ -25,6 +31,7 @@ const matchesOnly = (
   if (only === "active") return event.activeCount > 0;
   if (only === "off") return event.activeCount === 0;
   if (only === "client") return event.isClientFacing;
+  if (only === "wired") return event.isWired;
   return true;
 };
 

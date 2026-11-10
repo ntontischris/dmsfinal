@@ -1,11 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { button, card, field, project, shot, signIn } from "./sales-parts";
+import { button, project, shot, signIn } from "./sales-parts";
 
 // Συζητήσεις Βοηθού (L2) και Αναπάντητες (L3) από άκρη σε άκρη (#192). Το seed γράφει, μέσα από τα RPC του server του Βοηθού,
 // μία Συζήτηση Επισκέπτη ανά project με την ίδια ερώτηση δύο φορές («ρωτήθηκε 2 φορές») και ένα δημοσιευμένο στοιχείο Γνώσης.
 // Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το project.
 test.describe.configure({ mode: "serial", retries: 0 });
+
 
 const UNANSWERED_PATH = "/app/knowledge/unanswered";
 const CONVERSATIONS_PATH = "/app/knowledge/conversations";
@@ -16,38 +17,51 @@ const ITEM = (P: string): string => `Γάμοι και εκδηλώσεις ${P}
 const questionRow = (page: Page, P: string) =>
   page.locator("li", { hasText: `«${QUESTION(P)}»` });
 
+// Η γραμμή μιας Συζήτησης στη λίστα L2 (ο σύνδεσμος είναι ο συνομιλητής, η πρώτη ερώτηση από κάτω).
+const conversationRow = (page: Page, P: string) =>
+  page.locator("li.part-row", { hasText: `«${QUESTION(P)}»` });
+
 test("ο Ιδιοκτήτης βλέπει την Αναπάντητη στο Σήμερα, την κλείνει με «Καλύφθηκε από…», την ξανανοίγει και διαγράφει τη Συζήτηση", async ({
   page,
 }) => {
   test.setTimeout(120_000);
   const P = project();
 
-  // 1. Η κάρτα Σήμερα δείχνει την ερώτηση και οδηγεί στο L3.
+  // 1. Η Σήμερα (ενημέρωση) έχει την κάρτα στο «Και άλλα», με πλήθος, και οδηγεί στο L3.
   await signIn(page, "owner@example.com");
-  const today = card(page, CARD_TITLE);
-  await expect(today).toBeVisible();
-  await expect(today.getByRole("link", { name: QUESTION(P) })).toBeVisible();
-  await today.getByRole("link", { name: "Άνοιγμα →" }).click();
+  const others = page.locator("details.a1-others");
+  await others.locator("summary").click();
+  const today = others.getByRole("listitem").filter({
+    has: page.getByRole("link", { name: CARD_TITLE, exact: true }),
+  });
+  await expect(today.locator(".a1-other-count")).toHaveText(/^[1-9]\d*$/);
+  await today.getByRole("link", { name: CARD_TITLE, exact: true }).click();
   await expect(page).toHaveURL(/\/app\/knowledge\/unanswered$/);
 
   // 2. «ρωτήθηκε 2 φορές» και κλείσιμο με «Καλύφθηκε από…» δημόσιο στοιχείο.
   const row = questionRow(page, P);
   await expect(row.getByText("ρωτήθηκε 2 φορές")).toBeVisible();
-  await row.getByText("Κλείσε", { exact: true }).click();
-  await field(row, "Στοιχείο της Γνώσης").selectOption({ label: ITEM(P) });
+  await row.getByRole("link", { name: "Κλείσε", exact: true }).click();
+  await expect(page).toHaveURL(/close=/);
+  await row.locator("summary", { hasText: "Στοιχείο" }).click();
+  await row.getByLabel("Αναζήτηση: Στοιχείο").fill(ITEM(P));
+  await row
+    .getByRole("link", { name: new RegExp(`^${ITEM(P)}`) })
+    .first()
+    .click();
   await shot(page, "l3-close");
-  await button(row, "Καλύφθηκε").click();
+  await button(row, `Καλύφθηκε από «${ITEM(P)}»`).click();
   await expect(page.getByText("Η ερώτηση κλείστηκε: καλύφθηκε.")).toBeVisible();
   await expect(questionRow(page, P)).toHaveCount(0);
 
-  // 3. Στην καρτέλα «Καλύφθηκαν», με το στοιχείο· «Ξανάνοιγμα» τη γυρίζει στις ανοιχτές.
+  // 3. Στην καρτέλα «Καλύφθηκαν», με το στοιχείο· «Ξανάνοιξε» τη γυρίζει στις ανοιχτές.
   await page.getByRole("link", { name: /^Καλύφθηκαν/ }).click();
   await expect(page).toHaveURL(/tab=covered/);
   const covered = questionRow(page, P);
   await expect(
     covered.getByRole("link", { name: `«${ITEM(P)}»` }),
   ).toBeVisible();
-  await button(covered, "Ξανάνοιγμα").click();
+  await button(covered, "Ξανάνοιξε").click();
   await expect(page.getByText("Η ερώτηση ξανάνοιξε.")).toBeVisible();
   await expect(
     questionRow(page, P).getByText("ρωτήθηκε 2 φορές"),
@@ -55,7 +69,7 @@ test("ο Ιδιοκτήτης βλέπει την Αναπάντητη στο Σ
 
   // 4. L2: η Συζήτηση (μόνο ανάγνωση) με «δεν ήξερε»· «Διαγραφή Συζήτησης» με επιβεβαίωση.
   await page.goto(`${CONVERSATIONS_PATH}?tab=public`);
-  await page.getByRole("link", { name: QUESTION(P) }).click();
+  await conversationRow(page, P).getByRole("link").click();
   await expect(page).toHaveURL(
     /\/app\/knowledge\/conversations\/[0-9a-f-]{36}$/,
   );
@@ -70,12 +84,12 @@ test("ο Ιδιοκτήτης βλέπει την Αναπάντητη στο Σ
     /\/app\/knowledge\/conversations\?done=deleted$/,
   );
   await expect(page.getByText("Η Συζήτηση διαγράφηκε")).toBeVisible();
-  await expect(page.getByRole("link", { name: QUESTION(P) })).toHaveCount(0);
+  await expect(conversationRow(page, P)).toHaveCount(0);
 
   // 5. Η Αναπάντητη ήρθε μόνο από αυτή τη Συζήτηση: έφυγε κι αυτή.
   await page.goto(UNANSWERED_PATH);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Αναπάντητες ερωτήσεις" }),
+    page.getByRole("navigation", { name: "Αναπάντητες ερωτήσεις" }),
   ).toBeVisible();
   await expect(questionRow(page, P)).toHaveCount(0);
 });
@@ -95,5 +109,6 @@ test("χωρίς «Διαχειρίζεται Γνώση» οι Συζητήσε
     page.getByText("Τις Συζητήσεις τις βλέπει όποιος διαχειρίζεται τη Γνώση."),
   ).toBeVisible();
   await page.goto("/app");
-  await expect(card(page, CARD_TITLE)).toHaveCount(0);
+  // Ούτε στη Σήμερα: η κάρτα δεν υπάρχει καθόλου (ούτε μέσα στο κλειστό «Και άλλα»).
+  await expect(page.locator("a", { hasText: CARD_TITLE })).toHaveCount(0);
 });

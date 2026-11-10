@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
@@ -375,9 +376,12 @@ const NotFound = () => (
 export async function SpacesRole({
   roleId,
   confirm,
+  history,
 }: {
   roleId: string;
   confirm: string | undefined;
+  // «Ιστορικό αλλαγών» του Ρόλου στο Ίχνος, από το module audit.
+  history?: ReactNode;
 }) {
   if (!isOwner(await getViewer())) return <Denied />;
   const [role, permissions, users, roles, usage] = await Promise.all([
@@ -400,6 +404,7 @@ export async function SpacesRole({
       <p>
         <Link href={ROLES_PATH}>← Όλοι οι Ρόλοι</Link>
       </p>
+      {history && <div className="btn-row">{history}</div>}
       <RoleEditForm
         role={current}
         permissions={permissions.data.filter((p) => p.kind === current.kind)}

@@ -2,7 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { project, signIn } from "../sales-parts";
-import { useSpacesLook } from "./spaces";
 
 // Περιήγηση Ιδιοκτήτη: φίλτρα σε κάρτες σε μία σειρά πάνω από τα αποτελέσματα (παραλλαγή 1, 2026-11-04). Στις Αποστολές
 // ο Πελάτης «Πελάτης Αποστολών {project}» και η «Ελένη Αποστολών» έρχονται από το seed· ένα Μήνυμα της ομάδας και ο
@@ -70,8 +69,7 @@ function cardOf(page: Page, label: string) {
     .filter({ has: page.locator("summary", { hasText: label }) });
 }
 
-test.beforeEach(async ({ context, page }) => {
-  await useSpacesLook(context);
+test.beforeEach(async ({ page }) => {
   await signIn(page, OWNER);
 });
 

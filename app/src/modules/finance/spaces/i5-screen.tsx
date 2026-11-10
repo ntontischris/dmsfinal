@@ -11,7 +11,7 @@ import { LEDGER_NO_ACCESS_TEXT } from "../ledger-labels";
 import { getLedger, listLedgerClients } from "../ledger-queries";
 import type { InvoiceItem } from "../invoices-view-schema";
 import type { LedgerClient } from "../ledger-view-schema";
-import { i5ClientIdOf, i5RowsOf } from "./i5-adapter";
+import { balanceHintOf, i5ClientIdOf, i5RowsOf } from "./i5-adapter";
 import { BalanceCards, PaymentCard, ToInvoiceCard } from "./i5-cards";
 import { LedgerTable } from "./i5-ledger";
 
@@ -21,7 +21,8 @@ const Spaces = ({ children }: { children: ReactNode }) => (
   <div data-spaces>{children}</div>
 );
 
-// Η Καρτέλα ανήκει σε έναν Πελάτη: μία κάρτα «Πελάτης» με αναζήτηση, αντί για μία καρτέλα ανά Πελάτη.
+// Η Καρτέλα ανήκει σε έναν Πελάτη: μία κάρτα «Πελάτης» με αναζήτηση, αντί για μία καρτέλα ανά Πελάτη. Δίπλα σε κάθε
+// Πελάτη το υπόλοιπό του, ώστε η λίστα να δείχνει με μια ματιά ποιος χρωστά.
 function ClientPicker(props: {
   clients: readonly LedgerClient[];
   current: string;
@@ -37,6 +38,7 @@ function ClientPicker(props: {
             label: c.name,
             href: hrefOf("I5", { client: c.id }),
             isCurrent: c.id === props.current,
+            hint: balanceHintOf(c.balance),
           })),
         },
       ]}
@@ -81,7 +83,7 @@ async function I5Body(props: {
 }
 
 // I5 Καρτέλα Πελάτη στη νέα εμφάνιση (prototype `screens/I5.tsx`), μόνο για την ομάδα (Οικονομικά + ποσά για όλους):
-// ο Χρήστης πελάτη μένει στην παλιά εμφάνιση. Πελάτες = όσοι έχουν κινήσεις (clients_with_finance)· ο ?client= διαλέγει,
+// ο Χρήστης πελάτη έχει τη δική του (SpacesClientLedger). Πελάτες = όσοι έχουν κινήσεις (clients_with_finance)· ο ?client= διαλέγει,
 // αλλιώς ο πρώτος. Η κατάσταση κάθε Τιμολογίου έρχεται από το invoices_view· αν δεν φορτώσει, η Καρτέλα φαίνεται χωρίς αυτήν.
 export async function SpacesLedger({ clientId }: { clientId?: string }) {
   const caps = financeCaps(await getViewer());

@@ -3,20 +3,36 @@ import { expect, test } from "vitest";
 import { contactErrors, contactSavedText } from "./b2-contact-check";
 
 test("χρειάζεται όνομα επαφής και τηλέφωνο ή email", () => {
-  expect(contactErrors({ name: " ", phone: "", email: "", legalName: "", city: "", afm: "" })).toEqual([
-    "Γράψε το όνομα του κύριου προσώπου.",
-    "Γράψε τηλέφωνο ή email.",
-  ]);
+  expect(
+    contactErrors({
+      clientName: "Μελίσσι",
+      name: " ",
+      phone: "",
+      email: "",
+      legalName: "",
+      city: "",
+      afm: "",
+    }),
+  ).toEqual(["Γράψε το όνομα του κύριου προσώπου.", "Γράψε τηλέφωνο ή email."]);
 });
 
 test("λάθος email το λέει", () => {
   expect(
-    contactErrors({ name: "Μαρία", phone: "", email: "maria", legalName: "", city: "", afm: "" }),
+    contactErrors({
+      clientName: "Μελίσσι",
+      name: "Μαρία",
+      phone: "",
+      email: "maria",
+      legalName: "",
+      city: "",
+      afm: "",
+    }),
   ).toEqual(["Το email δεν μοιάζει σωστό."]);
 });
 
 test("σωστά στοιχεία: κανένα λάθος, και το μήνυμα λέει τι άλλαξε", () => {
   const before = {
+    clientName: "Μελίσσι",
     name: "Μαρία",
     phone: "2310 1",
     email: "m@x.gr",
@@ -34,6 +50,7 @@ test("σωστά στοιχεία: κανένα λάθος, και το μήνυ
 
 test("το μήνυμα λέει και την Επωνυμία, την Πόλη και το ΑΦΜ που άλλαξαν", () => {
   const before = {
+    clientName: "Μελίσσι",
     name: "Μαρία",
     phone: "2310 1",
     email: "m@x.gr",
@@ -49,5 +66,25 @@ test("το μήνυμα λέει και την Επωνυμία, την Πόλη
   };
   expect(contactSavedText(before, after)).toBe(
     "Αποθηκεύτηκε: επωνυμία Μελίσσι Ι.Κ.Ε., πόλη Θεσσαλονίκη, ΑΦΜ 099999999. Το βλέπει όλη η ομάδα που έχει πρόσβαση στον Πελάτη.",
+  );
+});
+
+test("το όνομα του Πελάτη αλλάζει κι αυτό, αλλά δεν μένει κενό", () => {
+  const before = {
+    clientName: "Μελίσσι",
+    name: "Μαρία",
+    phone: "2310 1",
+    email: "",
+    legalName: "",
+    city: "",
+    afm: "",
+  };
+  expect(contactErrors({ ...before, clientName: " " })).toEqual([
+    "Γράψε το όνομα του Πελάτη.",
+  ]);
+  expect(
+    contactSavedText(before, { ...before, clientName: "Μελίσσι Καφέ" }),
+  ).toBe(
+    "Αποθηκεύτηκε: όνομα Μελίσσι Καφέ. Το βλέπει όλη η ομάδα που έχει πρόσβαση στον Πελάτη.",
   );
 });

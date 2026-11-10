@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { BlockedTimeValues } from "../components/blocked-time-form";
+import type { BlockedTimeValues } from "../blocked-form";
 import {
   conflictFieldsOf,
   draftOf,

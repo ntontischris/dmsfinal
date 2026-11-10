@@ -1,16 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import type { FormState } from "@/lib/form-state";
 import { createSupabase } from "@/lib/supabase/server";
 
-import { CardView } from "./components/card-view";
-import { getTodayCard } from "./queries";
 import { itemKeySchema, itemKeysSchema, prefsSchema } from "./schemas";
-import { todayCardSchema } from "./view-schema";
 
 const UNCONFIGURED_TEXT = "Η βάση δεν έχει συνδεθεί ακόμα.";
 const TODAY_PATH = "/app";
@@ -59,21 +55,6 @@ export async function resetTodayPrefs(): Promise<FormState> {
   if (failure) return failure;
   revalidatePath(TODAY_PATH);
   redirect(TODAY_PATH);
-}
-
-// «Ξαναδοκίμασε» μιας κάρτας: ξαναφορτώνει μόνο αυτή, οι υπόλοιπες δεν αγγίζονται. Η κάρτα αποδίδεται εδώ, στον server,
-// ώστε οι renderers να μη φτάνουν ποτέ στον browser. null = η κάρτα δεν επιτρέπεται πια· undefined = απέτυχε ξανά.
-export async function retryTodayCard(input: unknown): Promise<ReactNode | null | undefined> {
-  const parsed = todayCardSchema.safeParse(input);
-  if (!parsed.success) return undefined;
-  try {
-    const result = await getTodayCard(parsed.data.code);
-    if (!result.ok) return undefined;
-    return result.data === null ? null : <CardView card={parsed.data} data={result.data} />;
-  } catch (error) {
-    console.error("retryTodayCard:", error);
-    return undefined;
-  }
 }
 
 // «Αργότερα» μιας απόφασης (#241 Σ8): κρύβεται ως αύριο το πρωί (08:00 Αθήνας) μόνο για τον ίδιο τον Χρήστη.

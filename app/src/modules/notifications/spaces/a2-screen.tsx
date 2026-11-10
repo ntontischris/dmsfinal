@@ -1,6 +1,7 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
-import { can, getViewer } from "@/modules/access";
+import { can, getViewer, isClientViewer } from "@/modules/access";
 import { Panel } from "@/spaces/kit/panel";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
@@ -8,6 +9,7 @@ import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import {
   AUTOMATIONS_PATH,
   LOCKED_TEXT,
+  PREFS_CLIENT_NOTE,
   PREFS_EMPTY_TEXT,
   PREFS_EMPTY_TITLE,
   PREFS_SELF_NOTE,
@@ -22,13 +24,15 @@ import {
 import {
   EMPTY_TEXT,
   EMPTY_TITLE,
+  LANGUAGE_TITLE,
   NO_ACCESS_TEXT,
   RETENTION_NOTE,
 } from "../labels";
-import { getNotifications } from "../queries";
+import { getMyLanguage, getNotifications } from "../queries";
 import { getPrefs } from "../queries-automations";
 import type { NotificationPage } from "../view-schema";
 import { a2ItemsOf, a2PrefGroupsOf, type A2PrefGroup } from "./a2-adapter";
+import { SpacesLanguageChoice } from "./a3-language";
 import { MarkAllRead } from "./a2-mark-all";
 import { PrefToggle } from "./a2-pref-toggle";
 
@@ -160,14 +164,19 @@ function InboxTab({
 
 function PrefsTab({
   groups,
+  isClient,
   canConfigure,
+  language,
 }: {
   groups: readonly A2PrefGroup[];
+  isClient: boolean;
   canConfigure: boolean;
+  // «Γλώσσα των email», μόνο για τον Χρήστη πελάτη (#171).
+  language: ReactNode;
 }) {
   return (
     <>
-      <p className="note">{PREFS_TEAM_NOTE}</p>
+      <p className="note">{isClient ? PREFS_CLIENT_NOTE : PREFS_TEAM_NOTE}</p>
       {groups.length === 0 ? (
         <StateNotice kind="empty" title={PREFS_EMPTY_TITLE}>
           {PREFS_EMPTY_TEXT}
@@ -199,24 +208,46 @@ function PrefsTab({
           <Link href={AUTOMATIONS_PATH}>Ρύθμιση Αυτοματισμών</Link>
         </p>
       )}
+      {language}
     </>
   );
 }
 
-async function PrefsBody({ canConfigure }: { canConfigure: boolean }) {
-  const prefs = await getPrefs();
+async function PrefsBody({
+  isClient,
+  canConfigure,
+}: {
+  isClient: boolean;
+  canConfigure: boolean;
+}) {
+  const [prefs, language] = await Promise.all([
+    getPrefs(),
+    isClient ? getMyLanguage() : null,
+  ]);
   if (!prefs.ok) return <ErrorNotice what="οι Προτιμήσεις" />;
   return (
     <PrefsTab
       groups={a2PrefGroupsOf(prefs.data ?? [])}
+      isClient={isClient}
       canConfigure={canConfigure}
+      language={
+        language?.ok && language.data ? (
+          <Panel label={LANGUAGE_TITLE}>
+            <SpacesLanguageChoice current={language.data} />
+          </Panel>
+        ) : null
+      }
     />
   );
 }
 
-// A2 Ειδοποιήσεις στη νέα εμφάνιση (prototype `screens/A2.tsx`): Εισερχόμενα και Προτιμήσεις. Η βάση δείχνει μόνο τις
-// δικές σου Ειδοποιήσεις· η νέα εμφάνιση είναι μόνο για την ομάδα.
-export async function SpacesNotifications({ tab, filter, cursor }: SpacesNotificationsProps) {
+// A2 Ειδοποιήσεις στη νέα εμφάνιση (prototype `screens/A2.tsx`): Εισερχόμενα και Προτιμήσεις, για την ομάδα και τον
+// Χρήστη πελάτη. Η βάση δείχνει μόνο τις δικές σου Ειδοποιήσεις.
+export async function SpacesNotifications({
+  tab,
+  filter,
+  cursor,
+}: SpacesNotificationsProps) {
   const viewer = await getViewer();
   const result =
     viewer.status === "signed-in"
@@ -235,7 +266,10 @@ export async function SpacesNotifications({ tab, filter, cursor }: SpacesNotific
     <div data-spaces>
       <Tabs tab={tab} unread={page?.unread ?? null} />
       {tab === "prefs" ? (
-        <PrefsBody canConfigure={can(viewer, "automations.manage")} />
+        <PrefsBody
+          isClient={isClientViewer(viewer)}
+          canConfigure={can(viewer, "automations.manage")}
+        />
       ) : page ? (
         <InboxTab page={page} filter={filter} />
       ) : (

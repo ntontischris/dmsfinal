@@ -7,7 +7,6 @@ import {
   project,
   signIn,
 } from "../sales-parts";
-import { useSpacesLook } from "./spaces";
 
 // Περιήγηση Ιδιοκτήτη, διαδρομή 03: Πελάτες. Νέος Πελάτης με Επωνυμία, Πόλη και ΑΦΜ· νέα Ευκαιρία σε υπάρχοντα χωρίς
 // Πηγή· «Πιθανό διπλό» και στις δύο μεριές· η γραμμή «Σχέση με τον Πελάτη» με ορατό τίτλο, η κορυφή-ενημέρωση και οι
@@ -17,8 +16,7 @@ const OWNER = "owner@example.com";
 
 test.describe.configure({ mode: "serial" });
 
-test.beforeEach(async ({ context, page }) => {
-  await useSpacesLook(context);
+test.beforeEach(async ({ page }) => {
   await signIn(page, OWNER);
 });
 

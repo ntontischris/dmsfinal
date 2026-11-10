@@ -4,7 +4,6 @@ export type {
   OwnerCandidate,
   PeriodBalance,
   ProductionCard,
-  ProductionDetail,
   ProductionFilming,
   ProductionState,
   ProductionTab,
@@ -13,27 +12,9 @@ export type {
 export { PRODUCTION_STATES, PRODUCTION_TABS } from "./types";
 export { STATE_LABELS, TAB_LABELS } from "./labels";
 export { productionsCaps } from "./caps";
-export { historyLines, periodLabel, tabState } from "./helpers";
-export { listFilterSchema } from "./schemas";
+export { historyLines, periodLabel } from "./helpers";
 export type { ReadResult } from "./read";
-export {
-  getProduction,
-  listMemberCandidates,
-  listOwnerCandidates,
-  listProductions,
-} from "./queries";
-export { AgreementCard } from "./components/agreement-card";
-export { ClientProductionView } from "./components/client-production-view";
-export { HistoryPanel } from "./components/history-panel";
-export { MembersPanel } from "./components/members-panel";
-export { NewInternalDetails } from "./components/new-internal-details";
-export { OwnerPanel } from "./components/owner-panel";
-export { PeriodCard } from "./components/period-card";
-export { ProductionFilmings } from "./components/production-filmings";
-export { ProductionList } from "./components/production-list";
-export { ProductionTabs } from "./components/production-tabs";
-export { StatePanel } from "./components/state-panel";
-export { TasksPanel } from "./components/tasks-panel";
+export { listProductions } from "./queries";
 export { SpacesProductions } from "./spaces/g1-screen";
 export { SpacesProduction } from "./spaces/g2-screen";
 // Ctrl+K: αναζήτηση εγγραφών.

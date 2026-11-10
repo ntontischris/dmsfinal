@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 
 import {
   balanceOf,
+  doneMessage,
   emptyCrewNote,
   fmtDay,
   hoursLabel,
@@ -58,11 +59,24 @@ const memberOf = (overrides: Partial<CrewMember> = {}): CrewMember => ({
 test("απάντηση μόνο για μέλος, σε ανοιχτό Γύρισμα, με εκδομένο Δελτίο", () => {
   expect(replyOf(undefined, "scheduled", 2)).toBeNull();
   expect(replyOf(memberOf(), "done", 2)).toBeNull();
-  expect(replyOf(memberOf(), "scheduled", null)).toBeNull();
   expect(replyOf(memberOf(), "pending", 1)).toEqual({
     version: 1,
     isAnswered: false,
     canConfirm: true,
+    canDecline: true,
+  });
+});
+
+test("χωρίς Δελτίο το μέλος απαντά κανονικά· ό,τι ήδη ισχύει δεν ξαναστέλνεται", () => {
+  expect(replyOf(memberOf(), "scheduled", null)).toEqual({
+    version: null,
+    isAnswered: false,
+    canConfirm: true,
+    canDecline: true,
+  });
+  expect(replyOf(memberOf({ response: "confirmed" }), "scheduled", null)).toMatchObject({
+    isAnswered: true,
+    canConfirm: false,
     canDecline: true,
   });
 });
@@ -102,4 +116,19 @@ test("οι Σημειώσεις δείχνουν μόνο όσες υπάρχο�
       cancelledReason: null,
     }),
   ).toEqual([]);
+});
+
+test("το μήνυμα μετά από κράτηση ή μετάθεση λέει αν μπήκε σε έγκριση", () => {
+  expect(doneMessage("booked", { state: "pending", hasPendingReschedule: false })).toBe(
+    "Η κράτηση στάλθηκε για έγκριση.",
+  );
+  expect(doneMessage("booked", { state: "scheduled", hasPendingReschedule: false })).toBe(
+    "Η κράτηση επιβεβαιώθηκε.",
+  );
+  expect(doneMessage("rescheduled", { state: "scheduled", hasPendingReschedule: true })).toBe(
+    "Η μετάθεση στάλθηκε για έγκριση.",
+  );
+  expect(doneMessage("rescheduled", { state: "scheduled", hasPendingReschedule: false })).toBe(
+    "Η μετάθεση έγινε.",
+  );
 });

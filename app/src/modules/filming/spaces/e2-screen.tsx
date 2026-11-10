@@ -52,24 +52,23 @@ export async function SpacesFilmingQueue() {
     );
   const { pending, cancelRequests, rescheduleRequests } = queue.data;
   const nowMs = new Date().getTime();
+  const isEmpty =
+    pending.length + cancelRequests.length + rescheduleRequests.length === 0;
+  // Η ουρά μένει πάντα στη σελίδα: μετά την τελευταία απόφαση δείχνει το αποτέλεσμα και από κάτω το «τίποτα».
   return (
     <div data-spaces>
-      {pending.length + cancelRequests.length + rescheduleRequests.length ===
-      0 ? (
-        <StateNotice kind="empty" title="Τίποτα δεν περιμένει απάντηση.">
-          Όταν ένας πελάτης κλείσει Γύρισμα ή ζητήσει ακύρωση μετά το Όριο, θα
-          εμφανιστεί εδώ. <Link href={hrefOf("E1")}>Όλα τα Γυρίσματα</Link>
-        </StateNotice>
-      ) : (
-        <>
-          {settings.ok && <NoAnswerNote settings={settings.data} />}
-          <E2Queue
-            pending={pendingOldestFirst(pending).map(pendingItemOf)}
-            cancels={cancelRequests.map((entry) => cancelItemOf(entry, nowMs))}
-            reschedules={rescheduleRequests.map(rescheduleItemOf)}
-          />
-        </>
-      )}
+      {settings.ok && !isEmpty && <NoAnswerNote settings={settings.data} />}
+      <E2Queue
+        pending={pendingOldestFirst(pending).map(pendingItemOf)}
+        cancels={cancelRequests.map((entry) => cancelItemOf(entry, nowMs))}
+        reschedules={rescheduleRequests.map(rescheduleItemOf)}
+        empty={
+          <StateNotice kind="empty" title="Τίποτα δεν περιμένει απάντηση.">
+            Όταν ένας πελάτης κλείσει Γύρισμα ή ζητήσει ακύρωση μετά το Όριο, θα
+            εμφανιστεί εδώ. <Link href={hrefOf("E1")}>Όλα τα Γυρίσματα</Link>
+          </StateNotice>
+        }
+      />
     </div>
   );
 }

@@ -141,6 +141,10 @@ export async function GdprUserSection({
         {ZIP_NOTE}
         {user.block && ` ${BLOCK_TEXT[user.block]}`}
       </p>
+      <p className="note">
+        Κάθε αίτημα καταγράφεται στα <Link href={GDPR_PATH}>{GDPR_TITLE}</Link>,
+        με προθεσμία 1 μήνα.
+      </p>
     </Panel>
   );
 }
@@ -156,6 +160,18 @@ export async function GdprAnonymize({ userId, backHref }: GdprAnonymizeProps) {
   const user = subjects.ok
     ? subjects.data.teamUsers.find((row) => row.id === userId)
     : undefined;
+  // Μετά την ανωνυμοποίηση η σελίδα ξαναφορτώνει: εδώ λέμε ότι έγινε, όχι ότι «δεν γίνεται».
+  if (user?.block === "anonymized")
+    return (
+      <div className="n1-danger" role="status">
+        <Panel label="Ανωνυμοποίηση">
+          <p>{BLOCK_TEXT.anonymized}</p>
+          <Link className="button" href={backHref}>
+            Πίσω στον Χρήστη
+          </Link>
+        </Panel>
+      </div>
+    );
   if (!user || user.block !== null)
     return (
       <div className="n1-danger" role="alert">

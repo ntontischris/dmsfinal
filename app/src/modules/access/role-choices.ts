@@ -2,7 +2,11 @@ import { z } from "zod";
 
 import { createSupabase } from "@/lib/supabase/server";
 
-import type { RoleOption } from "./components/team-invite-form";
+// Ένας Ρόλος που μπορεί να δοθεί: id και όνομα.
+export interface RoleOption {
+  id: string;
+  name: string;
+}
 
 const roleOptionSchema = z.object({ id: z.string(), name: z.string() });
 

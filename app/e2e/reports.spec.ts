@@ -1,28 +1,24 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
+import { filterCard, openTab, pickFilter, startsWith } from "./finance-parts";
 import { signIn } from "./sales-parts";
 
-// Αναφορές Ρα (#198): ο Ιδιοκτήτης ανοίγει την M1 από την πλοήγηση, βλέπει τις τρεις οικονομικές Αναφορές, αλλάζει
+// Αναφορές Ρα (#198): ο Ιδιοκτήτης ανοίγει την M1 από τον Χώρο «Χρήματα», βλέπει τις τρεις οικονομικές Αναφορές, αλλάζει
 // Περίοδο (που μένει στη διεύθυνση) και ανοίγει τις Οφειλές· η Παραγωγή δεν έχει Αναφορές. Οι αριθμοί ελέγχονται στο
-// pgTAP (reports_test.sql)· εδώ μόνο η ροή. Σειριακά, χωρίς retries.
+// pgTAP (reports_test.sql)· εδώ μόνο η ροή. Σειριακά, χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ mode: "serial", retries: 0 });
 
+
 const REPORTS_PATH = "/app/reports";
-const nav = (page: Page) =>
-  page.getByRole("navigation", { name: "Οθόνες" });
+const MONEY = "Χρήματα";
 
 test("ο Ιδιοκτήτης ανοίγει τις οικονομικές Αναφορές με φίλτρο Περιόδου στη διεύθυνση", async ({
   page,
 }) => {
   test.setTimeout(90_000);
   await signIn(page, "owner@example.com");
-  await nav(page)
-    .getByRole("link", { name: /Αναφορές$/ })
-    .click();
+  await openTab(page, MONEY, "Αναφορές");
   await expect(page).toHaveURL(new RegExp(`${REPORTS_PATH}$`));
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Αναφορές" }),
-  ).toBeVisible();
   for (const title of [
     "Τζίρος και Εισπράξεις ανά μήνα",
     "Τζίρος ανά Πελάτη",
@@ -42,31 +38,22 @@ test("ο Ιδιοκτήτης ανοίγει τις οικονομικές Αν�
       name: "Τζίρος και Εισπράξεις ανά μήνα",
     }),
   ).toBeVisible();
-  const periods = page.getByRole("navigation", { name: "Περίοδος" });
-  await expect(periods.getByRole("link", { name: "Φέτος" })).toHaveAttribute(
-    "aria-current",
-    "true",
-  );
-  await periods.getByRole("link", { name: "Αυτός ο μήνας" }).click();
+  const period = filterCard(page, "Περίοδος").locator(".kit-fb-chip");
+  await expect(period).toHaveText(startsWith("Φέτος"));
+  await pickFilter(page, "Περίοδος", "Αυτός ο μήνας");
   await expect(page).toHaveURL(/period=this-month/);
-  await expect(
-    periods.getByRole("link", { name: "Αυτός ο μήνας" }),
-  ).toHaveAttribute("aria-current", "true");
-  await expect(page.getByText("ως σήμερα").first()).toBeVisible();
+  await expect(period).toHaveText(startsWith("Αυτός ο μήνας"));
+  await expect(period).toContainText("ως σήμερα");
 
   // Ο σελιδοδείκτης ξανανοίγει την ίδια εικόνα.
   await page.reload();
-  await expect(
-    periods.getByRole("link", { name: "Αυτός ο μήνας" }),
-  ).toHaveAttribute("aria-current", "true");
+  await expect(period).toHaveText(startsWith("Αυτός ο μήνας"));
 
   await page.goto(`${REPORTS_PATH}?report=receivables`);
   await expect(
     page.getByRole("heading", { level: 2, name: "Οφειλές κατά ηλικία" }),
   ).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Περίοδος" })).toHaveCount(
-    0,
-  );
+  await expect(filterCard(page, "Περίοδος")).toHaveCount(0);
   await expect(
     page
       .getByText("Σύνολο ανεξόφλητων")
@@ -76,13 +63,15 @@ test("ο Ιδιοκτήτης ανοίγει τις οικονομικές Αν�
 
 test("η Παραγωγή δεν βλέπει Αναφορές", async ({ page }) => {
   await signIn(page, "production@example.com");
-  await expect(nav(page).getByRole("link", { name: /Αναφορές$/ })).toHaveCount(
-    0,
-  );
   await page.goto(`${REPORTS_PATH}?report=turnover`);
   await expect(
     page.getByRole("heading", { name: "Χωρίς δικαίωμα" }),
   ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: MONEY, exact: true })
+      .getByRole("link", { name: "Αναφορές", exact: true }),
+  ).toHaveCount(0);
 });
 
 // Αναφορές Ρβ (#199): ο πωλητής (Εύρος Α) βλέπει τις τρεις Αναφορές πωλήσεων και όχι τις οικονομικές· μόνο τις δικές του
@@ -109,12 +98,8 @@ test("ο πωλητής βλέπει μόνο τις δικές του Αναφ�
   await expect(
     page.getByText("Βλέπεις μόνο τις Ευκαιρίες όπου είσαι Υπεύθυνος."),
   ).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Πωλητής" })).toHaveCount(
-    0,
-  );
-  await expect(
-    page.getByRole("navigation", { name: "Περίοδος" }),
-  ).toBeVisible();
+  await expect(filterCard(page, "Πωλητής")).toHaveCount(0);
+  await expect(filterCard(page, "Περίοδος")).toBeVisible();
 });
 
 // Ργ (#200), Ρδ (#201): ο Ιδιοκτήτης ανοίγει την M2 από την M1 και εξάγει τους Πελάτες (το seed έχει πάντα Πελάτες)·
@@ -124,12 +109,13 @@ test("ο Ιδιοκτήτης εξάγει Πελάτες και τους βλέ
   test.setTimeout(90_000);
   await signIn(page, "owner@example.com");
   await page.goto(REPORTS_PATH);
-  await page.getByRole("link", { name: "Εξαγωγή δεδομένων (M2)" }).click();
+  await page.getByRole("link", { name: "Εξαγωγή δεδομένων", exact: true }).click();
   await expect(page).toHaveURL(/\/app\/reports\/export$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Εξαγωγή δεδομένων" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Πακέτο λογιστή" })).toBeVisible();
 
-  await page.getByRole("navigation", { name: "Τι θέλεις να εξάγεις" }).getByRole("link", { name: "Πελάτες" }).click();
+  // Η «Άλλη εξαγωγή» ανοίγει από κάτω από το Πακέτο λογιστή· το σύνολο διαλέγεται από την κάρτα του.
+  await page.locator("summary", { hasText: "Άλλη εξαγωγή" }).click();
+  await pickFilter(page, "Σύνολο δεδομένων", "Πελάτες");
   await expect(page).toHaveURL(/dataset=clients/);
   const datasetDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "Εξαγωγή", exact: true }).click();

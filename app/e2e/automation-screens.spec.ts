@@ -1,13 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-import { fieldOf, visit } from "./filming-parts";
+import { visit } from "./filming-parts";
 import { project, signIn } from "./sales-parts";
 
 // K1 Αυτοματισμοί, K2 Μηνύματα συστήματος και A2 Προτιμήσεις (#173) από άκρη σε άκρη. Ο Χρήστης πελάτη
 // «notify.{project}@example.com» (Πλήρης) έρχεται από το seed. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία
 // βάση, γι' αυτό ό,τι αλλάζει επανέρχεται στο finally.
 test.describe.configure({ mode: "serial", retries: 0 });
+
 
 const CLIENT_EMAIL = (P: string): string => `notify.${P}@example.com`;
 const MARKER = (P: string): string => `Δοκιμή K1 ${P}`;
@@ -66,6 +67,7 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
     // K1: κατάλογος → Γεγονός «Νέο Μήνυμα».
     await visit(page, "/app/settings/automations");
     await page
+      .getByRole("main")
       .getByRole("link", { name: /Νέο Μήνυμα/ })
       .first()
       .click();
@@ -76,8 +78,13 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
 
     // Δεύτερος Αυτοματισμός Ειδοποίησης προς συγκεκριμένο Χρήστη.
     await page.getByRole("button", { name: "Προσθήκη Αυτοματισμού" }).click();
-    const form = page.getByRole("region", { name: "Νέος Αυτοματισμός" });
-    await fieldOf(form, "Παραλήπτες").selectOption("users");
+    const form = page.locator("section.kit-panel").filter({
+      has: page.getByRole("heading", {
+        name: "Νέος Αυτοματισμός",
+        exact: true,
+      }),
+    });
+    await form.getByLabel("Παραλήπτες", { exact: true }).selectOption("users");
     await form.getByLabel("Δημήτρης Διαχείριση").check();
     await form.getByLabel("Κείμενο, ελληνικά").fill(`${MARKER(P)}: `);
     await form.getByRole("button", { name: "{sender}" }).click();
@@ -106,18 +113,23 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
     await card.getByRole("button", { name: "Ναι, διαγραφή" }).click();
     await expect(card).toHaveCount(0);
 
-    // K2: το θέμα της πρόσκλησης αλλάζει και επανέρχεται.
-    await visit(page, "/app/settings/system-messages");
-    // Το όνομα του link είναι «Επεξεργασία : Πρόσκληση» (το κουμπί είναι inline-flex).
+    // K2: το θέμα της πρόσκλησης αλλάζει και επανέρχεται. Τα Μηνύματα συστήματος ανοίγουν από τις καρτέλες των K1–K3.
     await page
-      .getByRole("link", { name: /^Επεξεργασία\s*: Πρόσκληση$/ })
+      .getByRole("navigation", { name: "Αυτοματισμοί και αποστολές" })
+      .getByRole("link", { name: "Μηνύματα συστήματος" })
+      .click();
+    await expect(page).toHaveURL(/\/app\/settings\/system-messages$/);
+    await page
+      .locator("li.part-row")
+      .filter({ has: page.locator(".part-title", { hasText: /^Πρόσκληση$/ }) })
+      .getByRole("link", { name: "Επεξεργασία" })
       .click();
     await expect(page).toHaveURL(/\/app\/settings\/system-messages\/invite$/);
-    const subject = page.getByLabel("Θέμα, ελληνικά");
+    const subject = page.getByLabel("Θέμα (ελληνικά)");
     await expect(subject).toHaveValue("Πρόσκληση στο DMS: {place}");
     await subject.fill(`Καλώς ήρθες στο DMS ${P}`);
     await page.getByRole("button", { name: "Αποθήκευση" }).click();
-    await expect(page.getByText("αλλαγμένο κείμενο")).toBeVisible();
+    await expect(page.getByText("αλλαγμένο κείμενο").first()).toBeVisible();
     await expect(
       page.getByText(`Καλώς ήρθες στο DMS ${P}`, { exact: true }),
     ).toBeVisible();
@@ -126,7 +138,7 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
       .getByRole("button", { name: "Επαναφορά αρχικού κειμένου" })
       .click();
     await expect(page.getByText("αλλαγμένο κείμενο")).toHaveCount(0);
-    await expect(page.getByLabel("Θέμα, ελληνικά")).toHaveValue(
+    await expect(page.getByLabel("Θέμα (ελληνικά)")).toHaveValue(
       "Πρόσκληση στο DMS: {place}",
     );
   } finally {
@@ -142,7 +154,7 @@ test("ο πελάτης βλέπει κλειδωμένο το απαραίτη�
   try {
     await signIn(page, CLIENT_EMAIL(P));
     await visit(page, "/app/notifications");
-    await page.getByRole("link", { name: "Προτιμήσεις" }).click();
+    await page.getByRole("link", { name: "Προτιμήσεις", exact: true }).click();
     await expect(page).toHaveURL(/tab=prefs/);
 
     const locked = page.getByRole("checkbox", {
@@ -153,22 +165,28 @@ test("ο πελάτης βλέπει κλειδωμένο το απαραίτη�
     await expect(
       page.getByText("απαραίτητο: δεν σβήνει").first(),
     ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Γλώσσα των email" }),
-    ).toBeVisible();
 
     const message = page.getByRole("checkbox", {
       name: "Λαμβάνω: Νέο Μήνυμα · Ειδοποίηση",
     });
     await expect(message).toBeEnabled();
-    await message.uncheck();
-    await expect(page.getByRole("status")).toContainText(
-      "Δεν θα το λαμβάνεις.",
+    // Η νέα εμφάνιση δεν γράφει μήνυμα επιτυχίας: περιμένουμε την αποθήκευση (το κουτί κλειδώνει όσο σώζεται).
+    const saved = page.waitForResponse(
+      (response) => response.request().method() === "POST" && response.ok(),
     );
+    await message.uncheck();
+    await saved;
+    await expect(message).toBeEnabled();
     await page.reload();
     await expect(
       page.getByRole("checkbox", { name: "Λαμβάνω: Νέο Μήνυμα · Ειδοποίηση" }),
     ).not.toBeChecked();
+
+    // Η γλώσσα των email του Χρήστη πελάτη ζει στο Προφίλ και προτιμήσεις.
+    await visit(page, "/app/settings/profile");
+    await expect(
+      page.getByRole("heading", { name: "Γλώσσα των email" }),
+    ).toBeVisible();
   } finally {
     await restoreClientPrefs(P);
   }

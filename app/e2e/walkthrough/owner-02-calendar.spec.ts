@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 
 import { project, signIn } from "../sales-parts";
-import { useSpacesLook } from "./spaces";
 
 // Περιήγηση Ιδιοκτήτη, διαδρομή 02: Ημερολόγιο και Ρεπό / Άδεια (docs/walkthrough/owner.md).
 const OWNER = "owner@example.com";
@@ -11,8 +10,7 @@ const DAY = "2027-03-10";
 
 test.describe.configure({ mode: "serial" });
 
-test.beforeEach(async ({ context, page }) => {
-  await useSpacesLook(context);
+test.beforeEach(async ({ page }) => {
   await signIn(page, OWNER);
 });
 
@@ -94,7 +92,6 @@ test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού» από �
   // «Δες το και ως…»: η Παραγωγή βλέπει μόνο «Απασχολημένος», χωρίς τίτλο, Είδος ή το χρώμα του. Άλλος Χρήστης στην
   // ίδια καρτέλα: νέα σύνδεση από την αρχή, στη νέα εμφάνιση.
   await context.clearCookies();
-  await useSpacesLook(context);
   await signIn(page, PRODUCTION);
   await page.goto(`/app/calendar?view=list&date=${DAY}`);
   const list = page.locator(".a5-list");
@@ -105,7 +102,6 @@ test("02 · ο Ιδιοκτήτης κλείνει «Ραντεβού» από �
   await expect(list).not.toContainText("Ραντεβού");
 
   await context.clearCookies();
-  await useSpacesLook(context);
   await signIn(page, OWNER);
   await page.goto(`/app/calendar?view=list&date=${DAY}`);
   await item.click();

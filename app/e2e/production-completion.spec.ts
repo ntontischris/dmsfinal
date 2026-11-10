@@ -1,12 +1,14 @@
 import { expect, test } from "@playwright/test";
 
-import { fieldOf, openNewInternal } from "./productions-parts";
+import { visit } from "./filming-parts";
+import { createInternal, PRODUCTION_URL } from "./productions-parts";
 import { button, card, project, shot, signIn } from "./sales-parts";
 
-// Ολοκλήρωση Παραγωγής και Εργασίες (#143) από άκρη σε άκρη. Η Εσωτερική Παραγωγή φτιάχνεται εδώ, με όνομα του project,
-// ώστε να μη μπλέκει με τα άλλα τεστ που παραδίδουν την «Showreel» του seed.
+// Ολοκλήρωση Παραγωγής και Εργασίες (#143) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Η Εσωτερική Παραγωγή φτιάχνεται
+// εδώ, με όνομα του project, ώστε να μη μπλέκει με τα άλλα τεστ που παραδίδουν την «Showreel» του seed.
 // Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
 test.describe.configure({ retries: 0 });
+
 
 const OWNER_NAME = "Γιώργος Ιδιοκτήτης";
 const TASK = "Στείλε το μενού στον πελάτη";
@@ -20,67 +22,79 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   const DELIVERABLE = `Reel ${TITLE}`;
 
   await signIn(page, "owner@example.com");
-  await page.goto("/app/productions");
-  const form = await openNewInternal(page);
-  await fieldOf(form, "Τίτλος").fill(TITLE);
-  await fieldOf(form, "Υπεύθυνος").selectOption({ label: OWNER_NAME });
-  await button(form, "Δημιουργία").click();
-  await expect(
-    page.getByRole("heading", { level: 1, name: TITLE, exact: true }),
-  ).toBeVisible();
+  await createInternal(page, TITLE, OWNER_NAME);
+  const productionUrl = page.url();
 
   const tasks = card(page, "Εργασίες");
-  await fieldOf(tasks, "Τίτλος").fill(TASK);
-  await button(tasks, "Προσθήκη Εργασίας").click();
+  const taskTitle = tasks.getByLabel("Τίτλος εργασίας", { exact: true });
+  // Οι τιμές ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
+  await expect(async () => {
+    await taskTitle.fill(TASK);
+    await expect(button(tasks, "Προσθήκη εργασίας")).toBeEnabled({
+      timeout: 1_000,
+    });
+  }).toPass();
+  await button(tasks, "Προσθήκη εργασίας").click();
   await expect(tasks.getByRole("status")).toContainText(
     "Η Εργασία προστέθηκε.",
   );
-  await tasks.getByRole("checkbox", { name: TASK }).check();
-  await expect(tasks.getByRole("checkbox", { name: TASK })).toBeChecked();
+  const task = tasks.locator("li.g2-task", { hasText: TASK });
+  await button(task, "Έγινε").click();
+  await expect(task).toHaveAttribute("data-done", "true");
+  await expect(button(task, "Ξανάνοιγμα")).toBeVisible();
   await shot(page, "g2-tasks-done");
 
-  await page.getByText("Νέο Παραδοτέο", { exact: true }).click();
-  const create = page.locator("details", {
-    hasText: "Στοιχεία νέου Παραδοτέου",
+  const deliverables = card(page, "Παραδοτέα");
+  const create = deliverables.locator("form", {
+    has: page.getByRole("button", {
+      name: "Δημιουργία Παραδοτέου",
+      exact: true,
+    }),
   });
-  await fieldOf(create, "Τίτλος").fill(DELIVERABLE);
-  await button(create, "Δημιουργία").click();
+  await expect(async () => {
+    if (!(await create.isVisible()))
+      await button(deliverables, "Νέο Παραδοτέο").click();
+    await expect(create).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  await create.locator('input[name="title"]').fill(DELIVERABLE);
+  await button(create, "Δημιουργία Παραδοτέου").click();
   await expect(create.getByRole("status")).toContainText(
     "Το Παραδοτέο δημιουργήθηκε.",
   );
-  await card(page, "Παραδοτέα")
+  await deliverables
     .getByRole("link", { name: DELIVERABLE, exact: true })
     .click();
 
+  // H2: νέα Έκδοση. Στην Εσωτερική κάθε Έκδοση περνά από έλεγχο και ο Ελεγκτής (ο Ιδιοκτήτης) εγκρίνει οριστικά.
   const addVersion = page.locator("form", {
     has: page.getByRole("button", { name: "Προσθήκη Έκδοσης", exact: true }),
   });
-  await fieldOf(
-    addVersion,
-    "Link Έκδοσης (Google Drive, Vimeo ή YouTube)",
-  ).fill(LINK);
+  await expect(async () => {
+    if (!(await addVersion.isVisible()))
+      await button(page, "Νέα Έκδοση").click();
+    await expect(addVersion).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  await addVersion.locator('input[name="url"]').fill(LINK);
   await button(addVersion, "Προσθήκη Έκδοσης").click();
-  await expect(addVersion.getByRole("status")).toContainText(
-    "Η νέα Έκδοση προστέθηκε.",
-  );
+  // Με την επιτυχία η φόρμα κλείνει και η v1 περιμένει έγκριση.
+  await button(page, "Εγκρίνω (οριστικό)").click();
+  await expect(button(page, "Εγκρίνω (οριστικό)")).toHaveCount(0);
+  await expect(
+    page.getByText("εγκρίθηκε", { exact: true }).first(),
+  ).toBeVisible();
 
-  const approve = page.locator("form", {
-    has: page.getByRole("button", { name: "Ενέκρινε", exact: true }),
+  // Η παραδομένη Παραγωγή βγαίνει από την προβολή «Ανοιχτές»· ανοίγουμε την «Παραδομένες».
+  await visit(page, "/app/productions?view=delivered");
+  await page.getByRole("link", { name: TITLE, exact: true }).first().click();
+  await expect(page).toHaveURL(PRODUCTION_URL);
+  expect(page.url()).toBe(productionUrl);
+  const state = card(page, "Κατάσταση");
+  await expect(state.locator(".kit-panel-head")).toContainText("παραδομένη");
+  // Αυτόματη παράδοση: την έκανε το σύστημα, όχι κάποιος Χρήστης.
+  await expect(state).toContainText("από το σύστημα");
+  const doneTask = card(page, "Εργασίες").locator("li.g2-task", {
+    hasText: TASK,
   });
-  await button(approve, "Ενέκρινε").click();
-  await expect(
-    page.getByText("Εγκρίθηκε", { exact: true }).first(),
-  ).toBeVisible();
-
-  // Η παραδομένη Παραγωγή βγαίνει από την καρτέλα «Ανοιχτές»· ανοίγουμε την «Παραδομένες».
-  await page.goto("/app/productions?tab=delivered");
-  await page.getByRole("link", { name: TITLE, exact: true }).click();
-  await expect(
-    page.getByRole("heading", { level: 1, name: TITLE, exact: true }),
-  ).toBeVisible();
-  await expect(card(page, "Κατάσταση")).toContainText("Παραδόθηκε αυτόματα");
-  await expect(
-    card(page, "Εργασίες").getByRole("checkbox", { name: TASK }),
-  ).toBeChecked();
+  await expect(doneTask).toHaveAttribute("data-done", "true");
   await shot(page, "g2-auto-delivered");
 });

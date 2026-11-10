@@ -16,42 +16,17 @@ export type {
 } from "./types";
 export { QUEUE_VIEWS } from "./types";
 export type {
-  ClientDeliverableCard,
   ClientDeliverableDetail,
   ClientDeliverablesView,
   ClientPeriodGroup,
   ClientProvision,
 } from "./client-types";
 export { deliverablesCaps } from "./caps";
-export { parseQueueView, queueViewsOf } from "./helpers";
-export { queueFilterSchema } from "./schemas";
 export { deliverableCardsSchema } from "./view-schema";
 export type { ReadResult } from "./read";
-export {
-  getDeliverable,
-  getDeliverableCandidates,
-  listDeliverableQueue,
-  listPendingCharges,
-} from "./queries";
-export { getClientDeliverable, listClientDeliverables } from "./client-queries";
+export { getDeliverableCandidates, listDeliverableQueue } from "./queries";
+export { listClientDeliverables } from "./client-queries";
 export { clientCardsOf, roundsText } from "./client-helpers";
-export { ClientDetailView } from "./components/client-detail-view";
-export {
-  ClientCardList,
-  ClientQueueView,
-} from "./components/client-queue-view";
-export { ChargeDecisionsPanel } from "./components/charge-decisions-panel";
-export { DeliverableDetailView } from "./components/deliverable-detail";
-export {
-  NewDeliverableForm,
-  type FromRequest,
-} from "./components/new-deliverable-form";
-export { ProductionDeliverables } from "./components/production-deliverables";
-export { DeliverableRulesForm } from "./components/rules-form";
-export { QueueTable } from "./components/queue-table";
-export { QueueTabs } from "./components/queue-tabs";
-export { getDeliverableRules } from "./queries-rules";
-export type { DeliverableRuleKind, DeliverableRules } from "./rules-types";
 // Νέα εμφάνιση (Χώροι): οι οθόνες του prototype H1, H2 πάνω στα ίδια δεδομένα.
 export { SpacesDeliverables } from "./spaces/h1-screen";
 export { SpacesDeliverable } from "./spaces/h2-screen";

@@ -129,10 +129,14 @@ interface E2QueueProps {
   pending: readonly PendingItem[];
   cancels: readonly CancelItem[];
   reschedules: readonly RescheduleItem[];
+  // Τι δείχνει η ουρά όταν δεν περιμένει τίποτα (και μετά την τελευταία απόφαση).
+  empty: ReactNode;
 }
 
-export function E2Queue({ pending, cancels, reschedules }: E2QueueProps) {
+export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) {
   const [outcomes, setOutcomes] = useState<Outcomes>({});
+  // Η τελευταία απόφαση μένει ορατή κι όταν η γραμμή της φύγει από τη λίστα (και όταν η ουρά αδειάσει).
+  const [last, setLast] = useState<Outcome | null>(null);
   const [open, setOpen] = useState<Open>(null);
   const [isPending, startTransition] = useTransition();
   const send = (
@@ -147,17 +151,24 @@ export function E2Queue({ pending, cancels, reschedules }: E2QueueProps) {
         form.append(key, value),
       );
       const state = await action({}, form);
-      setOutcomes((prev) => ({
-        ...prev,
-        [id]: state.error
-          ? { label: "δεν έγινε", tone: "attention", text: state.error }
-          : { ...done, text: state.notice ?? "" },
-      }));
+      const outcome: Outcome = state.error
+        ? { label: "δεν έγινε", tone: "attention", text: state.error }
+        : { ...done, text: state.notice ?? "" };
+      setOutcomes((prev) => ({ ...prev, [id]: outcome }));
+      setLast(outcome);
       if (!state.error) setOpen(null);
     });
 
+  if (pending.length + cancels.length + reschedules.length === 0)
+    return (
+      <>
+        {last && <Result outcome={last} />}
+        {empty}
+      </>
+    );
   return (
     <>
+      {last && <Result outcome={last} />}
       <Panel label="Αναμένουν έγκριση" aside={pending.length} isFlush>
         {pending.length === 0 && (
           <p className="muted sx-pad">Κανένα Γύρισμα δεν περιμένει έγκριση.</p>

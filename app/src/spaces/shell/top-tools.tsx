@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import type { Look } from "@/components/shell/look";
 import { signOut } from "@/modules/access";
 import { newActionHref, type NewEntry } from "@/spaces/data/new-actions";
 import type { SearchItem } from "@/spaces/data/search";
@@ -23,7 +22,6 @@ interface TopToolsProps {
   // Η εναλλαγή Πελάτη, για Χρήστη πελάτη με πολλούς Πελάτες.
   clientSwitcher: ReactNode;
   name: string;
-  look: Look;
   canSignOut: boolean;
 }
 
@@ -31,7 +29,7 @@ const toolOf = (tools: readonly ScreenLink[], code: string) =>
   tools.find((tool) => tool.code === code);
 
 // Πάντα πάνω δεξιά: αναζήτηση, + Νέο, καμπανάκι, Γνώση, προφίλ. Στο κινητό και στο μεγάλο desktop κάθε εικονίδιο
-// έχει και λέξη· ενδιάμεσα η λέξη βγαίνει ως tooltip. Στο προφίλ: θέμα, εμφάνιση και Έξοδος.
+// έχει και λέξη· ενδιάμεσα η λέξη βγαίνει ως tooltip. Στο προφίλ: θέμα και Έξοδος.
 export function TopTools(props: TopToolsProps) {
   const {
     search,
@@ -41,7 +39,6 @@ export function TopTools(props: TopToolsProps) {
     bell,
     clientSwitcher,
     name,
-    look,
     canSignOut,
   } = props;
   const notifications = toolOf(tools, "A2");
@@ -98,7 +95,7 @@ export function TopTools(props: TopToolsProps) {
               <Link href={link.href}>{link.label}</Link>
             </li>
           ))}
-          <ProfileActions look={look} />
+          <ProfileActions />
           {canSignOut && (
             <li>
               <form action={signOut}>

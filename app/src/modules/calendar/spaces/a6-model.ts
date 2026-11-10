@@ -2,7 +2,7 @@
 // Η βάση ξανελέγχει τα πάντα· εδώ πιάνονται νωρίς μόνο οι μισές ή λάθος ημερομηνίες και ώρες. Ο τίτλος είναι προαιρετικός
 // (όπως στο σχήμα του server), γι' αυτό ο κανόνας «ο τίτλος είναι υποχρεωτικός» του prototype λείπει.
 
-import type { BlockedTimeValues } from "../components/blocked-time-form";
+import type { BlockedTimeValues } from "../blocked-form";
 import type { BlockedKind } from "../types";
 
 export interface Draft {

@@ -44,6 +44,11 @@ export function EnabledSwitch({
           {state.error}
         </span>
       )}
+      {state.notice && (
+        <span className="note" role="status">
+          {state.notice}
+        </span>
+      )}
     </form>
   );
 }

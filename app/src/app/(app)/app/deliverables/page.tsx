@@ -1,63 +1,16 @@
-import { lookOf } from "@/components/shell/read-look";
-import { ScreenHeader } from "@/components/shell/screen-header";
 import { getViewer, isClientViewer } from "@/modules/access";
-import {
-  ChargeDecisionsPanel,
-  QueueTable,
-  QueueTabs,
-  SpacesClientDeliverables,
-  SpacesDeliverables,
-  deliverablesCaps,
-  listDeliverableQueue,
-  listPendingCharges,
-  parseQueueView,
-  queueFilterSchema,
-  queueViewsOf,
-} from "@/modules/deliverables";
-
-import { ClientQueueScreen } from "./client-screens";
-import { LoadError, NoAccess } from "./page-parts";
+import { SpacesClientDeliverables, SpacesDeliverables } from "@/modules/deliverables";
 
 export const metadata = { title: "Παραδοτέα" };
 
-const EYEBROW = "H1 · Παραδοτέα";
-const DEFAULT_FILTER = { view: "mine" } as const;
-
 // H1: η ουρά των Παραδοτέων. Η καρτέλα είναι στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
-// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη βλέπει την H3 (και αυτή στις δύο εμφανίσεις).
+// Ο Χρήστης πελάτη βλέπει την H3.
 export default async function DeliverablesPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const viewer = await getViewer();
-  if (isClientViewer(viewer)) {
-    if ((await lookOf(viewer)) === "spaces") return <SpacesClientDeliverables viewer={viewer} />;
-    return <ClientQueueScreen viewer={viewer} />;
-  }
-  if ((await lookOf(viewer)) === "spaces")
-    return <SpacesDeliverables query={await searchParams} />;
-  const caps = deliverablesCaps(viewer);
-  if (!caps.canQueue) return <NoAccess viewer={viewer} />;
-
-  const parsed = queueFilterSchema.safeParse(await searchParams);
-  const filter = parsed.success ? parsed.data : DEFAULT_FILTER;
-  const views = queueViewsOf(caps.canReview);
-  const view = parseQueueView(filter.view, views);
-  const [queue, charges] = await Promise.all([
-    listDeliverableQueue(view),
-    caps.canSeeCharges ? listPendingCharges() : null,
-  ]);
-  if (!queue.ok || (charges !== null && !charges.ok)) return <LoadError />;
-
-  return (
-    <>
-      <ScreenHeader eyebrow={EYEBROW} title="Παραδοτέα" />
-      <div className="grid gap-4">
-        {charges?.ok && charges.data.length > 0 && <ChargeDecisionsPanel cards={charges.data} />}
-        <QueueTabs view={view} views={views} />
-        <QueueTable cards={queue.data} view={view} />
-      </div>
-    </>
-  );
+  if (isClientViewer(viewer)) return <SpacesClientDeliverables viewer={viewer} />;
+  return <SpacesDeliverables query={await searchParams} />;
 }

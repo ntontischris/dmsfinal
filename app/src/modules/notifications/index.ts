@@ -7,24 +7,13 @@ export {
   type NotificationFilter,
 } from "./helpers";
 export {
-  LOAD_ERROR_TEXT,
-  LOAD_ERROR_TITLE,
-  NO_ACCESS_TEXT,
-  NOTIFICATIONS_EYEBROW,
   NOTIFICATIONS_TITLE,
   UNSUBSCRIBE_TEXT_EL,
   UNSUBSCRIBE_TEXT_EN,
   UNSUBSCRIBE_TITLE,
 } from "./labels";
-export {
-  getBell,
-  getMyLanguage,
-  getNotifications,
-  type EmailLanguage,
-} from "./queries";
+export { getBell, getMyLanguage, type EmailLanguage } from "./queries";
 export { NotificationBell } from "./components/notification-bell";
-export { NotificationsScreen } from "./components/notifications-screen";
-export { LanguageForm } from "./components/language-form";
 export { SpacesUnsubscribeForm } from "./spaces/r-unsubscribe-form";
 export { SpacesLanguageChoice } from "./spaces/a3-language";
 // Ιστορικό αποστολών (K3) και καρτέλα «Αποστολές» του Πελάτη (#174).
@@ -45,7 +34,6 @@ export {
   SENDS_TITLE,
 } from "./sends-labels";
 export { getSends } from "./queries-sends";
-export { SendsScreen } from "./components/sends-screen";
 export { ClientSends } from "./components/client-sends";
 export { SpacesClientSends } from "./spaces/b2-sends";
 export {
@@ -70,7 +58,6 @@ export {
   LOAD_FAILED_TITLE,
   NO_EVENT_TITLE,
   NO_MANAGE_TEXT,
-  PREFS_FAILED_TITLE,
   SETTINGS_TITLE,
   SYSTEM_MESSAGES_PATH,
   ALL_SYSTEM_MESSAGES,
@@ -82,19 +69,8 @@ export {
   getAutomationEvent,
   getCatalog,
   getHolidays,
-  getPrefs,
   getSystemMessages,
 } from "./queries-automations";
-export { AutomationsCatalog } from "./components/automations-catalog";
-export { EventScreen } from "./components/event-screen";
-export {
-  AutomationsSubnav,
-  SystemMessageBadges,
-  SystemMessageList,
-  editedLine,
-} from "./components/system-messages-screen";
-export { SystemMessageEditor } from "./components/system-message-editor";
-export { NotificationsTabs, PrefsTab } from "./components/prefs-tab";
 
 // Νέα εμφάνιση (Χώροι): K1, K2, K3 όπως στο prototype.
 export { SpacesAutomations } from "./spaces/k1-screen";

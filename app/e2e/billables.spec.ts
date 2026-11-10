@@ -4,15 +4,18 @@ import { expect, test } from "@playwright/test";
 import { addCatalogueLine, draftProposal } from "./agreements-parts";
 import { signOutsideSystem } from "./agreements-flows-parts";
 import { visit } from "./filming-parts";
-import { project, shot, signIn } from "./sales-parts";
+import { openTab, tabLink } from "./finance-parts";
+import { inContext, project, shot, signIn } from "./sales-parts";
 
 // Προς τιμολόγηση (I1) από άκρη σε άκρη. Δικός του Πελάτης και Ευκαιρία (service role), ώστε να μην αγγίζει τα δεδομένα
 // άλλων specs. Η Συμφωνία γράφεται από τις οθόνες· το cron της ουράς δεν τρέχει μέσα στο e2e, οπότε η γεννήτρια
-// καλείται εδώ με το service role, όπως θα την καλούσε το cron. Σειριακά και χωρίς retries.
+// καλείται εδώ με το service role, όπως θα την καλούσε το cron. Σειριακά και χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ mode: "serial", retries: 0 });
 
+
 const TO_INVOICE_PATH = "/app/finance/to-invoice";
-const TO_INVOICE_LINK = /Προς τιμολόγηση$/;
+const MONEY = "Χρήματα";
+const TO_INVOICE_TAB = "Προς τιμολόγηση";
 const NO_ACCESS_TEXT = "Το «Προς τιμολόγηση» το βλέπουν μόνο όσοι";
 const NOT_A_DEBT_TEXT = "Τα Τιμολογητέα δεν είναι οφειλή";
 
@@ -70,6 +73,7 @@ async function runBillablesGenerator(): Promise<void> {
 
 test("ο Ιδιοκτήτης βλέπει το Τιμολογητέο της υπογεγραμμένης μηνιαίας Συμφωνίας στο «Προς τιμολόγηση»", async ({
   page,
+  browser,
 }) => {
   test.setTimeout(120_000);
   const P = project();
@@ -79,14 +83,17 @@ test("ο Ιδιοκτήτης βλέπει το Τιμολογητέο της υ
   await seedOpportunity(clientName, title);
 
   // Έναρξη τον προηγούμενο μήνα, ο τρέχων ΔΕΝ τιμολογήθηκε εκτός: η Περίοδος του τρέχοντος μήνα γεννά Τιμολογητέο.
-  await signIn(page, "owner@example.com");
-  await draftProposal(page, { title, kind: "μηνιαία" });
-  await addCatalogueLine(page, `Μηνιαία Παρουσία ${P}`);
-  await signOutsideSystem(page, P, { invoiced: false });
+  // Η Συμφωνία γράφεται από τις οθόνες των Συμφωνιών (δικά τους βήματα), σε δικό της context.
+  await inContext(browser, "owner@example.com", async (owner) => {
+    await draftProposal(owner, { title, kind: "μηνιαία" });
+    await addCatalogueLine(owner, `Μηνιαία Παρουσία ${P}`);
+    await signOutsideSystem(owner, P, { invoiced: false });
+  });
   await runBillablesGenerator();
 
-  await visit(page, TO_INVOICE_PATH);
-  await expect(page.getByRole("heading", { level: 1, name: "Προς τιμολόγηση" })).toBeVisible();
+  await signIn(page, "owner@example.com");
+  await openTab(page, MONEY, TO_INVOICE_TAB);
+  await expect(page).toHaveURL(new RegExp(`${TO_INVOICE_PATH}$`));
   await expect(page.getByText(NOT_A_DEBT_TEXT, { exact: false })).toBeVisible();
   await expect(page.getByText(clientName, { exact: true }).first()).toBeVisible();
   await shot(page, "i1-owner");
@@ -94,12 +101,7 @@ test("ο Ιδιοκτήτης βλέπει το Τιμολογητέο της υ
 
 test("οι Πωλήσεις δεν βλέπουν το «Προς τιμολόγηση»", async ({ page }) => {
   await signIn(page, "sales@example.com");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Οθόνες" })
-      .getByRole("link", { name: TO_INVOICE_LINK }),
-  ).toHaveCount(0);
-
   await visit(page, TO_INVOICE_PATH);
   await expect(page.getByText(NO_ACCESS_TEXT, { exact: false })).toBeVisible();
+  await expect(tabLink(page, MONEY, TO_INVOICE_TAB)).toHaveCount(0);
 });

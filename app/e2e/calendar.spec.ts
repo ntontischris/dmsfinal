@@ -1,25 +1,29 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { currentFifteenth, visit } from "./filming-parts";
-import { button, field, project, shot, signIn } from "./sales-parts";
+import { button, project, shot, signIn } from "./sales-parts";
 
-// Ημερολόγιο (A5), Κλεισμένος χρόνος (A6) και Σύνδεσμος ημερολογίου από άκρη σε άκρη. Σειριακά, χωρίς retries.
-// Κάθε τεστ φτιάχνει τα δικά του στοιχεία με όνομα του project (desktop, mobile), γιατί τα δύο projects μοιράζονται βάση.
+// Ημερολόγιο (A5), Κλεισμένος χρόνος (A6) και Σύνδεσμος ημερολογίου από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι).
+// Σειριακά, χωρίς retries. Κάθε τεστ φτιάχνει τα δικά του στοιχεία με όνομα του project (desktop, mobile), γιατί τα
+// δύο projects μοιράζονται βάση.
 
 test.describe.configure({ mode: "serial", retries: 0 });
 
+
 const CALENDAR = "/app/calendar";
-const CALENDAR_LINK_HEADING = "Σύνδεσμος ημερολογίου";
+// Ο Σύνδεσμος ημερολογίου ζει στην κάρτα «Στο κινητό σου» της A5.
+const CALENDAR_LINK_HEADING = "Στο κινητό σου";
 
 const entryNamed = (page: Page, title: string) =>
   page.getByRole("link", { name: new RegExp(title) });
 
 const linkPanel = (page: Page) =>
   page.locator("section", {
-    has: page.getByRole("heading", { name: CALENDAR_LINK_HEADING }),
+    has: page.getByRole("heading", { name: CALENDAR_LINK_HEADING, exact: true }),
   });
 
-// Ο κλεισμένος χρόνος μπαίνει από τη φόρμα Α6· η μέρα είναι του Ημερολογίου αν δεν δοθεί.
+// Ο κλεισμένος χρόνος μπαίνει από τη φόρμα Α6 («Μερικές ώρες»)· η μέρα είναι του Ημερολογίου αν δεν δοθεί.
+// Οι τιμές της φόρμας ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται μέχρι να μείνει.
 async function addBlockedTime(
   page: Page,
   {
@@ -30,9 +34,15 @@ async function addBlockedTime(
   }: { title: string; from: string; to: string; day?: string },
 ): Promise<void> {
   await visit(page, `/app/calendar/blocked/new${day ? `?date=${day}` : ""}`);
-  await field(page, "Από").fill(from);
-  await field(page, "Έως").fill(to);
-  await field(page, "Τίτλος").fill(title);
+  const titleBox = page.getByRole("textbox", { name: /^Τίτλος/ });
+  await expect(async () => {
+    await page.getByLabel("Μερικές ώρες (π.χ. γιατρός)").check();
+    await page.getByLabel("Από", { exact: true }).fill(from);
+    await page.getByLabel("Έως", { exact: true }).fill(to);
+    await titleBox.fill(title);
+    await expect(titleBox).toHaveValue(title, { timeout: 1_000 });
+    await expect(page.getByLabel("Από", { exact: true })).toHaveValue(from, { timeout: 1_000 });
+  }).toPass();
   await button(page, "Αποθήκευση").click();
   await expect(page).toHaveURL(/\/app\/calendar\?view=week/);
 }
@@ -68,10 +78,15 @@ test("ο Ιδιοκτήτης κλείνει χρόνο, τον βλέπει σ�
   await shot(page, "calendar-week");
   await entryNamed(page, title).click();
   await expect(page).toHaveURL(/\/app\/calendar\/blocked\/[0-9a-f-]{36}$/);
-  await expect(field(page, "Τίτλος")).toHaveValue(title);
+  await expect(page.getByRole("textbox", { name: /^Τίτλος/ })).toHaveValue(title);
 
-  await button(page, "Διαγραφή").click();
-  await button(page, "Διαγραφή τώρα").click();
+  // Η διαγραφή ζητά επιβεβαίωση· το κλικ πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγίνεται.
+  const confirm = page.getByRole("alertdialog");
+  await expect(async () => {
+    if (!(await confirm.isVisible())) await button(page, "Διαγραφή").click();
+    await expect(confirm).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  await button(confirm, "Διαγραφή").click();
   await expect(page).toHaveURL(/\/app\/calendar\?view=week/);
   await expect(page.getByText(title)).toHaveCount(0);
 });
@@ -95,7 +110,7 @@ test("ο Ιδιοκτήτης δημιουργεί σύνδεσμο, το .ics �
 
 // Η προσυμπλήρωση της φόρμας (ώρα, διάρκεια, κρυφό πεδίο) ελέγχεται στα τεστ μονάδας· εδώ ελέγχουμε τον σύνδεσμο
 // και ότι η φόρμα ανοίγει. Η φόρμα θέλει Συμφωνία με Περίοδο, και το seed έχει μία Ευκαιρία ανά project: μια νέα
-// Συμφωνία εδώ θα χαλούσε το filming.spec.
+// Συμφωνία εδώ θα χαλούσε το filming.spec. Χωρίς Συμφωνία ακόμα, η E4 λέει ότι δεν υπάρχει Πελάτης· ανοίγει όμως.
 test("η μετατροπή κλεισμένου χρόνου ανοίγει το νέο Γύρισμα με την ώρα και τη διάρκειά του", async ({
   page,
 }) => {
@@ -117,7 +132,10 @@ test("η μετατροπή κλεισμένου χρόνου ανοίγει τ�
   );
   await convert.click();
   await expect(page).toHaveURL(/\/app\/filming\/new\?/);
+  await expect(page).toHaveTitle(/^Νέο Γύρισμα/);
   await expect(
-    page.getByRole("heading", { name: "Νέο Γύρισμα", exact: true }),
+    page
+      .getByRole("heading", { name: "Μετατροπή από Κλεισμένο χρόνο", exact: true })
+      .or(page.getByText("Κανένας πελάτης με ενεργή Συμφωνία", { exact: true })),
   ).toBeVisible();
 });

@@ -10,7 +10,7 @@ import { AutoRefresh } from "../components/auto-refresh";
 import {
   loadCandidates,
   type CandidatesByProduction,
-} from "../components/request-slot";
+} from "../deliverable-candidates";
 import {
   MESSAGES_PATH,
   filterMessages,

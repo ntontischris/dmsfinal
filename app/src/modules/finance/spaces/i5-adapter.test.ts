@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { InvoiceItem } from "../invoices-view-schema";
 import type { LedgerEntry } from "../ledger-view-schema";
-import { i5ClientIdOf, i5RowsOf } from "./i5-adapter";
+import { balanceHintOf, i5ClientIdOf, i5RowsOf } from "./i5-adapter";
 
 const entry = (overrides: Partial<LedgerEntry> = {}): LedgerEntry => ({
   date: "2026-09-01",
@@ -104,5 +104,13 @@ describe("i5ClientIdOf", () => {
     expect(i5ClientIdOf("bak", clients)).toBe("bak");
     expect(i5ClientIdOf(undefined, clients)).toBe("kyp");
     expect(i5ClientIdOf(undefined, [])).toBeUndefined();
+  });
+});
+
+describe("balanceHintOf", () => {
+  it("should say who owes whom and how much, for each Client of the picker", () => {
+    expect(balanceHintOf(1240)).toMatch(/^χρωστά 1\.240\s€$/);
+    expect(balanceHintOf(-400)).toMatch(/^υπέρ του πελάτη 400\s€$/);
+    expect(balanceHintOf(0)).toMatch(/^0\s€$/);
   });
 });

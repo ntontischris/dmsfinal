@@ -1,15 +1,25 @@
 import { expect, test } from "@playwright/test";
 
-import { fieldOf, openNewInternal } from "./productions-parts";
-import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
+import {
+  DELIVERABLE_URL,
+  addTeamComment,
+  addVersion,
+  createDeliverable,
+  createInternalProduction,
+  deliverablesPanel,
+  pageTitle,
+  versionsPanel,
+} from "./deliverables-parts";
+import { visit } from "./filming-parts";
+import { button, project, shot, signIn, tableRow } from "./sales-parts";
 
-// Παραδοτέα (H1, H2, ενότητα της G2) από άκρη σε άκρη. Η Εσωτερική Παραγωγή φτιάχνεται εδώ (Υπεύθυνος ο Ιδιοκτήτης),
-// άρα το Παραδοτέο δεν θέλει Παροχή και ο Ιδιοκτήτης είναι ελεγκτής. Δεν χρησιμοποιεί την «Showreel» του seed: η έγκριση
-// του μοναδικού της Παραδοτέου την παραδίδει αυτόματα (#143) και τα τεστ της Παραγωγής την θέλουν ανοιχτή.
-// Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
+// Παραδοτέα (H1, H2, ενότητα της G2) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Η Εσωτερική Παραγωγή φτιάχνεται εδώ
+// (Υπεύθυνος ο Ιδιοκτήτης), άρα το Παραδοτέο δεν θέλει Παροχή και ο Ιδιοκτήτης είναι ελεγκτής. Δεν χρησιμοποιεί την
+// «Showreel» του seed: η έγκριση του μοναδικού της Παραδοτέου την παραδίδει αυτόματα (#143) και τα τεστ της Παραγωγής
+// την θέλουν ανοιχτή. Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
 test.describe.configure({ retries: 0 });
 
-const DELIVERABLE_URL = /\/app\/deliverables\/[0-9a-f-]{36}$/;
+
 const LINK = "https://drive.google.com/file/d/e2e-deliverable-v1";
 const COMMENT = "Ο ήχος θέλει διόρθωση";
 const TIMECODE = "0:42";
@@ -22,81 +32,46 @@ test("ο Ιδιοκτήτης φτιάχνει Παραδοτέο, το στέλ
   const DELIVERABLE = `Reel ${P}`;
 
   await signIn(page, "owner@example.com");
-  const nav = page.getByRole("navigation", { name: "Οθόνες" });
-  await expect(nav.getByRole("link", { name: /Παραδοτέα$/ })).toBeVisible();
-
-  await page.goto("/app/productions");
-  const newProduction = await openNewInternal(page);
-  await fieldOf(newProduction, "Τίτλος").fill(PRODUCTION);
-  await fieldOf(newProduction, "Υπεύθυνος").selectOption({
-    label: "Γιώργος Ιδιοκτήτης",
-  });
-  await button(newProduction, "Δημιουργία").click();
-  await expect(
-    page.getByRole("heading", { level: 1, name: PRODUCTION, exact: true }),
-  ).toBeVisible();
-  const deliverables = card(page, "Παραδοτέα");
-  await page.getByText("Νέο Παραδοτέο", { exact: true }).click();
-  const create = page.locator("details", {
-    hasText: "Στοιχεία νέου Παραδοτέου",
-  });
-  await fieldOf(create, "Τίτλος").fill(DELIVERABLE);
-  await button(create, "Δημιουργία").click();
-  await expect(create.getByRole("status")).toContainText(
-    "Το Παραδοτέο δημιουργήθηκε.",
-  );
-  await deliverables
+  await createInternalProduction(page, PRODUCTION);
+  await createDeliverable(page, DELIVERABLE);
+  await deliverablesPanel(page)
     .getByRole("link", { name: DELIVERABLE, exact: true })
     .click();
 
   await expect(page).toHaveURL(DELIVERABLE_URL);
-  await expect(
-    page.getByRole("heading", { level: 1, name: DELIVERABLE, exact: true }),
-  ).toBeVisible();
+  await expect(pageTitle(page, DELIVERABLE)).toBeVisible();
 
-  const addVersion = page.locator("form", {
-    has: page.getByRole("button", { name: "Προσθήκη Έκδοσης", exact: true }),
+  await addVersion(page, LINK, {
+    version: 1,
+    state: "αναμένει εσωτερικό έλεγχο",
   });
-  await fieldOf(
-    addVersion,
-    "Link Έκδοσης (Google Drive, Vimeo ή YouTube)",
-  ).fill(LINK);
-  await button(addVersion, "Προσθήκη Έκδοσης").click();
-  await expect(addVersion.getByRole("status")).toContainText(
-    "Η νέα Έκδοση προστέθηκε.",
-  );
-  const version = page.locator("article", { hasText: "Έκδοση 1" });
-  await expect(version.locator("header")).toContainText(
-    "Αναμένει εσωτερικό έλεγχο",
-  );
 
-  const comment = version.locator("form", {
-    has: page.getByRole("button", { name: "Σχόλιο", exact: true }),
-  });
-  await fieldOf(comment, "Σχόλιο").fill(COMMENT);
-  await fieldOf(comment, "Χρόνος (mm:ss, προαιρετικός)").fill(TIMECODE);
-  await button(comment, "Σχόλιο").click();
-  await expect(version).toContainText(COMMENT);
-  await expect(version).toContainText(TIMECODE);
+  await addTeamComment(page, { body: COMMENT, timecode: TIMECODE });
+  await expect(versionsPanel(page)).toContainText(TIMECODE);
   await shot(page, "h2-owner-version-sent");
 
-  await page.goto("/app/deliverables");
+  await visit(page, "/app/deliverables");
+  // Τα Παραδοτέα είναι καρτέλα του Χώρου «Παραγωγή».
+  await expect(
+    page
+      .getByRole("navigation", { name: "Παραγωγή" })
+      .getByRole("link", { name: "Παραδοτέα", exact: true }),
+  ).toBeVisible();
   await page
-    .getByRole("navigation", { name: "Καρτέλες Παραδοτέων" })
-    .getByRole("link", { name: "Προς έλεγχο", exact: true })
+    .getByRole("navigation", { name: "Προβολή ουράς" })
+    .getByRole("link", { name: /^προς έλεγχο \(\d+\)$/ })
     .click();
   await expect(tableRow(page, DELIVERABLE)).toBeVisible();
   await shot(page, "h1-review-tab");
 
   await tableRow(page, DELIVERABLE)
-    .getByRole("link", { name: DELIVERABLE, exact: true })
+    .getByRole("link", { name: "Άνοιγμα για έλεγχο", exact: true })
     .click();
-  const approve = page.locator("form", {
-    has: page.getByRole("button", { name: "Ενέκρινε", exact: true }),
-  });
-  await button(approve, "Ενέκρινε").click();
-  // Μετά την έγκριση η φόρμα φεύγει (δεν ζητιέται πια), γι' αυτό ελέγχουμε την κατάσταση, όχι το μήνυμα.
+  await expect(page).toHaveURL(/\/app\/deliverables\/[0-9a-f-]{36}/);
+  await button(page, "Εγκρίνω (οριστικό)").click();
+  // Μετά την έγκριση οι Ενέργειες φεύγουν (δεν ζητιούνται πια), γι' αυτό ελέγχουμε την κατάσταση, όχι το μήνυμα.
   await expect(
-    page.getByText("Εγκρίθηκε", { exact: true }).first(),
+    page.getByText("εγκρίθηκε", { exact: true }).first(),
   ).toBeVisible();
+  await expect(button(page, "Εγκρίνω (οριστικό)")).toHaveCount(0);
 });

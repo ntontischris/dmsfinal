@@ -8,6 +8,7 @@ import {
 } from "@playwright/test";
 import { z } from "zod";
 
+
 // Βοηθητικά του e2e/sales.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές).
 // Τα δύο projects (desktop, mobile) μοιράζονται μία βάση, γι' αυτό κάθε όνομα που φτιάχνει ή ψάχνει ένα τεστ έχει το όνομα του project.
 
@@ -98,19 +99,45 @@ export async function inContext(
   }
 }
 
-// Η φόρμα «Νέα Ευκαιρία» με νέο Πελάτη: ό,τι είναι υποχρεωτικό, με ονόματα που φέρουν το όνομα του project.
-export async function fillNewOpportunity(page: Page, P: string) {
-  await field(page, "Πελάτης της Ευκαιρίας").selectOption("__new__");
-  await field(page, "Όνομα Πελάτη").fill(`Νέος Πελάτης ${P}`);
-  await field(page, "Κύριο πρόσωπο").fill("Σοφία Νέου");
-  await field(page, "Email κύριου προσώπου").fill(
-    `new.${P}@nea-pelatis.example.gr`,
-  );
-  await field(page, "Τίτλος Ευκαιρίας").fill(`Βίντεο παρουσίασης ${P}`);
-  await field(page, "Πηγή").selectOption({ label: "Instagram" });
-  await field(page, "Επόμενο βήμα").fill("Πρώτο τηλεφώνημα");
+// Όπως το inContext, αλλά στη νέα εμφάνιση (Χώροι): ο άλλος Χρήστης βλέπει τις ίδιες οθόνες με το τεστ.
+export async function inSpacesContext(
+  browser: Browser,
+  email: string,
+  run: (page: Page) => Promise<void>,
+) {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    await signIn(page, email);
+    await run(page);
+  } finally {
+    await context.close();
+  }
+}
+
+// Η φόρμα «Νέος Πελάτης / Ευκαιρία» (B1) με νέο Πελάτη: ό,τι είναι υποχρεωτικό, με ονόματα που φέρουν το όνομα του project.
+export async function fillNewOpportunity(form: Locator, P: string) {
+  await field(form, "Όνομα πελάτη ή επιχείρησης").fill(`Νέος Πελάτης ${P}`);
+  await field(form, "Κύριο πρόσωπο").fill("Σοφία Νέου");
+  await field(form, "Email").fill(`new.${P}@nea-pelatis.example.gr`);
+  await form.locator('textarea[name="title"]').fill(`Βίντεο παρουσίασης ${P}`);
+  await field(form, "Πηγή").selectOption({ label: "Instagram" });
+  await field(form, "Επόμενο βήμα").fill("Πρώτο τηλεφώνημα");
   // Μέρα που δεν είναι ποτέ κλειστή (Πέμπτη, όχι αργία): καμία προειδοποίηση κλειστής μέρας.
-  await field(page, "Ημερομηνία επόμενου βήματος").fill("2099-01-08");
+  await form.locator('input[name="nextStepDue"]').fill("2099-01-08");
+}
+
+// Ανοίγει τη φόρμα «Νέος Πελάτης / Ευκαιρία» της λίστας Πελατών. Το κουμπί ζωντανεύει μόλις φορτώσει η σελίδα·
+// μέχρι τότε το πάτημα χάνεται, γι' αυτό ξαναπατιέται μέχρι να φανεί η φόρμα.
+export async function openNewLead(page: Page): Promise<Locator> {
+  await page.goto("/app/clients");
+  const form = page.locator("form.new-lead");
+  await expect(async () => {
+    if (!(await form.isVisible()))
+      await button(page, "Νέος Πελάτης / Ευκαιρία").click();
+    await expect(form).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  return form;
 }
 
 // Κουμπί με ακριβές όνομα: το `name` του getByRole ταιριάζει αλλιώς σε υπο-κείμενο (π.χ. «Απόσυρση» και «Μεταφορά και απόσυρση»).

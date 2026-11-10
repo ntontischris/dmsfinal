@@ -34,7 +34,9 @@ export function E3Reply({
         <Badge tone={reply.isAnswered ? responseTone(myWord) : "attention"}>
           {reply.isAnswered ? myWord : "Περιμένει απάντηση"}
         </Badge>{" "}
-        <span className="muted">Έκδοση {reply.version}</span>
+        {reply.version !== null && (
+          <span className="muted">Έκδοση {reply.version}</span>
+        )}
       </p>
       <div className="btn-row">
         {reply.canConfirm && (

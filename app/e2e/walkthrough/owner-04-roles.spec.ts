@@ -8,7 +8,6 @@ import {
   unique,
   uniqueEmail,
 } from "../team-parts";
-import { useSpacesLook } from "./spaces";
 
 // Περιήγηση Ιδιοκτήτη, διαδρομές 7–8: Ρόλοι. Ένας νέος Ρόλος διαγράφεται από τη λίστα· ένας Ρόλος που τον έχει κάποιος
 // διαγράφεται από τη σελίδα του, αφού οι Χρήστες του μετακινηθούν σε άλλον Ρόλο. Ό,τι φτιάχνει το τεστ το σβήνει.
@@ -17,8 +16,7 @@ const ROLES_PATH = "/app/team/roles";
 
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context, page }) => {
-  await useSpacesLook(context);
+test.beforeEach(async ({ page }) => {
   await signIn(page, OWNER);
 });
 

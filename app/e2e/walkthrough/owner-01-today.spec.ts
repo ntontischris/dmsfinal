@@ -1,16 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 import { signIn } from "../sales-parts";
-import { useSpacesLook } from "./spaces";
 
 // Περιήγηση Ιδιοκτήτη, διαδρομή 01: Είσοδος, Σήμερα και εργαλεία (docs/walkthrough/owner.md).
 const OWNER = "owner@example.com";
 const HEALTH = "Υγεία συστήματος";
 const DECISIONS = "Μόνο εσύ μπορείς";
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 test("01 · η Είσοδος δεν έχει Google και ο λάθος κωδικός δεν λέει αν υπάρχει λογαριασμός", async ({
   page,

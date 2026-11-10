@@ -5,8 +5,9 @@ import { fieldOf } from "./productions-parts";
 import { card, clientIdByName, project, shot, signIn, tableRow } from "./sales-parts";
 
 // Διόρθωση και ακύρωση καταχώρισης Τιμολογίου (Iε, #154) από άκρη σε άκρη. Δικός του Πελάτης ανά project και στιγμή
-// (service role). Το PDF είναι φανταστικό (e2e/fixtures). Σειριακά, χωρίς retries.
+// (service role). Το PDF είναι φανταστικό (e2e/fixtures). Σειριακά, χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ mode: "serial", retries: 0 });
+
 
 const INVOICES_PATH = "/app/finance/invoices";
 const NEW_PATH = `${INVOICES_PATH}/new`;
@@ -51,7 +52,7 @@ test("ο Ιδιοκτήτης διορθώνει τη λήξη και μετά �
   await page.goto(`${NEW_PATH}?client=${clientId}`);
   // Η φόρμα έρχεται μετά τον σκελετό αναμονής: πρώτα να φανεί, μετά να γραφτεί (όπως στο invoices.spec).
   await expect(
-    page.getByRole("heading", { level: 1, name: "Καταχώρηση Τιμολογίου" }),
+    page.getByRole("heading", { name: "Βήμα 1: Ανέβασμα PDF" }),
   ).toBeVisible();
   await page.locator('input[type="file"]').setInputFiles(PDF_FIXTURE);
   await fieldOf(page, "Αριθμός").fill(number);
@@ -71,30 +72,40 @@ test("ο Ιδιοκτήτης διορθώνει τη λήξη και μετά �
     "Καταχωρήθηκε",
   );
 
+  // Η διόρθωση αποθηκεύεται μόνο όταν κάτι άλλαξε.
+  const correction = card(page, "Διόρθωση ή ακύρωση καταχώρισης");
+  const save = correction.getByRole("button", { name: "Αποθήκευση διόρθωσης" });
+  await expect(save).toBeDisabled();
+  await fieldOf(correction, "Λήξη").fill(NEW_DUE);
+  await save.click();
   await expect(
-    page.getByRole("button", { name: "Αποθήκευση διόρθωσης" }),
-  ).toHaveCount(0);
-  await fieldOf(page, "Λήξη").fill(NEW_DUE);
-  await page.getByRole("button", { name: "Αποθήκευση διόρθωσης" }).click();
-  await expect(
-    page.getByRole("status").filter({ hasText: "Η διόρθωση αποθηκεύτηκε" }),
+    correction.getByRole("status").filter({ hasText: "Η διόρθωση αποθηκεύτηκε" }),
   ).toBeVisible();
   await expect(card(page, `Ίχνος καταχώρισης: ${number}`)).toContainText(
     "15/01/2099",
   );
   await shot(page, "i3-correct");
 
-  await page.locator("summary", { hasText: "Ακύρωση καταχώρισης" }).click();
-  await fieldOf(page, "Λόγος ακύρωσης (υποχρεωτικός)").fill(VOID_REASON);
-  await page.getByRole("button", { name: "Επιβεβαίωση ακύρωσης" }).click();
+  // Η ακύρωση θέλει λόγο: χωρίς αυτόν το κουμπί δεν πατιέται.
+  const voidButton = correction.getByRole("button", {
+    name: "Ακύρωση καταχώρισης",
+  });
+  await expect(voidButton).toBeDisabled();
+  await fieldOf(correction, "Λόγος ακύρωσης (υποχρεωτικός)").fill(VOID_REASON);
+  await voidButton.click();
   // Μετά την ακύρωση η φόρμα φεύγει και η σελίδα δείχνει την ακυρωμένη καταχώριση με τον λόγο.
-  await expect(
-    page.getByRole("heading", { name: "Η καταχώριση είναι ακυρωμένη" }),
-  ).toBeVisible();
+  const voidedNotice = page
+    .getByRole("heading", { name: "Η καταχώριση είναι ακυρωμένη" })
+    .locator("xpath=ancestor::section[1]");
+  await expect(voidedNotice).toBeVisible();
+  await expect(voidedNotice).toContainText(VOID_REASON);
 
   await page.goto(INVOICES_PATH);
   await expect(tableRow(page, number)).toHaveCount(0);
-  const voided = card(page, "Ακυρωμένες καταχωρίσεις");
+  const voided = page
+    .locator("details")
+    .filter({ has: page.locator("summary", { hasText: "Ακυρωμένες καταχωρίσεις" }) });
+  await voided.locator("summary").click();
   await expect(voided).toContainText(number);
   await expect(voided).toContainText(VOID_REASON);
   await shot(page, "i2-voided");

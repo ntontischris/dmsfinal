@@ -1,64 +1,13 @@
-import Link from "next/link";
-
-import { lookOf } from "@/components/shell/read-look";
-import { ScreenHeader } from "@/components/shell/screen-header";
-import { buttonVariants } from "@/components/ui/button";
-import { getViewer } from "@/modules/access";
-import {
-  COST_TITLE,
-  CostGroupTabs,
-  CostList,
-  CostLoadError,
-  CostNoAccess,
-  GROUP_LABELS,
-  SpacesCosts,
-  costsCaps,
-  listCostRows,
-  parseCostGroup,
-  type CostGroup,
-} from "@/modules/costs";
+import { COST_TITLE, SpacesCosts } from "@/modules/costs";
 
 export const metadata = { title: COST_TITLE };
 
-const EYEBROW = "G3 · Κόστος και ώρες";
-
-const EMPTY_TEXT: Readonly<Record<CostGroup, string>> = {
-  needs_hours: "Καμία Παραγωγή δεν περιμένει πραγματικές ώρες.",
-  overrun: "Καμία Παραγωγή δεν έχει υπέρβαση.",
-  rest: "Καμία άλλη Παραγωγή σε αυτή την ομάδα.",
-};
-
-// G3: κόστος και ώρες όλων των Παραγωγών, σε τρεις ομάδες. Η ομάδα ζει στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
-// Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype, με την Παραγωγή στο ?production=· αλλιώς η σημερινή.
+// G3: κόστος και ώρες όλων των Παραγωγών, με την Παραγωγή στο ?production=· η βάση αποφασίζει τι βλέπεις.
 export default async function CostsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const viewer = await getViewer();
-  const query = await searchParams;
-  if ((await lookOf(viewer)) === "spaces")
-    return <SpacesCosts production={typeof query.production === "string" ? query.production : undefined} />;
-  if (!costsCaps(viewer).canView) return <CostNoAccess viewer={viewer} eyebrow={EYEBROW} />;
-
-  const group = parseCostGroup(query.group);
-  const rows = await listCostRows(group);
-  if (!rows.ok) return <CostLoadError />;
-
-  return (
-    <>
-      <ScreenHeader eyebrow={EYEBROW} title={COST_TITLE}>
-        <Link href="/app/productions" className={buttonVariants({ variant: "ghost" })}>
-          ← Παραγωγές
-        </Link>
-      </ScreenHeader>
-      <div className="mt-4 grid gap-4">
-        <CostGroupTabs group={group} />
-        <CostList rows={rows.data} emptyText={EMPTY_TEXT[group]} />
-        <p className="m-0 text-sm text-muted-foreground">
-          {GROUP_LABELS[group]}: τα σήματα είναι ενδείξεις και δεν κλειδώνουν τίποτα.
-        </p>
-      </div>
-    </>
-  );
+  const { production } = await searchParams;
+  return <SpacesCosts production={typeof production === "string" ? production : undefined} />;
 }

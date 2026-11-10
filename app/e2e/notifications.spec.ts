@@ -1,13 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-import { switchUser } from "./booking-parts";
+import { switchUser } from "./knowledge-parts";
 import { project, signIn } from "./sales-parts";
 
 // Ειδοποιήσεις (A2, #170) από άκρη σε άκρη. Ο Πελάτης «Πελάτης Ειδοποιήσεων {project}» (Υπεύθυνος ο Ιδιοκτήτης) και ο
 // Χρήστης πελάτη «notify.{project}@example.com» (Πλήρης) έρχονται από το seed. Σειριακά, χωρίς retries· τα δύο projects
 // μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
+
 
 const CLIENT_EMAIL = (P: string): string => `notify.${P}@example.com`;
 const NOTIFICATIONS_PATH = "/app/notifications";
@@ -33,12 +34,14 @@ const bell = (page: Page) =>
 async function startFromZero(page: Page): Promise<void> {
   await page.goto(NOTIFICATIONS_PATH);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Ειδοποιήσεις" }),
+    page.getByRole("navigation", { name: "Ειδοποιήσεις", exact: true }),
   ).toBeVisible();
   const markAll = page.getByRole("button", { name: "Όλες διαβασμένες" });
   if (await markAll.isEnabled()) {
     await markAll.click();
-    await expect(page.getByRole("status")).toContainText("διαβασμέν");
+    await expect(
+      page.getByRole("status").filter({ hasText: "διαβασμέν" }),
+    ).toBeVisible();
   }
   await expect(bell(page)).toHaveAccessibleName(
     "Ειδοποιήσεις: καμία αδιάβαστη",
@@ -60,12 +63,11 @@ test("ο πελάτης γράφει, ο Ιδιοκτήτης βλέπει «1»
   // 1. Ο Χρήστης πελάτη στέλνει Μήνυμα.
   await switchUser(page, CLIENT_EMAIL(P));
   await page.goto(MESSAGES_PATH);
-  const composer = page.getByRole("region", { name: "Νέο Μήνυμα" });
-  await composer.getByLabel("Μήνυμα προς την ομάδα").fill(question);
-  await composer.getByRole("button", { name: "Αποστολή" }).click();
-  await expect(composer.getByRole("status")).toContainText(
-    "Το Μήνυμα στάλθηκε.",
-  );
+  await page.getByLabel("Το μήνυμά σου").fill(question);
+  await page.getByRole("button", { name: "Στείλε το μήνυμα" }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Το μήνυμα στάλθηκε." }),
+  ).toBeVisible();
 
   // 2. Τρέχει ο επεξεργαστής (όπως το cron της ουράς).
   await runEventsProcessor();
@@ -102,7 +104,7 @@ test("η σελίδα Ειδοποιήσεων δείχνει κενή κατά�
   ).toBeVisible();
 
   await page
-    .getByRole("navigation", { name: "Ποιες Ειδοποιήσεις" })
+    .getByRole("main")
     .getByRole("link", { name: "Όλες", exact: true })
     .click();
   await expect(page).toHaveURL(/show=all/);
