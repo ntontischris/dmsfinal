@@ -2,17 +2,14 @@
 
 import { useRouter } from "next/navigation";
 
-import { LOOK_COOKIE, SPACES_LOOK, type Look } from "@/components/shell/look";
+import { LOOK_COOKIE, type Look } from "@/components/shell/look";
 import { Button } from "@/components/ui/button";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
-// Γράφει ή σβήνει το cookie· χωρίς cookie ισχύει η παλιά εμφάνιση.
+// Γράφει πάντα ρητή τιμή· χωρίς cookie ισχύει η νέα εμφάνιση.
 export const saveLook = (look: Look): void => {
-  document.cookie =
-    look === "spaces"
-      ? `${LOOK_COOKIE}=${SPACES_LOOK}; path=/; max-age=${ONE_YEAR}; samesite=lax`
-      : `${LOOK_COOKIE}=; path=/; max-age=0; samesite=lax`;
+  document.cookie = `${LOOK_COOKIE}=${look}; path=/; max-age=${ONE_YEAR}; samesite=lax`;
 };
 
 // Διακόπτης «Νέα / Παλιά εμφάνιση»: αλλάζει το cookie και ξαναζωγραφίζει τη σελίδα από τον server.
