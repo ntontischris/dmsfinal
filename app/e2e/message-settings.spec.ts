@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 
 import { visit } from "./filming-parts";
 import { button, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ρυθμίσεις › Μηνύματα από άκρη σε άκρη (#164), στη νέα εμφάνιση (Χώροι). Ο Ιδιοκτήτης αλλάζει τα λεπτά διόρθωσης σε 20, βλέπει το «20» στο σημείωμα
 // του composer της Συνομιλίας και τα επαναφέρει στο 15. Σειριακά και χωρίς retries (η βάση μοιράζεται).
@@ -12,9 +11,6 @@ const SAVE = "Αποθήκευση Ρυθμίσεων";
 const SAVED = "Οι Ρυθμίσεις αποθηκεύτηκαν.";
 const EDIT_LABEL = "Διόρθωση Μηνύματος (λεπτά)";
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 test("ο Ιδιοκτήτης αλλάζει τα λεπτά διόρθωσης και τα βλέπει στη Συνομιλία", async ({
   page,

@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 
 import { card, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Υγεία συστήματος (P2, #215) από άκρη σε άκρη. Οι αποτυχημένες αποστολές και το Γεγονός που κόλλησε μπαίνουν με service
 // role (μόνο προετοιμασία), με το όνομα του project, γιατί τα δύο projects μοιράζονται μία βάση. Οι ενέργειες γίνονται
@@ -12,9 +11,6 @@ test.describe.configure({ mode: "serial", retries: 0 });
 const PATH = "/app/health";
 const TITLE = "Υγεία συστήματος";
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

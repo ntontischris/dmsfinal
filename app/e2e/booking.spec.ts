@@ -14,15 +14,11 @@ import {
   switchUser,
 } from "./booking-parts";
 import { button, listItem, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Κρατήσεις (C2α, #130) στους Χώρους: Ωράριο, εξαίρεση, κράτηση του Πελάτη με έγκριση και μετάθεση που απορρίπτεται.
 // Σειριακά: το Ωράριο είναι μία γραμμή κοινή για όλα τα specs και το (α) πρέπει να τρέξει πρώτο.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Στην ουρά Εγκρίσεων κάθε Γύρισμα είναι δύο γραμμές: η κεφαλή (Πελάτης) και από κάτω οι ενέργειές του.
 const queueRow = (owner: Page, title: string, client: string): Locator =>

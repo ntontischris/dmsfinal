@@ -9,8 +9,6 @@ import { z } from "zod";
 
 import { control, panel } from "./catalogue-parts";
 import { button, signIn, tableRow } from "./sales-parts";
-// Δεν είναι React hook· το όνομα «use…» μπερδεύει τον κανόνα των hooks μέσα σε απλές συναρτήσεις.
-import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 
 // Βοηθητικά του e2e/agreements.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές), στη νέα εμφάνιση (Χώροι).
 // Οι Πελάτες και οι Ευκαιρίες έρχονται από το e2e/seed.mjs· κάθε Συμφωνία γράφεται από την οθόνη, όπως θα την έγραφε ο πωλητής.
@@ -64,7 +62,6 @@ export async function inSpacesContext(
 ) {
   const context = await browser.newContext();
   try {
-    await setSpacesLook(context);
     const page = await context.newPage();
     await signIn(page, email);
     await run(page);
@@ -144,7 +141,6 @@ export async function asVisitor(
 ) {
   const context = await browser.newContext();
   try {
-    await setSpacesLook(context);
     await run(await context.newPage());
   } finally {
     await context.close();

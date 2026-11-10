@@ -3,7 +3,6 @@ import { expect, type Browser, type Locator, type Page } from "@playwright/test"
 import { signOutsideSystem } from "./agreements-flows-parts";
 import { addCatalogueLine, draftProposal } from "./agreements-parts";
 import { button, inContext, signIn } from "./sales-parts";
-import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 
 // Βοηθητικά του e2e/filming.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές).
 // Κάθε τεστ φτιάχνει ό,τι χρειάζεται: η Συμφωνία της ροής γράφεται από την ίδια τη ροή, με τον Πελάτη του seed.
@@ -83,7 +82,6 @@ export async function inSpaces(
 ): Promise<void> {
   const context = await browser.newContext();
   try {
-    await setSpacesLook(context);
     const page = await context.newPage();
     await signIn(page, email);
     await run(page);

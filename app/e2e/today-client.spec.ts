@@ -2,15 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { project, signIn } from "./sales-parts";
 import { allLink, clickUntil, openFolds } from "./today-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Σήμερα πελάτη (Σε, #184) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Ο Χρήστης πελάτη «today.{project}@example.com»
 // (Πλήρης) του «Πελάτης Σήμερα {project}» έρχεται από το seed. Σειριακά, χωρίς retries.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const REQUESTS = "Τα ανοιχτά Αιτήματά σου";
 

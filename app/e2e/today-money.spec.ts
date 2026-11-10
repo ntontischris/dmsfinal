@@ -2,16 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
 
 import { clientIdByName, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Σήμερα Σδ (#183) στη νέα εμφάνιση (Χώροι): ένα ληξιπρόθεσμο Τιμολόγιο φαίνεται στα «Χρήματα» της Σήμερα (οφειλέτης και
 // ποσό), και το «Όλα τα τιμολόγια →» πηγαίνει στην I2 με το φίλτρο. Δικός του Πελάτης ανά project και στιγμή (service role,
 // μόνο για τα δεδομένα). Σειριακά, χωρίς retries.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

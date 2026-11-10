@@ -6,7 +6,6 @@ import { z } from "zod";
 
 import { listItem, signIn } from "./sales-parts";
 import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ομάδα Νβ (#208): Αιτήματα GDPR. Καταγραφή, προθεσμία και κλείσιμο, εξαγωγή Πελάτη (περιεχόμενα του ZIP),
 // ανωνυμοποίηση με πληκτρολόγηση ονόματος, άρνηση για τη Διαχείριση. Φανταστικά στοιχεία· τα δεδομένα στήνονται με το
@@ -15,9 +14,6 @@ import { useSpacesLook } from "./walkthrough/spaces";
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const PASSWORD = "e2e-password-123";
 const GDPR = "/app/team/gdpr";
@@ -226,7 +222,6 @@ test("η ανωνυμοποίηση θέλει το όνομα γραμμένο 
   expect(data.user?.email).toMatch(/^anonymized-\d+@anonymized\.invalid$/);
 
   const otherContext = await browser.newContext();
-  await useSpacesLook(otherContext);
   const other = await otherContext.newPage();
   await other.goto("/login");
   await other.getByLabel("Email", { exact: true }).fill(email);

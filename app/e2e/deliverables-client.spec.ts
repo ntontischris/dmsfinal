@@ -20,7 +20,6 @@ import {
   signIn,
   tableRow,
 } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ο κύκλος με τον πελάτη (H3, H4) στη νέα εμφάνιση (Χώροι): ο Ιδιοκτήτης ανεβάζει, ο Χρήστης πελάτη ζητά αλλαγές και
 // εγκρίνει. Η Παραγωγή βγαίνει από μηνιαία Συμφωνία του Πελάτη Παραδοτέων (seed) που υπογράφεται μέσα από τις οθόνες.
@@ -28,9 +27,6 @@ import { useSpacesLook } from "./walkthrough/spaces";
 // context. Σειριακά και χωρίς retries, όπως τα άλλα e2e.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const CLIENT_NAME = (P: string): string => `Πελάτης Παραδοτέων ${P}`;
 const CLIENT_EMAIL = (P: string): string => `deliv.${P}@example.com`;

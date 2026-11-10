@@ -2,16 +2,12 @@ import { expect, test } from "@playwright/test";
 
 import { button, project, signIn } from "./sales-parts";
 import { clickUntil } from "./today-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Σήμερα Σγ (#182) στη νέα εμφάνιση (Χώροι): οι κάρτες «Η δουλειά μου» μαζεύονται στο «Και άλλα». Ο Ιδιοκτήτης φτιάχνει
 // ένα πρόχειρο Παραδοτέο σε δική του Εσωτερική Παραγωγή· η γραμμή «Παραδοτέα για μένα» το μετρά και οδηγεί στην ουρά H1
 // «Για μένα». Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const MY_DELIVERABLES = "Παραδοτέα για μένα";
 

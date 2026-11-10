@@ -1,7 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Συνομιλία ομάδας (J1, J2) από άκρη σε άκρη (#160). Ο Πελάτης «Πελάτης Μηνυμάτων {project}» έρχεται από το seed.
 // Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε κείμενο έχει το όνομα του project.
@@ -12,9 +11,6 @@ const INBOX_PATH = "/app/messages";
 const COMPOSER = "Νέο Μήνυμα";
 const INTERNAL_MARK = "Εσωτερικό · δεν το βλέπει ο πελάτης";
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Ο συντάκτης καθαρίζει μόλις το Μήνυμα σταλεί (χωρίς γραμμή «στάλθηκε»): το Μήνυμα στο νήμα και άδειο κείμενο.
 async function expectSent(page: Page, composer: Locator, text: string) {

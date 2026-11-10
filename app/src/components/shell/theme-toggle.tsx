@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-
 import {
   parseThemePreference,
   resolveTheme,
@@ -44,15 +42,7 @@ export const chooseTheme = (preference: ThemePreference): void => {
   window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
 };
 
-// Εναλλαγή σκοτεινό / φωτεινό· τη χρησιμοποιεί και το μενού προφίλ της νέας εμφάνισης.
+// Εναλλαγή σκοτεινό / φωτεινό, από το μενού προφίλ.
 export const toggleTheme = (): void =>
   chooseTheme(readTheme() === "dark" ? "light" : "dark");
 
-// Στο v1 το θέμα θα ζει στο προφίλ του Χρήστη (A3)· ως τότε μένει στον browser.
-export function ThemeToggle() {
-  return (
-    <Button size="sm" onClick={toggleTheme}>
-      Σκοτεινό / φωτεινό
-    </Button>
-  );
-}

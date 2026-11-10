@@ -1,16 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { button, project, shot, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Συζητήσεις Βοηθού (L2) και Αναπάντητες (L3) από άκρη σε άκρη (#192). Το seed γράφει, μέσα από τα RPC του server του Βοηθού,
 // μία Συζήτηση Επισκέπτη ανά project με την ίδια ερώτηση δύο φορές («ρωτήθηκε 2 φορές») και ένα δημοσιευμένο στοιχείο Γνώσης.
 // Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το project.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const UNANSWERED_PATH = "/app/knowledge/unanswered";
 const CONVERSATIONS_PATH = "/app/knowledge/conversations";

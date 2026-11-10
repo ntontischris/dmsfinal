@@ -1,16 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { project, shot, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ο Βοηθός (A9) και Ρυθμίσεις › Εταιρεία › Βοηθός από άκρη σε άκρη (#193). Το CI δεν έχει κλειδιά παρόχων AI, άρα ο Βοηθός
 // απαντά «δεν είναι διαθέσιμος τώρα» χωρίς καμία κλήση AI. Ο Χρήστης πελάτη «know.{project}@example.com» (Πλήρης) έρχεται από
 // το seed της Γνώσης. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const RETENTION =
   "Οι Συζητήσεις κρατιούνται 12 μήνες από το τελευταίο μήνυμα και τις βλέπει η εταιρεία.";
@@ -82,7 +78,6 @@ test("ο Ιδιοκτήτης αλλάζει το πλαφόν του Βοηθο
   await shot(page, "o1-assistant-owner");
 
   await page.context().clearCookies();
-  await useSpacesLook(page.context());
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/company");
   // Η Διαχείριση βλέπει το πλαφόν κλειδωμένο («Μόνο Ιδιοκτήτης»), χωρίς πεδίο για να το αλλάξει.

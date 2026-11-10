@@ -11,7 +11,6 @@ import {
   visit,
 } from "./filming-parts";
 import { button, project, shot, signIn } from "./sales-parts";
-import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 
 // Γυρίσματα (E1–E4, E6, E7, Ρυθμίσεις) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Το seed φέρνει μόνο τον Πελάτη και
 // την Ευκαιρία· κάθε Συμφωνία και Γύρισμα γράφεται μέσα από τις οθόνες. Σειριακά και χωρίς retries, όπως τα υπόλοιπα τεστ.
@@ -20,9 +19,6 @@ test.describe.configure({ mode: "serial", retries: 0 });
 // Η Συμφωνία υπογράφεται σε δικά της contexts και κάθε Χρήστης μπαίνει ξεχωριστά: η ροή θέλει περισσότερο χρόνο.
 test.setTimeout(90_000);
 
-test.beforeEach(async ({ context }) => {
-  await setSpacesLook(context);
-});
 
 test("η Άννα κλείνει Γύρισμα, ο Ιδιοκτήτης ορίζει Συνεργείο και η Ρένα επιβεβαιώνει και ολοκληρώνεται με «έγινε»", async ({
   page,

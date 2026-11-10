@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { field, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Αλλαγή κωδικού από το Προφίλ (A3 › Είσοδος): ζητά τον τωρινό κωδικό. Φανταστικά στοιχεία, δικός του Χρήστης
 // ανά project (e2e/seed.mjs), και στο τέλος ο κωδικός γυρίζει στον αρχικό του seed.
@@ -11,9 +10,6 @@ const NEW_PASSWORD = "e2e-changed-password-789";
 // Το τεστ αλλάζει τον κωδικό του Χρήστη· μια επανάληψη θα ξεκινούσε με άλλον κωδικό.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Το μήνυμα της φόρμας· όχι ο route announcer του Next, που έχει κι αυτός role="alert".
 const formAlert = (page: Page) => page.locator(".r-msg[role=alert]");

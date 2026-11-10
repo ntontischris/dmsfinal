@@ -2,16 +2,12 @@ import { expect, test } from "@playwright/test";
 
 import { filterCard, openTab, pickFilter, startsWith } from "./finance-parts";
 import { signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Αναφορές Ρα (#198): ο Ιδιοκτήτης ανοίγει την M1 από τον Χώρο «Χρήματα», βλέπει τις τρεις οικονομικές Αναφορές, αλλάζει
 // Περίοδο (που μένει στη διεύθυνση) και ανοίγει τις Οφειλές· η Παραγωγή δεν έχει Αναφορές. Οι αριθμοί ελέγχονται στο
 // pgTAP (reports_test.sql)· εδώ μόνο η ροή. Σειριακά, χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const REPORTS_PATH = "/app/reports";
 const MONEY = "Χρήματα";

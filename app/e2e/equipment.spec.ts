@@ -8,15 +8,11 @@ import {
 } from "./equipment-parts";
 import { visit } from "./filming-parts";
 import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Εξοπλισμός (F1, F2, F3) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Το «Κάμερα {project}» το φτιάχνει το
 // e2e/seed.mjs (ντουλάπι του studio). Τα τεστ γράφουν στην ίδια βάση, σειριακά: οι νέες εγγραφές φέρουν το όνομα του project.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const READ_ONLY_REGISTRY = "Μόνο ανάγνωση: δεσμεύεις στα Γυρίσματά σου";
 const READ_ONLY_ITEM = "Το μητρώο το αλλάζει μόνο εκείνος.";

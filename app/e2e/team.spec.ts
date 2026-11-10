@@ -12,7 +12,6 @@ import {
   unique,
   uniqueEmail,
 } from "./team-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ομάδα Να (#207): απενεργοποίηση με προεπισκόπηση, Επανενεργοποίηση από την πρόσκληση, Ρόλος σε δύο βήματα και
 // Συνάδελφοι (N3). Φανταστικά στοιχεία· τα δεδομένα στήνονται με το service role, οι ενέργειες γίνονται από την οθόνη.
@@ -20,9 +19,6 @@ import { useSpacesLook } from "./walkthrough/spaces";
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Η φόρμα «Πρόσκληση Χρήστη» της Ομάδας (N1): οι ετικέτες δείχνουν τα πεδία με htmlFor.
 const inviteForm = (page: Page) => page.locator("#n1-invite");

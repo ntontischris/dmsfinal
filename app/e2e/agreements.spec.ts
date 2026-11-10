@@ -31,7 +31,6 @@ import {
 } from "./agreements-flows-parts";
 import { control, openItem, panel, screenHeader } from "./catalogue-parts";
 import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Συμφωνίες και υπογραφή (D1, D2, D4, D5), Ρυθμίσεις › Συμφωνίες (O3) και η πρόταση της B4 από άκρη σε άκρη. Φανταστικά στοιχεία.
 // Τους Πελάτες και τις Ευκαιρίες τους φτιάχνει το e2e/seed.mjs· κάθε Συμφωνία γράφεται από την οθόνη (βοηθητικά: e2e/agreements-parts.ts).
@@ -43,9 +42,6 @@ const NOT_ALLOWED = "Χωρίς δικαίωμα";
 test.describe.configure({ retries: 0 });
 
 // Όλες οι οθόνες εδώ είναι στη νέα εμφάνιση (Χώροι)· κάθε άλλο context τη βάζει μόνο του (inSpacesContext, asVisitor).
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 test("η Άννα φτάνει από την Ευκαιρία ως την υπογραφή του πελάτη", async ({
   page,
@@ -75,7 +71,6 @@ test("η Άννα φτάνει από την Ευκαιρία ως την υπο
 
   const visitor = await browser.newContext();
   try {
-    await useSpacesLook(visitor);
     const anon = await visitor.newPage();
     await anon.goto(link);
     await checkPublicDocument(anon, P);
@@ -169,7 +164,6 @@ test("ο Σύνδεσμος που ακυρώθηκε, οι αλλαγές κα�
 
   const visitor = await browser.newContext();
   try {
-    await useSpacesLook(visitor);
     const anon = await visitor.newPage();
     await anon.goto(newLink);
     await requestChangesAsVisitor(anon);

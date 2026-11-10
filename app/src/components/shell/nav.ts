@@ -412,23 +412,3 @@ export const visibleNav = (
     ),
   })).filter((section) => section.items.length > 0);
 
-// Το πλαϊνό μενού της παλιάς εμφάνισης: χωρίς τις οθόνες που υπάρχουν μόνο στη νέα.
-export const classicNav = (
-  allows: (requirement: string) => boolean,
-): NavSection[] =>
-  visibleNav(allows)
-    .map((section) => ({
-      ...section,
-      items: section.items.filter((item) => !item.isSpacesOnly),
-    }))
-    .filter((section) => section.items.length > 0);
-
-// Η τρέχουσα οθόνη: η μεγαλύτερη διαδρομή που ταιριάζει (π.χ. το /app/team/roles/… ανήκει στο N4, όχι στο N1).
-export const currentHref = (
-  pathname: string,
-  sections: readonly NavSection[],
-): string | undefined =>
-  sections
-    .flatMap((section) => section.items.map((item) => item.href))
-    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
-    .sort((a, b) => b.length - a.length)[0];

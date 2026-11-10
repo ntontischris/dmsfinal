@@ -7,15 +7,11 @@ import {
   switchUserInSpaces,
 } from "./finance-parts";
 import { button, card, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Καρτέλα Πελάτη (I5) και όψη πελάτη από άκρη σε άκρη (#153). Ο Πελάτης «Πελάτης Καρτέλας {project}» και ο Χρήστης πελάτη
 // «ledger.{project}@example.com» (Πλήρης) έρχονται από το seed. Σειριακά, χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const CLIENT_NAME = (P: string): string => `Πελάτης Καρτέλας ${P}`;
 const CLIENT_EMAIL = (P: string): string => `ledger.${P}@example.com`;

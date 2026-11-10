@@ -3,8 +3,6 @@ import { expect, type Browser, type Page } from "@playwright/test";
 import { signOutsideSystem } from "./agreements-flows-parts";
 import { addCatalogueLine, draftProposal } from "./agreements-parts";
 import { signIn } from "./sales-parts";
-// Με άλλο όνομα: δεν είναι React hook, το «use» μπερδεύει τον κανόνα των hooks.
-import { useSpacesLook as addSpacesLook } from "./walkthrough/spaces";
 
 // Βοηθητικά του e2e/booking.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές).
 // Ο Πελάτης κρατήσεων (seed) έχει ένα Χρήστη πελάτη με Ρόλο «Πλήρης»· η Συμφωνία του υπογράφεται μέσα από τις οθόνες.
@@ -29,7 +27,6 @@ export async function inSpaces(
 ): Promise<void> {
   const context = await browser.newContext();
   try {
-    await addSpacesLook(context);
     const page = await context.newPage();
     await signIn(page, email);
     await run(page);

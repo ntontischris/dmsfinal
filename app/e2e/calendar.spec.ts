@@ -2,7 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { currentFifteenth, visit } from "./filming-parts";
 import { button, project, shot, signIn } from "./sales-parts";
-import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 
 // Ημερολόγιο (A5), Κλεισμένος χρόνος (A6) και Σύνδεσμος ημερολογίου από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι).
 // Σειριακά, χωρίς retries. Κάθε τεστ φτιάχνει τα δικά του στοιχεία με όνομα του project (desktop, mobile), γιατί τα
@@ -10,9 +9,6 @@ import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await setSpacesLook(context);
-});
 
 const CALENDAR = "/app/calendar";
 // Ο Σύνδεσμος ημερολογίου ζει στην κάρτα «Στο κινητό σου» της A5.

@@ -6,16 +6,12 @@ import { signOutsideSystem } from "./agreements-flows-parts";
 import { visit } from "./filming-parts";
 import { openTab, tabLink } from "./finance-parts";
 import { inContext, project, shot, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Προς τιμολόγηση (I1) από άκρη σε άκρη. Δικός του Πελάτης και Ευκαιρία (service role), ώστε να μην αγγίζει τα δεδομένα
 // άλλων specs. Η Συμφωνία γράφεται από τις οθόνες· το cron της ουράς δεν τρέχει μέσα στο e2e, οπότε η γεννήτρια
 // καλείται εδώ με το service role, όπως θα την καλούσε το cron. Σειριακά και χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const TO_INVOICE_PATH = "/app/finance/to-invoice";
 const MONEY = "Χρήματα";

@@ -23,7 +23,5 @@ export default defineConfig({
     reuseExistingServer: false,
     stdout: "pipe",
     timeout: 60_000,
-    // Προσωρινό: τα e2e που δεν πέρασαν ακόμη στους Χώρους τρέχουν στην παλιά εμφάνιση.
-    env: { DMS_DEFAULT_LOOK: "classic" },
   },
 });

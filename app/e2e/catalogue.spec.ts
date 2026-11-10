@@ -11,7 +11,6 @@ import {
   rowTitled,
 } from "./catalogue-parts";
 import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Κατάλογος και Κόστος (C1, C2), Ρυθμίσεις › Συμφωνίες (O3) και Οικονομικά (O6) από άκρη σε άκρη, στους Χώρους.
 // Τα Πακέτα, οι Υπηρεσίες και ο μήνας Κόστους ώρας (40,00 €) τα φτιάχνει το e2e/seed.mjs (βοηθητικά: e2e/catalogue-parts.ts).
@@ -22,9 +21,6 @@ const NOT_ALLOWED = "Χωρίς δικαίωμα";
 // και θα έκρυβε το πραγματικό λάθος.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Οι σύνδεσμοι προς τις Ρυθμίσεις Συμφωνιών και Οικονομικών, όπου κι αν βρίσκονται στη σελίδα.
 const SETTINGS_LINKS =

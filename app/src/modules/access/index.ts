@@ -42,7 +42,6 @@ export { ClientInviteForm } from "./components/client-invite-form";
 export { ClientSwitcher } from "./components/client-switcher";
 export { ClientUsersSection } from "./components/client-users-section";
 export { InvitationList } from "./components/invitation-list";
-export { SignOutButton } from "./components/sign-out-button";
 export { signOut } from "./actions";
 export { sendTestEmail } from "./integrations-actions";
 export { SpacesTeam, SpacesTeamUser } from "./spaces/n1-screen";

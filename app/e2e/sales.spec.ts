@@ -16,7 +16,6 @@ import {
   tableRow,
 } from "./sales-parts";
 import { panel } from "./catalogue-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Πελάτες και Ευκαιρίες (B1–B6) και Ρυθμίσεις › Πωλήσεις (O2) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Φανταστικά στοιχεία.
 // Τους Πελάτες και τις Ευκαιρίες που διαβάζονται εδώ τους φτιάχνει το e2e/seed.mjs (βοηθητικά: e2e/sales-parts.ts).
@@ -26,9 +25,6 @@ const PIPELINE_URL = /\/app\/pipeline\/[0-9a-f-]{36}$/;
 // και θα έκρυβε το πραγματικό λάθος.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Η κάρτα μιας Ευκαιρίας στις Στήλες του Pipeline (B3).
 const boardCard = (page: Page, title: string): Locator =>

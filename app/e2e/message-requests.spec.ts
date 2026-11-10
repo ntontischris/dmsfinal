@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 
 import { switchUserInSpaces } from "./messages-parts";
 import { project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Τα Αιτήματα (Jδ, #163) από άκρη σε άκρη. Ο Πελάτης «Πελάτης Αιτημάτων {project}» και ο Χρήστης πελάτη
 // «requests.{project}@example.com» (Πλήρης, Υπεύθυνος του Πελάτη η Άννα) έρχονται από το seed. Σειριακά, χωρίς retries.
@@ -10,9 +9,6 @@ test.describe.configure({ mode: "serial", retries: 0 });
 
 const MESSAGES_PATH = "/app/messages";
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 test("ο πελάτης στέλνει Αίτημα «άλλο», η ομάδα το απορρίπτει με απάντηση και ο πελάτης τη βλέπει", async ({
   page,

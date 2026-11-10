@@ -3,16 +3,12 @@ import { expect, test, type Page } from "@playwright/test";
 import { visit } from "./filming-parts";
 import { COSTS_URL, openProduction } from "./productions-parts";
 import { button, card, project, shot, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Κόστος και ώρες (G3, G1 «Θέλουν ώρες») από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Η Εσωτερική «Showreel {project}»
 // του seed είναι ανοιχτή και χωρίς ώρες. Το G3 είναι μία οθόνη με επιλογή Παραγωγής (?production=)· η σελίδα της
 // Παραγωγής (G2) ανοίγει το κόστος της με το «Κόστος και ώρες». Τα τεστ γράφουν στην ίδια βάση, σειριακά, χωρίς retries.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const COSTS_PATH = "/app/productions/costs";
 const COST_LINK = "Κόστος και ώρες";

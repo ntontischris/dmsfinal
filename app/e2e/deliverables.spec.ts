@@ -12,7 +12,6 @@ import {
 } from "./deliverables-parts";
 import { visit } from "./filming-parts";
 import { button, project, shot, signIn, tableRow } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Παραδοτέα (H1, H2, ενότητα της G2) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Η Εσωτερική Παραγωγή φτιάχνεται εδώ
 // (Υπεύθυνος ο Ιδιοκτήτης), άρα το Παραδοτέο δεν θέλει Παροχή και ο Ιδιοκτήτης είναι ελεγκτής. Δεν χρησιμοποιεί την
@@ -20,9 +19,6 @@ import { useSpacesLook } from "./walkthrough/spaces";
 // την θέλουν ανοιχτή. Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const LINK = "https://drive.google.com/file/d/e2e-deliverable-v1";
 const COMMENT = "Ο ήχος θέλει διόρθωση";

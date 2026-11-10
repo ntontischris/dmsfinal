@@ -4,7 +4,6 @@ import { addCatalogueLine, draftProposal } from "./agreements-parts";
 import { signOutsideSystem } from "./agreements-flows-parts";
 import { switchUserInSpaces } from "./messages-parts";
 import { inContext, project } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Η Συνομιλία του πελάτη (J3) από άκρη σε άκρη (#161). Ο Πελάτης «Πελάτης Συνομιλίας {project}» και ο Χρήστης πελάτη
 // «chat.{project}@example.com» (Πλήρης) έρχονται από το seed· η Παραγωγή του (ετικέτα) βγαίνει από μηνιαία Συμφωνία που
@@ -17,9 +16,6 @@ const MESSAGES_PATH = "/app/messages";
 const SENT_NOTICE = "Το μήνυμα στάλθηκε.";
 const COMPOSER = "Νέο Μήνυμα";
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Ο συντάκτης του πελάτη: η φόρμα με τίτλο «Νέο μήνυμα».
 const clientComposer = (page: Page) =>

@@ -4,7 +4,6 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
 import { card, field, listItem, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Προσκλήσεις (N1, N2, N3), Χρήστες πελάτη, Ενσωματώσεις (O8) και Send Email Hook από άκρη σε άκρη. Φανταστικά στοιχεία.
 // Οι προσκεκλημένοι μπαίνουν με σύνδεσμο επαναφοράς από το admin API (το email δεν διαβάζεται από τα Mailpit).
@@ -14,9 +13,6 @@ const NEW_PASSWORD = "e2e-new-password-456";
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Οι προσκλήσεις σε εκκρεμότητα και οι Χρήστες ομάδας της N1.
 const pendingInvites = (page: Page) =>
@@ -129,7 +125,6 @@ test("ο Ιδιοκτήτης προσκαλεί Χρήστη ομάδας, ο �
   await expect(listItem(pendingInvites(page), email)).toContainText("εκκρεμεί");
 
   const context = await browser.newContext();
-  await useSpacesLook(context);
   const guest = await acceptInvite(context, email);
   await expect(linkTo(guest, "/app/clients")).not.toHaveCount(0);
   await context.close();
@@ -152,7 +147,6 @@ test("η ακυρωμένη πρόσκληση δεν δίνει πρόσβασ�
   await expect(listItem(pendingInvites(page), email)).toHaveCount(0);
 
   const context = await browser.newContext();
-  await useSpacesLook(context);
   const guest = await acceptInvite(context, email);
   await expect(linkTo(guest, "/app/team")).toHaveCount(0);
   await guest.goto("/app/team");
@@ -184,7 +178,6 @@ test("ο Ιδιοκτήτης προσκαλεί Χρήστη πελάτη κα�
   );
 
   const context = await browser.newContext();
-  await useSpacesLook(context);
   const guest = await acceptInvite(context, email);
   // Οι Συνάδελφοι ζουν στο μενού προφίλ· Ομάδα και Πελάτες δεν υπάρχουν πουθενά για τον πελάτη.
   await expect(linkTo(guest, "/app/colleagues")).not.toHaveCount(0);

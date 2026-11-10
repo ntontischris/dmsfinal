@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { listItem, project, shot, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // N5 Ενσωματώσεις και συνδρομές (#209) από άκρη σε άκρη. Το CI δεν έχει κλειδιά παρόχων: με INTEGRATIONS_FAKE_PROVIDERS=1
 // (workflow) οι τρεις συνδέσεις μετρούν ως στημένες και το «Έλεγχος τώρα» απαντά χωρίς καμία κλήση δικτύου.
@@ -11,9 +10,6 @@ const PAGE = "/app/settings/integrations";
 
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Ένα πάνελ της οθόνης (κάρτα σύνδεσης, Συνδρομές, φόρμα συνδρομής), από τον τίτλο του.
 const card = (scope: Page | Locator, title: string) =>

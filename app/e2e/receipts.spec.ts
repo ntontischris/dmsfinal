@@ -3,15 +3,11 @@ import { expect, test } from "@playwright/test";
 
 import { openTab, tabLink } from "./finance-parts";
 import { button, card, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Εισπράξεις (I4) και Τρόποι είσπραξης από άκρη σε άκρη (#150). Τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε
 // Πελάτης και Τρόπος παίρνει όνομα με το project και τη στιγμή. Σειριακά, χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const SETTINGS_PATH = "/app/settings/finance";
 const RECEIPTS_PATH = "/app/finance/receipts";

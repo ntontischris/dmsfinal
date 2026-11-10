@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 
 // Google Calendar (C2δ) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Στο CI δεν υπάρχουν στοιχεία λογαριασμού Google,
 // άρα η κάρτα δείχνει «Λείπουν τα στοιχεία…» και όλα τα υπόλοιπα μένουν κενά. Οι Κανόνες αποθηκεύονται κανονικά.
@@ -10,9 +9,6 @@ const MISSING_CONFIG = "Λείπουν τα στοιχεία του λογαρι
 const NO_DELETIONS = "Καμία διαγραφή δεν περιμένει";
 const RULES_SAVED = "Οι Κανόνες Google αποθηκεύτηκαν.";
 
-test.beforeEach(async ({ context }) => {
-  await setSpacesLook(context);
-});
 
 async function signIn(page: Page, email: string) {
   await page.goto("/login");

@@ -3,16 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 
 import { visit } from "./filming-parts";
 import { project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // K1 Αυτοματισμοί, K2 Μηνύματα συστήματος και A2 Προτιμήσεις (#173) από άκρη σε άκρη. Ο Χρήστης πελάτη
 // «notify.{project}@example.com» (Πλήρης) έρχεται από το seed. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία
 // βάση, γι' αυτό ό,τι αλλάζει επανέρχεται στο finally.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const CLIENT_EMAIL = (P: string): string => `notify.${P}@example.com`;
 const MARKER = (P: string): string => `Δοκιμή K1 ${P}`;

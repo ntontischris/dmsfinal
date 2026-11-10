@@ -8,8 +8,6 @@ import {
 } from "@playwright/test";
 import { z } from "zod";
 
-// Ψευδώνυμο: δεν είναι React hook, απλώς ξεκινά με «use».
-import { useSpacesLook as applySpacesLook } from "./walkthrough/spaces";
 
 // Βοηθητικά του e2e/sales.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές).
 // Τα δύο projects (desktop, mobile) μοιράζονται μία βάση, γι' αυτό κάθε όνομα που φτιάχνει ή ψάχνει ένα τεστ έχει το όνομα του project.
@@ -109,7 +107,6 @@ export async function inSpacesContext(
 ) {
   const context = await browser.newContext();
   try {
-    await applySpacesLook(context);
     const page = await context.newPage();
     await signIn(page, email);
     await run(page);

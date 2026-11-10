@@ -2,15 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { formWith, panel, switchUser } from "./knowledge-parts";
 import { button, project, shot, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Γνώση (A8) και Διαχείριση Γνώσης (L1) από άκρη σε άκρη (#190). Ο Χρήστης πελάτη «know.{project}@example.com» (Πλήρης)
 // έρχεται από το seed. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το project.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const MANAGE_PATH = "/app/knowledge/manage";
 const KNOWLEDGE_PATH = "/app/knowledge";

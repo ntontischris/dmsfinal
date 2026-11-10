@@ -2,15 +2,11 @@ import { expect, test, type Locator } from "@playwright/test";
 
 import { visit } from "./filming-parts";
 import { button, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Κανόνες Παραδοτέων (Ρυθμίσεις › Παραδοτέα, O5) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Ο Ιδιοκτήτης αλλάζει την
 // προθεσμία του βίντεο και την γυρίζει πίσω. Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Το κουμπί ανάβει μόνο μετά από αλλαγή· ό,τι γράφεται πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
 async function fillUntilSaveEnables(card: Locator, value: string) {

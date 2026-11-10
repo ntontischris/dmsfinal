@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ρυθμίσεις › Εταιρεία (O1) και Έλεγχος ετοιμότητας (O7) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Φανταστικά στοιχεία.
 const PASSWORD = "e2e-password-123";
@@ -11,9 +10,6 @@ const IBAN: Readonly<Record<string, string>> = {
   mobile: "GR2301720000000000000000002",
 };
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 async function signIn(page: Page, email: string) {
   await page.goto("/login");

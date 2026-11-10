@@ -11,7 +11,6 @@ import {
   visit,
 } from "./filming-parts";
 import { button, project, signIn } from "./sales-parts";
-import { useSpacesLook as setSpacesLook } from "./walkthrough/spaces";
 
 // Δελτίο γυρίσματος (#136) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι): ο Ιδιοκτήτης στέλνει Έκδοση 1, αλλάζει μία λήψη
 // και βγάζει Έκδοση 2 με «Τι άλλαξε», και βλέπει το ιστορικό. Σειριακά και χωρίς retries, όπως το filming.spec.ts.
@@ -22,9 +21,6 @@ test.describe.configure({ mode: "serial", retries: 0 });
 // Η Συμφωνία υπογράφεται σε δικά της contexts και κάθε Χρήστης μπαίνει ξεχωριστά: η ροή θέλει περισσότερο χρόνο.
 test.setTimeout(90_000);
 
-test.beforeEach(async ({ context }) => {
-  await setSpacesLook(context);
-});
 
 // Ένα πάνελ της σελίδας του Γυρίσματος, από τον τίτλο του (h2).
 const panel = (page: Page, title: string): Locator =>

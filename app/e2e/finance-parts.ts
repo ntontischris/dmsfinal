@@ -1,8 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { signIn } from "./sales-parts";
-// Με άλλο όνομα: δεν είναι React hook (ο κανόνας των hooks κοιτά μόνο το όνομα).
-import { useSpacesLook as addSpacesCookie } from "./walkthrough/spaces";
 
 // Κοινά βήματα των e2e των Οικονομικών και των Αναφορών στη νέα εμφάνιση (Χώροι).
 
@@ -68,6 +66,5 @@ export async function switchUserInSpaces(
   email: string,
 ): Promise<void> {
   await page.context().clearCookies();
-  await addSpacesCookie(page.context());
   await signIn(page, email);
 }

@@ -3,16 +3,12 @@ import { expect, test } from "@playwright/test";
 import { visit } from "./filming-parts";
 import { createInternal, PRODUCTION_URL } from "./productions-parts";
 import { button, card, project, shot, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ολοκλήρωση Παραγωγής και Εργασίες (#143) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Η Εσωτερική Παραγωγή φτιάχνεται
 // εδώ, με όνομα του project, ώστε να μη μπλέκει με τα άλλα τεστ που παραδίδουν την «Showreel» του seed.
 // Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
 test.describe.configure({ retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const OWNER_NAME = "Γιώργος Ιδιοκτήτης";
 const TASK = "Στείλε το μενού στον πελάτη";

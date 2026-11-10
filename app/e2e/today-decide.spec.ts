@@ -3,7 +3,6 @@ import { expect, test, type Page } from "@playwright/test";
 import { inSpacesContext } from "./messages-parts";
 import { clientIdByName, project, signIn } from "./sales-parts";
 import { clickUntil } from "./today-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Σήμερα Σβ (#181) στη νέα εμφάνιση (Χώροι): οι κάρτες «περιμένει απόφαση» μαζεύονται στο «Μόνο εσύ μπορείς». Ο πωλητής
 // κάνει ένα Αίτημα πρόσβασης· ο Ιδιοκτήτης το βλέπει να μετρά στις αποφάσεις, και ο σύνδεσμος της ουράς «Χωρίς υπεύθυνο»
@@ -11,9 +10,6 @@ import { useSpacesLook } from "./walkthrough/spaces";
 // μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const decisions = (page: Page) => page.locator("[data-part='decisions']");
 

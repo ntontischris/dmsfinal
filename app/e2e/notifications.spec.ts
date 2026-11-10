@@ -3,16 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 
 import { switchUser } from "./knowledge-parts";
 import { project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ειδοποιήσεις (A2, #170) από άκρη σε άκρη. Ο Πελάτης «Πελάτης Ειδοποιήσεων {project}» (Υπεύθυνος ο Ιδιοκτήτης) και ο
 // Χρήστης πελάτη «notify.{project}@example.com» (Πλήρης) έρχονται από το seed. Σειριακά, χωρίς retries· τα δύο projects
 // μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const CLIENT_EMAIL = (P: string): string => `notify.${P}@example.com`;
 const NOTIFICATIONS_PATH = "/app/notifications";

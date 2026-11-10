@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Είσοδος, Ομάδα (N1) και Ρόλοι (N4) από άκρη σε άκρη, με τους τρεις φανταστικούς Χρήστες του e2e/seed.mjs.
 const PASSWORD = "e2e-password-123";
@@ -13,9 +12,6 @@ async function signIn(page: Page, email: string) {
   await expect(page).toHaveURL(/\/app$/);
 }
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 // Οι καρτέλες του Χώρου «Εταιρεία» στην κεφαλίδα· οι υπόλοιπες οθόνες του Χώρου είναι στο «Περισσότερα».
 const companyTabs = (page: Page) =>

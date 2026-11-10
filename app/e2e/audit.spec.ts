@@ -2,7 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { clientIdByName, project, signIn } from "./sales-parts";
 import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Υγεία Pα (#214): Ίχνος ενεργειών (P1). Φίλτρα και chips στη διεύθυνση, «κρυφό ποσό» για Διαχείριση χωρίς «Βλέπει ποσά»,
 // «Ιστορικό αλλαγών» από τη σελίδα Πελάτη, εξαγωγή, άρνηση για τις Πωλήσεις. Οι γραμμές του Ίχνους τις γράφει το seed
@@ -16,9 +15,6 @@ const companyTabs = (page: Page) =>
 const chips = (page: Page) => page.getByRole("list", { name: "Ενεργά φίλτρα" });
 const auditRows = (page: Page) => page.locator("li.part-row");
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 test("ο Ιδιοκτήτης φιλτράρει το Ίχνος και τα φίλτρα μένουν στη διεύθυνση", async ({
   page,

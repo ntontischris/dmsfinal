@@ -2,16 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { project, signIn } from "./sales-parts";
 import { clickUntil, openFolds } from "./today-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Σήμερα (A1, #180) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Ο Ιδιοκτήτης και ο Χρήστης πελάτη
 // «client.{project}@example.com» (Πλήρης) έρχονται από το seed. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία
 // βάση (και τις Προτιμήσεις του Ιδιοκτήτη).
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const HEALTH = "Υγεία συστήματος";
 

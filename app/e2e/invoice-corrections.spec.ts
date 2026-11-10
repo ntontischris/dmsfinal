@@ -3,15 +3,11 @@ import { expect, test } from "@playwright/test";
 
 import { fieldOf } from "./productions-parts";
 import { card, clientIdByName, project, shot, signIn, tableRow } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Διόρθωση και ακύρωση καταχώρισης Τιμολογίου (Iε, #154) από άκρη σε άκρη. Δικός του Πελάτης ανά project και στιγμή
 // (service role). Το PDF είναι φανταστικό (e2e/fixtures). Σειριακά, χωρίς retries. Στη νέα εμφάνιση (Χώροι).
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const INVOICES_PATH = "/app/finance/invoices";
 const NEW_PATH = `${INVOICES_PATH}/new`;

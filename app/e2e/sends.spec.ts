@@ -2,7 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { card, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ιστορικό αποστολών (K3, #174) από άκρη σε άκρη. Ο Πελάτης «Πελάτης Αποστολών {project}» (Υπεύθυνος ο Ιδιοκτήτης) και ο
 // Χρήστης πελάτη «Ελένη Αποστολών» (Πλήρης) έρχονται από το seed. Ένα Μήνυμα της ομάδας μπαίνει με service role και τρέχει
@@ -10,9 +9,6 @@ import { useSpacesLook } from "./walkthrough/spaces";
 // Ιστορικό. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 const SENDS_PATH = "/app/settings/sends";
 
