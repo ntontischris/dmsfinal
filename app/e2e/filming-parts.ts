@@ -111,7 +111,7 @@ export async function ensureSignedMonthlyAgreement(
   const form = newFilmingForm(page);
   await expect(form.or(empty)).toBeVisible();
   if (await form.isVisible()) {
-    const option = form.getByLabel("Πελάτης", { exact: true }).locator("option", { hasText: clientName(P) });
+    const option = form.getByRole("combobox", { name: "Πελάτης", exact: true }).locator("option", { hasText: clientName(P) });
     if ((await option.count()) > 0) return;
   }
   await signedMonthlyAgreement(browser, P);
@@ -131,7 +131,7 @@ export async function bookFilmingFromScreen(
   const form = newFilmingForm(page);
   const day = form.locator('input[name="date"]');
   await expect(async () => {
-    await form.getByLabel("Πελάτης", { exact: true }).selectOption({ label: clientName(P) });
+    await form.getByRole("combobox", { name: "Πελάτης", exact: true }).selectOption({ label: clientName(P) });
     await day.fill(date);
     await form.locator('input[name="time"]').fill(startTimeOf(P));
     await expect(day).toHaveValue(date, { timeout: 1_000 });
