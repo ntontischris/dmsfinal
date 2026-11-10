@@ -141,8 +141,8 @@ test("η κάρτα Υγείας στο Σήμερα ανοίγει την Υγ�
     await more.getByRole("link", { name: TITLE, exact: true }).click();
   }
   await expect(page).toHaveURL(/\/app\/health$/);
-  // Οι Χώροι δεν έχουν τίτλο h1 στη σελίδα· η Υγεία φαίνεται από τη σύνοψή της.
+  // Οι Χώροι δεν έχουν τίτλο h1 στη σελίδα· η Υγεία φαίνεται από την κάρτα του εξωτερικού ελέγχου, που υπάρχει πάντα.
   await expect(
-    page.getByRole("status", { name: "Σύνοψη Υγείας" }),
+    page.getByText("Εξωτερικός έλεγχος", { exact: true }),
   ).toBeVisible();
 });
