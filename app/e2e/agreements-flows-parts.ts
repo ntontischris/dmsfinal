@@ -2,7 +2,10 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
   SIGNATORY,
+  actionsBar,
+  chooseView,
   openOpportunity,
+  openWith,
   previousMonthStart,
   readSigningCode,
   wrongCodeFor,
@@ -10,7 +13,8 @@ import {
 import { control, panel, screenHeader } from "./catalogue-parts";
 import { button, shot, tableRow } from "./sales-parts";
 
-// Τα πολυβηματικά κομμάτια του e2e/agreements.spec.ts: η σελίδα του πελάτη (D5), η υπογραφή εκτός συστήματος και η αποθήκευση των Ρυθμίσεων.
+// Τα πολυβηματικά κομμάτια του e2e/agreements.spec.ts, στη νέα εμφάνιση (Χώροι): η σελίδα του πελάτη (D5), η υπογραφή εκτός
+// συστήματος και η αποθήκευση των Ρυθμίσεων.
 
 // Ο πελάτης βλέπει το έγγραφο με τιμές και ΦΠΑ, και τίποτα εσωτερικό: ούτε κόστος, ούτε Παρεκκλίσεις, ούτε Εγκρίσεις.
 export async function checkPublicDocument(anon: Page, P: string) {
@@ -57,9 +61,10 @@ export async function signAsVisitor(anon: Page, team: Page) {
 
 // «Υπογράφηκε εκτός συστήματος» με Έναρξη τον προηγούμενο μήνα: ζητά τι έχει ήδη καταναλωθεί και αν τιμολογήθηκε ο μήνας.
 export async function signOutsideSystem(owner: Page, P: string, options: { invoiced?: boolean } = {}) {
-  await button(owner, "Υπογράφηκε εκτός συστήματος").click();
-  const actions = panel(owner, "Ενέργειες");
-  await control(actions, "Αρχείο υπογραφής").fill(`symfonia-${P}.pdf`);
+  const actions = actionsBar(owner);
+  const file = control(actions, "Αρχείο υπογραφής");
+  await openWith(button(actions, "Υπογράφηκε εκτός συστήματος"), file);
+  await file.fill(`symfonia-${P}.pdf`);
   await control(actions, "Ποιος υπέγραψε").fill(SIGNATORY);
   await control(actions, "Έναρξη").fill(previousMonthStart());
   await actions.getByLabel(/Έχουν ήδη καταναλωθεί · reels/).fill("3");
@@ -85,34 +90,49 @@ export async function saveAndWait(page: Page, scope: Locator) {
   await saved;
 }
 
+// Η κάρτα μιας πρότασης στην ουρά Εγκρίσεων (D4)· το αποτέλεσμα μιας απόφασης είναι δική του κάρτα (`d4-result`).
+const approvalCard = (owner: Page, title: string): Locator =>
+  owner.locator("section.card:not(.d4-result)").filter({ hasText: title });
+const approvalResult = (owner: Page, title: string): Locator =>
+  owner.locator("section.d4-result").filter({ hasText: title });
+
 // D4 από τον Ιδιοκτήτη: η Απόρριψη χωρίς σχόλιο δεν περνά, με σχόλιο γυρίζει την πρόταση στη Σύνταξη.
 export async function ownerRejects(owner: Page, title: string) {
   await owner.goto("/app/agreements/approvals");
-  const item = owner.locator("section").filter({ hasText: title });
+  const item = approvalCard(owner, title);
   await expect(item).toContainText("Ελεύθερη γραμμή: «Ειδικό βίντεο»");
   await shot(owner, "d4-approvals");
-  await button(item, "Απόρριψη").click();
-  await expect(owner.getByText("Γράψε σχόλιο")).toBeVisible();
-  await control(item, "Σχόλιο").fill("Πολύ ακριβά");
-  await button(item, "Απόρριψη").click();
-  await expect(owner.getByText("Απορρίφθηκε")).toBeVisible();
+  const comment = item.getByLabel("Σχόλιο (υποχρεωτικό: τι να αλλάξει)");
+  await openWith(button(item, "Απορρίπτω"), comment);
+  // Χωρίς σχόλιο η Απόρριψη δεν στέλνεται.
+  await expect(button(item, "Απορρίπτω")).toBeDisabled();
+  await comment.fill("Πολύ ακριβά");
+  await button(item, "Απορρίπτω").click();
+  await expect(approvalResult(owner, title)).toContainText("απορρίφθηκε");
+  await expect(approvalResult(owner, title)).toContainText("«Πολύ ακριβά»");
 }
 
 // Η Έγκριση στέλνει την πρόταση αμέσως, χωρίς δεύτερο βήμα.
 export async function ownerApproves(owner: Page, title: string) {
   await owner.goto("/app/agreements/approvals");
-  const item = owner.locator("section").filter({ hasText: title });
+  const item = approvalCard(owner, title);
+  await openWith(
+    button(item, "Εγκρίνω"),
+    item.getByLabel("Σχόλιο (προαιρετικό)"),
+  );
   await button(item, "Εγκρίνω").click();
-  await expect(owner.getByText("Εγκρίθηκε και στάλθηκε")).toBeVisible();
+  await expect(approvalResult(owner, title)).toContainText(
+    "Εγκρίθηκε και στάλθηκε",
+  );
 }
 
 // Ο Νίκος (πωλητής με δικό του Πελάτη) δεν βλέπει τις προτάσεις της Άννας ούτε την ουρά Εγκρίσεων.
 export async function checkNikosSeesNothing(nikos: Page, P: string) {
-  const nav = nikos.getByRole("navigation", { name: "Οθόνες" });
-  await expect(
-    nav.getByRole("link", { name: "Προτάσεις προς έγκριση" }),
-  ).toHaveCount(0);
   await nikos.goto("/app/agreements");
+  // Η ουρά «Προς έγκριση» ζει κάτω από την καρτέλα Συμφωνίες· ο Νίκος δεν τη βλέπει.
+  await expect(nikos.getByRole("link", { name: /Προς έγκριση/ })).toHaveCount(
+    0,
+  );
   for (const letter of ["Α", "Β", "Γ", "Δ"])
     await expect(nikos.getByText(`Πρόταση ${letter} ${P}`)).toHaveCount(0);
   await nikos.goto("/app/agreements/approvals");
@@ -123,13 +143,42 @@ export async function checkNikosSeesNothing(nikos: Page, P: string) {
 
 const SAVED = "Αποθηκεύτηκε. Ισχύει από εδώ και πέρα";
 
+// Οι Ρυθμίσεις συγκρίνουν τη φόρμα με ό,τι φόρτωσε· πριν ζωντανέψει η σελίδα, μια αλλαγή δεν μετρά. Το «Επεξεργασία»
+// ενός είδους Παροχής ανοίγει μόνο σε ζωντανή σελίδα, άρα δείχνει πότε μπορούμε να γράψουμε.
+async function waitAlive(page: Page) {
+  const edit = page.getByRole("button", {
+    name: "Επεξεργασία: reel",
+    exact: true,
+  });
+  await expect(async () => {
+    if ((await edit.getAttribute("aria-expanded")) !== "true")
+      await edit.click();
+    await expect(edit).toHaveAttribute("aria-expanded", "true", {
+      timeout: 1_000,
+    });
+  }).toPass();
+  await edit.click();
+  await expect(edit).toHaveAttribute("aria-expanded", "false");
+}
+
+// Γράφει την τιμή και αποθηκεύει· αν το πεδίο έχει ήδη αυτή την τιμή, δεν υπάρχει τίποτα να αποθηκευτεί.
+async function saveValue(
+  page: Page,
+  scope: Locator,
+  input: Locator,
+  value: string,
+) {
+  await waitAlive(page);
+  if ((await input.inputValue()) === value) return;
+  await input.fill(value);
+  await expect(button(scope, "Αποθήκευση")).toBeEnabled();
+  await saveAndWait(page, scope);
+}
 // Μέρες πληρωμής των μηνιαίων: 30, αποθηκεύεται και διαβάζεται πάλι· οι Ρυθμίσεις γυρίζουν πάντα στο 15, ό,τι κι αν γίνει.
 export async function changePaymentDays(page: Page) {
   const terms = panel(page, "Όροι Συμφωνίας");
-  const save = async (days: string) => {
-    await control(terms, "Μέρες πληρωμής").fill(days);
-    await saveAndWait(page, terms);
-  };
+  const save = (days: string) =>
+    saveValue(page, terms, control(terms, "Μέρες πληρωμής"), days);
   try {
     await save("30");
     await expect(terms.getByRole("status")).toContainText(SAVED);
@@ -146,11 +195,8 @@ export async function changePaymentDays(page: Page) {
 // Όριο αλλαγών του «reel»: 3, αποθηκεύεται και διαβάζεται πάλι· γυρίζει πάντα στο 2.
 export async function changeReelRounds(page: Page) {
   const limits = panel(page, "Όριο αλλαγών");
-  const rounds = tableRow(limits, "reel").locator("input");
-  const save = async (value: string) => {
-    await rounds.fill(value);
-    await saveAndWait(page, limits);
-  };
+  const rounds = limits.getByLabel("Γύροι αλλαγών · reel", { exact: true });
+  const save = (value: string) => saveValue(page, limits, rounds, value);
   try {
     await save("3");
     await expect(limits.getByRole("status")).toContainText(SAVED);
@@ -180,14 +226,14 @@ export async function checkSignedByLink(
 
   await openOpportunity(page, agreement.title);
   await expect(
-    page.getByText("Κερδισμένη με την υπογραφή της Συμφωνίας"),
+    page.getByText("Κερδισμένη με την υπογραφή του Υπογράφοντα"),
   ).toBeVisible();
   await expect(
-    page.getByText(`Υπογράφηκε η Συμφωνία από ${SIGNATORY}`),
+    page.getByText(`Υπογράφηκε η Συμφωνία από ${SIGNATORY}`).first(),
   ).toBeVisible();
 
   await page.goto("/app/agreements");
-  await control(page, "Προβολή").selectOption({ label: "Ενεργές" });
+  await chooseView(page, "Ενεργές");
   await expect(tableRow(page, agreement.title)).toBeVisible();
   await shot(page, "d1-agreements");
 }
@@ -214,7 +260,7 @@ export async function declineAsVisitor(anon: Page) {
 export async function checkFrozenCost(page: Page) {
   const cost = panel(page, "Κόστος και περιθώριο");
   await expect(cost).toContainText(/Εκτιμώμενο κόστος\s*800,00\s€/);
-  await expect(cost).toContainText(/Εύρος τιμής\s*1\.040,00\s€/);
+  await expect(cost).toContainText(/Εύρος\s*ελάχιστη 1\.040,00\s€/);
   await expect(cost).toContainText(/500,00\s€\s·\s38,5%/);
   await expect(cost).toContainText("Αντίγραφο της στιγμής της υπογραφής.");
   await expect(control(page, "Ώρες γυρίσματος")).toHaveCount(0);

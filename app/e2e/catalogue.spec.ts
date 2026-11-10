@@ -4,22 +4,16 @@ import {
   ITEM_URL,
   control,
   fillNewPackage,
+  itemHeader,
   openItem,
   panel,
   publishArchiveRestore,
-  screenHeader,
+  rowTitled,
 } from "./catalogue-parts";
-import {
-  button,
-  card,
-  listItem,
-  project,
-  shot,
-  signIn,
-  tableRow,
-} from "./sales-parts";
+import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
-// Κατάλογος και Κόστος (C1, C2), Ρυθμίσεις › Συμφωνίες (O3) και Οικονομικά (O6) από άκρη σε άκρη. Φανταστικά στοιχεία.
+// Κατάλογος και Κόστος (C1, C2), Ρυθμίσεις › Συμφωνίες (O3) και Οικονομικά (O6) από άκρη σε άκρη, στους Χώρους.
 // Τα Πακέτα, οι Υπηρεσίες και ο μήνας Κόστους ώρας (40,00 €) τα φτιάχνει το e2e/seed.mjs (βοηθητικά: e2e/catalogue-parts.ts).
 // Τα ποσά ταιριάζουν με `\s`: το κενό πριν το «€» δεν σπάει γραμμή.
 const NOT_ALLOWED = "Χωρίς δικαίωμα";
@@ -28,18 +22,26 @@ const NOT_ALLOWED = "Χωρίς δικαίωμα";
 // και θα έκρυβε το πραγματικό λάθος.
 test.describe.configure({ retries: 0 });
 
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
+
+// Οι σύνδεσμοι προς τις Ρυθμίσεις Συμφωνιών και Οικονομικών, όπου κι αν βρίσκονται στη σελίδα.
+const SETTINGS_LINKS =
+  'a[href="/app/settings/agreements"], a[href="/app/settings/finance"]';
+
 test("οι Πωλήσεις βλέπουν τιμές και Παροχές, όχι κόστος", async ({ page }) => {
   const P = project();
   await signIn(page, "sales@example.com");
-  const nav = page.getByRole("navigation", { name: "Οθόνες" });
-  await expect(nav.getByRole("link", { name: /Κατάλογος/ })).toBeVisible();
-  await expect(
-    nav.getByRole("link", {
-      name: /Ρυθμίσεις Συμφωνιών|Ρυθμίσεις Οικονομικών/,
-    }),
-  ).toHaveCount(0);
-
   await page.goto("/app/catalogue");
+  // Ο Κατάλογος είναι καρτέλα του Χώρου «Πελάτες»· οι Ρυθμίσεις του δεν φαίνονται πουθενά.
+  await expect(
+    page
+      .getByRole("navigation", { name: "Πελάτες" })
+      .getByRole("link", { name: "Κατάλογος", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(page.locator(SETTINGS_LINKS)).toHaveCount(0);
+
   const row = tableRow(page, `Μηνιαία Παρουσία ${P}`);
   await expect(row).toContainText("2 Γυρίσματα, 8 reels");
   await expect(row).toContainText(/1\.300,00\s€\s\/\sμήνα/);
@@ -56,13 +58,12 @@ test("οι Πωλήσεις βλέπουν τιμές και Παροχές, ό�
   await shot(page, "c1-sales");
 
   await openItem(page, `Μηνιαία Παρουσία ${P}`);
-  await expect(panel(page, "Βασικά και τιμή")).toContainText(
-    /1\.300,00\s€\s\/\sμήνα/,
-  );
+  await expect(panel(page, "Τιμή")).toContainText(/1\.300,00\s€\s\/\sμήνα/);
   await expect(card(page, "Κόστος και περιθώριο")).toHaveCount(0);
   await expect(button(page, "Αρχειοθέτηση")).toHaveCount(0);
-  await expect(screenHeader(page).getByText("Μόνο ανάγνωση")).toBeVisible();
+  await expect(itemHeader(page).getByText("Μόνο ανάγνωση")).toBeVisible();
   await expect(control(page, "Όνομα")).toHaveCount(0);
+  await expect(page.locator(SETTINGS_LINKS)).toHaveCount(0);
 
   for (const url of [
     "/app/catalogue/new",
@@ -109,19 +110,23 @@ test("η Διαχείριση βλέπει κόστος και περιθώρι�
   await expect(cost).toContainText("14 ώρες");
   await expect(control(cost, "Ώρες γυρίσματος")).toHaveCount(0);
   await expect(control(cost, "Άμεσο κόστος")).toBeVisible();
-  await expect(panel(page, "Μέσες Πραγματικές ώρες")).toContainText(
-    "έρχονται με το module Παραγωγές",
-  );
   await shot(page, "c2-admin");
 
+  // Χωρίς «Διαχειρίζεται κόστος»: μόνο το Κόστος ώρας που ισχύει, χωρίς έξοδα και αποθήκευση μήνα.
   await page.goto("/app/settings/finance");
-  await expect(page.getByText(/Κόστος ώρας που ισχύει/)).toContainText(
-    /40,00\s€/,
-  );
   await expect(
-    page.getByText("Αλλάζουν μόνο από όποιον «Διαχειρίζεται κόστος»").first(),
+    page.getByRole("heading", {
+      name: "Θέλει το Δικαίωμα «Διαχειρίζεται κόστος»",
+      exact: true,
+    }),
   ).toBeVisible();
-  await expect(button(page, "Αποθήκευση μήνα")).toHaveCount(0);
+  await expect(
+    page.locator("section", {
+      has: page.getByRole("heading", { name: /^Κόστος ώρας/ }),
+    }),
+  ).toContainText(/40\s€ ανά ώρα/);
+  await expect(card(page, "Έξοδα του μήνα")).toHaveCount(0);
+  await expect(page.locator('input[name="expensesTotal"]')).toHaveCount(0);
 });
 
 test("ο Ιδιοκτήτης αλλάζει ώρες και τιμή, και το περιθώριο ακολουθεί", async ({
@@ -141,7 +146,8 @@ test("ο Ιδιοκτήτης αλλάζει ώρες και τιμή, και τ
   await page.reload();
   await expect(panel(page, "Κόστος και περιθώριο")).toContainText(/480,00\s€/);
 
-  const basics = panel(page, "Βασικά και τιμή");
+  // «Βασικά» και «Τιμή» είναι μία φόρμα με ένα κουμπί κάτω από τα δύο πάνελ.
+  const basics = page.locator("form", { has: page.locator("#c2-price") });
   await control(basics, "Τιμή χωρίς ΦΠΑ").fill("600");
   await button(basics, "Αποθήκευση").click();
   await expect(basics.getByRole("status")).toContainText(
@@ -151,9 +157,7 @@ test("ο Ιδιοκτήτης αλλάζει ώρες και τιμή, και τ
   await expect(panel(page, "Κόστος και περιθώριο")).toContainText(
     /Περιθώριο στην τιμή\s*120,00\s€\s·\s20%/,
   );
-  await expect(panel(page, "Βασικά και τιμή")).toContainText(
-    /Με ΦΠΑ 24%:\s744,00\s€/,
-  );
+  await expect(panel(page, "Τιμή")).toContainText(/Με ΦΠΑ 24%:\s744,00\s€/);
   await shot(page, "c2-owner");
 });
 
@@ -169,7 +173,7 @@ test("η Διαχείριση φτιάχνει Πακέτο, το κάνει δ�
   await fillNewPackage(page, name);
   await button(page, "Δημιουργία").click();
   await expect(page).toHaveURL(ITEM_URL);
-  await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   await expect(control(page, "Ποσότητα")).toHaveValue("4");
   const itemUrl = page.url();
 
@@ -198,11 +202,13 @@ test("Ρυθμίσεις › Συμφωνίες: Είδη Παροχής", async
   ).toHaveAttribute("aria-current", /.+/);
 
   const kinds = panel(page, "Είδη Παροχής");
-  const reel = tableRow(kinds, "reel");
-  await expect(reel.getByText(/Σε χρήση σε \d+/)).toBeVisible();
+  const reel = rowTitled(kinds, "reel");
+  await expect(reel.getByText(/\d+ χρήσεις/)).toBeVisible();
+  await expect(reel.getByText("Σε χρήση", { exact: true })).toBeVisible();
   await expect(button(reel, "Απόσυρση")).toBeVisible();
   await expect(button(reel, "Διαγραφή")).toHaveCount(0);
 
+  await button(kinds, "+ Νέο είδος Παροχής").click();
   const add = kinds.locator("form", {
     has: page.getByRole("button", { name: "Προσθήκη", exact: true }),
   });
@@ -215,7 +221,7 @@ test("Ρυθμίσεις › Συμφωνίες: Είδη Παροχής", async
   await control(add, "Μονάδα (EN)").fill("streams");
   await button(add, "Προσθήκη").click();
   await expect(add.getByRole("status")).toContainText("Αποθηκεύτηκε");
-  const added = tableRow(kinds, `Live ${P}`);
+  const added = rowTitled(kinds, `Live ${P}`);
   await expect(added.getByText("Νέο", { exact: true })).toBeVisible();
   await shot(page, "o3-admin");
 
@@ -233,36 +239,39 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
     /40,00\s€/,
   );
 
-  const months = panel(page, "Κόστος ώρας");
+  // Μήνας, έξοδα και ώρες είναι μία φόρμα σε δύο κάρτες· το κουμπί της κάρτας «Έξοδα του μήνα» την αποθηκεύει.
+  const months = panel(page, "Έξοδα του μήνα");
   await control(months, "Μήνας").selectOption({ index: 1 });
-  await control(months, "Έξοδα του μήνα (€)").fill("9900");
-  await control(months, "Αναμενόμενες παραγωγικές ώρες").fill("220");
-  await button(months, "Αποθήκευση μήνα").click();
+  // Η ετικέτα των πεδίων παίρνει «εκκρεμεί» όσο είναι άδεια, γι' αυτό τα πεδία με το id τους.
+  await page.locator("#o6-expenses").fill("9900");
+  await page.locator("#o6-hours").fill("220");
+  await button(months, "Αποθήκευση").click();
   await expect(months.getByRole("status")).toContainText(
     "Αποθηκεύτηκε. Ισχύει από τον",
   );
-  await expect(months.locator("tr", { hasText: "Επόμενος" })).toContainText(
+  await expect(months.locator("li", { hasText: "Επόμενος" })).toContainText(
     /45,00\s€/,
   );
-  await expect(months.locator("tr", { hasText: "Τρέχων" })).toContainText(
+  await expect(months.locator("li", { hasText: "Τρέχων" })).toContainText(
     /40,00\s€/,
   );
   await shot(page, "o6-owner");
 
-  const range = panel(page, "Εύρος τιμής");
-  const saveMin = async (value: string, margin: string) => {
-    await control(range, "Ελάχιστη (×)").fill(value);
+  const range = panel(page, "Εύρος τιμής και Υπέρβαση κόστους");
+  const minimum = rowTitled(range, "Ελάχιστη");
+  const saveMin = async (value: string, margin: RegExp) => {
+    await control(range, "Πολλαπλασιαστής Ελάχιστη").fill(value);
     await button(range, "Αποθήκευση").click();
-    await expect(range).toContainText(`Ελάχιστο περιθώριο: ${margin}`);
+    await expect(minimum).toContainText(margin);
   };
   try {
-    await saveMin("1,2", "16,7%");
+    await saveMin("1,2", /Ελάχιστο περιθώριο: 17\s?%/);
     await expect(range.getByRole("status")).toContainText("Αποθηκεύτηκε");
   } finally {
-    await saveMin("1,3", "23,1%");
+    await saveMin("1,3", /Ελάχιστο περιθώριο: 23\s?%/);
   }
 
-  await control(range, "Στόχος (×)").fill("1");
+  await control(range, "Πολλαπλασιαστής Στόχος").fill("1");
   await button(range, "Αποθήκευση").click();
   await expect(range.getByRole("alert")).toContainText(
     "Οι πολλαπλασιαστές ξεκινούν από 1 και ανεβαίνουν",
@@ -274,12 +283,12 @@ test("ο Έλεγχος ετοιμότητας βλέπει έτοιμους Κ�
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/readiness");
-  const list = card(page, "Πριν το άνοιγμα σε πελάτες");
+  const list = panel(page, "Τι πρέπει να είναι έτοιμο");
   for (const title of [
     "Κατάλογος: Πακέτα, Υπηρεσίες, τιμές",
     "Έξοδα και ώρες: ο πρώτος μήνας Κόστους ώρας",
   ]) {
-    const item = listItem(list, title);
+    const item = rowTitled(list, title);
     await expect(item.getByText("έτοιμο", { exact: true })).toBeVisible();
     await expect(item).not.toContainText("έρχεται με");
   }
