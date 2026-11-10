@@ -60,7 +60,11 @@ export async function signAsVisitor(anon: Page, team: Page) {
 }
 
 // «Υπογράφηκε εκτός συστήματος» με Έναρξη τον προηγούμενο μήνα: ζητά τι έχει ήδη καταναλωθεί και αν τιμολογήθηκε ο μήνας.
-export async function signOutsideSystem(owner: Page, P: string, options: { invoiced?: boolean } = {}) {
+export async function signOutsideSystem(
+  owner: Page,
+  P: string,
+  options: { invoiced?: boolean } = {},
+) {
   const actions = actionsBar(owner);
   const file = control(actions, "Αρχείο υπογραφής");
   await openWith(button(actions, "Υπογράφηκε εκτός συστήματος"), file);
@@ -216,7 +220,7 @@ export async function checkSignedByLink(
 ) {
   await page.goto(agreement.agreementUrl);
   await expect(
-    screenHeader(page).getByText("ενεργή", { exact: true }),
+    screenHeader(page).locator(".badge", { hasText: /^ενεργή$/ }),
   ).toBeVisible();
   await expect(page.getByText(`Υπέγραψε ${SIGNATORY}`)).toBeVisible();
   await expect(

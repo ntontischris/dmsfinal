@@ -32,10 +32,13 @@ export const itemHeader = (page: Page): Locator =>
     .first();
 
 // Μια γραμμή λίστας των Χώρων (ListRow) με τον τίτλο της ακριβώς.
-export const rowTitled = (scope: Page | Locator, title: string): Locator =>
-  scope.locator("li.part-row").filter({
-    has: scope.locator(".part-title").getByText(title, { exact: true }),
+// Το `has` ψάχνει μέσα στη γραμμή, άρα ο εσωτερικός locator ξεκινά από τη σελίδα, όχι από το scope.
+export const rowTitled = (scope: Page | Locator, title: string): Locator => {
+  const page = "goto" in scope ? scope : scope.page();
+  return scope.locator("li.part-row").filter({
+    has: page.locator(".part-title").getByText(title, { exact: true }),
   });
+};
 
 export async function openItem(page: Page, name: string): Promise<void> {
   await page.goto("/app/catalogue");
@@ -49,7 +52,7 @@ export async function fillNewPackage(page: Page, name: string): Promise<void> {
   await control(page, "Όνομα").fill(name);
   await control(page, "Τιμή χωρίς ΦΠΑ").fill("900");
   await page.getByRole("button", { name: "Προσθήκη Παροχής" }).click();
-  await control(page, "Είδος Παροχής").selectOption({ label: "reel" });
+  await control(page, "Είδος Παροχής").selectOption({ label: "reels" });
   await control(page, "Ποσότητα").fill("4");
 }
 

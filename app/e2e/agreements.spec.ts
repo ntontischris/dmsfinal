@@ -30,14 +30,7 @@ import {
   signOutsideSystem,
 } from "./agreements-flows-parts";
 import { control, openItem, panel, screenHeader } from "./catalogue-parts";
-import {
-  button,
-  card,
-  project,
-  shot,
-  signIn,
-  tableRow,
-} from "./sales-parts";
+import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
 import { useSpacesLook } from "./walkthrough/spaces";
 
 // Συμφωνίες και υπογραφή (D1, D2, D4, D5), Ρυθμίσεις › Συμφωνίες (O3) και η πρόταση της B4 από άκρη σε άκρη. Φανταστικά στοιχεία.
@@ -227,7 +220,7 @@ test("ο Ιδιοκτήτης καταχωρίζει υπογραφή εκτός
 
     await signOutsideSystem(owner, P);
     await expect(
-      screenHeader(owner).getByText("ενεργή", { exact: true }),
+      screenHeader(owner).locator(".badge", { hasText: /^ενεργή$/ }),
     ).toBeVisible();
     await expect(
       owner.getByText(`εκτός συστήματος: symfonia-${P}.pdf`),
@@ -280,21 +273,19 @@ test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις π
   const reel = panel(page, "Είδη Παροχής")
     .locator("li")
     .filter({ has: page.locator(".part-title", { hasText: /^reel$/ }) });
-  await expect(reel.getByText("Σε χρήση", { exact: true })).toBeVisible();
+  await expect(
+    reel.getByText("Σε χρήση", { exact: true }).first(),
+  ).toBeVisible();
   await expect(reel.getByText(/^\d+ χρήσεις$/)).toBeVisible();
   await openItem(page, `Μηνιαία Παρουσία ${P}`);
   await expect(page.getByText(/Συμφωνίες το έχουν αντιγράψει/)).toBeVisible();
 
-  await inSpacesContext(
-    browser,
-    "sales@example.com",
-    async (sales) => {
-      await sales.goto("/app/settings/agreements");
-      await expect(
-        sales.getByRole("heading", { name: NOT_ALLOWED, exact: true }),
-      ).toBeVisible();
-    },
-  );
+  await inSpacesContext(browser, "sales@example.com", async (sales) => {
+    await sales.goto("/app/settings/agreements");
+    await expect(
+      sales.getByRole("heading", { name: NOT_ALLOWED, exact: true }),
+    ).toBeVisible();
+  });
 });
 
 test("ο Έλεγχος ετοιμότητας μένει στις 12 γραμμές χωρίς γραμμή για τις Συμφωνίες", async ({

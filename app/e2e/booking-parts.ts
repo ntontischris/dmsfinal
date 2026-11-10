@@ -9,7 +9,8 @@ import { useSpacesLook as addSpacesLook } from "./walkthrough/spaces";
 // Βοηθητικά του e2e/booking.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές).
 // Ο Πελάτης κρατήσεων (seed) έχει ένα Χρήστη πελάτη με Ρόλο «Πλήρης»· η Συμφωνία του υπογράφεται μέσα από τις οθόνες.
 
-export const CLIENT_PRODUCT_NAME = (P: string): string => `Πελάτης Κρατήσεων ${P}`;
+export const CLIENT_PRODUCT_NAME = (P: string): string =>
+  `Πελάτης Κρατήσεων ${P}`;
 export const CLIENT_EMAIL = (P: string): string => `client.${P}@example.com`;
 export const BOOKING_OPPORTUNITY = (P: string): string => `Κρατήσεις ${P}`;
 
@@ -38,9 +39,16 @@ export async function inSpaces(
 }
 
 // Η Συμφωνία του Πελάτη κρατήσεων: μηνιαία, υπογραμμένη εκτός συστήματος από τον Ιδιοκτήτη.
-export async function signedBookingAgreement(page: Page, browser: Browser, P: string): Promise<void> {
+export async function signedBookingAgreement(
+  page: Page,
+  browser: Browser,
+  P: string,
+): Promise<void> {
   await signIn(page, "sales@example.com");
-  const agreementUrl = await draftProposal(page, { title: BOOKING_OPPORTUNITY(P), kind: "μηνιαία" });
+  const agreementUrl = await draftProposal(page, {
+    title: BOOKING_OPPORTUNITY(P),
+    kind: "μηνιαία",
+  });
   await addCatalogueLine(page, `Μηνιαία Παρουσία ${P}`);
   await inSpaces(browser, "owner@example.com", async (owner) => {
     await owner.goto(agreementUrl);
@@ -54,7 +62,8 @@ export async function switchUser(page: Page, email: string): Promise<void> {
   // αν η φόρμα εισόδου ανοίξει πριν τελειώσει, η έξοδος ακυρώνεται και ο χρήστης μένει συνδεδεμένος.
   // Στους Χώρους η «Έξοδος» είναι στο μενού προφίλ (κουμπί «Προφίλ: …»)· στην παλιά εμφάνιση φαίνεται κατευθείαν.
   const signOut = page.getByRole("button", { name: "Έξοδος", exact: true });
-  if (!(await signOut.isVisible())) await page.getByRole("button", { name: /^Προφίλ: / }).click();
+  if (!(await signOut.isVisible()))
+    await page.getByRole("button", { name: /^Προφίλ: / }).click();
   await signOut.click();
   await page.waitForURL(/\/login/);
   await signIn(page, email);
@@ -62,16 +71,25 @@ export async function switchUser(page: Page, email: string): Promise<void> {
 
 // Ο Πελάτης διαλέγει την πρώτη ελεύθερη μέρα, διάρκεια 2 ώρες και την πρώτη ελεύθερη ώρα, και επιβεβαιώνει.
 // Κάθε επιλογή γράφεται στη διεύθυνση και φέρνει το επόμενο βήμα από τη βάση.
-export async function bookFirstFreeSlot(page: Page, options: { reschedule?: boolean } = {}): Promise<void> {
+export async function bookFirstFreeSlot(
+  page: Page,
+  options: { reschedule?: boolean } = {},
+): Promise<void> {
   await page.locator("button.e-day:enabled").first().click();
   await expect(page).toHaveURL(/day=/);
-  const durations = page.locator("section.kit-panel", { has: page.getByRole("heading", { name: "2. Πόσες ώρες;" }) });
+  const durations = page.locator("section.kit-panel", {
+    has: page.getByRole("heading", { name: "2. Πόσες ώρες;" }),
+  });
   await durations.getByRole("button", { name: "2 ώρες", exact: true }).click();
   await expect(page).toHaveURL(/hours=2/);
-  const times = page.locator("section.kit-panel", { has: page.getByRole("heading", { name: "3. Τι ώρα ξεκινάμε;" }) });
+  const times = page.locator("section.kit-panel", {
+    has: page.getByRole("heading", { name: "3. Τι ώρα ξεκινάμε;" }),
+  });
   await times.locator(".e-times button:enabled").first().click();
   await expect(page).toHaveURL(/time=/);
-  const submit = options.reschedule ? "Επιβεβαίωση μετάθεσης" : "Επιβεβαίωση κράτησης";
+  const submit = options.reschedule
+    ? "Επιβεβαίωση μετάθεσης"
+    : "Επιβεβαίωση κράτησης";
   await page.getByRole("button", { name: submit, exact: true }).click();
 }
 
@@ -90,9 +108,14 @@ export async function setOpeningHours(page: Page): Promise<void> {
   await hoursForm.locator('input[name="capacity"]').fill("2");
   await hoursForm.locator('select[name="stepMinutes"]').selectOption("60");
   for (const hours of ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"]) {
-    await hoursForm.locator(`input[name="durations"][value="${hours}"]`).setChecked(hours === "2" || hours === "3");
+    await hoursForm
+      .locator(`input[name="durations"][value="${hours}"]`)
+      .setChecked(hours === "2" || hours === "3");
   }
-  const saveButton = hoursForm.getByRole("button", { name: "Αποθήκευση", exact: true });
+  const saveButton = hoursForm.getByRole("button", {
+    name: "Αποθήκευση",
+    exact: true,
+  });
   // Το κουμπί ανάβει μόνο όταν κάτι άλλαξε· αν το Ωράριο είναι ήδη ό,τι θέλουμε, δεν υπάρχει τι να αποθηκευτεί.
   if (await saveButton.isEnabled()) {
     await saveButton.click();
@@ -103,4 +126,5 @@ export async function setOpeningHours(page: Page): Promise<void> {
   await expect(page.locator('input[name="capacity"]').first()).toHaveValue("2");
 }
 
-export const EXCEPTION_NOTE = (P: string): string => `e2e εξαίρεση ${P} ${Date.now()}`;
+export const EXCEPTION_NOTE = (P: string): string =>
+  `e2e εξαίρεση ${P} ${Date.now()}`;

@@ -204,7 +204,9 @@ test("Ρυθμίσεις › Συμφωνίες: Είδη Παροχής", async
   const kinds = panel(page, "Είδη Παροχής");
   const reel = rowTitled(kinds, "reel");
   await expect(reel.getByText(/\d+ χρήσεις/)).toBeVisible();
-  await expect(reel.getByText("Σε χρήση", { exact: true })).toBeVisible();
+  await expect(
+    reel.getByText("Σε χρήση", { exact: true }).first(),
+  ).toBeVisible();
   await expect(button(reel, "Απόσυρση")).toBeVisible();
   await expect(button(reel, "Διαγραφή")).toHaveCount(0);
 
@@ -222,7 +224,7 @@ test("Ρυθμίσεις › Συμφωνίες: Είδη Παροχής", async
   await button(add, "Προσθήκη").click();
   await expect(add.getByRole("status")).toContainText("Αποθηκεύτηκε");
   const added = rowTitled(kinds, `Live ${P}`);
-  await expect(added.getByText("Νέο", { exact: true })).toBeVisible();
+  await expect(added.getByText("Νέο", { exact: true }).first()).toBeVisible();
   await shot(page, "o3-admin");
 
   await button(added, "Διαγραφή").click();
@@ -289,7 +291,9 @@ test("ο Έλεγχος ετοιμότητας βλέπει έτοιμους Κ�
     "Έξοδα και ώρες: ο πρώτος μήνας Κόστους ώρας",
   ]) {
     const item = rowTitled(list, title);
-    await expect(item.getByText("έτοιμο", { exact: true })).toBeVisible();
+    await expect(
+      item.getByText("έτοιμο", { exact: true }).first(),
+    ).toBeVisible();
     await expect(item).not.toContainText("έρχεται με");
   }
 });

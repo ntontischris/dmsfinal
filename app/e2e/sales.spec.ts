@@ -184,8 +184,8 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   await expect(page).toHaveURL(PIPELINE_URL);
   await expect(page.locator("dt", { hasText: "Συνεχίζει" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Κερδισμένη/ })).toHaveCount(0);
-  // Το πάνελ «Πρόταση» (B4): η Άννα μπορεί να συντάξει, άρα βλέπει τη φόρμα δημιουργίας.
-  await expect(panel(page, "Πρόταση")).toContainText("Σύνταξη πρότασης");
+  // Το πάνελ «Πρόταση» (B4): η Άννα μπορεί να συντάξει, άρα βλέπει το «Νέα πρόταση».
+  await expect(button(panel(page, "Πρόταση"), "Νέα πρόταση")).toBeVisible();
 
   // Το όνομα του Πελάτη αλλάζει από τη σελίδα του («Αλλαγή στοιχείων»).
   await page

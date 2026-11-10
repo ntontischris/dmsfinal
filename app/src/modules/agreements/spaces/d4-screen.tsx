@@ -37,14 +37,7 @@ export async function SpacesApprovals() {
   return (
     <Frame>
       <p className="note">{RIGHTS_NOTE}</p>
-      {found.data.length === 0 ? (
-        <StateNotice
-          kind="empty"
-          title="Καμία πρόταση δεν περιμένει Έγκριση."
-        />
-      ) : (
-        <ApprovalQueue items={found.data} canSeeAmounts={caps.canSeeAmounts} />
-      )}
+      <ApprovalQueue items={found.data} canSeeAmounts={caps.canSeeAmounts} />
     </Frame>
   );
 }

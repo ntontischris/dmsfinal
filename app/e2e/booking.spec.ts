@@ -71,7 +71,10 @@ test("ο Πελάτης κλείνει κράτηση, ο Ιδιοκτήτης �
     const row = queueRow(owner, "Αναμένουν έγκριση", CLIENT_PRODUCT_NAME(P));
     const actions = actionsOf(row);
     await button(actions, "Έγκριση").click();
-    await expect(actions).toContainText("εγκρίθηκε");
+    // Η απάντηση φαίνεται στη γραμμή· αν ήταν η τελευταία, η ουρά δείχνει ότι δεν περιμένει τίποτα.
+    await expect(
+      owner.getByText(/εγκρίθηκε|Τίποτα δεν περιμένει απάντηση/).first(),
+    ).toBeVisible();
     await owner.reload();
     await expect(row).toHaveCount(0);
   });
@@ -100,7 +103,11 @@ test("ο Πελάτης ζητά μετάθεση, ο Ιδιοκτήτης τη�
       .getByLabel(/Λόγος απόρριψης της μετάθεσης/)
       .fill("e2e: δεν χωράει η ώρα");
     await button(actions, "Απορρίπτω").click();
-    await expect(actions).toContainText("μένει στην παλιά ώρα");
+    await expect(
+      owner
+        .getByText(/μένει στην παλιά ώρα|Τίποτα δεν περιμένει απάντηση/)
+        .first(),
+    ).toBeVisible();
     await owner.reload();
     await expect(row).toHaveCount(0);
   });
