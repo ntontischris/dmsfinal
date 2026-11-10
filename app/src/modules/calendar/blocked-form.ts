@@ -12,6 +12,13 @@ export interface BlockedFormFields {
   to: string;
 }
 
+// Οι τιμές της φόρμας A6: τα πεδία του χρόνου, το άτομο, ο τίτλος και το Είδος (κενό = χωρίς Είδος).
+export interface BlockedTimeValues extends BlockedFormFields {
+  userId: string;
+  title: string;
+  kindId?: string;
+}
+
 export interface BlockedSpan {
   startsAt: string;
   endsAt: string;

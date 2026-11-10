@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
 
 import { saveBlockedTime } from "../actions-blocked";
-import type { BlockedTimeValues } from "../components/blocked-time-form";
+import type { BlockedTimeValues } from "../blocked-form";
 import type { BlockedKind, CalendarMember } from "../types";
 import { ConflictWarning, useConflicts } from "./a6-conflicts";
 import { draftOf, formFieldsOf, validateDraft, type Draft } from "./a6-model";
