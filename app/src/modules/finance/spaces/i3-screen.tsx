@@ -6,6 +6,7 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { financeCaps } from "../caps";
 import type { InvoiceDetail } from "../invoice-detail-schema";
+import { KIND_LABELS } from "../invoices-labels";
 import { getInvoiceContext, getInvoiceDetail } from "../invoices-queries";
 import { athensToday } from "../money";
 import { listClientOptions } from "../queries";
@@ -53,11 +54,16 @@ async function Workbench({ clientId }: { clientId: string }) {
 const wrap = (body: ReactNode) => <div data-spaces>{body}</div>;
 
 // Διόρθωση (?invoice=): το Ίχνος και η Διόρθωση/Ακύρωση της καταχώρισης, όπως στο prototype κάτω από τον πάγκο.
+// Πάνω τους μία γραμμή λέει ποια καταχώριση είναι (είδος, αριθμός, Πελάτης, τι διορθώνει), όπως η κλασική σελίδα.
 function CorrectionPart({ detail }: { detail: ReadResult<InvoiceDetail> }) {
   if (!detail.ok) return <ErrorNotice what="η καταχώριση" />;
   const invoice = detail.data;
   return (
     <>
+      <p className="muted">
+        {KIND_LABELS[invoice.kind]} {invoice.number} · {invoice.clientName}
+        {invoice.creditForNumber && ` · διορθώνει ${invoice.creditForNumber}`}
+      </p>
       <InvoiceTrail number={invoice.number} trail={invoice.trail} />
       {invoice.voided !== null && (
         <StateNotice kind="empty" title="Η καταχώριση είναι ακυρωμένη">

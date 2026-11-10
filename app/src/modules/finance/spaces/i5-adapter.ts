@@ -1,6 +1,8 @@
 // I5 (νέα εμφάνιση): η πραγματική Καρτέλα (client_ledger_view) στις γραμμές του prototype (`data/finance-access.ts`
 // ledgerOf), με την κατάσταση κάθε Τιμολογίου από το invoices_view. Καθαρές συναρτήσεις.
 
+import { fmtMoney } from "@/spaces/screens/shared";
+
 import { STATUS_LABELS } from "../invoices-labels";
 import type { InvoiceItem } from "../invoices-view-schema";
 import type { LedgerClient, LedgerEntry } from "../ledger-view-schema";
@@ -64,3 +66,10 @@ export const i5ClientIdOf = (
   param: string | undefined,
   clients: readonly LedgerClient[],
 ): string | undefined => param ?? clients[0]?.id;
+
+// Το υπόλοιπο δίπλα σε κάθε Πελάτη της επιλογής (όπως η λίστα Πελατών της κλασικής): προς τα πού και πόσο.
+export const balanceHintOf = (balance: number): string => {
+  if (balance === 0) return fmtMoney(0);
+  const amount = fmtMoney(Math.abs(balance));
+  return balance < 0 ? `υπέρ του πελάτη ${amount}` : `χρωστά ${amount}`;
+};

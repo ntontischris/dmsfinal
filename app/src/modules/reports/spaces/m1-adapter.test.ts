@@ -7,6 +7,7 @@ import {
   monthlyText,
   openSub,
   periodLabelWithDates,
+  periodOptionLabel,
   quietText,
   shareWidth,
   turnoverChartOf,
@@ -34,6 +35,14 @@ describe("M1 adapter", () => {
     expect(
       periodLabelWithDates({ label: "Αυτό το τρίμηνο", from: "2026-07-01", to: "2026-09-30" }),
     ).toBe("Αυτό το τρίμηνο (01/07–30/09/2026)");
+  });
+
+  it("should mark the period that is still running as «ως σήμερα» in the M1 filter", () => {
+    const period = { label: "Αυτός ο μήνας", from: "2026-11-01", to: "2026-11-30" };
+    expect(periodOptionLabel({ ...period, isPartial: true })).toBe(
+      "Αυτός ο μήνας (01/11–30/11/2026) · ως σήμερα",
+    );
+    expect(periodOptionLabel({ ...period, isPartial: false })).toBe("Αυτός ο μήνας (01/11–30/11/2026)");
   });
 
   it("should leave quiet months out of the chart and scale bars to 60%", () => {
