@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 import { INITIAL_FORM_STATE } from "@/lib/form-state";
@@ -46,14 +47,20 @@ export function Customize({
       <form action={action}>
         <header className="a1-card-head">
           <h2 id="a1-customize-title">Προσαρμογή της «Σήμερα»</h2>
-          <button
-            className="button"
-            data-primary="true"
-            type="submit"
-            disabled={isPending}
-          >
-            Τέλος
-          </button>
+          <span className="btn-row">
+            {/* Κλείσιμο χωρίς αποθήκευση: η «Σήμερα» μένει όπως ήταν. */}
+            <Link className="button" href="/app">
+              Κλείσιμο
+            </Link>
+            <button
+              className="button"
+              data-primary="true"
+              type="submit"
+              disabled={isPending}
+            >
+              Τέλος
+            </button>
+          </span>
         </header>
         <p className="muted">
           Βλέπεις όσες κάρτες σου επιτρέπουν τα Δικαιώματά σου. Κρύψε όσες δεν

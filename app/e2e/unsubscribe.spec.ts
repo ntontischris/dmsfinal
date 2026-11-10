@@ -2,12 +2,17 @@ import { expect, test } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { project } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Σύνδεσμος διακοπής (#171, Α10) από άκρη σε άκρη. Ο Πελάτης «Πελάτης Ειδοποιήσεων {project}» και ο Χρήστης πελάτη
 // «notify.{project}@example.com» (Πλήρης) έρχονται από το seed. Ένα μη απαραίτητο Γεγονός (μετακίνηση στο Google) μπαίνει
 // στην ουρά με service role και τρέχει ο επεξεργαστής, όπως κάνει το cron κάθε λεπτού. Μετά ο πελάτης ανοίγει το /u/<token>
 // χωρίς είσοδο και επιβεβαιώνει. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
 function adminClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

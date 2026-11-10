@@ -9,6 +9,12 @@ export type InboxTab = (typeof INBOX_TABS)[number];
 export const parseTab = (value: string | undefined): InboxTab =>
   INBOX_TABS.find((tab) => tab === value) ?? "conversations";
 
+// Οι καρτέλες του Χρήστη πελάτη (J3): «Συνομιλία» και «Αιτήματα (N ανοιχτά)».
+export type ClientTab = "conversation" | "requests";
+
+export const parseClientTab = (value: string | undefined): ClientTab =>
+  value === "requests" ? "requests" : "conversation";
+
 export type ThreadFilter = "all" | "untagged" | "internal";
 
 export const parseFilter = (value: string | undefined): ThreadFilter =>
@@ -131,7 +137,8 @@ export interface ThreadLinkOptions {
 export const MESSAGES_PATH = "/app/messages";
 
 // Η λήψη ενός συνημμένου: η διαδρομή ελέγχει ορατότητα και κάνει redirect σε προσωρινό σύνδεσμο.
-export const attachmentHref = (attachmentId: string): string => `${MESSAGES_PATH}/attachments/${attachmentId}`;
+export const attachmentHref = (attachmentId: string): string =>
+  `${MESSAGES_PATH}/attachments/${attachmentId}`;
 
 export const threadHref = (
   clientId: string,

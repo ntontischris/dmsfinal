@@ -6,8 +6,7 @@ import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { AutoRefresh } from "../components/auto-refresh";
-import type { ClientTab } from "../components/client-screen";
-import { MESSAGES_PATH, newestAt } from "../helpers";
+import { MESSAGES_PATH, newestAt, type ClientTab } from "../helpers";
 import {
   CLIENT_READONLY_NOTE,
   CLIENT_VIDEO_NOTE,

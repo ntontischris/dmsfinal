@@ -20,7 +20,7 @@ export function J3LinkView({ link }: { link: J3Link }) {
 // Ποτέ υπεύθυνο ή ημέρες ανοιχτό.
 export function RequestBox({ request }: { request: J3Request }) {
   return (
-    <div className="j3-req">
+    <div className="j3-req" role="region" aria-label={request.title}>
       <div className="j3-req-head">
         <strong>{request.title}</strong>
         <Badge tone={request.isOpen ? "attention" : undefined}>

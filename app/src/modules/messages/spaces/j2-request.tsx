@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "@/spaces/screens/shared";
 
-import type { CandidatesByProduction } from "../components/request-slot";
+import type { CandidatesByProduction } from "../deliverable-candidates";
 import {
   CREATE_DELIVERABLE_NEEDS_TAG,
   CREATE_DELIVERABLE_NO_ACCESS,
@@ -68,7 +68,7 @@ export function RequestBox({
   const request = message.request;
   if (request === null) return null;
   return (
-    <div className="j2-req">
+    <div className="j2-req" role="region" aria-label={request.title}>
       <div className="j2-req-head">
         <strong>{request.title}</strong>
         <Badge tone={request.isOpen ? "strong" : undefined}>
