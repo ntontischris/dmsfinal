@@ -82,7 +82,11 @@ export function Composer({
   const isEmpty = text.trim() === "" && uploads.paths.length === 0;
 
   return (
-    <section className="j2-composer" data-internal={isInternal}>
+    <section
+      className="j2-composer"
+      data-internal={isInternal}
+      aria-label="Νέο Μήνυμα"
+    >
       <JForm
         action={sendMessage}
         className="j2-form"

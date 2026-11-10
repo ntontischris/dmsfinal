@@ -1,38 +1,35 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import {
-  button,
-  card,
-  clientIdByName,
-  field,
-  inContext,
-  listItem,
-  project,
-  signIn,
-} from "./sales-parts";
+import { inSpacesContext } from "./messages-parts";
+import { clientIdByName, project, signIn } from "./sales-parts";
+import { clickUntil } from "./today-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
-// Σήμερα Σβ (#181): οι κάρτες «περιμένει απόφαση». Ο πωλητής κάνει ένα Αίτημα πρόσβασης· ο Ιδιοκτήτης το βλέπει να μετρά
-// στην κάρτα «Χωρίς υπεύθυνο», και το «Άνοιγμα →» τον πάει στην ουρά, όπου το απορρίπτει (ώστε να μη μείνει τίποτα πίσω).
-// Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
+// Σήμερα Σβ (#181) στη νέα εμφάνιση (Χώροι): οι κάρτες «περιμένει απόφαση» μαζεύονται στο «Μόνο εσύ μπορείς». Ο πωλητής
+// κάνει ένα Αίτημα πρόσβασης· ο Ιδιοκτήτης το βλέπει να μετρά στις αποφάσεις, και ο σύνδεσμος της ουράς «Χωρίς υπεύθυνο»
+// τον πάει εκεί, όπου το απορρίπτει (ώστε να μη μείνει τίποτα πίσω). Σειριακά, χωρίς retries· τα δύο projects μοιράζονται
+// μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-const UNASSIGNED = "Χωρίς υπεύθυνο";
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
-const unassignedCard = (page: Page) => card(page, UNASSIGNED);
+const decisions = (page: Page) => page.locator("[data-part='decisions']");
 
-// Το πλήθος της κάρτας, όταν φορτώσει· 0 αν η κάρτα είναι άδεια (μαζεμένη στη γραμμή «Τίποτα σε αναμονή»).
-async function unassignedCount(page: Page): Promise<number> {
+// Το πλήθος των αποφάσεων, όταν φορτώσει· 0 αν δεν υπάρχει καμία (το πάνελ μένει χωρίς αριθμό).
+async function decisionsCount(page: Page): Promise<number> {
   await page.goto("/app");
   await expect(
     page.getByRole("heading", { level: 1, name: "Σήμερα" }),
   ).toBeVisible();
-  if ((await unassignedCard(page).count()) === 0) return 0;
-  const badge = unassignedCard(page).locator('[aria-label$=" σε αναμονή"]');
-  await expect(badge).toBeVisible();
-  return Number.parseInt((await badge.getAttribute("aria-label")) ?? "0", 10);
+  await expect(decisions(page)).toBeVisible();
+  const total = decisions(page).locator(".kit-panel-head > span.kit-label");
+  if ((await total.count()) === 0) return 0;
+  return Number.parseInt((await total.textContent()) ?? "0", 10);
 }
 
-test("ένα Αίτημα πρόσβασης μετρά στην κάρτα «Χωρίς υπεύθυνο» και το «Άνοιγμα →» πάει στην ουρά", async ({
+test("ένα Αίτημα πρόσβασης μετρά στις αποφάσεις της Σήμερα και ο σύνδεσμος πάει στην ουρά «Χωρίς υπεύθυνο»", async ({
   page,
   browser,
 }) => {
@@ -41,32 +38,42 @@ test("ένα Αίτημα πρόσβασης μετρά στην κάρτα «Χ
   const topic = `Σήμερα απόφαση ${P}`;
 
   await signIn(page, "owner@example.com");
-  const before = await unassignedCount(page);
+  const before = await decisionsCount(page);
 
-  await inContext(browser, "sales@example.com", async (seller) => {
+  // Η Πηγή δεν ρωτιέται πια: η βάση δίνει στο αίτημα την Πηγή του Πελάτη.
+  await inSpacesContext(browser, "sales@example.com", async (seller) => {
     await seller.goto(
       `/app/clients/${await clientIdByName(`Ταβέρνα Αρμύρα ${P}`)}`,
     );
-    await field(seller, "Τι αφορά").fill(topic);
-    await field(seller, "Πηγή").selectOption({ label: "Τηλέφωνο" });
-    await button(seller, "Αίτημα πρόσβασης").click();
+    const about = seller.getByRole("textbox", { name: "Τι αφορά η Ευκαιρία" });
+    await clickUntil(
+      seller.getByRole("button", { name: "Αίτημα πρόσβασης", exact: true }),
+      about,
+    );
+    await about.fill(topic);
+    await seller.getByRole("button", { name: "Αποστολή αιτήματος" }).click();
     await expect(
       seller.getByText("Το αίτημα στάλθηκε στη Διαχείριση"),
     ).toBeVisible();
   });
 
   await page.reload();
-  const decide = unassignedCard(page);
-  await expect(decide.getByLabel(`${before + 1} σε αναμονή`)).toBeVisible();
-  await decide.getByRole("link", { name: "Άνοιγμα →" }).click();
+  await expect(
+    decisions(page).locator(".kit-panel-head > span.kit-label"),
+  ).toHaveText(String(before + 1));
+  await decisions(page).locator('a[href^="/app/unassigned"]').first().click();
   await expect(page).toHaveURL(/\/app\/unassigned$/);
 
-  const request = listItem(card(page, "Αιτήματα πρόσβασης"), topic);
+  const request = page.getByRole("listitem").filter({ hasText: topic });
   await expect(request).toContainText(`Ταβέρνα Αρμύρα ${P}`);
-  await button(request, "Απόρριψη").click();
-  await field(request, "Σχόλιο απόρριψης (υποχρεωτικό)").fill(
-    "Τον Πελάτη τον έχει ήδη ο Νίκος",
+  const comment = request.getByRole("textbox", { name: "Σχόλιο απόρριψης" });
+  await clickUntil(
+    request.getByRole("button", { name: "Απόρριψη", exact: true }),
+    comment,
   );
-  await button(request, "Επιβεβαίωση απόρριψης").click();
+  await comment.fill("Τον Πελάτη τον έχει ήδη ο Νίκος");
+  await request
+    .getByRole("button", { name: "Επιβεβαίωση απόρριψης", exact: true })
+    .click();
   await expect(request).toHaveCount(0);
 });

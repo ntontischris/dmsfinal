@@ -6,6 +6,7 @@ import { Panel } from "@/spaces/kit/panel";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
+import { CLIENT_HELP_NOTE, PRICES_NOTE } from "../labels";
 import { getLibrary } from "../queries";
 import { searchKnowledge } from "../search";
 import {
@@ -108,7 +109,8 @@ export async function SpacesKnowledge({ q }: { q: string }) {
         </StateNotice>
       </div>
     );
-  const groups = await groupsOf(q, isClientViewer(viewer));
+  const isClient = isClientViewer(viewer);
+  const groups = await groupsOf(q, isClient);
   return (
     <div data-spaces>
       <div className="toolbar">
@@ -120,7 +122,8 @@ export async function SpacesKnowledge({ q }: { q: string }) {
         )}
       </div>
       <SearchForm q={q} />
-      <p className="note">Για τιμές, δες τον Κατάλογο.</p>
+      {/* Ο πελάτης δεν έχει Κατάλογο· τον στέλνουμε στη Συνομιλία με την ομάδα. */}
+      <p className="note">{isClient ? CLIENT_HELP_NOTE : PRICES_NOTE}</p>
       {groups === null ? (
         <ErrorNotice what="η Γνώση" />
       ) : (
