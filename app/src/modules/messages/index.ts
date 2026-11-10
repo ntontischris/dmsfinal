@@ -17,7 +17,6 @@ export {
 export { CLIENT_NO_ACCESS_TEXT, INBOX_TITLE } from "./labels";
 export { getAttachmentLink } from "./queries";
 export { getMessageSettings } from "./queries-settings";
-export { MessageSettingsForm } from "./components/settings-form";
 export { parseRequestView } from "./request-helpers";
 export { SpacesInbox } from "./spaces/j1-screen";
 export { SpacesThread } from "./spaces/j2-screen";

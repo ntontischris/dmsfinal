@@ -27,13 +27,6 @@ export type { ReadResult } from "./read";
 export { getDeliverableCandidates, listDeliverableQueue } from "./queries";
 export { listClientDeliverables } from "./client-queries";
 export { clientCardsOf, roundsText } from "./client-helpers";
-export {
-  NewDeliverableForm,
-  type FromRequest,
-} from "./components/new-deliverable-form";
-export { DeliverableRulesForm } from "./components/rules-form";
-export { getDeliverableRules } from "./queries-rules";
-export type { DeliverableRuleKind, DeliverableRules } from "./rules-types";
 // Νέα εμφάνιση (Χώροι): οι οθόνες του prototype H1, H2 πάνω στα ίδια δεδομένα.
 export { SpacesDeliverables } from "./spaces/h1-screen";
 export { SpacesDeliverable } from "./spaces/h2-screen";
