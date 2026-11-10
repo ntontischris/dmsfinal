@@ -43,6 +43,7 @@ import {
   StageSelect,
 } from "./b4-controls";
 import { noteKindId } from "./b4-said-yes";
+import { TitleEditor } from "./b4-title";
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
   <div data-spaces>{children}</div>
@@ -114,6 +115,20 @@ function Facts({
   const isOpen = opportunity.outcome === "open";
   return (
     <dl className="dl">
+      {canWork && (
+        <>
+          <dt>Τίτλος</dt>
+          <dd>
+            <TitleEditor
+              opportunityId={opportunity.id}
+              title={opportunity.title}
+              stageId={opportunity.stageId}
+              nextStep={opportunity.nextStep}
+              nextStepDue={opportunity.nextStepDue}
+            />
+          </dd>
+        </>
+      )}
       <dt>Πελάτης</dt>
       <dd>
         <Link href={hrefOf("B2", { id: opportunity.clientId })}>
