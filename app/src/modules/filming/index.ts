@@ -60,7 +60,6 @@ export {
   listMine,
   listOpenFilmings,
 } from "./queries";
-export { BookingPage } from "./components/booking-page";
 export { BookingExceptions } from "./components/booking-exceptions";
 export { BookingHolidays } from "./components/booking-holidays";
 export { BookingHoursForm } from "./components/booking-hours-form";
