@@ -155,3 +155,18 @@ export async function openFilmingFromList(
   await page.getByRole("link", { name: clientName(P), exact: true }).first().click();
   await expect(page).toHaveURL(FILMING_URL);
 }
+
+// Η γραμμή ενός μέλους στο πάνελ «Συνεργείο» της E3.
+export const crewRow = (page: Page, name: string): Locator =>
+  page
+    .locator("section", { has: page.getByRole("heading", { name: "Συνεργείο", exact: true }) })
+    .locator("li", { hasText: name });
+
+// Προσθέτει άτομο στο Συνεργείο της E3. Η επιλογή ζει στο React· ό,τι διαλεχτεί πριν ζωντανέψει η σελίδα χάνεται.
+export async function addToCrew(page: Page, name: string): Promise<void> {
+  await expect(async () => {
+    await page.getByLabel("Άτομο", { exact: true }).selectOption({ label: name });
+    await expect(button(page, "Προσθήκη")).toBeEnabled({ timeout: 1_000 });
+  }).toPass();
+  await button(page, "Προσθήκη").click();
+}

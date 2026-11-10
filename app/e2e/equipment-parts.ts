@@ -1,36 +1,49 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { visit } from "./filming-parts";
+import { button, card } from "./sales-parts";
+
 // Βοηθητικά του e2e/equipment.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές).
-// Τα πεδία ταιριάζουν με την ετικέτα-τίτλο (`span`), γιατί μερικές ετικέτες έχουν υπόδειξη μέσα τους.
+// Οι οθόνες του Εξοπλισμού (F1, F2, F3) είναι στη νέα εμφάνιση (Χώροι): τα πάνελ είναι `section` με τίτλο h2.
 
 export const ITEM_URL = /\/app\/equipment\/[0-9a-f-]{36}$/;
 
-export const fieldOf = (scope: Page | Locator, label: string): Locator =>
-  scope
-    .locator(`label:has(> span:text-is("${label}"))`)
-    .locator("input, select, textarea");
-
-// Το «Νέο αντικείμενο» είναι κλειστό `details`· ανοίγει με το summary και δίνει τη φόρμα του.
-export async function openNewItem(page: Page): Promise<Locator> {
-  await page.getByText("Νέο αντικείμενο", { exact: true }).click();
-  return page.locator("details", { hasText: "Στοιχεία νέου αντικειμένου" });
+// Ένα κουμπί που ανοίγει πάνελ: πριν ζωντανέψει η σελίδα το κλικ χάνεται, οπότε ξαναπατιέται μέχρι να φανεί το πάνελ.
+async function openPanel(page: Page, opener: string, title: string): Promise<Locator> {
+  const panel = card(page, title);
+  await expect(async () => {
+    if (!(await panel.isVisible())) await button(page, opener).click();
+    await expect(panel).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  return panel;
 }
+
+// Το «Νέο αντικείμενο» της F1 ανοίγει το πάνελ της φόρμας του.
+export const openNewItem = (page: Page): Promise<Locator> =>
+  openPanel(page, "Νέο αντικείμενο", "Νέο αντικείμενο");
 
 // Το «Νέο Πρότυπο» κάνει το ίδιο στη F3.
-export async function openNewTemplate(page: Page): Promise<Locator> {
-  await page.getByText("Νέο Πρότυπο", { exact: true }).click();
-  return page.locator("details", { hasText: "Στοιχεία νέου Προτύπου" });
+export const openNewTemplate = (page: Page): Promise<Locator> =>
+  openPanel(page, "Νέο Πρότυπο", "Νέο Πρότυπο εξοπλισμού");
+
+// Το «Περισσότερα» των καρτελών του Χώρου «Παραγωγή»: εκεί ζουν οι οθόνες χωρίς καρτέλα (π.χ. τα Πρότυπα εξοπλισμού).
+export async function openMoreScreens(page: Page): Promise<Locator> {
+  const nav = page.getByRole("navigation", { name: "Παραγωγή", exact: true });
+  const more = nav.getByRole("button", { name: "Περισσότερες οθόνες", exact: true });
+  await expect(async () => {
+    if ((await more.getAttribute("aria-expanded")) !== "true") await more.click();
+    await expect(more).toHaveAttribute("aria-expanded", "true", { timeout: 1_000 });
+  }).toPass();
+  return nav;
 }
 
-// Η σελίδα του αντικειμένου, από τη λίστα της F1. Ο σύνδεσμος έχει το όνομα του αντικειμένου.
+// Η σελίδα του αντικειμένου, από το μητρώο της F1. Ο σύνδεσμος και ο τίτλος του πάνελ έχουν το όνομα του αντικειμένου.
 export async function openItemFromRegistry(
   page: Page,
   name: string,
 ): Promise<void> {
-  await page.goto("/app/equipment");
+  await visit(page, "/app/equipment");
   await page.getByRole("link", { name, exact: true }).click();
   await expect(page).toHaveURL(ITEM_URL);
-  await expect(
-    page.getByRole("heading", { level: 1, name, exact: true }),
-  ).toBeVisible();
+  await expect(card(page, name)).toBeVisible();
 }

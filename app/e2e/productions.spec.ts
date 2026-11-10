@@ -1,23 +1,34 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
+import { visit } from "./filming-parts";
 import {
-  fieldOf,
-  openNewInternal,
+  confirmWithReason,
+  createInternal,
   openProduction,
-  PRODUCTION_URL,
 } from "./productions-parts";
 import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
-// Παραγωγές (G1, G2) από άκρη σε άκρη. Το «Showreel {project}» το φτιάχνει το e2e/seed.mjs (Εσωτερική, Υπεύθυνος ο Ιδιοκτήτης).
-// Τα τεστ γράφουν στην ίδια βάση, σειριακά: οι νέες εγγραφές φέρουν το όνομα του project.
+// Παραγωγές (G1, G2) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Το «Showreel {project}» το φτιάχνει το e2e/seed.mjs
+// (Εσωτερική, Υπεύθυνος ο Ιδιοκτήτης). Τα τεστ γράφουν στην ίδια βάση, σειριακά: οι νέες εγγραφές φέρουν το όνομα του project.
 // Σειριακά και χωρίς retries. Η Ρένα είναι ήδη Μέλος του seed, γι' αυτό το τεστ προσθέτει άλλον Χρήστη.
 test.describe.configure({ retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
 const DELIVERY_NOTE = "Drive, φάκελος Οκτωβρίου";
 const REOPEN_REASON = "Ζητήθηκε αλλαγή στο μοντάζ";
 const CANCEL_REASON = "Δεν θα γυριστεί";
 const MEMBER_NAME = "Δημήτρης Διαχείριση";
 const OWNER_NAME = "Γιώργος Ιδιοκτήτης";
+
+// Οι καρτέλες του Χώρου «Παραγωγή» (κεφαλίδα της σελίδας): εκεί φαίνεται αν ο Χρήστης έχει τις Παραγωγές.
+const productionTab = (page: Page) =>
+  page
+    .getByRole("navigation", { name: "Παραγωγή", exact: true })
+    .getByRole("link", { name: "Παραγωγές", exact: true });
 
 test("ο Ιδιοκτήτης βλέπει την Παραγωγή, προσθέτει Μέλος, την παραδίδει και την ξανανοίγει", async ({
   page,
@@ -26,51 +37,59 @@ test("ο Ιδιοκτήτης βλέπει την Παραγωγή, προσθέ
   const TITLE = `Showreel ${P}`;
 
   await signIn(page, "owner@example.com");
-  const nav = page.getByRole("navigation", { name: "Οθόνες" });
-  await expect(nav.getByRole("link", { name: /Παραγωγές$/ })).toBeVisible();
-
-  await page.goto("/app/productions");
+  await visit(page, "/app/productions");
+  await expect(productionTab(page)).toBeVisible();
   await expect(tableRow(page, TITLE)).toBeVisible();
-  await expect(
-    page.getByText("Νέα Εσωτερική Παραγωγή", { exact: true }),
-  ).toBeVisible();
+  await expect(button(page, "Νέα Εσωτερική Παραγωγή")).toBeVisible();
 
   await openProduction(page, TITLE);
-  await expect(card(page, "Κατάσταση")).toContainText("Ανοιχτή");
-  await expect(card(page, "Υπεύθυνος")).toContainText(OWNER_NAME);
-  await expect(card(page, "Συμφωνία")).toContainText("δεν ανήκει σε Συμφωνία");
-  await expect(card(page, "Περίοδος")).toContainText("καμία Περίοδος");
+  const state = card(page, "Κατάσταση");
+  // Η λέξη της κατάστασης είναι το σήμα στην κεφαλίδα του πάνελ (το κείμενο από κάτω αναφέρει κι άλλες καταστάσεις).
+  const stateWord = state.locator(".kit-panel-head");
+  await expect(stateWord).toContainText("ανοιχτή");
+  await expect(state).toContainText(OWNER_NAME);
+  // Εσωτερική χωρίς Συμφωνία και χωρίς Περίοδο: η κεφαλίδα το λέει και δεν υπάρχουν Παροχές Περιόδου.
+  const header = page.locator(".g2-header");
+  await expect(header).toContainText("Εσωτερική Παραγωγή");
+  await expect(header.getByText("Συμφωνία", { exact: true })).toHaveCount(0);
+  await expect(card(page, "Παροχές της Περιόδου")).toHaveCount(0);
 
   const members = card(page, "Μέλη");
-  await fieldOf(members, "Μέλος ομάδας").selectOption({ label: MEMBER_NAME });
-  await button(members, "Προσθήκη").click();
+  await expect(async () => {
+    await members.getByLabel("Νέο Μέλος").selectOption({ label: MEMBER_NAME });
+    await expect(button(members, "Προσθήκη Μέλους")).toBeEnabled({
+      timeout: 1_000,
+    });
+  }).toPass();
+  await button(members, "Προσθήκη Μέλους").click();
   await expect(members.getByRole("status")).toContainText(
     "Το Μέλος προστέθηκε.",
   );
-  await expect(card(page, "Μέλη")).toContainText(MEMBER_NAME);
+  await expect(
+    members.locator("li.g2-member", { hasText: MEMBER_NAME }),
+  ).toBeVisible();
 
-  const deliver = page.locator("form", {
-    has: page.getByRole("button", { name: "Παράδοση", exact: true }),
+  await confirmWithReason(page, {
+    open: "Παράδοση χειροκίνητα",
+    label: "Σχόλιο παράδοσης (υποχρεωτικό)",
+    confirm: "Παράδοση",
+    reason: DELIVERY_NOTE,
   });
-  await fieldOf(deliver, "Τι παραδόθηκε και πού (υποχρεωτικό)").fill(
-    DELIVERY_NOTE,
-  );
-  await button(deliver, "Παράδοση").click();
-  await expect(card(page, "Κατάσταση")).toContainText("Παραδομένη");
-  await expect(card(page, "Ιστορικό")).toContainText(
+  await expect(stateWord).toContainText("παραδομένη");
+  await expect(state).toContainText(`Σχόλιο: ${DELIVERY_NOTE}`);
+  await expect(card(page, "Ίχνος ενεργειών")).toContainText(
     `Παραδόθηκε: ${DELIVERY_NOTE}`,
   );
   await shot(page, "g2-owner-delivered");
 
-  const reopen = page.locator("form", {
-    has: page.getByRole("button", { name: "Επανάνοιγμα", exact: true }),
+  await confirmWithReason(page, {
+    open: "Επανάνοιγμα",
+    label: "Λόγος επανανοίγματος (υποχρεωτικός)",
+    confirm: "Επανάνοιγμα",
+    reason: REOPEN_REASON,
   });
-  await fieldOf(reopen, "Λόγος επανανοίγματος (υποχρεωτικός)").fill(
-    REOPEN_REASON,
-  );
-  await button(reopen, "Επανάνοιγμα").click();
-  await expect(card(page, "Κατάσταση")).toContainText("Ανοιχτή");
-  await expect(card(page, "Ιστορικό")).toContainText(
+  await expect(stateWord).toContainText("ανοιχτή");
+  await expect(card(page, "Ίχνος ενεργειών")).toContainText(
     `Ξανανοίχτηκε. Λόγος: ${REOPEN_REASON}`,
   );
 });
@@ -82,30 +101,23 @@ test("ο Ιδιοκτήτης φτιάχνει Εσωτερική Παραγωγ
   const TITLE = `Εσωτερική ${P}`;
 
   await signIn(page, "owner@example.com");
-  await page.goto("/app/productions");
-  const form = await openNewInternal(page);
-  await fieldOf(form, "Τίτλος").fill(TITLE);
-  await fieldOf(form, "Υπεύθυνος").selectOption({ label: OWNER_NAME });
-  await button(form, "Δημιουργία").click();
+  await createInternal(page, TITLE, OWNER_NAME);
+  await expect(page.locator(".g2-header")).toContainText("Εσωτερική Παραγωγή");
+  await expect(card(page, "Κατάσταση")).toContainText(OWNER_NAME);
 
-  await expect(page).toHaveURL(PRODUCTION_URL);
-  await expect(
-    page.getByRole("heading", { level: 1, name: TITLE, exact: true }),
-  ).toBeVisible();
-  await expect(card(page, "Συμφωνία")).toContainText("δεν ανήκει σε Συμφωνία");
-
-  const cancel = page.locator("form", {
-    has: page.getByRole("button", { name: "Ακύρωση", exact: true }),
+  await confirmWithReason(page, {
+    open: "Ακύρωση Παραγωγής",
+    label: "Λόγος ακύρωσης (υποχρεωτικός)",
+    confirm: "Ακύρωση Παραγωγής",
+    reason: CANCEL_REASON,
   });
-  await fieldOf(cancel, "Λόγος ακύρωσης (υποχρεωτικός)").fill(CANCEL_REASON);
-  await button(cancel, "Ακύρωση").click();
-  await expect(card(page, "Κατάσταση")).toContainText("Ακυρωμένη");
-  await expect(card(page, "Κατάσταση")).toContainText(
-    `Λόγος: ${CANCEL_REASON}`,
-  );
+  const state = card(page, "Κατάσταση");
+  await expect(state.locator(".kit-panel-head")).toContainText("ακυρωμένη");
+  await expect(state).toContainText(`Λόγος: ${CANCEL_REASON}`);
 
-  await page.goto("/app/productions?tab=all&internal=1");
-  await expect(tableRow(page, TITLE)).toContainText("Ακυρωμένη");
+  // Οι παλιές διευθύνσεις (?tab=all&internal=1) ανοίγουν την προβολή «Εσωτερικές», με όλες τις καταστάσεις.
+  await visit(page, "/app/productions?tab=all&internal=1");
+  await expect(tableRow(page, TITLE)).toContainText("ακυρωμένη");
 });
 
 test("η Παραγωγή με Εύρος «όσα με αφορούν» βλέπει μόνο τις δικές της και δεν μεταβιβάζει", async ({
@@ -114,22 +126,14 @@ test("η Παραγωγή με Εύρος «όσα με αφορούν» βλέ�
   const P = project();
 
   await signIn(page, "production@example.com");
-  const nav = page.getByRole("navigation", { name: "Οθόνες" });
-  await expect(nav.getByRole("link", { name: /Παραγωγές$/ })).toBeVisible();
-
-  await page.goto("/app/productions?tab=all&internal=1");
+  await visit(page, "/app/productions?tab=all&internal=1");
+  await expect(productionTab(page)).toBeVisible();
   await expect(tableRow(page, `Showreel ${P}`)).toBeVisible();
   await expect(tableRow(page, `Εσωτερική ${P}`)).toHaveCount(0);
-  await expect(
-    page.getByText("Νέα Εσωτερική Παραγωγή", { exact: true }),
-  ).toHaveCount(0);
+  await expect(button(page, "Νέα Εσωτερική Παραγωγή")).toHaveCount(0);
 
   await openProduction(page, `Showreel ${P}`);
-  await expect(
-    card(page, "Υπεύθυνος").getByRole("button", {
-      name: "Μεταβίβαση",
-      exact: true,
-    }),
-  ).toHaveCount(0);
+  // Η μεταβίβαση είναι το «Αλλαγή» του Υπευθύνου στο πάνελ «Κατάσταση».
+  await expect(button(card(page, "Κατάσταση"), "Αλλαγή")).toHaveCount(0);
   await shot(page, "g2-production");
 });

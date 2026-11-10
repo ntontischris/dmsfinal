@@ -1,33 +1,46 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 
 import { visit } from "./filming-parts";
 import { button, signIn } from "./sales-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
-// Κανόνες Παραδοτέων (Ρυθμίσεις › Παραδοτέα) από άκρη σε άκρη. Ο Ιδιοκτήτης αλλάζει την προθεσμία του βίντεο και την
-// γυρίζει πίσω. Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
+// Κανόνες Παραδοτέων (Ρυθμίσεις › Παραδοτέα, O5) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Ο Ιδιοκτήτης αλλάζει την
+// προθεσμία του βίντεο και την γυρίζει πίσω. Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
 test.describe.configure({ mode: "serial", retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
+
+// Το κουμπί ανάβει μόνο μετά από αλλαγή· ό,τι γράφεται πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
+async function fillUntilSaveEnables(card: Locator, value: string) {
+  await expect(async () => {
+    await card.getByLabel("Προθεσμία βίντεο").fill(value);
+    await expect(button(card, "Αποθήκευση")).toBeEnabled({ timeout: 1_000 });
+  }).toPass();
+}
 
 test("ο Ιδιοκτήτης αλλάζει την προθεσμία του βίντεο και την επαναφέρει", async ({
   page,
 }) => {
   await signIn(page, "owner@example.com");
   await visit(page, "/app/settings/deliverables");
-  const rules = page.locator("form", {
-    has: page.locator('input[name="changesDays"]'),
+  const deadlines = page.locator(".o-card", {
+    hasText: "Προθεσμία ανά είδος Παροχής",
   });
-  await expect(button(rules, "Αποθήκευση Κανόνων")).toHaveCount(0);
-  await rules.getByLabel("Προθεσμία βίντεο").fill("14");
-  await button(rules, "Αποθήκευση Κανόνων").click();
-  await expect(rules.getByRole("status")).toContainText(
+  await expect(button(deadlines, "Αποθήκευση")).toBeDisabled();
+  await fillUntilSaveEnables(deadlines, "14");
+  await button(deadlines, "Αποθήκευση").click();
+  await expect(deadlines.getByRole("status")).toContainText(
     "Οι Κανόνες αποθηκεύτηκαν.",
   );
-  await expect(button(rules, "Αποθήκευση Κανόνων")).toHaveCount(0);
+  await expect(button(deadlines, "Αποθήκευση")).toBeDisabled();
 
   await page.reload();
-  await expect(rules.getByLabel("Προθεσμία βίντεο")).toHaveValue("14");
-  await rules.getByLabel("Προθεσμία βίντεο").fill("10");
-  await button(rules, "Αποθήκευση Κανόνων").click();
-  await expect(rules.getByRole("status")).toContainText(
+  await expect(deadlines.getByLabel("Προθεσμία βίντεο")).toHaveValue("14");
+  await fillUntilSaveEnables(deadlines, "10");
+  await button(deadlines, "Αποθήκευση").click();
+  await expect(deadlines.getByRole("status")).toContainText(
     "Οι Κανόνες αποθηκεύτηκαν.",
   );
 });

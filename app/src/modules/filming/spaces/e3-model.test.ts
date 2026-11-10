@@ -59,11 +59,24 @@ const memberOf = (overrides: Partial<CrewMember> = {}): CrewMember => ({
 test("απάντηση μόνο για μέλος, σε ανοιχτό Γύρισμα, με εκδομένο Δελτίο", () => {
   expect(replyOf(undefined, "scheduled", 2)).toBeNull();
   expect(replyOf(memberOf(), "done", 2)).toBeNull();
-  expect(replyOf(memberOf(), "scheduled", null)).toBeNull();
   expect(replyOf(memberOf(), "pending", 1)).toEqual({
     version: 1,
     isAnswered: false,
     canConfirm: true,
+    canDecline: true,
+  });
+});
+
+test("χωρίς Δελτίο το μέλος απαντά κανονικά· ό,τι ήδη ισχύει δεν ξαναστέλνεται", () => {
+  expect(replyOf(memberOf(), "scheduled", null)).toEqual({
+    version: null,
+    isAnswered: false,
+    canConfirm: true,
+    canDecline: true,
+  });
+  expect(replyOf(memberOf({ response: "confirmed" }), "scheduled", null)).toMatchObject({
+    isAnswered: true,
+    canConfirm: false,
     canDecline: true,
   });
 });

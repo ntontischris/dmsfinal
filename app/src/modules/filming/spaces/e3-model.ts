@@ -68,22 +68,26 @@ export const balanceOf = (provision: ProvisionBalance): E3Balance => ({
 });
 
 export interface E3Reply {
-  version: number;
+  // Η έκδοση του Δελτίου (κενό = δεν έχει εκδοθεί Δελτίο).
+  version: number | null;
   // Απάντησε στην τρέχουσα έκδοση του Δελτίου.
   isAnswered: boolean;
   canConfirm: boolean;
   canDecline: boolean;
 }
 
-// Η απάντηση του μέλους στο E3, όπως στη σημερινή σελίδα: μόνο σε ανοιχτό Γύρισμα με εκδομένο Δελτίο. Ό,τι ήδη ισχύει
-// για την τρέχουσα έκδοση δεν ξαναστέλνεται.
+// Η απάντηση του μέλους (E3, E6): μόνο σε ανοιχτό Γύρισμα. Με Δελτίο μετρά η απάντηση στην τρέχουσα έκδοση· χωρίς
+// Δελτίο η απάντηση ως έχει (όπως η παλιά E6). Ό,τι ήδη ισχύει δεν ξαναστέλνεται.
 export const replyOf = (
-  member: CrewMember | undefined,
+  member: Pick<CrewMember, "response" | "version"> | undefined,
   state: FilmingState,
   sheetVersion: number | null,
 ): E3Reply | null => {
-  if (!member || !isOpenState(state) || sheetVersion === null) return null;
-  const isAnswered = member.version === sheetVersion;
+  if (!member || !isOpenState(state)) return null;
+  const isAnswered =
+    sheetVersion === null
+      ? member.response !== "pending"
+      : member.version === sheetVersion;
   return {
     version: sheetVersion,
     isAnswered,

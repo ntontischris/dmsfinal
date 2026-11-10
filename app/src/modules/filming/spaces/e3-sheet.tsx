@@ -9,7 +9,7 @@ import { ListRow, RowList } from "@/spaces/kit/parts";
 
 import { issueSheet, saveSheet } from "../actions-sheet";
 import { formatDateTime } from "../helpers-time";
-import { addShot, moveShot, removeShot } from "../sheet-model";
+import { addShot, moveShot, removeShot, renameShot } from "../sheet-model";
 import type { SheetShot, SheetView } from "../sheet-types";
 import { useRun } from "./e3-run";
 import { LastDone } from "./e3-ui";
@@ -17,6 +17,42 @@ import { LastDone } from "./e3-ui";
 interface E3SheetProps {
   filmingId: string;
   sheet: SheetView;
+}
+
+// Το κείμενο μιας λήψης, αλλάζει επί τόπου (όπως η παλιά φόρμα): αποθηκεύεται όταν φύγεις από το πεδίο ή πατήσεις Enter.
+function ShotText({
+  shot,
+  index,
+  isPending,
+  onRename,
+}: {
+  shot: SheetShot;
+  index: number;
+  isPending: boolean;
+  onRename: (text: string) => void;
+}) {
+  const [text, setText] = useState(shot.text);
+  const commit = () => {
+    const trimmed = text.trim();
+    if (trimmed !== "" && trimmed !== shot.text) onRename(trimmed);
+    else setText(shot.text);
+  };
+  return (
+    <input
+      className="input"
+      aria-label={`Κείμενο λήψης ${index + 1}`}
+      maxLength={300}
+      value={text}
+      disabled={isPending}
+      onChange={(event) => setText(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        commit();
+      }}
+    />
+  );
 }
 
 // Η λίστα λήψεων: με Δικαίωμα επεξεργασίας κάθε αλλαγή αποθηκεύεται αμέσως (όπως στο prototype)· αλλιώς της τελευταίας έκδοσης.
@@ -45,7 +81,19 @@ function ShotList({
           <ListRow
             key={item.id}
             lead={String(index + 1)}
-            title={item.text}
+            title={
+              canEdit ? (
+                <ShotText
+                  key={item.text}
+                  shot={item}
+                  index={index}
+                  isPending={isPending}
+                  onRename={(text) => onChange(renameShot(items, item.id, text))}
+                />
+              ) : (
+                item.text
+              )
+            }
             aside={
               canEdit && (
                 <>

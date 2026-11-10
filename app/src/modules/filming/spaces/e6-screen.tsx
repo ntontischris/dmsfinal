@@ -10,6 +10,8 @@ import { listMine } from "../queries";
 import { getSheet } from "../queries-sheet";
 import type { MineEntry } from "../types";
 import { weekdayOf } from "./e1-format";
+import { RESPONSE_WORDS, replyOf } from "./e3-model";
+import { E3Reply } from "./e3-reply";
 import { awaitsAnswer, dayOf, e6SheetOf, mineWhen } from "./e6-adapter";
 import { E6Sheet } from "./e6-sheet";
 
@@ -79,14 +81,37 @@ async function Selected({
   const view = e6SheetOf(entry, sheet.data, viewerId, new Date().getTime());
   if (view) return <E6Sheet key={entry.id} sheet={view} />;
   return (
-    <StateNotice kind="empty" title="Το Δελτίο δεν έχει σταλεί ακόμα">
-      <p>
-        Είσαι στο Συνεργείο του Γυρίσματος{" "}
-        {entry.client?.name ?? NO_CLIENT_LABEL} (
-        {mineWhen(entry.startsAt, entry.hours)}). Θα ειδοποιηθείς όταν σταλεί το
-        Δελτίο.
-      </p>
-    </StateNotice>
+    <>
+      <StateNotice kind="empty" title="Το Δελτίο δεν έχει σταλεί ακόμα">
+        <p>
+          Είσαι στο Συνεργείο του Γυρίσματος{" "}
+          {entry.client?.name ?? NO_CLIENT_LABEL} (
+          {mineWhen(entry.startsAt, entry.hours)}). Θα ειδοποιηθείς όταν σταλεί
+          το Δελτίο.
+        </p>
+      </StateNotice>
+      <NoSheetReply entry={entry} />
+    </>
+  );
+}
+
+// Χωρίς Δελτίο το μέλος απαντά ήδη «επιβεβαιώνω» ή «δεν μπορώ» (όπως η παλιά E6).
+function NoSheetReply({ entry }: { entry: MineEntry }) {
+  const reply = replyOf(
+    { response: entry.myResponse, version: entry.myVersion },
+    entry.state,
+    null,
+  );
+  if (!reply) return null;
+  return (
+    <Panel label="Η απάντησή σου">
+      <E3Reply
+        filmingId={entry.id}
+        reply={reply}
+        myWord={RESPONSE_WORDS[entry.myResponse]}
+      />
+      {entry.myReason && <p className="muted">Λόγος: {entry.myReason}</p>}
+    </Panel>
   );
 }
 
