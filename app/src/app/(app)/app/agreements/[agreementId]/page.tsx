@@ -27,8 +27,10 @@ export const metadata = { title: "Συμφωνία" };
 // το `can` που δίνει η βάση, και ό,τι ο θεατής δεν δικαιούται να δει (τιμές, ώρες, κόστος) φτάνει εδώ ως null.
 export default async function AgreementPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ agreementId: string }>;
+  searchParams: Promise<{ variant?: string }>;
 }) {
   const [viewer, { agreementId }] = await Promise.all([getViewer(), params]);
   // Στη νέα εμφάνιση (Χώροι) η οθόνη του prototype· αλλιώς η σημερινή. Ο Χρήστης πελάτη έχει τη δική του όψη.
@@ -39,7 +41,16 @@ export default async function AgreementPage({
     return <SpacesClientAgreement agreementId={agreementId} />;
   if (caps.isClient)
     return id.success ? <ClientAgreementPage agreementId={id.data} /> : <Missing />;
-  if (look === "spaces") return <SpacesAgreement agreementId={agreementId} />;
+  if (look === "spaces") {
+    // PROTOTYPE: ?variant=a|b|c (αγνοείται στην παραγωγή).
+    const { variant } = await searchParams;
+    return (
+      <SpacesAgreement
+        agreementId={agreementId}
+        variant={typeof variant === "string" ? variant : undefined}
+      />
+    );
+  }
   if (!caps.canView) return <NoAccess viewer={viewer} />;
   if (!id.success) return <Missing />;
 

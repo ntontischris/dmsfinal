@@ -115,7 +115,7 @@ function MonthlyRows({ terms, baseline, isEditing }: RowsProps) {
   );
 }
 
-function TermsRows(props: RowsProps) {
+export function TermsRows(props: RowsProps) {
   const { terms, baseline, isEditing, isMonthly } = props;
   return (
     <dl className="dl">
