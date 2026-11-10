@@ -41,13 +41,16 @@ import { E3Crew } from "./e3-crew";
 import { E3Equipment } from "./e3-equipment";
 import { E3Sheet } from "./e3-sheet";
 import {
+  DONE_KINDS,
   RESPONSE_WORDS,
   balanceOf,
+  doneMessage,
   fmtDay,
   hoursLabel,
   notesOf,
   replyOf,
   responseTone,
+  type DoneKind,
 } from "./e3-model";
 import { E3Reply } from "./e3-reply";
 import { StatusBadge } from "./e3-ui";
@@ -497,14 +500,37 @@ function Missing() {
   );
 }
 
+// Το μήνυμα μετά από κράτηση ή μετάθεση (`?done=`), όπως το έδειχνε η παλιά σελίδα.
+function DoneNotice({ done, card }: { done: DoneKind | null; card: FilmingCard }) {
+  if (done === null) return null;
+  return (
+    <p className="e-info" role="status">
+      {doneMessage(done, {
+        state: card.state,
+        hasPendingReschedule: card.signals.pendingReschedule !== null,
+      })}
+    </p>
+  );
+}
+
+const doneOf = (value: string | undefined): DoneKind | null =>
+  DONE_KINDS.find((kind) => kind === value) ?? null;
+
 // Η όψη του πελάτη (prototype `e3-workbench.tsx` με isClient): κεφαλίδα, «Τι μπορείς να κάνεις», υπόλοιπο. Χωρίς banner
 // «έγινε», Συνεργείο, Εξοπλισμό, Δελτίο ή Ιστορικό· καμία λίστα υποψηφίων δεν φορτώνει.
-async function ClientFilming({ card }: { card: FilmingCard }) {
+async function ClientFilming({
+  card,
+  done,
+}: {
+  card: FilmingCard;
+  done: DoneKind | null;
+}) {
   const open = await listFilmings("open");
   return (
     <div data-spaces>
       <Others rows={open.ok ? open.data : []} currentId={card.id} />
       <div className="e3">
+        <DoneNotice done={done} card={card} />
         <Header card={card} nowMs={new Date().getTime()} isClient />
         <E3ClientActions card={card} />
         <ClientBalance card={card} />
@@ -519,9 +545,11 @@ async function ClientFilming({ card }: { card: FilmingCard }) {
 export async function SpacesFilming({
   id,
   equipment,
+  done,
 }: {
   id: string | null;
   equipment: E3EquipmentSource;
+  done?: string;
 }) {
   const viewer = await getViewer();
   const caps = filmingCaps(viewer);
@@ -536,7 +564,8 @@ export async function SpacesFilming({
     );
   if (filming.data === null) return <Missing />;
   const card = filming.data;
-  if (isClientViewer(viewer)) return <ClientFilming card={card} />;
+  if (isClientViewer(viewer))
+    return <ClientFilming card={card} done={doneOf(done)} />;
   const tools = await loadTools(card, caps.canBook, equipment);
   if (tools.isBroken)
     return (
@@ -577,6 +606,7 @@ export async function SpacesFilming({
     <div data-spaces>
       <Others rows={tools.open} currentId={card.id} />
       <div className="e3">
+        <DoneNotice done={doneOf(done)} card={card} />
         {needsOutcome(asListItem(card), nowMs) && (
           <section className="card e3-banner" role="status">
             <strong>Τελείωσε και δεν σημειώθηκε.</strong> Σημείωσε «έγινε» ή

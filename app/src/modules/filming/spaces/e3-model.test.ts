@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 
 import {
   balanceOf,
+  doneMessage,
   emptyCrewNote,
   fmtDay,
   hoursLabel,
@@ -102,4 +103,19 @@ test("οι Σημειώσεις δείχνουν μόνο όσες υπάρχο�
       cancelledReason: null,
     }),
   ).toEqual([]);
+});
+
+test("το μήνυμα μετά από κράτηση ή μετάθεση λέει αν μπήκε σε έγκριση", () => {
+  expect(doneMessage("booked", { state: "pending", hasPendingReschedule: false })).toBe(
+    "Η κράτηση στάλθηκε για έγκριση.",
+  );
+  expect(doneMessage("booked", { state: "scheduled", hasPendingReschedule: false })).toBe(
+    "Η κράτηση επιβεβαιώθηκε.",
+  );
+  expect(doneMessage("rescheduled", { state: "scheduled", hasPendingReschedule: true })).toBe(
+    "Η μετάθεση στάλθηκε για έγκριση.",
+  );
+  expect(doneMessage("rescheduled", { state: "scheduled", hasPendingReschedule: false })).toBe(
+    "Η μετάθεση έγινε.",
+  );
 });

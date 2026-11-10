@@ -120,3 +120,20 @@ export const responseTone = (response: string): BadgeTone | undefined =>
     : response === "δεν μπορώ"
       ? "attention"
       : "waiting";
+
+// Το «done» της διεύθυνσης μετά από κράτηση ή μετάθεση (`?done=`): τι έγινε, και αν μπήκε σε έγκριση.
+export const DONE_KINDS = ["booked", "rescheduled"] as const;
+export type DoneKind = (typeof DONE_KINDS)[number];
+
+export const doneMessage = (
+  done: DoneKind,
+  card: { state: FilmingState; hasPendingReschedule: boolean },
+): string => {
+  if (done === "booked")
+    return card.state === "pending"
+      ? "Η κράτηση στάλθηκε για έγκριση."
+      : "Η κράτηση επιβεβαιώθηκε.";
+  return card.hasPendingReschedule
+    ? "Η μετάθεση στάλθηκε για έγκριση."
+    : "Η μετάθεση έγινε.";
+};
