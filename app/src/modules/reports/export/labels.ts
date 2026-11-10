@@ -1,15 +1,8 @@
 // Ελληνικά κείμενα της Εξαγωγής (M2, Ργ #200) και του Πακέτου λογιστή (Ρδ #201), όπως στο prototype.
 
 export const EXPORT_TITLE = "Εξαγωγή δεδομένων";
-export const EXPORT_EYEBROW = "M2 · Εξαγωγή";
-export const EXPORT_LINK = "Εξαγωγή δεδομένων (M2)";
-export const EXPORT_LINK_NOTE = "Ό,τι δεν δείχνει μια Αναφορά βγαίνει σε Excel ή CSV από την";
-export const REPORTS_LINK_NOTE = "Οι έτοιμες Αναφορές είναι στις";
-export const REPORTS_LINK = "Αναφορές (M1)";
 
 export const EXPORT_NO_ACCESS = "Την Εξαγωγή την κάνουν όσοι έχουν «Εξάγει δεδομένα».";
-export const EXPORT_LOAD_ERROR_TITLE = "Δεν φόρτωσε η Εξαγωγή";
-export const EXPORT_LOAD_ERROR_TEXT = "Δεν χάθηκε τίποτα. Ξαναδοκίμασε σε λίγο.";
 export const NO_DATASETS_TITLE = "Κανένα σύνολο δεδομένων για σένα";
 export const NO_DATASETS_TEXT =
   "Ένα σύνολο εξάγεται μόνο αν βλέπεις την πηγή του: τα οικονομικά με «Βλέπει Οικονομικά», οι Πελάτες και οι Συμφωνίες με τα δικά τους «Βλέπει».";
@@ -44,7 +37,6 @@ export const FORMATS = {
 export const EXPORT_BUTTON = "Εξαγωγή";
 export const EXPORTING = "Ετοιμάζεται…";
 export const EXPORT_FAILED = "Η εξαγωγή δεν έγινε. Δοκίμασε ξανά.";
-export const REPORT_EXPORT_LABEL = "Εξαγωγή όπως φαίνεται:";
 export const AUDIT_EXPORT_LABEL = "Εξαγωγή με αυτά τα φίλτρα:";
 export const AUDIT_EXPORT_NOTE =
   "Μόνο όσα βλέπεις, με τα ίδια κρυφά ποσά και κόστος. Η εξαγωγή γράφεται κι αυτή στο Ίχνος.";
@@ -52,24 +44,14 @@ export const AUDIT_TRUNCATED =
   "Το αρχείο έχει τις 10.000 πιο πρόσφατες γραμμές. Για τις παλαιότερες, στένεψε τα φίλτρα.";
 export const AUDIT_DATASET_NOTE = "Για φίλτρα (πρόσωπο, περιοχή, στοιχείο, περίοδος), εξαγωγή από το";
 
-export const PACK_SECTION = "Πακέτο λογιστή";
-export const PACK_MONTH = "Μήνας";
-export const PACK_TEXT =
-  "Ένα Excel με δύο φύλλα (Τιμολόγια, Εισπράξεις) και τα PDF των Τιμολογίων του μήνα, σε ένα .zip.";
-export const PACK_PARTIAL = "Ο μήνας δεν έχει κλείσει ακόμα· το πακέτο έχει ό,τι υπάρχει ως σήμερα.";
-export const PACK_BUTTON = "Λήψη πακέτου (.zip)";
-export const PACK_WORKING = "Ετοιμάζεται το πακέτο…";
 export const PACK_DONE = (pdfs: number, missing: number): string =>
   missing === 0
     ? `Έτοιμο: ${pdfs} PDF μέσα στο πακέτο.`
     : `Έτοιμο: ${pdfs} PDF μέσα στο πακέτο· ${missing} Τιμολόγια χωρίς PDF, γραμμένα στο ΔΙΑΒΑΣΕ.txt.`;
 export const PACK_NO_PDFS_NOTE = "Χωρίς «Βλέπει ποσά» το πακέτο δεν έχει ποσά ούτε PDF.";
 
-export const HISTORY_SECTION = "Ιστορικό εξαγωγών";
 export const HISTORY_OWN_NOTE = "Βλέπεις μόνο τις δικές σου εξαγωγές.";
 export const HISTORY_EMPTY = "Δεν έχει γίνει καμία εξαγωγή ακόμα.";
-export const HISTORY_COLUMNS = { at: "Πότε", by: "Ποιος", what: "Τι", rows: "Γραμμές" } as const;
-export const HISTORY_ERROR = "Δεν φόρτωσε το Ιστορικό εξαγωγών.";
 
 // Τα ονόματα μέσα στο Πακέτο λογιστή.
 export const PACK_FOLDER = "Πακέτο λογιστή";

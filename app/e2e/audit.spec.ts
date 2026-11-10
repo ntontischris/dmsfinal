@@ -1,8 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { card, clientIdByName, project, signIn } from "./sales-parts";
+import { clientIdByName, project, signIn } from "./sales-parts";
 import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
 
 // Υγεία Pα (#214): Ίχνος ενεργειών (P1). Φίλτρα και chips στη διεύθυνση, «κρυφό ποσό» για Διαχείριση χωρίς «Βλέπει ποσά»,
 // «Ιστορικό αλλαγών» από τη σελίδα Πελάτη, εξαγωγή, άρνηση για τις Πωλήσεις. Οι γραμμές του Ίχνους τις γράφει το seed
@@ -10,35 +9,25 @@ import { useSpacesLook } from "./walkthrough/spaces";
 test.describe.configure({ mode: "serial", retries: 0 });
 
 const AUDIT_PATH = "/app/audit";
-// Οι καρτέλες του Χώρου «Εταιρεία», όπου το Ίχνος είναι η καρτέλα «Ίχνος».
-const companyTabs = (page: Page) =>
-  page.getByRole("navigation", { name: "Εταιρεία" });
+const nav = (page: Page) => page.getByRole("navigation", { name: "Οθόνες" });
 const chips = (page: Page) => page.getByRole("list", { name: "Ενεργά φίλτρα" });
-const auditRows = (page: Page) => page.locator("li.part-row");
-
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
 
 test("ο Ιδιοκτήτης φιλτράρει το Ίχνος και τα φίλτρα μένουν στη διεύθυνση", async ({
   page,
 }) => {
   test.setTimeout(90_000);
   await signIn(page, "owner@example.com");
-  await page.goto("/app/team");
-  await companyTabs(page)
-    .getByRole("link", { name: "Ίχνος", exact: true })
-    .click();
+  await nav(page).getByRole("link", { name: "Ίχνος ενεργειών" }).click();
   await expect(page).toHaveURL(new RegExp(`${AUDIT_PATH}$`));
   await expect(
-    companyTabs(page).getByRole("link", { name: "Ίχνος", exact: true }),
-  ).toHaveAttribute("aria-current", "page");
-  await expect(
-    page.getByRole("heading", { name: "Ίχνος ενεργειών" }),
+    page.getByRole("heading", { level: 1, name: "Ίχνος ενεργειών" }),
   ).toBeVisible();
-  await expect(auditRows(page).first()).toBeVisible();
+  await expect(page.locator("table")).toBeVisible();
 
-  await page.getByRole("main").getByRole("link", { name: "30 μέρες" }).click();
+  await page
+    .getByRole("navigation", { name: "Περίοδος" })
+    .getByRole("link", { name: "30 μέρες" })
+    .click();
   await expect(page).toHaveURL(/period=30d/);
   await page.getByLabel("Περιοχή").selectOption({ label: "Κατάλογος" });
   await page.getByRole("button", { name: "Εφαρμογή" }).click();
@@ -47,7 +36,7 @@ test("ο Ιδιοκτήτης φιλτράρει το Ίχνος και τα φ�
   await expect(chips(page)).toContainText("Περιοχή: Κατάλογος");
   await expect(chips(page)).toContainText("Περίοδος: 30 μέρες");
   await expect(
-    auditRows(page).locator(".part-sub", { hasText: "Κατάλογος" }).first(),
+    page.locator("td[data-label='Περιοχή']", { hasText: "Κατάλογος" }).first(),
   ).toBeVisible();
 
   // Ο σελιδοδείκτης ξανανοίγει την ίδια εικόνα.
@@ -120,16 +109,7 @@ test("το «Ιστορικό αλλαγών» του Πελάτη ανοίγε�
   const clientId = await clientIdByName(name);
   await signIn(page, "owner@example.com");
   await page.goto(`/app/clients/${clientId}`);
-  // Το «Ιστορικό αλλαγών» ζει στο «⋯» της κεφαλίδας του Πελάτη.
-  const menu = page.locator("details", {
-    has: page.locator('summary[aria-label="Περισσότερες ενέργειες"]'),
-  });
-  await expect(async () => {
-    if ((await menu.getAttribute("open")) === null)
-      await menu.locator("summary").click();
-    await expect(menu).toHaveAttribute("open", "", { timeout: 1_000 });
-  }).toPass();
-  await menu.getByRole("link", { name: "Ιστορικό αλλαγών" }).click();
+  await page.getByRole("link", { name: "Ιστορικό αλλαγών" }).click();
   await expect(page).toHaveURL(
     new RegExp(`${AUDIT_PATH}\\?entity=clients&id=${clientId}$`),
   );
@@ -152,12 +132,15 @@ test("ο Ιδιοκτήτης εξάγει το Ίχνος με τα φίλτρ�
   );
 
   await page.goto("/app/reports/export?dataset=audit");
+  // Η M2 (Χώροι): η κάρτα «Σύνολο δεδομένων» δείχνει το Ίχνος ενεργειών.
   await expect(
     page
-      .getByRole("group", { name: "Σύνολο δεδομένων" })
+      .locator("details.kit-fb-card", { hasText: "Σύνολο δεδομένων" })
       .locator(".kit-fb-chip"),
   ).toHaveText("Ίχνος ενεργειών");
-  const history = card(page, "Ιστορικό εξαγωγών");
+  const history = page
+    .getByRole("heading", { name: "Ιστορικό εξαγωγών" })
+    .locator("xpath=ancestor::section[1]");
   await expect(
     history.getByText("Ίχνος ενεργειών · Excel").first(),
   ).toBeVisible();
@@ -166,14 +149,11 @@ test("ο Ιδιοκτήτης εξάγει το Ίχνος με τα φίλτρ�
 test("οι Πωλήσεις δεν βλέπουν το Ίχνος", async ({ page }) => {
   await signIn(page, "sales@example.com");
   await expect(
-    page.getByRole("link", { name: "Ίχνος", exact: true }),
+    nav(page).getByRole("link", { name: "Ίχνος ενεργειών" }),
   ).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Ίχνος ενεργειών" })).toHaveCount(
-    0,
-  );
   await page.goto(AUDIT_PATH);
   await expect(
     page.getByRole("heading", { name: "Χωρίς δικαίωμα" }),
   ).toBeVisible();
-  await expect(auditRows(page)).toHaveCount(0);
+  await expect(page.locator("table")).toHaveCount(0);
 });

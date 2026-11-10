@@ -1,17 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
 
-import { clientIdByName, project, signIn } from "./sales-parts";
-import { useSpacesLook } from "./walkthrough/spaces";
+import { card, clientIdByName, project, signIn } from "./sales-parts";
 
-// Σήμερα Σδ (#183) στη νέα εμφάνιση (Χώροι): ένα ληξιπρόθεσμο Τιμολόγιο φαίνεται στα «Χρήματα» της Σήμερα (οφειλέτης και
-// ποσό), και το «Όλα τα τιμολόγια →» πηγαίνει στην I2 με το φίλτρο. Δικός του Πελάτης ανά project και στιγμή (service role,
-// μόνο για τα δεδομένα). Σειριακά, χωρίς retries.
+// Σήμερα Σδ (#183): ένα ληξιπρόθεσμο Τιμολόγιο φαίνεται στην κάρτα «Ληξιπρόθεσμα Τιμολόγια» της Σήμερα, και το
+// «Άνοιγμα →» πηγαίνει στην I2 με το φίλτρο. Δικός του Πελάτης ανά project και στιγμή (service role, μόνο για τα δεδομένα).
+// Σειριακά, χωρίς retries.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test.beforeEach(async ({ context }) => {
-  await useSpacesLook(context);
-});
+const OVERDUE = "Ληξιπρόθεσμα Τιμολόγια";
+const WEEK = "Γυρίσματα των επόμενων 7 ημερών";
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -23,13 +21,12 @@ function serviceClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-// Τα «Χρήματα» δείχνουν τους 3 μεγαλύτερους οφειλέτες: ποσό πολύ πάνω από κάθε οφειλή του seed, ώστε ο Πελάτης να είναι εκεί.
-// Λήξη πριν από χρόνια, διαφορετική ανά project.
+// Πελάτης με ένα Τιμολόγιο που έληξε πριν από χρόνια, ώστε να είναι στα 3 πρώτα της κάρτας (παλαιότερη λήξη πρώτη).
+// Διαφορετική λήξη ανά project, ώστε τα δύο projects να μη μοιράζονται θέση.
 const DUE_DATE: Readonly<Record<string, string>> = {
   desktop: "2000-01-10",
   mobile: "2000-01-20",
 };
-const TOTAL_EUROS = /4\.960\.000\s€/;
 
 async function seedOverdueInvoice(
   clientName: string,
@@ -49,15 +46,15 @@ async function seedOverdueInvoice(
     number,
     issue_date: "2000-01-01",
     due_date: DUE_DATE[project()] ?? "2000-01-30",
-    net: 4_000_000,
-    vat: 960_000,
-    total: 4_960_000,
+    net: 100,
+    vat: 24,
+    total: 124,
     pdf_path: `e2e-today/${number}.pdf`,
   });
   if (error) throw error;
 }
 
-test("ο Ιδιοκτήτης βλέπει το ληξιπρόθεσμο στη Σήμερα και το «Όλα τα τιμολόγια →» τον πάει στα ληξιπρόθεσμα", async ({
+test("ο Ιδιοκτήτης βλέπει το ληξιπρόθεσμο στη Σήμερα και το «Άνοιγμα →» τον πάει στα ληξιπρόθεσμα", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -69,22 +66,21 @@ test("ο Ιδιοκτήτης βλέπει το ληξιπρόθεσμο στη 
   await expect(
     page.getByRole("heading", { level: 1, name: "Σήμερα" }),
   ).toBeVisible();
-  await expect(
-    page.locator("[data-part='programme']").getByRole("heading", {
-      name: "Το πρόγραμμα",
-    }),
-  ).toBeVisible();
+  await expect(card(page, WEEK)).toBeVisible();
 
-  const money = page.locator("[data-part='money']");
-  const debtor = money.getByRole("listitem").filter({ hasText: clientName });
-  await expect(debtor).toContainText(/έληξε πριν από \d+ ημέρες/);
-  await expect(debtor).toContainText(TOTAL_EUROS);
+  const overdue = card(page, OVERDUE);
+  await expect(overdue).toContainText(`${clientName}, ${number}`);
+  await expect(overdue).toContainText("επείγον");
+  await expect(overdue).toContainText("124,00");
 
-  await money.getByRole("link", { name: "Όλα τα τιμολόγια →" }).click();
+  await overdue.getByRole("link", { name: "Άνοιγμα →" }).click();
   await expect(page).toHaveURL(/\/app\/finance\/invoices\?filter=overdue$/);
+  // Η I2 (Χώροι): η κάρτα «Κατάσταση» των φίλτρων δείχνει τα ληξιπρόθεσμα.
   await expect(
-    page.getByRole("heading", { level: 1, name: "Χρήματα" }),
-  ).toBeVisible();
+    page
+      .locator("details.kit-fb-card", { hasText: "Κατάσταση" })
+      .locator(".kit-fb-chip"),
+  ).toHaveText(/^ληξιπρόθεσμα/);
   await expect(page.locator("tr", { hasText: number })).toContainText(
     "ληξιπρόθεσμο",
   );
