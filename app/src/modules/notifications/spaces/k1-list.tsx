@@ -15,6 +15,7 @@ const ONLY_LABELS: readonly { id: OnlyFilter | undefined; label: string }[] = [
   { id: "active", label: "Με ενεργούς" },
   { id: "client", label: "Προς πελάτη" },
   { id: "off", label: "Όλοι σβηστοί" },
+  { id: "wired", label: "Μόνο συνδεδεμένα" },
 ];
 
 interface FiltersProps {

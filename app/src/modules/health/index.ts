@@ -12,5 +12,4 @@ export {
   HEALTH_TITLE,
 } from "./labels";
 export type { HealthView } from "./schemas";
-export { HealthScreen } from "./components/health-screen";
 export { SpacesHealth } from "./spaces/p2-screen";

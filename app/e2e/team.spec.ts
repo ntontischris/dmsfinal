@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-import { field, listItem, signIn } from "./sales-parts";
+import { card, field, listItem, signIn } from "./sales-parts";
 import {
   assignmentsOf,
   clientWithUsers,
@@ -12,12 +12,20 @@ import {
   unique,
   uniqueEmail,
 } from "./team-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ομάδα Να (#207): απενεργοποίηση με προεπισκόπηση, Επανενεργοποίηση από την πρόσκληση, Ρόλος σε δύο βήματα και
 // Συνάδελφοι (N3). Φανταστικά στοιχεία· τα δεδομένα στήνονται με το service role, οι ενέργειες γίνονται από την οθόνη.
 
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
+
+// Η φόρμα «Πρόσκληση Χρήστη» της Ομάδας (N1): οι ετικέτες δείχνουν τα πεδία με htmlFor.
+const inviteForm = (page: Page) => page.locator("#n1-invite");
 
 test("η απενεργοποίηση δείχνει ονομαστικά τι επιστρέφει και μετά το επιστρέφει", async ({
   page,
@@ -33,10 +41,9 @@ test("η απενεργοποίηση δείχνει ονομαστικά τι �
 
   await signIn(page, "owner@example.com");
   await page.goto(`/app/team/${userId}`);
-  await page
-    .getByRole("button", { name: "Απενεργοποίηση", exact: true })
-    .click();
-  const dialog = page.getByRole("alertdialog");
+  await page.getByRole("link", { name: "Απενεργοποίηση", exact: true }).click();
+  await expect(page).toHaveURL(/\?confirm=deactivate$/);
+  const dialog = card(page, `Απενεργοποίηση: ${name}`).last();
   await expect(dialog).toContainText("1 Παραγωγή → χωρίς Υπεύθυνο");
   await expect(dialog).toContainText(title);
   await expect(dialog).toContainText("1 Εργασία → χωρίς ανάθεση");
@@ -45,15 +52,18 @@ test("η απενεργοποίηση δείχνει ονομαστικά τι �
     "1 θέση σε Συνεργείο μελλοντικού Γυρίσματος",
   );
   await dialog.getByRole("button", { name: "Ναι, απενεργοποίηση" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "Ο Χρήστης απενεργοποιήθηκε",
-  );
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: /Ο Χρήστης (απενεργοποιήθηκε|είναι απενεργοποιημένος)/ }),
+  ).toBeVisible();
 
   expect(await isTeamUserActive(userId)).toBe(false);
   expect(await productionOwner(productionId)).toBeNull();
   await page.goto(`/app/filming/${filmingId}`);
-  await expect(page.getByText("άδειασε θέση", { exact: true })).toBeVisible();
-  await expect(page.getByText(`${name} απενεργοποιήθηκε`)).toBeVisible();
+  await expect(
+    page.getByText(`Άδειασε θέση: ${name} απενεργοποιήθηκε`),
+  ).toBeVisible();
 });
 
 test("η Διαχείριση δεν απενεργοποιεί τον Ιδιοκτήτη: η προεπισκόπηση λέει γιατί", async ({
@@ -65,8 +75,12 @@ test("η Διαχείριση δεν απενεργοποιεί τον Ιδιο�
   await expect(
     page.getByText("Τον Ιδιοκτήτη τον απενεργοποιεί μόνο Ιδιοκτήτης."),
   ).toBeVisible();
+  // Στη νέα εμφάνιση το κουμπί μένει, κλειδωμένο· δεν υπάρχει σύνδεσμος προς την επιβεβαίωση.
   await expect(
     page.getByRole("button", { name: "Απενεργοποίηση", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("link", { name: "Απενεργοποίηση", exact: true }),
   ).toHaveCount(0);
 });
 
@@ -84,11 +98,12 @@ test("email απενεργοποιημένου Χρήστη στην πρόσκ�
 
   await signIn(page, "owner@example.com");
   await page.goto("/app/team");
-  await field(page, "Ονοματεπώνυμο").fill(name);
-  await field(page, "Email").fill(email);
-  await page.getByLabel("Πωλήσεις", { exact: true }).check();
-  await page.getByRole("button", { name: "Πρόσκληση", exact: true }).click();
-  const offer = page
+  const form = inviteForm(page);
+  await form.getByLabel("Ονοματεπώνυμο", { exact: true }).fill(name);
+  await form.getByLabel("Email", { exact: true }).fill(email);
+  await form.getByLabel("Ρόλος Πωλήσεις", { exact: true }).check();
+  await form.getByRole("button", { name: "Αποστολή πρόσκλησης" }).click();
+  const offer = form
     .getByRole("alert")
     .filter({ hasText: "έχει απενεργοποιηθεί" });
   await expect(offer).toContainText(name);
@@ -97,7 +112,10 @@ test("email απενεργοποιημένου Χρήστη στην πρόσκ�
     "Ο Χρήστης επανενεργοποιήθηκε",
   );
   expect(await isTeamUserActive(userId)).toBe(true);
-  await expect(listItem(page, email)).toHaveCount(0);
+  // Δεν φτιάχτηκε πρόσκληση: το email δεν είναι στις Προσκλήσεις (ο Χρήστης φαίνεται στη λίστα των Χρηστών).
+  await expect(
+    listItem(card(page, "Προσκλήσεις σε εκκρεμότητα").last(), email),
+  ).toHaveCount(0);
 });
 
 test("η αποθήκευση Ρόλου δείχνει πρώτα ποιους επηρεάζει και αποθηκεύει μετά την επιβεβαίωση", async ({
@@ -118,18 +136,16 @@ test("η αποθήκευση Ρόλου δείχνει πρώτα ποιους 
     .getByLabel("Όλα")
     .check();
   await page.getByRole("button", { name: "Αποθήκευση", exact: true }).click();
-  const confirm = page.getByRole("alertdialog", {
-    name: "Επιβεβαίωση αποθήκευσης",
-  });
+  const confirm = page.getByRole("alertdialog", { name: "Προεπισκόπηση" });
   await expect(confirm).toContainText(`Επηρεάζει: ${holder}.`);
   expect(await grantCount(roleId)).toBe(0);
 
   await confirm
     .getByRole("button", { name: "Επιβεβαίωση αποθήκευσης" })
     .click();
-  await expect(page.getByRole("status")).toContainText(
-    "Αποθηκεύτηκε (1 αλλαγή)",
-  );
+  await expect(
+    page.getByRole("status").filter({ hasText: "Αποθηκεύτηκε (1 αλλαγή)" }),
+  ).toBeVisible();
   expect(await grantCount(roleId)).toBe(1);
 });
 
@@ -161,11 +177,11 @@ test("ο πελάτης προσκαλεί, επαναστέλνει, ακυρώ
   ]) {
     await field(page, "Ονοματεπώνυμο").fill(who);
     await field(page, "Email").fill(address);
-    await page.getByRole("button", { name: "Πρόσκληση Χρήστη πελάτη" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      "Η πρόσκληση στάλθηκε",
-    );
-    await expect(listItem(page, address)).toContainText("Εκκρεμεί");
+    await page.getByRole("button", { name: "Αποστολή πρόσκλησης" }).click();
+    await expect(
+      page.getByRole("status").filter({ hasText: "Η πρόσκληση στάλθηκε" }),
+    ).toBeVisible();
+    await expect(listItem(page, address)).toContainText("εκκρεμεί");
   }
 
   await listItem(page, resendEmail)

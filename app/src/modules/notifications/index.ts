@@ -45,7 +45,6 @@ export {
   SENDS_TITLE,
 } from "./sends-labels";
 export { getSends } from "./queries-sends";
-export { SendsScreen } from "./components/sends-screen";
 export { ClientSends } from "./components/client-sends";
 export { SpacesClientSends } from "./spaces/b2-sends";
 export {
@@ -85,15 +84,6 @@ export {
   getPrefs,
   getSystemMessages,
 } from "./queries-automations";
-export { AutomationsCatalog } from "./components/automations-catalog";
-export { EventScreen } from "./components/event-screen";
-export {
-  AutomationsSubnav,
-  SystemMessageBadges,
-  SystemMessageList,
-  editedLine,
-} from "./components/system-messages-screen";
-export { SystemMessageEditor } from "./components/system-message-editor";
 export { NotificationsTabs, PrefsTab } from "./components/prefs-tab";
 
 // Νέα εμφάνιση (Χώροι): K1, K2, K3 όπως στο prototype.

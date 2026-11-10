@@ -12,6 +12,7 @@ import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { SYSTEM_MESSAGES_PATH } from "../automation-labels";
 import type { SystemMessage } from "../automation-view-schema";
 import { getSystemMessages } from "../queries-automations";
+import { KSubnav } from "./k-subnav";
 import { SystemMessageEditor } from "./k2-editor";
 import { whenEdited } from "./k2-model";
 
@@ -20,6 +21,7 @@ import "./k2.css";
 function Frame({ children }: { children: ReactNode }) {
   return (
     <div data-spaces>
+      <KSubnav current="system" />
       {children}
       <p className="note">
         Οι αυτόματες ειδοποιήσεις προς Χρήστες ρυθμίζονται στους{" "}

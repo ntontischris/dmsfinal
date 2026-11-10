@@ -4,8 +4,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { strFromU8, unzipSync } from "fflate";
 import { z } from "zod";
 
-import { field, listItem, signIn } from "./sales-parts";
+import { listItem, signIn } from "./sales-parts";
 import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
+import { useSpacesLook } from "./walkthrough/spaces";
 
 // Ομάδα Νβ (#208): Αιτήματα GDPR. Καταγραφή, προθεσμία και κλείσιμο, εξαγωγή Πελάτη (περιεχόμενα του ZIP),
 // ανωνυμοποίηση με πληκτρολόγηση ονόματος, άρνηση για τη Διαχείριση. Φανταστικά στοιχεία· τα δεδομένα στήνονται με το
@@ -13,6 +14,10 @@ import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
 
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
+
+test.beforeEach(async ({ context }) => {
+  await useSpacesLook(context);
+});
 
 const PASSWORD = "e2e-password-123";
 const GDPR = "/app/team/gdpr";
@@ -94,7 +99,10 @@ const panelOf = (page: Page, title: string) =>
     .getByRole("heading", { name: title, exact: true })
     .locator("xpath=ancestor::section[1]");
 
-const gdprPanel = (page: Page) => panelOf(page, "GDPR · μόνο ο Ιδιοκτήτης");
+const gdprPanel = (page: Page) => panelOf(page, "GDPR (μόνο Ιδιοκτήτης)");
+
+// Το GDPR του Πελάτη είναι στην καρτέλα «users» της Σελίδας Πελάτη (με τους Χρήστες πελάτη).
+const clientUsersTab = (clientId: string) => `/app/clients/${clientId}?tab=users`;
 
 test("ο Ιδιοκτήτης καταγράφει αίτημα, βλέπει την προθεσμία και στο Σήμερα, και το κλείνει", async ({
   page,
@@ -105,26 +113,32 @@ test("ο Ιδιοκτήτης καταγράφει αίτημα, βλέπει τ
   await signIn(page, "owner@example.com");
   await page.goto(GDPR);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Αιτήματα GDPR" }),
+    page.getByRole("heading", { name: "Αιτήματα GDPR", exact: true }),
   ).toBeVisible();
-  await field(page, "Είδος").selectOption("export");
-  await field(page, "Ποιον αφορά").selectOption({
+  await page.getByLabel("Είδος", { exact: true }).selectOption("export");
+  await page.getByLabel("Ποιον αφορά", { exact: true }).selectOption({
     label: `Πελάτης: ${clientName}`,
   });
   await page.getByRole("button", { name: "Καταγραφή αιτήματος" }).click();
-  await expect(page.getByRole("status")).toContainText("Το αίτημα καταγράφηκε");
+  await expect(
+    page.getByRole("status").filter({ hasText: "Το αίτημα καταγράφηκε" }),
+  ).toBeVisible();
 
   // Λήψη σήμερα → προθεσμία σε έναν μήνα: 28 έως 31 μέρες, όποιος κι αν είναι ο μήνας.
   const row = listItem(page, `Εξαγωγή: ${clientName}`);
   await expect(row).toContainText(/λήγει σε (28|29|30|31) μέρες/);
 
+  // Στη Σήμερα οι προθεσμίες GDPR είναι αποφάσεις του «Μόνο εσύ μπορείς». Φαίνονται οι 5 σημαντικότερες· όταν το
+  // αίτημα δεν χωρά σε αυτές, μετρά στο «Και N ακόμα».
   await page.goto("/app");
-  const card = panelOf(page, "GDPR με προθεσμία");
-  await expect(card).toBeVisible();
-  await expect(card.getByRole("link", { name: "Άνοιγμα →" })).toHaveAttribute(
-    "href",
-    GDPR,
-  );
+  const decisions = page.locator("[data-part='decisions']");
+  const open = decisions.getByRole("link", {
+    name: `Άνοιξε: Εξαγωγή: ${clientName}`,
+  });
+  const more = decisions.getByRole("link", { name: /^Και \d+ ακόμα/ });
+  await expect(open.or(more).first()).toBeVisible();
+  if ((await open.count()) > 0)
+    await expect(open).toHaveAttribute("href", GDPR);
 
   await page.goto(GDPR);
   await row.getByRole("button", { name: "Ολοκλήρωση" }).click();
@@ -142,10 +156,10 @@ test("η εξαγωγή Πελάτη κατεβάζει ZIP με JSON και CSV
   await seedMessages(clientId, publicBody, internalBody);
 
   await signIn(page, "owner@example.com");
-  await page.goto(`/app/clients/${clientId}`);
+  await page.goto(clientUsersTab(clientId));
   const panel = gdprPanel(page);
   await expect(
-    panel.getByRole("heading", { name: "Εξαγωγή δεδομένων Πελάτη" }),
+    panel.getByRole("button", { name: "Εξαγωγή δεδομένων Πελάτη" }),
   ).toBeVisible();
   const download = page.waitForEvent("download");
   await panel.getByRole("button", { name: "Εξαγωγή δεδομένων Πελάτη" }).click();
@@ -188,12 +202,9 @@ test("η ανωνυμοποίηση θέλει το όνομα γραμμένο 
   await signIn(page, "owner@example.com");
   await page.goto(`/app/team/${userId}`);
   const panel = gdprPanel(page);
-  await panel
-    .getByRole("button", { name: "Ανωνυμοποίηση", exact: true })
-    .click();
-  const dialog = page.getByRole("alertdialog", {
-    name: `Ανωνυμοποίηση: ${name}`,
-  });
+  await panel.getByRole("link", { name: "Ανωνυμοποίηση", exact: true }).click();
+  await expect(page).toHaveURL(/\?confirm=anonymize$/);
+  const dialog = panelOf(page, `Ανωνυμοποίηση: ${name}`);
   const confirm = dialog.getByRole("button", {
     name: "Ανωνυμοποίηση οριστικά",
   });
@@ -201,25 +212,28 @@ test("η ανωνυμοποίηση θέλει το όνομα γραμμένο 
   await expect(confirm).toBeDisabled();
   await dialog.getByRole("textbox").fill(name);
   await confirm.click();
-  // Η σελίδα ξαναφορτώνει από τη βάση: το πάνελ λέει πια ότι έγινε.
-  await expect(panel).toContainText("Έχει ήδη ανωνυμοποιηθεί.");
+  // Η σελίδα ξαναφορτώνει από τη βάση: η επιβεβαίωση λέει πια ότι έγινε, και το πάνελ του Χρήστη το ίδιο.
+  await page.getByRole("link", { name: "Πίσω στον Χρήστη" }).click();
+  await expect(gdprPanel(page)).toContainText("Έχει ήδη ανωνυμοποιηθεί.");
 
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Ανωνυμοποιημένος Χρήστης",
-  );
+  await expect(
+    page.getByRole("heading", { name: /Ανωνυμοποιημένος Χρήστης/ }).first(),
+  ).toBeVisible();
   await expect(page.getByText(name)).toHaveCount(0);
   await expect(gdprPanel(page)).toContainText("Έχει ήδη ανωνυμοποιηθεί.");
   const { data } = await serviceClient().auth.admin.getUserById(userId);
   expect(data.user?.email).toMatch(/^anonymized-\d+@anonymized\.invalid$/);
 
-  const other = await browser.newPage();
+  const otherContext = await browser.newContext();
+  await useSpacesLook(otherContext);
+  const other = await otherContext.newPage();
   await other.goto("/login");
   await other.getByLabel("Email", { exact: true }).fill(email);
   await other.getByLabel("Κωδικός").fill(PASSWORD);
   await other.getByRole("button", { name: "Είσοδος" }).click();
   await expect(other.getByText("Λάθος email ή κωδικός.")).toBeVisible();
-  await other.close();
+  await otherContext.close();
 });
 
 test("η Διαχείριση δεν βλέπει τίποτα από τα GDPR", async ({ page }) => {
@@ -237,15 +251,16 @@ test("η Διαχείριση δεν βλέπει τίποτα από τα GDPR"
   await expect(
     page.getByRole("heading", { name: "Χωρίς δικαίωμα" }),
   ).toBeVisible();
-  await expect(page.getByText("Μητρώο αιτημάτων")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Αιτήματα GDPR", exact: true }),
+  ).toHaveCount(0);
   await page.goto(`/app/team/${userId}`);
-  await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
+  await expect(page.getByRole("heading", { name }).first()).toBeVisible();
   await expect(gdprPanel(page)).toHaveCount(0);
-  await page.goto(`/app/clients/${clientId}`);
+  await page.goto(clientUsersTab(clientId));
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(gdprPanel(page)).toHaveCount(0);
+  // Καμία προθεσμία GDPR στη Σήμερα: κανένας σύνδεσμος προς τα Αιτήματα.
   await page.goto("/app");
-  await expect(
-    page.getByRole("heading", { name: "GDPR με προθεσμία" }),
-  ).toHaveCount(0);
+  await expect(page.locator(`a[href="${GDPR}"]`)).toHaveCount(0);
 });

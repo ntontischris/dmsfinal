@@ -146,14 +146,24 @@ function DeactivateConfirm({
   preview: DeactivationPreview | null;
   backHref: string;
 }) {
-  if (!preview || preview.block || !target.isActive)
+  // Μετά το «Ναι» η σελίδα ξαναφορτώνει με τον Χρήστη ανενεργό: εδώ λέμε ότι έγινε, όχι ότι «δεν γίνεται».
+  if (!target.isActive)
+    return (
+      <div className="n1-danger" role="status">
+        <Panel label={`Απενεργοποίηση: ${target.name}`}>
+          <p>Ο Χρήστης είναι απενεργοποιημένος. Δεν έχει πια πρόσβαση.</p>
+          <Link className="button" href={backHref}>
+            Πίσω στον Χρήστη
+          </Link>
+        </Panel>
+      </div>
+    );
+  if (!preview || preview.block)
     return (
       <div className="n1-danger" role="alert">
         <Panel label="Δεν γίνεται η Απενεργοποίηση">
           {preview?.block ? (
             <p>{BLOCK_TEXT[preview.block]}</p>
-          ) : !target.isActive ? (
-            <p>Ο Χρήστης είναι ήδη απενεργοποιημένος.</p>
           ) : (
             <PreviewMissing />
           )}
@@ -192,6 +202,7 @@ interface UserDetailProps {
   // Τα τμήματα GDPR (μόνο Ιδιοκτήτης): η ενότητα και η επιβεβαίωση ανωνυμοποίησης, από το module gdpr.
   gdprSection: ReactNode;
   gdprConfirm: ReactNode;
+  history?: ReactNode;
 }
 
 export function UserDetail({
@@ -204,12 +215,14 @@ export function UserDetail({
   confirm,
   gdprSection,
   gdprConfirm,
+  history,
 }: UserDetailProps) {
   return (
     <>
       <p>
         <Link href={hrefOf("N1")}>← Όλοι οι Χρήστες ομάδας</Link>
       </p>
+      {history && <div className="btn-row">{history}</div>}
       <Summary target={target} reach={reach} />
       {confirm === "deactivate" && (
         <DeactivateConfirm
