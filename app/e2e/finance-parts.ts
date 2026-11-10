@@ -61,14 +61,13 @@ export async function pickFilter(
 export const startsWith = (text: string): RegExp =>
   new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
 
-// Έξοδος από το μενού προφίλ και είσοδος ως άλλος Χρήστης, στην ίδια εμφάνιση.
+// Αλλαγή Χρήστη στην ίδια εμφάνιση: η συνεδρία σβήνει από τα cookies (στο κινητό το μενού προφίλ το σκεπάζει η κεφαλίδα
+// ενός πάνελ όταν η σελίδα έχει κυλήσει) και ο νέος Χρήστης μπαίνει από την Είσοδο.
 export async function switchUserInSpaces(
   page: Page,
   email: string,
 ): Promise<void> {
-  await page.getByRole("button", { name: /^Προφίλ:/ }).click();
-  await page.getByRole("button", { name: "Έξοδος", exact: true }).click();
-  await page.waitForURL(/\/login/);
+  await page.context().clearCookies();
   await addSpacesCookie(page.context());
   await signIn(page, email);
 }

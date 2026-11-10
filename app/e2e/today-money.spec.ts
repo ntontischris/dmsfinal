@@ -75,9 +75,12 @@ test("ο Ιδιοκτήτης βλέπει το ληξιπρόθεσμο στη 
 
   await overdue.getByRole("link", { name: "Άνοιγμα →" }).click();
   await expect(page).toHaveURL(/\/app\/finance\/invoices\?filter=overdue$/);
+  // Η I2 (Χώροι): η κάρτα «Κατάσταση» των φίλτρων δείχνει τα ληξιπρόθεσμα.
   await expect(
-    page.getByRole("heading", { level: 1, name: "Τιμολόγια" }),
-  ).toBeVisible();
+    page
+      .locator("details.kit-fb-card", { hasText: "Κατάσταση" })
+      .locator(".kit-fb-chip"),
+  ).toHaveText(/^ληξιπρόθεσμα/);
   await expect(page.locator("tr", { hasText: number })).toContainText(
     "ληξιπρόθεσμο",
   );

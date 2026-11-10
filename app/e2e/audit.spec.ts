@@ -132,11 +132,12 @@ test("ο Ιδιοκτήτης εξάγει το Ίχνος με τα φίλτρ�
   );
 
   await page.goto("/app/reports/export?dataset=audit");
+  // Η M2 (Χώροι): η κάρτα «Σύνολο δεδομένων» δείχνει το Ίχνος ενεργειών.
   await expect(
     page
-      .getByRole("navigation", { name: "Τι θέλεις να εξάγεις" })
-      .getByRole("link", { name: "Ίχνος ενεργειών" }),
-  ).toHaveAttribute("aria-current", "true");
+      .locator("details.kit-fb-card", { hasText: "Σύνολο δεδομένων" })
+      .locator(".kit-fb-chip"),
+  ).toHaveText("Ίχνος ενεργειών");
   const history = page
     .getByRole("heading", { name: "Ιστορικό εξαγωγών" })
     .locator("xpath=ancestor::section[1]");
