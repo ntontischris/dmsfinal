@@ -393,7 +393,9 @@ export const NAV: readonly NavSection[] = [
   },
   {
     title: "Σύστημα",
-    items: [{ code: "KIT", label: "Kit", href: "/app/kit", requires: "team" }],
+    // Το Kit είναι κατάλογος components για όποιον στήνει οθόνες: μόνο ο Ιδιοκτήτης. Αλλιώς ο Χώρος «Εταιρεία»
+    // φαινόταν σε κάθε Χρήστη ομάδας μόνο με το Kit, ένα αδιέξοδο.
+    items: [{ code: "KIT", label: "Kit", href: "/app/kit", requires: "owner" }],
   },
 ];
 

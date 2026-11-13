@@ -5,6 +5,7 @@ import { codeOfPath, hrefOf } from "@/spaces/data/screens";
 import {
   landingOf,
   mobileBar,
+  screenCodeOf,
   spaceOf,
   spacesModel,
   tabOf,
@@ -86,7 +87,7 @@ describe("spacesModel: Χώροι από τα Δικαιώματα", () => {
 
   it("κρύβει Χώρους, καρτέλες και ουρές που δεν επιτρέπονται", () => {
     const model = spacesModel(teamWith("clients.view"));
-    expect(labelsOf(model)).toEqual(["Σήμερα", "Πελάτες", "Εταιρεία"]);
+    expect(labelsOf(model)).toEqual(["Σήμερα", "Πελάτες"]);
     expect(space(model, "clients")?.tabs.map((tab) => tab.code)).toEqual([
       "B1",
     ]);
@@ -145,6 +146,15 @@ describe("ποιος Χώρος ανάβει", () => {
     expect(spaceOf(codeOfPath(pathname), model)?.id).toBe(spaceId);
   });
 
+  it("η ίδια διαδρομή είναι J1 για την ομάδα και J3 για τον πελάτη", () => {
+    expect(screenCodeOf("/app/messages", model)).toBe("J1");
+    const client = spacesModel(fullClient);
+    expect(screenCodeOf("/app/messages", client)).toBe("J3");
+    expect(spaceOf(screenCodeOf("/app/messages", client), client)?.id).toBe(
+      "c-messages",
+    );
+  });
+
   it("η Γνώση είναι εργαλείο, δεν ανάβει Χώρο", () => {
     expect(spaceOf(codeOfPath("/app/knowledge"), model)).toBeUndefined();
   });
@@ -153,6 +163,19 @@ describe("ποιος Χώρος ανάβει", () => {
     expect(tabOf("B6")).toBe("B1");
     expect(tabOf("O2")).toBe("O1");
     expect(tabOf("B1")).toBe("B1");
+  });
+});
+
+describe("Χώρος χωρίς τίποτα χρήσιμο", () => {
+  it("η «Εταιρεία» δεν φαίνεται σε Χρήστη ομάδας χωρίς Δικαίωμα σε αυτήν (όχι μόνο με το Kit)", () => {
+    expect(space(spacesModel(teamWith("filming.view")), "company")).toBeUndefined();
+  });
+
+  it("ο Ιδιοκτήτης τη βλέπει, με το Kit στα «Περισσότερα»", () => {
+    const owner = (requirement: string) =>
+      requirement === "team" || requirement === "owner";
+    const company = space(spacesModel(owner), "company");
+    expect(company?.tabs.map((tab) => tab.code)).toEqual(["N4", "O8", "KIT"]);
   });
 });
 

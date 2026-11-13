@@ -64,7 +64,7 @@ test("ο πελάτης γράφει με ετικέτα Παραγωγής, η 
     .first()
     .click();
   await expect(page).toHaveURL(new RegExp(`${MESSAGES_PATH}$`));
-  // Οι καρτέλες της J3 (η κεφαλίδα του Χώρου δεν βγαίνει εδώ: το /app/messages αντιστοιχεί πρώτα στην J1 της ομάδας).
+  // Οι καρτέλες της J3 (ο τίτλος «Μηνύματα» είναι του Χώρου του πελάτη· οι καρτέλες είναι της ίδιας της J3).
   await expect(
     page.getByRole("navigation", { name: "Μηνύματα", exact: true }),
   ).toBeVisible();

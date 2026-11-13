@@ -70,7 +70,9 @@
 @media (max-width: 48rem) {
   /* Στο κινητό η πάνω μπάρα κυλά μαζί με τη σελίδα: δεν κρύβει τίτλους ούτε το στοιχείο με εστίαση.
      Οι Χώροι και το «Σήμερα» μένουν πάντα στο κάτω μενού, οπότε το μονόγραμμα φεύγει για να χωρούν οι λέξεις. */
-  & .shell-bar { position: static; padding: var(--space-2) var(--space-2) 0; }
+  /* Όχι sticky, αλλά πάντα πάνω από τη σελίδα: το μενού προφίλ ανοίγει πάνω από κεφαλίδες πάνελ (position: relative)
+     που έρχονται αργότερα στη σελίδα, αλλιώς κάλυπταν την «Έξοδο». Πάνω και από την κάτω μπάρα (40). */
+  & .shell-bar { position: relative; z-index: 45; padding: var(--space-2) var(--space-2) 0; }
   & .shell-home { display: none; }
   & .tool-button:has(.tool-label) { display: flex; flex-direction: column; justify-content: center; gap: 1px; width: auto; min-width: 2.75rem; padding: 0 var(--space-1); border-radius: var(--radius); }
   & .tool-label { display: block; font-size: var(--text-xs); font-weight: 600; line-height: 1.1; white-space: nowrap; }

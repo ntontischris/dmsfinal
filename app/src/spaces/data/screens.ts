@@ -169,15 +169,21 @@ const matchesRoute = (pathname: string, route: string): boolean => {
 
 // Ο κωδικός μιας διαδρομής: πρώτα ακριβές ταίριασμα (NAV ή λεπτομέρεια), αλλιώς η μεγαλύτερη διαδρομή του NAV που ταιριάζει
 // (π.χ. /app/team/roles/<id> → N4). Τα /app/clients/duplicates (B6) κερδίζουν το /app/clients/{id} (B2) γιατί είναι στο NAV.
-export const codeOfPath = (pathname: string): string | undefined => {
-  const exactNav = NAV_ITEMS.find((item) => item.href === pathname);
-  if (exactNav) return exactNav.code;
+export const codeOfPath = (pathname: string): string | undefined =>
+  codesOfPath(pathname)[0];
+
+// Όλοι οι υποψήφιοι κωδικοί μιας διαδρομής: η ίδια σελίδα μπορεί να είναι δύο οθόνες, μία της ομάδας και μία του πελάτη
+// (π.χ. /app/messages → J1 ομάδας, J3 πελάτη). Ποια ισχύει το κρίνει ο θεατής (spaces.ts, screenCodeOf).
+export const codesOfPath = (pathname: string): readonly string[] => {
+  const exactNav = NAV_ITEMS.filter((item) => item.href === pathname);
+  if (exactNav.length > 0) return [...new Set(exactNav.map((item) => item.code))];
   // Σταθερή διαδρομή (π.χ. /app/filming/new) πριν από διαδρομή με {id} (/app/filming/{id}).
   const detail =
     DETAIL_SCREENS.find((screen) => screen.route === pathname) ??
     DETAIL_SCREENS.find((screen) => matchesRoute(pathname, screen.route));
-  if (detail) return detail.code;
-  return NAV_ITEMS.filter(
+  if (detail) return [detail.code];
+  const prefix = NAV_ITEMS.filter(
     (item) => item.href !== "/app" && pathname.startsWith(`${item.href}/`),
-  ).sort((a, b) => b.href.length - a.href.length)[0]?.code;
+  ).sort((a, b) => b.href.length - a.href.length)[0];
+  return prefix ? [prefix.code] : [];
 };

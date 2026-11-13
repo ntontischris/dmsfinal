@@ -14,7 +14,12 @@ export {
   threadHref,
   type ClientTab,
 } from "./helpers";
-export { CLIENT_NO_ACCESS_TEXT, INBOX_TITLE } from "./labels";
+export {
+  CLIENT_NO_ACCESS_TEXT,
+  CLIENT_NO_CLIENT_TEXT,
+  CLIENT_NO_CLIENT_TITLE,
+  INBOX_TITLE,
+} from "./labels";
 export { getAttachmentLink } from "./queries";
 export { getMessageSettings } from "./queries-settings";
 export { parseRequestView } from "./request-helpers";

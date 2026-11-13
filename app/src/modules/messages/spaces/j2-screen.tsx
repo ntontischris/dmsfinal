@@ -7,6 +7,7 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { messagesCaps } from "../caps";
 import { AutoRefresh } from "../components/auto-refresh";
+import { chatTopicOf } from "../components/refresh-mode";
 import {
   loadCandidates,
   type CandidatesByProduction,
@@ -205,7 +206,7 @@ export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
   const candidates = await loadCandidates(thread);
   return (
     <div data-spaces>
-      <AutoRefresh />
+      <AutoRefresh topic={chatTopicOf("team", clientId)} />
       <Header
         thread={thread}
         clientHref={caps.canOpenClient ? `/app/clients/${clientId}` : undefined}

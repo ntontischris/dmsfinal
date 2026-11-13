@@ -24,12 +24,17 @@ const allowsRequirement = (viewer: Viewer, requirement: string): boolean => {
   return can(viewer, requirement);
 };
 
+// Λογαριασμός χωρίς ομάδα και χωρίς Πελάτη: συνήθως Χρήστης πελάτη που δεν έχει ακόμα συνδεθεί με την επιχείρησή του
+// (ή που αφαιρέθηκε). Μιλά στον πελάτη, όχι στην ομάδα.
+const NO_ACCESS_NOTICE =
+  "Ο λογαριασμός σου δεν έχει ακόμα συνδεθεί με την επιχείρησή σου. Μόλις η εταιρεία σε προσκαλέσει, θα βλέπεις εδώ τη δουλειά σας.";
+
 // Τι λέει η γραμμή κάτω από τη μπάρα όταν κάτι δεν επιτρέπει την κανονική δουλειά.
 const noticeText = (viewer: Viewer, memberships: readonly MembershipRow[]): string | null =>
   viewer.status === "unconfigured"
     ? "Η βάση δεν έχει συνδεθεί ακόμα: βλέπεις το σύστημα χωρίς δεδομένα."
     : viewer.status === "signed-in" && !viewer.team && memberships.length === 0
-      ? "Ο λογαριασμός σου δεν έχει ακόμα πρόσβαση στην ομάδα. Ζήτησε πρόσκληση από τον Ιδιοκτήτη."
+      ? NO_ACCESS_NOTICE
       : null;
 
 // Το όνομα στο avatar του μενού προφίλ.

@@ -4,6 +4,7 @@
 // Από το prototype (`data/spaces.ts`): ορατός κωδικός = ορατός στο NAV (screens.ts)· κωδικός χωρίς σελίδα = κρυφός.
 
 import {
+  codesOfPath,
   hrefFor,
   isCodeVisible,
   isNavCode,
@@ -366,4 +367,14 @@ export const spaceOf = (
 export const codesOfSpace = (id: SpaceId): readonly string[] => {
   const space = SPACES.find((candidate) => candidate.id === id);
   return space ? [...space.tabs, ...space.members] : [];
+};
+
+// Ο κωδικός της διαδρομής για αυτόν τον θεατή: από τους υποψήφιους, αυτός που ανήκει σε Χώρο του (π.χ. το /app/messages
+// είναι J1 για την ομάδα και J3 για τον πελάτη). Αλλιώς ο πρώτος, όπως πριν.
+export const screenCodeOf = (
+  pathname: string,
+  model: SpacesModel,
+): string | undefined => {
+  const codes = codesOfPath(pathname);
+  return codes.find((code) => spaceOf(code, model) !== undefined) ?? codes[0];
 };
