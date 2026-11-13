@@ -243,7 +243,7 @@ select public.t_run();
 select is(public.t_count('a1', 'production.cost_overrun'), 1, 'Υπέρβαση ωρών → όσοι βλέπουν κόστος, μία φορά ανά Παραγωγή');
 select is(public.t_events('production.cost_overrun'), 1, 'Δεύτερη αλλαγή με υπέρβαση: κανένα δεύτερο Γεγονός');
 
-update public.productions set state = 'delivered', delivered_at = now() where id = current_setting('t.pa')::uuid;
+update public.productions set state = 'delivered', delivered_at = now(), delivered_note = 'Παραδόθηκε' where id = current_setting('t.pa')::uuid;
 select public.t_run();
 select is(public.t_count('a1', 'production.delivered_without_hours'), 1, 'Παράδοση χωρίς ώρες μοντάζ → όσοι βλέπουν κόστος');
 
