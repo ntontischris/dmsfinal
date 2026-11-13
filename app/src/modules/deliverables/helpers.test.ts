@@ -35,6 +35,7 @@ describe("availableActions", () => {
       cancel: true,
       comment: true,
       decideCharge: true,
+      decideRoundCharge: true,
       edit: true,
     };
     expect(availableActions(all, 1)).toEqual([

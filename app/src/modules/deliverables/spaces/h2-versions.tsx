@@ -3,11 +3,18 @@
 import { useState } from "react";
 
 import { Panel } from "@/spaces/kit/panel";
+import { VideoPlayer, useVideoControl } from "@/spaces/kit/video-player";
 import { Badge, StateNotice } from "@/spaces/screens/shared";
 
-import type { DeliverableVersion } from "../types";
-import { CommentForm, CommentList } from "./h2-comments";
 import {
+  markCommentsSeen,
+  replyToComment,
+  resolveComment,
+} from "../actions-comments";
+import type { DeliverableDetail, DeliverableVersion } from "../types";
+import { CommentForm } from "./h2-comments";
+import {
+  CLIENT_NAME,
   VERSION_WORDS,
   fmtDay,
   latestOf,
@@ -15,8 +22,16 @@ import {
   type PanelProps,
 } from "./h2-model";
 import { countLabel } from "./h1-model";
+import { clientPreviewOf } from "./notes-model";
+import { VideoNotes } from "./video-notes";
+import { useMarkSeen } from "./video-notes-fields";
 
-// Οι Εκδόσεις του H2 (prototype `screens/h2-versions.tsx`): καρτέλα ανά Έκδοση, τα στοιχεία της και τα σχόλιά της.
+// Οι Εκδόσεις του H2 (prototype `screens/h2-versions.tsx`): καρτέλα ανά Έκδοση, το βίντεο, τα στοιχεία της
+// και οι σημειώσεις της. «Όπως ο πελάτης»: μόνο ό,τι έχει σταλεί, χωρίς τα εσωτερικά, χωρίς κουμπιά.
+
+type View = "team" | "client";
+
+const TEAM_ACTIONS = { reply: replyToComment, resolve: resolveComment };
 
 function VersionFacts({ version }: { version: DeliverableVersion }) {
   return (
@@ -99,8 +114,98 @@ function VersionHints({
   );
 }
 
+function VersionBody({
+  detail,
+  version,
+  isLatest,
+  view,
+}: {
+  detail: DeliverableDetail;
+  version: DeliverableVersion;
+  isLatest: boolean;
+  view: View;
+}) {
+  const control = useVideoControl();
+  const isTeam = view === "team";
+  useMarkSeen(
+    markCommentsSeen,
+    detail.id,
+    version.number,
+    version.comments.length > 0,
+  );
+  return (
+    <>
+      <VideoPlayer
+        link={version.url}
+        title={`${detail.title} · v${version.number}`}
+        control={control}
+      />
+      {isTeam ? (
+        <>
+          <VersionFacts version={version} />
+          <VersionHints
+            version={version}
+            daysWaiting={isLatest ? detail.daysWaiting : null}
+          />
+        </>
+      ) : (
+        <p className="note">
+          Έτσι το βλέπει ο πελάτης: μόνο οι Εκδόσεις που του στάλθηκαν, χωρίς τα
+          εσωτερικά σχόλια.
+        </p>
+      )}
+      <h3>Σχόλια</h3>
+      <VideoNotes
+        notes={version.comments}
+        control={control}
+        actions={isTeam && detail.can.comment ? TEAM_ACTIONS : null}
+        unnamed={CLIENT_NAME}
+      />
+      {isTeam && detail.can.comment && (
+        <CommentForm
+          deliverableId={detail.id}
+          versionNumber={version.number}
+          control={control}
+        />
+      )}
+    </>
+  );
+}
+
+function ViewChoice({
+  view,
+  onChange,
+}: {
+  view: View;
+  onChange: (view: View) => void;
+}) {
+  return (
+    <div className="choice-row" role="group" aria-label="Ποια ματιά">
+      <button
+        type="button"
+        className="button"
+        aria-pressed={view === "team"}
+        onClick={() => onChange("team")}
+      >
+        Όπως η ομάδα
+      </button>
+      <button
+        type="button"
+        className="button"
+        aria-pressed={view === "client"}
+        onClick={() => onChange("client")}
+      >
+        Δες το όπως ο πελάτης
+      </button>
+    </div>
+  );
+}
+
 export function H2Versions({ detail, ctx }: PanelProps) {
-  const versions = versionsInOrder(detail.versions);
+  const [view, setView] = useState<View>("team");
+  const versions = versionsInOrder(
+    view === "client" ? clientPreviewOf(detail.versions) : detail.versions,
+  );
   const latest = latestOf(detail)?.number;
   const [picked, setPicked] = useState(ctx.initialVersion ?? latest);
   const [seenLatest, setSeenLatest] = useState(latest);
@@ -115,9 +220,23 @@ export function H2Versions({ detail, ctx }: PanelProps) {
       label="Εκδόσεις"
       aside={<span className="muted">{versions.length} συνολικά</span>}
     >
+      {detail.versions.length > 0 && (
+        <ViewChoice view={view} onChange={setView} />
+      )}
       {!version ? (
-        <StateNotice kind="empty" title="Δεν υπάρχουν ακόμα Εκδόσεις">
-          <p>Πρόσθεσε την πρώτη με «Νέα Έκδοση».</p>
+        <StateNotice
+          kind="empty"
+          title={
+            view === "client"
+              ? "Ο πελάτης δεν βλέπει ακόμα καμία Έκδοση"
+              : "Δεν υπάρχουν ακόμα Εκδόσεις"
+          }
+        >
+          <p>
+            {view === "client"
+              ? "Βλέπει μια Έκδοση μόλις του σταλεί."
+              : "Πρόσθεσε την πρώτη με «Νέα Έκδοση»."}
+          </p>
         </StateNotice>
       ) : (
         <>
@@ -137,19 +256,13 @@ export function H2Versions({ detail, ctx }: PanelProps) {
           <div className="h2-signals">
             <Badge tone="strong">{VERSION_WORDS[version.state]}</Badge>
           </div>
-          <VersionFacts version={version} />
-          <VersionHints
+          <VersionBody
+            key={`${view}-${version.number}`}
+            detail={detail}
             version={version}
-            daysWaiting={version.number === latest ? detail.daysWaiting : null}
+            isLatest={version.number === latest}
+            view={view}
           />
-          <h3>Σχόλια</h3>
-          <CommentList comments={version.comments} />
-          {detail.can.comment && (
-            <CommentForm
-              deliverableId={detail.id}
-              versionNumber={version.number}
-            />
-          )}
         </>
       )}
     </Panel>

@@ -3,7 +3,13 @@
 import type { FormState } from "@/lib/form-state";
 
 import { callRpc, finishWith, firstIssue, pick } from "./action-support";
-import { cancelSchema, chargeDecisionSchema, createSchema, updateSchema } from "./schemas";
+import {
+  cancelSchema,
+  chargeDecisionSchema,
+  createSchema,
+  roundChargeDecisionSchema,
+  updateSchema,
+} from "./schemas";
 
 // Το Παραδοτέο: δημιουργία, επεξεργασία, ακύρωση και απόφαση χρέωσης. Κάθε μία είναι ένα RPC της βάσης.
 
@@ -71,4 +77,16 @@ export async function decideDeliverableCharge(_: FormState, form: FormData): Pro
     p_reason: value.reason,
   });
   return finishWith(outcome, "Η χρέωση αποφασίστηκε.");
+}
+
+// Γύρος αλλαγών πέρα από το Όριο: «χρεώνεται» (γεννά Χρέωση «Έξτρα αναθεώρηση») ή «χωρίς χρέωση» με λόγο.
+export async function decideRoundCharge(_: FormState, form: FormData): Promise<FormState> {
+  const parsed = roundChargeDecisionSchema.safeParse(pick(form, ["roundChargeId", "decision", "reason"]));
+  if (!parsed.success) return firstIssue(parsed.error);
+  const outcome = await callRpc("deliverable_round_charge_decide", {
+    p_id: parsed.data.roundChargeId,
+    p_decision: parsed.data.decision,
+    p_reason: parsed.data.reason,
+  });
+  return finishWith(outcome, "Η χρέωση του γύρου αποφασίστηκε.");
 }

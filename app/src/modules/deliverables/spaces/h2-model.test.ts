@@ -26,6 +26,10 @@ const comment = (
   isInternal: false,
   createdAt: "2026-09-10T10:00:00Z",
   authorName: "Άρης Κωνσταντίνου",
+  parentId: null,
+  resolvedAt: null,
+  resolvedByName: null,
+  seenBy: [],
   ...overrides,
 });
 

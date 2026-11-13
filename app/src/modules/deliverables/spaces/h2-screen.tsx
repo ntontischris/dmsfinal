@@ -16,6 +16,7 @@ import { H2ClientAsks } from "./h2-asks";
 import { H2Header } from "./h2-header";
 import { H2Charge, H2Requests } from "./h2-money";
 import { goesToReviewOf, type H2Context } from "./h2-model";
+import { H2RoundCharges } from "./h2-round-charges";
 import { H2Versions } from "./h2-versions";
 
 import "./h2.css";
@@ -120,6 +121,7 @@ export async function SpacesDeliverable({
         <H2Actions {...panel} />
         <H2Versions {...panel} />
         <H2Charge {...panel} />
+        <H2RoundCharges {...panel} />
         <H2Requests {...panel} />
         <H2FinalFiles {...panel} />
         <H2Cancel {...panel} />

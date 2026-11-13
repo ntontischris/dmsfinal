@@ -161,4 +161,12 @@
 /* Στο στενό: η ανοιχτή κάρτα πιάνει όλη τη σειρά και η λίστα της σπρώχνει τα υπόλοιπα κάτω, ώστε να μη σκεπάζει τις άλλες κάρτες. */
 @media (max-width: 40rem) { & .kit-fb-card[open] { flex-basis: 100%; } & .kit-fb-card[open] > summary { width: 100%; box-sizing: border-box; } & .kit-fb-pop { position: static; width: 100%; margin-top: var(--space-1); box-shadow: none; translate: none !important; } }
 @media (pointer: coarse) { & .kit-fb-opt { min-height: 44px; } & .kit-fb-card > summary { min-height: 44px; box-sizing: border-box; } }
+
+/* Player βίντεο (YouTube, Vimeo, Drive): κοινός για Παραδοτέα και Γνώση. Φορτώνει μόλις πατήσεις «Παίξε». */
+& .kit-video { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden; background: var(--color-bg); color: var(--color-text); }
+& .kit-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+& .kit-video[data-poster='true'] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); border: 1px solid var(--color-border); cursor: pointer; font: inherit; font-weight: 600; }
+& .kit-video[data-poster='true']:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+& .kit-video[data-vertical='true'] { aspect-ratio: 9 / 16; width: min(100%, calc(70vh * 9 / 16)); align-self: center; }
+& .kit-video-play { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 50%; background: var(--color-text); color: var(--color-bg); font-size: 1.4rem; padding-left: 0.2rem; }
 }

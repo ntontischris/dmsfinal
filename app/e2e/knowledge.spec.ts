@@ -7,7 +7,6 @@ import { button, project, shot, signIn } from "./sales-parts";
 // έρχεται από το seed. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το project.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-
 const MANAGE_PATH = "/app/knowledge/manage";
 const KNOWLEDGE_PATH = "/app/knowledge";
 const PDF_FIXTURE = "e2e/fixtures/sample-invoice.pdf";
@@ -174,4 +173,33 @@ test("ο Ιδιοκτήτης ξαναφτιάχνει τη μνήμη του Β
   await page.goto(`${KNOWLEDGE_PATH}?q=${encodeURIComponent("φωτισμός")}`);
   await expect(page.getByRole("link", { name: ARTICLE(P) })).toBeVisible();
   await expect(page.getByText("Δεν φορτώθηκε: η Γνώση")).toHaveCount(0);
+});
+
+test("ο Ιδιοκτήτης βάζει βίντεο σε Άρθρο και παίζει μέσα στο κείμενο", async ({
+  page,
+}) => {
+  const P = project();
+  const title = `Βίντεο φωτισμού ${P}`;
+
+  await signIn(page, "owner@example.com");
+  await createSection(page, `${P}-v`);
+  await createItem(page, `${P}-v`, "Άρθρο", title);
+  const content = formWith(page, "Κείμενο (Markdown)");
+  await button(content, "Βίντεο").click();
+  await content
+    .getByLabel("Link βίντεο (YouTube, Vimeo ή Google Drive)")
+    .fill("https://vimeo.com/76979871");
+  await button(content, "Πρόσθεσε το βίντεο").click();
+  await expect(content.getByLabel("Κείμενο (Markdown)")).toHaveValue(
+    /\[Βίντεο\]\(https:\/\/vimeo\.com\/76979871\)/,
+  );
+  await button(content, "Αποθήκευση").click();
+  await expect(content.getByRole("status")).toContainText("Αποθηκεύτηκε.");
+
+  // Η προεπισκόπηση δείχνει τον player στη θέση του link (δεν τον ξεκινάμε: θα φόρτωνε το Vimeo).
+  await button(content, "Προεπισκόπηση").click();
+  await expect(
+    content.getByRole("button", { name: "Παίξε το βίντεο: Βίντεο" }),
+  ).toBeVisible();
+  await shot(page, "l1-article-video");
 });

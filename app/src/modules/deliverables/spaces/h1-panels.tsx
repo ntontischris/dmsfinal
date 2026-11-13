@@ -16,8 +16,8 @@ export function ChargesCard({ items }: { items: readonly DeliverableCard[] }) {
   return (
     <Panel label="Αποφάσεις χρέωσης" aside={items.length} isFlush>
       <p className="note sx-pad">
-        Η Παροχή δεν έφτανε για το Παραδοτέο: η δουλειά συνεχίζει, η χρέωση
-        περιμένει απόφαση.
+        Η Παροχή δεν έφτανε ή ένας γύρος αλλαγών πέρασε το όριο: η δουλειά
+        συνεχίζει, η χρέωση περιμένει απόφαση.
       </p>
       <RowList>
         {items.map((d) => (

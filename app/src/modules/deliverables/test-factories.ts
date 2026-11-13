@@ -40,6 +40,7 @@ export const canFactory = (overrides: Partial<DeliverableCan> = {}): Deliverable
   comment: false,
   decideCharge: false,
   edit: false,
+  decideRoundCharge: false,
   ...overrides,
 });
 
@@ -50,6 +51,7 @@ export const detailFactory = (overrides: Partial<DeliverableDetail> = {}): Deliv
   pendingCharge: false,
   history: [],
   requests: [],
+  roundCharges: [],
   finalFilesUrl: null,
   ...overrides,
 });

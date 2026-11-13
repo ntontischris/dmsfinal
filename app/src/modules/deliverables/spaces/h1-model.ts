@@ -30,10 +30,12 @@ export const EMPTY: Readonly<
 };
 
 // Φίλτρα της ουράς: ανά άτομο (id Χρήστη), ανά πελάτη (όνομα, η κάρτα δεν φέρνει id) και «Καθυστερούν».
+// «Μόνο εμένα» (onlyAssignee): ο ίδιος ο Χρήστης ως Ανατεθειμένος, ανεξάρτητα από το φίλτρο ατόμου.
 export interface QueueFilter {
   person?: string;
   client?: string;
   isLateOnly?: boolean;
+  onlyAssignee?: string;
 }
 
 export interface FilterOption {
@@ -64,10 +66,11 @@ export const productionLabel = (card: DeliverableCard): string =>
 
 export const filterQueue = (
   items: readonly DeliverableCard[],
-  { person, client, isLateOnly = false }: QueueFilter,
+  { person, client, isLateOnly = false, onlyAssignee }: QueueFilter,
 ): readonly DeliverableCard[] =>
   items.filter(
     (card) =>
+      (!onlyAssignee || card.assigneeId === onlyAssignee) &&
       (!person || card.assigneeId === person) &&
       (!client || card.client === client) &&
       (!isLateOnly || card.isLate),

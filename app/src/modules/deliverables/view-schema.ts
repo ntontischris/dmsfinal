@@ -5,6 +5,7 @@ import {
   CHARGES,
   DELIVERABLE_STATES,
   REQUEST_DECISIONS,
+  ROUND_CHARGE_DECISIONS,
   VERSION_STATES,
 } from "./types";
 
@@ -54,6 +55,10 @@ const commentSchema = z.object({
   isInternal: z.boolean(),
   createdAt: z.string(),
   authorName: z.string().nullable(),
+  parentId: z.string().nullable(),
+  resolvedAt: z.string().nullable(),
+  resolvedByName: z.string().nullable(),
+  seenBy: z.array(z.string()),
 });
 
 const versionSchema = z.object({
@@ -80,6 +85,7 @@ const canSchema = z.object({
   comment: z.boolean(),
   decideCharge: z.boolean(),
   edit: z.boolean(),
+  decideRoundCharge: z.boolean(),
 });
 
 const historySchema = z.object({
@@ -104,6 +110,18 @@ const requestSchema = z.object({
   newDeliverableId: z.string().nullable(),
 });
 
+const roundChargeSchema = z.object({
+  id: z.string(),
+  version: z.number(),
+  round: z.number(),
+  roundsLimit: z.number(),
+  decision: z.enum(ROUND_CHARGE_DECISIONS).nullable(),
+  reason: z.string().nullable(),
+  decidedAt: z.string().nullable(),
+  decidedByName: z.string().nullable(),
+  createdAt: z.string(),
+});
+
 export const deliverableDetailSchema = deliverableCardSchema
   .extend({
     versions: z.array(versionSchema),
@@ -111,6 +129,7 @@ export const deliverableDetailSchema = deliverableCardSchema
     pendingCharge: z.boolean(),
     history: z.array(historySchema),
     requests: z.array(requestSchema),
+    roundCharges: z.array(roundChargeSchema),
     finalFilesUrl: z.string().nullable(),
   })
   .transform((row) => ({

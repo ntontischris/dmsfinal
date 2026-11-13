@@ -9,6 +9,7 @@ import {
   reportLinkSchema,
   requestChangeSchema,
 } from "./client-schemas";
+import { replySchema, resolveSchema, seenSchema } from "./note-schemas";
 
 // Οι ενέργειες του Χρήστη πελάτη: απόφαση, σχόλιο, «Το link δεν ανοίγει», αίτημα αλλαγής μετά την έγκριση.
 
@@ -62,4 +63,31 @@ export async function requestChangeAfterApproval(_: FormState, form: FormData): 
     p_body: value.body,
   });
   return finishWith(outcome, "Το αίτημά σου στάλθηκε στην ομάδα.");
+}
+
+// Απάντηση του πελάτη σε σημείωση (μόνο σε όσες βλέπει· η βάση ελέγχει ότι η σημείωση είναι δική του).
+export async function replyAsClient(_: FormState, form: FormData): Promise<FormState> {
+  const parsed = replySchema.safeParse(pick(form, ["parentId", "body"]));
+  if (!parsed.success) return firstIssue(parsed.error);
+  const outcome = await callRpc("deliverable_client_comment_reply", {
+    p_parent: parsed.data.parentId,
+    p_body: parsed.data.body,
+  });
+  return finishWith(outcome, "Η απάντηση στάλθηκε.");
+}
+
+export async function resolveAsClient(_: FormState, form: FormData): Promise<FormState> {
+  const parsed = resolveSchema.safeParse(pick(form, ["commentId", "resolved"]));
+  if (!parsed.success) return firstIssue(parsed.error);
+  const outcome = await callRpc("deliverable_client_comment_resolve", {
+    p_comment: parsed.data.commentId,
+    p_resolved: parsed.data.resolved,
+  });
+  return finishWith(outcome, parsed.data.resolved ? "Σημειώθηκε ως λυμένο." : "Η σημείωση ξανάνοιξε.");
+}
+
+export async function markSeenAsClient(deliverableId: string, versionNumber: number): Promise<void> {
+  const parsed = seenSchema.safeParse({ deliverableId, versionNumber });
+  if (!parsed.success) return;
+  await callRpc("deliverable_client_comments_seen", { p_id: deliverableId, p_version: versionNumber });
 }

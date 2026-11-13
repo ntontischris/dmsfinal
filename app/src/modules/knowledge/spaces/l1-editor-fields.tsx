@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, type ChangeEvent } from "react";
 
+import { isVideoLink } from "@/lib/video-embed";
+
 import { attachFile } from "../actions-upload";
 import { fileHref } from "../helpers";
 import { TEXT_STATUS_LABEL } from "../labels";
@@ -12,12 +14,53 @@ import { acceptOf, formatSize } from "../upload-rules";
 import type { EditableItem } from "../view-schema";
 import { ArticleBody } from "./a8-markdown";
 
+// «Βίντεο»: ένα link YouTube, Vimeo ή Drive μπαίνει σε δική του γραμμή και παίζει μέσα στο Άρθρο.
+function VideoLinkField({ onAdd }: { onAdd: (markdown: string) => void }) {
+  const [link, setLink] = useState("");
+  const isBad = link.trim() !== "" && !isVideoLink(link);
+  const handleAdd = () => {
+    if (!isVideoLink(link)) return;
+    onAdd(`[Βίντεο](${link.trim()})`);
+    setLink("");
+  };
+  return (
+    <div className="stack">
+      <label>
+        Link βίντεο (YouTube, Vimeo ή Google Drive)
+        <input
+          className="input"
+          value={link}
+          placeholder="https://youtu.be/…"
+          autoComplete="off"
+          onChange={(event) => setLink(event.target.value)}
+        />
+      </label>
+      {isBad && (
+        <span className="muted">
+          Δεν είναι link βίντεο YouTube, Vimeo ή αρχείου Drive.
+        </span>
+      )}
+      <div className="btn-row">
+        <button
+          className="button"
+          type="button"
+          disabled={!isVideoLink(link)}
+          onClick={handleAdd}
+        >
+          Πρόσθεσε το βίντεο
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Το «Κείμενο» του επεξεργαστή (prototype `l1-editor.tsx` › ContentFields) σε Markdown, με προεπισκόπηση και ανέβασμα
 // εικόνας που εισάγει Markdown link στη θέση του δρομέα.
 export function BodyField({ item }: { item: EditableItem }) {
   const [body, setBody] = useState(item.body ?? "");
   const [isPreview, setIsPreview] = useState(false);
   const [uploadState, setUploadState] = useState<string | null>(null);
+  const [isAddingVideo, setIsAddingVideo] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
 
@@ -39,11 +82,32 @@ export function BodyField({ item }: { item: EditableItem }) {
     setUploadState(null);
   };
 
+  const insertBlock = (markdown: string) => {
+    const at = textareaRef.current?.selectionStart ?? body.length;
+    setBody(
+      (current) =>
+        `${current.slice(0, at)}\n\n${markdown}\n\n${current.slice(at)}`,
+    );
+    setIsAddingVideo(false);
+  };
+
   return (
     <>
       <div className="btn-row">
-        <button className="button" type="button" onClick={() => imageRef.current?.click()}>
+        <button
+          className="button"
+          type="button"
+          onClick={() => imageRef.current?.click()}
+        >
           Εικόνα
+        </button>
+        <button
+          className="button"
+          type="button"
+          aria-expanded={isAddingVideo}
+          onClick={() => setIsAddingVideo(!isAddingVideo)}
+        >
+          Βίντεο
         </button>
         <button
           className="button"
@@ -62,6 +126,7 @@ export function BodyField({ item }: { item: EditableItem }) {
         aria-label="Ανέβασμα εικόνας"
         onChange={handleImage}
       />
+      {isAddingVideo && <VideoLinkField onAdd={insertBlock} />}
       {uploadState && <p className="muted">{uploadState}</p>}
       <label style={isPreview ? { display: "none" } : undefined}>
         Κείμενο (Markdown)
@@ -74,11 +139,10 @@ export function BodyField({ item }: { item: EditableItem }) {
           onChange={(event) => setBody(event.target.value)}
         />
       </label>
-      {isPreview && (
-        <ArticleBody source={body} />
-      )}
+      {isPreview && <ArticleBody source={body} />}
       <p className="muted">
-        **έντονα**, - λίστα, [σύνδεσμος](https://…). Σύνδεσμοι μόνο https:// ή /app/….
+        **έντονα**, - λίστα, [σύνδεσμος](https://…). Σύνδεσμοι μόνο https:// ή
+        /app/….
       </p>
     </>
   );

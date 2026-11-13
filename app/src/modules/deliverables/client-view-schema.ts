@@ -43,6 +43,10 @@ const clientCommentSchema = z.object({
   atSeconds: z.number().int().nullable(),
   authorName: z.string().nullable(),
   createdAt: z.string(),
+  parentId: z.string().nullable(),
+  resolvedAt: z.string().nullable(),
+  resolvedByName: z.string().nullable(),
+  seenBy: z.array(z.string()),
 });
 
 const clientVersionSchema = z.object({
