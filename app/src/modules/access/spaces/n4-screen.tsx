@@ -19,6 +19,7 @@ import {
   type RoleSummary,
   type TeamUserRow,
 } from "../queries";
+import { getRoleFirstSteps } from "../first-steps";
 import { EMPTY_USAGE, type RoleUsage } from "../role-usage";
 import { can, getViewer, isOwner } from "../viewer";
 import {
@@ -35,11 +36,8 @@ import {
   ROLES_PATH,
 } from "./n4-adapter";
 import { DeleteRoleConfirm } from "./n4-delete-form";
-import {
-  GiveRoleForm,
-  NewRoleForm,
-  RoleEditForm,
-} from "./n4-forms";
+import { GiveRoleForm, NewRoleForm, RoleEditForm } from "./n4-forms";
+import { RoleFirstStepsForm } from "./n4-first-steps";
 import { PermissionMatrix } from "./n4-matrix";
 import { roleReachText } from "./team-reach";
 
@@ -384,13 +382,15 @@ export async function SpacesRole({
   history?: ReactNode;
 }) {
   if (!isOwner(await getViewer())) return <Denied />;
-  const [role, permissions, users, roles, usage] = await Promise.all([
-    getRole(roleId),
-    listPermissions(),
-    listTeamUsers(),
-    listRoles(),
-    listRoleUsage(),
-  ]);
+  const [role, permissions, users, roles, usage, firstSteps] =
+    await Promise.all([
+      getRole(roleId),
+      listPermissions(),
+      listTeamUsers(),
+      listRoles(),
+      listRoleUsage(),
+      getRoleFirstSteps(roleId),
+    ]);
   if (!role.ok || !permissions.ok || !users.ok || !roles.ok || !usage.ok)
     return (
       <div data-spaces>
@@ -410,6 +410,9 @@ export async function SpacesRole({
         permissions={permissions.data.filter((p) => p.kind === current.kind)}
         badges={<RoleBadges role={current} />}
       />
+      {firstSteps !== null && (
+        <RoleFirstStepsForm roleId={current.id} body={firstSteps} />
+      )}
       {current.kind === "team" && (
         <HoldersSection role={current} users={users.data} />
       )}
