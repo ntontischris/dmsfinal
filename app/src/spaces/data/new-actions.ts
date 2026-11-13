@@ -9,6 +9,8 @@ export interface NewAction {
   code: string;
   // Όλα αυτά τα Δικαιώματα χρειάζονται (όπως τα ελέγχει η σελίδα της φόρμας).
   requires: readonly string[];
+  // Αρκεί ένα από αυτά (π.χ. η Πρόσκληση: ομάδας ή πελάτη).
+  requiresAny?: readonly string[];
   // Query που ανοίγει την οθόνη έτοιμη για τη δημιουργία.
   query?: Readonly<Record<string, string>>;
   // Σύντομο όνομα για το κουμπί, όταν είναι η μόνη δημιουργία του Χρήστη.
@@ -29,6 +31,13 @@ const NEW_ACTIONS: readonly NewAction[] = [
     requires: ["finance.view", "finance.invoices"],
   },
   {
+    label: "Πρόσκληση Χρήστη",
+    code: "N6",
+    requires: [],
+    requiresAny: ["access.team", "access.clientUsers"],
+    soloLabel: "Πρόσκληση",
+  },
+  {
     label: "Ρεπό / Άδεια / ραντεβού",
     code: "A6",
     requires: ["team"],
@@ -43,7 +52,11 @@ const NEW_ACTIONS: readonly NewAction[] = [
 ];
 
 export const newActionsFor = (allows: Allows): readonly NewAction[] =>
-  NEW_ACTIONS.filter((action) => action.requires.every(allows));
+  NEW_ACTIONS.filter(
+    (action) =>
+      action.requires.every(allows) &&
+      (action.requiresAny === undefined || action.requiresAny.some(allows)),
+  );
 
 export type NewEntry =
   | { kind: "menu"; actions: readonly NewAction[] }

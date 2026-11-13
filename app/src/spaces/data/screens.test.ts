@@ -81,6 +81,18 @@ describe("+ Νέο", () => {
     expect(newEntryFor(() => false)).toBeNull();
   });
 
+  it("η Πρόσκληση φαίνεται με όποιο από τα δύο Δικαιώματα πρόσκλησης και ανοίγει τη σελίδα της", () => {
+    const labels = (allows: (requirement: string) => boolean) =>
+      newActionsFor(allows).map((action) => action.label);
+    expect(labels((r) => r === "access.team")).toContain("Πρόσκληση Χρήστη");
+    expect(labels((r) => r === "access.clientUsers")).toContain(
+      "Πρόσκληση Χρήστη",
+    );
+    expect(labels((r) => r === "team")).not.toContain("Πρόσκληση Χρήστη");
+    const [action] = newActionsFor((r) => r === "access.clientUsers");
+    expect(newActionHref(action, "1")).toBe("/app/team/invite");
+  });
+
   it("η Νέα Ευκαιρία ανοίγει τη φόρμα στη λίστα Πελατών, με νέα τιμή κάθε φορά", () => {
     const [action] = newActionsFor(
       (requirement) => requirement === "clients.manage",

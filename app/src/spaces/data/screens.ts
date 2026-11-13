@@ -86,6 +86,12 @@ const DETAIL_SCREENS: readonly DetailScreen[] = [
     parent: "L1",
   },
   { code: "M2", title: "Εξαγωγή", route: "/app/reports/export", parent: "M1" },
+  {
+    code: "N6",
+    title: "Πρόσκληση",
+    route: "/app/team/invite",
+    parent: "N1",
+  },
 ];
 
 const NAV_ITEMS: readonly NavItem[] = NAV.flatMap((section) => section.items);

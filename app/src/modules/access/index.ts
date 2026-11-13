@@ -45,6 +45,10 @@ export { InvitationList } from "./components/invitation-list";
 export { signOut } from "./actions";
 export { sendTestEmail } from "./integrations-actions";
 export { SpacesTeam, SpacesTeamUser } from "./spaces/n1-screen";
+// N6 Πρόσκληση: η μία φόρμα για άνθρωπο της ομάδας ή Πελάτη (a2).
+export { SpacesInvite } from "./spaces/invite-screen";
+// a3 «Πρώτα βήματα» στη Σήμερα.
+export { SpacesFirstSteps } from "./spaces/first-steps-card";
 export { SpacesNewRole, SpacesRole, SpacesRoles } from "./spaces/n4-screen";
 // Νέα εμφάνιση των δημόσιων σελίδων (R9 Είσοδος, R10 Επαναφορά/Νέος κωδικός, R13 Ο σύνδεσμος δεν ισχύει πια).
 export { AuthPage } from "./spaces/r-frame";
