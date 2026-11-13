@@ -434,7 +434,7 @@ select throws_ok($$ select public.today_card('versions_to_review') $$, '42501', 
 select is((select array_agg(c ->> 'code' order by n)
              from jsonb_array_elements(public.today_counts(timestamptz '2026-03-03 10:00+00') -> 'cards') with ordinality x (c, n)
             where c ->> 'grp' = 'work'),
-  array['my_deliverables', 'requests_mentions', 'unread_messages'], 'Η Παραγωγή βλέπει μόνο τις κάρτες των ουρών της');
+  array['my_deliverables', 'my_tasks', 'requests_mentions', 'unread_messages'], 'Η Παραγωγή βλέπει μόνο τις κάρτες των ουρών της');
 reset role;
 select public.tw_as('b1');
 set local role authenticated;

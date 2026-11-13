@@ -27,19 +27,23 @@ as $$ select case when p_done is not null then 'done' when p_started is not null
 
 -- Αντικαθιστά το 20261012160000: και κατάσταση, προτεραιότητα.
 create or replace function authz.production_tasks_json(p_production uuid) returns jsonb
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select coalesce(jsonb_agg(jsonb_build_object(
-           'id', t.id, 'title', t.title, 'assigneeId', t.assignee_id,
-           'assigneeName', (select u.name from public.team_users u where u.user_id = t.assignee_id),
-           'dueDate', t.due_date,
-           'isLate', (t.done_at is null and t.due_date is not null and t.due_date < public.sales_today()),
-           'done', (t.done_at is not null),
-           'status', authz.task_status(t.started_at, t.done_at),
-           'priority', t.priority
-         ) order by t.sort, t.created_at, t.id), '[]'::jsonb)
-    from public.production_tasks t
-   where t.production_id = p_production;
+begin
+  return (
+    select coalesce(jsonb_agg(jsonb_build_object(
+             'id', t.id, 'title', t.title, 'assigneeId', t.assignee_id,
+             'assigneeName', (select u.name from public.team_users u where u.user_id = t.assignee_id),
+             'dueDate', t.due_date,
+             'isLate', (t.done_at is null and t.due_date is not null and t.due_date < public.sales_today()),
+             'done', (t.done_at is not null),
+             'status', authz.task_status(t.started_at, t.done_at),
+             'priority', t.priority
+           ) order by t.sort, t.created_at, t.id), '[]'::jsonb)
+      from public.production_tasks t
+     where t.production_id = p_production
+  );
+end;
 $$;
 
 -- ───────────── Εργασίες: RPC γραφής ─────────────
@@ -184,43 +188,51 @@ insert into public.today_cards (code, grp, kind, audience, sort, label_el, label
 
 -- Οι ανοιχτές Εργασίες με προθεσμία στις μέρες p_from..p_to: όσες είναι δικές μου, και όσες σε Παραγωγές που βλέπω.
 create function authz.calendar_tasks(p_from date, p_to date) returns jsonb
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select coalesce(jsonb_agg(jsonb_build_object(
-           'id', t.id, 'day', t.due_date, 'title', t.title, 'productionId', p.id,
-           'clientName', coalesce(c.name, p.title),
-           'assigneeId', t.assignee_id, 'assigneeName', u.name,
-           'isMine', coalesce(t.assignee_id = auth.uid(), false)
-         ) order by t.due_date, t.id), '[]'::jsonb)
-    from public.production_tasks t
-    join public.productions p on p.id = t.production_id
-    left join public.clients c on c.id = p.client_id
-    left join public.team_users u on u.user_id = t.assignee_id
-   where t.due_date between p_from and p_to
-     and t.done_at is null and p.state = 'open'
-     and (t.assignee_id = auth.uid() or authz.can_see_production(p.id));
+begin
+  return (
+    select coalesce(jsonb_agg(jsonb_build_object(
+             'id', t.id, 'day', t.due_date, 'title', t.title, 'productionId', p.id,
+             'clientName', coalesce(c.name, p.title),
+             'assigneeId', t.assignee_id, 'assigneeName', u.name,
+             'isMine', coalesce(t.assignee_id = auth.uid(), false)
+           ) order by t.due_date, t.id), '[]'::jsonb)
+      from public.production_tasks t
+      join public.productions p on p.id = t.production_id
+      left join public.clients c on c.id = p.client_id
+      left join public.team_users u on u.user_id = t.assignee_id
+     where t.due_date between p_from and p_to
+       and t.done_at is null and p.state = 'open'
+       and (t.assignee_id = auth.uid() or authz.can_see_production(p.id))
+  );
+end;
 $$;
 
 -- Αντικαθιστά το 20261104140000: και οι Εργασίες (tasks).
 create or replace function authz.calendar_team_view(
   p_from date, p_to date, p_from_at timestamptz, p_to_at timestamptz
 ) returns jsonb
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select jsonb_build_object(
-    'filmings', authz.calendar_team_filmings(p_from_at, p_to_at),
-    'blocked', authz.calendar_team_blocked(p_from_at, p_to_at),
-    'busy', authz.calendar_busy(p_from_at, p_to_at),
-    'nextSteps', authz.calendar_next_steps(p_from, p_to),
-    'deadlines', authz.calendar_deadlines(p_from, p_to),
-    'tasks', authz.calendar_tasks(p_from, p_to),
-    'days', authz.calendar_team_days(p_from, p_to),
-    'canBlockOthers', authz.has('calendar.block_others'),
-    'canBook', authz.has('filming.book'),
-    'team', authz.calendar_team_members(),
-    'people', authz.calendar_people(),
-    'me', auth.uid()
+begin
+  return (
+    select jsonb_build_object(
+      'filmings', authz.calendar_team_filmings(p_from_at, p_to_at),
+      'blocked', authz.calendar_team_blocked(p_from_at, p_to_at),
+      'busy', authz.calendar_busy(p_from_at, p_to_at),
+      'nextSteps', authz.calendar_next_steps(p_from, p_to),
+      'deadlines', authz.calendar_deadlines(p_from, p_to),
+      'tasks', authz.calendar_tasks(p_from, p_to),
+      'days', authz.calendar_team_days(p_from, p_to),
+      'canBlockOthers', authz.has('calendar.block_others'),
+      'canBook', authz.has('filming.book'),
+      'team', authz.calendar_team_members(),
+      'people', authz.calendar_people(),
+      'me', auth.uid()
+    )
   );
+end;
 $$;
 
 -- ───────────── Στάδια Παραγωγής ─────────────
@@ -245,29 +257,33 @@ alter table public.productions add column stage_id uuid references public.produc
 
 -- Αντικαθιστά το 20261009180000: και το Στάδιο (μόνο για την ομάδα).
 create or replace function authz.production_card(p_production uuid) returns jsonb
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select jsonb_build_object(
-    'id', p.id,
-    'title', p.title,
-    'client', case when c.id is null then null else jsonb_build_object('id', c.id, 'name', c.name) end,
-    'period', case when pe.id is null then null
-                   else jsonb_build_object('n', pe.n, 'starts', pe.starts, 'ends', pe.ends,
-                                           'state', authz.period_state(pe.starts, pe.ends)) end,
-    'owner', case when u.user_id is null then null
-                  when authz.is_team_user() then jsonb_build_object('id', u.user_id, 'name', u.name)
-                  else jsonb_build_object('name', u.name) end,
-    'state', p.state,
-    'isInternal', p.client_id is null,
-    'stage', case when s.id is not null and authz.is_team_user()
-                  then jsonb_build_object('id', s.id, 'label', s.label) end
-  )
-  from public.productions p
-  left join public.clients c on c.id = p.client_id
-  left join public.agreement_periods pe on pe.id = p.period_id
-  left join public.team_users u on u.user_id = p.owner_id
-  left join public.production_stages s on s.id = p.stage_id
-  where p.id = p_production;
+begin
+  return (
+    select jsonb_build_object(
+      'id', p.id,
+      'title', p.title,
+      'client', case when c.id is null then null else jsonb_build_object('id', c.id, 'name', c.name) end,
+      'period', case when pe.id is null then null
+                     else jsonb_build_object('n', pe.n, 'starts', pe.starts, 'ends', pe.ends,
+                                             'state', authz.period_state(pe.starts, pe.ends)) end,
+      'owner', case when u.user_id is null then null
+                    when authz.is_team_user() then jsonb_build_object('id', u.user_id, 'name', u.name)
+                    else jsonb_build_object('name', u.name) end,
+      'state', p.state,
+      'isInternal', p.client_id is null,
+      'stage', case when s.id is not null and authz.is_team_user()
+                    then jsonb_build_object('id', s.id, 'label', s.label) end
+    )
+    from public.productions p
+    left join public.clients c on c.id = p.client_id
+    left join public.agreement_periods pe on pe.id = p.period_id
+    left join public.team_users u on u.user_id = p.owner_id
+    left join public.production_stages s on s.id = p.stage_id
+    where p.id = p_production
+  );
+end;
 $$;
 
 -- Τα Στάδια (ενεργά πρώτα, στη σειρά τους). Τα βλέπει η ομάδα των Παραγωγών και ο διαχειριστής των Ρυθμίσεων.
