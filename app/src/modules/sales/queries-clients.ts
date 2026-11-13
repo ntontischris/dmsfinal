@@ -8,6 +8,7 @@ import {
   parseActivities,
   parseOpportunities,
 } from "./queries-opportunities";
+import { collectPages } from "./paging";
 import { read, type ReadResult } from "./read";
 import type {
   ActivityRow,
@@ -185,3 +186,9 @@ export async function getClientDeleteState(
     (data) => deleteStateSchema.parse(data),
   );
 }
+
+// Όλοι οι Πελάτες της αναζήτησης (B1): σελίδα-σελίδα, γιατί η βάση δίνει έως 100 ανά κλήση.
+export const listAllClients = (
+  query: string,
+): Promise<ReadResult<ClientRow[]>> =>
+  collectPages((offset, limit) => listClients({ query, limit, offset }));

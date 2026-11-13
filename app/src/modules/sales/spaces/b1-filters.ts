@@ -2,53 +2,63 @@
 // Ζουν στη διεύθυνση (?status=, ?noshoot=1, ?package=<όνομα> ή ?package=- για «χωρίς Πακέτο», μαζί με την αναζήτηση ?q=)
 // και στενεύουν τις γραμμές που ήρθαν.
 
+import { selectionOf, type ColumnSelection } from "@/spaces/kit/column-filters";
 import type { FilterGroup } from "@/spaces/kit/filter-bar";
 import { hrefOf } from "@/spaces/data/screens";
 
 import type { ClientStatus } from "../types";
 import { STATUS_LABELS, type B1Row } from "./b1-adapter";
+import { B1_COLUMN_KEYS } from "./b1-columns";
 
 export interface B1Filters {
   status: ClientStatus | null;
   isNoShoot: boolean;
   // Όνομα Πακέτου ενεργής Συμφωνίας, ή NO_PACKAGE για όσους δεν έχουν κανένα.
   pkg: string | null;
+  // Τα φίλτρα των στηλών (b1-columns: ?city=, ?owner=, …)· λείπει όταν δεν έχει διαλεχτεί κανένα.
+  columns?: ColumnSelection;
 }
 
-export interface B1Params {
-  status?: string;
-  noshoot?: string;
-  package?: string;
-}
+// Η διεύθυνση όπως έρχεται: ?status=, ?noshoot=, ?package= και τα keys των στηλών.
+export type B1Params = Readonly<Record<string, string | string[] | undefined>>;
+
+type Param = B1Params[string];
 
 export const NO_PACKAGE = "-";
 
 // Κάθε Κατάσταση που βγάζει η βάση (authz.client_status), με τη σειρά των ετικετών της.
 const STATUSES = Object.keys(STATUS_LABELS) as ClientStatus[];
 
-const isStatus = (value: string | undefined): value is ClientStatus =>
+const isStatus = (value: Param): value is ClientStatus =>
   STATUSES.some((status) => status === value);
 
-const pkgOf = (value: string | undefined): string | null => {
+const pkgOf = (value: Param): string | null => {
   const trimmed = typeof value === "string" ? value.trim() : "";
   return trimmed === "" ? null : trimmed;
 };
 
-export const parseB1Filters = (params: B1Params): B1Filters => ({
-  status: isStatus(params.status) ? params.status : null,
-  isNoShoot: params.noshoot === "1",
-  pkg: pkgOf(params.package),
-});
+export const parseB1Filters = (params: B1Params): B1Filters => {
+  const base: B1Filters = {
+    status: isStatus(params.status) ? params.status : null,
+    isNoShoot: params.noshoot === "1",
+    pkg: pkgOf(params.package),
+  };
+  const columns = selectionOf(B1_COLUMN_KEYS, params);
+  return Object.keys(columns).length === 0 ? base : { ...base, columns };
+};
 
 export const hasB1Filters = (filters: B1Filters): boolean =>
   filters.status !== null || filters.isNoShoot || filters.pkg !== null;
 
-export const b1Href = (query: string, filters: B1Filters): string =>
+// Η σελίδα μπαίνει μόνο όταν είναι μετά την πρώτη· κάθε αλλαγή φίλτρου γυρίζει στην πρώτη.
+export const b1Href = (query: string, filters: B1Filters, page = 1): string =>
   hrefOf("B1", {
     q: query || undefined,
     status: filters.status ?? undefined,
     noshoot: filters.isNoShoot ? "1" : undefined,
     package: filters.pkg ?? undefined,
+    ...filters.columns,
+    page: page > 1 ? String(page) : undefined,
   });
 
 // Η βάση δίνει τα Πακέτα των ενεργών Συμφωνιών ενωμένα με «, » (sales_client_overview.package_name).

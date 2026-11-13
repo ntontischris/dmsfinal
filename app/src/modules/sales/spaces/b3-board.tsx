@@ -152,6 +152,9 @@ function Card({
         {card.title}
       </Link>
       {card.amount && <span className="b3-amount">{card.amount}</span>}
+      {card.forecast && (
+        <span className="part-sub b3-forecast">{card.forecast}</span>
+      )}
       <span className="part-sub b3-client">{card.clientName}</span>
       {card.nextStep && card.outcome === "open" && (
         <p className="b3-step">

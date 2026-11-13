@@ -14,6 +14,7 @@ export interface ListItem {
   isSystem: boolean;
   isRetired: boolean;
   needsDetail?: boolean; // μόνο Πηγές: θέλει περιγραφή («Ποια πηγή;») στη Νέα Ευκαιρία
+  probability?: number | null; // μόνο Στάδια: προεπιλεγμένη Πιθανότητα (%) των Ευκαιριών του Σταδίου
 }
 export interface SalesLists {
   stages: ListItem[];
@@ -70,6 +71,35 @@ export interface Opportunity {
 export interface Pipeline {
   open: Opportunity[];
   closed: Opportunity[];
+}
+
+// Πρόβλεψη ανά ανοιχτή Ευκαιρία (sales_pipeline_rows). Αξία null χωρίς «Βλέπει ποσά» ή χωρίς εκτίμηση και πρόταση.
+export interface ForecastRow {
+  opportunityId: string;
+  value: number | null;
+  valueSource: "estimate" | "proposal" | null;
+  probability: number; // 0–100
+  probabilitySource: "opportunity" | "stage" | null;
+  weighted: number | null;
+  expectedClose: string | null; // YYYY-MM-DD
+  isLate: boolean;
+}
+// Τα στοιχεία που γράφει ο Υπεύθυνος (B4): null = δεν γράφτηκε (η Αξία πέφτει στην πρόταση, η Πιθανότητα στο Στάδιο).
+export interface OpportunityForecast {
+  row: ForecastRow | null;
+  estimate: number | null;
+  probability: number | null;
+  expectedClose: string | null;
+}
+// Το σύνολο της ανοιχτής πρόβλεψης (sales_pipeline_value): ποσά null χωρίς «Βλέπει ποσά».
+export interface PipelineValue {
+  hasAmounts: boolean;
+  open: number;
+  valued: number;
+  total: number | null;
+  weighted: number | null;
+  thisMonth: { count: number; weighted: number | null };
+  late: number;
 }
 
 export interface ActivityRow {

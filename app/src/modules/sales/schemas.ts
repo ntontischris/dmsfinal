@@ -145,3 +145,42 @@ export const mergeSchema = z
     message: "Διάλεξε δύο διαφορετικούς Πελάτες.",
     path: ["survivorId"],
   });
+
+// Πρόβλεψη (b3): "" = δεν γράφτηκε (Αξία από την πρόταση, Πιθανότητα από το Στάδιο, χωρίς κλείσιμο).
+// Το ποσό δέχεται ελληνική υποδιαστολή («1.500,50» ή «1500,5»).
+const MONEY = /^\d{1,10}([.,]\d{1,2})?$/;
+const toMoney = (v: string): string => {
+  const plain = v.replace(/\s/g, "");
+  return /,/.test(plain) ? plain.replace(/\./g, "").replace(",", ".") : plain;
+};
+const optionalMoney = text
+  .transform(toMoney)
+  .refine(
+    (v) => v === "" || MONEY.test(v),
+    "Γράψε την Αξία σε ευρώ (π.χ. 1500).",
+  )
+  .transform((v) => (v === "" ? null : Number(v)));
+const optionalPercent = text
+  .refine(
+    (v) => v === "" || (/^\d{1,3}$/.test(v) && Number(v) <= 100),
+    "Η Πιθανότητα είναι από 0 έως 100%.",
+  )
+  .transform((v) => (v === "" ? null : Number(v)));
+const optionalDate = z
+  .union([z.literal(""), z.iso.date("Διάλεξε ημερομηνία κλεισίματος.")])
+  .transform((v) => (v === "" ? null : v));
+
+export const forecastSchema = z.object({
+  opportunityId: z.uuid(),
+  value: optionalMoney,
+  probability: optionalPercent,
+  expectedClose: optionalDate,
+  // "1" = η φόρμα δεν έδειξε Αξία (ο Χρήστης δεν βλέπει ποσά): η Αξία μένει όπως είναι.
+  keepValue: z.string().transform((v) => v === "1"),
+});
+
+// Προεπιλεγμένη Πιθανότητα Σταδίου (O2): "" = χωρίς προεπιλογή (μετρά 0%).
+export const stageProbabilitySchema = z.object({
+  id: z.uuid(),
+  probability: optionalPercent,
+});

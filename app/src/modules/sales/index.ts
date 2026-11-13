@@ -17,6 +17,7 @@ export type {
   DuplicatePair,
   DuplicateReason,
   DuplicateSide,
+  ForecastRow,
   FormRouting,
   ListItem,
   ListName,
@@ -24,6 +25,7 @@ export type {
   Opportunity,
   Outcome,
   Pipeline,
+  PipelineValue,
   PickerClient,
   QueueItem,
   SalesCaps,
@@ -85,6 +87,9 @@ export { parseB1Filters } from "./spaces/b1-filters";
 export { SpacesClient } from "./spaces/b2-screen";
 export { SpacesOpportunity } from "./spaces/b4-screen";
 export { SpacesPipeline } from "./spaces/b3-screen";
+export { parseB3Selection } from "./spaces/b3-columns";
+// Η πρόβλεψη του Pipeline για άλλες οθόνες (π.χ. KPIs στο Σήμερα): sales_pipeline_value / sales_pipeline_rows.
+export { getPipelineValue, listForecastRows } from "./queries-forecast";
 export { SpacesUnassigned } from "./spaces/b5-screen";
 export { SpacesDuplicates } from "./spaces/b6-screen";
 export { SpacesSalesSettings } from "./spaces/o2-screen";
