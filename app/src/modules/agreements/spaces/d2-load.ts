@@ -1,11 +1,13 @@
 import { headers } from "next/headers";
 
 import { athensToday } from "../helpers";
+import type { Lifecycle } from "../lifecycle-schema";
 import {
   getProposalPreview,
   listCatalogueOptions,
   listOutbox,
 } from "../queries-agreements";
+import { getLifecycle } from "../queries-lifecycle";
 import type {
   AgreementCaps,
   AgreementDetail,
@@ -24,6 +26,7 @@ export interface D2Extras {
   outbox: OutboxItem[];
   isOptionsFailed: boolean;
   isLossReasonsFailed: boolean;
+  lifecycle: Lifecycle | null; // Λύση, συνέχιση, ανανέωση, αρχείο: μόνο μετά την υπογραφή
 }
 
 export const isInternal = (caps: AgreementCaps): boolean =>
@@ -44,11 +47,12 @@ export async function loadExtras(
   caps: AgreementCaps,
 ): Promise<D2Extras> {
   const { can } = agreement;
-  const [options, lists, preview, outbox] = await Promise.all([
+  const [options, lists, preview, outbox, lifecycle] = await Promise.all([
     can.edit ? listCatalogueOptions(agreement.id) : null,
     can.closeLost ? listLossReasons() : null,
     can.seeAmounts ? getProposalPreview(agreement.id) : null,
     isInternal(caps) ? listOutbox(agreement.id) : null,
+    agreement.state === "proposal" ? null : getLifecycle(agreement.id),
   ]);
   return {
     options: options?.ok ? options.data : [],
@@ -65,6 +69,7 @@ export async function loadExtras(
       : [],
     isOptionsFailed: options !== null && !options.ok,
     isLossReasonsFailed: lists !== null && !lists.ok,
+    lifecycle: lifecycle?.ok ? lifecycle.data : null,
   };
 }
 

@@ -19,6 +19,7 @@ import {
   RevisionsSection,
   SignatureSection,
 } from "./d2-history";
+import { LifecyclePanel } from "./d2-lifecycle";
 import { LinesSection } from "./d2-lines";
 import {
   daysToExpiry,
@@ -86,6 +87,13 @@ function Body({ agreement, kinds, caps, extras, origin }: BodyProps) {
         pendingDays={pendingApprovalDays(agreement)}
         preview={previewOf(extras)}
       />
+      {extras.lifecycle && (
+        <LifecyclePanel
+          agreementId={agreement.id}
+          lifecycle={extras.lifecycle}
+          today={today}
+        />
+      )}
       <LinesSection
         agreement={agreement}
         kinds={kinds}

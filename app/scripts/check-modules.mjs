@@ -32,6 +32,7 @@ const ADMIN_FILES = new Set([
   "src/modules/finance/invoice-storage.ts",
   "src/modules/messages/message-storage.ts",
   "src/modules/knowledge/knowledge-storage.ts",
+  "src/modules/agreements/agreement-files.ts",
 ]);
 // Τα `import type` δεν φτάνουν ποτέ στο κώδικα που τρέχει, άρα δεν μετράνε.
 const SPECIFIER = /(?:import|export)(?!\s+type\s)[^"']*?from\s*["']([^"']+)["']|(?:import|require)\(\s*["']([^"']+)["']\s*\)/g;

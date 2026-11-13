@@ -37,6 +37,7 @@ const defaultsRowSchema = z.object({
   openProposals: count,
   liveAgreements: count,
   updatedAt: z.string(),
+  renewalLeadDays: count,
 });
 
 const defaultsRowsSchema: z.ZodType<AgreementDefaults[], unknown> =

@@ -25,4 +25,4 @@ export const OUTBOX_KIND_LABELS: Readonly<Record<OutboxKind, string>> = { propos
 export const BUCKET_LABELS: Readonly<Record<BucketFilter, string>> = { open: "Ανοιχτές", proposal: "Προτάσεις", active: "Ενεργές", closed: "Κλειστές", all: "Όλες" };
 export const FORWARD_NOTE = "Η αλλαγή ισχύει για νέες προτάσεις· οι ανοιχτές και οι υπογεγραμμένες Συμφωνίες κρατούν τους δικούς τους Όρους.";
 export const MANUAL_DELIVERY_NOTE = "Ο πάροχος email δεν έχει συνδεθεί· τα μηνύματα τα παραδίδεις εσύ από εδώ.";
-export const AUTO_RENEWAL_NOTE = "Η αυτόματη συνέχιση καταχωρίζεται και φαίνεται στην πρόταση, αλλά δεν εκτελείται ακόμα: μια τέτοια Συμφωνία δεν λήγει μόνη της.";
+export const AUTO_RENEWAL_NOTE = "Αυτόματη συνέχιση: την επόμενη μέρα μετά τη Λήξη η Συμφωνία συνεχίζει με ίδιους όρους και διάρκεια, εκτός αν πατηθεί «Χωρίς συνέχιση».";

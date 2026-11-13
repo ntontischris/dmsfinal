@@ -2,7 +2,7 @@
 
 import type { FormState } from "@/lib/form-state";
 
-import { perform, pick } from "./action-support";
+import { callRpc, finishWith, firstIssue, perform, pick } from "./action-support";
 import {
   revisionLimitsInputSchema,
   savePolicySchema,
@@ -25,30 +25,34 @@ const TERMS_KEYS = [
   "renewal",
   "dissolutionNoticeDays",
   "dissolutionFee",
+  "renewalLeadDays",
 ] as const;
 
 // Η εφάπαξ στέλνει μόνο Μέρες πληρωμής· τα υπόλοιπα φτάνουν κενά (null) και η βάση τα αγνοεί εκεί.
+// Οι μέρες της Ευκαιρίας ανανέωσης έχουν δικό τους RPC, στην ίδια «Αποθήκευση».
 export async function saveTerms(
   _: FormState,
   form: FormData,
 ): Promise<FormState> {
-  return perform(
-    saveTermsSchema.safeParse(pick(form, TERMS_KEYS)),
-    (v) => ({
-      name: "agreements_save_terms",
-      args: {
-        p_set: v.set,
-        p_payment_days: v.paymentDays,
-        p_unused_provisions: v.unusedProvisions,
-        p_grace_days: v.graceDays,
-        p_duration_months: v.durationMonths,
-        p_renewal: v.renewal,
-        p_dissolution_notice_days: v.dissolutionNoticeDays,
-        p_dissolution_fee: v.dissolutionFee,
-      },
-    }),
-    SAVED_NOTICE,
-  );
+  const parsed = saveTermsSchema.safeParse(pick(form, TERMS_KEYS));
+  if (!parsed.success) return firstIssue(parsed.error);
+  const v = parsed.data;
+  const terms = await callRpc("agreements_save_terms", {
+    p_set: v.set,
+    p_payment_days: v.paymentDays,
+    p_unused_provisions: v.unusedProvisions,
+    p_grace_days: v.graceDays,
+    p_duration_months: v.durationMonths,
+    p_renewal: v.renewal,
+    p_dissolution_notice_days: v.dissolutionNoticeDays,
+    p_dissolution_fee: v.dissolutionFee,
+  });
+  if (!terms.ok || v.renewalLeadDays === null)
+    return finishWith(terms, SAVED_NOTICE);
+  const lead = await callRpc("agreements_save_renewal_lead", {
+    p_days: v.renewalLeadDays,
+  });
+  return finishWith(lead, SAVED_NOTICE);
 }
 
 export async function savePolicy(

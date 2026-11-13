@@ -37,6 +37,7 @@ describe("saveTermsSchema", () => {
       renewal: "new_opportunity",
       dissolutionNoticeDays: 30,
       dissolutionFee: null,
+      renewalLeadDays: null,
     });
   });
 
@@ -60,7 +61,25 @@ describe("saveTermsSchema", () => {
       renewal: null,
       dissolutionNoticeDays: null,
       dissolutionFee: null,
+      renewalLeadDays: null,
     });
+  });
+
+  it("οι μέρες της Ευκαιρίας ανανέωσης είναι 1–365, κενό σημαίνει «δεν αλλάζει»", () => {
+    expect(
+      saveTermsSchema.parse({ ...monthly, renewalLeadDays: "45" })
+        .renewalLeadDays,
+    ).toBe(45);
+    expect(
+      saveTermsSchema.parse({ ...monthly, renewalLeadDays: "" })
+        .renewalLeadDays,
+    ).toBeNull();
+    expect(
+      saveTermsSchema.safeParse({ ...monthly, renewalLeadDays: "0" }).success,
+    ).toBe(false);
+    expect(
+      saveTermsSchema.safeParse({ ...monthly, renewalLeadDays: "366" }).success,
+    ).toBe(false);
   });
 
   it("η ρήτρα λύσης δέχεται κόμμα και κενό σημαίνει «δεν αλλάζει»", () => {

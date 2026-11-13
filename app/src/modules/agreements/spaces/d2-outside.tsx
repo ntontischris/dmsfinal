@@ -13,7 +13,7 @@ export type { UsedKind } from "./d2-model";
 // Έναρξη, που μπορεί να είναι στο παρελθόν. Ίδια πεδία με τη σημερινή φόρμα· την απόφαση την παίρνει η βάση.
 
 const FILE_HINT =
-  "Όνομα αρχείου ή σύνδεσμος· η αποθήκευση αρχείων έρχεται με το module Αρχεία.";
+  "Ανέβασε το υπογεγραμμένο PDF, JPG ή PNG (έως 4 MB). Χωρίς αρχείο, γράψε όνομα ή σύνδεσμο.";
 
 const startsBeforeThisMonth = (start: string, today: string): boolean =>
   start !== "" && start < `${today.slice(0, 7)}-01`;
@@ -80,6 +80,15 @@ function Fields({ agreement, kinds, today }: OutsideProps) {
       <p className="note">
         Η υπογραφή κλείνει την Ευκαιρία ως κερδισμένη και παγώνει την πρόταση.
       </p>
+      <label className="stack">
+        <span className="muted">Υπογεγραμμένο αρχείο</span>
+        <input
+          className="input"
+          type="file"
+          name="signedFile"
+          accept="application/pdf,image/jpeg,image/png"
+        />
+      </label>
       <label className="stack">
         <span className="muted">Αρχείο υπογραφής</span>
         <input

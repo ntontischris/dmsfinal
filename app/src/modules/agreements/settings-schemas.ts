@@ -53,6 +53,10 @@ export const saveTermsSchema = z.object({
   durationMonths,
   renewal: optionalChoice(["new_opportunity", "auto"], RENEWAL_MESSAGE),
   dissolutionNoticeDays: nullableInt(0, 365),
+  // Πόσες μέρες πριν από τη Λήξη ανοίγει η Ευκαιρία ανανέωσης (μόνο στις μηνιαίες· κενό = δεν αλλάζει).
+  renewalLeadDays: nullableInt(1, 365)
+    .optional()
+    .transform((value) => value ?? null),
   // Απουσία = ο θεατής δεν «Βλέπει ποσά»: δεν στέλνεται, άρα δεν αλλάζει.
   dissolutionFee: optionalMoney.transform((value) => value ?? null),
 });
