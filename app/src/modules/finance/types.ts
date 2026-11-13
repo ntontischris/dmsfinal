@@ -12,6 +12,13 @@ export interface ReceiptRow {
   clientName: string;
   receivedOn: string;
   amount: number;
+  // Η παρακράτηση φόρου (d6): κλείνει το Τιμολόγιο όπως η πληρωμή, αλλά δεν είναι μετρητά.
+  withheld: number;
+  withholdingId: string | null;
+  withholdingLabel: string | null;
+  // Τα Τιμολόγια που δέθηκαν με το χέρι (d4)· κενό = από το παλαιότερο, όπως πριν.
+  invoiceIds: string[];
+  invoiceNumbers: string[];
   methodId: string;
   methodLabel: string;
   note: string;
@@ -19,6 +26,14 @@ export interface ReceiptRow {
   deleted: boolean;
   deleteReason: string | null;
   canEdit: boolean;
+}
+
+// Ποσοστό παρακράτησης (d6): το αλλάζει ο admin στις Ρυθμίσεις › Οικονομικά.
+export interface WithholdingRate {
+  id: string;
+  label: string;
+  percent: number;
+  retired: boolean;
 }
 
 export interface ReceiptSettle {

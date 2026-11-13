@@ -19,6 +19,8 @@ const invoiceItemSchema = z.object({
   clientName: z.string(),
   issueDate: z.string(),
   dueDate: z.string().nullable(),
+  // Το καθαρό: μόνο στο invoices_view της ομάδας (για την πρόταση παρακράτησης, d6).
+  net: z.number().optional(),
   total: z.number(),
   paid: z.number(),
   remaining: z.number(),

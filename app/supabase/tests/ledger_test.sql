@@ -33,7 +33,7 @@ insert into public.clients (id, name, afm, contact_name, contact_email, manager_
   ('00000000-0000-0000-0000-0000000000c1', 'Πελάτης Α', '123456789', 'Μαρία Παπαδάκη', 'a@example.com', '00000000-0000-0000-0000-0000000000a3'),
   ('00000000-0000-0000-0000-0000000000c2', 'Πελάτης Β', '987654321', 'Νίκος Κίνης', 'b@example.com', '00000000-0000-0000-0000-0000000000a3'),
   ('00000000-0000-0000-0000-0000000000c3', 'Πελάτης Γ', '555555555', 'Ελένη Γεωργίου', 'c@example.com', '00000000-0000-0000-0000-0000000000a3'),
-  ('00000000-0000-0000-0000-0000000000c4', 'Πελάτης Δ', '444444444', 'Πέτρος Δ', 'd@example.com', '00000000-0000-0000-0000-0000000000a3');
+  ('00000000-0000-0000-0000-0000000000c4', 'Πελάτης Δ', '444444444', 'Πέτρος Δ', 'd@example.com', '00000000-0000-0000-0000-0000000000a1');
 
 insert into public.roles (name, description, kind, is_owner, is_builtin) values
   ('Μόνο προβολή (τεστ)', 'Τεστ: Χρήστης πελάτη χωρίς Οικονομικά.', 'client', false, false);
@@ -98,7 +98,8 @@ select throws_ok($$ select public.client_ledger_view() $$, '42501', null, 'Χρ�
 select throws_ok($$ select public.client_invoices_view() $$, '42501', null, 'Χρήστης πελάτη χωρίς «Βλέπει Οικονομικά» δεν βλέπει Τιμολόγια');
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a3","role":"authenticated"}', true);
-select throws_ok($$ select public.client_ledger_view(current_setting('t.a')::uuid) $$, '42501', null, 'Οι Πωλήσεις δεν βλέπουν Καρτέλα');
+-- Οι Πωλήσεις («Βλέπει ποσά» δικά μου) βλέπουν μόνο Καρτέλα Πελάτη όπου είναι υπεύθυνες (d11)· ο Δ ανήκει στον Ιδιοκτήτη.
+select throws_ok($$ select public.client_ledger_view('00000000-0000-0000-0000-0000000000c4') $$, '42501', null, 'Οι Πωλήσεις δεν βλέπουν Καρτέλα Πελάτη άλλου υπευθύνου');
 select throws_ok($$ select public.clients_with_finance() $$, '42501', null, 'Οι Πωλήσεις δεν βλέπουν τη λίστα Καρτελών');
 select throws_ok($$ select public.client_invoices_view() $$, '42501', null, 'Η ομάδα δεν έχει όψη Χρήστη πελάτη');
 

@@ -50,6 +50,9 @@ export const RECEIPT_COLUMNS: readonly ExportColumn[] = [
   text("clientName", "Πελάτης"),
   text("clientAfm", "ΑΦΜ"),
   money("amount", "Ποσό"),
+  // Παρακράτηση φόρου (d6): ποσό και είδος, για τον λογιστή.
+  money("withheld", "Παρακράτηση"),
+  text("withholding", "Είδος παρακράτησης"),
   text("method", "Τρόπος"),
   text("note", "Σημείωση"),
 ];

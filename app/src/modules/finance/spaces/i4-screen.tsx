@@ -11,9 +11,10 @@ import {
   listClientOptions,
   listPaymentMethods,
   listReceipts,
+  listWithholdingRates,
 } from "../queries";
 import type { ReadResult } from "../read";
-import type { ClientOption, PaymentMethod } from "../types";
+import type { ClientOption, PaymentMethod, WithholdingRate } from "../types";
 import { hasActionsColumn, i4RowsOf } from "./i4-adapter";
 import { ReceiptsCsv } from "./i4-csv";
 import { I4Form } from "./i4-form";
@@ -35,10 +36,17 @@ const activeMethodsOf = (methods: readonly PaymentMethod[]) =>
     .filter((method) => !method.retired)
     .map((method) => ({ id: method.id, name: method.label }));
 
+export interface ReceiptsQuery {
+  clientId?: string;
+  invoiceId?: string;
+}
+
 function FormSlot(props: {
   clients: ReadResult<ClientOption[]> | null;
   methods: readonly PaymentMethod[];
+  rates: ReadResult<WithholdingRate[]>;
   openByClient: Readonly<Record<string, readonly OpenInvoice[]>> | null;
+  query: ReceiptsQuery;
 }) {
   if (props.clients === null) return null;
   if (!props.clients.ok)
@@ -48,7 +56,9 @@ function FormSlot(props: {
       clients={props.clients.data}
       methods={activeMethodsOf(props.methods)}
       openByClient={props.openByClient}
+      rates={props.rates.ok ? props.rates.data.filter((r) => !r.retired) : []}
       today={athensToday()}
+      initial={props.query}
     />
   );
 }
@@ -56,7 +66,8 @@ function FormSlot(props: {
 // I4 Εισπράξεις στη νέα εμφάνιση (prototype `screens/I4.tsx`): η λίστα θέλει «Βλέπει Οικονομικά» και «Βλέπει ποσά»
 // (όλα)· η καταχώρηση και η διόρθωση «Καταχωρεί Εισπράξεις». Η βάση ελέγχει κάθε RPC. Το «Θα εξοφλήσει» και το «Για
 // Τιμολόγιο» βγαίνουν από τα Τιμολόγια (invoices_view), με την κατανομή της βάσης.
-export async function SpacesReceipts() {
+// Με ?client=&invoice= (από γραμμή Τιμολογίου) η φόρμα ανοίγει έτοιμη για εκείνο το Τιμολόγιο (d4).
+export async function SpacesReceipts({ query = {} }: { query?: ReceiptsQuery }) {
   const caps = financeCaps(await getViewer());
   if (!caps.canView)
     return (
@@ -66,11 +77,12 @@ export async function SpacesReceipts() {
         </StateNotice>
       </Spaces>
     );
-  const [receipts, methods, clients, invoices] = await Promise.all([
+  const [receipts, methods, clients, invoices, rates] = await Promise.all([
     listReceipts(),
     listPaymentMethods(),
     caps.canRegister ? listClientOptions() : null,
     getInvoices("all"),
+    listWithholdingRates(),
   ]);
   if (!receipts.ok || !methods.ok)
     return (
@@ -94,10 +106,12 @@ export async function SpacesReceipts() {
       <FormSlot
         clients={clients}
         methods={methods.data}
+        rates={rates}
         openByClient={items === null ? null : openInvoicesByClient(items)}
+        query={query}
       />
       <p className="note">
-        Οι τρόποι είσπραξης αλλάζουν στις Ρυθμίσεις › Οικονομικά. Η διόρθωση και
+        Οι τρόποι είσπραξης και τα ποσοστά παρακράτησης αλλάζουν στις Ρυθμίσεις › Οικονομικά. Η διόρθωση και
         η διαγραφή θέλουν λόγο και γράφονται στο ίχνος.
       </p>
       {rows.length === 0 ? (

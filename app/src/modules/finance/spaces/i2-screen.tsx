@@ -239,6 +239,8 @@ export async function SpacesInvoices({
           rows={rows}
           today={today}
           canEdit={caps.canRegisterInvoices}
+          canOpen
+          canCollect={caps.canRegister}
         />
       )}
       {voided?.ok === true && (

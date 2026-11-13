@@ -29,6 +29,10 @@ interface Correction {
   receivedOn: string;
   methodId: string;
   note: string;
+  // Η παρακράτηση διορθώνεται (d6)· με μηδέν φεύγει και το είδος. Τα δεμένα Τιμολόγια μένουν όπως ήταν.
+  withheld: string;
+  withholdingId: string;
+  invoiceIds: string;
 }
 
 const correctionOf = (r: I4Row): Correction => ({
@@ -36,7 +40,17 @@ const correctionOf = (r: I4Row): Correction => ({
   receivedOn: r.date,
   methodId: r.methodId,
   note: r.note,
+  withheld: r.withheld > 0 ? decimalText(r.withheld) : "",
+  withholdingId: r.withholdingId ?? "",
+  invoiceIds: r.invoiceIds.join(","),
 });
+
+const isZero = (text: string): boolean =>
+  (Number(text.replace(",", ".")) || 0) === 0;
+
+// Παρακράτηση μηδέν = χωρίς είδος (η βάση δεν δέχεται είδος χωρίς ποσό).
+const sentOf = (c: Correction): Correction =>
+  isZero(c.withheld) ? { ...c, withheld: "", withholdingId: "" } : c;
 
 const formDataOf = (
   id: string,
@@ -95,6 +109,15 @@ function CorrectionFields(props: {
         value={value.note}
         onChange={(e) => onChange({ note: e.target.value })}
       />
+      {value.withholdingId !== "" && (
+        <input
+          className="input"
+          aria-label="Ποσό παρακράτησης (€)"
+          placeholder="Παρακράτηση"
+          value={value.withheld}
+          onChange={(e) => onChange({ withheld: e.target.value })}
+        />
+      )}
     </>
   );
 }
@@ -116,7 +139,7 @@ function ReasonBox(props: {
       const data = formDataOf(
         props.row.id,
         reason.trim(),
-        isDelete ? null : correction,
+        isDelete ? null : sentOf(correction),
       );
       const state = isDelete
         ? await deleteReceipt({}, data)
@@ -229,6 +252,11 @@ function ReceiptLine(p: RowProps) {
       </td>
       <td data-label="Ποσό" className="num i245-money">
         {fmtMoney(r.amount)}
+        {r.withheld > 0 && (
+          <div className="muted">
+            + {r.withholdingLabel ?? "παρακράτηση"} {fmtMoney(r.withheld)}
+          </div>
+        )}
       </td>
       <td data-label="Για Τιμολόγιο" className="i245-cell">
         {r.deletedReason === null ? invoicesText(r.invoices) : "—"}

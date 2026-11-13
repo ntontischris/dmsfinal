@@ -2,8 +2,8 @@ import { createSupabase } from "@/lib/supabase/server";
 import { listClients } from "@/modules/sales";
 
 import { read, type ReadResult } from "./read";
-import type { ClientOption, PaymentMethod, ReceiptRow } from "./types";
-import { parseMethods, parseReceipts } from "./view-schema";
+import type { ClientOption, PaymentMethod, ReceiptRow, WithholdingRate } from "./types";
+import { parseMethods, parseReceipts, parseWithholdingRates } from "./view-schema";
 
 const CLIENT_OPTIONS_LIMIT = 100;
 
@@ -23,6 +23,13 @@ export async function listPaymentMethods(): Promise<ReadResult<PaymentMethod[]>>
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read("listPaymentMethods", supabase.rpc("payment_methods_view"), parseMethods);
+}
+
+// Ποσοστά παρακράτησης (d6), και τα αποσυρμένα: η διόρθωση παλιάς Είσπραξης τα δείχνει.
+export async function listWithholdingRates(): Promise<ReadResult<WithholdingRate[]>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("listWithholdingRates", supabase.rpc("withholding_rates_view"), parseWithholdingRates);
 }
 
 // Πελάτες για τη φόρμα, από τη λίστα Πελατών του sales (το RPC κρίνει το Εύρος και τους ενεργούς).

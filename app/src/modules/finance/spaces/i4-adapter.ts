@@ -8,6 +8,11 @@ export interface I4Row {
   date: string;
   clientName: string;
   amount: number;
+  // Παρακράτηση (d6): 0 = χωρίς. Το είδος και τα δεμένα Τιμολόγια περνούν όπως είναι στη διόρθωση.
+  withheld: number;
+  withholdingId: string | null;
+  withholdingLabel: string | null;
+  invoiceIds: readonly string[];
   method: string;
   methodId: string;
   note: string;
@@ -28,6 +33,10 @@ export const i4RowsOf = (
     date: r.receivedOn,
     clientName: r.clientName,
     amount: r.amount,
+    withheld: r.withheld,
+    withholdingId: r.withholdingId,
+    withholdingLabel: r.withholdingLabel,
+    invoiceIds: r.invoiceIds,
     method: r.methodLabel,
     methodId: r.methodId,
     note: r.note,

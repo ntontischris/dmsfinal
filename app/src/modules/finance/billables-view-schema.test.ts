@@ -14,7 +14,7 @@ function billableItem(overrides: Record<string, unknown> = {}) {
     net: 1000,
     open: 1000,
     daysOpen: 10,
-    reminders: [7],
+    lastReminderAt: "2027-03-08T09:00:00Z",
     ...overrides,
   };
 }

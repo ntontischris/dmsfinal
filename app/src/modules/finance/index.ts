@@ -6,7 +6,7 @@ export type {
   ReceiptPreview,
   ReceiptRow,
 } from "./types";
-export { financeCaps, financeViewOf } from "./caps";
+export { canSeeClientLedger, financeCaps, financeViewOf } from "./caps";
 export type { FinanceView } from "./caps";
 export { METHODS_TITLE, RECEIPTS_TITLE } from "./labels";
 export { listPaymentMethods } from "./queries";
@@ -35,6 +35,7 @@ export { getLedger } from "./ledger-queries";
 export { SpacesInvoices } from "./spaces/i2-screen";
 export { SpacesToInvoice } from "./spaces/i1-screen";
 export { SpacesNewInvoice } from "./spaces/i3-screen";
+export { SpacesInvoice } from "./spaces/i8-screen";
 // Χώροι: I4, I5
 export { SpacesReceipts } from "./spaces/i4-screen";
 export { SpacesLedger } from "./spaces/i5-screen";
@@ -43,5 +44,13 @@ export { SpacesClientInvoices } from "./spaces/i2-client-screen";
 export { SpacesClientLedger } from "./spaces/i5-client-screen";
 // Τρόποι είσπραξης: για τη φόρμα της νέας εμφάνισης (O6).
 export { saveMethod, retireMethod, restoreMethod } from "./actions-methods";
+// Ποσοστά παρακράτησης (d6): για τη φόρμα του O6.
+export type { WithholdingRate } from "./types";
+export { listWithholdingRates } from "./queries";
+export {
+  saveWithholdingRate,
+  retireWithholdingRate,
+  restoreWithholdingRate,
+} from "./actions-withholding";
 // Ctrl+K: αναζήτηση εγγραφών.
 export { searchInvoices } from "./invoices-search";

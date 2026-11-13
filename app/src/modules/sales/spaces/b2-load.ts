@@ -44,6 +44,8 @@ export interface Loaded {
   agreements: AgreementRow[] | null;
   ledger: (B2Ledger & { hasEntries: boolean }) | null;
   ledgerEntries: LedgerEntry[];
+  // false = ο πωλητής βλέπει μόνο την Καρτέλα του δικού του Πελάτη (d11), όχι τις σελίδες των Οικονομικών.
+  ledgerFull: boolean;
   // null = δεν υπάρχουν ληξιπρόθεσμα, δεν τα βλέπει ή δεν φόρτωσαν.
   overdueInvoices: OverdueInvoice[] | null;
   nextFilming: string | null;
@@ -61,6 +63,8 @@ export interface LoadInput {
   rights: B2TabRights;
   allowed: readonly B2Tab[];
   caps: SalesCaps;
+  // Βλέπει όλα τα Οικονομικά (Τιμολόγια, Καρτέλα I5)· αλλιώς μόνο την Καρτέλα στη σελίδα (d11).
+  isLedgerFull: boolean;
   who: ActivityWho;
 }
 
@@ -140,8 +144,10 @@ export async function loadClient(input: LoadInput): Promise<Loaded> {
     agreements: agreements?.ok ? agreements.data : null,
     ledger: ledger?.ok ? ledgerOf(ledger.data) : null,
     ledgerEntries: ledger?.ok ? ledger.data.entries : [],
-    overdueInvoices: ledger?.ok
-      ? await loadOverdue(client.id, ledger.data.overdue)
+    ledgerFull: input.isLedgerFull,
+    overdueInvoices:
+      ledger?.ok && input.isLedgerFull
+        ? await loadOverdue(client.id, ledger.data.overdue)
       : null,
     nextFilming: overview?.nextFilming ?? null,
     lists: lists.ok ? lists.data : null,

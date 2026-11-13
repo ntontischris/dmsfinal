@@ -129,9 +129,11 @@ function Finance({ ctx }: { ctx: ClientPageCtx }) {
         part="money"
         label="Καρτέλα Πελάτη"
         aside={
-          <Link href={hrefOf("I5", { client: ctx.client.id })}>
-            Άνοιγμα της Καρτέλας Πελάτη
-          </Link>
+          ctx.data.ledgerFull && (
+            <Link href={hrefOf("I5", { client: ctx.client.id })}>
+              Άνοιγμα της Καρτέλας Πελάτη
+            </Link>
+          )
         }
       >
         {entries.length === 0 ? (

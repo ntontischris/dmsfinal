@@ -10,8 +10,17 @@ import { correctionFormSchema, deleteFormSchema, previewSchema, receiptFormSchem
 
 // Εισπράξεις (I4, #150): κάθε αλλαγή είναι ένα RPC της βάσης. Η βάση ελέγχει το Δικαίωμα και τον λόγο.
 
-const RECEIPT_FIELDS = ["clientId", "amount", "receivedOn", "methodId", "note"] as const;
-const CORRECTION_FIELDS = ["amount", "receivedOn", "methodId", "note"] as const;
+const RECEIPT_FIELDS = [
+  "clientId",
+  "amount",
+  "receivedOn",
+  "methodId",
+  "note",
+  "withheld",
+  "withholdingId",
+  "invoiceIds",
+] as const;
+const CORRECTION_FIELDS = RECEIPT_FIELDS.filter((field) => field !== "clientId");
 const RECEIPT_SAVED = "Η Είσπραξη καταχωρήθηκε.";
 const RECEIPT_CORRECTED = "Η διόρθωση αποθηκεύτηκε.";
 const RECEIPT_DELETED = "Η Είσπραξη διαγράφηκε.";
@@ -21,29 +30,16 @@ export type PreviewResult = { preview: ReceiptPreview } | { error: string };
 export async function registerReceipt(_: FormState, form: FormData): Promise<FormState> {
   const parsed = receiptFormSchema.safeParse(pick(form, RECEIPT_FIELDS));
   if (!parsed.success) return firstIssue(parsed.error);
-  const values = parsed.data;
-  const outcome = await callRpc("receipt_register", {
-    p_client: values.clientId,
-    p_received_on: values.receivedOn,
-    p_amount: values.amount,
-    p_method: values.methodId,
-    p_note: values.note,
-  });
+  // Ο Πελάτης διαλέγεται πάντα ρητά· τα δεμένα Τιμολόγια και η παρακράτηση είναι προαιρετικά (d4, d6).
+  const outcome = await callRpc("receipt_record", { p: parsed.data });
   return finishWith(outcome, RECEIPT_SAVED);
 }
 
 export async function correctReceipt(_: FormState, form: FormData): Promise<FormState> {
   const parsed = correctionFormSchema.safeParse(pick(form, ["id", ...CORRECTION_FIELDS, "reason"]));
   if (!parsed.success) return firstIssue(parsed.error);
-  const values = parsed.data;
-  const outcome = await callRpc("receipt_correct", {
-    p_id: values.id,
-    p_received_on: values.receivedOn,
-    p_amount: values.amount,
-    p_method: values.methodId,
-    p_note: values.note,
-    p_reason: values.reason,
-  });
+  // Η διόρθωση αλλάζει και την παρακράτηση· τα δεμένα Τιμολόγια περνούν όπως ήταν.
+  const outcome = await callRpc("receipt_amend", { p: parsed.data });
   return finishWith(outcome, RECEIPT_CORRECTED);
 }
 

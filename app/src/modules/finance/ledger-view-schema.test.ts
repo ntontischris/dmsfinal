@@ -44,11 +44,17 @@ describe("parseLedger", () => {
   });
 
   it("should accept every ledger entry kind", () => {
-    const entries = ["invoice", "receipt_doc", "credit", "payment"].map(
+    const entries = [
+      "invoice",
+      "receipt_doc",
+      "credit",
+      "payment",
+      "withheld",
+    ].map(
       (kind) => entry({ kind }),
     );
 
-    expect(parseLedger(ledger({ entries })).entries).toHaveLength(4);
+    expect(parseLedger(ledger({ entries })).entries).toHaveLength(5);
   });
 
   it("should reject an unknown entry kind", () => {

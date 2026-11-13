@@ -15,6 +15,17 @@ export const financeCaps = (viewer: Viewer): FinanceCaps => ({
   canRegisterInvoices: can(viewer, "finance.invoices"),
 });
 
+// d11: η Καρτέλα ενός Πελάτη στη σελίδα του. Όποιος βλέπει όλα τα Οικονομικά, ή ο Χρήστης ομάδας με «Βλέπει ποσά»
+// Εύρος «δικά μου» για Πελάτη όπου είναι Υπεύθυνος (όπως η authz.ledger_client). Η βάση ξαναελέγχει.
+export const canSeeClientLedger = (
+  viewer: Viewer,
+  managerId: string | null,
+): boolean =>
+  financeCaps(viewer).canView ||
+  (viewer.status === "signed-in" &&
+    viewer.team?.permissions["finance.amounts"] === "mine" &&
+    managerId === viewer.userId);
+
 // Ποια όψη των Οικονομικών βλέπει ο θεατής (όπως στα Παραδοτέα): ομάδα (με ποσά), Χρήστης πελάτη με «Βλέπει Οικονομικά», ή καμία.
 export type FinanceView = "team" | "client" | "none";
 
