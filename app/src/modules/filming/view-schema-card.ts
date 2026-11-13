@@ -86,6 +86,26 @@ const periodSchema = z
   })
   .nullable();
 
+const teamSchema = z.object({
+  details: z.object({
+    contactName: z.string().nullable(),
+    contactPhone: z.string().nullable(),
+    filesUrl: z.string().nullable(),
+    updatedAt: z.string().nullable(),
+  }),
+  google: z.object({
+    state: z.enum(["off", "none", "queued", "error", "synced"]),
+    at: z.string().nullable(),
+    error: z.string().nullable(),
+  }),
+  outcome: z.object({
+    billable: z.enum(["none", "pending", "invoiced"]),
+    extraBillable: z.boolean(),
+    noShowBurns: z.boolean(),
+  }),
+  canEditDetails: z.boolean(),
+});
+
 // Η κάρτα του Γυρίσματος (E3). Τα πεδία του Ιστορικού έρχονται snake_case από το Ίχνος.
 const cardShape = z.object({
   id: z.string(),
@@ -157,6 +177,8 @@ const cardShape = z.object({
     clientReschedule: z.boolean(),
     clientWithdrawReschedule: z.boolean(),
   }),
+  // Μόνο για την ομάδα· ο Πελάτης παίρνει null.
+  team: teamSchema.nullable().default(null),
 });
 
 const toHistoryEntry = (entry: z.infer<typeof historySchema>): FilmingHistoryEntry => ({

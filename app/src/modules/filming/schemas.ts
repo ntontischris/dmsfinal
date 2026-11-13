@@ -197,3 +197,14 @@ export const settingsSchema = z.object({
   changeResetsConfirmations: z.boolean(),
   doneMarking: z.enum(["manual", "auto"]),
 });
+
+// Στοιχεία χώρου (c9): επαφή, τηλέφωνο και σύνδεσμος αρχείων. Κενά πεδία σβήνουν την τιμή.
+export const detailsSchema = z.object({
+  filmingId: uuid,
+  contactName: optionalText(120),
+  contactPhone: optionalText(40),
+  filesUrl: text
+    .max(1000, "Ο σύνδεσμος είναι μέχρι 1000 χαρακτήρες.")
+    .refine((value) => value === "" || /^https:\/\/\S+$/.test(value), "Ο σύνδεσμος αρχείων πρέπει να ξεκινά με https://")
+    .transform((value) => value || null),
+});

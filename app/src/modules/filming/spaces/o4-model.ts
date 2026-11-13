@@ -88,7 +88,7 @@ export const o4RulesOf = (
   {
     name: "noAnswerAction",
     label: "Αν ο Πελάτης δεν απαντήσει",
-    hint: INACTIVE,
+    hint: "Τρέχει μόνο του κάθε 10 λεπτά: μετά τις ώρες χωρίς απάντηση, το αναμένον Γύρισμα εγκρίνεται ή απορρίπτεται.",
     kind: "choice",
     value: s.noAnswerAction,
     options: labels.noAnswer,
@@ -96,7 +96,7 @@ export const o4RulesOf = (
   {
     name: "noAnswerHours",
     label: "Χωρίς απάντηση μετά από (ώρες)",
-    hint: "Ορίζει πότε το Γύρισμα παίρνει το σήμα «περιμένει» στην ουρά έγκρισης.",
+    hint: "Ορίζει πότε το Γύρισμα παίρνει το σήμα «περιμένει» στην ουρά έγκρισης και πότε τρέχει ο από πάνω Κανόνας.",
     kind: "number",
     value: s.noAnswerHours,
     min: 1,
@@ -133,7 +133,7 @@ export const o4RulesOf = (
   {
     name: "doneMarking",
     label: "Σήμανση «έγινε»",
-    hint: INACTIVE,
+    hint: "Αν είναι αυτόματη, την επόμενη μέρα το Γύρισμα γίνεται «έγινε» με τις κλεισμένες ώρες. Γύρισμα που αναιρέθηκε με το χέρι δεν ξανακλείνει μόνο του.",
     kind: "choice",
     value: s.doneMarking,
     options: labels.done,
