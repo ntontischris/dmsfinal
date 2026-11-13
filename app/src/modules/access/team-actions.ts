@@ -82,36 +82,16 @@ export async function saveRole(
   if (!current.ok || !current.data) return { error: "Ο Ρόλος δεν βρέθηκε." };
   if (form.get("confirmed") !== "true") return affectedBy(supabase, parsed.data.id);
 
-  const { error: roleError } = await supabase
-    .from("roles")
-    .update({ name: parsed.data.name, description: parsed.data.description })
-    .eq("id", parsed.data.id);
-  if (roleError)
-    return { error: messageOf(roleError, "Ο Ρόλος δεν αποθηκεύτηκε.") };
-
-  const changes = diffGrants(current.data.grants, grantsFromForm(form));
-  const removed = changes
-    .filter((c) => c.after === null)
-    .map((c) => c.permission);
-  const upserts = changes.flatMap((c) =>
-    c.after
-      ? [{ role_id: parsed.data.id, permission: c.permission, scope: c.after }]
-      : [],
-  );
-  if (removed.length > 0) {
-    const { error } = await supabase
-      .from("role_permissions")
-      .delete()
-      .eq("role_id", parsed.data.id)
-      .in("permission", removed);
-    if (error)
-      return { error: messageOf(error, "Τα Δικαιώματα δεν αποθηκεύτηκαν.") };
-  }
-  if (upserts.length > 0) {
-    const { error } = await supabase.from("role_permissions").upsert(upserts);
-    if (error)
-      return { error: messageOf(error, "Τα Δικαιώματα δεν αποθηκεύτηκαν.") };
-  }
+  // Όνομα, περιγραφή και όλα τα Δικαιώματα σε μία συναλλαγή (a6): ή όλα ή τίποτα.
+  const grants = grantsFromForm(form);
+  const changes = diffGrants(current.data.grants, grants);
+  const { error } = await supabase.rpc("role_save", {
+    p_role_id: parsed.data.id,
+    p_name: parsed.data.name,
+    p_description: parsed.data.description,
+    p_grants: grants,
+  });
+  if (error) return { error: messageOf(error, "Ο Ρόλος δεν αποθηκεύτηκε.") };
   revalidatePath("/app/team", "layout");
   return { notice: savedNotice(changes.length, current.data.holders.length) };
 }
@@ -135,51 +115,21 @@ export async function createRole(
   const supabase = await createSupabase();
   if (!supabase) return UNCONFIGURED;
 
-  const source = parsed.data.copyFrom
-    ? await getRole(parsed.data.copyFrom)
-    : null;
-  const { data, error } = await supabase
-    .from("roles")
-    .insert({
-      name: parsed.data.name,
-      kind: parsed.data.kind,
-      description:
-        source?.ok && source.data ? `Αντίγραφο του «${source.data.name}».` : "",
-    })
-    .select("id")
-    .single();
-  if (error || !data)
+  // Ο Ρόλος και τα αντιγραμμένα Δικαιώματα σε μία συναλλαγή (a6).
+  const { data, error } = await supabase.rpc("role_create", {
+    p_kind: parsed.data.kind,
+    p_name: parsed.data.name,
+    p_copy_from: parsed.data.copyFrom ?? null,
+  });
+  if (error || typeof data !== "string")
     return {
       error: messageOf(
         error ?? { message: "χωρίς id" },
         "Ο Ρόλος δεν δημιουργήθηκε.",
       ),
     };
-
-  const copied =
-    source?.ok && source.data && !source.data.isOwner
-      ? Object.entries(source.data.grants)
-      : [];
-  if (copied.length > 0) {
-    const { error: grantError } = await supabase
-      .from("role_permissions")
-      .insert(
-        copied.map(([permission, scope]) => ({
-          role_id: data.id,
-          permission,
-          scope,
-        })),
-      );
-    if (grantError)
-      return {
-        error: messageOf(
-          grantError,
-          "Ο Ρόλος δημιουργήθηκε, αλλά τα Δικαιώματα δεν αντιγράφηκαν.",
-        ),
-      };
-  }
   revalidatePath("/app/team", "layout");
-  redirect(`/app/team/roles/${data.id}`);
+  redirect(`/app/team/roles/${data}`);
 }
 
 const deleteRoleSchema = z.object({
