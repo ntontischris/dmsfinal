@@ -4,7 +4,7 @@ import { listClientUsers, listInvitations } from "../invitation-queries";
 import { listClientRoleChoices } from "../role-choices";
 import { can, type Viewer } from "../viewer";
 import { n2InvitationsOf, n2MembersOf, teamInvitedBy } from "./n2-adapter";
-import { N2InviteForm } from "./n2-forms";
+import { InvitePanel } from "./invite-panel";
 import { MembersSection, PendingInvitations } from "./n2-sections";
 
 interface SpacesClientUsersProps {
@@ -52,12 +52,16 @@ export async function SpacesClientUsers({
       ) : (
         <ErrorNotice what="τις προσκλήσεις" />
       )}
-      <N2InviteForm
+      {/* Η ίδια «Πρόσκληση» με το «+ Νέο» και την Ομάδα, με τον Πελάτη ήδη διαλεγμένο. */}
+      <InvitePanel
         title="Πρόσκληση Χρήστη πελάτη"
-        clientId={clientId}
-        clientName={clientName}
-        roles={roles}
-        footnote="Προεπιλογή Ρόλου πελάτη: «Πλήρης». Ο Υπογράφων της πρώτης υπογεγραμμένης Συμφωνίας προσκαλείται αυτόματα ως «Πλήρης»."
+        team={null}
+        client={{
+          clients: [{ id: clientId, name: clientName }],
+          roles,
+          presetClientId: clientId,
+        }}
+        footnote="Ο Υπογράφων της πρώτης υπογεγραμμένης Συμφωνίας προσκαλείται αυτόματα ως «Πλήρης»."
       />
     </div>
   );

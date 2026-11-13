@@ -53,7 +53,7 @@ export interface Space {
 
 // Ίδιοι Χώροι με το prototype. Οι κωδικοί χωρίς σελίδα στην εφαρμογή (π.χ. Q1) απλώς δεν φαίνονται.
 // Το E5 και το N3 είναι οθόνες πελάτη· στους Χώρους ομάδας μπαίνουν μόνο για την περιήγηση χωρίς βάση. Το O8 (Ενσωματώσεις)
-// είναι το N5 του prototype και το KIT ο κατάλογος των components.
+// είναι το N5 του prototype και το KIT ο κατάλογος των components. Το N6 (Πρόσκληση) είναι η μία φόρμα πρόσκλησης (a2).
 export const SPACES: readonly Space[] = [
   {
     id: "today",
@@ -108,6 +108,7 @@ export const SPACES: readonly Space[] = [
       "L2",
       "L3",
       "N4",
+      "N6",
       "N5",
       "O2",
       "O3",

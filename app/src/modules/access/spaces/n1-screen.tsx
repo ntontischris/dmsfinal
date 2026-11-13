@@ -8,6 +8,7 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { Strip } from "@/spaces/shell/strip";
 
 import { listInvitations } from "../invitation-queries";
+import type { RoleOption } from "../role-choices";
 import {
   getDeactivationPreview,
   listPermissions,
@@ -23,7 +24,9 @@ import {
   type PickerViewer,
 } from "./n1-adapter";
 import { UserDetail, type DetailConfirm } from "./n1-detail";
-import { InvitationList, InviteForm } from "./n1-invite";
+import { InvitePanel } from "./invite-panel";
+import { inviteOptionsOf } from "./invite-options";
+import { InvitationList } from "./n1-invite";
 import { UserList } from "./n1-list";
 import { listTeamUserDates } from "./n1-load";
 import { RoleReachTable } from "./n1-reach-table";
@@ -65,10 +68,16 @@ interface SpacesTeamProps {
   status: string | undefined;
   // Τα Αιτήματα GDPR (μόνο Ιδιοκτήτης), από το module gdpr.
   gdprRequests: ReactNode;
+  // Οι Πελάτες που βλέπει ο Χρήστης, για την πρόσκληση ανθρώπου Πελάτη (από τη σελίδα, module sales).
+  clients: readonly RoleOption[];
 }
 
 // N1 Ομάδα στη νέα εμφάνιση (prototype `screens/N1.tsx`): οι Χρήστες ομάδας, οι Προσκλήσεις, η πρόσκληση, τι βλέπει κάθε Ρόλος.
-export async function SpacesTeam({ status, gdprRequests }: SpacesTeamProps) {
+export async function SpacesTeam({
+  status,
+  gdprRequests,
+  clients,
+}: SpacesTeamProps) {
   const viewer = await getViewer();
   if (!can(viewer, "access.team")) return <Denied />;
   const [team, strip] = await Promise.all([
@@ -108,9 +117,16 @@ export async function SpacesTeam({ status, gdprRequests }: SpacesTeamProps) {
       ) : (
         <ErrorNotice what="οι Προσκλήσεις" />
       )}
-      <InviteForm
-        roles={pickerRolesOf(roles.data, permissions.data, me, false)}
-        isOwner={me.isOwner}
+      <InvitePanel
+        title="Πρόσκληση Χρήστη"
+        {...inviteOptionsOf({
+          canTeam: true,
+          canClient: can(viewer, "access.clientUsers"),
+          me,
+          roles: roles.data,
+          permissions: permissions.data,
+          clients,
+        })}
       />
       <RoleReachTable roles={roles.data} permissions={permissions.data} />
       {me.isOwner && !isAlone && gdprRequests}

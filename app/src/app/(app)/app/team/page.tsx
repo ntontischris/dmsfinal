@@ -1,5 +1,6 @@
 import { SpacesTeam } from "@/modules/access";
 import { SpacesGdprRequests } from "@/modules/gdpr";
+import { listClients } from "@/modules/sales";
 
 export const metadata = { title: "Ομάδα" };
 
@@ -9,11 +10,15 @@ export default async function TeamPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const { status } = await searchParams;
+  const [{ status }, clients] = await Promise.all([
+    searchParams,
+    listClients({ limit: 100 }),
+  ]);
   return (
     <SpacesTeam
       status={typeof status === "string" ? status : undefined}
       gdprRequests={<SpacesGdprRequests />}
+      clients={clients.ok ? clients.data.map(({ id, name }) => ({ id, name })) : []}
     />
   );
 }
