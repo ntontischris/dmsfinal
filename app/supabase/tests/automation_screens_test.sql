@@ -86,12 +86,12 @@ select throws_ok($$ select public.system_message_save('{"code":"invite","subject
 
 -- ───────────── Κατάλογος και Γεγονός ─────────────
 select public.t_as('a3');
-select is(jsonb_array_length(public.automations_catalog() -> 'events'), 60, 'Η Διαχείριση βλέπει και τα 60 Γεγονότα');
+select is(jsonb_array_length(public.automations_catalog() -> 'events'), 63, 'Η Διαχείριση βλέπει και τα 63 Γεγονότα');
 select is(jsonb_array_length(public.automations_catalog() -> 'groups'), 6, 'Έξι ομάδες');
 select is((select (e ->> 'totalCount')::integer from jsonb_array_elements(public.automations_catalog() -> 'events') e
             where e ->> 'code' = 'message.created'), 3, 'Το «Νέο Μήνυμα» έχει 3 αρχικούς Αυτοματισμούς');
 select is((select e ->> 'isWired' from jsonb_array_elements(public.automations_catalog() -> 'events') e
-            where e ->> 'code' = 'opportunity.form_submitted'), 'false', 'Η φόρμα Ιστοσελίδας συνδέεται αργότερα');
+            where e ->> 'code' = 'opportunity.form_submitted'), 'true', 'Η φόρμα Ιστοσελίδας είναι συνδεδεμένη');
 select is(jsonb_array_length(public.automation_event('message.created') -> 'automations'), 3, 'Η σελίδα Γεγονότος έχει τους Αυτοματισμούς');
 select is((select a ->> 'sendTime' from jsonb_array_elements(public.automation_event('holiday.greeting') -> 'automations') a limit 1),
   '09:00', 'Η ώρα αποστολής φεύγει ως «HH:MM»');
@@ -134,7 +134,7 @@ select lives_ok($$ select public.automation_save('{"eventType":"filming.day","ch
   'Χρονισμός με ημερομηνία: μέρες και ώρα');
 select lives_ok($$ select public.automation_save('{"eventType":"opportunity.form_submitted","channel":"notification",
   "recipientKind":"relative","recipientRelative":"opportunity_owner","timing":"immediate","bodyEl":"Νέα Ευκαιρία {opportunity}"}') $$,
-  'Γεγονός που συνδέεται αργότερα δέχεται Αυτοματισμό');
+  'Η φόρμα Ιστοσελίδας δέχεται νέο Αυτοματισμό');
 
 -- ───────────── Επεξεργασία, διακόπτης, διαγραφή ─────────────
 select set_config('t.new', (select a.id::text from public.automations a

@@ -60,8 +60,8 @@ export const SPACES: readonly Space[] = [
     label: "Σήμερα",
     icon: "today",
     audience: "team",
-    tabs: ["A1", "A5"],
-    members: ["A2", "A6", "E6", "G4"],
+    tabs: ["A1", "A5", "E6"],
+    members: ["A2", "A6", "G4"],
   },
   {
     id: "clients",

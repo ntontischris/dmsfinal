@@ -116,6 +116,11 @@ describe("spacesModel: Χώροι από τα Δικαιώματα", () => {
     expect(landingOf(space(spacesModel(fullTeam), "today")!)).toBe("/app");
   });
 
+  it("«Τα Γυρίσματά μου» είναι καρτέλα του «Σήμερα», ένα κλικ από την αρχή", () => {
+    const today = space(spacesModel(fullTeam), "today");
+    expect(today?.tabs.map((tab) => tab.code)).toContain("E6");
+  });
+
   it("δίνει σύντομες ετικέτες και τον σύνδεσμο «Τιμές» προς τον Κατάλογο", () => {
     const model = spacesModel(fullTeam);
     expect(space(model, "clients")?.tabs.map((tab) => tab.label)).toEqual([
