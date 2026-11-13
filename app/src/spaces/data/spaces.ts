@@ -61,7 +61,7 @@ export const SPACES: readonly Space[] = [
     icon: "today",
     audience: "team",
     tabs: ["A1", "A5"],
-    members: ["A2", "A6", "E6"],
+    members: ["A2", "A6", "E6", "G4"],
   },
   {
     id: "clients",
@@ -218,6 +218,7 @@ const SHORT_LABELS: Readonly<Record<string, string>> = {
   N3: "Συνάδελφοι",
   A6: "Ρεπό / Άδεια",
   E6: "Τα Γυρίσματά μου",
+  G4: "Οι εργασίες μου",
   J1: "Εισερχόμενα",
   J3: "Μηνύματα",
   N4: "Ρόλοι και Δικαιώματα",

@@ -32,6 +32,7 @@ const teamData = (overrides: Partial<CalendarData> = {}): CalendarData => ({
   ],
   nextSteps: [],
   deadlines: [],
+  tasks: [],
   days: [{ day: "2026-10-14", status: "holiday", holidayName: "Αγίου Δημητρίου" }],
   canBlockOthers: false,
   canBook: true,
@@ -143,5 +144,21 @@ describe("buildCalendarDays", () => {
       href: "/app/deliverables/d1",
     });
     expect(dayOf("2026-10-13", data, ["blocked"])?.entries.map((entry) => entry.kind)).toEqual(["blocked"]);
+  });
+
+  it("should place a task due date in the deadlines layer with a link to its production", () => {
+    const data = teamData({
+      tasks: [{ id: "t1", day: "2026-10-14", title: "Στείλε μενού", productionId: "p1", clientName: "Κυψέλη", assigneeId: "u2", assigneeName: "Άννα", isMine: false }],
+    });
+    expect(dayOf("2026-10-14", data, ["deadlines"])?.entries).toEqual([
+      expect.objectContaining({
+        kind: "deadline",
+        title: "Εργασία: Στείλε μενού",
+        detail: "Κυψέλη · Άννα",
+        time: "όλη μέρα",
+        href: "/app/productions/p1",
+      }),
+    ]);
+    expect(dayOf("2026-10-14", data, ["blocked"])?.entries).toEqual([]);
   });
 });

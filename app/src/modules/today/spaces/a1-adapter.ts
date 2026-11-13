@@ -26,6 +26,7 @@ const TECHNICAL: ReadonlySet<string> = new Set(["google_deletions"]);
 // Κάρτες με ημερομηνία ανά γραμμή: η μέρα με το πρόθεμά της (όπως οι renderers της ομάδας «Η δουλειά μου»).
 const DATED: Readonly<Record<string, string>> = {
   my_deliverables: "προθεσμία",
+  my_tasks: "προθεσμία",
   versions_to_review: "προθεσμία",
   next_steps_due: "έληξε",
   proposals_in_progress: "λήγει",

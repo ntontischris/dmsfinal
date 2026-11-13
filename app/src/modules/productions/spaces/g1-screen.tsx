@@ -29,8 +29,10 @@ import {
   type G1Signals,
   type View,
 } from "./g1-rows";
+import { parseMode } from "./board-model";
 import { G1ClientCards } from "./g1-client";
 import { CLIENT_VIEWS } from "./g1-client-model";
+import { G1BoardSection, G1ModeSwitch, G1WorkloadSection } from "./g1-modes";
 import { G1Team } from "./g1-team";
 
 import "./g1.css";
@@ -43,6 +45,7 @@ interface G1Query {
   tab?: string;
   internal?: string;
   client?: string;
+  mode?: string;
 }
 
 const textOf = (value: string | string[] | undefined): string | undefined =>
@@ -53,6 +56,7 @@ const g1QueryOf = (raw: RawQuery): G1Query => ({
   tab: textOf(raw.tab),
   internal: textOf(raw.internal),
   client: textOf(raw.client),
+  mode: textOf(raw.mode),
 });
 
 const EMPTY_SCOPED = "Καμία Παραγωγή δεν σε αφορά σε αυτή την προβολή.";
@@ -243,6 +247,7 @@ export async function SpacesProductions({ query: raw }: { query: RawQuery }) {
     );
 
   const isScoped = scopeOf(viewer) === "mine";
+  const mode = parseMode(query.mode, scopeOf(viewer) === "all");
   // Άγνωστος Πελάτης (ή χωρίς ορατές Παραγωγές) = χωρίς φίλτρο, όπως το findClient του prototype.
   const ofTheClient = ofClient(productions.data, query.client);
   const clientName = query.client ? ofTheClient[0]?.client?.name : undefined;
@@ -265,20 +270,33 @@ export async function SpacesProductions({ query: raw }: { query: RawQuery }) {
         </p>
       )}
       {clientName && <ClientFilter name={clientName} view={active} />}
-      <ViewTabs
-        views={views}
-        active={active}
-        all={all}
-        signals={signals}
+      <G1ModeSwitch
+        active={mode}
+        canSeeLoad={scopeOf(viewer) === "all"}
         clientId={clientName ? query.client : undefined}
       />
-      <G1Team
-        rows={shown.map((card) => toRow(card, signals))}
-        people={people}
-        defaultOwnerId={defaultOwnerOf(viewer, people)}
-        canCreate={caps.canCreateInternal}
-        emptyText={isScoped ? EMPTY_SCOPED : EMPTY_TEXT}
-      />
+      {mode === "board" && (
+        <G1BoardSection cards={all} canMove={scopeOf(viewer) !== undefined} />
+      )}
+      {mode === "load" && <G1WorkloadSection />}
+      {mode === "list" && (
+        <>
+          <ViewTabs
+            views={views}
+            active={active}
+            all={all}
+            signals={signals}
+            clientId={clientName ? query.client : undefined}
+          />
+          <G1Team
+            rows={shown.map((card) => toRow(card, signals))}
+            people={people}
+            defaultOwnerId={defaultOwnerOf(viewer, people)}
+            canCreate={caps.canCreateInternal}
+            emptyText={isScoped ? EMPTY_SCOPED : EMPTY_TEXT}
+          />
+        </>
+      )}
     </div>
   );
 }

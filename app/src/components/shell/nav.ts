@@ -148,6 +148,12 @@ export const NAV: readonly NavSection[] = [
         ],
       },
       {
+        code: "G4",
+        label: "Οι εργασίες μου",
+        href: "/app/tasks",
+        requires: "team",
+      },
+      {
         code: "G3",
         label: "Κόστος και ώρες",
         href: "/app/productions/costs",

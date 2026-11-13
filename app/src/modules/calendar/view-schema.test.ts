@@ -71,6 +71,27 @@ describe("calendarViewSchema", () => {
     expect(view.nextSteps).toHaveLength(1);
     expect(view.deadlines).toHaveLength(1);
     expect(view.me).toBe("u1");
+    // Βάση χωρίς τις Εργασίες: κενή λίστα, όχι σφάλμα.
+    expect(view.tasks).toEqual([]);
+  });
+
+  it("should read the task due dates of the team view", () => {
+    const view = calendarViewSchema.parse({
+      ...teamJson,
+      tasks: [
+        {
+          id: "t1",
+          day: "2027-01-07",
+          title: "Μενού",
+          productionId: "p1",
+          clientName: null,
+          assigneeId: "u1",
+          assigneeName: "Εγώ",
+          isMine: true,
+        },
+      ],
+    });
+    expect(view.tasks.map((task) => task.productionId)).toEqual(["p1"]);
   });
 
   it("should give the client no extra layers and filmings without crew", () => {
@@ -84,6 +105,7 @@ describe("calendarViewSchema", () => {
       isTeam: false,
       nextSteps: [],
       deadlines: [],
+      tasks: [],
       people: [],
       me: null,
     });

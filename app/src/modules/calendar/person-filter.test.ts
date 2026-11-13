@@ -82,6 +82,18 @@ const data = (overrides: Partial<CalendarData> = {}): CalendarData => ({
       isMine: false,
     },
   ],
+  tasks: [
+    {
+      id: "t-me",
+      day: "2026-11-04",
+      title: "Μενού",
+      productionId: "p1",
+      clientName: null,
+      assigneeId: "me",
+      assigneeName: "Εγώ",
+      isMine: true,
+    },
+  ],
   days: [],
   canBlockOthers: true,
   canBook: true,
@@ -101,6 +113,7 @@ const idsOf = (view: CalendarData) => ({
   busy: view.busy.length,
   nextSteps: view.nextSteps.map((item) => item.id),
   deadlines: view.deadlines.map((item) => item.id),
+  tasks: view.tasks.map((item) => item.id),
 });
 
 describe("forPerson", () => {
@@ -115,6 +128,7 @@ describe("forPerson", () => {
       busy: 0,
       nextSteps: ["o-me"],
       deadlines: [],
+      tasks: ["t-me"],
     });
   });
 
@@ -125,6 +139,7 @@ describe("forPerson", () => {
       busy: 1,
       nextSteps: [],
       deadlines: ["d-u2"],
+      tasks: [],
     });
   });
 

@@ -162,6 +162,27 @@ function deadlinePlaced(data: CalendarData): PlacedEntry[] {
   }));
 }
 
+// Προθεσμία Εργασίας: στο ίδιο επίπεδο «Προθεσμίες», ανοίγει την Παραγωγή της (G2).
+function taskPlaced(data: CalendarData): PlacedEntry[] {
+  return data.tasks.map((task) => ({
+    layer: "deadlines",
+    days: [task.day],
+    entry: {
+      key: `task-${task.id}`,
+      kind: "deadline",
+      startsAt: athensToIso(task.day, "00:00"),
+      time: ALL_DAY_LABEL,
+      title: `Εργασία: ${task.title}`,
+      detail: joined([task.clientName, task.isMine ? null : task.assigneeName]),
+      mark: null,
+      tone: null,
+      icon: null,
+      isPending: false,
+      href: `/app/productions/${task.productionId}`,
+    },
+  }));
+}
+
 // Τα στοιχεία κάθε μέρας, με τα ενεργά επίπεδα μόνο και ταξινομημένα ανά ώρα.
 function entriesByDay(
   data: CalendarData,
@@ -172,6 +193,7 @@ function entriesByDay(
     ...blockedPlaced(data),
     ...nextStepPlaced(data),
     ...deadlinePlaced(data),
+    ...taskPlaced(data),
     ...busyPlaced(data),
   ];
   const byDay = new Map<string, CalendarEntry[]>();

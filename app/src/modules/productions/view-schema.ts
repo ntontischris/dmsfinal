@@ -3,8 +3,12 @@ import { z } from "zod";
 import { deliverableCardsSchema } from "@/modules/deliverables";
 
 import {
+  BILLABLE_REASONS,
   PERIOD_STATES,
   PRODUCTION_STATES,
+  TASK_PRIORITIES,
+  TASK_STATUSES,
+  type MyTask,
   type PeriodBalance,
   type ProductionCard,
   type ProductionDetail,
@@ -33,6 +37,7 @@ const cardSchema = z.object({
   owner: z.object({ id: z.string().optional(), name: z.string() }).nullable(),
   state,
   isInternal: z.boolean(),
+  stage: z.object({ id: z.string(), label: z.string() }).nullable().default(null),
 });
 
 type CardRow = z.infer<typeof cardSchema>;
@@ -45,6 +50,7 @@ const toCard = (row: CardRow): ProductionCard => ({
   owner: row.owner ? { id: row.owner.id ?? null, name: row.owner.name } : null,
   state: row.state,
   isInternal: row.isInternal,
+  stage: row.stage,
 });
 
 export const productionsViewSchema = z
@@ -81,6 +87,8 @@ const taskSchema = z.object({
   dueDate: z.string().nullable(),
   isLate: z.boolean(),
   done: z.boolean(),
+  status: z.enum(TASK_STATUSES),
+  priority: z.enum(TASK_PRIORITIES),
 });
 
 // Τα Γυρίσματα της Παραγωγής (G2): μόνο όσα βλέπει ο Χρήστης, από τη βάση.
@@ -162,3 +170,52 @@ export const productionDetailSchema = cardSchema
 export const ownerCandidatesViewSchema = z.array(
   z.object({ id: z.string(), name: z.string() }),
 );
+
+// «Οι εργασίες μου» (G4): οι Εργασίες του θεατή, με τη σειρά της βάσης.
+export const myTasksViewSchema = z.array(
+  z.object({
+    id: z.string(),
+    title: z.string(),
+    dueDate: z.string().nullable(),
+    status: z.enum(TASK_STATUSES),
+    priority: z.enum(TASK_PRIORITIES),
+    isLate: z.boolean(),
+    production: z.object({ id: z.string(), title: z.string(), canOpen: z.boolean() }),
+    clientName: z.string().nullable(),
+  }),
+) satisfies z.ZodType<MyTask[]>;
+
+// Τα Στάδια του πίνακα και αν ο θεατής τα επεξεργάζεται.
+export const stagesViewSchema = z.object({
+  stages: z.array(z.object({ id: z.string(), label: z.string(), isActive: z.boolean() })),
+  canEdit: z.boolean(),
+});
+
+// Φόρτος ανά άτομο.
+export const workloadViewSchema = z.array(
+  z.object({
+    userId: z.string(),
+    name: z.string(),
+    productions: z.number(),
+    tasks: z.number(),
+    lateTasks: z.number(),
+    deliverables: z.number(),
+    filmings: z.number(),
+  }),
+);
+
+// Τιμή και Τιμολογητέα της Παραγωγής.
+export const productionMoneySchema = z.object({
+  price: z.number().nullable(),
+  priceOf: z.enum(["period", "agreement"]).nullable(),
+  billables: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      reason: z.enum(BILLABLE_REASONS),
+      net: z.number(),
+      billableOn: z.string(),
+      covered: z.number(),
+    }),
+  ),
+});

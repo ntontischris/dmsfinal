@@ -322,8 +322,8 @@ insert into public.message_requests (message_id, kind, assignee_id, declared_by,
 
 -- ───────────── Μητρώο και κλειστές συναρτήσεις ─────────────
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'work'),
-  array['my_deliverables', 'versions_to_review', 'requests_mentions', 'unread_messages', 'next_steps_due', 'proposals_in_progress'],
-  'Οι έξι κάρτες «Η δουλειά μου» στη σειρά του κανόνα 2');
+  array['my_deliverables', 'my_tasks', 'versions_to_review', 'requests_mentions', 'unread_messages', 'next_steps_due', 'proposals_in_progress'],
+  'Οι κάρτες «Η δουλειά μου» στη σειρά του κανόνα 2 (και οι Εργασίες μου, L2)');
 set local role anon;
 select throws_ok($$ select public.today_card('my_deliverables') $$, '42501', null, 'Ο ανώνυμος δεν ανοίγει κάρτα');
 reset role;
@@ -434,7 +434,7 @@ select throws_ok($$ select public.today_card('versions_to_review') $$, '42501', 
 select is((select array_agg(c ->> 'code' order by n)
              from jsonb_array_elements(public.today_counts(timestamptz '2026-03-03 10:00+00') -> 'cards') with ordinality x (c, n)
             where c ->> 'grp' = 'work'),
-  array['my_deliverables', 'requests_mentions', 'unread_messages'], 'Η Παραγωγή βλέπει μόνο τις κάρτες των ουρών της');
+  array['my_deliverables', 'my_tasks', 'requests_mentions', 'unread_messages'], 'Η Παραγωγή βλέπει μόνο τις κάρτες των ουρών της');
 reset role;
 select public.tw_as('b1');
 set local role authenticated;

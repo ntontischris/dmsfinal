@@ -28,6 +28,7 @@ export function forPerson(
     deadlines: data.deadlines.filter(
       (deadline) => deadline.assigneeId === target,
     ),
+    tasks: data.tasks.filter((task) => task.assigneeId === target),
   };
 }
 

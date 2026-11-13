@@ -13,6 +13,8 @@ function taskFactory(
     dueDate: null,
     isLate: false,
     done: false,
+    status: "todo",
+    priority: "normal",
     ...overrides,
   };
 }
