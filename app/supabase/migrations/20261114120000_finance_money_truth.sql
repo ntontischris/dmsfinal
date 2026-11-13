@@ -732,23 +732,29 @@ $$;
 
 -- Ίδια με το 20261102120000_sales_client_overview.sql· το υπόλοιπο αφαιρεί και την παρακράτηση.
 create or replace function authz.client_overview_balance_cents(p_client uuid) returns bigint
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
+begin
+  return (
   select round(coalesce(sum(m.delta), 0) * 100)::bigint
     from (
       select case when i.kind = 'credit' then -i.total else i.total end as delta
         from public.invoices i where i.client_id = p_client and i.voided_at is null
       union all
       select -(r.amount + r.withheld) from public.receipts r where r.client_id = p_client and r.deleted_at is null
-    ) m;
+    ) m
+  );
+end;
 $$;
 
 -- ───────────── Εξαγωγές: παρακράτηση ─────────────
 
 -- Ίδια με το 20261017160000_reports_export.sql, με παρακράτηση και ποσοστό.
 create or replace function authz.export_receipt_rows(p_from date, p_to date, p_amounts boolean) returns jsonb
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
+begin
+  return (
   select coalesce(jsonb_agg(jsonb_build_object(
            'receivedOn', r.received_on, 'clientName', c.name, 'clientAfm', c.afm,
            'amount', case when p_amounts then r.amount end,
@@ -760,13 +766,17 @@ as $$
     join public.clients c on c.id = r.client_id
     join public.payment_methods m on m.id = r.method_id
     left join public.withholding_rates w on w.id = r.withholding_rate_id
-   where r.deleted_at is null and r.received_on between p_from and p_to;
+   where r.deleted_at is null and r.received_on between p_from and p_to
+  );
+end;
 $$;
 
 -- Ίδια με το 20261017160000_reports_export.sql· ίδιες κινήσεις με την Καρτέλα, μαζί με την παρακράτηση.
 create or replace function authz.export_ledger_rows(p_from date, p_to date, p_amounts boolean) returns jsonb
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
+begin
+  return (
   with moves as (
     select i.client_id, i.issue_date as d,
            case i.kind when 'invoice' then 'Τιμολόγιο ' when 'receipt' then 'Απόδειξη ' else 'Πιστωτικό ' end || i.number as label,
@@ -803,7 +813,9 @@ as $$
          ) order by c.name, c.id, r.d, case when r.debit > 0 then 0 else 1 end, r.created_at, r.id, r.part), '[]'::jsonb)
     from run r
     join public.clients c on c.id = r.client_id
-   where r.d between p_from and p_to;
+   where r.d between p_from and p_to
+  );
+end;
 $$;
 
 -- ───────────── Ίχνος ─────────────
@@ -822,8 +834,10 @@ update public.audit_entities set amount_keys = '{amount,withheld}' where entity 
 
 -- Ίδια με το 20261104130000_blocked_time_kinds.sql, με τα ποσοστά παρακράτησης (χωρίς ποσά, όπως οι Τρόποι).
 create or replace function authz.audit_entity_allowed(p_entity text) returns boolean
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
+begin
+  return (
   select case p_entity
     -- Κατάλογος: ποσά και κόστος
     when 'catalogue_item_costs' then authz.has('finance.cost')
@@ -945,7 +959,9 @@ as $$
     -- Υγεία (#215): «Ξαναδοκίμασε» ενός Γεγονότος που κόλλησε· μόνο τύπος και προσπάθειες
     when 'events' then true
     else false
-  end;
+  end
+  );
+end;
 $$;
 
 -- ───────────── Δικαιώματα εκτέλεσης ─────────────

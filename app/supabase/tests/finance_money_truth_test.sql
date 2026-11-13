@@ -217,9 +217,9 @@ select is(
           jsonb_array_elements(c -> 'items') i where i ->> 'id' = '00000000-0000-0000-0000-0000000000e1'),
   'null'::jsonb, 'Χωρίς αποστολή δεν φαίνεται υπενθύμιση'
 );
-insert into public.automations (id, event_type, channel, recipient_kind, recipient_user_ids, body_el) values
+insert into public.automations (id, event_type, channel, recipient_kind, recipient_user_ids, timing, wait_minutes, body_el) values
   ('00000000-0000-0000-0000-0000000000f1', 'billable.open_waiting', 'notification', 'users',
-   array['00000000-0000-0000-0000-0000000000a1']::uuid[], 'Τεστ');
+   array['00000000-0000-0000-0000-0000000000a1']::uuid[], 'wait', 43200, 'Τεστ');
 insert into public.automation_sends (automation_id, case_key, recipient_key, channel, created_at) values
   ('00000000-0000-0000-0000-0000000000f1', 'billable.open_waiting:00000000-0000-0000-0000-0000000000e1:30',
    '00000000-0000-0000-0000-0000000000a1', 'notification', timestamptz '2026-07-01 09:00+03');
