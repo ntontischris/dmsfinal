@@ -121,6 +121,24 @@ export const chargeDecisionSchema = z
       });
   });
 
+// Γύρος πέρα από το Όριο: ίδιοι κανόνες με τη χρέωση Παραδοτέου («χωρίς χρέωση» θέλει λόγο).
+export const roundChargeDecisionSchema = z
+  .object({
+    roundChargeId: z.uuid(),
+    decision: z.enum(["charged", "free"], {
+      error: "Διάλεξε «Χρεώνεται» ή «Χωρίς χρέωση».",
+    }),
+    reason: optionalNote,
+  })
+  .superRefine((value, ctx) => {
+    if (value.decision === "free" && value.reason === null)
+      ctx.addIssue({
+        code: "custom",
+        path: ["reason"],
+        message: REASON_MESSAGE,
+      });
+  });
+
 export const queueFilterSchema = z.object({
   view: z.enum(["mine", "review", "client"]).catch("mine"),
 });

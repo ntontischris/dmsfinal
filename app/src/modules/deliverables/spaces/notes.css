@@ -1,0 +1,15 @@
+/* Σημειώσεις πάνω στο βίντεο (H2, H4): νήματα, απαντήσεις, «το είδε». Μόνο τα ουδέτερα tokens. */
+[data-look='spaces'] {
+& .vn-time { border: 0; background: none; padding: 0; font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; min-height: 44px; }
+& .vn-time:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+& .vn-seen { font-size: var(--text-xs); }
+& .vn-replies { list-style: none; margin: 0; padding: 0 0 0 var(--space-3); border-left: 2px solid var(--color-border); display: grid; gap: var(--space-2); }
+& .vn-replies p { margin: 0; }
+& .vn-reply-head { font-size: var(--text-sm); color: var(--color-text-muted); }
+& .vn-reply, & .vn-time-field { display: grid; gap: var(--space-2); }
+& .vn-reply label, & .vn-time-field label { display: grid; gap: var(--space-1); }
+& .vn-time-field { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+& .vn-time-field > .muted { grid-column: 1 / -1; }
+& .vn-inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+& .vn-view { margin-bottom: var(--space-3); }
+}

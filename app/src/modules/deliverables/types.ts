@@ -67,6 +67,12 @@ export interface DeliverableComment {
   isInternal: boolean;
   createdAt: string;
   authorName: string | null;
+  // Απάντηση σε νήμα (null = η ίδια η σημείωση). Οι απαντήσεις δεν έχουν χρόνο.
+  parentId: string | null;
+  resolvedAt: string | null;
+  resolvedByName: string | null;
+  // Ποιοι την είδαν (εκτός από όποιον την έγραψε), με τη σειρά που την είδαν.
+  seenBy: string[];
 }
 
 export interface DeliverableVersion {
@@ -93,6 +99,7 @@ export interface DeliverableCan {
   comment: boolean;
   decideCharge: boolean;
   edit: boolean;
+  decideRoundCharge: boolean;
 }
 
 export interface DeliverableHistoryEntry {
@@ -120,12 +127,29 @@ export interface DeliverableRequest {
   newDeliverableId: string | null;
 }
 
+export const ROUND_CHARGE_DECISIONS = ["charged", "free"] as const;
+export type RoundChargeDecision = (typeof ROUND_CHARGE_DECISIONS)[number];
+
+// Γύρος αλλαγών πέρα από το Όριο: η ομάδα αποφασίζει «χρεώνεται» ή «χωρίς χρέωση» (null = εκκρεμεί).
+export interface DeliverableRoundCharge {
+  id: string;
+  version: number;
+  round: number;
+  roundsLimit: number;
+  decision: RoundChargeDecision | null;
+  reason: string | null;
+  decidedAt: string | null;
+  decidedByName: string | null;
+  createdAt: string;
+}
+
 export interface DeliverableDetail extends DeliverableCard {
   versions: DeliverableVersion[];
   can: DeliverableCan;
   pendingCharge: boolean;
   history: DeliverableHistoryEntry[];
   requests: DeliverableRequest[];
+  roundCharges: DeliverableRoundCharge[];
   finalFilesUrl: string | null;
 }
 

@@ -20,17 +20,9 @@
 & .h34-memo { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); border: 1px solid color-mix(in oklab, var(--color-accent) 35%, transparent); border-radius: var(--radius-lg); background: color-mix(in oklab, var(--color-accent) 7%, var(--color-surface-raised)); font-size: var(--text-sm); }
 & .h34 .h34-form label.h34-check { flex-direction: row; align-items: center; gap: var(--space-2); }
 & .h34 .h34-form label.h34-check input { width: auto; }
-/* Ο player μέσα στην εφαρμογή: 16:9, όλο το πλάτος. */
-& .h34-screen { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden; background: var(--color-bg); color: var(--color-text); }
-& .h34-screen iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-& .h34-poster { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); border: 0; cursor: pointer; font: inherit; font-weight: 600; }
-& .h34-poster:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
-& .h34-play { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 50%; background: var(--color-text); color: var(--color-bg); font-size: 1.4rem; padding-left: 0.2rem; }
 /* Σταθερός χώρος για τη βοήθεια κάτω από το πεδίο: το κουμπί δεν μετακινείται όσο γράφεις. */
 & .h34-hint { min-height: 1.4em; }
 & .h34-hint[data-hidden='true'] { visibility: hidden; }
-/* Reels: κάθετος player 9:16, όσο χωράει στην οθόνη. */
-& .h34-screen[data-vertical='true'] { aspect-ratio: 9 / 16; width: min(100%, calc(70vh * 9 / 16)); align-self: center; }
 @media (max-width: 40rem) { & .h34-player { padding: var(--space-2); } }
 /* Έγκριση ή Ζητώ αλλαγές: φαίνεται καθαρά ποιο πάτησες· κανένα δεν είναι χρωματισμένο από πριν. */
 & .h34-choice[aria-pressed='true'] { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-on-accent); font-weight: 700; }

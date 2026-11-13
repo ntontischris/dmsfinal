@@ -57,10 +57,12 @@ const detail = {
     comment: true,
     decideCharge: false,
     edit: true,
+    decideRoundCharge: false,
   },
   pendingCharge: false,
   history: [],
   requests: [],
+  roundCharges: [],
   finalFilesUrl: null,
 };
 
@@ -98,6 +100,59 @@ describe("deliverableDetailSchema", () => {
       ],
     });
     expect(parsed.requests[0]).toMatchObject({ decision: null, createdByName: "Νίκος" });
+  });
+
+  it("should read a note thread and a round over the limit", () => {
+    const parsed = deliverableDetailSchema.parse({
+      ...detail,
+      versions: [
+        {
+          ...version,
+          comments: [
+            {
+              id: "c1",
+              body: "Πιο σύντομο",
+              atSeconds: 12,
+              isInternal: false,
+              createdAt: "2026-10-11T07:00:00+00:00",
+              authorName: null,
+              parentId: null,
+              resolvedAt: "2026-10-12T07:00:00+00:00",
+              resolvedByName: "Γιώργος",
+              seenBy: ["Γιώργος"],
+            },
+          ],
+        },
+      ],
+      roundCharges: [
+        {
+          id: "g1",
+          version: 3,
+          round: 3,
+          roundsLimit: 2,
+          decision: null,
+          reason: null,
+          decidedAt: null,
+          decidedByName: null,
+          createdAt: "2026-10-12T07:00:00+00:00",
+        },
+      ],
+    });
+    expect(parsed.versions[0]?.comments[0]).toMatchObject({ seenBy: ["Γιώργος"], resolvedByName: "Γιώργος" });
+    expect(parsed.roundCharges[0]).toMatchObject({ round: 3, roundsLimit: 2, decision: null });
+  });
+
+  it("should refuse a round decision the database does not send", () => {
+    const bad = {
+      ...detail,
+      roundCharges: [
+        {
+          id: "g1", version: 3, round: 3, roundsLimit: 2, decision: "maybe", reason: null,
+          decidedAt: null, decidedByName: null, createdAt: "2026-10-12T07:00:00+00:00",
+        },
+      ],
+    };
+    expect(deliverableDetailSchema.safeParse(bad).success).toBe(false);
   });
 
   it("should camelize the history of the trail", () => {

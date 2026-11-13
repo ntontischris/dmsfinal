@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import { canSeeClientWork, type Viewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { getClientDeliverable } from "../client-queries";
@@ -14,10 +13,9 @@ import {
   versionsInOrder,
 } from "./h4-adapter";
 import { H4After, H4FinalFiles } from "./h4-after";
-import { H4CommentForm, H4CommentList } from "./h4-comments";
 import { H4Decision } from "./h4-decision";
-import { AnswerLine, H4Signals, VersionTabs } from "./h4-parts";
-import { H4Player } from "./h4-player";
+import { H4Signals, VersionTabs } from "./h4-parts";
+import { H4Review } from "./h4-review";
 
 import "./h34.css";
 
@@ -70,44 +68,32 @@ function Versions({
         versions={versions}
         selected={version.number}
       />
-      <H4Player
+      <H4Review
         key={version.number}
         deliverableId={detail.id}
         version={version}
         canReportBroken={detail.can.reportLink}
-      />
-      {/* Στη θέση της απόφασης: τι έγινε, ποιος ειδοποιήθηκε, τι ακολουθεί. */}
-      {notice && (
-        <section className="card h34-done" role="status">
-          <h2>{notice.title}</h2>
-          {notice.lines.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
-        </section>
-      )}
-      {/* Η απόφαση αμέσως κάτω από το βίντεο: είναι ο λόγος που μπήκε ο πελάτης. */}
-      {detail.can.answer && isLatest && (
-        <H4Decision
-          deliverableId={detail.id}
-          roundsUsed={detail.roundsUsed}
-          roundsLimit={detail.roundsLimit}
-          isOverLimit={detail.overLimit}
-        />
-      )}
-      <Panel
-        label="Σχόλια"
-        aside={<span className="muted">{version.comments.length}</span>}
+        canComment={detail.can.comment && isLatest}
       >
-        <AnswerLine version={version} />
-        <H4CommentList comments={version.comments} />
-        {detail.can.comment && isLatest && (
-          <H4CommentForm
-            key={version.number}
+        {/* Στη θέση της απόφασης: τι έγινε, ποιος ειδοποιήθηκε, τι ακολουθεί. */}
+        {notice && (
+          <section className="card h34-done" role="status">
+            <h2>{notice.title}</h2>
+            {notice.lines.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </section>
+        )}
+        {/* Η απόφαση αμέσως κάτω από το βίντεο: είναι ο λόγος που μπήκε ο πελάτης. */}
+        {detail.can.answer && isLatest && (
+          <H4Decision
             deliverableId={detail.id}
-            versionNumber={version.number}
+            roundsUsed={detail.roundsUsed}
+            roundsLimit={detail.roundsLimit}
+            isOverLimit={detail.overLimit}
           />
         )}
-      </Panel>
+      </H4Review>
     </>
   );
 }
@@ -151,7 +137,10 @@ export async function SpacesClientDeliverable({
         {(isApproved || detail.finalFilesUrl !== null) && (
           <H4FinalFiles finalLink={detail.finalFilesUrl} />
         )}
-        <Versions detail={detail} requested={typeof raw.v === "string" ? raw.v : undefined} />
+        <Versions
+          detail={detail}
+          requested={typeof raw.v === "string" ? raw.v : undefined}
+        />
         {(detail.can.requestChange || detail.openRequest !== null) && (
           <H4After
             deliverableId={detail.id}

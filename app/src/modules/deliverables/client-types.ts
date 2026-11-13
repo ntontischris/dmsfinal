@@ -46,6 +46,11 @@ export interface ClientComment {
   atSeconds: number | null;
   authorName: string | null;
   createdAt: string;
+  // Απάντηση σε νήμα (null = η ίδια η σημείωση).
+  parentId: string | null;
+  resolvedAt: string | null;
+  resolvedByName: string | null;
+  seenBy: string[];
 }
 
 // Μόνο Εκδόσεις που στάλθηκαν. Το `url` ανοίγει σε νέα καρτέλα.

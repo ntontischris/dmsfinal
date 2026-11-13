@@ -4,6 +4,7 @@ import {
   cancelSchema,
   chargeDecisionSchema,
   commentSchema,
+  roundChargeDecisionSchema,
   updateSchema,
   createSchema,
   versionAddSchema,
@@ -105,5 +106,24 @@ describe("updateSchema", () => {
   it("should refuse a deadline that is not a date", () => {
     const result = updateSchema.safeParse({ ...base, deadline: "10/05/2027" });
     expect(messageOf(result)).toBe("Η προθεσμία θέλει ημερομηνία.");
+  });
+});
+
+describe("roundChargeDecisionSchema", () => {
+  const roundChargeId = "44444444-4444-4444-8444-444444444444";
+
+  it("should charge a round without a reason", () => {
+    const parsed = roundChargeDecisionSchema.safeParse({ roundChargeId, decision: "charged", reason: "" });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.reason).toBeNull();
+  });
+
+  it("should ask for a reason when the round is free", () => {
+    const result = roundChargeDecisionSchema.safeParse({ roundChargeId, decision: "free", reason: "  " });
+    expect(messageOf(result)).toBe("Γράψε λόγο.");
+  });
+
+  it("should refuse a decision that is neither charged nor free", () => {
+    expect(roundChargeDecisionSchema.safeParse({ roundChargeId, decision: "round", reason: "" }).success).toBe(false);
   });
 });
