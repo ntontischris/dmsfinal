@@ -112,15 +112,14 @@ begin
 end;
 $$;
 
--- Οι Περίοδοι μιας Συμφωνίας: οι εγγραφές της αν υπάρχουν (μετά την υπογραφή, μαζί με όσες πρόσθεσε η συνέχιση),
--- αλλιώς το πλάνο από (Έναρξη, Διάρκεια). n από 0, μερίδιο όπως η authz.agreement_period_rows.
+-- Οι Περίοδοι μιας Συμφωνίας: το πλάνο από (Έναρξη, Διάρκεια), και μετά όσες πρόσθεσε η αυτόματη συνέχιση (οι εγγραφές
+-- με αριθμό πέρα από το πλάνο). n από 0, μερίδιο όπως η authz.agreement_period_rows.
 create function authz.agreement_rows(p_agreement uuid, p_start date, p_months integer)
 returns table (n integer, starts date, ends date, share numeric, gives_provisions boolean)
 language sql stable security definer set search_path = ''
 as $$
   select r.n, r.starts, r.ends, r.share, r.gives_provisions
     from authz.agreement_period_rows(p_start, p_months) r
-   where not exists (select 1 from public.agreement_periods pe where pe.agreement_id = p_agreement)
   union all
   select pe.n - 1, pe.starts, pe.ends,
          least(1::numeric, (pe.ends - pe.starts + 1)::numeric
@@ -128,6 +127,7 @@ as $$
          pe.gives_provisions
     from public.agreement_periods pe
    where pe.agreement_id = p_agreement
+     and pe.n > (select count(*) from authz.agreement_period_rows(p_start, p_months))
   order by 1;
 $$;
 

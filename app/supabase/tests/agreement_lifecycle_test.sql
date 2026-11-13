@@ -67,7 +67,7 @@ $$;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e1","role":"authenticated"}', true);
 
 -- ───────────── Αυτόματη συνέχιση ─────────────
--- Έναρξη πριν από 3 μήνες, Διάρκεια 2: η λήξη ήταν τον προηγούμενο μήνα.
+-- Έναρξη πριν από 3 μήνες, Διάρκεια 2: η λήξη ήταν πριν από 2 μήνες· μία συνέχιση φτάνει ως το τέλος του τρέχοντος μήνα.
 select set_config('t.a', public.t_monthly('00000000-0000-0000-0000-0000000000c1', 'Συνεχές Αθηνά', 2)::text, true);
 update public.agreements set renewal = 'auto' where id = current_setting('t.a')::uuid;
 select public.agreement_sign_outside(current_setting('t.a')::uuid, current_setting('t.today')::date, 'Μαρία Παπαδάκη',
@@ -78,7 +78,7 @@ select is(public.agreement_lifecycle_view(current_setting('t.a')::uuid)->>'state
   'Με αυτόματη συνέχιση η Συμφωνία μένει ενεργή και μετά τη λήξη');
 select ok(public.agreements_run(current_setting('t.today')::date) >= 1, 'Η καθημερινή δουλειά τρέχει');
 select is((select a.end_on from public.agreements a where a.id = current_setting('t.a')::uuid),
-  (current_setting('t.month')::date + interval '2 months')::date - 1,
+  (current_setting('t.month')::date + interval '1 month')::date - 1,
   'Η συνέχιση προσθέτει μία Διάρκεια από την επόμενη μέρα της λήξης');
 select is((select max(p.n) from public.agreement_periods p where p.agreement_id = current_setting('t.a')::uuid), 4,
   'Οι νέες Περίοδοι συνεχίζουν την αρίθμηση');
@@ -88,7 +88,7 @@ select is((select count(*)::int from public.agreement_period_provisions pp join 
             where p.agreement_id = current_setting('t.a')::uuid and p.n > 2), 2, 'Οι νέες Περίοδοι δίνουν Παροχές');
 select is(public.agreements_run(current_setting('t.today')::date) >= 0 and
   (select a.end_on from public.agreements a where a.id = current_setting('t.a')::uuid)
-    = (current_setting('t.month')::date + interval '2 months')::date - 1, true,
+    = (current_setting('t.month')::date + interval '1 month')::date - 1, true,
   'Δεύτερη εκτέλεση την ίδια μέρα δεν ξανασυνεχίζει');
 
 -- «Χωρίς συνέχιση»: στη λήξη λήγει.
