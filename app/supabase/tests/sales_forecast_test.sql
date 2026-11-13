@@ -94,7 +94,7 @@ create function public.t_row(p_opp text) returns text
 language sql
 as $$
   select concat_ws('|', coalesce(trim_scale(r.value)::text, '—'), coalesce(r.value_source, '—'), r.probability,
-                   coalesce(r.probability_source, '—'), coalesce(trim_scale(r.weighted)::text, '—'), r.is_late)
+                   coalesce(r.probability_source, '—'), coalesce(trim_scale(r.weighted)::text, '—'), case when r.is_late then 'true' else 'false' end)
     from public.sales_pipeline_rows(date '2025-06-15') r
    where r.opportunity_id = ('00000000-0000-0000-0000-0000000000' || p_opp)::uuid;
 $$;
