@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getViewer, type Viewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
+import { Segmented } from "@/spaces/kit/segmented";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { deliverablesCaps } from "../caps";
@@ -66,15 +67,19 @@ export async function SpacesDeliverables({ query: raw }: { query: RawQuery }) {
     const result = queues[views.indexOf(v)];
     return result?.ok ? result.data : [];
   };
+  const viewerId = viewer.status === "signed-in" ? viewer.userId : undefined;
+  const isMineOnly = query.who === "me" && viewerId !== undefined;
   const filter: QueueFilter = {
     person: query.person,
     client: query.client,
     isLateOnly: query.late === "1",
+    onlyAssignee: isMineOnly ? viewerId : undefined,
   };
   const unfiltered = itemsOf(view);
   const shown = filterQueue(unfiltered, filter);
   const back: ListQuery = {
     view: view === views[0] ? undefined : view,
+    who: isMineOnly ? "me" : undefined,
     person: query.person,
     client: query.client,
     late: query.late,
@@ -93,12 +98,23 @@ export async function SpacesDeliverables({ query: raw }: { query: RawQuery }) {
             key={v}
             className="tab"
             aria-current={v === view ? "page" : undefined}
-            href={hrefH1({ view: v === views[0] ? undefined : v })}
+            href={hrefH1({
+              view: v === views[0] ? undefined : v,
+              who: back.who,
+            })}
           >
             {VIEW_LABELS[v]} ({itemsOf(v).length})
           </Link>
         ))}
       </nav>
+      {viewerId && (
+        <WhoChoice
+          items={unfiltered}
+          viewerId={viewerId}
+          isMineOnly={isMineOnly}
+          back={back}
+        />
+      )}
       <QueueFilters
         items={unfiltered}
         filter={filter}
@@ -124,6 +140,35 @@ export async function SpacesDeliverables({ query: raw }: { query: RawQuery }) {
   );
 }
 
+// «Μόνο εμένα / Όλη η ομάδα»: ό,τι έχει Ανατεθειμένο εμένα ή όλη η ουρά. Μένει στη διεύθυνση (who=me).
+function WhoChoice(props: {
+  items: readonly DeliverableCard[];
+  viewerId: string;
+  isMineOnly: boolean;
+  back: ListQuery;
+}) {
+  const mine = filterQueue(props.items, { onlyAssignee: props.viewerId });
+  return (
+    <Segmented
+      label="Ποιανού"
+      options={[
+        {
+          label: "Μόνο εμένα",
+          href: hrefH1({ ...props.back, who: "me" }),
+          isCurrent: props.isMineOnly,
+          count: mine.length,
+        },
+        {
+          label: "Όλη η ομάδα",
+          href: hrefH1({ ...props.back, who: undefined }),
+          isCurrent: !props.isMineOnly,
+          count: props.items.length,
+        },
+      ]}
+    />
+  );
+}
+
 // Φίλτρα ανά άτομο, πελάτη και «Καθυστερούν»: απλή φόρμα GET, χωρίς JavaScript.
 function QueueFilters(props: {
   items: readonly DeliverableCard[];
@@ -143,6 +188,9 @@ function QueueFilters(props: {
       )}
       {props.back.late && (
         <input type="hidden" name="late" value={props.back.late} />
+      )}
+      {props.back.who && (
+        <input type="hidden" name="who" value={props.back.who} />
       )}
       {people.length > 1 && (
         <select

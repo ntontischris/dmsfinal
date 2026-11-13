@@ -46,6 +46,13 @@ test("φίλτρο ανά άτομο και ανά πελάτη", () => {
   expect(kinisi.map((c) => c.id)).toEqual(["a"]);
 });
 
+test("«Μόνο εμένα» κρατά όσα έχουν Ανατεθειμένο τον ίδιο τον Χρήστη", () => {
+  const mine = filterQueue(team, { onlyAssignee: ELENI });
+  expect(mine.length).toBeGreaterThan(0);
+  expect(mine.every((c) => c.assigneeId === ELENI)).toBe(true);
+  expect(filterQueue(team, {}).length).toBe(team.length);
+});
+
 test("«Καθυστερούν» κρατά μόνο όσα πέρασαν την προθεσμία", () => {
   const late = filterQueue(team, { isLateOnly: true });
   expect(late.length).toBe(lateCount(team));
@@ -103,5 +110,7 @@ test("η αναμονή σε μέρες", () => {
 });
 
 test("από τη διεύθυνση κρατά μόνο τις απλές τιμές", () => {
-  expect(textQuery({ view: "review", person: ["a", "b"], late: undefined })).toEqual({ view: "review" });
+  expect(
+    textQuery({ view: "review", person: ["a", "b"], late: undefined }),
+  ).toEqual({ view: "review" });
 });
