@@ -1,6 +1,8 @@
 import { getViewer } from "@/modules/access";
 import {
   CLIENT_NO_ACCESS_TEXT,
+  CLIENT_NO_CLIENT_TEXT,
+  CLIENT_NO_CLIENT_TITLE,
   INBOX_TITLE,
   messagesViewOf,
   parseClientTab,
@@ -33,7 +35,13 @@ export default async function MessagesPage({
       />
     );
   if (view === "none" && viewer.status === "signed-in" && viewer.team === null)
-    return (
+    return Object.keys(viewer.clientGrants ?? {}).length === 0 ? (
+      <div data-spaces>
+        <StateNotice kind="empty" title={CLIENT_NO_CLIENT_TITLE}>
+          {CLIENT_NO_CLIENT_TEXT}
+        </StateNotice>
+      </div>
+    ) : (
       <div data-spaces>
         <StateNotice kind="denied" title="Χωρίς δικαίωμα">
           {CLIENT_NO_ACCESS_TEXT}

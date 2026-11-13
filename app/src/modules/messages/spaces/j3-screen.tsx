@@ -6,6 +6,7 @@ import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { AutoRefresh } from "../components/auto-refresh";
+import { chatTopicOf } from "../components/refresh-mode";
 import { MESSAGES_PATH, newestAt, type ClientTab } from "../helpers";
 import {
   CLIENT_READONLY_NOTE,
@@ -267,7 +268,7 @@ export async function SpacesClientMessages({
   if (tab === "requests")
     return (
       <div data-spaces>
-        <AutoRefresh />
+        <AutoRefresh topic={chatTopicOf("client", context.data.clientId)} />
         <div className="j3-grid" id="top">
           <Tabs tab={tab} openCount={openCount} />
           {requests.ok ? (
@@ -289,7 +290,7 @@ export async function SpacesClientMessages({
     );
   return (
     <div data-spaces>
-      <AutoRefresh />
+      <AutoRefresh topic={chatTopicOf("client", context.data.clientId)} />
       <div className="j3-grid" id="top">
         <Tabs tab={tab} openCount={openCount} />
         <ConversationTab context={context.data} thread={thread} order={order} />

@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { codeOfPath } from "@/spaces/data/screens";
 import {
   landingOf,
   mobileBar,
+  screenCodeOf,
   spaceOf,
   type SpacesModel,
   type SpaceView,
@@ -26,7 +26,7 @@ interface SpaceLinksProps {
 
 // Ο Χώρος της τρέχουσας διεύθυνσης (π.χ. /app/clients/<id> → Πελάτες).
 const useActiveSpace = (model: SpacesModel): string | undefined =>
-  spaceOf(codeOfPath(usePathname()), model)?.id;
+  spaceOf(screenCodeOf(usePathname(), model), model)?.id;
 
 function SpaceLinks({
   model,

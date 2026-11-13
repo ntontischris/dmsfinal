@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { codeOfPath, titleOf } from "@/spaces/data/screens";
+import { titleOf } from "@/spaces/data/screens";
 import {
   labelOf,
   landingOf,
+  screenCodeOf,
   spaceOf,
   tabOf,
   type SpacesModel,
@@ -23,7 +24,7 @@ interface PageHeadProps {
 // στοιχείου τον γράφει η ίδια η σελίδα). Οθόνες του μενού χωρίς καρτέλα μπαίνουν στο «Περισσότερα», για να μη χαθεί καμία.
 // Καρτέλες και φίλτρα αλλάζουν χωρίς να πετούν τη σελίδα στην κορυφή (scroll={false}).
 export function PageHead({ model }: PageHeadProps) {
-  const code = codeOfPath(usePathname());
+  const code = screenCodeOf(usePathname(), model);
   const view = spaceOf(code, model);
   if (!code || !view) return null;
   const tab = tabOf(code);
