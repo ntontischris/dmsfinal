@@ -2,8 +2,14 @@ import { z } from "zod";
 
 import { createSupabase } from "@/lib/supabase/server";
 
+import { parseActualHours } from "./actual-hours";
 import { read, type ReadResult } from "./read";
-import type { CatalogueItem, CostHint, ProvisionKind } from "./types";
+import type {
+  ActualHours,
+  CatalogueItem,
+  CostHint,
+  ProvisionKind,
+} from "./types";
 
 // Ανάγνωση του Καταλόγου. Όλα περνούν από RPC: οι πίνακες είναι κλειστοί στην εφαρμογή και η βάση
 // επιστρέφει null σε τιμή, ώρες και κόστος που ο θεατής δεν δικαιούται να δει (το null δεν είναι μηδέν).
@@ -178,4 +184,17 @@ export async function getCostHint(): Promise<ReadResult<CostHint | null>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read("getCostHint", supabase.rpc("cost_hint"), parseHint);
+}
+
+// Μόνο για όσους «Βλέπουν κόστος»· η βάση αρνείται στους υπόλοιπους.
+export async function getActualHours(
+  itemId: string,
+): Promise<ReadResult<ActualHours>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "getActualHours",
+    supabase.rpc("catalogue_item_actual_hours", { p_item: itemId }),
+    parseActualHours,
+  );
 }

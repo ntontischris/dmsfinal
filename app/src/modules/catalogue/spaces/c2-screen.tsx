@@ -9,6 +9,7 @@ import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { catalogueCaps, itemKindLabel } from "../helpers";
 import {
+  getActualHours,
   getCatalogueItem,
   getCostHint,
   listProvisionKinds,
@@ -53,11 +54,12 @@ export async function SpacesCatalogueItem({ itemId }: { itemId: string }) {
   );
   const id = z.uuid().safeParse(itemId);
   if (!id.success) return missing;
-  const [item, kinds, hint, company] = await Promise.all([
+  const [item, kinds, hint, company, actual] = await Promise.all([
     getCatalogueItem(id.data),
     listProvisionKinds(),
     caps.canSeeCost ? getCostHint() : null,
     caps.canSeePrice ? getCompany() : null,
+    caps.canSeeCost ? getActualHours(id.data) : null,
   ]);
   if (!item.ok || !kinds.ok || (hint !== null && !hint.ok))
     return (
@@ -68,6 +70,8 @@ export async function SpacesCatalogueItem({ itemId }: { itemId: string }) {
   if (item.data === null) return missing;
   const found = item.data;
   const costHint = hint === null || !hint.ok ? null : hint.data;
+  // Αν δεν διαβαστούν οι πραγματικές ώρες, λείπει μόνο αυτή η γραμμή.
+  const actualHours = actual?.ok ? actual.data : null;
   // Αν δεν διαβαστεί ο ΦΠΑ, λείπει μόνο η υπόδειξη «Με ΦΠΑ».
   const vatRate = company?.ok ? company.data.vat_rate : null;
   const isReadOnly = !caps.canManage;
@@ -90,7 +94,12 @@ export async function SpacesCatalogueItem({ itemId }: { itemId: string }) {
       )}
       <C2Basics item={found} caps={caps} vatRate={vatRate} />
       <C2Provisions item={found} kinds={kinds.data} caps={caps} />
-      <C2Cost item={found} hint={costHint} caps={caps} />
+      <C2Cost
+        item={found}
+        hint={costHint}
+        caps={caps}
+        actual={actualHours}
+      />
       {found.kind === "package" && (
         <C2Public item={found} canEdit={caps.canManage} />
       )}
