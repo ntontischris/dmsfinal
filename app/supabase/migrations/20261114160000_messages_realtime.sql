@@ -11,18 +11,20 @@
 --  • ομάδα: «Συνομιλεί με πελάτη» (το σήμα δεν έχει περιεχόμενο· τι θα δει το αποφασίζει η ανάγνωση).
 --  • πελάτης: μόνο το θέμα του δικού του Πελάτη και μόνο με «Βλέπει Συνομιλία».
 create function authz.chat_topic_allowed(p_topic text) returns boolean
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select coalesce(
-    case
-      when p_topic ~ '^chat-team:[0-9a-f-]{36}$' then
-        authz.is_team_user() and authz.has('messages.chat')
-      when p_topic ~ '^chat-client:[0-9a-f-]{36}$' then
-        not authz.is_team_user()
-        and authz.client_user_has('c.chatRead')
-        and substr(p_topic, 13)::uuid = authz.client_user_client_id()
-      else false
-    end, false);
+begin
+  if p_topic ~ '^chat-team:[0-9a-f-]{36}$' then
+    return coalesce(authz.is_team_user() and authz.has('messages.chat'), false);
+  end if;
+  if p_topic ~ '^chat-client:[0-9a-f-]{36}$' then
+    return coalesce(
+      not authz.is_team_user()
+      and authz.client_user_has('c.chatRead')
+      and substr(p_topic, 13)::uuid = authz.client_user_client_id(), false);
+  end if;
+  return false;
+end;
 $$;
 
 revoke all on function authz.chat_topic_allowed(text) from public;
