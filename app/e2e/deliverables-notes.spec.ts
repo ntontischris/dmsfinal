@@ -63,7 +63,7 @@ test("η ομάδα σημειώνει πάνω στο βίντεο, απαντ�
 
   // 3. «Λύθηκε» και ξανά ανοιχτό.
   await button(versions, "Λύθηκε").click();
-  await expect(versions.getByText(/^λύθηκε/)).toBeVisible();
+  await expect(versions.getByText(/^λύθηκε · /)).toBeVisible();
   await button(versions, "Ξανάνοιξέ το").click();
   await expect(button(versions, "Λύθηκε")).toBeVisible();
   await shot(page, "h2-video-notes");
