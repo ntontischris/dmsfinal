@@ -17,5 +17,6 @@ export type { ReadResult } from "./read";
 export { listProductions } from "./queries";
 export { SpacesProductions } from "./spaces/g1-screen";
 export { SpacesProduction } from "./spaces/g2-screen";
+export { SpacesMyTasks } from "./spaces/g4-screen";
 // Ctrl+K: αναζήτηση εγγραφών.
 export { searchProductions } from "./queries-search";

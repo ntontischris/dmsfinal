@@ -71,6 +71,8 @@ const task = (overrides: Partial<ProductionTask> = {}): ProductionTask => ({
   dueDate: null,
   isLate: false,
   done: false,
+  status: "todo",
+  priority: "normal",
   ...overrides,
 });
 

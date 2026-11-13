@@ -98,7 +98,9 @@ const layerAccessOf = (viewer: Viewer, data: CalendarData): LayerAccess => ({
   seesNextSteps:
     can(viewer, "clients.manage") || can(viewer, "clients.transfer"),
   seesDeadlines:
-    can(viewer, "deliverables.work") || can(viewer, "deliverables.review"),
+    can(viewer, "deliverables.work") ||
+    can(viewer, "deliverables.review") ||
+    data.tasks.length > 0,
   hasBusy: data.busy.length > 0,
 });
 

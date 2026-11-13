@@ -28,6 +28,7 @@ import { STATE_WORDS } from "./g1-rows";
 import { G2ClientPage } from "./g2-client";
 import { G2State } from "./g2-live";
 import { G2Members } from "./g2-members";
+import { G2Money } from "./g2-money";
 import {
   cancellationOf,
   deliveryBlockers,
@@ -214,6 +215,7 @@ function G2Page({
         cancellation={cancellationOf(production)}
       />
       <G2Provisions production={production} />
+      {!production.isInternal && <G2Money productionId={production.id} />}
       <G2Filmings filmings={production.filmings} />
       <G2Deliverables
         production={production}
@@ -239,6 +241,7 @@ function G2Page({
         memberIds={members.map((member) => member.userId)}
         meId={meId}
         canEdit={viewerCan.members && production.state === "open"}
+        isOpen={production.state === "open"}
       />
       <G2Members
         productionId={production.id}

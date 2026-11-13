@@ -38,6 +38,12 @@ export interface ProductionCard {
   owner: ProductionOwner | null; // null = «Χωρίς υπεύθυνο»
   state: ProductionState;
   isInternal: boolean;
+  stage?: ProductionStageRef | null; // το Στάδιο του πίνακα (μόνο ομάδα)· null = χωρίς Στάδιο
+}
+
+export interface ProductionStageRef {
+  id: string;
+  label: string;
 }
 
 export interface PeriodBalance {
@@ -105,6 +111,73 @@ export interface ProductionTask {
   dueDate: string | null; // YYYY-MM-DD
   isLate: boolean;
   done: boolean;
+  status: TaskStatus;
+  priority: TaskPriority;
+}
+
+// Κατάσταση Εργασίας: «να γίνει» → «σε εξέλιξη» → «έγινε». Προτεραιότητα: τρία σταθερά επίπεδα.
+export const TASK_STATUSES = ["todo", "doing", "done"] as const;
+export type TaskStatus = (typeof TASK_STATUSES)[number];
+export const TASK_PRIORITIES = ["low", "normal", "high"] as const;
+export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+
+// Μια Εργασία στο «Οι εργασίες μου» (G4): με την Παραγωγή και τον Πελάτη της.
+export interface MyTask {
+  id: string;
+  title: string;
+  dueDate: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  isLate: boolean;
+  production: { id: string; title: string; canOpen: boolean };
+  clientName: string | null;
+}
+
+// Τα Στάδια του πίνακα Παραγωγών (λίστα που επεξεργάζεται ο διαχειριστής).
+export interface ProductionStage {
+  id: string;
+  label: string;
+  isActive: boolean;
+}
+
+export interface ProductionStages {
+  stages: ProductionStage[];
+  canEdit: boolean;
+}
+
+// Φόρτος ανά άτομο της ομάδας (G1, προβολή «Φόρτος»).
+export interface WorkloadRow {
+  userId: string;
+  name: string;
+  productions: number;
+  tasks: number;
+  lateTasks: number;
+  deliverables: number;
+  filmings: number;
+}
+
+export const BILLABLE_REASONS = [
+  "period",
+  "milestone",
+  "extra_deliverable",
+  "extra_revision",
+  "extra_filming",
+  "dissolution_fee",
+] as const;
+export type BillableReason = (typeof BILLABLE_REASONS)[number];
+
+// Τιμή και Τιμολογητέα της Παραγωγής (G2, μόνο με «Βλέπει ποσά»).
+export interface ProductionMoney {
+  price: number | null;
+  priceOf: "period" | "agreement" | null;
+  billables: {
+    id: string;
+    label: string;
+    reason: BillableReason;
+    net: number;
+    billableOn: string;
+    covered: number;
+  }[];
 }
 
 export interface HistoryLine {

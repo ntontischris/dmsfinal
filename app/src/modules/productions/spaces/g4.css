@@ -1,0 +1,5 @@
+/* G4 Οι εργασίες μου */
+[data-look='spaces'] {
+/* Μόνο ουδέτερα tokens. */
+& .g4-aside { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; justify-content: flex-end; }
+}

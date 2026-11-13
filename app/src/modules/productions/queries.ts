@@ -1,11 +1,24 @@
 import { createSupabase } from "@/lib/supabase/server";
 
 import { read, type ReadResult } from "./read";
-import type { OwnerCandidate, ProductionCard, ProductionDetail, ProductionState } from "./types";
+import type {
+  MyTask,
+  OwnerCandidate,
+  ProductionCard,
+  ProductionDetail,
+  ProductionMoney,
+  ProductionStages,
+  ProductionState,
+  WorkloadRow,
+} from "./types";
 import {
+  myTasksViewSchema,
   ownerCandidatesViewSchema,
   productionDetailSchema,
+  productionMoneySchema,
   productionsViewSchema,
+  stagesViewSchema,
+  workloadViewSchema,
 } from "./view-schema";
 
 // Ανάγνωση των Παραγωγών. Όλα περνούν από RPC: οι πίνακες είναι κλειστοί στην εφαρμογή.
@@ -62,4 +75,44 @@ async function listCandidates(
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read(label, supabase.rpc(rpc), (data) => ownerCandidatesViewSchema.parse(data));
+}
+
+// «Οι εργασίες μου» (G4): οι Εργασίες του θεατή σε ανοιχτές Παραγωγές.
+export async function listMyTasks(): Promise<ReadResult<MyTask[]>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("listMyTasks", supabase.rpc("my_tasks_view", {}), (data) => myTasksViewSchema.parse(data));
+}
+
+// Τα Στάδια του πίνακα Παραγωγών.
+export async function listProductionStages(): Promise<ReadResult<ProductionStages>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("listProductionStages", supabase.rpc("production_stages_view"), (data) =>
+    stagesViewSchema.parse(data),
+  );
+}
+
+// Φόρτος ανά άτομο (μόνο Εύρος «όλα»).
+export async function listWorkload(): Promise<ReadResult<WorkloadRow[]>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("listWorkload", supabase.rpc("productions_workload", {}), (data) =>
+    workloadViewSchema.parse(data),
+  );
+}
+
+// Τιμή και Τιμολογητέα της Παραγωγής. Χωρίς «Βλέπει ποσά» η βάση αρνείται: τότε απλώς δεν φαίνεται η ενότητα.
+export async function getProductionMoney(
+  productionId: string,
+): Promise<ReadResult<ProductionMoney | null>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  const { data, error } = await supabase.rpc("production_money_view", { p_production: productionId });
+  if (error && NOT_VISIBLE.includes(error.code ?? "")) return { ok: true, data: null };
+  if (error) {
+    console.error("getProductionMoney:", error.message);
+    return { ok: false };
+  }
+  return { ok: true, data: productionMoneySchema.parse(data) };
 }

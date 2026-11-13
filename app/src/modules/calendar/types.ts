@@ -58,6 +58,18 @@ export interface DeadlineEntry {
   isMine: boolean;
 }
 
+// Προθεσμία Εργασίας Παραγωγής (ανοιχτή, σε ανοιχτή Παραγωγή) που βλέπει ο Χρήστης.
+export interface TaskEntry {
+  id: string;
+  day: string;
+  title: string;
+  productionId: string;
+  clientName: string | null;
+  assigneeId: string | null;
+  assigneeName: string | null;
+  isMine: boolean;
+}
+
 export interface DayStatus {
   day: string;
   status: string;
@@ -85,6 +97,7 @@ export interface CalendarData {
   busy: BusyEntry[];
   nextSteps: NextStepEntry[];
   deadlines: DeadlineEntry[];
+  tasks: TaskEntry[];
   days: DayStatus[];
   canBlockOthers: boolean;
   canBook: boolean;

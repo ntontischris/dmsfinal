@@ -64,6 +64,17 @@ const deadlineSchema = z.object({
   isMine: z.boolean(),
 });
 
+const taskSchema = z.object({
+  id: z.string(),
+  day: z.string(),
+  title: z.string(),
+  productionId: z.string(),
+  clientName: z.string().nullable(),
+  assigneeId: z.string().nullable(),
+  assigneeName: z.string().nullable(),
+  isMine: z.boolean(),
+});
+
 const busySchema = z.object({
   userId: z.string(),
   userName: z.string().nullable(),
@@ -97,6 +108,8 @@ const teamViewSchema = z
     busy: z.array(busySchema),
     nextSteps: z.array(nextStepSchema),
     deadlines: z.array(deadlineSchema),
+    // Οι Εργασίες (20261114110000)· βάση χωρίς τη μετάβαση δίνει κενό.
+    tasks: z.array(taskSchema).default([]),
     days: z.array(teamDaySchema),
     canBlockOthers: z.boolean(),
     canBook: z.boolean(),
@@ -122,6 +135,7 @@ const clientViewSchema = z
       busy: [],
       nextSteps: [],
       deadlines: [],
+      tasks: [],
       days: view.days.map((day) => ({ ...day, holidayName: null })),
       canBlockOthers: false,
       canBook: view.canBook,
