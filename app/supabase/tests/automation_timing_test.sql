@@ -180,8 +180,8 @@ select public.t_as('b1');
 select throws_ok($$ select public.holiday_greetings_get() $$, '42501', null, 'Ο πελάτης δεν διαβάζει τις Αργίες');
 
 -- ───────────── Κατάλογος ─────────────
-select is((select count(*)::integer from public.automations where is_initial and timing <> 'immediate'), 24,
-  'Οι αρχικοί χρονισμένοι Αυτοματισμοί (με δύο μέρες υπενθύμισης Έκδοσης και την ανανέωση συνδρομής)');
+select is((select count(*)::integer from public.automations where is_initial and timing <> 'immediate'), 25,
+  'Οι αρχικοί χρονισμένοι Αυτοματισμοί (με δύο μέρες υπενθύμισης Έκδοσης, την ανανέωση συνδρομής και το Τιμολογητέο σε αναμονή)');
 select is((select wait_minutes from public.automations where event_type = 'message.unread_waiting' and is_initial), 15,
   'Η σύνοψη παίρνει τα λεπτά των Ρυθμίσεων ως αναμονή');
 select is((select wait_minutes from public.automations where event_type = 'request.open_waiting' and is_initial), 3 * 1440,
