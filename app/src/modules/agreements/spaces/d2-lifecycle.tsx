@@ -229,8 +229,10 @@ export function LifecyclePanel(props: PanelProps) {
             <StopForm agreementId={agreementId} />
           )}
           {can.dissolve && <DissolveForm {...props} />}
+          {/* Νέο αρχείο → νέο key: η φόρμα κλείνει μόνη της μετά το ανέβασμα. */}
           {can.attachFile && (
             <FileForm
+              key={lifecycle.signedFile?.uploadedAt ?? "none"}
               agreementId={agreementId}
               hasFile={lifecycle.signedFile !== null}
             />
