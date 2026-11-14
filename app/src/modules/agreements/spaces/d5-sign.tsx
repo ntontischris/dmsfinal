@@ -2,7 +2,6 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 
-import { requestSigningCode, signProposal } from "../actions-public";
 import { deadKindOf } from "../components/dead-link";
 import {
   SIGN_LABELS,
@@ -12,18 +11,24 @@ import {
 import type { Language, PublicResult } from "../types";
 import { D5Done, D5Message } from "./d5-done";
 
-// Η ροή υπογραφής του Υπογράφοντα (prototype `screens/d5-actions.tsx` › SignStep, CodeStep) με τις πραγματικές
-// δημόσιες ενέργειες: όνομα + «Αποδέχομαι» → κωδικός 6 ψηφίων → υπογραφή. Ό,τι γράφτηκε μένει αν κάτι αποτύχει.
+// Η ροή υπογραφής του Υπογράφοντα (prototype `screens/d5-actions.tsx` › SignStep, CodeStep): όνομα + «Αποδέχομαι»
+// → κωδικός 6 ψηφίων → υπογραφή. Ό,τι γράφτηκε μένει αν κάτι αποτύχει. Οι δύο κλήσεις έρχονται απ' έξω: με token
+// από τον Σύνδεσμο (D5) ή με τη Συμφωνία για τον Χρήστη πελάτη μέσα στην εφαρμογή (D2).
 // Το token και ο κωδικός δεν γράφονται πουθενά· μένουν μόνο στη μνήμη της σελίδας.
 
+type CodeChannel = "manual" | "email";
+
 interface SignFlowProps {
-  token: string;
+  requestCode: (name: string, accepted: boolean) => Promise<PublicResult>;
+  sign: (code: string) => Promise<PublicResult>;
   language: Language;
   managerName: string | null;
+  // Αρχικές τιμές· το «sent» της βάσης λέει πού πήγε τελικά ο κωδικός.
   maskedEmail: string;
-  codeChannel: "manual" | "email";
+  codeChannel: CodeChannel;
   onDead: (kind: DeadLinkKind) => void;
   onCancel: () => void;
+  onSigned?: () => void;
 }
 
 const CODE_PATTERN = /^\d{6}$/;
@@ -65,7 +70,7 @@ function Signed({
   codeChannel,
 }: {
   language: Language;
-  codeChannel: "manual" | "email";
+  codeChannel: CodeChannel;
 }) {
   const t = SIGN_LABELS[language];
   return codeChannel === "email" ? (
@@ -198,13 +203,17 @@ function CodeStep(props: CodeStepProps) {
 type Step = "name" | "code" | "done";
 
 export function D5SignFlow(props: SignFlowProps) {
-  const { token, language, onDead } = props;
+  const { language, onDead } = props;
   const t = SIGN_LABELS[language];
   const [step, setStep] = useState<Step>("name");
   const [name, setName] = useState("");
   const [isAccepted, setIsAccepted] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [needsNewCode, setNeedsNewCode] = useState(false);
+  const [sent, setSent] = useState({
+    channel: props.codeChannel,
+    maskedEmail: props.maskedEmail,
+  });
   const [isPending, startTransition] = useTransition();
 
   const run = (
@@ -220,11 +229,12 @@ export function D5SignFlow(props: SignFlowProps) {
 
   const handleRequest = (name: string, accepted: boolean) =>
     run(
-      () => requestSigningCode({ token, name, accepted }),
+      () => props.requestCode(name, accepted),
       (result) => {
         const dead = deadKindOf(result);
         if (dead) return onDead(dead);
         if (result.status !== "sent") return setMessage(messageFor(result, t));
+        setSent({ channel: result.channel, maskedEmail: result.maskedEmail });
         setNeedsNewCode(false);
         setStep("code");
       },
@@ -232,10 +242,13 @@ export function D5SignFlow(props: SignFlowProps) {
 
   const handleSign = (code: string) =>
     run(
-      () => signProposal({ token, code }),
+      () => props.sign(code),
       (result) => {
         // «signed» από την υπογραφή είναι επιτυχία, όχι νεκρός Σύνδεσμος.
-        if (result.status === "signed") return setStep("done");
+        if (result.status === "signed") {
+          props.onSigned?.();
+          return setStep("done");
+        }
         const dead = deadKindOf(result);
         if (dead) return onDead(dead);
         setMessage(messageFor(result, t));
@@ -252,7 +265,7 @@ export function D5SignFlow(props: SignFlowProps) {
   };
 
   if (step === "done")
-    return <Signed language={language} codeChannel={props.codeChannel} />;
+    return <Signed language={language} codeChannel={sent.channel} />;
   return (
     <div className="stack">
       {step === "name" ? (
@@ -270,8 +283,8 @@ export function D5SignFlow(props: SignFlowProps) {
         <CodeStep
           t={t}
           intro={
-            props.codeChannel === "email"
-              ? t.codeStepEmail(props.maskedEmail)
+            sent.channel === "email"
+              ? t.codeStepEmail(sent.maskedEmail)
               : t.codeStepManual(props.managerName)
           }
           isPending={isPending}

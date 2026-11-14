@@ -206,3 +206,16 @@ export const declineSchema = z.object({
   token: publicTokenSchema,
   reason: text.max(1000),
 });
+
+// ───────────── D2: υπογραφή μέσα στην εφαρμογή (Χρήστης πελάτη) ─────────────
+
+export const clientRequestCodeSchema = z.object({
+  agreementId: z.uuid(),
+  name: text.min(1).max(120),
+  accepted: z.literal(true),
+});
+
+export const clientSignSchema = z.object({
+  agreementId: z.uuid(),
+  code: z.string().regex(/^\d{6}$/),
+});
