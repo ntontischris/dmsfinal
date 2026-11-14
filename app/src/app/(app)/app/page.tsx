@@ -1,5 +1,6 @@
-import { SpacesFirstSteps } from "@/modules/access";
+import { SpacesFirstSteps, getViewer } from "@/modules/access";
 import { SpacesToday, TODAY_TITLE } from "@/modules/today";
+import { FlowHome } from "@/spaces/flows/flow-home";
 
 export const metadata = { title: TODAY_TITLE };
 
@@ -10,10 +11,13 @@ export default async function TodayPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { customize } = await searchParams;
+  const [{ customize }, viewer] = await Promise.all([searchParams, getViewer()]);
+  // Prototype οδηγών (proto/flows): η ουρά και οι πόρτες της ομάδας πάνω από την ενημέρωση.
+  const isTeam = viewer.status === "signed-in" && viewer.team !== null;
   return (
     <>
       <SpacesFirstSteps />
+      {isTeam && <FlowHome />}
       <SpacesToday isCustomizing={customize === "1"} />
     </>
   );
