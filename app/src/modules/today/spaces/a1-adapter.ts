@@ -29,6 +29,7 @@ const DATED: Readonly<Record<string, string>> = {
   my_tasks: "προθεσμία",
   versions_to_review: "προθεσμία",
   next_steps_due: "έληξε",
+  client_reminders: "υπενθύμιση",
   proposals_in_progress: "λήγει",
 };
 
