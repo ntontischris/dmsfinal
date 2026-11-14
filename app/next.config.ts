@@ -4,7 +4,10 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
 ];
 
 // Η δημόσια σελίδα του Συνδέσμου πρότασης (/p/<token>): το token δεν φεύγει ως Referer, δεν ευρετηριάζεται, δεν αποθηκεύεται σε cache.
@@ -17,9 +20,12 @@ const proposalHeaders = [
 
 // Το PDF Τιμολογίου (έως 4 MB) ανεβαίνει μέσα από server action· το Vercel κόβει σώματα πάνω από 4,5 MB.
 const nextConfig: NextConfig = {
-  // Η γραμματοσειρά του PDF Συμφωνίας διαβάζεται από τον δίσκο: μπαίνει στο function του route που φτιάχνει το PDF.
+  // Η γραμματοσειρά και το λογότυπο του brand (κοινά των PDF) διαβάζονται από τον δίσκο: μπαίνουν στο function του route.
   outputFileTracingIncludes: {
-    "/app/agreements/*/pdf": ["./src/modules/agreements/pdf/fonts/*.ttf"],
+    "/app/agreements/*/pdf": [
+      "./src/lib/pdf/fonts/*.ttf",
+      "./public/brand/logo-horizontal-light.png",
+    ],
   },
   experimental: {
     serverActions: { bodySizeLimit: "5mb" },

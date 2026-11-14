@@ -1,15 +1,10 @@
 import "server-only";
 
-import path from "node:path";
+import { Document, Text, View } from "@react-pdf/renderer";
 
-import {
-  Document,
-  Font,
-  Page,
-  Text,
-  View,
-  renderToBuffer,
-} from "@react-pdf/renderer";
+import { BrandPage, renderBrandPdf } from "@/lib/pdf/brand-page";
+import { kit } from "@/lib/pdf/brand-styles";
+import type { LogoBytes, PdfLogo } from "@/lib/pdf/logo";
 
 import { DOC_LABELS, type DocLabels } from "../labels-public";
 import {
@@ -24,25 +19,13 @@ import {
   signedPdfLabels,
   type SignedPdfLabels,
 } from "./signed-pdf-labels";
-import { FAMILY, s } from "./signed-pdf-styles";
+import { s } from "./signed-pdf-styles";
 
-// Το PDF της υπογεγραμμένης Συμφωνίας: το ίδιο έγγραφο που είδε ο πελάτης (documentOf, D5) στα χρώματα της εφαρμογής,
-// με την υπογραφή στο τέλος. Η γραμματοσειρά (Inter Tight, OFL) ενσωματώνεται ώστε τα ελληνικά να φαίνονται παντού.
-
-const FONT_DIR = path.join(process.cwd(), "src/modules/agreements/pdf/fonts");
-
-Font.register({
-  family: FAMILY,
-  fonts: [
-    { src: path.join(FONT_DIR, "InterTight-Regular.ttf"), fontWeight: 400 },
-    { src: path.join(FONT_DIR, "InterTight-SemiBold.ttf"), fontWeight: 600 },
-  ],
-});
-// Η προεπιλεγμένη συλλαβοποίηση είναι αγγλική: στα ελληνικά θα έκοβε λάθος. Οι λέξεις δεν κόβονται.
-Font.registerHyphenationCallback((word) => [word]);
+// Το PDF της υπογεγραμμένης Συμφωνίας: το ίδιο έγγραφο που είδε ο πελάτης (documentOf, D5) στο κοινό πλαίσιο
+// του brand (src/lib/pdf), με την υπογραφή στο τέλος και τα στοιχεία της Εταιρείας στο υποσέλιδο κάθε σελίδας.
 
 function Label({ text }: { text: string }) {
-  return <Text style={s.label}>{capsOf(text)}</Text>;
+  return <Text style={kit.label}>{capsOf(text)}</Text>;
 }
 
 function Section({
@@ -63,33 +46,39 @@ function Section({
 function Bullets({ items }: { items: readonly string[] }) {
   return items.map((item) => (
     <View key={item} style={s.bullet}>
-      <Text style={s.dot}>·</Text>
-      <Text style={s.rowMain}>{item}</Text>
+      <View style={s.dot} />
+      <Text style={s.bulletText}>{item}</Text>
     </View>
   ));
 }
 
-function LineRow({ line }: { line: D5Line }) {
+function LineRow({ line, isFirst }: { line: D5Line; isFirst: boolean }) {
   return (
-    <View style={s.row}>
+    <View style={[s.row, isFirst ? s.firstRow : {}]} wrap={false}>
       <View style={s.rowMain}>
         <Text style={s.strong}>{line.title}</Text>
         <Text style={s.muted}>{line.sub}</Text>
       </View>
       <View style={s.rowAside}>
-        <Text style={s.muted}>{line.quantity}</Text>
         <Text style={s.strong}>{line.amount}</Text>
+        <Text style={s.muted}>{line.quantity}</Text>
       </View>
     </View>
   );
 }
 
-function PairRow({ pair }: { pair: D5Pair }) {
-  const weight = pair.isStrong ? s.strong : {};
+function PairRow({ pair, isFirst }: { pair: D5Pair; isFirst: boolean }) {
+  if (pair.isStrong)
+    return (
+      <View style={s.total}>
+        <Text style={s.strong}>{pair.label}</Text>
+        <Text style={s.totalValue}>{pair.value}</Text>
+      </View>
+    );
   return (
-    <View style={s.row}>
-      <Text style={[s.rowMain, weight]}>{pair.label}</Text>
-      <Text style={weight}>{pair.value}</Text>
+    <View style={[s.row, isFirst ? s.firstRow : {}]}>
+      <Text style={s.rowMain}>{pair.label}</Text>
+      <Text>{pair.value}</Text>
     </View>
   );
 }
@@ -99,6 +88,8 @@ export interface SignedPdfInput {
   language: Language;
   signedName: string;
   signedOn: string;
+  // Το λογότυπο που ανέβασε ο Ιδιοκτήτης· χωρίς αυτό (ή αν δεν διαβάζεται) μπαίνει του brand.
+  logo: LogoBytes | null;
 }
 
 // Ό,τι χρειάζεται κάθε κομμάτι, υπολογισμένο μία φορά.
@@ -119,27 +110,18 @@ const viewOf = (input: SignedPdfInput): PdfView => {
   };
 };
 
-function Header({ view: { doc, labels } }: { view: PdfView }) {
-  return (
-    <View style={s.band}>
-      <Text style={s.brand}>{doc.brand}</Text>
-      <Text style={s.kicker}>
-        {labels.docTitle} · {doc.proposalFor}
-      </Text>
-      <Text style={s.title}>{doc.title}</Text>
-      <Text style={s.meta}>{doc.meta}</Text>
-    </View>
-  );
-}
-
 function Price({ view: { doc, t } }: { view: PdfView }) {
   return (
     <Section label={t.priceTitle}>
-      {doc.price.map((pair) => (
-        <PairRow key={pair.label} pair={pair} />
+      {doc.price.map((pair, index) => (
+        <PairRow key={pair.label} pair={pair} isFirst={index === 0} />
       ))}
       <Bullets items={doc.priceNotes} />
-      {doc.instalments.length > 0 && <Text style={s.sub}>{t.instalments}</Text>}
+      {doc.instalments.length > 0 && (
+        <Text style={s.sub} minPresenceAhead={40}>
+          {t.instalments}
+        </Text>
+      )}
       <Bullets items={doc.instalments} />
     </Section>
   );
@@ -150,10 +132,14 @@ function Terms({ view: { doc, t } }: { view: PdfView }) {
     <View style={s.section}>
       <Label text={t.termsTitle} />
       <Bullets items={doc.terms} />
-      <Text style={s.sub}>{t.filmingTitle}</Text>
+      <Text style={s.sub} minPresenceAhead={40}>
+        {t.filmingTitle}
+      </Text>
       <Bullets items={doc.filming} />
       {doc.revisionLimits.length > 0 && (
-        <Text style={s.sub}>{t.revisionTitle}</Text>
+        <Text style={s.sub} minPresenceAhead={40}>
+          {t.revisionTitle}
+        </Text>
       )}
       <Bullets items={doc.revisionLimits} />
     </View>
@@ -163,11 +149,11 @@ function Terms({ view: { doc, t } }: { view: PdfView }) {
 function Body({ view }: { view: PdfView }) {
   const { doc, t, labels } = view;
   return (
-    <View style={s.body}>
+    <View>
       <View style={s.section}>
         <Label text={t.linesTitle} />
-        {doc.lines.map((line) => (
-          <LineRow key={line.id} line={line} />
+        {doc.lines.map((line, index) => (
+          <LineRow key={line.id} line={line} isFirst={index === 0} />
         ))}
       </View>
       {doc.included && (
@@ -179,12 +165,7 @@ function Body({ view }: { view: PdfView }) {
       <Terms view={view} />
       <View style={s.signature} wrap={false}>
         <Label text={labels.signatureTitle} />
-        <Text style={s.strong}>{view.signedBy}</Text>
-      </View>
-      <View style={s.legal}>
-        {doc.legal.map((line) => (
-          <Text key={line}>{line}</Text>
-        ))}
+        <Text style={s.signatureText}>{view.signedBy}</Text>
       </View>
     </View>
   );
@@ -193,9 +174,11 @@ function Body({ view }: { view: PdfView }) {
 function SignedAgreementPdf({
   view,
   language,
+  logo,
 }: {
   view: PdfView;
   language: Language;
+  logo: PdfLogo;
 }) {
   const { doc, labels } = view;
   return (
@@ -204,18 +187,18 @@ function SignedAgreementPdf({
       author={doc.brand}
       language={language}
     >
-      <Page size="A4" style={s.page}>
-        <Header view={view} />
+      <BrandPage
+        logo={logo}
+        kind={capsOf(labels.docTitle)}
+        runningTitle={capsOf(doc.brand)}
+        eyebrow={capsOf(doc.proposalFor)}
+        title={doc.title}
+        meta={doc.meta}
+        company={doc.legal}
+        pageLabel={labels.page}
+      >
         <Body view={view} />
-        <View style={s.footer} fixed>
-          <Text>{doc.brand}</Text>
-          <Text
-            render={({ pageNumber, totalPages }) =>
-              labels.page(pageNumber, totalPages)
-            }
-          />
-        </View>
-      </Page>
+      </BrandPage>
     </Document>
   );
 }
@@ -223,8 +206,11 @@ function SignedAgreementPdf({
 export async function renderSignedPdf(
   input: SignedPdfInput,
 ): Promise<Uint8Array> {
-  const buffer = await renderToBuffer(
-    <SignedAgreementPdf view={viewOf(input)} language={input.language} />,
+  const view = viewOf(input);
+  return renderBrandPdf(
+    (logo) => (
+      <SignedAgreementPdf view={view} language={input.language} logo={logo} />
+    ),
+    input.logo,
   );
-  return new Uint8Array(buffer);
 }
