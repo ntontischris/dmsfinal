@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Viewer } from "@/modules/access";
 
-import { financeViewOf } from "./caps";
+import { canSeeClientLedger, financeViewOf } from "./caps";
 
 const USER = "44444444-4444-4444-8444-444444444444";
 
@@ -60,5 +60,34 @@ describe("financeViewOf", () => {
 
   it("should give nothing to visitors", () => {
     expect(financeViewOf({ status: "anonymous" })).toBe("none");
+  });
+});
+
+describe("canSeeClientLedger", () => {
+  const sales = teamViewer({ "clients.view": "mine", "finance.amounts": "mine" });
+
+  it("should let sales see the ledger of a client they manage", () => {
+    expect(canSeeClientLedger(sales, USER)).toBe(true);
+  });
+
+  it("should hide the ledger of another salesman's client", () => {
+    expect(
+      canSeeClientLedger(sales, "55555555-5555-4555-8555-555555555555"),
+    ).toBe(false);
+  });
+
+  it("should hide the ledger of an unassigned client from sales", () => {
+    expect(canSeeClientLedger(sales, null)).toBe(false);
+  });
+
+  it("should hide the ledger from a member without any amounts scope", () => {
+    expect(canSeeClientLedger(teamViewer({ "clients.view": "mine" }), USER)).toBe(
+      false,
+    );
+  });
+
+  it("should let a member with all finance see any client's ledger", () => {
+    const finance = teamViewer({ "finance.view": "all", "finance.amounts": "all" });
+    expect(canSeeClientLedger(finance, null)).toBe(true);
   });
 });

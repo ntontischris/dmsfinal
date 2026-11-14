@@ -74,3 +74,34 @@ export const parseInvoiceDetail = (data: unknown): InvoiceDetail =>
   invoiceDetailSchema.parse(data);
 export const parseVoidedInvoices = (data: unknown): VoidedItem[] =>
   z.array(voidedItemSchema).parse(data);
+
+// Η σελίδα ενός Τιμολογίου (I8, d3): κατάσταση, τι πληρώθηκε από ποια Είσπραξη, Συμφωνίες και Παραγωγές που καλύπτει.
+const linkSchema = z.object({ id: z.string(), title: z.string() });
+
+const paymentSchema = z.object({
+  receiptId: z.string(),
+  receivedOn: z.string(),
+  methodLabel: z.string(),
+  applied: z.number(),
+  receiptAmount: z.number(),
+  withheld: z.number(),
+  withholdingLabel: z.string().nullable(),
+  linked: z.boolean(),
+});
+
+const invoicePaymentsSchema = z.object({
+  // Ίδιες τιμές με τη λίστα (unpaid/partial/overdue/paid/credit), ή «voided» για ακυρωμένη καταχώριση.
+  status: z.string(),
+  owed: z.number(),
+  paid: z.number(),
+  remaining: z.number(),
+  payments: z.array(paymentSchema),
+  agreements: z.array(linkSchema),
+  productions: z.array(linkSchema),
+});
+
+export type InvoicePayments = z.infer<typeof invoicePaymentsSchema>;
+export type InvoicePayment = z.infer<typeof paymentSchema>;
+
+export const parseInvoicePayments = (data: unknown): InvoicePayments =>
+  invoicePaymentsSchema.parse(data);

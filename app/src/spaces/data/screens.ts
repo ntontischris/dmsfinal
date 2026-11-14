@@ -66,6 +66,12 @@ const DETAIL_SCREENS: readonly DetailScreen[] = [
     route: "/app/finance/invoices/new",
     parent: "I2",
   },
+  {
+    code: "I8",
+    title: "Τιμολόγιο",
+    route: "/app/finance/invoices/{id}",
+    parent: "I2",
+  },
   { code: "J2", title: "Συνομιλία", route: "/app/messages/{id}", parent: "J1" },
   {
     code: "K2",

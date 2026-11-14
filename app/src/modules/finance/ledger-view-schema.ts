@@ -9,6 +9,8 @@ export const LEDGER_KINDS = [
   "receipt_doc",
   "credit",
   "payment",
+  // Παρακράτηση φόρου (d6): πίστωση που κλείνει Τιμολόγιο χωρίς να μπουν χρήματα.
+  "withheld",
 ] as const;
 export type LedgerKind = (typeof LEDGER_KINDS)[number];
 

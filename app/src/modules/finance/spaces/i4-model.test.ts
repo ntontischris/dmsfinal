@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import type { InvoiceItem } from "../invoices-view-schema";
 import type { ReceiptRow } from "../types";
 import {
+  linkedPreviewOf,
   openInvoicesByClient,
   previewOf,
   receiptTargets,
   settlementOf,
+  suggestedWithholding,
 } from "./i4-model";
 
 const invoice = (overrides: Partial<InvoiceItem> = {}): InvoiceItem => ({
@@ -31,6 +33,11 @@ const receipt = (overrides: Partial<ReceiptRow> = {}): ReceiptRow => ({
   clientName: "Κυψέλη Καφέ",
   receivedOn: "2026-08-20",
   amount: 500,
+  withheld: 0,
+  withholdingId: null,
+  withholdingLabel: null,
+  invoiceIds: [],
+  invoiceNumbers: [],
   methodId: "m-1",
   methodLabel: "Τραπεζική μεταφορά",
   note: "",
@@ -77,8 +84,8 @@ const ITEMS: readonly InvoiceItem[] = [
 describe("i4-model", () => {
   it("μετά την Είσπραξη λέει ποιο Τιμολόγιο εξοφλήθηκε και τι μένει", () => {
     const open = [
-      { number: "Α-58", remaining: 616 },
-      { number: "Α-62", remaining: 1116 },
+      { id: "i-58", number: "Α-58", remaining: 616, net: 500 },
+      { id: "i-62", number: "Α-62", remaining: 1116, net: 900 },
     ];
     expect(settlementOf(open, 800)).toEqual([
       { number: "Α-58", isPaid: true, left: 0 },
@@ -113,8 +120,8 @@ describe("i4-model", () => {
   it("τα ανοιχτά Τιμολόγια ανά Πελάτη είναι από το παλαιότερο, χωρίς πιστωτικά", () => {
     expect(openInvoicesByClient(ITEMS)).toEqual({
       kyp: [
-        { number: "Α-58", remaining: 16 },
-        { number: "Α-62", remaining: 1116 },
+        { id: "i-2", number: "Α-58", remaining: 16, net: 0 },
+        { id: "i-3", number: "Α-62", remaining: 1116, net: 0 },
       ],
     });
   });
@@ -124,5 +131,35 @@ describe("i4-model", () => {
       covers: [{ number: "Α-58", amount: 16 }],
       surplus: 4,
     });
+  });
+
+  it("η Είσπραξη δεμένη με Τιμολόγιο το εξοφλεί πρώτα, ακόμη κι αν δεν είναι το παλαιότερο", () => {
+    const targets = receiptTargets(
+      [receipt({ id: "r-link", receivedOn: "2026-10-05", amount: 1116, invoiceIds: ["i-3"] })],
+      [ITEMS[0], ITEMS[2]].map((item) => ({ ...item, paid: 0, remaining: item.total })),
+    );
+    expect(targets["r-link"]).toEqual(["Α-62"]);
+  });
+
+  it("η παρακράτηση μετρά στην αξία της Είσπραξης", () => {
+    const targets = receiptTargets(
+      [receipt({ id: "r-wh", amount: 400, withheld: 100 })],
+      [invoice({ paid: 0, remaining: 500, status: "unpaid" })],
+    );
+    expect(targets["r-wh"]).toEqual(["Α-41"]);
+    const open = [
+      { id: "a", number: "Α-1", remaining: 300, net: 250 },
+      { id: "b", number: "Α-2", remaining: 620, net: 500 },
+    ];
+    expect(linkedPreviewOf(open, 620, ["b"])).toEqual({
+      covers: [{ number: "Α-2", amount: 620 }],
+      surplus: 0,
+    });
+    expect(suggestedWithholding(open, ["b"], 20)).toBe(100);
+    expect(suggestedWithholding(open, [], 20)).toBe(0);
+    expect(settlementOf(open, 700, ["b"])).toEqual([
+      { number: "Α-2", isPaid: true, left: 0 },
+      { number: "Α-1", isPaid: false, left: 220 },
+    ]);
   });
 });

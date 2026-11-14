@@ -4,7 +4,7 @@ import { Entity } from "@/spaces/kit/parts";
 import { hrefOf } from "@/spaces/data/screens";
 import { Badge, fmtDate, fmtMoney } from "@/spaces/screens/shared";
 
-import { reasonText, sortItemsByDate } from "../billables-helpers";
+import { daysText, reasonText, sortItemsByDate } from "../billables-helpers";
 import type { BillableClient, BillableItem } from "../billables-view-schema";
 
 function BillableRow({ row }: { row: BillableItem }) {
@@ -29,10 +29,14 @@ function BillableRow({ row }: { row: BillableItem }) {
       </td>
       <td data-label="Υπενθύμιση">
         <span className="i13-signals">
-          {row.reminders.length === 0 && "—"}
-          {row.reminders.map((d) => (
-            <Badge key={d} tone="attention">{`${d} μ. στάλθηκε`}</Badge>
-          ))}
+          {/* d1: μόνο ό,τι στάλθηκε πραγματικά· αλλιώς πόσο περιμένει. */}
+          {row.lastReminderAt ? (
+            <Badge tone="attention">
+              {`υπενθύμιση στάλθηκε ${fmtDate(row.lastReminderAt)}`}
+            </Badge>
+          ) : (
+            `περιμένει ${daysText(row.daysOpen)}`
+          )}
         </span>
       </td>
     </tr>

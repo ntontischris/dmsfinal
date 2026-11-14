@@ -13,7 +13,7 @@ import { Badge } from "@/spaces/screens/shared";
 // πραγματικές ενέργειες της κλασικής κάρτας: προσθήκη, μετονομασία, απόσυρση και επαναφορά· χωρίς διαγραφή.
 // Οι ενέργειες έρχονται από τη σελίδα (server actions του module Οικονομικά).
 
-type Action = (state: FormState, form: FormData) => Promise<FormState>;
+export type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
 export interface MethodActions {
   save: Action;
@@ -25,7 +25,7 @@ const METHODS_NOTE =
   "Ένας τρόπος που έχει χρησιμοποιηθεί δεν διαγράφεται· αποσύρεται, και οι παλιές Εισπράξεις κρατούν τον τρόπο τους.";
 const MAX_LABEL = 60;
 
-function FormNote({ state }: { state: FormState }) {
+export function FormNote({ state }: { state: FormState }) {
   if (state.error)
     return (
       <span className="note" role="alert">
@@ -70,7 +70,7 @@ function RenameForm({ save, method }: { save: Action; method: PaymentMethod }) {
   );
 }
 
-function RowAction({
+export function RowAction({
   action,
   id,
   label,

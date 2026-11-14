@@ -33,7 +33,7 @@ function item(overrides: Partial<BillableItem>): BillableItem {
     net: 100,
     open: 100,
     daysOpen: 0,
-    reminders: [],
+    lastReminderAt: null,
     ...overrides,
   };
 }

@@ -12,7 +12,8 @@ const billableItemSchema = z.object({
   net: z.number(),
   open: z.number(),
   daysOpen: z.number(),
-  reminders: z.array(z.number()),
+  // Πότε στάλθηκε πραγματικά η τελευταία υπενθύμιση (d1)· null = καμία.
+  lastReminderAt: z.string().nullable(),
 });
 
 const billableClientSchema = z.object({

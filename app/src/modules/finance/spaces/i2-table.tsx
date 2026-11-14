@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { hrefOf } from "@/spaces/data/screens";
 import { Entity } from "@/spaces/kit/parts";
 import {
   Badge,
@@ -20,12 +21,21 @@ interface InvoiceTableProps {
   canEdit: boolean;
   // Ο Χρήστης πελάτη δεν βλέπει στήλη Πελάτη (prototype: showClient).
   showClient?: boolean;
+  // Η ομάδα ανοίγει τη σελίδα του Τιμολογίου (I8) και καταχωρεί Είσπραξη από τη γραμμή (d3, d4).
+  canOpen?: boolean;
+  canCollect?: boolean;
 }
 
-function NumberCell({ row }: { row: InvoiceItem }) {
+function NumberCell({ row, canOpen }: { row: InvoiceItem; canOpen: boolean }) {
   return (
     <td data-label="Αριθμός" className="i2-number">
-      <span className="i2-code">{row.number}</span>
+      {canOpen ? (
+        <Link className="i2-code" href={hrefOf("I8", { id: row.id })}>
+          {row.number}
+        </Link>
+      ) : (
+        <span className="i2-code">{row.number}</span>
+      )}
       {row.creditForNumber && (
         <span className="i245-sub">διορθώνει {row.creditForNumber}</span>
       )}
@@ -71,10 +81,26 @@ function AmountCells({ row }: { row: InvoiceItem }) {
   );
 }
 
-function Actions({ row, canEdit }: { row: InvoiceItem; canEdit: boolean }) {
+function Actions({
+  row,
+  canEdit,
+  canCollect,
+}: {
+  row: InvoiceItem;
+  canEdit: boolean;
+  canCollect: boolean;
+}) {
   return (
     <td data-label="Ενέργειες" className="i2-actions">
       <div className="i2-actions-row">
+        {canCollect && row.kind !== "credit" && row.remaining > 0 && (
+          <Link
+            href={hrefOf("I4", { client: row.clientId, invoice: row.id })}
+            title="Καταχώρηση Είσπραξης για αυτό το Τιμολόγιο"
+          >
+            Είσπραξη
+          </Link>
+        )}
         <a
           className="button"
           href={pdfHref(row.id)}
@@ -98,10 +124,12 @@ function InvoiceRow({
   today,
   canEdit,
   showClient = true,
+  canOpen = false,
+  canCollect = false,
 }: InvoiceTableProps & { row: InvoiceItem }) {
   return (
     <tr>
-      <NumberCell row={row} />
+      <NumberCell row={row} canOpen={canOpen} />
       <td data-label="Είδος" className="i2-nowrap">
         {KIND_LABELS[row.kind]}
       </td>
@@ -118,7 +146,7 @@ function InvoiceRow({
       </td>
       <AmountCells row={row} />
       <StatusCell row={row} today={today} />
-      <Actions row={row} canEdit={canEdit} />
+      <Actions row={row} canEdit={canEdit} canCollect={canCollect} />
     </tr>
   );
 }
@@ -147,6 +175,8 @@ export function InvoiceTable({
   today,
   canEdit,
   showClient = true,
+  canOpen = false,
+  canCollect = false,
 }: InvoiceTableProps) {
   return (
     <div className="scroll">
@@ -163,6 +193,8 @@ export function InvoiceTable({
               today={today}
               canEdit={canEdit}
               showClient={showClient}
+              canOpen={canOpen}
+              canCollect={canCollect}
             />
           ))}
         </tbody>

@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { can, getViewer, isOwner, type Viewer } from "@/modules/access";
 import { agreementCaps } from "@/modules/agreements";
-import { financeCaps } from "@/modules/finance";
+import { canSeeClientLedger, financeCaps } from "@/modules/finance";
 import { messagesCaps } from "@/modules/messages";
 import {
   type ClientSendsFilter,
@@ -69,7 +69,7 @@ const rightsOf = (viewer: Viewer, client: ClientDetail): B2TabRights => ({
   chat: messagesCaps(viewer).canChat,
   activities: true,
   dispatches: canSeeClientSends(viewer, client.managerId),
-  ledger: financeCaps(viewer).canView,
+  ledger: canSeeClientLedger(viewer, client.managerId),
 });
 
 // Ο Πελάτης άλλου πωλητή: φαίνεται η ύπαρξή του και ο Υπεύθυνος, όχι τα στοιχεία (ADR 0007).
@@ -160,6 +160,7 @@ async function ClientView(props: ClientViewProps) {
     rights,
     allowed,
     caps,
+    isLedgerFull: financeCaps(viewer).canView,
     who: {
       userId: caps.userId,
       isOwner: isOwner(viewer),

@@ -2,8 +2,10 @@ import { createSupabase } from "@/lib/supabase/server";
 
 import {
   parseInvoiceDetail,
+  parseInvoicePayments,
   parseVoidedInvoices,
   type InvoiceDetail,
+  type InvoicePayments,
   type VoidedItem,
 } from "./invoice-detail-schema";
 import { signedInvoicePdfUrl } from "./invoice-storage";
@@ -53,6 +55,20 @@ export async function getInvoiceDetail(
     "getInvoiceDetail",
     supabase.rpc("invoice_detail", { p_id: invoiceId }),
     parseInvoiceDetail,
+  );
+}
+
+// Η σελίδα Τιμολογίου (I8, d3): πληρωμές, υπόλοιπο, Συμφωνίες και Παραγωγές. Η μέρα έρχεται από τον server (p_today).
+export async function getInvoicePayments(
+  invoiceId: string,
+  today: string,
+): Promise<ReadResult<InvoicePayments>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "getInvoicePayments",
+    supabase.rpc("invoice_payments", { p_id: invoiceId, p_today: today }),
+    parseInvoicePayments,
   );
 }
 

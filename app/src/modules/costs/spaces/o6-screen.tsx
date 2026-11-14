@@ -18,9 +18,13 @@ import {
 import {
   financeCaps,
   listPaymentMethods,
+  listWithholdingRates,
   restoreMethod,
+  restoreWithholdingRate,
   retireMethod,
+  retireWithholdingRate,
   saveMethod,
+  saveWithholdingRate,
   type PaymentMethod,
 } from "@/modules/finance";
 import {
@@ -50,6 +54,7 @@ import {
 import { decimalText } from "./o6-live";
 import { MethodsEditor } from "./o6-methods";
 import { O6MonthCards } from "./o6-month";
+import { WithholdingEditor } from "./o6-withholding";
 import { AdminCost, MethodsList, RecentChanges } from "./o6-parts";
 
 import "./o6.css";
@@ -83,6 +88,28 @@ function Methods({
     <MethodsEditor
       methods={methods}
       actions={{ save: saveMethod, retire: retireMethod, restore: restoreMethod }}
+    />
+  );
+}
+
+// Η παρακράτηση φόρου (d6) αλλάζει μόνο από όποιον «Διαχειρίζεται Ρυθμίσεις»· οι άλλοι δεν τη χρειάζονται εδώ.
+function Withholding({
+  rates,
+  canManage,
+}: {
+  rates: Awaited<ReturnType<typeof listWithholdingRates>>;
+  canManage: boolean;
+}) {
+  if (!canManage) return null;
+  if (!rates.ok) return <ErrorNotice what="τα ποσοστά παρακράτησης" />;
+  return (
+    <WithholdingEditor
+      rates={rates.data}
+      actions={{
+        save: saveWithholdingRate,
+        retire: retireWithholdingRate,
+        restore: restoreWithholdingRate,
+      }}
     />
   );
 }
@@ -227,11 +254,13 @@ function RangeCard({ hint }: { hint: CostHint }) {
 
 async function O6Body({ canManageCost }: { canManageCost: boolean }) {
   const viewer = await getViewer();
-  const [months, hint, changes, methods] = await Promise.all([
+  const canManageMethods = financeCaps(viewer).canManageMethods;
+  const [months, hint, changes, methods, rates] = await Promise.all([
     canManageCost ? listCostMonths() : null,
     getCostHint(),
     recentChanges(O6_AUDIT_ENTITIES),
     listPaymentMethods(),
+    listWithholdingRates(),
   ]);
   if ((months && !months.ok) || !hint.ok || !hint.data)
     return <ErrorNotice what="τις Ρυθμίσεις Οικονομικών" />;
@@ -242,11 +271,12 @@ async function O6Body({ canManageCost }: { canManageCost: boolean }) {
       {methods.ok ? (
         <Methods
           methods={methods.data}
-          canManage={financeCaps(viewer).canManageMethods}
+          canManage={canManageMethods}
         />
       ) : (
         <ErrorNotice what="οι Τρόποι είσπραξης" />
       )}
+      <Withholding rates={rates} canManage={canManageMethods} />
       {months?.ok ? (
         <>
           <CostMonthCards months={months.data} hint={hint.data} />
