@@ -45,6 +45,8 @@ const packSchema = z.object({
   pdfs: z.boolean(),
   invoices: z.array(z.unknown()),
   receipts: z.array(z.unknown()),
+  // d10: null όταν ο Χρήστης δεν βλέπει Έξοδα· λείπει σε παλιότερη βάση.
+  expenses: z.array(z.unknown()).nullable().optional(),
 });
 
 const historyItemSchema = z.object({

@@ -57,6 +57,15 @@ export const RECEIPT_COLUMNS: readonly ExportColumn[] = [
   text("note", "Σημείωση"),
 ];
 
+// Οι γραμμές Εξόδων του μήνα στο Πακέτο λογιστή (d10): η ανάλυση του Κόστους, μία γραμμή ανά ποσό.
+export const EXPENSE_LINE_COLUMNS: readonly ExportColumn[] = [
+  { key: "month", header: "Μήνας", type: "month" },
+  text("category", "Κατηγορία"),
+  text("item", "Είδος"),
+  text("label", "Περιγραφή"),
+  money("amount", "Ποσό"),
+];
+
 export const DATASETS: readonly DatasetDefinition[] = [
   {
     code: "invoices",

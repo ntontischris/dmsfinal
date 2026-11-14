@@ -108,8 +108,9 @@ describe("exportableReport", () => {
   });
 
   it("should list every report export in the database allowlist", () => {
+    // Η λίστα ξαναγράφτηκε με τις Αναφορές του παλιού DMS (d8): ισχύει η τελευταία.
     const migration = readFileSync(
-      "supabase/migrations/20261017160000_reports_export.sql",
+      "supabase/migrations/20261114120100_finance_reports.sql",
       "utf8",
     );
     for (const { id, exportSpec } of [...FINANCE_REPORTS, ...SALES_REPORTS])
