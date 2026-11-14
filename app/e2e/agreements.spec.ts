@@ -236,6 +236,15 @@ test("η Διαχείριση βλέπει κόστος και περιθώρι�
   await openAgreementByTitle(page, `Πρόταση Α ${P}`);
   await checkFrozenCost(page);
   await shot(page, "d2-cost-admin");
+
+  // Το PDF της υπογεγραμμένης Συμφωνίας (b10) κατεβαίνει από τον σύνδεσμο της Υπογραφής.
+  const href = await page
+    .getByRole("link", { name: "Λήψη PDF" })
+    .getAttribute("href");
+  const pdf = await page.request.get(href ?? "");
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
 });
 
 test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις προεπιλογές και φαίνονται οι χρήσεις", async ({

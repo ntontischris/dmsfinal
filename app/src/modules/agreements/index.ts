@@ -116,6 +116,7 @@ export {
   listProvisionKinds,
 } from "./queries-agreements";
 export { getSignedFileLink } from "./queries-lifecycle";
+export { getSignedAgreementPdf } from "./queries-signed-pdf";
 export { getPublicProposal } from "./queries-public";
 export { getDefaults } from "./queries-settings";
 export { TermsCard } from "./components/terms-card";
