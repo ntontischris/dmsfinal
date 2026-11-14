@@ -95,3 +95,6 @@ export { SpacesDuplicates } from "./spaces/b6-screen";
 export { SpacesSalesSettings } from "./spaces/o2-screen";
 // Ctrl+K: αναζήτηση εγγραφών.
 export { searchClients } from "./queries-search";
+// Η δημόσια φόρμα ενδιαφέροντος της Ιστοσελίδας (POST /api/forms/interest).
+export { submitWebForm } from "./web-form";
+export type { WebFormResult } from "./web-form";
