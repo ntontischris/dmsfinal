@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getViewer } from "@/modules/access";
+import { readLogoFile } from "@/modules/settings";
 
 import { agreementCaps } from "./helpers";
 import { signedPdfFileName } from "./pdf/signed-pdf-labels";
@@ -12,7 +13,8 @@ export type SignedPdf =
   | { ok: true; bytes: Uint8Array; fileName: string }
   | { ok: false; status: 404 | 500 };
 
-type Source = { ok: true; input: SignedPdfInput | null } | { ok: false };
+type SignedPdfData = Omit<SignedPdfInput, "logo">;
+type Source = { ok: true; input: SignedPdfData | null } | { ok: false };
 
 // Ο Χρήστης πελάτη: μόνο δική του Συμφωνία που έχει υπογραφεί (η βάση κρίνει c.agreements και Πελάτη).
 async function clientSource(agreementId: string): Promise<Source> {
@@ -66,10 +68,14 @@ export async function getSignedAgreementPdf(
   if (!source.input) return { ok: false, status: 404 };
   // Η βιβλιοθήκη PDF φορτώνεται μόνο όταν ζητηθεί PDF, όχι σε κάθε σελίδα που διαβάζει Συμφωνίες.
   try {
-    const { renderSignedPdf } = await import("./pdf/signed-pdf");
+    // Το λογότυπο είναι το τωρινό της Εταιρείας (null αν δεν ανέβηκε ή δεν διαβάστηκε: τότε μπαίνει του brand).
+    const [{ renderSignedPdf }, logo] = await Promise.all([
+      import("./pdf/signed-pdf"),
+      readLogoFile(),
+    ]);
     return {
       ok: true,
-      bytes: await renderSignedPdf(source.input),
+      bytes: await renderSignedPdf({ ...source.input, logo }),
       fileName: signedPdfFileName(agreementId),
     };
   } catch (error) {
