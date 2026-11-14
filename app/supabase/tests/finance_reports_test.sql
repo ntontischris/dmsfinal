@@ -170,7 +170,7 @@ select throws_ok($$ select public.report_profit('next-year') $$, 'P0001', 'Άγ�
 -- ───────────── Έξοδα ανά κατηγορία ─────────────
 select set_config('t.x', authz.report_expenses_by_category('this-year', date '2025-06-30')::text, true);
 select is(
-  (select string_agg((r->>'category') || ':' || (r->>'amount')::numeric || ':' || (r->>'share') || ':' || (r->>'lineCount'),
+  (select string_agg((r->>'category') || ':' || trim_scale((r->>'amount')::numeric) || ':' || (r->>'share') || ':' || (r->>'lineCount'),
                      ' ' order by n)
      from jsonb_array_elements(current_setting('t.x')::jsonb->'rows') with ordinality x (r, n)),
   'Σταθερά:800:0.4706:3 Χωρίς ανάλυση:700:0.4118:0 Μεταβλητά:200:0.1176:1',
@@ -193,8 +193,8 @@ select public.t_as('a1');
 -- ───────────── Έσοδα − Έξοδα = Κέρδος ─────────────
 select set_config('t.p', authz.report_profit('this-year', date '2025-06-30')::text, true);
 select is(
-  (select string_agg((m->>'month') || ':' || coalesce(((m->>'income')::numeric)::text, '-') || ':'
-                     || coalesce(((m->>'expenses')::numeric)::text, '-') || ':' || coalesce(((m->>'profit')::numeric)::text, '-')
+  (select string_agg((m->>'month') || ':' || coalesce((trim_scale((m->>'income')::numeric))::text, '-') || ':'
+                     || coalesce((trim_scale((m->>'expenses')::numeric))::text, '-') || ':' || coalesce((trim_scale((m->>'profit')::numeric))::text, '-')
                      || ':' || coalesce(m->>'margin', '-') || ':' || (m->>'isPartial'), ' ' order by n)
      from jsonb_array_elements(current_setting('t.p')::jsonb->'months') with ordinality x (m, n)
     where m->>'month' >= '2025-04'),
@@ -203,7 +203,7 @@ select is(
 );
 select is(jsonb_array_length(current_setting('t.p')::jsonb->'months'), 6, 'Φέτος ως σήμερα: Ιανουάριος–Ιούνιος');
 select is(
-  (select ((t->>'income')::numeric)::text || '/' || ((t->>'expenses')::numeric)::text || '/' || ((t->>'profit')::numeric)::text
+  (select (trim_scale((t->>'income')::numeric))::text || '/' || (trim_scale((t->>'expenses')::numeric))::text || '/' || (trim_scale((t->>'profit')::numeric))::text
           || '/' || (t->>'margin')
      from (select current_setting('t.p')::jsonb->'totals' t) s),
   '1400/1700/-300/-0.2143', 'Σύνολα μόνο από τους μήνες με Έξοδα'
@@ -213,14 +213,14 @@ select is((current_setting('t.p')::jsonb->>'missingMonths')::int, 4, 'Τέσσε
 -- ───────────── Τρόποι είσπραξης ─────────────
 select set_config('t.m', authz.report_payment_methods('this-year', date '2025-06-30')::text, true);
 select is(
-  (select string_agg((r->>'label') || ':' || (r->>'amount')::numeric || ':' || (r->>'share') || ':' || (r->>'receiptCount'),
+  (select string_agg((r->>'label') || ':' || trim_scale((r->>'amount')::numeric) || ':' || (r->>'share') || ':' || (r->>'receiptCount'),
                      ' ' order by n)
      from jsonb_array_elements(current_setting('t.m')::jsonb->'rows') with ordinality x (r, n)),
   'Τραπεζική κατάθεση:1040:0.7222:1 Μετρητά:400:0.2778:2',
   'Ανά Τρόπο, μεγαλύτερο πρώτο· χωρίς τη διαγραμμένη και την περσινή'
 );
 select is(
-  (select ((t->>'amount')::numeric)::text || '/' || (t->>'receiptCount') || '/' || ((t->>'withheld')::numeric)::text
+  (select (trim_scale((t->>'amount')::numeric))::text || '/' || (t->>'receiptCount') || '/' || (trim_scale((t->>'withheld')::numeric))::text
           || '/' || (t->>'withheldCount')
      from (select current_setting('t.m')::jsonb->'totals' t) s),
   '1440/3/200/1', 'Σύνολα με την παρακράτηση χωριστά'
@@ -273,13 +273,13 @@ select public.t_as('a2');
 select set_config('t.k', authz.export_accountant_pack('2025-05', date '2025-06-30')::text, true);
 select is(
   (select string_agg((e->>'category') || '/' || coalesce(e->>'item', '-') || '/' || coalesce(e->>'label', '-') || ':'
-                     || (e->>'amount')::numeric, ' ' order by n)
+                     || trim_scale((e->>'amount')::numeric), ' ' order by n)
      from jsonb_array_elements(current_setting('t.k')::jsonb->'expenses') with ordinality x (e, n)),
   'Μεταβλητά/Μετακινήσεις/Καύσιμα:200 Σταθερά/Ενοίκιο/Γραφείο:600 Σταθερά/Λογαριασμοί/Internet:50 Σταθερά/Λογαριασμοί/Ρεύμα:150',
   'Ο Λογιστής παίρνει τις γραμμές Εξόδων του μήνα'
 );
 select is(
-  (select (e->>'category') || ':' || (e->>'amount')::numeric || ':' || coalesce(e->>'item', 'null')
+  (select (e->>'category') || ':' || trim_scale((e->>'amount')::numeric) || ':' || coalesce(e->>'item', 'null')
      from jsonb_array_elements(authz.export_accountant_pack('2025-06', date '2025-06-30')->'expenses') e),
   'Χωρίς ανάλυση:700:null', 'Μήνας χωρίς ανάλυση: μία γραμμή με το σύνολο'
 );
