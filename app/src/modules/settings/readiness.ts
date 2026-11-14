@@ -37,7 +37,7 @@ export const READINESS: Readonly<Record<string, ReadinessInfo>> = {
   costs: {
     label: "Έξοδα και ώρες: ο πρώτος μήνας Κόστους ώρας",
     who: "Όποιος «Διαχειρίζεται κόστος»",
-    href: "/app/settings/finance",
+    href: "/app/finance/expenses",
   },
   payment_methods: {
     label: "Τρόποι είσπραξης: τουλάχιστον ένας ενεργός",

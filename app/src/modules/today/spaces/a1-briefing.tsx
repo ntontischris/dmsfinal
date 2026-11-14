@@ -6,6 +6,7 @@ import { StateNotice } from "@/spaces/screens/shared";
 import { arrangeToday } from "../layout";
 import { CUSTOMIZE_PATH } from "../labels";
 import {
+  getTodayKpis,
   getTodayMoney,
   getTodayProgramme,
   getTodayTeam,
@@ -19,6 +20,7 @@ import { CardError, TodayCard } from "./a1-card";
 import { rankDecisions } from "./a1-decisions";
 import { newChipOf, newCountOf, withoutLater } from "./a1-later";
 import { leadOf } from "./a1-lead";
+import { KpiBrief } from "./a1-kpis-panel";
 import { loadCards } from "./a1-load";
 import { MoneyBrief } from "./a1-money-panel";
 import {
@@ -67,7 +69,8 @@ export async function TeamBriefing({
   const shown = new Set(
     counts.cards.filter((card) => !card.hidden).map((card) => card.code),
   );
-  const [loaded, money, team, day, visit] = await Promise.all([
+  // Οι δείκτες (d9) δεν είναι κάρτα: φαίνονται σε όποιον έχει το Δικαίωμα κάθε δείκτη (η βάση κρύβει τους υπόλοιπους).
+  const [loaded, money, team, day, visit, kpis] = await Promise.all([
     loadCards(counts.cards),
     shown.has(MONEY_CARD) ? partOf("money", getTodayMoney) : null,
     partOf("team", getTodayTeam),
@@ -77,6 +80,7 @@ export async function TeamBriefing({
         )
       : null,
     getTodayVisit(),
+    partOf("kpis", getTodayKpis),
   ]);
   const failed = new Set(
     loaded.filter((item) => item.failed).map((item) => item.built.card.id),
@@ -115,6 +119,7 @@ export async function TeamBriefing({
       {hello(newChip)}
       {lead && <p className="a1-lead">{lead}</p>}
       {children}
+      {kpis && <KpiBrief kpis={kpis} />}
       {layout.isAllHidden ? (
         <StateNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
           Πάτα «Προσαρμογή» για να εμφανίσεις όσες θέλεις, ή{" "}
