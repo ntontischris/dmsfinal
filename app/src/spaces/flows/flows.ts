@@ -23,6 +23,15 @@ export interface FlowStep {
   submits?: { form: string; label: string };
   // Ο σταθμός ανοίγει στη μέρα του γυρίσματος (?date=), αν ο οδηγός την ξέρει.
   opensOnDate?: boolean;
+  // Το κύριο κουμπί μένει κλειστό μέχρι το Γύρισμα να έχει ό,τι λέει εδώ (από τη βάση, μέσω της σελίδας του).
+  requires?: readonly Need[];
+}
+
+export type Need = "crew" | "equipment";
+
+export interface FilmingCounts {
+  crew: number;
+  equipment: number;
 }
 
 export interface Flow {
@@ -66,12 +75,13 @@ export const FLOWS: readonly Flow[] = [
       {
         question: "Ποιοι πάνε και με τι;",
         preset:
-          "Τα πρότυπα Συνεργείου και Εξοπλισμού του είδους γεμίζουν και τα δύο. Ό,τι συγκρούεται φαίνεται κόκκινο, με το όνομα και τον λόγο.",
+          "Μπήκαν τα πρότυπα Συνεργείου και Εξοπλισμού του είδους. Ό,τι συγκρούεται φαίνεται κόκκινο, με το όνομα και τον λόγο. Χωρίς ομάδα και εξοπλισμό δεν προχωράς.",
         hidden:
           "Προσθήκη ή αφαίρεση μέλους ή αντικειμένου· ποιος έχει ρεπό ή άδεια (μόνο προειδοποίηση).",
         station: "E1",
         area: "Παραγωγή",
         stays: FILMING_PAGE,
+        requires: ["crew", "equipment"],
       },
       {
         question: "⏳ Η ομάδα απαντά αν μπορεί",
@@ -173,6 +183,37 @@ export const resumeHref = (
   return null;
 };
 
+const NEED_LABEL: Readonly<Record<Need, string>> = {
+  crew: "Συνεργείο",
+  equipment: "Εξοπλισμός",
+};
+
+// Τι λείπει από το Γύρισμα· χωρίς αριθμούς (η σελίδα δεν τους έδωσε) λείπουν όλα, ώστε να μη περνά κανείς χωρίς έλεγχο.
+export const missingOf = (
+  needs: readonly Need[] = [],
+  counts: FilmingCounts | null,
+): readonly Need[] =>
+  counts === null ? needs : needs.filter((need) => counts[need] < 1);
+
+// «Λείπει: Συνεργείο, Εξοπλισμός», ή null όταν δεν λείπει τίποτα.
+export const missingLine = (missing: readonly Need[]): string | null =>
+  missing.length > 0
+    ? `Λείπει: ${missing.map((need) => NEED_LABEL[need]).join(", ")}`
+    : null;
+
+// Το βήμα που ζητά ομάδα και εξοπλισμό (για το «Πίσω στο βήμα 3» του τέλους).
+export const requiringStep = (flow: Flow): number =>
+  flow.steps.findIndex((step) => (step.requires?.length ?? 0) > 0) + 1;
+
+// Στο τέλος: τι λείπει από όσα ζήτησε η δουλειά, μόνο αν οι αριθμοί είναι γνωστοί (αλλιώς τίποτα).
+export const missingAtEnd = (
+  flow: Flow,
+  counts: FilmingCounts | null,
+): readonly Need[] =>
+  counts === null
+    ? []
+    : missingOf(flow.steps[requiringStep(flow) - 1]?.requires, counts);
+
 // Το επόμενο βήμα μετά από αναμονή: η γραμμή ουράς ανοίγει εκεί.
 export const nextAfter = (flow: Flow, step: number): number =>
   Math.min(step + 1, flow.steps.length);
@@ -198,3 +239,11 @@ export const clientRowsOf = (
       packages: [...new Set(group.map((item) => item.title))].join(" · "),
     }),
   );
+
+// Οι αριθμοί που δίνει η σελίδα του Γυρίσματος («μέλη,αντικείμενα»)· ό,τι άκυρο → null (άγνωστοι).
+export const parseCounts = (raw: string): FilmingCounts | null => {
+  const [crew, equipment] = raw.split(",").map((part) => (part === "" ? NaN : Number(part)));
+  return Number.isInteger(crew) && Number.isInteger(equipment)
+    ? { crew, equipment }
+    : null;
+};

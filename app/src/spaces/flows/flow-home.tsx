@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
 import { Panel } from "@/spaces/kit/panel";
@@ -7,6 +8,7 @@ import { ListRow, RowList } from "@/spaces/kit/parts";
 
 import { FLOWS, flowOf, stepHref, type Flow } from "./flows";
 import {
+  enterParked,
   parseParked,
   readParkedRaw,
   subscribeParked,
@@ -27,13 +29,22 @@ function QueueRow({ row }: { row: Parked }) {
     row.reason === "wait"
       ? `${flow.name} — περιμένουμε την ομάδα· μετά: ${step.question}`
       : `${flow.name} — συνέχισε`;
+  // Όλη η γραμμή ανοίγει το βήμα· η θέση γράφεται στην καρτέλα πριν την πλοήγηση. Η γραμμή μένει στην ουρά
+  // μέχρι το «Τέλος» της δουλειάς (όχι με το πάτημα).
   return (
-    <ListRow
-      title={title}
-      href={stepHref(flow, row.step, { date: row.date })}
-      sub={`Βήμα ${row.step} από ${flow.steps.length}: ${step.question}`}
-      aside={step.area}
-    />
+    <li className="part-row">
+      <Link
+        className="part-row-main flow-queue-link"
+        href={stepHref(flow, row.step, { date: row.date })}
+        onClick={() => enterParked(row)}
+      >
+        <span className="part-title">{title}</span>
+        <span className="part-sub">
+          Βήμα {row.step} από {flow.steps.length}: {step.question}
+        </span>
+      </Link>
+      <span className="part-row-aside">{step.area}</span>
+    </li>
   );
 }
 

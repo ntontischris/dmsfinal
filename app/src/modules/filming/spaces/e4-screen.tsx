@@ -11,7 +11,8 @@ import { getBookingHours } from "../queries-booking";
 import type { FilmingFromRequest } from "../request-prefill";
 import type { NamedRef } from "../types";
 import { E4Form, type E4Preferred } from "./e4-form";
-import { firstWorkingSlot } from "./e4-start";
+import { guideSlotOf, type E4BusySource } from "./e4-guide-load";
+import { startSlotOf } from "./e4-start";
 
 import "./e.css";
 
@@ -33,12 +34,15 @@ export async function SpacesNewFilming({
   fromRequest,
   preferred = null,
   internal,
+  guide = null,
 }: {
   prefill: NewFilmingPrefill | null;
   fromRequest: FilmingFromRequest | null;
   // Ο Πελάτης που διαλέχτηκε πριν (`?client=`) και η διεύθυνσή του, αν έχει.
   preferred?: E4Preferred | null;
   internal: E4InternalSource;
+  // Μέσα στον οδηγό «Στήνω γύρισμα»: τα πιασμένα διαστήματα της ομάδας (για την ώρα) και τα Πρότυπα με τη δημιουργία.
+  guide?: { busyOn: E4BusySource } | null;
 }) {
   const caps = filmingCaps(await getViewer());
   if (!caps.canBook)
@@ -68,15 +72,27 @@ export async function SpacesNewFilming({
     );
   const now = new Date();
   const today = athensDate(now);
-  const start = hours.ok
-    ? firstWorkingSlot(hours.data, { date: today, time: athensTime(now.toISOString()) })
-    : null;
+  const first = startSlotOf(hours.ok ? hours.data : null, {
+    date: today,
+    time: athensTime(now.toISOString()),
+  });
+  const guided =
+    guide && first && !prefill
+      ? await guideSlotOf({
+          options: options.data,
+          clientId: fromRequest?.clientId ?? preferred?.clientId ?? null,
+          hours: hours.ok ? hours.data : null,
+          slot: first,
+          busyOn: guide.busyOn,
+        })
+      : null;
   return wrap(
     <E4Form
       options={options.data}
       productions={internalList}
       today={today}
-      start={start}
+      start={guided?.slot ?? first}
+      guide={guide ? { crewNote: guided?.crewNote ?? null } : null}
       preferred={preferred}
       prefill={prefill}
       fromRequest={fromRequest}

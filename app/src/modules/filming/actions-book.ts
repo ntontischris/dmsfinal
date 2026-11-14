@@ -6,7 +6,9 @@ import { z } from "zod";
 import type { FormState } from "@/lib/form-state";
 
 import { callRpc, finishWith, firstIssue, pick, revalidateAppLayout } from "./action-support";
+import { pickTemplate } from "./default-templates";
 import { bookSchema, filmingRefSchema, internalBookSchema, rescheduleSchema } from "./schemas";
+import { crewTemplatesSchema } from "./view-schema";
 
 // Κλείσιμο Γυρίσματος από την ομάδα (E4). Η βάση ελέγχει Δικαίωμα, Συμφωνία, Περίοδο και Παροχές.
 // Μετά την επιτυχία η οθόνη πηγαίνει στο νέο Γύρισμα (E3)· το μήνυμα δεν θα έμενε μετά την ανανέωση.
@@ -33,7 +35,33 @@ export async function bookFilming(_: FormState, form: FormData): Promise<FormSta
     p_from_blocked: fromBlocked ?? null,
   });
   if (!outcome.ok) return outcome.state;
+  if (form.get("withTemplates") === "1") await applyDefaultTemplates(outcome.data, String(form.get("kindLabel") ?? ""));
   return redirectToFilming(outcome.data);
+}
+
+const equipmentTemplatesSchema = z.array(z.object({ id: z.uuid(), name: z.string() }));
+
+// Ένα Πρότυπο από τη λίστα του (μέσω RPC, ώστε η βάση να ελέγχει το Δικαίωμα), διαλεγμένο για το είδος.
+async function templateFor(view: string, schema: z.ZodType<readonly { id: string; name: string }[]>, kindLabel: string) {
+  const list = await callRpc(view, {});
+  const parsed = list.ok ? schema.safeParse(list.data ?? []) : null;
+  return parsed?.success ? pickTemplate(parsed.data, kindLabel) : undefined;
+}
+
+// Ο οδηγός «Στήνω γύρισμα»: με τη δημιουργία μπαίνουν και τα προεπιλεγμένα Πρότυπα Συνεργείου και Εξοπλισμού.
+// Όποιο μέλος/αντικείμενο συγκρούεται παραλείπεται από τη βάση (lenient)· χωρίς Δικαίωμα ή Πρότυπο, απλώς δεν μπαίνει.
+// Το Γύρισμα έχει ήδη δημιουργηθεί: ένα λάθος εδώ δεν το ακυρώνει, το β.3 του οδηγού δείχνει τι λείπει.
+async function applyDefaultTemplates(data: unknown, kindLabel: string): Promise<void> {
+  const id = z.uuid().safeParse(data);
+  if (!id.success) return;
+  const [crew, equipment] = await Promise.all([
+    templateFor("crew_templates_view", crewTemplatesSchema, kindLabel),
+    templateFor("equipment_templates_view", equipmentTemplatesSchema, kindLabel),
+  ]);
+  await Promise.all([
+    crew ? callRpc("filming_crew_apply_template", { p_id: id.data, p_template: crew.id }) : null,
+    equipment ? callRpc("filming_equipment_apply_template", { p_id: id.data, p_template: equipment.id }) : null,
+  ]);
 }
 
 // Κλείσιμο Γυρίσματος από Αίτημα Μηνύματος (Μ11): το Γύρισμα δημιουργείται και το Αίτημα κλείνει σε μία συναλλαγή της βάσης.

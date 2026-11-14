@@ -11,4 +11,7 @@
 &:has(#e4-form[aria-busy='true']) .flow-guide-submit { pointer-events: none; opacity: 0.6; }
 & .flow-home { margin-block: var(--space-4); }
 & .flow-home-area + .flow-home-area { margin-top: var(--space-3); }
+& .flow-guide-missing { margin: 0; align-self: center; font-size: var(--text-sm); font-weight: 600; color: var(--color-danger); }
+& .flow-queue-link { display: flex; flex-direction: column; color: inherit; text-decoration: none; }
+& .flow-queue-link:hover .part-title, & .flow-queue-link:focus-visible .part-title { text-decoration: underline; }
 }

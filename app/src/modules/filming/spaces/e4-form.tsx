@@ -20,6 +20,7 @@ import {
   isPastDay,
   uniqueClients,
 } from "./e4-model";
+import type { E4CrewNote } from "./e4-guide-load";
 import type { StartSlot } from "./e4-start";
 
 export interface E4Preferred {
@@ -37,6 +38,8 @@ export interface E4FormProps {
   preferred: E4Preferred | null;
   prefill: NewFilmingPrefill | null;
   fromRequest: FilmingFromRequest | null;
+  // Μέσα στον οδηγό: με τη δημιουργία μπαίνουν τα προεπιλεγμένα Πρότυπα· crewNote = το Συνεργείο δεν είναι ελεύθερο.
+  guide?: { crewNote: E4CrewNote | null } | null;
 }
 
 type Mode = "client" | "internal";
@@ -51,6 +54,7 @@ export function E4Form({
   preferred,
   prefill,
   fromRequest,
+  guide = null,
 }: E4FormProps) {
   const clients = uniqueClients(options);
   const requested = clients.find(
@@ -320,15 +324,31 @@ export function E4Form({
               δημιουργήσεις το Γύρισμα.
             </p>
           )}
+          {guide?.crewNote && guide.crewNote.date === date && (
+            <p className="e-warn" role="alert">
+              Στις {fmtDate(date)} το Συνεργείο του Προτύπου «
+              {guide.crewNote.template}» δεν είναι ελεύθερο καμία ώρα του
+              Ωραρίου. Διάλεξε άλλη μέρα, αλλιώς θα λείπουν άτομα.
+            </p>
+          )}
           {state.error && (
             <p className="e-warn" role="alert">
               {state.error}
             </p>
           )}
-          <p className="muted">
-            Το Συνεργείο ορίζεται μετά, στη σελίδα του Γυρίσματος. Ξεκινά
-            «προγραμματισμένο» (δεν περνά από έγκριση).
-          </p>
+          {guide && !isInternal ? (
+            <p className="muted">
+              Με τη δημιουργία μπαίνουν τα Πρότυπα Συνεργείου και Εξοπλισμού
+              του είδους. Ξεκινά «προγραμματισμένο» (δεν περνά από έγκριση).
+              <input type="hidden" name="withTemplates" value="1" />
+              <input type="hidden" name="kindLabel" value={kind?.label ?? ""} />
+            </p>
+          ) : (
+            <p className="muted">
+              Το Συνεργείο ορίζεται μετά, στη σελίδα του Γυρίσματος. Ξεκινά
+              «προγραμματισμένο» (δεν περνά από έγκριση).
+            </p>
+          )}
           <div className="btn-row e4-own-submit">
             <button
               type="submit"

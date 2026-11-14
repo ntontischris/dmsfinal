@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { BookingHoursView, BookingWeekDay } from "../booking-types";
-import { firstWorkingSlot } from "./e4-start";
+import {
+  firstFreeTime,
+  firstWorkingSlot,
+  startSlotOf,
+  windowOn,
+} from "./e4-start";
 
 const weekday = (dow: number): BookingWeekDay => ({
   dow,
@@ -111,6 +116,67 @@ describe("firstWorkingSlot", () => {
     });
     expect(
       firstWorkingSlot(shut, { date: "2026-11-14", time: "08:00" }),
+    ).toBeNull();
+  });
+});
+
+describe("startSlotOf", () => {
+  it("should skip a Saturday to Monday even when the hours could not be read", () => {
+    expect(startSlotOf(null, { date: "2026-11-14", time: "10:30" })).toEqual({
+      date: "2026-11-16",
+      time: "09:00",
+    });
+  });
+
+  it("should follow the owner's hours when they are read", () => {
+    expect(
+      startSlotOf(hours(), { date: "2026-11-14", time: "10:30" }),
+    ).toEqual({ date: "2026-11-16", time: "10:00" });
+  });
+});
+
+describe("windowOn", () => {
+  it("should give the opening and closing hour of an open day", () => {
+    expect(windowOn(hours(), "2026-11-16")).toEqual({
+      opens: "10:00",
+      closes: "18:00",
+    });
+  });
+
+  it("should give nothing on a closed day", () => {
+    expect(windowOn(hours(), "2026-11-14")).toBeNull();
+  });
+});
+
+// Οι πιασμένες ώρες σε λεπτά της μέρας (10:00 = 600).
+describe("firstFreeTime", () => {
+  const window = { opens: "10:00", closes: "18:00" };
+
+  it("should keep the opening hour when nobody is busy", () => {
+    expect(firstFreeTime({ window, hours: 2, stepMinutes: 30, busy: [] })).toBe(
+      "10:00",
+    );
+  });
+
+  it("should move past a filming that holds the crew", () => {
+    expect(
+      firstFreeTime({
+        window,
+        hours: 2,
+        stepMinutes: 30,
+        busy: [{ from: 600, to: 720 }],
+      }),
+    ).toBe("12:00");
+  });
+
+  it("should give nothing when no slot fits inside the hours", () => {
+    expect(
+      firstFreeTime({
+        window,
+        hours: 4,
+        stepMinutes: 30,
+        busy: [{ from: 660, to: 900 }],
+      }),
     ).toBeNull();
   });
 });

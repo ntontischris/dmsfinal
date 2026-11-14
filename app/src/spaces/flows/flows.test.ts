@@ -5,12 +5,17 @@ import {
   clientRowsOf,
   flowOf,
   isLast,
+  missingAtEnd,
+  missingLine,
+  missingOf,
+  parseCounts,
   parseStep,
+  requiringStep,
   resumeHref,
   stepHref,
   withQuery,
 } from "./flows";
-import { parseParked, withParked, withoutJob } from "./parked";
+import { parseParked, placeWith, withParked, withoutJob } from "./parked";
 
 const flow = flowOf("stino-gyrisma")!;
 
@@ -145,5 +150,62 @@ describe("parked queue", () => {
     expect(parseParked("not json")).toEqual([]);
     expect(parseParked(null)).toEqual([]);
     expect(parseParked('[{"job":"a"}]')).toEqual([]);
+  });
+});
+
+describe("step 3 gate (crew and equipment)", () => {
+  const needs = ["crew", "equipment"] as const;
+
+  it("should require crew and equipment on step 3", () => {
+    expect(requiringStep(flow)).toBe(3);
+    expect(flow.steps[2].requires).toEqual(needs);
+  });
+
+  it("should treat unknown counts as everything missing", () => {
+    expect(missingOf(needs, null)).toEqual(needs);
+  });
+
+  it("should list only what has zero rows", () => {
+    expect(missingOf(needs, { crew: 2, equipment: 0 })).toEqual(["equipment"]);
+    expect(missingOf(needs, { crew: 1, equipment: 3 })).toEqual([]);
+  });
+
+  it("should need nothing on a step without requirements", () => {
+    expect(missingOf(undefined, null)).toEqual([]);
+  });
+
+  it("should write the missing line in Greek", () => {
+    expect(missingLine(["crew"])).toBe("Λείπει: Συνεργείο");
+    expect(missingLine(["equipment"])).toBe("Λείπει: Εξοπλισμός");
+    expect(missingLine(needs)).toBe("Λείπει: Συνεργείο, Εξοπλισμός");
+    expect(missingLine([])).toBeNull();
+  });
+
+  it("should not claim anything missing at the end when counts are unknown", () => {
+    expect(missingAtEnd(flow, null)).toEqual([]);
+    expect(missingAtEnd(flow, { crew: 0, equipment: 1 })).toEqual(["crew"]);
+  });
+
+  it("should parse the counts the filming page writes", () => {
+    expect(parseCounts("2,0")).toEqual({ crew: 2, equipment: 0 });
+    expect(parseCounts("")).toBeNull();
+    expect(parseCounts(",")).toBeNull();
+  });
+});
+
+describe("active place", () => {
+  const filming = { path: "/app/filming/abc", crew: 1, equipment: 0 };
+
+  it("should keep date and filming within the same job", () => {
+    const current = { job: "stino-gyrisma", step: 3, date: "2026-11-16", filming };
+    expect(placeWith(current, { job: "stino-gyrisma", step: 4 })).toEqual({
+      ...current,
+      step: 4,
+    });
+  });
+
+  it("should drop them for another job", () => {
+    const current = { job: "stino-gyrisma", step: 3, date: "2026-11-16", filming };
+    expect(placeWith(current, { job: "other", step: 1 })).toEqual({ job: "other", step: 1 });
   });
 });
