@@ -9,12 +9,13 @@ import { initialsOf } from "@/spaces/shell/avatar";
 
 import {
   applyEquipmentTemplate,
+  reportEquipmentDamage,
   setFilmingEquipment,
 } from "../actions-equipment";
 import type { EquipmentCandidate, FilmingCard, NamedRef } from "../types";
 import { emptyEquipmentNote, isOpenState } from "./e3-model";
 import { useRun } from "./e3-run";
-import { LastDone, Warning } from "./e3-ui";
+import { LastDone, ReasonForm, Warning } from "./e3-ui";
 
 // Δέσμευση εξοπλισμού στο Γύρισμα (prototype `screens/e3-equipment.tsx`), από το μητρώο ή από Πρότυπο. Η βάση ορίζει
 // τη λίστα ολόκληρη (filming_equipment_set) και αποφασίζει σύγκρουση/διαθεσιμότητα· το μήνυμά της φαίνεται κάτω.
@@ -38,6 +39,9 @@ export function E3Equipment({
   const statusOf = (status: string): string => statusLabels[status] ?? status;
   const [picked, setPicked] = useState("");
   const [templateId, setTemplateId] = useState("");
+  const [damageFor, setDamageFor] = useState<string | null>(null);
+  // Βλάβη σημειώνει όποιος γράφει τα στοιχεία του Γυρίσματος, και σε κλειστό Γύρισμα (χάλασε στο γύρισμα).
+  const canReportDamage = card.team?.canEditDetails ?? false;
   const { run, isPending, result } = useRun();
   const isEditable = card.viewerCan.equipment && isOpenState(card.state);
   const itemIds = card.equipment.map((line) => line.itemId);
@@ -63,21 +67,52 @@ export function E3Equipment({
               title={line.name}
               sub={statusOf(line.status)}
               aside={
-                isEditable && (
-                  <button
-                    type="button"
-                    className="button"
-                    aria-label={`Αποδέσμευση: ${line.name}`}
-                    disabled={isPending}
-                    onClick={() =>
-                      setItems(itemIds.filter((id) => id !== line.itemId))
-                    }
-                  >
-                    Αποδέσμευση
-                  </button>
-                )
+                <>
+                  {canReportDamage && line.status === AVAILABLE && (
+                    <button
+                      type="button"
+                      className="button"
+                      aria-label={`Βλάβη: ${line.name}`}
+                      disabled={isPending}
+                      onClick={() => setDamageFor(line.itemId)}
+                    >
+                      Βλάβη
+                    </button>
+                  )}
+                  {isEditable && (
+                    <button
+                      type="button"
+                      className="button"
+                      aria-label={`Αποδέσμευση: ${line.name}`}
+                      disabled={isPending}
+                      onClick={() =>
+                        setItems(itemIds.filter((id) => id !== line.itemId))
+                      }
+                    >
+                      Αποδέσμευση
+                    </button>
+                  )}
+                </>
               }
             />
+            {damageFor === line.itemId && (
+              <li className="sx-extra">
+                <ReasonForm
+                  label={`Τι έπαθε: ${line.name};`}
+                  confirmLabel="Σε επισκευή"
+                  isDanger
+                  isPending={isPending}
+                  onConfirm={(note) =>
+                    run(
+                      reportEquipmentDamage,
+                      { filmingId: card.id, itemId: line.itemId, note },
+                      () => setDamageFor(null),
+                    )
+                  }
+                  onClose={() => setDamageFor(null)}
+                />
+              </li>
+            )}
             {(line.status !== AVAILABLE || line.conflict) && (
               <li className="sx-extra">
                 {line.status !== AVAILABLE && (

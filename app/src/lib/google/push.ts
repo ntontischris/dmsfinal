@@ -49,8 +49,13 @@ async function writeEvent(ctx: PushContext, item: ClaimItem, event: QueuedEvent)
 
 // Ένα μόνο αντικείμενο: ό,τι δεν χρειάζεται κλήση τελειώνει χωρίς αυτήν.
 async function pushItem(ctx: PushContext, item: ClaimItem): Promise<void> {
+  // Χωρίς αντιστοίχιση σβήνουμε το σταθερό id: η εγγραφή μπορεί να έγινε στο Google χωρίς να γραφτεί η αντιστοίχιση
+  // (γραμμή που αντικαταστάθηκε ή διακοπή πριν το «done»). Αν δεν υπάρχει, το 404 είναι επιτυχία.
   if (item.op === "delete") {
-    if (item.eventId) await ctx.api.deleteEvent(ctx.calendarId, item.eventId);
+    await ctx.api.deleteEvent(
+      ctx.calendarId,
+      item.eventId ?? stableEventId(item.entityId),
+    );
     return finishOutbox(ctx.client, { id: item.id, eventId: null });
   }
   if (!item.event) return finishOutbox(ctx.client, { id: item.id, eventId: null });

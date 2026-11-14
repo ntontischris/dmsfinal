@@ -2,7 +2,8 @@ import { getViewer } from "@/modules/access";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { equipmentCaps } from "../caps";
-import { listCategories, listItems } from "../queries";
+import { listBookings, listCategories, listItems } from "../queries";
+import { bookingIndexOf } from "./f1-bookings";
 import { F1Registry } from "./f1-registry";
 
 import "./f.css";
@@ -21,9 +22,10 @@ export async function SpacesEquipment() {
         </div>
       </div>
     );
-  const [items, categories] = await Promise.all([
+  const [items, categories, bookings] = await Promise.all([
     listItems({ includeRetired: true }),
     listCategories({ includeRetired: true }),
+    listBookings(),
   ]);
   return (
     <div data-spaces>
@@ -33,6 +35,7 @@ export async function SpacesEquipment() {
             canManage={caps.canManage}
             items={items.data}
             categories={categories.data}
+            bookings={bookingIndexOf(bookings.ok ? bookings.data : [])}
           />
         ) : (
           <ErrorNotice what="το μητρώο Εξοπλισμού" />
