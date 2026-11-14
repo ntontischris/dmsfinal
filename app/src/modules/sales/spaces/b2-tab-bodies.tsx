@@ -10,6 +10,7 @@ import { ErrorNotice, fmtDate, fmtMoney } from "@/spaces/screens/shared";
 import { BriefPanel, NextStepPanel, clientTabHref } from "./b2-briefing";
 import type { ClientPageCtx } from "./b2-context";
 import type { ClientTab } from "./b2-page-model";
+import { ClientReminders } from "./b2-reminders";
 import {
   ActivitiesSection,
   AgreementsSection,
@@ -57,6 +58,14 @@ function Overview({ ctx }: { ctx: ClientPageCtx }) {
           {ctx.d.filming && (
             <p className="b2-filming">Επόμενο γύρισμα: {ctx.d.filming.text}</p>
           )}
+        </BriefPanel>
+      )}
+      {ctx.data.reminders !== null && (
+        <BriefPanel part="next" label="Υπενθυμίσεις μου">
+          <ClientReminders
+            clientId={ctx.client.id}
+            reminders={ctx.data.reminders}
+          />
         </BriefPanel>
       )}
       {ctx.data.activities !== null && (

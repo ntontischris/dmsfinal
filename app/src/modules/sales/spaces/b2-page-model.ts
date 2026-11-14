@@ -69,8 +69,9 @@ export const resolveClientTab = (
   return tabs.find((tab) => tab === mapped) ?? "overview";
 };
 
-// Μόνο 3 βήματα: η «Ανανέωση» δεν γίνεται ποτέ τρέχουσα (η βάση δεν δένει ακόμα Ευκαιρία με Συμφωνία που ανανεώνει).
-export const threeSteps = (steps: readonly Step[]): Step[] => steps.slice(0, 3);
+// Η «Ανανέωση» φαίνεται μόνο όταν ανάψει (τρέχουσα)· αλλιώς η σχέση δείχνει 3 βήματα.
+export const shownSteps = (steps: readonly Step[]): Step[] =>
+  steps[3]?.state === "current" ? [...steps] : steps.slice(0, 3);
 
 export const stageOf = (steps: readonly Step[]): string =>
   steps.find((step) => step.state === "current")?.label ?? "Υποψήφιος";

@@ -20,7 +20,7 @@ import {
   moneySentence,
   nextStepOf,
   stageOf,
-  threeSteps,
+  shownSteps,
   type ClientTab,
   type NextStep,
 } from "./b2-page-model";
@@ -95,8 +95,12 @@ const rowsOf = (p: ClientPageInput): B2OpportunityRow[] =>
 
 export function deriveClientPage(p: ClientPageInput): ClientDerived {
   const { data, caps } = p;
-  const steps = threeSteps(
-    relationshipSteps(data.opportunities, data.agreements ?? []),
+  const steps = shownSteps(
+    relationshipSteps(
+      data.opportunities,
+      data.agreements ?? [],
+      data.isRenewalDue,
+    ),
   );
   const stage = stageOf(steps);
   const lines = summaryLines(p);

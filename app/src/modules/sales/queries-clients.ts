@@ -54,6 +54,8 @@ const clientDetailSchema = z.object({
   legal_name: z.string(),
   city: z.string(),
   afm: z.string().nullable(),
+  address: z.string(),
+  filming_location: z.string(),
   contact_name: z.string(),
   contact_email: z.string(),
   contact_phone: z.string(),
@@ -65,7 +67,7 @@ const clientDetailSchema = z.object({
 });
 
 const CLIENT_COLUMNS =
-  "id, name, legal_name, city, afm, contact_name, contact_email, contact_phone, manager_id, archived_at, merged_into_id, created_at, manager:team_users!clients_manager_id_fkey(name)";
+  "id, name, legal_name, city, afm, address, filming_location, contact_name, contact_email, contact_phone, manager_id, archived_at, merged_into_id, created_at, manager:team_users!clients_manager_id_fkey(name)";
 
 export async function listClients(
   options: { query?: string; limit?: number; offset?: number } = {},
@@ -122,6 +124,8 @@ export async function getClient(
         legalName: row.legal_name,
         city: row.city,
         afm: row.afm,
+        address: row.address,
+        filmingLocation: row.filming_location,
         contactName: row.contact_name,
         contactEmail: row.contact_email,
         contactPhone: row.contact_phone,

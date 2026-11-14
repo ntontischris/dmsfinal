@@ -7,11 +7,16 @@ import {
   listClientActivities,
   listClientOpportunities,
 } from "../queries-clients";
+import {
+  getClientRenewalDue,
+  listMyClientReminders,
+} from "../queries-client-care";
 import { listClientOverviews } from "../queries-overview";
 import { listAssignableUsers } from "../queries-queue";
 import type {
   ClientDeleteState,
   ClientDetail,
+  ClientReminder,
   Opportunity,
   SalesCaps,
   SalesLists,
@@ -55,6 +60,10 @@ export interface Loaded {
   deleteState: ClientDeleteState | null;
   // null = ο Χρήστης δεν βλέπει τις Δραστηριότητες ή δεν φόρτωσαν.
   activities: B2ActivityRow[] | null;
+  // Η «Ανανέωση» της σχέσης (b7): false και όταν δεν φόρτωσε.
+  isRenewalDue: boolean;
+  // Οι ανοιχτές «Υπενθύμισέ με» του Χρήστη· null = δεν φόρτωσαν.
+  reminders: ClientReminder[] | null;
   failed: string[];
 }
 
@@ -119,6 +128,8 @@ export async function loadClient(input: LoadInput): Promise<Loaded> {
     assignable,
     deleteState,
     activities,
+    renewal,
+    reminders,
   ] = await Promise.all([
     listClientOpportunities(client.id),
     rights.agreements ? listAgreements({ clientId: client.id }) : null,
@@ -130,6 +141,8 @@ export async function loadClient(input: LoadInput): Promise<Loaded> {
     input.allowed.includes("activities")
       ? loadActivities(client.id, input.who)
       : null,
+    getClientRenewalDue(client.id),
+    listMyClientReminders(client.id),
   ]);
   const overview = overviews.ok ? overviews.data[0] : undefined;
   const failed = [
@@ -154,6 +167,8 @@ export async function loadClient(input: LoadInput): Promise<Loaded> {
     assignable,
     deleteState: deleteState?.ok ? deleteState.data : null,
     activities,
+    isRenewalDue: renewal.ok && renewal.data,
+    reminders: reminders.ok ? reminders.data : null,
     failed,
   };
 }

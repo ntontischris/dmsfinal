@@ -117,6 +117,12 @@ describe("relationshipSteps", () => {
       relationshipSteps([], [agreement()]).map((step) => step.state),
     ).toEqual(["done", "done", "current", "todo"]);
   });
+
+  it("should be at renewal when a renewal is due", () => {
+    expect(
+      relationshipSteps([], [agreement()], true).map((step) => step.state),
+    ).toEqual(["done", "done", "done", "current"]);
+  });
 });
 
 describe("clientSummary", () => {
