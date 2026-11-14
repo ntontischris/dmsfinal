@@ -150,6 +150,42 @@ describe("buildAccountantPack", () => {
   });
 });
 
+describe("buildAccountantPack with expenses (d10)", () => {
+  const EXPENSES: ExportSheet = {
+    name: "Έξοδα",
+    columns: [
+      { header: "Κατηγορία", type: "text" },
+      { header: "Ποσό", type: "money" },
+    ],
+    rows: [
+      ["Σταθερά", 600],
+      ["Μεταβλητά", 200],
+    ],
+  };
+
+  it("should add a third sheet and count its lines in the README", async () => {
+    const { files } = await unzip(payload({ expenses: EXPENSES }));
+    const workbook = unzipSync(
+      files["Πακέτο λογιστή 2026-09/Τιμολόγια και Εισπράξεις 2026-09.xlsx"],
+    );
+    expect(strFromU8(workbook["xl/workbook.xml"])).toContain(
+      'name="Έξοδα" sheetId="3"',
+    );
+    const readme = strFromU8(files["Πακέτο λογιστή 2026-09/ΔΙΑΒΑΣΕ.txt"]);
+    expect(readme).toContain("Έξοδα (γραμμές Κόστους): 2");
+  });
+
+  it("should keep two sheets when the user cannot see expenses", async () => {
+    const { files } = await unzip(payload({ expenses: null }));
+    const workbook = unzipSync(
+      files["Πακέτο λογιστή 2026-09/Τιμολόγια και Εισπράξεις 2026-09.xlsx"],
+    );
+    expect(strFromU8(workbook["xl/workbook.xml"])).not.toContain("Έξοδα");
+    const readme = strFromU8(files["Πακέτο λογιστή 2026-09/ΔΙΑΒΑΣΕ.txt"]);
+    expect(readme).not.toContain("Έξοδα");
+  });
+});
+
 describe("mapLimit", () => {
   it("should keep the order and never run more than the limit at once", async () => {
     let running = 0;

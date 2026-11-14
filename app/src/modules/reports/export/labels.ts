@@ -60,6 +60,8 @@ export const PACK_PDF_FOLDER = "PDF";
 export const PACK_README = "ΔΙΑΒΑΣΕ.txt";
 export const PACK_SHEET_INVOICES = "Τιμολόγια";
 export const PACK_SHEET_RECEIPTS = "Εισπράξεις";
+// Τρίτο φύλλο (d10), μόνο για όποιον βλέπει Έξοδα (κόστος ή ποσά για όλα).
+export const PACK_SHEET_EXPENSES = "Έξοδα";
 export const PACK_PDF_COLUMN = "Αρχείο PDF";
 export const PDF_MISSING = {
   noAmounts: "Χωρίς «Βλέπει ποσά» δεν κατεβαίνουν PDF",

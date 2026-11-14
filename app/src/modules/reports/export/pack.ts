@@ -14,7 +14,7 @@ import {
 } from "./labels";
 import { buildXlsx } from "./xlsx";
 
-// Το Πακέτο λογιστή στον browser (Ρ8): κατεβάζει τα PDF από τα signed URLs, γράφει το Excel δύο φύλλων με τη στήλη
+// Το Πακέτο λογιστή στον browser (Ρ8): κατεβάζει τα PDF από τα signed URLs, γράφει το Excel δύο (ή τριών, με Έξοδα) φύλλων με τη στήλη
 // «Αρχείο PDF» και ένα ΔΙΑΒΑΣΕ.txt, και τα κλείνει σε ένα .zip. Τιμολόγιο χωρίς PDF γράφεται ρητά, δεν παραλείπεται.
 
 // Ένα Τιμολόγιο του πακέτου, με τη σειρά των γραμμών του φύλλου Τιμολογίων.
@@ -33,6 +33,8 @@ export interface PackPayload {
   invoices: ExportSheet;
   files: readonly PackFile[];
   receipts: ExportSheet;
+  // Τρίτο φύλλο «Έξοδα» (d10)· null/απόν όταν ο Χρήστης δεν βλέπει Έξοδα.
+  expenses?: ExportSheet | null;
 }
 
 export type PdfFetcher = (url: string) => Promise<Uint8Array | null>;
@@ -118,6 +120,9 @@ export const packReadme = (
     "",
     `Τιμολόγια: ${payload.invoices.rows.length} · PDF μέσα στο πακέτο: ${resolved.length - missing.length}`,
     `Εισπράξεις: ${payload.receipts.rows.length}`,
+    ...(payload.expenses
+      ? [`Έξοδα (γραμμές Κόστους): ${payload.expenses.rows.length}`]
+      : []),
     "",
     missing.length === 0
       ? "Όλα τα Τιμολόγια έχουν το PDF τους στον φάκελο PDF."
@@ -146,6 +151,7 @@ export async function buildAccountantPack(
   const workbook = buildXlsx([
     withPdfColumn(payload.invoices, resolved),
     payload.receipts,
+    ...(payload.expenses ? [payload.expenses] : []),
   ]);
   const files: Zippable = {
     [`${folder}/${fileBase([PACK_WORKBOOK, payload.month])}.xlsx`]: [

@@ -19,10 +19,16 @@ import { SALES_REPORTS } from "../catalog/sales";
 import { monthLabel } from "../format";
 import { PERIOD_CODES } from "../url";
 import { toSheet, type ExportSheet } from "./columns";
-import { findDataset, INVOICE_COLUMNS, RECEIPT_COLUMNS } from "./datasets";
+import {
+  EXPENSE_LINE_COLUMNS,
+  findDataset,
+  INVOICE_COLUMNS,
+  RECEIPT_COLUMNS,
+} from "./datasets";
 import {
   AUDIT_TRUNCATED,
   EXPORT_FAILED,
+  PACK_SHEET_EXPENSES,
   PACK_SHEET_INVOICES,
   PACK_SHEET_RECEIPTS,
   PDF_MISSING,
@@ -214,6 +220,9 @@ export async function prepareAccountantPack(
       invoices: toSheet(PACK_SHEET_INVOICES, INVOICE_COLUMNS, pack.invoices),
       files: packFiles(pack.invoices, urls),
       receipts: toSheet(PACK_SHEET_RECEIPTS, RECEIPT_COLUMNS, pack.receipts),
+      expenses: pack.expenses
+        ? toSheet(PACK_SHEET_EXPENSES, EXPENSE_LINE_COLUMNS, pack.expenses)
+        : null,
     },
   };
 }

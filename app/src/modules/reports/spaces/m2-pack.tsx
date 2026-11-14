@@ -2,15 +2,20 @@ import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
-import { INVOICE_COLUMNS, RECEIPT_COLUMNS } from "../export/datasets";
+import {
+  EXPENSE_LINE_COLUMNS,
+  INVOICE_COLUMNS,
+  RECEIPT_COLUMNS,
+} from "../export/datasets";
 import { packMonths, pickPackMonth, type ExportQuery } from "../export/url";
 import { PackButton } from "./m2-buttons";
 import { m2Href, packButtonLabel, packMonthLabel } from "./m2-model";
 
-// Οι στήλες των δύο φύλλων του Excel: ίδιες με την «Άλλη εξαγωγή».
+// Οι στήλες των φύλλων του Excel: ίδιες με την «Άλλη εξαγωγή». Τα «Έξοδα» μόνο για όποιον τα βλέπει (d10).
 const SHEETS = [
   { id: "invoices", label: "Τιμολόγια", columns: INVOICE_COLUMNS },
   { id: "receipts", label: "Εισπράξεις", columns: RECEIPT_COLUMNS },
+  { id: "expenses", label: "Έξοδα", columns: EXPENSE_LINE_COLUMNS },
 ] as const;
 
 function SheetColumns() {
@@ -63,8 +68,8 @@ export function PackSection(props: { today: string; query: ExportQuery }) {
           </p>
         )}
         <p className="muted">
-          Ένα αρχείο .zip με ένα Excel δύο φύλλων (Τιμολόγια, Εισπράξεις) και τα
-          PDF των Τιμολογίων του μήνα. Τα πιστωτικά είναι στο φύλλο «Τιμολόγια»,
+          Ένα αρχείο .zip με ένα Excel (Τιμολόγια, Εισπράξεις και, για όποιον
+          βλέπει Κόστος ή ποσά, Έξοδα) και τα PDF των Τιμολογίων του μήνα. Τα πιστωτικά είναι στο φύλλο «Τιμολόγια»,
           με «Είδος: Πιστωτικό».
         </p>
         <SheetColumns />
