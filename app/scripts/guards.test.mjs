@@ -86,6 +86,8 @@ describe("check:design", () => {
     const text = 'const s = { color: "#111111" };';
     expect(findDesignViolations([file("src/modules/agreements/pdf/signed-pdf-styles.ts", text)])).toEqual([]);
     expect(findDesignViolations([file("src/modules/agreements/pdf/signed-pdf.tsx", text)])).toHaveLength(1);
+    expect(findDesignViolations([file("src/lib/pdf/brand-styles.ts", text)])).toEqual([]);
+    expect(findDesignViolations([file("src/lib/pdf/brand-page.tsx", text)])).toHaveLength(1);
   });
 
   it("επιτρέπει χρώματα μόνο στο αρχείο των tokens", () => {
