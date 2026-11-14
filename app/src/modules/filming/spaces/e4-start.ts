@@ -1,5 +1,5 @@
-// Η προεπιλεγμένη μέρα και ώρα του E4 «Νέο Γύρισμα»: η πρώτη εργάσιμη μέρα μέσα στο Ωράριο (Ρυθμίσεις › Γυρίσματα).
-// Ποτέ σήμερα αν το Ωράριο της μέρας έχει ήδη ανοίξει· κλειστές μέρες, εξαιρέσεις και αργίες παραλείπονται.
+// Η προεπιλεγμένη μέρα και ώρα του E4 «Νέο Γύρισμα»: η πρώτη ανοιχτή μέρα του Ωραρίου (Ρυθμίσεις › Γυρίσματα) από αύριο και μετά.
+// Ποτέ σήμερα, ακόμα κι αν το Ωράριο δεν έχει ανοίξει ακόμα· κλειστές μέρες, εξαιρέσεις και αργίες παραλείπονται.
 
 import type { BookingHoursView } from "../booking-types";
 
@@ -66,16 +66,15 @@ export const firstWorkingSlot = (
   hours: Hours,
   now: StartSlot,
 ): StartSlot | null => {
-  for (let offset = 0; offset <= LOOKAHEAD_DAYS; offset += 1) {
+  for (let offset = 1; offset <= LOOKAHEAD_DAYS; offset += 1) {
     const date = addDays(now.date, offset);
     const opens = windowOn(hours, date)?.opens;
-    if (opens !== undefined && (offset > 0 || now.time < opens))
-      return { date, time: opens };
+    if (opens !== undefined) return { date, time: opens };
   }
   return null;
 };
 
-// Η προεπιλογή της φόρμας: ακόμα κι αν το Ωράριο δεν διαβάστηκε, ποτέ Σαββατοκύριακο ή σήμερα μετά το άνοιγμα.
+// Η προεπιλογή της φόρμας: ακόμα κι αν το Ωράριο δεν διαβάστηκε, ποτέ Σαββατοκύριακο και ποτέ σήμερα.
 export const startSlotOf = (
   hours: Hours | null,
   now: StartSlot,

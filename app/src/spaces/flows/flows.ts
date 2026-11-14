@@ -116,6 +116,18 @@ export const parseStep = (
     : 1;
 };
 
+// Το URL είναι στο βήμα που διαλέγει Πελάτη μέσα στον οδηγό: η σελίδα από κάτω δεν δείχνει τη δική της λίστα,
+// ώστε κανένας σύνδεσμός της να μη βγάζει από τον οδηγό.
+export const isPickingClient = (
+  job: string | string[] | undefined,
+  step: string | string[] | undefined,
+): boolean => {
+  const flow = typeof job === "string" ? flowOf(job) : undefined;
+  if (!flow) return false;
+  const raw = typeof step === "string" ? step : undefined;
+  return flow.steps[parseStep(raw, flow) - 1]?.picksClient === true;
+};
+
 export const isWait = (step: FlowStep): boolean => step.station === "queue";
 
 // Προσθέτει παραμέτρους σε έναν σύνδεσμο, κρατώντας όσες είχε.
@@ -155,6 +167,28 @@ export const stepHref = (
       ? withQuery(path, { date })
       : path;
   return withPlace(dated, flow, step);
+};
+
+export interface NewFilmingEntry {
+  // Το URL έχει ήδη θέση οδηγού (?job=).
+  hasJob: boolean;
+  // Αίτημα Μηνύματος ή Κλεισμένος χρόνος προσυμπληρώνει τη φόρμα: μένει έξω από τον οδηγό (βάζει όμως τα Πρότυπα).
+  isPrefilled: boolean;
+  clientId: string | null;
+}
+
+// Κάθε άλλο «Νέο Γύρισμα» (+ Νέο, Γυρίσματα, Ημερολόγιο, σελίδα Πελάτη) μπαίνει στον οδηγό «Στήνω γύρισμα»: με Πελάτη
+// στο βήμα της φόρμας, αλλιώς στο βήμα 1. null = η φόρμα ανοίγει όπως είναι.
+export const newFilmingEntryOf = ({
+  hasJob,
+  isPrefilled,
+  clientId,
+}: NewFilmingEntry): string | null => {
+  const flow = flowOf("stino-gyrisma");
+  if (hasJob || isPrefilled || !flow) return null;
+  if (!clientId) return stepHref(flow, 1);
+  const formStep = flow.steps.findIndex((step) => step.station === "E4") + 1;
+  return withQuery(stepHref(flow, formStep), { client: clientId });
 };
 
 // Η διαδρομή του σταθμού ενός βήματος ταιριάζει με την τρέχουσα; (η αναμονή δεν έχει σταθμό-σελίδα)

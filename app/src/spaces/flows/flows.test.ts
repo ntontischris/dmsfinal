@@ -8,6 +8,8 @@ import {
   missingAtEnd,
   missingLine,
   missingOf,
+  newFilmingEntryOf,
+  isPickingClient,
   parseCounts,
   parseStep,
   requiringStep,
@@ -207,5 +209,34 @@ describe("active place", () => {
   it("should drop them for another job", () => {
     const current = { job: "stino-gyrisma", step: 3, date: "2026-11-16", filming };
     expect(placeWith(current, { job: "other", step: 1 })).toEqual({ job: "other", step: 1 });
+  });
+});
+
+describe("newFilmingEntryOf", () => {
+  const CLIENT = "11111111-1111-4111-8111-111111111111";
+
+  it("should send a bare «Νέο Γύρισμα» to step 1 of the guide", () => {
+    expect(newFilmingEntryOf({ hasJob: false, isPrefilled: false, clientId: null })).toBe(
+      "/app/clients?job=stino-gyrisma&step=1",
+    );
+  });
+
+  it("should send a «Νέο Γύρισμα» with a Client to step 2 of the guide", () => {
+    expect(newFilmingEntryOf({ hasJob: false, isPrefilled: false, clientId: CLIENT })).toBe(
+      `/app/filming/new?job=stino-gyrisma&step=2&client=${CLIENT}`,
+    );
+  });
+
+  it("should leave the form alone inside the guide or with a request or booking prefill", () => {
+    expect(newFilmingEntryOf({ hasJob: true, isPrefilled: false, clientId: CLIENT })).toBeNull();
+    expect(newFilmingEntryOf({ hasJob: false, isPrefilled: true, clientId: CLIENT })).toBeNull();
+  });
+});
+
+describe("isPickingClient", () => {
+  it("should be true only on the guide step that picks the Client", () => {
+    expect(isPickingClient("stino-gyrisma", "1")).toBe(true);
+    expect(isPickingClient("stino-gyrisma", "2")).toBe(false);
+    expect(isPickingClient(undefined, "1")).toBe(false);
   });
 });

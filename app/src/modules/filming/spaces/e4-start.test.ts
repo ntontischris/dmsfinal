@@ -34,11 +34,11 @@ describe("firstWorkingSlot", () => {
     });
   });
 
-  it("should keep today only before the hours open", () => {
+  it("should never propose today, even before the hours open", () => {
     expect(
       firstWorkingSlot(hours(), { date: "2026-11-16", time: "09:00" }),
     ).toEqual({
-      date: "2026-11-16",
+      date: "2026-11-17",
       time: "10:00",
     });
     expect(
@@ -178,5 +178,21 @@ describe("firstFreeTime", () => {
         busy: [{ from: 660, to: 900 }],
       }),
     ).toBeNull();
+  });
+});
+
+describe("startSlotOf on an open Saturday", () => {
+  it("should propose tomorrow's first open day, not today", () => {
+    const saturdayOpen = hours({
+      week: [1, 2, 3, 4, 5, 6, 7].map((dow) => ({
+        ...weekday(dow),
+        isOpen: dow <= 6,
+        opens: dow <= 6 ? "10:00" : null,
+        closes: dow <= 6 ? "18:00" : null,
+      })),
+    });
+    expect(
+      startSlotOf(saturdayOpen, { date: "2026-11-14", time: "08:00" }),
+    ).toEqual({ date: "2026-11-16", time: "10:00" });
   });
 });

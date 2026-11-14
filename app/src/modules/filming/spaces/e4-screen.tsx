@@ -12,6 +12,8 @@ import type { FilmingFromRequest } from "../request-prefill";
 import type { NamedRef } from "../types";
 import { E4Form, type E4Preferred } from "./e4-form";
 import { guideSlotOf, type E4BusySource } from "./e4-guide-load";
+import type { HeldProduction } from "./e4-held";
+import type { E4ReopenAction } from "./e4-held-notice";
 import { startSlotOf } from "./e4-start";
 
 import "./e.css";
@@ -20,6 +22,15 @@ import "./e.css";
 export type E4InternalSource = () => Promise<
   { ok: true; data: readonly { id: string; title: string }[] } | { ok: false }
 >;
+
+// Οι Παραγωγές που δεν δέχονται Γυρίσματα, επίσης από τη σελίδα· null = δεν διαβάστηκαν (καμία γραμμή).
+export type E4HeldSource = () => Promise<readonly HeldProduction[] | null>;
+
+export interface E4GuideSources {
+  busyOn: E4BusySource;
+  held: E4HeldSource;
+  reopen: E4ReopenAction | null;
+}
 
 const wrap = (body: ReactNode) => (
   <div data-spaces>
@@ -41,8 +52,8 @@ export async function SpacesNewFilming({
   // Ο Πελάτης που διαλέχτηκε πριν (`?client=`) και η διεύθυνσή του, αν έχει.
   preferred?: E4Preferred | null;
   internal: E4InternalSource;
-  // Μέσα στον οδηγό «Στήνω γύρισμα»: τα πιασμένα διαστήματα της ομάδας (για την ώρα) και τα Πρότυπα με τη δημιουργία.
-  guide?: { busyOn: E4BusySource } | null;
+  // Μέσα στον οδηγό «Στήνω γύρισμα»: τα πιασμένα διαστήματα της ομάδας (για την ώρα) και οι κλειστές Παραγωγές.
+  guide?: E4GuideSources | null;
 }) {
   const caps = filmingCaps(await getViewer());
   if (!caps.canBook)
@@ -53,10 +64,11 @@ export async function SpacesNewFilming({
         </p>
       </StateNotice>,
     );
-  const [options, productions, hours] = await Promise.all([
+  const [options, productions, hours, held] = await Promise.all([
     listBookingOptions(),
     caps.canBookInternal ? internal() : null,
     getBookingHours(),
+    guide ? guide.held() : null,
   ]);
   if (!options.ok) return wrap(<ErrorNotice what="η φόρμα νέου Γυρίσματος" />);
   const internalList: NamedRef[] = productions?.ok
@@ -92,7 +104,15 @@ export async function SpacesNewFilming({
       productions={internalList}
       today={today}
       start={guided?.slot ?? first}
-      guide={guide ? { crewNote: guided?.crewNote ?? null } : null}
+      guide={
+        guide
+          ? {
+              crewNote: guided?.crewNote ?? null,
+              held: held ?? [],
+              reopen: guide.reopen,
+            }
+          : null
+      }
       preferred={preferred}
       prefill={prefill}
       fromRequest={fromRequest}

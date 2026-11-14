@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import type { FormState } from "@/lib/form-state";
 
-import { callRpc, finishWith, firstIssue, pick, revalidateAppLayout } from "./action-support";
+import { callRpc, finishWith, firstIssue, pick, revalidateAppLayout, type RpcOutcome } from "./action-support";
 import { pickTemplate } from "./default-templates";
 import { bookSchema, filmingRefSchema, internalBookSchema, rescheduleSchema } from "./schemas";
 import { crewTemplatesSchema } from "./view-schema";
@@ -22,18 +22,17 @@ export async function bookFilming(_: FormState, form: FormData): Promise<FormSta
   if (!parsed.success) return firstIssue(parsed.error);
   const { agreementId, startsAt, hours, kindId, location, note, fromBlocked } = parsed.data;
   const request = z.uuid().safeParse(form.get("requestMessageId"));
-  if (request.success) {
-    return bookFromRequest(request.data, { agreementId, startsAt, hours, kindId, location, note, fromBlocked });
-  }
-  const outcome = await callRpc("filming_create", {
-    p_agreement: agreementId,
-    p_starts_at: startsAt,
-    p_hours: hours,
-    p_kind: kindId,
-    p_location: location,
-    p_note: note,
-    p_from_blocked: fromBlocked ?? null,
-  });
+  const outcome = request.success
+    ? await createFromRequest(request.data, { agreementId, startsAt, hours, kindId, location, note, fromBlocked })
+    : await callRpc("filming_create", {
+        p_agreement: agreementId,
+        p_starts_at: startsAt,
+        p_hours: hours,
+        p_kind: kindId,
+        p_location: location,
+        p_note: note,
+        p_from_blocked: fromBlocked ?? null,
+      });
   if (!outcome.ok) return outcome.state;
   if (form.get("withTemplates") === "1") await applyDefaultTemplates(outcome.data, String(form.get("kindLabel") ?? ""));
   return redirectToFilming(outcome.data);
@@ -65,11 +64,12 @@ async function applyDefaultTemplates(data: unknown, kindLabel: string): Promise<
 }
 
 // Κλείσιμο Γυρίσματος από Αίτημα Μηνύματος (Μ11): το Γύρισμα δημιουργείται και το Αίτημα κλείνει σε μία συναλλαγή της βάσης.
-async function bookFromRequest(messageId: string, fields: Record<string, unknown>): Promise<FormState> {
+// Δίνει το id του νέου Γυρίσματος, όπως το filming_create.
+async function createFromRequest(messageId: string, fields: Record<string, unknown>): Promise<RpcOutcome> {
   const outcome = await callRpc("message_request_create_filming", { p_message: messageId, p: fields });
-  if (!outcome.ok) return outcome.state;
+  if (!outcome.ok) return outcome;
   const created = z.object({ id: z.uuid() }).safeParse(outcome.data);
-  return redirectToFilming(created.success ? created.data.id : null);
+  return { ok: true, data: created.success ? created.data.id : null };
 }
 
 // Κράτηση από τον Πελάτη (E5, c.book). Η βάση ελέγχει Ωράριο, Χωρητικότητα, Παροχή και Συμφωνία· αν η Συμφωνία θέλει έγκριση μένει «αναμένει».

@@ -21,6 +21,8 @@ import {
   uniqueClients,
 } from "./e4-model";
 import type { E4CrewNote } from "./e4-guide-load";
+import { heldProductionOf, type HeldProduction } from "./e4-held";
+import { E4HeldNotice, type E4ReopenAction } from "./e4-held-notice";
 import type { StartSlot } from "./e4-start";
 
 export interface E4Preferred {
@@ -38,8 +40,15 @@ export interface E4FormProps {
   preferred: E4Preferred | null;
   prefill: NewFilmingPrefill | null;
   fromRequest: FilmingFromRequest | null;
-  // Μέσα στον οδηγό: με τη δημιουργία μπαίνουν τα προεπιλεγμένα Πρότυπα· crewNote = το Συνεργείο δεν είναι ελεύθερο.
-  guide?: { crewNote: E4CrewNote | null } | null;
+  // Μέσα στον οδηγό: crewNote = το Συνεργείο του Προτύπου δεν είναι ελεύθερο. Τα Πρότυπα μπαίνουν με κάθε Γύρισμα Πελάτη.
+  guide?: E4Guide | null;
+}
+
+export interface E4Guide {
+  crewNote: E4CrewNote | null;
+  // Οι Παραγωγές που δεν δέχονται Γυρίσματα (Παραδομένες, ακυρωμένες) και η επανάνοιξη, για τη γραμμή πριν τη δημιουργία.
+  held: readonly HeldProduction[];
+  reopen: E4ReopenAction | null;
 }
 
 type Mode = "client" | "internal";
@@ -93,6 +102,7 @@ export function E4Form({
   const internalForm = useKeptForm(bookInternalFilming);
   const { state, isPending, onSubmit, formRef } = isInternal ? internalForm : clientForm;
   const hours = hoursOf(duration, freeHours);
+  const held = isInternal ? undefined : heldProductionOf(agreement, date, guide?.held ?? []);
 
   const resetKind = (next: BookingAgreement | undefined) => {
     const first = next?.kinds.find((k) => k.id === defaultKindId(next.kinds));
@@ -138,8 +148,7 @@ export function E4Form({
             <p className="e-info">
               Από Κλεισμένο χρόνο ({fmtDate(prefill.date)} {prefill.time}). Η
               ώρα έχει προσυμπληρωθεί. Με τη μετατροπή ο Κλεισμένος χρόνος
-              σβήνει όταν αποθηκευτεί το Γύρισμα. Τα άτομα δεν μπαίνουν μόνα
-              τους στο Συνεργείο.
+              σβήνει όταν αποθηκευτεί το Γύρισμα.
               <input
                 type="hidden"
                 name="fromBlocked"
@@ -331,12 +340,15 @@ export function E4Form({
               Ωραρίου. Διάλεξε άλλη μέρα, αλλιώς θα λείπουν άτομα.
             </p>
           )}
+          {guide && held && (
+            <E4HeldNotice production={held} reopen={guide.reopen} />
+          )}
           {state.error && (
             <p className="e-warn" role="alert">
               {state.error}
             </p>
           )}
-          {guide && !isInternal ? (
+          {!isInternal ? (
             <p className="muted">
               Με τη δημιουργία μπαίνουν τα Πρότυπα Συνεργείου και Εξοπλισμού
               του είδους. Ξεκινά «προγραμματισμένο» (δεν περνά από έγκριση).
