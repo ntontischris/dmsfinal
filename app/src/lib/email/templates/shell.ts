@@ -34,7 +34,8 @@ const footerText = (locale: Locale): string =>
     : "Devre Media · Το μήνυμα στάλθηκε από το σύστημα της εταιρείας.";
 
 export function renderShell(input: ShellInput): RenderedBody {
-  const logo = `${input.origin}/logo-email.png`;
+  // e1: το λογότυπο της εταιρείας από τις Ρυθμίσεις (το route δείχνει το προεπιλεγμένο αν δεν υπάρχει).
+  const logo = `${input.origin}/company-logo`;
   const html = [
     `<!doctype html><html lang="${input.locale}"><body style="margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif;">`,
     `<div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;padding:32px;">`,

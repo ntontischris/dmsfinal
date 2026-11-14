@@ -6,6 +6,7 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import {
   getAiSpend,
   getCompany,
+  getLogoVersion,
   listBankAccounts,
   recentChanges,
 } from "../queries";
@@ -17,6 +18,7 @@ import {
   spendLineOf,
 } from "./o1-adapter";
 import { CompanyAndSigner, TaxAndVat } from "./o1-company";
+import { LogoCard } from "./o1-logo";
 import { AssistantCard, BankCard } from "./o1-money";
 import { READINESS_HREF, RecentChanges, SettingsTabs } from "./o-shared";
 
@@ -39,11 +41,12 @@ export async function SpacesCompanySettings({
         </StateNotice>
       </div>
     );
-  const [company, accounts, changes, spend] = await Promise.all([
+  const [company, accounts, changes, spend, logoVersion] = await Promise.all([
     getCompany(),
     listBankAccounts(),
     recentChanges(["company_settings", "bank_accounts"]),
     getAiSpend(),
+    getLogoVersion(),
   ]);
   const owner = isOwner(viewer);
   return (
@@ -69,6 +72,7 @@ export async function SpacesCompanySettings({
             pending={pendingFieldsOf(company.data)}
             isOwner={owner}
           />
+          <LogoCard version={logoVersion} />
           <BankCard
             banks={banksOf(accounts.data)}
             isOwner={owner}

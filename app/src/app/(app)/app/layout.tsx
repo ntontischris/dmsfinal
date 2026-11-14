@@ -11,6 +11,7 @@ import {
 } from "@/modules/access";
 import { SpacesAssistant } from "@/modules/assistant";
 import { NotificationBell, getBell } from "@/modules/notifications";
+import { getLogoVersion } from "@/modules/settings";
 import { newEntryFor } from "@/spaces/data/new-actions";
 import { searchItemsFor } from "@/spaces/data/search";
 import { spacesModel } from "@/spaces/data/spaces";
@@ -45,7 +46,8 @@ const nameOf = (viewer: Viewer): string =>
 export default async function AppLayout({ children }: { children: ReactNode }) {
   // Α9: καμπανάκι για ομάδα και πελάτη· null όταν ο Χρήστης δεν έχει Ειδοποιήσεις. Ζητείται μαζί με τον θεατή
   // (το /app το βλέπει μόνο συνδεδεμένος, το proxy στέλνει τους άλλους στο /login).
-  const [viewer, bellResult] = await Promise.all([getViewer(), getBell()]);
+  // e1: και η έκδοση του λογότυπου της εταιρείας για τη μπάρα.
+  const [viewer, bellResult, logoVersion] = await Promise.all([getViewer(), getBell(), getLogoVersion()]);
   const memberships = viewer.status === "signed-in" && !viewer.team ? await listMemberships() : null;
   const clientRows = memberships?.ok ? memberships.data : [];
   const bell = viewer.status === "signed-in" ? bellResult : null;
@@ -67,7 +69,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     canSignOut: viewer.status === "signed-in",
   };
   return (
-    <SpacesShell model={model} tools={tools} notice={noticeText(viewer, clientRows)} assistant={assistantAudience && <SpacesAssistant audience={assistantAudience} />}>
+    <SpacesShell model={model} tools={tools} notice={noticeText(viewer, clientRows)} assistant={assistantAudience && <SpacesAssistant audience={assistantAudience} />} logoVersion={logoVersion}>
       {children}
     </SpacesShell>
   );

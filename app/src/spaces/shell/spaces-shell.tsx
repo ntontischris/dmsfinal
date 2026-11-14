@@ -24,7 +24,30 @@ interface SpacesShellProps {
   tools: ComponentProps<typeof TopTools>;
   notice: string | null;
   assistant: ReactNode;
+  // e1: πότε άλλαξε το λογότυπο της εταιρείας· null → το μονόγραμμα.
+  logoVersion: string | null;
   children: ReactNode;
+}
+
+const LOGO_STYLE = {
+  height: "1.5rem",
+  width: "auto",
+  maxWidth: "2.75rem",
+  objectFit: "contain",
+} as const;
+
+// Το λογότυπο της εταιρείας (από τις Ρυθμίσεις) αν υπάρχει, αλλιώς το μονόγραμμα.
+function HomeMark({ version }: { version: string | null }) {
+  if (!version) return <Monogram />;
+  return (
+    // Το route σερβίρει το αρχείο από ιδιωτικό bucket· το next/image δεν προσθέτει κάτι εδώ.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/company-logo?v=${encodeURIComponent(version)}`}
+      alt=""
+      style={LOGO_STYLE}
+    />
+  );
 }
 
 // Το κέλυφος των Χώρων, από το prototype (`app/[role]/layout.tsx`): χάπι πάνω με μονόγραμμα, Χώρους και εργαλεία,
@@ -34,6 +57,7 @@ export function SpacesShell({
   tools,
   notice,
   assistant,
+  logoVersion,
   children,
 }: SpacesShellProps) {
   return (
@@ -44,7 +68,7 @@ export function SpacesShell({
       <header className="shell-bar" data-spaces>
         <nav className="shell-pill" aria-label="Χώροι">
           <Link className="shell-home" href="/app" aria-label="Σήμερα">
-            <Monogram />
+            <HomeMark version={logoVersion} />
           </Link>
           <SpaceNav model={model} />
           <span className="shell-divider" />

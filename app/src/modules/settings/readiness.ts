@@ -23,7 +23,11 @@ export const READINESS: Readonly<Record<string, ReadinessInfo>> = {
     who: "Ιδιοκτήτης",
     href: "/app/settings/company",
   },
-  logo: { label: "Λογότυπο", who: "Διαχείριση" },
+  logo: {
+    label: "Λογότυπο",
+    who: "Διαχείριση",
+    href: "/app/settings/company",
+  },
   booking_hours: { label: "Ωράριο κρατήσεων", who: "Διαχείριση" },
   catalogue: {
     label: "Κατάλογος: Πακέτα, Υπηρεσίες, τιμές",
