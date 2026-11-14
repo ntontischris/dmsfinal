@@ -1,5 +1,11 @@
 // Module «Γνώση» (L, #190): Γνώση (A8) για κάθε Χρήστη και Διαχείριση Γνώσης (L1). Έξω φαίνεται μόνο ό,τι χρειάζονται οι σελίδες.
-export { parseManageTab, parseQuery, parseStatusFilter } from "./helpers";
+export {
+  parseManageTab,
+  parseQuery,
+  parseSection,
+  parseStatusFilter,
+  sectionHref,
+} from "./helpers";
 export { LIBRARY_TITLE, MANAGE_TITLE } from "./labels";
 export { getFileLink, getImageLink } from "./queries";
 

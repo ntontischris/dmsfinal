@@ -11,9 +11,14 @@ import { salesCaps } from "../helpers";
 import { LIST_LABELS } from "../labels";
 import { listSalesLists } from "../queries-lists";
 import { listAssignableUsers } from "../queries-queue";
-import { getSalesSettings, listListUsage } from "../queries-settings";
+import {
+  getSalesSettings,
+  listGuideSections,
+  listListUsage,
+} from "../queries-settings";
 import type { ListName, ListUsage, SalesLists } from "../types";
 import { toggleRetiredHref } from "./o2-adapter";
+import { O2Guide } from "./o2-guide";
 import { O2List } from "./o2-list";
 import { O2Routing } from "./o2-routing";
 
@@ -27,6 +32,7 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   retired_at: "Απόσυρση",
   form_routing: "Πού πάνε οι νέες Ευκαιρίες",
   form_assignee_id: "Συγκεκριμένο πρόσωπο",
+  knowledge_section_id: "Οδηγός πωλήσεων",
 };
 
 const ENTITY_LABELS: Readonly<Record<string, string>> = {
@@ -34,7 +40,7 @@ const ENTITY_LABELS: Readonly<Record<string, string>> = {
   sales_sources: "Πηγές",
   sales_loss_reasons: "Λόγοι απώλειας",
   sales_activity_kinds: "Είδη Δραστηριότητας",
-  sales_settings: "Νέες Ευκαιρίες από τη φόρμα",
+  sales_settings: "Ρυθμίσεις Πωλήσεων",
 };
 
 const LISTS: readonly { list: ListName; key: keyof SalesLists }[] = [
@@ -98,13 +104,15 @@ export async function SpacesSalesSettings({
         </StateNotice>
       </div>
     );
-  const [lists, settings, usage, assignable, changes] = await Promise.all([
-    listSalesLists(),
-    getSalesSettings(),
-    listListUsage(),
-    listAssignableUsers(),
-    recentChanges(Object.keys(ENTITY_LABELS)),
-  ]);
+  const [lists, settings, usage, assignable, changes, sections] =
+    await Promise.all([
+      listSalesLists(),
+      getSalesSettings(),
+      listListUsage(),
+      listAssignableUsers(),
+      recentChanges(Object.keys(ENTITY_LABELS)),
+      listGuideSections(),
+    ]);
   return (
     <div data-spaces>
       <SpacesSettingsTabs code="O2" />
@@ -113,6 +121,12 @@ export async function SpacesSalesSettings({
       ) : (
         <>
           <O2Routing settings={settings.data} assignable={assignable.data} />
+          {sections.ok && (
+            <O2Guide
+              current={settings.data.guideSectionId}
+              sections={sections.data}
+            />
+          )}
           <Lists
             lists={lists.data}
             usage={usage.data}

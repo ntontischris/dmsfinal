@@ -42,6 +42,13 @@ export const retireStageSchema = z.object({
   stageId: z.uuid("Το Στάδιο δεν βρέθηκε."),
   moveToId: z.union([z.literal(""), z.uuid("Διάλεξε Στάδιο για τη μεταφορά.")]),
 });
+// «Οδηγός πωλήσεων»: μια Ενότητα της Γνώσης ή «none» (χωρίς Οδηγό).
+export const guideSectionSchema = z.object({
+  value: z.union([z.literal("none"), z.uuid()], {
+    message: "Διάλεξε Ενότητα της Γνώσης.",
+  }),
+});
+
 export const routingSchema = z.object({
   value: z.string().refine((v) => parseRoutingValue(v) !== null, {
     message: "Διάλεξε πού πάνε οι νέες Ευκαιρίες.",

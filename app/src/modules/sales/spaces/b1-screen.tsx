@@ -26,6 +26,7 @@ import {
   type B1Filters,
 } from "./b1-filters";
 import { NewOpportunity } from "./b1-new-opportunity";
+import { GuideLink } from "./guide-link";
 
 import "./b1.css";
 
@@ -168,6 +169,7 @@ export async function SpacesClients({
             "Ένας Πελάτης, ένας πωλητής: βλέπεις το όνομα των Πελατών των άλλων, αλλά ανοίγεις μόνο τους δικούς σου και όσους έχουν δική σου Ευκαιρία. "}
           {!caps.canManage && "Μόνο ανάγνωση. "}
         </span>
+        <GuideLink />
         {caps.canManage && (
           <NewOpportunitySlot
             clients={clients.data}

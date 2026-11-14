@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import type { Audience, ItemKind, ItemStatus } from "./view-schema";
 
 // Βοηθητικά της Γνώσης: διαδρομές, φίλτρα, Κοινό, έλεγχος δημοσίευσης. Ο ίδιος κανόνας ζει στη βάση· εδώ για άμεση ένδειξη.
@@ -21,6 +23,15 @@ export const parseStatusFilter = (
 
 export const parseQuery = (value: string | undefined): string =>
   (value ?? "").trim().slice(0, 200);
+
+// Μία Ενότητα στη Γνώση (?section=), π.χ. ο «Οδηγός πωλήσεων» από τον χώρο Πωλήσεων. Ό,τι δεν είναι id αγνοείται.
+export const parseSection = (value: string | undefined): string | null => {
+  const parsed = z.uuid().safeParse(value);
+  return parsed.success ? parsed.data.toLowerCase() : null;
+};
+
+export const sectionHref = (id: string): string =>
+  `${KNOWLEDGE_PATH}?section=${encodeURIComponent(id)}`;
 
 export interface PublishCheck {
   kind: ItemKind;

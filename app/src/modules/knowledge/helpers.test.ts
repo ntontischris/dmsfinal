@@ -5,8 +5,10 @@ import {
   audienceText,
   parseManageTab,
   parseQuery,
+  parseSection,
   parseStatusFilter,
   publishBlockers,
+  sectionHref,
 } from "./helpers";
 
 const ROLE = { id: "r1", name: "Πλήρης", kind: "client" as const };
@@ -96,5 +98,21 @@ describe("parsers", () => {
     expect(parseQuery("  Γύρισμα ")).toBe("Γύρισμα");
     expect(parseQuery(undefined)).toBe("");
     expect(parseQuery("x".repeat(300))).toHaveLength(200);
+  });
+});
+
+describe("parseSection", () => {
+  const ID = "6F1C2A3B-4D5E-4F60-8A7B-9C0D1E2F3A4B";
+
+  it("should accept a section id and link back to it", () => {
+    expect(parseSection(ID)).toBe(ID.toLowerCase());
+    expect(sectionHref(ID.toLowerCase())).toBe(
+      `/app/knowledge?section=${ID.toLowerCase()}`,
+    );
+  });
+
+  it("should ignore anything that is not an id", () => {
+    expect(parseSection(undefined)).toBeNull();
+    expect(parseSection("πωλήσεις")).toBeNull();
   });
 });

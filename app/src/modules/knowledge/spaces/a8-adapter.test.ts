@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { Library } from "../view-schema";
-import { athensDate, libraryGroups, searchGroups } from "./a8-adapter";
+import {
+  athensDate,
+  libraryGroups,
+  onlySection,
+  searchGroups,
+} from "./a8-adapter";
 
 const library = (
   overrides: Partial<Library["sections"][number]> = {},
@@ -79,5 +84,23 @@ describe("A8 adapter", () => {
 
   it("should return no groups when the search finds nothing", () => {
     expect(searchGroups("x", { items: [] })).toEqual([]);
+  });
+});
+
+describe("onlySection", () => {
+  const groups = [
+    { id: "s-1", title: "Γυρίσματα", blurb: "", rows: [] },
+    { id: "s-2", title: "Πωλήσεις", blurb: "", rows: [] },
+  ];
+
+  it("should keep only the section of the address", () => {
+    expect(onlySection(groups, "s-2").map((g) => g.title)).toEqual([
+      "Πωλήσεις",
+    ]);
+  });
+
+  it("should keep every section without one, and none for an unknown one", () => {
+    expect(onlySection(groups, null)).toHaveLength(2);
+    expect(onlySection(groups, "s-9")).toEqual([]);
   });
 });
