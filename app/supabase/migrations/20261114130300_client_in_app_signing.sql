@@ -257,10 +257,12 @@ as $$
 $$;
 
 create function authz.today_client_sign_can(p_uid uuid, p_client uuid) returns boolean
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select authz.today_client_can(p_uid, p_client, array['c.agreements'])
+begin
+  return authz.today_client_can(p_uid, p_client, array['c.agreements'])
      and authz.today_client_can(p_uid, p_client, array['c.sign']);
+end;
 $$;
 
 create function authz.today_count_client_sign(p_uid uuid, p_client uuid, p_now timestamptz) returns integer

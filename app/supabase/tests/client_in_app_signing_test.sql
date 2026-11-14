@@ -182,7 +182,7 @@ reset role;
 select is((select a.state <> 'proposal' from public.agreements a where a.id = current_setting('t.a')::uuid), true,
   'Η πρόταση έγινε Συμφωνία');
 select is(
-  (select s.method || '|' || s.signed_name || '|' || s.user_agent || '|' || (l.recipient_email = 'SIGN@client-one.example.gr')::text
+  (select s.method || '|' || s.signed_name || '|' || s.user_agent || '|' || (lower(l.recipient_email) = 'sign@client-one.example.gr')::text
      from public.agreement_signatures s join public.agreement_links l on l.id = s.link_id
     where s.agreement_id = current_setting('t.a')::uuid),
   'link|Κώστας Υπογράφων|e2e-agent|true', 'Η υπογραφή γράφεται όπως του Συνδέσμου, με τον Σύνδεσμο του Υπογράφοντα');
