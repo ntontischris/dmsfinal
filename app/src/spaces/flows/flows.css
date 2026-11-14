@@ -7,6 +7,8 @@
 & .flow-guide-more summary { cursor: pointer; font-size: var(--text-sm); color: var(--color-accent); }
 & .flow-guide-more p { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-text-muted); }
 & .flow-guide-actions { flex-wrap: wrap; }
+&:has(.flow-guide-submit) .e4-own-submit { display: none; }
+&:has(#e4-form[aria-busy='true']) .flow-guide-submit { pointer-events: none; opacity: 0.6; }
 & .flow-home { margin-block: var(--space-4); }
 & .flow-home-area + .flow-home-area { margin-top: var(--space-3); }
 }

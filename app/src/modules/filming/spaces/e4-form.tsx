@@ -20,12 +20,21 @@ import {
   isPastDay,
   uniqueClients,
 } from "./e4-model";
+import type { StartSlot } from "./e4-start";
+
+export interface E4Preferred {
+  clientId: string;
+  location: string;
+}
 
 export interface E4FormProps {
   options: readonly BookingAgreement[];
   // Οι ανοιχτές Εσωτερικές Παραγωγές (κενό αν δεν επιτρέπεται Γύρισμα χωρίς Πελάτη).
   productions: readonly NamedRef[];
   today: string;
+  // Η πρώτη εργάσιμη μέρα και ώρα μέσα στο Ωράριο (null = σήμερα, 09:00).
+  start: StartSlot | null;
+  preferred: E4Preferred | null;
   prefill: NewFilmingPrefill | null;
   fromRequest: FilmingFromRequest | null;
 }
@@ -38,11 +47,15 @@ export function E4Form({
   options,
   productions,
   today,
+  start: startSlot,
+  preferred,
   prefill,
   fromRequest,
 }: E4FormProps) {
   const clients = uniqueClients(options);
-  const requested = clients.find((c) => c.id === fromRequest?.clientId);
+  const requested = clients.find(
+    (c) => c.id === (fromRequest?.clientId ?? preferred?.clientId),
+  );
   const canInternal = productions.length > 0 && !fromRequest;
   const [mode, setMode] = useState<Mode>(
     clients.length === 0 && canInternal ? "internal" : "client",
@@ -58,13 +71,17 @@ export function E4Form({
   const kind = agreement?.kinds.find((k) => k.id === kindId);
   const startHours = prefill?.hours ?? defaultHours(kind);
   const [productionId, setProductionId] = useState("");
-  const [date, setDate] = useState(prefill?.date ?? today);
-  const [start, setStart] = useState(prefill?.time ?? "09:00");
+  const [date, setDate] = useState(prefill?.date ?? startSlot?.date ?? today);
+  const [start, setStart] = useState(
+    prefill?.time ?? startSlot?.time ?? "09:00",
+  );
   const [duration, setDuration] = useState(
     durationChoiceOf(startHours, DURATION_PRESETS),
   );
   const [freeHours, setFreeHours] = useState(String(startHours));
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(
+    requested && requested.id === preferred?.clientId ? preferred.location : "",
+  );
   const [note, setNote] = useState("");
   const isInternal = mode === "internal";
   // Δύο φόρμες-actions, μία ενεργή κάθε φορά (το action του useActionState δεν αλλάζει στη μέση).
@@ -104,7 +121,13 @@ export function E4Form({
     );
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate>
+    <form
+      id="e4-form"
+      ref={formRef}
+      onSubmit={onSubmit}
+      aria-busy={isPending}
+      noValidate
+    >
       <Panel label={prefill ? "Μετατροπή από Κλεισμένο χρόνο" : "Στοιχεία"}>
         <div className="e-form">
           {prefill && (
@@ -306,7 +329,7 @@ export function E4Form({
             Το Συνεργείο ορίζεται μετά, στη σελίδα του Γυρίσματος. Ξεκινά
             «προγραμματισμένο» (δεν περνά από έγκριση).
           </p>
-          <div className="btn-row">
+          <div className="btn-row e4-own-submit">
             <button
               type="submit"
               className="button"

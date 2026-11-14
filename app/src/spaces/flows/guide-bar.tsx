@@ -8,11 +8,13 @@ import { labelOf } from "@/spaces/data/spaces";
 import { Panel } from "@/spaces/kit/panel";
 import { Meter } from "@/spaces/kit/parts";
 
+import { GuideClients } from "./guide-clients";
 import {
   flowOf,
   isLast,
   isWait,
   parseStep,
+  resumeHref,
   stepHref,
   type Flow,
 } from "./flows";
@@ -21,22 +23,24 @@ import {
   park,
   readActive,
   rememberActive,
+  rememberDate,
   unpark,
 } from "./parked";
 
 import "./flows.css";
 
-// Μετά την αποθήκευση ενός σταθμού (π.χ. Νέο Γύρισμα → σελίδα Γυρίσματος) το URL χάνει τη θέση: ο οδηγός τη βάζει πίσω.
-function useResumeAfterSave(hasPlace: boolean, pathname: string) {
+// Το URL έχασε τη θέση (αποθήκευση που ανακατευθύνει, αλλαγή εβδομάδας στο Ημερολόγιο): ο οδηγός τη βάζει πίσω
+// από τη θέση που κρατά η καρτέλα, αν είμαστε στον σταθμό του βήματος ή εκεί που στέλνει η αποθήκευσή του.
+function useResume(hasPlace: boolean, pathname: string, search: string) {
   const router = useRouter();
   useEffect(() => {
     if (hasPlace) return;
     const active = readActive();
     const flow = flowOf(active?.job);
     if (!active || !flow) return;
-    if (flow.steps[active.step - 1]?.landsOn?.test(pathname))
-      router.replace(stepHref(flow, active.step + 1, pathname));
-  }, [hasPlace, pathname, router]);
+    const href = resumeHref(flow, active.step, { pathname, search });
+    if (href) router.replace(href);
+  }, [hasPlace, pathname, search, router]);
 }
 
 interface GuideProps {
@@ -45,48 +49,118 @@ interface GuideProps {
   pathname: string;
 }
 
-function GuideActions({ flow, step, pathname }: GuideProps) {
+// Η μέρα του γυρίσματος: από τη θέση της καρτέλας, ή από το Ημερολόγιο που ήδη δείχνει τη μέρα.
+const dateOf = (): string | undefined =>
+  readActive()?.date ??
+  new URLSearchParams(window.location.search).get("date") ??
+  undefined;
+
+// Πριν υποβληθεί η φόρμα του σταθμού, ο οδηγός κρατά τη μέρα της (για το Ημερολόγιο του τελευταίου βήματος).
+const keepFormDate = (flow: Flow, step: number, formId: string) => {
+  const form = document.getElementById(formId);
+  const field =
+    form instanceof HTMLFormElement ? form.elements.namedItem("date") : null;
+  if (field instanceof HTMLInputElement && field.value)
+    rememberDate(flow.id, step, field.value);
+};
+
+const isAtStationOf = (flow: Flow, step: number, pathname: string) =>
+  stepHref(flow, step, { pathname }).split("?")[0] === pathname;
+
+// Το ένα κύριο κουμπί του βήματος: υποβολή της φόρμας του σταθμού, «Εντάξει, περιμένω», «Επόμενο» ή «Τέλος».
+// Στο βήμα επιλογής Πελάτη κύρια είναι η λίστα, χωρίς κουμπί.
+function PrimaryAction({ flow, step, pathname }: GuideProps) {
   const router = useRouter();
+  const current = flow.steps[step - 1];
   const goHome = () => {
     forgetActive();
     router.push("/app");
-  };
-  const handleExit = () => {
-    park({ job: flow.id, step, reason: "exit", at: Date.now() });
-    goHome();
   };
   const handleNext = () => {
     if (isLast(flow, step)) {
       unpark(flow.id);
       return goHome();
     }
-    const next = flow.steps[step];
-    if (next && isWait(next)) {
-      park({ job: flow.id, step: step + 2, reason: "wait", at: Date.now() });
+    if (isWait(current)) {
+      park({
+        job: flow.id,
+        step: step + 1,
+        reason: "wait",
+        at: Date.now(),
+        date: dateOf(),
+      });
       return goHome();
     }
-    router.push(stepHref(flow, step + 1, pathname));
+    router.push(stepHref(flow, step + 1, { pathname, date: dateOf() }));
   };
-  const station = stepHref(flow, step, pathname);
-  const isAtStation = station.split("?")[0] === pathname;
-  const current = flow.steps[step - 1];
-  return (
-    <div className="btn-row flow-guide-actions">
+  if (current.picksClient) return null;
+  const { submits } = current;
+  if (submits && isAtStationOf(flow, step, pathname))
+    return (
       <button
-        type="button"
+        type="submit"
+        form={submits.form}
+        className="button flow-guide-submit"
+        data-primary="true"
+        onClick={() => keepFormDate(flow, step, submits.form)}
+      >
+        {submits.label}
+      </button>
+    );
+  if (submits)
+    return (
+      <Link
         className="button"
         data-primary="true"
-        onClick={handleNext}
+        href={stepHref(flow, step, { pathname })}
       >
-        {isLast(flow, step) ? "Τέλος" : "Επόμενο"}
-      </button>
-      {!isAtStation && current && (
-        <Link className="button" href={station}>
+        Άνοιξε: {labelOf(current.station)}
+      </Link>
+    );
+  return (
+    <button
+      type="button"
+      className="button"
+      data-primary="true"
+      onClick={handleNext}
+    >
+      {isLast(flow, step)
+        ? "Τέλος"
+        : isWait(current)
+          ? "Εντάξει, περιμένω"
+          : "Επόμενο"}
+    </button>
+  );
+}
+
+function GuideActions({ flow, step, pathname }: GuideProps) {
+  const router = useRouter();
+  const handleExit = () => {
+    park({
+      job: flow.id,
+      step,
+      reason: "exit",
+      at: Date.now(),
+      date: dateOf(),
+    });
+    forgetActive();
+    router.push("/app");
+  };
+  const current = flow.steps[step - 1];
+  const showsStationLink =
+    !isAtStationOf(flow, step, pathname) &&
+    !current.submits &&
+    !isWait(current);
+  return (
+    <div className="btn-row flow-guide-actions">
+      <PrimaryAction flow={flow} step={step} pathname={pathname} />
+      {showsStationLink && (
+        <Link className="button" href={stepHref(flow, step, { pathname })}>
           Άνοιξε: {labelOf(current.station)}
         </Link>
       )}
       {step > 1 && (
-        <Link className="button" href={stepHref(flow, step - 1, pathname)}>
+        <Link className="button" href={stepHref(flow, step - 1, { pathname })}>
           Πίσω
         </Link>
       )}
@@ -107,12 +181,12 @@ function Guide({ flow, step, pathname }: GuideProps) {
       >
         <Meter label={current.area} used={step} total={flow.steps.length} />
         <p className="flow-guide-question">{current.question}</p>
-        {isLast(flow, step) ? (
+        <p className="flow-guide-preset">{current.preset}</p>
+        {current.picksClient && <GuideClients flow={flow} step={step} />}
+        {isLast(flow, step) && (
           <p className="flow-guide-done" role="status">
             {flow.done}
           </p>
-        ) : (
-          <p className="flow-guide-preset">{current.preset}</p>
         )}
         {current.hidden && (
           <details className="flow-guide-more">
@@ -126,13 +200,13 @@ function Guide({ flow, step, pathname }: GuideProps) {
   );
 }
 
-// Ο οδηγός πάνω από κάθε οθόνη όσο το URL έχει ?job=&step=. Χωρίς θέση δεν δείχνει τίποτα.
+// Ο οδηγός πάνω από κάθε οθόνη όσο το URL έχει ?job=&step=. Χωρίς θέση ξαναμπαίνει μόνο από τη θέση της καρτέλας.
 export function GuideBar() {
   const params = useSearchParams();
   const pathname = usePathname();
   const flow = flowOf(params.get("job"));
   const step = flow ? parseStep(params.get("step"), flow) : 0;
-  useResumeAfterSave(flow !== undefined, pathname);
+  useResume(flow !== undefined, pathname, params.toString());
   useEffect(() => {
     if (flow) rememberActive(flow.id, step);
   }, [flow, step]);

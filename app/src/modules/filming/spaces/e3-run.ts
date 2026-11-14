@@ -13,7 +13,7 @@ export type Fields = Readonly<Record<string, string | readonly string[]>>;
 
 export interface RunResult {
   text: string;
-  tone: "ok" | "error";
+  tone: "ok" | "warn" | "error";
 }
 
 const formOf = (fields: Fields): FormData => {
@@ -36,7 +36,11 @@ export function useRun() {
         setResult({ text: state.error, tone: "error" });
         return;
       }
-      setResult({ text: state.notice ?? "Έγινε.", tone: "ok" });
+      setResult(
+        state.warning
+          ? { text: state.warning, tone: "warn" }
+          : { text: state.notice ?? "Έγινε.", tone: "ok" },
+      );
       onDone?.();
     });
   return { run, isPending, result };

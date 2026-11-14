@@ -5,11 +5,13 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import type { NewFilmingPrefill } from "../blocked-prefill";
 import { filmingCaps } from "../caps";
-import { athensDate } from "../helpers-time";
+import { athensDate, athensTime } from "../helpers-time";
 import { listBookingOptions } from "../queries";
+import { getBookingHours } from "../queries-booking";
 import type { FilmingFromRequest } from "../request-prefill";
 import type { NamedRef } from "../types";
-import { E4Form } from "./e4-form";
+import { E4Form, type E4Preferred } from "./e4-form";
+import { firstWorkingSlot } from "./e4-start";
 
 import "./e.css";
 
@@ -29,10 +31,13 @@ const wrap = (body: ReactNode) => (
 export async function SpacesNewFilming({
   prefill,
   fromRequest,
+  preferred = null,
   internal,
 }: {
   prefill: NewFilmingPrefill | null;
   fromRequest: FilmingFromRequest | null;
+  // Ο Πελάτης που διαλέχτηκε πριν (`?client=`) και η διεύθυνσή του, αν έχει.
+  preferred?: E4Preferred | null;
   internal: E4InternalSource;
 }) {
   const caps = filmingCaps(await getViewer());
@@ -44,9 +49,10 @@ export async function SpacesNewFilming({
         </p>
       </StateNotice>,
     );
-  const [options, productions] = await Promise.all([
+  const [options, productions, hours] = await Promise.all([
     listBookingOptions(),
     caps.canBookInternal ? internal() : null,
+    getBookingHours(),
   ]);
   if (!options.ok) return wrap(<ErrorNotice what="η φόρμα νέου Γυρίσματος" />);
   const internalList: NamedRef[] = productions?.ok
@@ -60,11 +66,18 @@ export async function SpacesNewFilming({
         </p>
       </StateNotice>,
     );
+  const now = new Date();
+  const today = athensDate(now);
+  const start = hours.ok
+    ? firstWorkingSlot(hours.data, { date: today, time: athensTime(now.toISOString()) })
+    : null;
   return wrap(
     <E4Form
       options={options.data}
       productions={internalList}
-      today={athensDate(new Date())}
+      today={today}
+      start={start}
+      preferred={preferred}
       prefill={prefill}
       fromRequest={fromRequest}
     />,

@@ -25,12 +25,12 @@ function QueueRow({ row }: { row: Parked }) {
   if (!flow || !step) return null;
   const title =
     row.reason === "wait"
-      ? `${flow.name} — περιμένουμε την ομάδα`
+      ? `${flow.name} — περιμένουμε την ομάδα· μετά: ${step.question}`
       : `${flow.name} — συνέχισε`;
   return (
     <ListRow
       title={title}
-      href={stepHref(flow, row.step)}
+      href={stepHref(flow, row.step, { date: row.date })}
       sub={`Βήμα ${row.step} από ${flow.steps.length}: ${step.question}`}
       aside={step.area}
     />

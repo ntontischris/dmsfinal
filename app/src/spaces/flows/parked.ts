@@ -6,6 +6,14 @@ export interface Parked {
   step: number;
   reason: "exit" | "wait";
   at: number;
+  // Η μέρα του γυρίσματος, για το βήμα που ανοίγει το Ημερολόγιο σε αυτήν.
+  date?: string;
+}
+
+export interface ActivePlace {
+  job: string;
+  step: number;
+  date?: string;
 }
 
 const KEY = "flows.parked";
@@ -74,26 +82,39 @@ export const subscribeParked = (onChange: () => void): (() => void) => {
 };
 
 // Ο ενεργός οδηγός της καρτέλας: όταν μια αποθήκευση στέλνει σε σελίδα χωρίς ?job=, ο οδηγός ξέρει πού ήταν.
-export const rememberActive = (job: string, step: number): void => {
-  try {
-    window.sessionStorage.setItem(ACTIVE, JSON.stringify({ job, step }));
-  } catch (error) {
-    console.error("flows.active", error);
-  }
-};
-
-export const readActive = (): { job: string; step: number } | null => {
+export const readActive = (): ActivePlace | null => {
   try {
     const value: unknown = JSON.parse(
       window.sessionStorage.getItem(ACTIVE) ?? "null",
     );
     return isParked({ ...(value as object), at: 0 })
-      ? (value as { job: string; step: number })
+      ? (value as ActivePlace)
       : null;
   } catch {
     return null;
   }
 };
+
+const writeActive = (place: ActivePlace): void => {
+  try {
+    window.sessionStorage.setItem(ACTIVE, JSON.stringify(place));
+  } catch (error) {
+    console.error("flows.active", error);
+  }
+};
+
+// Κρατά τη μέρα του γυρίσματος όσο μένουμε στην ίδια δουλειά.
+export const rememberActive = (job: string, step: number): void => {
+  const current = readActive();
+  writeActive({
+    job,
+    step,
+    ...(current?.job === job && current.date ? { date: current.date } : {}),
+  });
+};
+
+export const rememberDate = (job: string, step: number, date: string): void =>
+  writeActive({ job, step, date });
 
 export const forgetActive = (): void => {
   try {
