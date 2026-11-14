@@ -163,6 +163,15 @@ export interface DuplicateSide {
   contactPhone: string;
   managerName: string | null;
   opportunities: number;
+  agreements: readonly DuplicateAgreement[];
+  productions: number;
+  invoices: number;
+  clientUsers: number;
+}
+// Συμφωνία μιας πλευράς στην προεπισκόπηση συγχώνευσης (χωρίς ποσά): τίτλος και «μηνιαία, ενεργή».
+export interface DuplicateAgreement {
+  title: string;
+  label: string;
 }
 export interface DuplicatePair {
   flagId: string;
@@ -175,7 +184,12 @@ export interface DuplicatePair {
 export interface SalesSettings {
   formRouting: FormRouting;
   formAssigneeId: string | null;
+  guideSectionId: string | null; // «Οδηγός πωλήσεων»: Ενότητα της Γνώσης
   updatedAt: string;
+}
+export interface GuideSection {
+  id: string;
+  name: string;
 }
 export type ListUsage = Readonly<Record<string, number>>; // κλειδί: id της τιμής
 

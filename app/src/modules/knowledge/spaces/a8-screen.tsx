@@ -6,11 +6,13 @@ import { Panel } from "@/spaces/kit/panel";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
+import { KNOWLEDGE_PATH } from "../helpers";
 import { CLIENT_HELP_NOTE, PRICES_NOTE } from "../labels";
 import { getLibrary } from "../queries";
 import { searchKnowledge } from "../search";
 import {
   libraryGroups,
+  onlySection,
   searchGroups,
   type A8Group,
   type A8Row,
@@ -85,9 +87,15 @@ function Groups({ groups, q }: { groups: readonly A8Group[]; q: string }) {
   ));
 }
 
+interface KnowledgeView {
+  q: string;
+  section: string | null;
+}
+
 // Βιβλιοθήκη ή αποτελέσματα αναζήτησης (?q=): ψάχνει η βάση (ελληνικό full-text), μόνο στο Κοινό του Χρήστη.
+// Με ?section= η βιβλιοθήκη δείχνει μόνο εκείνη την Ενότητα.
 async function groupsOf(
-  q: string,
+  { q, section }: KnowledgeView,
   isClient: boolean,
 ): Promise<A8Group[] | null> {
   if (q) {
@@ -95,11 +103,13 @@ async function groupsOf(
     return found.ok ? searchGroups(q, found.data) : null;
   }
   const library = await getLibrary();
-  return library.ok ? libraryGroups(library.data) : null;
+  return library.ok
+    ? onlySection(libraryGroups(library.data), section)
+    : null;
 }
 
 // A8 Γνώση στη νέα εμφάνιση (prototype `screens/A8.tsx`): οι Ενότητες με τα δημοσιευμένα στοιχεία του Κοινού μου.
-export async function SpacesKnowledge({ q }: { q: string }) {
+export async function SpacesKnowledge({ q, section }: KnowledgeView) {
   const viewer = await getViewer();
   if (viewer.status !== "signed-in")
     return (
@@ -110,10 +120,16 @@ export async function SpacesKnowledge({ q }: { q: string }) {
       </div>
     );
   const isClient = isClientViewer(viewer);
-  const groups = await groupsOf(q, isClient);
+  const isOneSection = section !== null && !q;
+  const groups = await groupsOf({ q, section }, isClient);
   return (
     <div data-spaces>
       <div className="toolbar">
+        {isOneSection && (
+          <Link className="button" href={KNOWLEDGE_PATH}>
+            ← Όλη η Γνώση
+          </Link>
+        )}
         <span className="grow" />
         {can(viewer, "knowledge.manage") && (
           <Link className="button" href={hrefOf("L1")}>

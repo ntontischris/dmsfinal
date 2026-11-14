@@ -19,17 +19,33 @@ const fieldsOf = (side: DuplicateSide): readonly [string, string][] => [
   ["Κύριο πρόσωπο", side.contactName || "—"],
   ["Υπεύθυνος", side.managerName ?? NO_MANAGER_LABEL],
   ["Ευκαιρίες", String(side.opportunities)],
+  ["Παραγωγές", String(side.productions)],
+  ["Τιμολόγια", String(side.invoices)],
+  ["Χρήστες πελάτη", String(side.clientUsers)],
 ];
+
+// Οι Συμφωνίες κάθε πλευράς, για να φαίνεται τι μεταφέρεται πριν τη Συγχώνευση.
+const agreementsOf = (side: DuplicateSide) =>
+  side.agreements.length === 0
+    ? [{ id: "none", title: "Καμία", sub: "Συμφωνίες" }]
+    : side.agreements.map((agreement, index) => ({
+        id: `agreement-${index}`,
+        title: agreement.title,
+        sub: `Συμφωνία · ${agreement.label}`,
+      }));
 
 function Side({ side, title }: { side: DuplicateSide; title: string }) {
   return (
     <Panel label={side.name} aside={<Badge>{title}</Badge>}>
       <ItemRows
-        items={fieldsOf(side).map(([label, value]) => ({
-          id: label,
-          title: value,
-          sub: label,
-        }))}
+        items={[
+          ...fieldsOf(side).map(([label, value]) => ({
+            id: label,
+            title: value,
+            sub: label,
+          })),
+          ...agreementsOf(side),
+        ]}
       />
     </Panel>
   );
@@ -103,7 +119,6 @@ function Pair({
 }
 
 // Πιθανά διπλά και Συγχώνευση (prototype `screens/b6-pairs.tsx`) με τις πραγματικές ενέργειες.
-// Η γραμμή «Συμφωνίες» ανά πλευρά λείπει: η ανάγνωση των ζευγαριών δεν τη δίνει.
 export function DuplicatePairs({ pairs }: { pairs: readonly DuplicatePair[] }) {
   const notes = useDoneNotes();
   const pending = pairs.filter((pair) => !notes.isDone(pair.flagId));

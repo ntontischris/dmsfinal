@@ -70,6 +70,13 @@ export const libraryGroups = (library: Library): A8Group[] =>
       ),
     }));
 
+// Μόνο η Ενότητα της διεύθυνσης (?section=), αν υπάρχει· αλλιώς όλες.
+export const onlySection = (
+  groups: readonly A8Group[],
+  section: string | null,
+): A8Group[] =>
+  section ? groups.filter((group) => group.id === section) : [...groups];
+
 // Τα αποτελέσματα της αναζήτησης ως μία ομάδα (η βάση τα ταξινομεί κατά συνάφεια).
 export const searchGroups = (q: string, result: SearchResult): A8Group[] =>
   result.items.length === 0

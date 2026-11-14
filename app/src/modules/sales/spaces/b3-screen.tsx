@@ -19,6 +19,7 @@ import { boardCardsOf, type BoardCard } from "./b3-adapter";
 import { PipelineBoard } from "./b3-board";
 import { b3ColumnFilters, b3Href } from "./b3-columns";
 import { pipelineStats } from "./forecast-adapter";
+import { GuideLink } from "./guide-link";
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
   <div data-spaces>{children}</div>
@@ -107,11 +108,13 @@ export async function SpacesPipeline({
   const { visible, groups } = filteredBoard(cards, selection, today);
   return (
     <Frame>
-      {caps.manageScope === "mine" && (
-        <p className="muted">
-          Βλέπεις τις Ευκαιρίες σου και όσες αφορούν τους Πελάτες σου.
-        </p>
-      )}
+      <div className="toolbar">
+        <span className="muted grow">
+          {caps.manageScope === "mine" &&
+            "Βλέπεις τις Ευκαιρίες σου και όσες αφορούν τους Πελάτες σου."}
+        </span>
+        <GuideLink />
+      </div>
       {cards.length === 0 ? (
         <StateNotice kind="empty" title="Δεν υπάρχουν ανοιχτές Ευκαιρίες">
           <p>

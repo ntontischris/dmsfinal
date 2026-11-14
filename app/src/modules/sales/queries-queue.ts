@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { KIND_LABELS, STATE_LABELS } from "@/modules/agreements";
 import { createSupabase } from "@/lib/supabase/server";
 
 import { read, type ReadResult } from "./read";
@@ -136,6 +137,16 @@ const sideSchema = z.object({
   contact_phone: z.string(),
   manager_name: z.string().nullable(),
   opportunities: z.number(),
+  agreements: z.array(
+    z.object({
+      title: z.string(),
+      state: z.enum(["proposal", "signed", "active", "expired", "dissolved"]),
+      kind: z.enum(["monthly", "one_off"]),
+    }),
+  ),
+  productions: z.number(),
+  invoices: z.number(),
+  client_users: z.number(),
 });
 
 const pairSchema = z.array(
@@ -159,6 +170,13 @@ const toSide = (side: z.infer<typeof sideSchema>): DuplicateSide => ({
   contactPhone: side.contact_phone,
   managerName: side.manager_name,
   opportunities: side.opportunities,
+  agreements: side.agreements.map((agreement) => ({
+    title: agreement.title,
+    label: `${KIND_LABELS[agreement.kind]}, ${STATE_LABELS[agreement.state]}`,
+  })),
+  productions: side.productions,
+  invoices: side.invoices,
+  clientUsers: side.client_users,
 });
 
 export async function listDuplicatePairs(): Promise<

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createSupabase } from "@/lib/supabase/server";
 
 import { read, type ReadResult } from "./read";
-import type { ListUsage, SalesSettings } from "./types";
+import type { GuideSection, ListUsage, SalesSettings } from "./types";
 
 // Ανάγνωση Ρυθμίσεων › Πωλήσεις. Το πού πάνε οι νέες Ευκαιρίες το βλέπει κάθε μέλος της ομάδας (RLS)·
 // οι μετρητές χρήσης δίνονται μόνο σε όποιον «Διαχειρίζεται Ρυθμίσεις».
@@ -11,6 +11,7 @@ import type { ListUsage, SalesSettings } from "./types";
 const settingsSchema = z.object({
   form_routing: z.enum(["owner", "person", "queue"]),
   form_assignee_id: z.string().nullable(),
+  knowledge_section_id: z.string().nullable(),
   updated_at: z.string(),
 });
 
@@ -21,13 +22,14 @@ export async function getSalesSettings(): Promise<ReadResult<SalesSettings>> {
     "getSalesSettings",
     supabase
       .from("sales_settings")
-      .select("form_routing, form_assignee_id, updated_at")
+      .select("form_routing, form_assignee_id, knowledge_section_id, updated_at")
       .single(),
     (data) => {
       const row = settingsSchema.parse(data);
       return {
         formRouting: row.form_routing,
         formAssigneeId: row.form_assignee_id,
+        guideSectionId: row.knowledge_section_id,
         updatedAt: row.updated_at,
       };
     },
@@ -46,5 +48,20 @@ export async function listListUsage(): Promise<ReadResult<ListUsage>> {
     Object.fromEntries(
       usageSchema.parse(data).map((row) => [row.item_id, row.uses]),
     ),
+  );
+}
+
+const sectionsSchema = z.array(z.object({ id: z.string(), name: z.string() }));
+
+// Οι Ενότητες της Γνώσης για την επιλογή «Οδηγός πωλήσεων» (μόνο για όποιον «Διαχειρίζεται Ρυθμίσεις»).
+export async function listGuideSections(): Promise<
+  ReadResult<readonly GuideSection[]>
+> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "listGuideSections",
+    supabase.rpc("sales_guide_sections"),
+    (data) => sectionsSchema.parse(data),
   );
 }
