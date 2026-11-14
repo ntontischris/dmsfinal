@@ -115,6 +115,7 @@ export {
   listOutbox,
   listProvisionKinds,
 } from "./queries-agreements";
+export { getSignedFileLink } from "./queries-lifecycle";
 export { getPublicProposal } from "./queries-public";
 export { getDefaults } from "./queries-settings";
 export { TermsCard } from "./components/terms-card";

@@ -13,6 +13,8 @@ import {
   outboxMarkSchema,
   signOutsideSchema,
 } from "./schemas";
+import { SIGNED_FILE_MESSAGE, isSignedFileOk } from "./lifecycle-schema";
+import { hasFile, storeSignedFile } from "./signed-file-store";
 
 // Οι ενέργειες ροής της πρότασης: αποστολή, Έγκριση, νέα αναθεώρηση, Παράταση, απώλεια, Σύνδεσμοι, υπογραφή εκτός συστήματος.
 // Κάθε μία: έλεγχος φόρμας → μία κλήση RPC → μήνυμα. Τι επιτρέπεται σε κάθε βήμα το αποφασίζει η βάση.
@@ -169,15 +171,25 @@ const SIGN_OUTSIDE_KEYS = [
 ] as const;
 
 // Τα «καταναλωμένα» υπάρχουν στη φόρμα μόνο όταν η Έναρξη είναι σε προηγούμενο μήνα· αλλιώς η βάση τα αγνοεί.
+// Με αρχείο (b12): η αναφορά παίρνει το όνομά του όταν μένει κενή, και μετά την υπογραφή το αρχείο αποθηκεύεται.
 export async function signOutside(
   _: FormState,
   form: FormData,
 ): Promise<FormState> {
+  const file = form.get("signedFile");
+  if (hasFile(file) && !isSignedFileOk(file))
+    return { error: SIGNED_FILE_MESSAGE };
+  const fields = pick(form, SIGN_OUTSIDE_KEYS);
+  const reference =
+    fields.reference.trim() === "" && file instanceof File && file.size > 0
+      ? file.name
+      : fields.reference;
   const parsed = signOutsideSchema.safeParse({
-    ...pick(form, SIGN_OUTSIDE_KEYS),
+    ...fields,
+    reference,
     used: String(form.get("used") ?? ""),
   });
-  return perform(
+  const signed = await perform(
     parsed,
     (d) => ({
       name: "agreement_sign_outside",
@@ -193,6 +205,11 @@ export async function signOutside(
     }),
     "Καταχωρίστηκε η υπογραφή εκτός συστήματος. Η Ευκαιρία έγινε κερδισμένη.",
   );
+  if (signed.error || !parsed.success || !hasFile(file)) return signed;
+  const stored = await storeSignedFile(parsed.data.agreementId, file);
+  return stored.error
+    ? { error: `Η υπογραφή καταχωρίστηκε, αλλά το αρχείο όχι: ${stored.error}` }
+    : { notice: `${signed.notice} Το αρχείο αποθηκεύτηκε.` };
 }
 
 export async function markOutbox(

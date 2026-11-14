@@ -108,6 +108,7 @@ export interface AgreementDefaults {         // O3: agreements_defaults_view
   paymentDaysMonthly: number; paymentDaysOneOff: number; unusedProvisions: UnusedProvisions; graceDays: number; durationMonths: number;
   renewal: Renewal; dissolutionNoticeDays: number; dissolutionFee: number | null; filmingNoticeHours: number; filmingCancelHours: number;
   lateCancelBurns: boolean; noShowBurns: boolean; emailSenderConnected: boolean; openProposals: number; liveAgreements: number; updatedAt: string;
+  renewalLeadDays: number;
 }
 export interface KindInfo { id: string; label: string; labelEn: string; unit: string; unitEn: string; sort: number; isRetired: boolean; revisionLimit: number | null }
 

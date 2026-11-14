@@ -32,6 +32,7 @@ const NOT_ONE_OFF = [
   "Περίοδος χάριτος (μέρες)",
   "Διάρκεια (μήνες)",
   "Ανανέωση",
+  "Ευκαιρία ανανέωσης (μέρες πριν τη Λήξη)",
   "Ρήτρα λύσης (μέρες προειδοποίηση)",
 ];
 const NEW_ONLY =
@@ -133,6 +134,11 @@ function MonthlyRows({ defaults }: { defaults: AgreementDefaults }) {
         options={RENEWAL_VALUES}
         labels={RENEWAL_LABELS}
         sub={defaults.renewal === "auto" ? AUTO_RENEWAL_NOTE : undefined}
+      />
+      <InputRow
+        label="Ευκαιρία ανανέωσης (μέρες πριν τη Λήξη)"
+        name="renewalLeadDays"
+        value={String(defaults.renewalLeadDays)}
       />
       <InputRow
         label="Ρήτρα λύσης (μέρες προειδοποίηση)"
