@@ -5,6 +5,7 @@ import type { FormState } from "@/lib/form-state";
 import { callRpc, finishWith, firstIssue, pick } from "./action-support";
 import { equipmentNotice } from "./notices";
 import {
+  damageSchema,
   equipmentSetSchema,
   equipmentTemplateApplySchema,
   reservationSchema,
@@ -80,4 +81,24 @@ export async function releaseItem(
     p_filming: parsed.data.filmingId,
   });
   return finishWith(outcome, "Η δέσμευση αφαιρέθηκε.");
+}
+
+// Βλάβη σε δεσμευμένο αντικείμενο, από τη σελίδα του Γυρίσματος: γίνεται «Σε επισκευή» με τον λόγο.
+export async function reportEquipmentDamage(
+  _: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = damageSchema.safeParse(
+    pick(form, ["itemId", "filmingId", "note"]),
+  );
+  if (!parsed.success) return firstIssue(parsed.error);
+  const outcome = await callRpc("filming_equipment_report_damage", {
+    p_filming: parsed.data.filmingId,
+    p_item: parsed.data.itemId,
+    p_note: parsed.data.note,
+  });
+  return finishWith(
+    outcome,
+    "Η βλάβη γράφτηκε· το αντικείμενο είναι «Σε επισκευή».",
+  );
 }

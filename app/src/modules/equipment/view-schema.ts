@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   EQUIPMENT_STATUSES,
+  type EquipmentBooking,
   type EquipmentCategory,
   type EquipmentItemDetail,
   type EquipmentItemRow,
@@ -128,3 +129,14 @@ export const itemDetailSchema = itemRowFields
       reservations: row.reservations,
     }),
   );
+
+// Οι ανοιχτές Δεσμεύσεις (equipment_bookings_view): για το «Επόμενο Γύρισμα» και το «Ελεύθερο στις» του μητρώου.
+export const bookingsViewSchema = z.array(
+  z.object({
+    itemId: z.string(),
+    filmingId: z.string().nullable(),
+    startsAt: z.string(),
+    hours: z.coerce.number(),
+    state: z.enum(["pending", "scheduled"]),
+  }),
+) satisfies z.ZodType<EquipmentBooking[]>;

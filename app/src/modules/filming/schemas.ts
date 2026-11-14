@@ -184,6 +184,10 @@ export const reservationSchema = z.object({
   filmingId: uuid,
 });
 
+export const damageSchema = reservationSchema.extend({
+  note: requiredReason("Γράψε τι έπαθε το αντικείμενο."),
+});
+
 export const settingsSchema = z.object({
   bookingNeedsApproval: z.boolean(),
   noAnswerAction: z.enum(["none", "approve", "reject"]),
