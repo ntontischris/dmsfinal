@@ -6,8 +6,9 @@ import { fmtDate, fmtMoney } from "@/spaces/screens/shared";
 
 import { isForgotten } from "../helpers";
 import { NO_MANAGER_LABEL } from "../labels";
-import type { Opportunity, Outcome } from "../types";
+import type { ForecastRow, Opportunity, Outcome } from "../types";
 import { daysSince } from "./b3-filters";
+import { cardForecastText } from "./forecast-adapter";
 
 export interface BoardCard {
   id: string;
@@ -29,6 +30,10 @@ export interface BoardCard {
   lastContact: string | null;
   // Ο Υπεύθυνος της Ευκαιρίας ή όποιος διαχειρίζεται όλους τους Πελάτες: μετακινεί και κλείνει.
   canWork: boolean;
+  // Πρόβλεψη (b3) σε μία γραμμή, και τα στοιχεία της για τα φίλτρα· null στις κλεισμένες.
+  forecast: string | null;
+  expectedClose: string | null;
+  isLate: boolean;
 }
 
 export const daysAgoText = (fromIso: string, todayIso: string): string => {
@@ -55,11 +60,14 @@ export interface BoardInput {
   lastContacts: Readonly<Record<string, string | null>>;
   canWork: (opportunity: Opportunity) => boolean;
   today: string;
+  // Η πρόβλεψη κάθε ανοιχτής Ευκαιρίας (sales_pipeline_rows), ανά id· κενό αν δεν διαβάστηκε.
+  forecasts?: Readonly<Record<string, ForecastRow>>;
 }
 
 export const boardCardsOf = (input: BoardInput): BoardCard[] =>
   input.opportunities.map((o) => {
     const forgotten = isForgotten(o, input.today);
+    const forecast = o.outcome === "open" ? input.forecasts?.[o.id] : undefined;
     return {
       id: o.id,
       href: hrefOf("B4", { id: o.id }),
@@ -85,5 +93,8 @@ export const boardCardsOf = (input: BoardInput): BoardCard[] =>
       nextStepDue: o.outcome === "open" ? o.nextStepDue : null,
       lastContact: input.lastContacts[o.clientId] ?? null,
       canWork: o.outcome === "open" && input.canWork(o),
+      forecast: cardForecastText(forecast),
+      expectedClose: forecast?.expectedClose ?? null,
+      isLate: forecast?.isLate ?? false,
     };
   });

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { createSupabase } from "@/lib/supabase/server";
 
+import { collectChunks } from "./paging";
 import { read, type ReadResult } from "./read";
 import type { ClientOverview, ClientProvision } from "./types";
 
@@ -94,3 +95,9 @@ export async function listClientLastContacts(
     parseLastContacts,
   );
 }
+
+// Η εικόνα πολλών Πελατών (B1), σε κομμάτια των 100.
+export const listAllClientOverviews = (
+  ids: readonly string[],
+): Promise<ReadResult<ClientOverview[]>> =>
+  collectChunks(ids, listClientOverviews);

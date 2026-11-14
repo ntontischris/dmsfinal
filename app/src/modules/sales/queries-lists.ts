@@ -19,6 +19,7 @@ const listRowsSchema = z.array(
     is_system: z.boolean(),
     retired_at: z.string().nullable(),
     needs_detail: z.boolean().optional(),
+    probability: z.number().nullable().optional(),
   }),
 );
 
@@ -33,13 +34,18 @@ const parseList = (data: unknown): ListItem[] =>
     ...(row.needs_detail === undefined
       ? {}
       : { needsDetail: row.needs_detail }),
+    ...(row.probability === undefined ? {} : { probability: row.probability }),
   }));
 
 type Supabase = NonNullable<Awaited<ReturnType<typeof createSupabase>>>;
 
-// Μόνο οι Πηγές έχουν «Θέλει περιγραφή».
+// Μόνο οι Πηγές έχουν «Θέλει περιγραφή» και μόνο τα Στάδια προεπιλεγμένη Πιθανότητα.
+const EXTRA_COLUMNS: Readonly<Record<string, string>> = {
+  sales_sources: ", needs_detail",
+  sales_stages: ", probability",
+};
 const columnsOf = (table: string): string =>
-  table === "sales_sources" ? `${LIST_COLUMNS}, needs_detail` : LIST_COLUMNS;
+  `${LIST_COLUMNS}${EXTRA_COLUMNS[table] ?? ""}`;
 
 const readList = (supabase: Supabase, table: string) =>
   read(

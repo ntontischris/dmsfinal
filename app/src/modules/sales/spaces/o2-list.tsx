@@ -25,6 +25,7 @@ import {
   usesText,
   type O2Status,
 } from "./o2-adapter";
+import { StageProbability } from "./o2-probability";
 import { SpacesActionForm } from "./spaces-form";
 
 // Λίστα Ρύθμισης Πωλήσεων (prototype `screens/o-shared.tsx` ListEditor), με τις πραγματικές ενέργειες της σημερινής
@@ -276,6 +277,9 @@ function ItemRow({
           <Badge tone={O2_STATUS_TONE[status]}>{status}</Badge>
           {list === "sources" && status !== "Αποσύρθηκε" && (
             <NeedsDetailToggle item={item} onDone={onDone} />
+          )}
+          {list === "stages" && status !== "Αποσύρθηκε" && (
+            <StageProbability item={item} onDone={onDone} />
           )}
           <button
             type="button"

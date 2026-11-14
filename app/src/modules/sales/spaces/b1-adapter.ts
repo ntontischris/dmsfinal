@@ -30,6 +30,8 @@ export interface B1Row {
   packageName: string | null;
   activeAgreements: number | null;
   balance: string | null;
+  // Χρωστά κάτι (Υπόλοιπο > 0)· null όταν ο Χρήστης δεν βλέπει Οικονομικά.
+  hasBalance: boolean | null;
   isPossibleDuplicate: boolean;
   // Η οθόνη Συγχώνευσης, για το «Πιθανό διπλό».
   mergeHref: string;
@@ -78,6 +80,10 @@ export const b1RowOf = (
     packageName: overview?.packageName ?? null,
     activeAgreements: overview?.activeAgreements ?? null,
     balance: balanceOf(overview),
+    hasBalance:
+      overview?.balanceCents === null || overview?.balanceCents === undefined
+        ? null
+        : overview.balanceCents > 0,
     isPossibleDuplicate: row.isPossibleDuplicate && caps.canMerge,
     mergeHref: hrefOf("B6"),
     lastContact: overview?.lastContact ?? null,

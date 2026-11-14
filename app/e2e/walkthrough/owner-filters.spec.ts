@@ -147,12 +147,13 @@ test("φίλτρα · στους Πελάτες η σειρά φίλτρων ε�
   expect(Math.abs(tableBox.x - searchBox.x)).toBeLessThan(4);
   expect(tableBox.y).toBeGreaterThan(searchBox.y + searchBox.height);
   if (project() === "mobile") return;
-  // Σε φαρδιά οθόνη αναζήτηση και κάρτες χωρούν σε μία σειρά.
+  // Σε φαρδιά οθόνη οι κάρτες ξεκινούν στη σειρά της αναζήτησης· κάθε στήλη είναι φίλτρο (b1), οπότε
+  // όσες δεν χωρούν πάνε από κάτω, πάντα πάνω από τον πίνακα.
   const tops = await page
     .getByRole("group", { name: "Φίλτρα", exact: true })
     .locator("summary")
     .evaluateAll((items) => items.map((item) => item.getBoundingClientRect().top));
-  expect(tops.length).toBe(3);
-  for (const top of tops) expect(Math.abs(top - tops[0]!)).toBeLessThan(searchBox.height);
+  expect(tops.length).toBeGreaterThanOrEqual(3);
   expect(Math.abs(tops[0]! - searchBox.y)).toBeLessThan(searchBox.height);
+  for (const top of tops) expect(top).toBeLessThan(tableBox.y);
 });

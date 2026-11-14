@@ -112,6 +112,11 @@ export const salesCaps = (viewer: Viewer): SalesCaps => {
   };
 };
 
+// «Βλέπει ποσά» (finance.amounts): Αξία Ευκαιρίας και σύνολα πρόβλεψης.
+export const canSeeAmounts = (viewer: Viewer): boolean =>
+  viewer.status === "signed-in" &&
+  viewer.team?.permissions["finance.amounts"] !== undefined;
+
 export const clientAccess = (
   caps: SalesCaps,
   client: { managerId: string | null },

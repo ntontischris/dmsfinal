@@ -51,6 +51,10 @@ export function ClientsSearch({
       {filters.pkg && (
         <input type="hidden" name="package" value={filters.pkg} />
       )}
+      {Object.entries(filters.columns ?? {}).map(
+        ([key, value]) =>
+          value && <input key={key} type="hidden" name={key} value={value} />,
+      )}
     </form>
   );
 }

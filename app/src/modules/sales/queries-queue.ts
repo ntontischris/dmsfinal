@@ -198,3 +198,19 @@ export async function listAssignableUsers(): Promise<
         .map((row) => ({ userId: row.user_id, name: row.name })),
   );
 }
+
+// Σε ποιον δίνει ο Υπεύθυνος μια Ευκαιρία (b2): για όποιον διαχειρίζεται Πελάτες.
+export async function listHandoffCandidates(): Promise<
+  ReadResult<AssignableUser[]>
+> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "listHandoffCandidates",
+    supabase.rpc("sales_handoff_candidates"),
+    (data) =>
+      assignableSchema
+        .parse(data)
+        .map((row) => ({ userId: row.user_id, name: row.name })),
+  );
+}

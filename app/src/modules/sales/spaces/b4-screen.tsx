@@ -19,7 +19,7 @@ import {
 } from "@/spaces/screens/shared";
 
 import { athensToday, isForgotten, salesCaps } from "../helpers";
-import { NO_MANAGER_LABEL, OUTCOME_LABELS } from "../labels";
+import { OUTCOME_LABELS } from "../labels";
 import { getActivityLookups, listSalesLists } from "../queries-lists";
 import {
   getOpportunity,
@@ -42,6 +42,7 @@ import {
   SaidYes,
   StageSelect,
 } from "./b4-controls";
+import { ForecastPanel, ManagerField } from "./b4-forecast-panel";
 import { noteKindId } from "./b4-said-yes";
 import { TitleEditor } from "./b4-title";
 
@@ -104,11 +105,13 @@ interface WorkbenchProps {
 function Facts({
   opportunity,
   lists,
+  caps,
   canWork,
   today,
 }: {
   opportunity: Opportunity;
   lists: SalesLists;
+  caps: SalesCaps;
   canWork: boolean;
   today: string;
 }) {
@@ -148,7 +151,9 @@ function Facts({
         )}
       </dd>
       <dt>Υπεύθυνος</dt>
-      <dd>{opportunity.managerName ?? NO_MANAGER_LABEL}</dd>
+      <dd>
+        <ManagerField opportunity={opportunity} caps={caps} />
+      </dd>
       <dt>Πηγή</dt>
       <dd>
         {labelOf(lists.sources, opportunity.sourceId)}
@@ -253,6 +258,7 @@ function Workbench({
           <Facts
             opportunity={opportunity}
             lists={lists}
+            caps={caps}
             canWork={canWork}
             today={today}
           />
@@ -285,6 +291,12 @@ function Workbench({
             />
           )}
         </Panel>
+
+        <ForecastPanel
+          opportunity={opportunity}
+          stages={lists.stages}
+          canWork={canWork}
+        />
 
         <div id="b4-proposal" />
         <SpacesProposalPanel
