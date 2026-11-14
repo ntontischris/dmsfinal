@@ -5,6 +5,7 @@ import {
   crewRespondSchema,
   dateSchema,
   decideCancelSchema,
+  detailsSchema,
   hoursSchema,
   rescheduleSchema,
   settingsSchema,
@@ -129,5 +130,26 @@ describe("settingsSchema", () => {
 
   it("should reject a horizon beyond a year", () => {
     expect(settingsSchema.safeParse({ ...rules, horizonDays: 400 }).success).toBe(false);
+  });
+});
+
+describe("detailsSchema", () => {
+  const base = { filmingId: FILMING_ID, contactName: " Κώστας ", contactPhone: "", filesUrl: "" };
+
+  it("should turn empty fields into null so a save can clear them", () => {
+    const result = detailsSchema.parse(base);
+    expect(result).toEqual({ filmingId: FILMING_ID, contactName: "Κώστας", contactPhone: null, filesUrl: null });
+  });
+
+  it("should accept an https files link", () => {
+    expect(detailsSchema.parse({ ...base, filesUrl: "https://drive.example.com/x" }).filesUrl).toBe(
+      "https://drive.example.com/x",
+    );
+  });
+
+  it("should reject a files link that is not https", () => {
+    expect(firstMessage(detailsSchema.safeParse({ ...base, filesUrl: "http://example.com" }))).toBe(
+      "Ο σύνδεσμος αρχείων πρέπει να ξεκινά με https://",
+    );
   });
 });

@@ -38,6 +38,7 @@ import {
 import { E3Actions } from "./e3-actions";
 import { E3ClientActions } from "./e3-client";
 import { E3Crew } from "./e3-crew";
+import { E3Details } from "./e3-details";
 import { E3Equipment } from "./e3-equipment";
 import { E3Sheet } from "./e3-sheet";
 import {
@@ -622,6 +623,7 @@ export async function SpacesFilming({
         )}
         <Header card={card} nowMs={nowMs} isClient={false} />
         <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />
+        <E3Details card={card} />
         {!isCrewView && viewerId && (
           <Mine
             card={card}

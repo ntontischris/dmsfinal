@@ -181,6 +181,27 @@ export interface FilmingPeriod {
   state: "closed" | "current" | "next";
 }
 
+// Μόνο για την ομάδα (c7, c9): στοιχεία χώρου, κατάσταση στο Google και τι γίνεται με τη χρέωση (χωρίς ποσά).
+export interface FilmingDetails {
+  contactName: string | null;
+  contactPhone: string | null;
+  filesUrl: string | null;
+  updatedAt: string | null;
+}
+
+export type FilmingGoogleState = "off" | "none" | "queued" | "error" | "synced";
+
+export interface FilmingTeamInfo {
+  details: FilmingDetails;
+  google: { state: FilmingGoogleState; at: string | null; error: string | null };
+  outcome: {
+    billable: "none" | "pending" | "invoiced";
+    extraBillable: boolean;
+    noShowBurns: boolean;
+  };
+  canEditDetails: boolean;
+}
+
 export interface FilmingCard {
   id: string;
   startsAt: string;
@@ -220,6 +241,7 @@ export interface FilmingCard {
   history: FilmingHistoryEntry[];
   signals: FilmingSignals;
   viewerCan: FilmingViewerCan;
+  team: FilmingTeamInfo | null;
 }
 
 // Τα Γυρίσματά μου (E6).

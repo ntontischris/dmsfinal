@@ -18,11 +18,13 @@ import {
 import { athensDate, athensTime, formatDateTime } from "../helpers-time";
 import type { FilmingCard } from "../types";
 import { hoursLabel, isOpenState } from "./e3-model";
+import { outcomeNotes } from "./e3-outcome";
 import { useRun, type FormAction } from "./e3-run";
 import { LastDone, ReasonForm } from "./e3-ui";
 
 // Οι Ενέργειες της σελίδας Γυρίσματος (prototype `screens/e3-actions.tsx`). Κάθε κουμπί φαίνεται μόνο όταν το viewerCan
-// της βάσης το επιτρέπει· η βάση ελέγχει ξανά. Λείπει ο σύνδεσμος αρχείων στο «έγινε» (δεν υπάρχει στη βάση).
+// της βάσης το επιτρέπει· η βάση ελέγχει ξανά. Δίπλα στο «έγινε», «δεν έγινε» και «αναίρεση» λέει τι γίνεται με την
+// Παροχή και τη χρέωση (e3-outcome). Ο σύνδεσμος αρχείων μπαίνει στα «Στοιχεία χώρου» (e3-details).
 
 type Form =
   | "reject"
@@ -70,6 +72,7 @@ function DoneForm({ card, isPending, onSend, onClose }: FormProps) {
       {extra > 0 && (
         <p className="note">Επιπλέον χρόνος: {hoursLabel(extra)}.</p>
       )}
+      <Notes lines={outcomeNotes(card, "done")} />
       <div className="btn-row">
         <button
           type="button"
@@ -145,6 +148,18 @@ function MoveForm({ card, isPending, onSend, onClose }: FormProps) {
         </button>
       </div>
     </div>
+  );
+}
+
+function Notes({ lines }: { lines: readonly string[] }) {
+  return (
+    <ul className="stack e3-outcome" aria-label="Τι γίνεται με την Παροχή και τη χρέωση">
+      {lines.map((line) => (
+        <li key={line} className="note">
+          {line}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -282,7 +297,7 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
       {form === "done" && <DoneForm {...formProps} />}
       {form === "noshow" && (
         <DecisionRow
-          note="Ο πελάτης δεν εμφανίστηκε. Η Παροχή καίγεται ή επιστρέφει κατά τους Όρους της Συμφωνίας."
+          note={outcomeNotes(card, "noshow").join(" ")}
           isDanger
           isPending={isPending}
           yes={{
@@ -378,10 +393,9 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
               Αναίρεση
             </button>
             <p className="muted">
-              Για «έγινε» ή «δεν έγινε» που μπήκε κατά λάθος. Το Τιμολογητέο που
-              γέννησε σβήνεται αν δεν έχει τιμολογηθεί· αλλιώς διορθώνεται με
-              πιστωτικό.
+              Για «έγινε» ή «δεν έγινε» που μπήκε κατά λάθος.
             </p>
+            <Notes lines={outcomeNotes(card, "undo")} />
           </div>
         )}
       {form === "undo" && (

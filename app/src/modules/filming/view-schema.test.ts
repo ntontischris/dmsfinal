@@ -113,6 +113,22 @@ describe("cardSchema", () => {
     expect(card.internalNote).toBe("Φέρε το gimbal");
     expect(card.viewerCan.markDone).toBe(true);
   });
+
+  it("should leave team info empty for a client and read it for the team", () => {
+    expect(cardSchema.parse(cardJson).team).toBeNull();
+    const card = cardSchema.parse({
+      ...cardJson,
+      team: {
+        details: { contactName: "Κώστας", contactPhone: "210 0000000", filesUrl: "https://example.com/f", updatedAt: null },
+        google: { state: "error", at: "2026-10-09T07:00:00+00:00", error: "403" },
+        outcome: { billable: "pending", extraBillable: true, noShowBurns: false },
+        canEditDetails: true,
+      },
+    });
+    expect(card.team?.details.filesUrl).toBe("https://example.com/f");
+    expect(card.team?.google.state).toBe("error");
+    expect(card.team?.outcome.billable).toBe("pending");
+  });
 });
 
 describe("queueSchema", () => {
