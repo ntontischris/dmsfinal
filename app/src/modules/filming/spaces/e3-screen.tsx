@@ -606,6 +606,13 @@ export async function SpacesFilming({
   return (
     <div data-spaces>
       <Others rows={tools.open} currentId={card.id} />
+      {/* Για τον οδηγό «Στήνω γύρισμα»: πόσα μέλη και αντικείμενα έχει το Γύρισμα (από τη βάση). */}
+      <div
+        hidden
+        data-flow-filming
+        data-crew={card.crew.length}
+        data-equipment={card.equipment.length}
+      />
       <div className="e3">
         <DoneNotice done={doneOf(done)} card={card} />
         {needsOutcome(asListItem(card), nowMs) && (

@@ -15,6 +15,7 @@ export { productionsCaps } from "./caps";
 export { historyLines, periodLabel } from "./helpers";
 export type { ReadResult } from "./read";
 export { listProductions } from "./queries";
+export { reopenProduction } from "./actions-state";
 export { SpacesProductions } from "./spaces/g1-screen";
 export { SpacesProduction } from "./spaces/g2-screen";
 export { SpacesMyTasks } from "./spaces/g4-screen";

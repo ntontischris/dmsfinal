@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import {
   ClientSwitcher,
@@ -15,6 +15,7 @@ import { getLogoVersion } from "@/modules/settings";
 import { newEntryFor } from "@/spaces/data/new-actions";
 import { searchItemsFor } from "@/spaces/data/search";
 import { spacesModel } from "@/spaces/data/spaces";
+import { GuideBar } from "@/spaces/flows/guide-bar";
 import { SpacesShell } from "@/spaces/shell/spaces-shell";
 
 // «owner», «team» και «client» δεν είναι Δικαιώματα· όλα τα άλλα ελέγχονται ως Δικαιώματα (ομάδας ή πελάτη).
@@ -70,6 +71,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   };
   return (
     <SpacesShell model={model} tools={tools} notice={noticeText(viewer, clientRows)} assistant={assistantAudience && <SpacesAssistant audience={assistantAudience} />} logoVersion={logoVersion}>
+      <Suspense fallback={null}>
+        <GuideBar />
+      </Suspense>
       {children}
     </SpacesShell>
   );
