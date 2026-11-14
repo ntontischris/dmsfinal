@@ -25,7 +25,6 @@ const PIPELINE_URL = /\/app\/pipeline\/[0-9a-f-]{36}$/;
 // και θα έκρυβε το πραγματικό λάθος.
 test.describe.configure({ retries: 0 });
 
-
 // Η κάρτα μιας Ευκαιρίας στις Στήλες του Pipeline (B3).
 const boardCard = (page: Page, title: string): Locator =>
   page.locator(".kcard", { hasText: title });
@@ -292,6 +291,10 @@ test("τα Πιθανά διπλά: το «Είναι άλλος» κλείνε�
 
   const pair = duplicatePair(page, `Καφέ Αθήναιον ${P}`);
   await expect(pair).toContainText("ίδιο τηλέφωνο");
+  // b6: κάθε πλευρά δείχνει τις Συμφωνίες της και τα βασικά της στοιχεία πριν τη Συγχώνευση.
+  await expect(pair).toContainText("Συμφωνί");
+  await expect(pair).toContainText("Παραγωγές");
+  await expect(pair).toContainText("Τιμολόγια");
   await shot(page, "b6-duplicates");
   await button(pair, "Είναι άλλος").click();
   await expect(pair).toHaveCount(0);
