@@ -36,6 +36,9 @@ dmsfinal-app
 |---|---|---|
 | Ιδιοκτήτης | το κουμπί «Δες ως…» του Ιδιοκτήτη στην Είσοδο (/login) | app/src/modules/access/demo.ts + actions.ts (signInAsDemo): οι ετικέτες έρχονται από το env DEMO_LOGINS, ο κωδικός μόνο από το env DEMO_LOGIN_PASSWORD του server — ποτέ σε αρχείο ή chat |
 
+## preview_data
+demo only — ο ιδιοκτήτης επιβεβαίωσε 2026-11-14 ότι τα δεδομένα είναι ψεύτικα («Γράψε, σβήσε ό,τι γουστάρεις»)
+
 ## old_system_source
 Παλιό DMS: repo devremedia (παγωμένο) + η τοπική λίστα «don't repeat».
 
