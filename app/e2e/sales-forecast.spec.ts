@@ -4,7 +4,6 @@ import { panel } from "./catalogue-parts";
 import {
   button,
   field,
-  inspector,
   openNewLead,
   project,
   shot,
@@ -77,8 +76,9 @@ test("πρόβλεψη και αλλαγή Υπεύθυνου: ο Ιδιοκτή
   await shot(page, "b4-forecast");
 
   // b2: ο Υπεύθυνος της Ευκαιρίας αλλάζει με την επιλογή, χωρίς κουμπί.
-  await inspector(page)
-    .getByLabel("Υπεύθυνος Ευκαιρίας")
+  // Η σελίδα Ευκαιρίας δεν έχει πλαϊνό inspector: η επιλογή είναι στα στοιχεία της κεφαλίδας.
+  await page
+    .getByRole("combobox", { name: "Υπεύθυνος Ευκαιρίας", exact: true })
     .selectOption({ label: "Νίκος Πωλήσεις" });
   await expect(page.getByText("Ο Υπεύθυνος άλλαξε.")).toBeVisible();
 
@@ -124,7 +124,7 @@ test("Ρυθμίσεις › Πωλήσεις: η Διαχείριση ορίζ�
   // Ίδια τιμή με αυτή που έχει: το τεστ δεν αλλάζει την πρόβλεψη των άλλων.
   const current = (await input.inputValue()) || "10";
   await input.fill(current);
-  await button(stages.locator("form", { has: input }), "Ορισμός").click();
+  await button(stages, "Ορισμός Πιθανότητας: Νέα").click();
   await expect(
     stages.getByText(`Το Στάδιο «Νέα» έχει πια Πιθανότητα ${current}%.`),
   ).toBeVisible();
