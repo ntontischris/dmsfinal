@@ -7,6 +7,7 @@ import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import { setCost } from "../actions-items";
+import { hasActualHours } from "../actual-hours";
 import { moneyInput } from "../components/item-basics-form-parts";
 import { costOf, marginOf } from "../cost";
 import {
@@ -18,6 +19,7 @@ import {
 } from "../helpers";
 import { COST_INTERNAL_NOTE } from "../labels";
 import type {
+  ActualHours,
   CatalogueCaps,
   CatalogueItem,
   CostHint,
@@ -30,6 +32,7 @@ interface CostProps {
   item: CatalogueItem;
   hint: CostHint | null;
   caps: CatalogueCaps;
+  actual: ActualHours | null;
 }
 
 const HOURS_HINT_EDIT =
@@ -73,7 +76,31 @@ function HoursInput({
   );
 }
 
-function CostFields({ item, caps }: CostProps) {
+const measuredText = (hours: number | null, count: number): string =>
+  hours === null
+    ? "χωρίς μέτρηση"
+    : `${formatHours(hours)} (${count} ${count === 1 ? "Παραγωγή" : "Παραγωγές"})`;
+
+// Πόσο κράτησε στην πράξη (b14), δίπλα στην εκτίμηση: μέσος όρος ανά μονάδα από επιβεβαιωμένες ώρες.
+function ActualRow({ actual }: { actual: ActualHours | null }) {
+  if (actual === null) return null;
+  return (
+    <>
+      <dt>Πραγματικές ώρες (μ.ό.)</dt>
+      <dd>
+        {hasActualHours(actual)
+          ? `γύρισμα ${measuredText(actual.shoot, actual.shootCount)} · μοντάζ ${measuredText(actual.edit, actual.editCount)}`
+          : "Δεν υπάρχουν ακόμα επιβεβαιωμένες ώρες."}
+        <div className="muted">
+          Από Παραγωγές Συμφωνιών που έχουν μόνο αυτό, ανά μονάδα. Αν απέχουν
+          πολύ από την εκτίμηση, διόρθωσε τις ώρες ή την τιμή.
+        </div>
+      </dd>
+    </>
+  );
+}
+
+function CostFields({ item, caps, actual }: CostProps) {
   const hoursEditable = caps.canManageCost;
   return (
     <dl className="dl">
@@ -104,6 +131,7 @@ function CostFields({ item, caps }: CostProps) {
           />
         }
       />
+      <ActualRow actual={actual} />
       <Field
         id="c2-direct-cost"
         label="Άμεσο κόστος"
@@ -158,7 +186,7 @@ function MarginRow({ price, cost }: { price: number; cost: ItemCost }) {
 }
 
 // Η εκτίμηση βγαίνει από τα αποθηκευμένα στοιχεία και το Κόστος ώρας που ισχύει σήμερα.
-function CostSummary({ item, hint }: Omit<CostProps, "caps">) {
+function CostSummary({ item, hint }: Pick<CostProps, "item" | "hint">) {
   if (hint === null || hint.hourCost === null)
     return (
       <p className="muted">

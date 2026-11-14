@@ -133,6 +133,9 @@ test("ο Ιδιοκτήτης αλλάζει ώρες και τιμή, και τ
   await openItem(page, `Εκδήλωση ${P}`);
 
   const cost = panel(page, "Κόστος και περιθώριο");
+  // Δίπλα στην εκτίμηση, ο μέσος όρος των πραγματικών ωρών (b14)· οι αριθμοί ελέγχονται στο pgTAP.
+  await expect(cost).toContainText("Πραγματικές ώρες (μ.ό.)");
+  await expect(cost).toContainText("ανά μονάδα");
   await control(cost, "Ώρες γυρίσματος").fill("5");
   await control(cost, "Ώρες μοντάζ").fill("7");
   await button(cost, "Αποθήκευση").click();

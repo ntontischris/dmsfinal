@@ -59,6 +59,13 @@ export interface CostHint {
   multipliers: Multipliers;
   overrunPercent: number; // Ποσοστό υπέρβασης (G3), από τις Ρυθμίσεις
 }
+// Μέσος όρος επιβεβαιωμένων ωρών ανά μονάδα (b14)· null όταν δεν υπάρχει ακόμα καμία μέτρηση.
+export interface ActualHours {
+  shoot: number | null;
+  shootCount: number;
+  edit: number | null;
+  editCount: number;
+}
 export interface CostMonth {
   month: string; // YYYY-MM-01
   expensesTotal: number;
