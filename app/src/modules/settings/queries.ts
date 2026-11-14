@@ -186,3 +186,15 @@ export async function recentChanges(
     })),
   };
 }
+
+// Πότε άλλαξε το λογότυπο (e1), για το ?v= του /company-logo στο κέλυφος· null όταν δεν υπάρχει λογότυπο.
+export async function getLogoVersion(): Promise<string | null> {
+  const supabase = await createSupabase();
+  if (!supabase) return null;
+  const result = await read(
+    "getLogoVersion",
+    supabase.rpc("company_logo_version"),
+    (data) => z.string().nullable().parse(data ?? null),
+  );
+  return result.ok ? result.data : null;
+}

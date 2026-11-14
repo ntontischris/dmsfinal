@@ -211,8 +211,8 @@ describe("ασφάλεια των προτύπων", () => {
     expect(body.html).not.toContain("<script>x</script>");
   });
 
-  it("έχει το λογότυπο από την εφαρμογή", () => {
-    expect(testMessage({ locale: "el", origin: ORIGIN }).html).toContain(`${ORIGIN}/logo-email.png`);
+  it("έχει το λογότυπο της εταιρείας από την εφαρμογή", () => {
+    expect(testMessage({ locale: "el", origin: ORIGIN }).html).toContain(`src="${ORIGIN}/company-logo"`);
   });
 
   it("η πρόσκληση γράφει ότι ο σύνδεσμος ισχύει 24 ώρες", () => {

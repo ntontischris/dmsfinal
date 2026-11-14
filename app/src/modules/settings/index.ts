@@ -3,6 +3,7 @@
 export {
   getAiSpend,
   getCompany,
+  getLogoVersion,
   getOpenedAt,
   getReadiness,
   listBankAccounts,
@@ -11,6 +12,8 @@ export {
   type CompanySettings,
 } from "./queries";
 export { READINESS, type ReadinessInfo } from "./readiness";
+// e1: το αρχείο του λογότυπου για το route /company-logo (service role, μόνο server).
+export { readLogoFile, type LogoFile } from "./logo-storage";
 export { isValidAfm, isValidIban, formatIban } from "./validation";
 // Νέα εμφάνιση (Χώροι): O1, O7 και τα κοινά των καρτελών Ρυθμίσεων (prototype `screens/o-shared.tsx`), για τις O2–O6 των άλλων modules.
 export { SpacesCompanySettings } from "./spaces/o1-screen";

@@ -134,3 +134,34 @@ test("ο Έλεγχος ετοιμότητας δείχνει τι μένει κ
   ).toHaveCount(0);
   await shot(page, "o7-owner");
 });
+
+// e1: το λογότυπο ανεβαίνει από τη Διαχείριση, φαίνεται στη μπάρα και στο /company-logo (για τα email),
+// κάνει «έτοιμη» τη γραμμή του Ελέγχου ετοιμότητας και, με την αφαίρεση, γυρίζει το προεπιλεγμένο.
+test("η Διαχείριση ανεβάζει και αφαιρεί το λογότυπο της εταιρείας", async ({ page }) => {
+  await signIn(page, "admin@example.com");
+  await page.goto("/app/settings/company");
+  const logo = card(page, "Λογότυπο");
+  await logo.getByLabel(/λογότυπο/i).setInputFiles("e2e/fixtures/logo.png");
+  await logo.getByRole("button", { name: "Ανέβασμα", exact: true }).click();
+  await expect(logo.getByRole("status")).toContainText("Το λογότυπο αποθηκεύτηκε");
+  await expect(logo.getByRole("img", { name: "Το τρέχον λογότυπο" })).toBeVisible();
+  await expect(page.locator('.shell-home img[src^="/company-logo?v="]')).toHaveCount(1);
+  const served = await page.request.get("/company-logo");
+  expect(served.status()).toBe(200);
+  expect(served.headers()["content-type"]).toBe("image/png");
+  await shot(page, "o1-logo");
+
+  await page.goto("/app/settings/readiness");
+  const line = card(page, "Τι πρέπει να είναι έτοιμο")
+    .getByRole("listitem")
+    .filter({ hasText: "Λογότυπο" });
+  await expect(line.getByText("έτοιμο", { exact: true })).toBeVisible();
+
+  await page.goto("/app/settings/company");
+  await card(page, "Λογότυπο").getByRole("button", { name: "Αφαίρεση λογότυπου" }).click();
+  await expect(card(page, "Λογότυπο").getByText(/Δεν έχει ανέβει λογότυπο/)).toBeVisible();
+  await expect(page.locator(".shell-home img")).toHaveCount(0);
+  const fallback = await page.request.get("/company-logo", { maxRedirects: 0 });
+  expect(fallback.status()).toBe(307);
+  expect(fallback.headers()["location"]).toMatch(/\/logo-email\.png$/);
+});
