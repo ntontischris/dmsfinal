@@ -9,6 +9,13 @@
 | job_id | wave | stage | round | test_score | preview_url | prototype_commit |
 |---|---|---|---|---|---|---|
 | stino-gyrisma | 1 | functional-approval | 4 | 5/5 (round 4) | https://dmsfinal-app-git-proto-flows-ntontischris-projects.vercel.app | 0d7d455 |
+| xekino-ti-mera | 1 | design | 0 | — | — | — |
+| apanto-se-pelates | 1 | design | 0 | — | — | — |
+| organono-imerologio | 1 | design | 0 | — | — | — |
+| egkrino-gyrismata | 1 | design | 0 | — | — | — |
+| trexo-paragogi | 1 | design | 0 | — | — | — |
+| paradido-video | 1 | design | 0 | — | — | — |
+| kleino-pelati | 1 | design | 0 | — | — | — |
 
 ## Log
 - 2026-11-14 Ιδιοκτήτης flows → stino-gyrisma design written (flow.md, 6 βήματα, Πελάτες → Παραγωγή → Σήμερα)
@@ -23,3 +30,4 @@
 - 2026-11-14 Ιδιοκτήτης gaps → 41 gaps (14 missing, 12 done-badly, 15 sources-disagree), 6 jobs without gaps. Approval 2 presented as a page.
 - 2026-11-15 Ιδιοκτήτης Approval 2 → yes («με το πακέτο 2 προχωράμε»); 41 gaps = recommendation; G11 + owner may change crew/equipment. Next: wave 1 research → design.
 - 2026-11-15 wave 1 research → 7 research.md (xekino-ti-mera, apanto-se-pelates, organono-imerologio, egkrino-gyrismata, trexo-paragogi, paradido-video, kleino-pelati); all gates passed. G6 notification: owner decision, no researched precedent. Next: design.
+- 2026-11-15 wave 1 design: 7 flow.md written; cross-flow review fixed 3 overlaps (portal bookings only in egkrino, chat Αίτημα «Γύρισμα» only in apanto; paradido waits without a row until the approval deadline; Σήμερα: one thing = one row). Open for handoff: every flow has «Τίποτα hardcoded» ✗ (guide text in a file + thresholds) → settings.
