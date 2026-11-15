@@ -27,7 +27,7 @@ export interface ActivePlace {
 
 const KEY = "flows.parked";
 const ACTIVE = "flows.active";
-const EVENT = "flows-parked";
+export const PARKED_EVENT = "flows-parked";
 
 const isParked = (value: unknown): value is Parked =>
   typeof value === "object" &&
@@ -72,7 +72,7 @@ const writeParked = (rows: readonly Parked[]): void => {
   } catch (error) {
     console.error("flows.parked", error);
   }
-  window.dispatchEvent(new Event(EVENT));
+  window.dispatchEvent(new Event(PARKED_EVENT));
 };
 
 export const park = (row: Parked): void =>
@@ -82,10 +82,10 @@ export const unpark = (job: string): void =>
   writeParked(withoutJob(parseParked(readParkedRaw()), job));
 
 export const subscribeParked = (onChange: () => void): (() => void) => {
-  window.addEventListener(EVENT, onChange);
+  window.addEventListener(PARKED_EVENT, onChange);
   window.addEventListener("storage", onChange);
   return () => {
-    window.removeEventListener(EVENT, onChange);
+    window.removeEventListener(PARKED_EVENT, onChange);
     window.removeEventListener("storage", onChange);
   };
 };
@@ -119,7 +119,7 @@ const writeActive = (place: ActivePlace): void => {
   } catch (error) {
     console.error("flows.active", error);
   }
-  window.dispatchEvent(new Event(EVENT));
+  window.dispatchEvent(new Event(PARKED_EVENT));
 };
 
 // Η θέση της ίδιας δουλειάς, με ό,τι ξέρει ήδη (μέρα, Γύρισμα) και τις αλλαγές.

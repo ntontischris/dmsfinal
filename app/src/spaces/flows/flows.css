@@ -16,4 +16,7 @@
 & .flow-queue-link:hover .part-title, & .flow-queue-link:focus-visible .part-title { text-decoration: underline; }
 & .part-row:has(.flow-queue-link) { position: relative; cursor: pointer; }
 & .flow-queue-link::after { content: ""; position: absolute; inset: 0; }
+& .flow-later { position: relative; z-index: 1; }
+& .flow-later-options { margin-top: var(--space-2); flex-wrap: wrap; }
+& .flow-queue-head { justify-content: space-between; align-items: center; }
 }

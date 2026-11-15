@@ -1,6 +1,9 @@
+import { Suspense } from "react";
+
 import { SpacesFirstSteps, getViewer } from "@/modules/access";
 import { SpacesToday, TODAY_TITLE } from "@/modules/today";
 import { FlowHome } from "@/spaces/flows/flow-home";
+import { FlowToday } from "@/spaces/flows/flow-today";
 
 export const metadata = { title: TODAY_TITLE };
 
@@ -17,7 +20,11 @@ export default async function TodayPage({
   return (
     <>
       <SpacesFirstSteps />
-      {isTeam && <FlowHome />}
+      {isTeam && (
+        <Suspense fallback={<FlowHome digests={null} />}>
+          <FlowToday />
+        </Suspense>
+      )}
       <SpacesToday isCustomizing={customize === "1"} />
     </>
   );

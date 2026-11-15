@@ -4,103 +4,23 @@
 
 import { hrefOf } from "@/spaces/data/screens";
 
-export interface FlowStep {
-  question: string;
-  // Τι είναι ήδη συμπληρωμένο (από δεδομένα της εφαρμογής).
-  preset: string;
-  // Τι μένει πίσω από το «Περισσότερα».
-  hidden?: string;
-  // Ο σταθμός: κωδικός οθόνης, ή "queue" για αναμονή (σελίδα του οδηγού στη Σήμερα, μετά γραμμή ουράς).
-  station: string;
-  area: string;
-  // Η διαδρομή της οθόνης του σταθμού όταν χρειάζεται id (π.χ. /app/filming/<id>): αν είμαστε ήδη εκεί, μένουμε.
-  stays?: RegExp;
-  // Η αποθήκευση του σταθμού στέλνει εδώ χωρίς τη θέση· ο οδηγός συνεχίζει στο επόμενο βήμα.
-  landsOn?: RegExp;
-  // Το βήμα διαλέγει Πελάτη μέσα στον οδηγό· η επιλογή περνά στο επόμενο βήμα ως ?client=.
-  picksClient?: boolean;
-  // Το κύριο κουμπί του οδηγού υποβάλλει τη φόρμα του σταθμού (μία αποθήκευση, όχι «Επόμενο» χωρίς αποθήκευση).
-  submits?: { form: string; label: string };
-  // Ο σταθμός ανοίγει στη μέρα του γυρίσματος (?date=), αν ο οδηγός την ξέρει.
-  opensOnDate?: boolean;
-  // Το κύριο κουμπί μένει κλειστό μέχρι το Γύρισμα να έχει ό,τι λέει εδώ (από τη βάση, μέσω της σελίδας του).
-  requires?: readonly Need[];
-}
+import { FLOWS, type Flow, type FlowStep, type Need } from "./flow-registry";
 
-export type Need = "crew" | "equipment";
+export {
+  CREW_STEP,
+  FILMING_PAGE,
+  FLOWS,
+  THREAD_PAGE,
+  type Flow,
+  type FlowChoice,
+  type FlowStep,
+  type Need,
+} from "./flow-registry";
 
 export interface FilmingCounts {
   crew: number;
   equipment: number;
 }
-
-export interface Flow {
-  id: string;
-  name: string;
-  area: string;
-  done: string;
-  steps: readonly FlowStep[];
-}
-
-const FILMING_PAGE =
-  /^\/app\/filming\/(?!new$|queue$|mine$|crew-templates$)[^/]+$/;
-
-export const FLOWS: readonly Flow[] = [
-  {
-    id: "stino-gyrisma",
-    name: "Στήνω γύρισμα",
-    area: "Παραγωγή",
-    done: "Το γύρισμα μπήκε στο Ημερολόγιο με ομάδα και εξοπλισμό, και κάθε μέλος το βλέπει στα «Τα Γυρίσματά μου»· οι απαντήσεις της ομάδας θα φανούν στο «Τι πρέπει να κάνω τώρα».",
-    steps: [
-      {
-        question: "Για ποιον Πελάτη είναι το γύρισμα;",
-        preset:
-          "Μόνο Πελάτες με Συμφωνία σε ανοιχτή Περίοδο, με το Πακέτο τους. Ένα πάτημα διαλέγει.",
-        hidden:
-          "Εσωτερική Παραγωγή χωρίς Πελάτη· Πελάτες χωρίς ενεργή Συμφωνία.",
-        station: "B1",
-        area: "Πελάτες",
-        picksClient: true,
-      },
-      {
-        question: "Ποια μέρα και ώρα;",
-        preset:
-          "Ο Πελάτης που διάλεξες, η πρώτη εργάσιμη μέρα μέσα στο ωράριο και τοποθεσία η διεύθυνση του Πελάτη. Έλεγξε και πάτα «Δημιουργία Γυρίσματος».",
-        hidden: "Συμφωνία και είδος γυρίσματος, άλλη τοποθεσία, σημείωση.",
-        station: "E4",
-        area: "Παραγωγή",
-        landsOn: FILMING_PAGE,
-        submits: { form: "e4-form", label: "Δημιουργία Γυρίσματος" },
-      },
-      {
-        question: "Ποιοι πάνε και με τι;",
-        preset:
-          "Μπήκαν τα πρότυπα Συνεργείου και Εξοπλισμού του είδους. Ό,τι συγκρούεται φαίνεται κόκκινο, με το όνομα και τον λόγο. Χωρίς ομάδα και εξοπλισμό δεν προχωράς.",
-        hidden:
-          "Προσθήκη ή αφαίρεση μέλους ή αντικειμένου· ποιος έχει ρεπό ή άδεια (μόνο προειδοποίηση).",
-        station: "E1",
-        area: "Παραγωγή",
-        stays: FILMING_PAGE,
-        requires: ["crew", "equipment"],
-      },
-      {
-        question: "⏳ Η ομάδα απαντά αν μπορεί",
-        preset:
-          "Περιμένουμε να απαντήσει η ομάδα αν μπορεί. Η δουλειά μένει στο «Τι πρέπει να κάνω τώρα» και συνεχίζει από εκεί στο Ημερολόγιο.",
-        station: "queue",
-        area: "Σήμερα",
-      },
-      {
-        question: "Το βλέπει η ομάδα στο Ημερολόγιο;",
-        preset: "Το Ημερολόγιο ανοίγει στην εβδομάδα του γυρίσματος.",
-        hidden: "Σύνδεση με Google Ημερολόγιο.",
-        station: "A5",
-        area: "Σήμερα",
-        opensOnDate: true,
-      },
-    ],
-  },
-];
 
 export const flowOf = (id: string | null | undefined): Flow | undefined =>
   FLOWS.find((flow) => flow.id === id);
@@ -206,8 +126,9 @@ export const resumeHref = (
 ): string | null => {
   const target = flow.steps[step - 1];
   if (!target) return null;
-  if (target.landsOn?.test(at.pathname))
-    return stepHref(flow, step + 1, { pathname: at.pathname });
+  const forward = forwardOf(flow, step);
+  if (forward !== null && target.landsOn?.test(at.pathname))
+    return stepHref(flow, forward, { pathname: at.pathname });
   if (isStationPath(target, at.pathname))
     return withPlace(
       at.search ? `${at.pathname}?${at.search}` : at.pathname,
@@ -252,8 +173,50 @@ export const missingAtEnd = (
 export const nextAfter = (flow: Flow, step: number): number =>
   Math.min(step + 1, flow.steps.length);
 
+// Το βήμα του «Επόμενο»: το `then` του, αλλιώς το επόμενο που δεν ανοίγει μόνο από επιλογή· null = τέλος.
+export const nextOf = (flow: Flow, step: number): number | null => {
+  const then = flow.steps[step - 1]?.then;
+  if (then !== undefined) return then;
+  const later = flow.steps.findIndex(
+    (item, index) => index >= step && item.isBranch !== true,
+  );
+  return later === -1 ? null : later + 1;
+};
+
+// Μετά την αποθήκευση του σταθμού: το επόμενο βήμα, ή η κύρια επιλογή όταν όλα τα επόμενα ανοίγουν από επιλογή.
+export const forwardOf = (flow: Flow, step: number): number | null =>
+  nextOf(flow, step) ?? flow.steps[step - 1]?.choices?.[0]?.to ?? null;
+
+const leadsTo = (flow: Flow, from: number, to: number): boolean =>
+  nextOf(flow, from) === to ||
+  (flow.steps[from - 1]?.choices?.some((choice) => choice.to === to) ?? false);
+
+// Το «Πίσω»: το πρώτο προηγούμενο βήμα που οδηγεί εδώ· null στο βήμα 1.
+export const prevOf = (flow: Flow, step: number): number | null => {
+  if (step <= 1) return null;
+  const from = flow.steps.findIndex(
+    (_, index) => index + 1 < step && leadsTo(flow, index + 1, step),
+  );
+  return from === -1 ? step - 1 : from + 1;
+};
+
+// Ο οδηγός που γυρνά στο βήμα 1 δεν έχει τελευταίο βήμα: τελειώνει όταν αδειάσει η ουρά του.
 export const isLast = (flow: Flow, step: number): boolean =>
-  step === flow.steps.length;
+  flow.isLoop !== true && nextOf(flow, step) === null;
+
+// «2α», «⏳3» από το flow.md, αλλιώς η θέση.
+export const markOf = (flow: Flow, step: number): string =>
+  flow.steps[step - 1]?.mark ?? String(step);
+
+const depthOfMark = (mark: string): number =>
+  Number(mark.replace(/\D/g, "")) || 1;
+
+// Για το «Βήμα n από N» και τον μετρητή: πόσο βαθιά είναι το βήμα και πόσα βήματα έχει η πιο μακριά διαδρομή.
+export const depthOf = (flow: Flow, step: number): number =>
+  depthOfMark(markOf(flow, step));
+
+export const totalOf = (flow: Flow): number =>
+  Math.max(...flow.steps.map((_, index) => depthOf(flow, index + 1)));
 
 export interface FlowClient {
   id: string;
@@ -280,4 +243,33 @@ export const parseCounts = (raw: string): FilmingCounts | null => {
   return Number.isInteger(crew) && Number.isInteger(equipment)
     ? { crew, equipment }
     : null;
+};
+
+// Βήμα με «Ξεκίνα από τον πιο παλιό»: η γραμμή που περιμένει πιο πολύ ανοίγει κατευθείαν εκεί που στέλνει ο σταθμός
+// (π.χ. η Συνομιλία του), στο επόμενο βήμα. null = δεν ταιριάζει, ο οδηγός δείχνει τις επιλογές του.
+export const oldestHref = (
+  flow: Flow,
+  step: number,
+  href: string | undefined,
+): string | null => {
+  const target = flow.steps[step - 1];
+  const forward = forwardOf(flow, step);
+  if (!href || !target?.landsOn || forward === null) return null;
+  return target.landsOn.test(href.split("?")[0])
+    ? withPlace(href, flow, forward)
+    : null;
+};
+
+// Το κείμενο του κύριου κουμπιού όταν δεν υποβάλλει φόρμα ούτε δείχνει επιλογές.
+export const primaryLabelOf = (
+  flow: Flow,
+  step: number,
+  isFinished: boolean,
+): string => {
+  const current = flow.steps[step - 1];
+  if (isFinished) return "Τέλος";
+  if (current && isWait(current)) return "Εντάξει, περιμένω";
+  return flow.isLoop && nextOf(flow, step) === 1
+    ? (flow.nextLabel ?? "Επόμενο")
+    : "Επόμενο";
 };

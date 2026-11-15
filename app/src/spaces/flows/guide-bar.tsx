@@ -11,17 +11,26 @@ import { Meter } from "@/spaces/kit/parts";
 import { useFilmingCounts } from "./filming-counts";
 import { GuideClients } from "./guide-clients";
 import {
+  dateOf,
+  isAtStationOf,
+  PrimaryAction,
+  type GuideProps,
+} from "./guide-primary";
+import {
+  depthOf,
   flowOf,
   isLast,
   isWait,
+  markOf,
   missingAtEnd,
   missingLine,
   missingOf,
   parseStep,
+  prevOf,
   requiringStep,
   resumeHref,
   stepHref,
-  type FilmingCounts,
+  totalOf,
   type Flow,
 } from "./flows";
 import {
@@ -31,12 +40,11 @@ import {
   readActive,
   readActiveRaw,
   rememberActive,
-  rememberDate,
   rememberFilming,
   subscribeParked,
-  unpark,
   type FilmingPlace,
 } from "./parked";
+import { useJobDigest } from "./use-job-digest";
 
 import "./flows.css";
 
@@ -54,104 +62,14 @@ function useResume(hasPlace: boolean, pathname: string, search: string) {
   }, [hasPlace, pathname, search, router]);
 }
 
-interface GuideProps {
-  flow: Flow;
-  step: number;
-  pathname: string;
-  // Μέλη και αντικείμενα του Γυρίσματος της σελίδας (null = δεν είμαστε σε Γύρισμα).
-  counts: FilmingCounts | null;
-}
-
 // Το Γύρισμα που κράτησε η καρτέλα (στον server: κανένα).
 function useStoredFilming(): FilmingPlace | null {
-  const raw = useSyncExternalStore(subscribeParked, readActiveRaw, () => "null");
-  return parseActive(raw)?.filming ?? null;
-}
-
-// Η μέρα του γυρίσματος: από τη θέση της καρτέλας, ή από το Ημερολόγιο που ήδη δείχνει τη μέρα.
-const dateOf = (): string | undefined =>
-  readActive()?.date ??
-  new URLSearchParams(window.location.search).get("date") ??
-  undefined;
-
-// Πριν υποβληθεί η φόρμα του σταθμού, ο οδηγός κρατά τη μέρα της (για το Ημερολόγιο του τελευταίου βήματος).
-const keepFormDate = (flow: Flow, step: number, formId: string) => {
-  const form = document.getElementById(formId);
-  const field =
-    form instanceof HTMLFormElement ? form.elements.namedItem("date") : null;
-  if (field instanceof HTMLInputElement && field.value)
-    rememberDate(flow.id, step, field.value);
-};
-
-const isAtStationOf = (flow: Flow, step: number, pathname: string) =>
-  stepHref(flow, step, { pathname }).split("?")[0] === pathname;
-
-// Το ένα κύριο κουμπί του βήματος: υποβολή της φόρμας του σταθμού, «Εντάξει, περιμένω», «Επόμενο» ή «Τέλος».
-// Στο βήμα επιλογής Πελάτη κύρια είναι η λίστα, χωρίς κουμπί.
-function PrimaryAction({ flow, step, pathname, counts }: GuideProps) {
-  const router = useRouter();
-  const current = flow.steps[step - 1];
-  const goHome = () => {
-    forgetActive();
-    router.push("/app");
-  };
-  const handleNext = () => {
-    if (isLast(flow, step)) {
-      unpark(flow.id);
-      return goHome();
-    }
-    if (isWait(current)) {
-      park({
-        job: flow.id,
-        step: step + 1,
-        reason: "wait",
-        at: Date.now(),
-        date: dateOf(),
-        filming: readActive()?.filming,
-      });
-      return goHome();
-    }
-    router.push(stepHref(flow, step + 1, { pathname, date: dateOf() }));
-  };
-  if (current.picksClient) return null;
-  const { submits } = current;
-  if (submits && isAtStationOf(flow, step, pathname))
-    return (
-      <button
-        type="submit"
-        form={submits.form}
-        className="button flow-guide-submit"
-        data-primary="true"
-        onClick={() => keepFormDate(flow, step, submits.form)}
-      >
-        {submits.label}
-      </button>
-    );
-  if (submits)
-    return (
-      <Link
-        className="button"
-        data-primary="true"
-        href={stepHref(flow, step, { pathname })}
-      >
-        Άνοιξε: {labelOf(current.station)}
-      </Link>
-    );
-  return (
-    <button
-      type="button"
-      className="button"
-      data-primary="true"
-      disabled={missingOf(current.requires, counts).length > 0}
-      onClick={handleNext}
-    >
-      {isLast(flow, step)
-        ? "Τέλος"
-        : isWait(current)
-          ? "Εντάξει, περιμένω"
-          : "Επόμενο"}
-    </button>
+  const raw = useSyncExternalStore(
+    subscribeParked,
+    readActiveRaw,
+    () => "null",
   );
+  return parseActive(raw)?.filming ?? null;
 }
 
 function GuideActions(props: GuideProps) {
@@ -173,6 +91,7 @@ function GuideActions(props: GuideProps) {
   const missing = current.requires
     ? missingLine(missingOf(current.requires, counts))
     : null;
+  const back = prevOf(flow, step);
   const showsStationLink =
     !isAtStationOf(flow, step, pathname) &&
     !current.submits &&
@@ -190,8 +109,8 @@ function GuideActions(props: GuideProps) {
           Άνοιξε: {labelOf(current.station)}
         </Link>
       )}
-      {step > 1 && (
-        <Link className="button" href={stepHref(flow, step - 1, { pathname })}>
+      {back !== null && (
+        <Link className="button" href={stepHref(flow, back, { pathname })}>
           Πίσω
         </Link>
       )}
@@ -217,26 +136,30 @@ function DoneLine({ flow }: { flow: Flow }) {
     <p className="flow-guide-missing" role="status">
       {missing} —{" "}
       <Link href={stepHref(flow, back, { pathname: filming.path })}>
-        Πίσω στο βήμα {back}
+        Πίσω στο βήμα {markOf(flow, back)}
       </Link>
     </p>
   );
 }
 
 function Guide(props: GuideProps) {
-  const { flow, step } = props;
+  const { flow, step, isFinished } = props;
   const current = flow.steps[step - 1];
   return (
     <div data-spaces className="flow-guide">
       <Panel
         label={`Οδηγός · ${flow.name}`}
-        aside={`Βήμα ${step} από ${flow.steps.length}`}
+        aside={`Βήμα ${markOf(flow, step)} από ${totalOf(flow)}`}
       >
-        <Meter label={current.area} used={step} total={flow.steps.length} />
+        <Meter
+          label={current.area}
+          used={depthOf(flow, step)}
+          total={totalOf(flow)}
+        />
         <p className="flow-guide-question">{current.question}</p>
         <p className="flow-guide-preset">{current.preset}</p>
         {current.picksClient && <GuideClients flow={flow} step={step} />}
-        {isLast(flow, step) && <DoneLine flow={flow} />}
+        {isFinished && <DoneLine flow={flow} />}
         {current.hidden && (
           <details className="flow-guide-more">
             <summary>Περισσότερα</summary>
@@ -249,25 +172,50 @@ function Guide(props: GuideProps) {
   );
 }
 
+interface PlacedProps {
+  flow: Flow;
+  step: number;
+  pathname: string;
+}
+
+// Ο οδηγός που γυρνά: στο βήμα 1 διαβάζει τον κανόνα ουράς του· χωρίς γραμμή που περιμένει, τελείωσε.
+function PlacedGuide({ flow, step, pathname }: PlacedProps) {
+  const counts = useFilmingCounts();
+  const digest = useJobDigest(flow.id, flow.isLoop === true && step === 1);
+  const isFinished = isLast(flow, step) || digest?.count === 0;
+  // Στη σελίδα του Γυρίσματος ο οδηγός κρατά ποιο είναι και πόσα έχει, για το τέλος και την ουρά.
+  const crew = counts?.crew;
+  const equipment = counts?.equipment;
+  useEffect(() => {
+    rememberActive(flow.id, step);
+  }, [flow, step]);
+  useEffect(() => {
+    if (crew !== undefined && equipment !== undefined)
+      rememberFilming(flow.id, step, { path: pathname, crew, equipment });
+  }, [flow, step, pathname, crew, equipment]);
+  return (
+    <Guide
+      flow={flow}
+      step={step}
+      pathname={pathname}
+      counts={counts}
+      isFinished={isFinished}
+      oldest={digest?.oldest?.href}
+    />
+  );
+}
+
 // Ο οδηγός πάνω από κάθε οθόνη όσο το URL έχει ?job=&step=. Χωρίς θέση ξαναμπαίνει μόνο από τη θέση της καρτέλας.
 export function GuideBar() {
   const params = useSearchParams();
   const pathname = usePathname();
   const flow = flowOf(params.get("job"));
-  const step = flow ? parseStep(params.get("step"), flow) : 0;
   useResume(flow !== undefined, pathname, params.toString());
-  const counts = useFilmingCounts();
-  useEffect(() => {
-    if (flow) rememberActive(flow.id, step);
-  }, [flow, step]);
-  // Στη σελίδα του Γυρίσματος ο οδηγός κρατά ποιο είναι και πόσα έχει, για το τέλος και την ουρά.
-  const crew = counts?.crew;
-  const equipment = counts?.equipment;
-  useEffect(() => {
-    if (flow && crew !== undefined && equipment !== undefined)
-      rememberFilming(flow.id, step, { path: pathname, crew, equipment });
-  }, [flow, step, pathname, crew, equipment]);
   return flow ? (
-    <Guide flow={flow} step={step} pathname={pathname} counts={counts} />
+    <PlacedGuide
+      flow={flow}
+      step={parseStep(params.get("step"), flow)}
+      pathname={pathname}
+    />
   ) : null;
 }
