@@ -55,11 +55,12 @@ export const allowedTabs = (
 const isOpen = (opportunity: Pick<Opportunity, "outcome">): boolean =>
   opportunity.outcome === "open";
 
-// Σχέση με τον Πελάτη: Υποψήφιος → Πρόταση → Συμφωνία. Η «Ανανέωση» μένει να έρθει: η βάση δεν δένει ακόμα
-// Ευκαιρία με τη Συμφωνία που ανανεώνει, οπότε δεν γίνεται ποτέ τρέχουσα.
+// Σχέση με τον Πελάτη: Υποψήφιος → Πρόταση → Συμφωνία → Ανανέωση. Η «Ανανέωση» γίνεται τρέχουσα όταν η βάση λέει
+// ότι μηνιαία Συμφωνία λήγει μέσα στο παράθυρο ανανέωσης ή υπάρχει ανοιχτή Ευκαιρία ανανέωσης (sales_client_renewal_due).
 export const relationshipSteps = (
   opportunities: readonly Pick<Opportunity, "outcome">[],
   agreements: readonly Pick<AgreementRow, "state">[],
+  isRenewalDue = false,
 ): Step[] => {
   const hasAgreement = agreements.some(
     (a) => a.state === "active" || a.state === "signed",
@@ -67,7 +68,7 @@ export const relationshipSteps = (
   const hasProposal =
     agreements.some((a) => a.state === "proposal") ||
     opportunities.some(isOpen);
-  const index = hasAgreement ? 2 : hasProposal ? 1 : 0;
+  const index = isRenewalDue ? 3 : hasAgreement ? 2 : hasProposal ? 1 : 0;
   const labels = ["Υποψήφιος", "Πρόταση", "Συμφωνία", "Ανανέωση"];
   return labels.map((label, i) => ({
     label,

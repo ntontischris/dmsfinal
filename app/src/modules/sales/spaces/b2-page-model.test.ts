@@ -11,7 +11,7 @@ import {
   nextStepOf,
   resolveClientTab,
   stageOf,
-  threeSteps,
+  shownSteps,
 } from "./b2-page-model";
 
 const opportunity = (overrides: Partial<Opportunity> = {}): Opportunity => ({
@@ -175,15 +175,26 @@ describe("moneySentence", () => {
   });
 });
 
-describe("threeSteps", () => {
+describe("shownSteps", () => {
   it("should drop «Ανανέωση» and keep the current stage", () => {
-    const steps = threeSteps(relationshipSteps([opportunity()], []));
+    const steps = shownSteps(relationshipSteps([opportunity()], []));
     expect(steps.map((step) => step.label)).toEqual([
       "Υποψήφιος",
       "Πρόταση",
       "Συμφωνία",
     ]);
     expect(stageOf(steps)).toBe("Πρόταση");
+  });
+
+  it("should light «Ανανέωση» as the current stage when a renewal is due", () => {
+    const steps = shownSteps(relationshipSteps([], [], true));
+    expect(steps.map((step) => step.state)).toEqual([
+      "done",
+      "done",
+      "done",
+      "current",
+    ]);
+    expect(stageOf(steps)).toBe("Ανανέωση");
   });
 
   it("should fall back to «Υποψήφιος» without a current step", () => {

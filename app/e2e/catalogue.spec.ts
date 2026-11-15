@@ -240,23 +240,40 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
     /40,00\s€/,
   );
 
-  // Μήνας, έξοδα και ώρες είναι μία φόρμα σε δύο κάρτες· το κουμπί της κάρτας «Έξοδα του μήνα» την αποθηκεύει.
-  const months = panel(page, "Έξοδα του μήνα");
-  await control(months, "Μήνας").selectOption({ index: 1 });
-  // Η ετικέτα των πεδίων παίρνει «εκκρεμεί» όσο είναι άδεια, γι' αυτό τα πεδία με το id τους.
-  await page.locator("#o6-expenses").fill("9900");
-  await page.locator("#o6-hours").fill("220");
-  await button(months, "Αποθήκευση").click();
-  await expect(months.getByRole("status")).toContainText(
-    "Αποθηκεύτηκε. Ισχύει από τον",
-  );
-  await expect(months.locator("li", { hasText: "Επόμενος" })).toContainText(
-    /45,00\s€/,
-  );
+  // Τα Έξοδα και οι ώρες γράφονται μόνο στην I6 (d7): η O6 δείχνει τους μήνες και οδηγεί εκεί.
+  const months = panel(page, "Έξοδα και ώρες");
   await expect(months.locator("li", { hasText: "Τρέχων" })).toContainText(
     /40,00\s€/,
   );
+  await expect(page.locator("#o6-expenses")).toHaveCount(0);
+  await months.getByRole("link", { name: "Έξοδα και Κόστος ώρας" }).click();
+  await expect(page).toHaveURL(/\/app\/finance\/expenses$/);
   await shot(page, "o6-owner");
+
+  // Ο επόμενος μήνας στην I6: μία γραμμή 9.900 € και 220 ώρες → 45,00 € την ώρα. Αν τον έγραψε ήδη το άλλο project,
+  // αλλάζει η ίδια γραμμή (η αποθήκευση αντικαθιστά όλη την ανάλυση), άρα το αποτέλεσμα είναι πάντα το ίδιο.
+  await page.locator("nav.tabs a.tab").last().click();
+  await expect(page).toHaveURL(/\?month=\d{4}-\d{2}$/);
+  if ((await page.getByLabel("Ποσό γραμμής").count()) === 0) {
+    await page.getByRole("button", { name: "Προσθήκη κατηγορίας" }).click();
+    await page.getByRole("button", { name: "Προσθήκη εξόδου" }).click();
+    await page.getByRole("button", { name: "Προσθήκη γραμμής" }).click();
+  }
+  await page.getByLabel("Ποσό γραμμής").first().fill("9900");
+  await page.getByLabel("Παραγωγικές ώρες").fill("220");
+  await page.getByRole("button", { name: "Αποθήκευση", exact: true }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Αποθηκεύτηκε" }),
+  ).toBeVisible();
+  const history = panel(page, "Ιστορικό Κόστους ώρας");
+  await expect(history.locator("tr", { hasText: "μελλοντικός" }).first()).toContainText(
+    /45,00\s€/,
+  );
+  await expect(history.locator("tr", { hasText: "τρέχων" })).toContainText(
+    /40,00\s€/,
+  );
+
+  await page.goto("/app/settings/finance");
 
   const range = panel(page, "Εύρος τιμής και Υπέρβαση κόστους");
   const minimum = rowTitled(range, "Ελάχιστη");

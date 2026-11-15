@@ -2,12 +2,14 @@ import { createSupabase } from "@/lib/supabase/server";
 
 import { read, type ReadResult } from "./read";
 import type {
+  EquipmentBooking,
   EquipmentCategory,
   EquipmentItemDetail,
   EquipmentItemRow,
   EquipmentTemplate,
 } from "./types";
 import {
+  bookingsViewSchema,
   categoriesViewSchema,
   itemDetailSchema,
   itemsViewSchema,
@@ -72,5 +74,16 @@ export async function listTemplates(): Promise<
     "listEquipmentTemplates",
     supabase.rpc("equipment_templates_view"),
     (data) => templatesViewSchema.parse(data),
+  );
+}
+
+// Οι ανοιχτές Δεσμεύσεις όλων των αντικειμένων που δεν έχουν τελειώσει (για το μητρώο F1).
+export async function listBookings(): Promise<ReadResult<EquipmentBooking[]>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "listEquipmentBookings",
+    supabase.rpc("equipment_bookings_view", {}),
+    (data) => bookingsViewSchema.parse(data),
   );
 }

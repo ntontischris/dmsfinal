@@ -77,3 +77,11 @@ export const pickerGroupsOf = (
   }
   return [...groups.values()];
 };
+
+// «Ελεύθερο στις» (F1): Διαθέσιμο και χωρίς ανοιχτή Δέσμευση εκείνη τη μέρα (Ώρα Ελλάδας, «ΕΕΕΕ-ΜΜ-ΗΗ»).
+export const isFreeOn = (
+  item: EquipmentItemRow,
+  busyDays: Readonly<Record<string, readonly string[]>>,
+  day: string,
+): boolean =>
+  item.status === "available" && !(busyDays[item.id] ?? []).includes(day);

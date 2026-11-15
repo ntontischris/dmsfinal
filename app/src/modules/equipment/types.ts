@@ -96,3 +96,12 @@ export interface EquipmentReservation {
   state: "pending" | "scheduled" | "done" | "no_show" | "cancelled" | "rejected";
   conflict: boolean;
 }
+
+// Ανοιχτή Δέσμευση για το μητρώο (F1): ποιο αντικείμενο, πότε, και ο σύνδεσμος στο Γύρισμα μόνο όπου το βλέπει ο Χρήστης.
+export interface EquipmentBooking {
+  itemId: string;
+  filmingId: string | null;
+  startsAt: string;
+  hours: number;
+  state: "pending" | "scheduled";
+}

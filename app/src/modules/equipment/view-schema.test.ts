@@ -99,4 +99,31 @@ describe("itemDetailSchema", () => {
     expect(detail.templates).toEqual([{ id: ITEM_ID, name: "Ζωντανή" }]);
     expect(detail.history[0]?.actorName).toBe("Γιώργος Ιδιοκτήτης");
   });
+
+  it("should take the conflict flag of the next reservation from the reservations list", () => {
+    const next = {
+      filmingId: CATEGORY_ID,
+      startsAt: "2026-12-01T08:00:00+00:00",
+      hours: 2,
+      state: "scheduled",
+    };
+    const detail = itemDetailSchema.parse({
+      id: ITEM_ID,
+      name: "Gimbal",
+      code: null,
+      note: null,
+      status: "available",
+      status_note: null,
+      category_id: CATEGORY_ID,
+      category_name: "Στήριξη και σταθεροποίηση",
+      category_retired: false,
+      updated_at: "2026-10-09T10:00:00Z",
+      updated_by_name: null,
+      templates: [],
+      history: [],
+      nextReservation: next,
+      reservations: [{ ...next, conflict: true }],
+    });
+    expect(detail.nextReservation).toEqual({ ...next, conflict: true });
+  });
 });

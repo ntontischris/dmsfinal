@@ -134,6 +134,11 @@ export function ClientSignature({ agreement }: { agreement: ClientAgreement }) {
           {fmtDate(agreement.signature.signedOn)}
         </dd>
       </dl>
+      {agreement.document && (
+        <p>
+          <a href={`/app/agreements/${agreement.id}/pdf`}>Λήψη PDF</a>
+        </p>
+      )}
     </Panel>
   );
 }

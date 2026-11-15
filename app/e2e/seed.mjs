@@ -467,6 +467,28 @@ for (const P of ["desktop", "mobile"]) {
 }
 console.log("seed: Σήμερα πελάτη");
 
+// ───────────── Υπογραφή μέσα στην εφαρμογή (b11): Πελάτης με Χρήστη πελάτη «Πλήρης» για το e2e/agreements-client-sign.spec.ts ─────────────
+// Το email του Χρήστη είναι το email του κύριου προσώπου, άρα και του Υπογράφοντα της πρότασης.
+for (const P of ["desktop", "mobile"]) {
+  const clientName = `Πελάτης Υπογραφής ${P}`;
+  const email = `insign.${P}@example.com`;
+  await seedProposalClient({
+    name: clientName,
+    email,
+    contactName: "Θεόδωρος Υπογραφής",
+    managerId: ANNA,
+    titles: [`Υπογραφή εντός ${P}`],
+  });
+  const { data: clientRow, error: clientError } = await admin.from("clients").select("id").eq("name", clientName).single();
+  if (clientError) throw clientError;
+  const { data: created, error: userError } = await admin.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
+  if (userError) throw userError;
+  await insertPlain("client_users", {
+    client_id: clientRow.id, user_id: created.user.id, name: "Θεόδωρος Υπογραφής", role_id: fullClientRole.id, is_current: true,
+  });
+}
+console.log("seed: Υπογραφή μέσα στην εφαρμογή");
+
 // ───────────── Γνώση: Πελάτης με Χρήστη πελάτη «Πλήρης» για το e2e/knowledge.spec.ts ─────────────
 for (const P of ["desktop", "mobile"]) {
   const clientId = await insertRow("clients", {

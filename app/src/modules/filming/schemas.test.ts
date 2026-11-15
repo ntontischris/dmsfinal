@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   bookSchema,
   crewRespondSchema,
+  damageSchema,
   dateSchema,
   decideCancelSchema,
   detailsSchema,
@@ -151,5 +152,27 @@ describe("detailsSchema", () => {
     expect(firstMessage(detailsSchema.safeParse({ ...base, filesUrl: "http://example.com" }))).toBe(
       "Ο σύνδεσμος αρχείων πρέπει να ξεκινά με https://",
     );
+  });
+});
+
+describe("damageSchema", () => {
+  const ITEM_ID = "33333333-3333-4333-8333-333333333333";
+
+  it("keeps the trimmed note", () => {
+    const result = damageSchema.safeParse({
+      filmingId: FILMING_ID,
+      itemId: ITEM_ID,
+      note: "  Σπασμένη οθόνη ",
+    });
+    expect(result.success && result.data.note).toBe("Σπασμένη οθόνη");
+  });
+
+  it("asks what happened when the note is blank", () => {
+    const result = damageSchema.safeParse({
+      filmingId: FILMING_ID,
+      itemId: ITEM_ID,
+      note: "   ",
+    });
+    expect(firstMessage(result)).toBe("Γράψε τι έπαθε το αντικείμενο.");
   });
 });

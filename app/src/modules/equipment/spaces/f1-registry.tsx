@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
@@ -16,14 +17,16 @@ import {
   type RegistryRow,
   type UnitGroup,
 } from "../types";
+import type { BookingIndex, NextBookingView } from "./f1-bookings";
 import { F1Categories } from "./f1-categories";
 import { F1NewItem } from "./f1-new-item";
-import { statusTone } from "./f-model";
+import { isFreeOn, statusTone } from "./f-model";
 
 interface F1RegistryProps {
   canManage: boolean;
   items: readonly EquipmentItemRow[];
   categories: readonly EquipmentCategory[];
+  bookings: BookingIndex;
 }
 
 const ALL = "all";
@@ -36,7 +39,20 @@ const rowKey = (row: RegistryRow): string =>
     ? row.item.id
     : (row.group.units[0]?.id ?? row.group.baseName);
 
-function ItemLine({ item }: { item: EquipmentItemRow }) {
+// Το επόμενο Γύρισμα του αντικειμένου· σύνδεσμος μόνο όπου ο Χρήστης βλέπει το Γύρισμα.
+function NextBooking({ view }: { view: NextBookingView | undefined }) {
+  if (!view) return <span className="muted">Κανένα</span>;
+  const text = view.isPending ? `${view.label} (αναμένει έγκριση)` : view.label;
+  return view.href ? <Link href={view.href}>{text}</Link> : <span>{text}</span>;
+}
+
+function ItemLine({
+  item,
+  next,
+}: {
+  item: EquipmentItemRow;
+  next: NextBookingView | undefined;
+}) {
   return (
     <tr>
       <td data-label="Αντικείμενο">
@@ -55,15 +71,24 @@ function ItemLine({ item }: { item: EquipmentItemRow }) {
           {STATUS_LABELS[item.status]}
         </Badge>
       </td>
+      <td data-label="Επόμενο Γύρισμα">
+        <NextBooking view={next} />
+      </td>
     </tr>
   );
 }
 
 // Ομάδα μονάδων (όπως η σημερινή σελίδα): μία γραμμή με το πλήθος, που ανοίγει για κάθε μονάδα με την Κατάστασή της.
-function GroupLine({ group }: { group: UnitGroup }) {
+function GroupLine({
+  group,
+  next,
+}: {
+  group: UnitGroup;
+  next: BookingIndex["next"];
+}) {
   return (
     <tr>
-      <td colSpan={3} data-label="Μονάδες">
+      <td colSpan={4} data-label="Μονάδες">
         <details>
           <summary>
             <strong>{groupLabel(group)}</strong>{" "}
@@ -75,7 +100,14 @@ function GroupLine({ group }: { group: UnitGroup }) {
                 key={unit.id}
                 href={hrefOf("F2", { id: unit.id })}
                 title={unit.name}
-                sub={unit.code ?? undefined}
+                sub={
+                  [
+                    unit.code,
+                    next[unit.id] && `Επόμενο: ${next[unit.id]?.label}`,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || undefined
+                }
                 aside={
                   <Badge tone={statusTone(unit.status)}>
                     {STATUS_LABELS[unit.status]}
@@ -92,14 +124,23 @@ function GroupLine({ group }: { group: UnitGroup }) {
 
 // Το μητρώο (prototype `f1-registry.tsx`) με τα πραγματικά αντικείμενα. Χωρίς φίλτρο Κατάστασης κρύβονται τα αποσυρμένα.
 // Οι μονάδες του ίδιου αντικειμένου («… #1», «… #2») ομαδοποιούνται, όπως στη σημερινή σελίδα.
-export function F1Registry({ canManage, items, categories }: F1RegistryProps) {
+export function F1Registry({
+  canManage,
+  items,
+  categories,
+  bookings,
+}: F1RegistryProps) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>(ALL);
   const [status, setStatus] = useState<EquipmentStatus | typeof ALL>(ALL);
   const [isAdding, setIsAdding] = useState(false);
+  const [freeOn, setFreeOn] = useState("");
 
-  const visible = groupEquipmentUnits(items, (item) =>
-    matchesItemFilter(item, { query, categoryId: category, status }),
+  const visible = groupEquipmentUnits(
+    items,
+    (item) =>
+      matchesItemFilter(item, { query, categoryId: category, status }) &&
+      (freeOn === "" || isFreeOn(item, bookings.busyDays, freeOn)),
   );
 
   return (
@@ -177,7 +218,22 @@ export function F1Registry({ canManage, items, categories }: F1RegistryProps) {
                 </option>
               ))}
             </select>
+            <label className="muted">
+              <span>Ελεύθερο στις </span>
+              <input
+                className="input"
+                type="date"
+                value={freeOn}
+                onChange={(event) => setFreeOn(event.target.value)}
+              />
+            </label>
           </div>
+          {freeOn !== "" && (
+            <p className="muted">
+              Δείχνει μόνο ό,τι είναι Διαθέσιμο και δεν έχει ανοιχτό Γύρισμα
+              εκείνη τη μέρα.
+            </p>
+          )}
           {visible.length === 0 ? (
             <p className="muted">Τίποτα δεν ταιριάζει με τα φίλτρα.</p>
           ) : (
@@ -188,14 +244,23 @@ export function F1Registry({ canManage, items, categories }: F1RegistryProps) {
                     <th>Αντικείμενο</th>
                     <th>Κατηγορία</th>
                     <th>Κατάσταση</th>
+                    <th>Επόμενο Γύρισμα</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visible.map((row) =>
                     row.kind === "item" ? (
-                      <ItemLine key={rowKey(row)} item={row.item} />
+                      <ItemLine
+                        key={rowKey(row)}
+                        item={row.item}
+                        next={bookings.next[row.item.id]}
+                      />
                     ) : (
-                      <GroupLine key={rowKey(row)} group={row.group} />
+                      <GroupLine
+                        key={rowKey(row)}
+                        group={row.group}
+                        next={bookings.next}
+                      />
                     ),
                   )}
                 </tbody>

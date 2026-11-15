@@ -39,6 +39,8 @@ export interface ClientDetail {
   legalName: string;
   city: string;
   afm: string | null;
+  address: string;
+  filmingLocation: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
@@ -47,6 +49,12 @@ export interface ClientDetail {
   archivedAt: string | null;
   mergedIntoId: string | null;
   createdAt: string;
+}
+// «Υπενθύμισέ με»: προσωπική υπενθύμιση του χρήστη πάνω σε Πελάτη (μέρα YYYY-MM-DD + σημείωση).
+export interface ClientReminder {
+  id: string;
+  remindOn: string;
+  note: string;
 }
 export interface Opportunity {
   id: string;

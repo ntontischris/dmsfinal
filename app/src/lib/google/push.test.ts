@@ -81,6 +81,26 @@ describe("pushOutbox", () => {
     expect(doneCalls(calls)).toEqual([{ p_id: 1, p_event_id: null, p_etag: null, p_error: null, p_permanent: false }]);
   });
 
+  it("deletes the stable id when no link was recorded, so an event written by a superseded row is not left behind", async () => {
+    const { ctx, calls } = context([
+      item({ op: "delete", eventId: null, event: null }),
+    ]);
+    await pushOutbox(ctx);
+    expect(ctx.api.deleteEvent).toHaveBeenCalledWith("cal-1", STABLE_ID);
+    expect(doneCalls(calls)[0]).toMatchObject({
+      p_event_id: null,
+      p_error: null,
+    });
+  });
+
+  it("deletes the linked event, not the stable id, when a link exists", async () => {
+    const { ctx } = context([
+      item({ op: "delete", eventId: "ev-1", event: null }),
+    ]);
+    await pushOutbox(ctx);
+    expect(ctx.api.deleteEvent).toHaveBeenCalledWith("cal-1", "ev-1");
+  });
+
   it("finishes without calling Google when the entity no longer exists", async () => {
     const { ctx, calls } = context([item({ event: null })]);
     await pushOutbox(ctx);

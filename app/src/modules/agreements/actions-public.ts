@@ -1,9 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
 import type { z } from "zod";
-
-import { createSupabase } from "@/lib/supabase/server";
 
 import {
   changesSchema,
@@ -11,45 +8,13 @@ import {
   requestCodeSchema,
   signSchema,
 } from "./schemas";
+import { callSignRpc as callPublic, FAILED, visitor } from "./sign-rpc";
 import type { PublicResult } from "./types";
-import { publicResultSchema } from "./view-schema";
 
 // Οι ενέργειες του πελάτη στη D5. Ανώνυμες: μιλούν μόνο στα agreement_public_*, με token.
 // Δεν είναι form actions (η ροή υπογραφής έχει δικά της βήματα στον browser) και δεν κάνουν
 // revalidate ή redirect. Ποτέ exception: κάθε αποτυχία γίνεται {status}.
 // Το token και ο κωδικός δεν καταγράφονται πουθενά, ούτε στα σφάλματα.
-
-const FAILED: PublicResult = { status: "error" };
-const MAX_IP = 64;
-const MAX_AGENT = 300;
-
-// Η διεύθυνση του επισκέπτη: η πρώτη τιμή του x-forwarded-for (πίσω από proxy), αλλιώς x-real-ip.
-async function visitor(): Promise<{ ip: string; agent: string }> {
-  const list = await headers();
-  const forwarded = list.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = forwarded || list.get("x-real-ip")?.trim() || "";
-  return {
-    ip: ip.slice(0, MAX_IP),
-    agent: (list.get("user-agent") ?? "").slice(0, MAX_AGENT),
-  };
-}
-
-async function callPublic(
-  name: string,
-  args: Record<string, unknown>,
-): Promise<PublicResult> {
-  const supabase = await createSupabase();
-  if (!supabase) return FAILED;
-  const { data, error } = await supabase.rpc(name, args);
-  if (error) {
-    console.error("agreements public", error.code);
-    return FAILED;
-  }
-  const parsed = publicResultSchema.safeParse(data);
-  if (parsed.success) return parsed.data;
-  console.error("agreements public", "unreadable answer");
-  return FAILED;
-}
 
 // Το λάθος φόρμας που ξέρει να πει ο πελάτης (όνομα, όροι, μήνυμα) γίνεται το αντίστοιχο status· τα υπόλοιπα «error».
 const invalidInput = (

@@ -8,11 +8,13 @@ import {
   parseSeenAt,
   parseSnoozed,
   parseTodayCounts,
+  parseTodayKpis,
   parseTodayMoney,
   parseTodayProgramme,
   parseTodayTeam,
   type CardData,
   type TodayCounts,
+  type TodayKpis,
   type TodayMoney,
   type TodayProgramme,
   type TodayTeam,
@@ -45,6 +47,13 @@ export async function getTodayMoney(): Promise<ReadResult<TodayMoney | null>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read("getTodayMoney", supabase.rpc("today_money"), parseTodayMoney);
+}
+
+// Δείκτες και «ραντάρ κινδύνου» (d9). Η βάση κρύβει (null) όσους δεν επιτρέπει το Δικαίωμα του θεατή.
+export async function getTodayKpis(): Promise<ReadResult<TodayKpis | null>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("getTodayKpis", supabase.rpc("today_kpis"), parseTodayKpis);
 }
 
 export async function getTodayTeam(): Promise<ReadResult<TodayTeam | null>> {

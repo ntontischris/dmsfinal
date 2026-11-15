@@ -2,9 +2,11 @@ import { z } from "zod";
 
 import {
   EQUIPMENT_STATUSES,
+  type EquipmentBooking,
   type EquipmentCategory,
   type EquipmentItemDetail,
   type EquipmentItemRow,
+  type EquipmentReservation,
   type EquipmentTemplate,
   type HistoryEntry,
 } from "./types";
@@ -110,12 +112,22 @@ const reservationSchema = z.object({
   conflict: z.boolean(),
 });
 
+const withConflict = (
+  next: Omit<EquipmentReservation, "conflict"> | null,
+  all: readonly EquipmentReservation[],
+): EquipmentReservation | null =>
+  next &&
+  (all.find(
+    (r) => r.filmingId === next.filmingId && r.startsAt === next.startsAt,
+  ) ?? { ...next, conflict: false });
+
 export const itemDetailSchema = itemRowFields
   .extend({
     updated_by_name: z.string().nullable(),
     templates: z.array(z.object({ id: z.string(), name: z.string() })),
     history: z.array(historyRow),
-    nextReservation: reservationSchema.nullable(),
+    // Η βάση δεν στέλνει σήμα σύγκρουσης στο επόμενο· το παίρνουμε από την ίδια Δέσμευση στη λίστα.
+    nextReservation: reservationSchema.omit({ conflict: true }).nullable(),
     reservations: z.array(reservationSchema),
   })
   .transform(
@@ -124,7 +136,18 @@ export const itemDetailSchema = itemRowFields
       updatedByName: row.updated_by_name,
       templates: row.templates,
       history: row.history.map(toHistory),
-      nextReservation: row.nextReservation,
+      nextReservation: withConflict(row.nextReservation, row.reservations),
       reservations: row.reservations,
     }),
   );
+
+// Οι ανοιχτές Δεσμεύσεις (equipment_bookings_view): για το «Επόμενο Γύρισμα» και το «Ελεύθερο στις» του μητρώου.
+export const bookingsViewSchema = z.array(
+  z.object({
+    itemId: z.string(),
+    filmingId: z.string().nullable(),
+    startsAt: z.string(),
+    hours: z.coerce.number(),
+    state: z.enum(["pending", "scheduled"]),
+  }),
+) satisfies z.ZodType<EquipmentBooking[]>;

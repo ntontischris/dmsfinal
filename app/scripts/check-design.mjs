@@ -9,6 +9,8 @@ import { report, walk } from "./lib/walk.mjs";
 const TOKENS_FILES = new Set(["src/app/globals.css", "src/spaces/styles/globals.css", "src/spaces/styles/brand.css"]);
 // Τα email δεν διαβάζουν τα tokens του CSS· τα χρώματα του πρότυπου είναι inline και σταθερά εκεί.
 const EMAIL_TEMPLATES = /^src\/lib\/email\/templates\//;
+// Το ίδιο και τα PDF (react-pdf): τα χρώματά τους ζουν σε ένα αρχείο styles ανά πρότυπο, δίπλα στο πρότυπο.
+const PDF_STYLES = /^src\/modules\/[^/]+\/pdf\/[^/]+-styles\.ts$/;
 const RULES = [
   [/#[0-9a-fA-F]{3,8}\b(?![\w-])/, "χρώμα hex"],
   [/\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\(/, "χρώμα με συνάρτηση"],
@@ -19,7 +21,7 @@ const RULES = [
 export function findDesignViolations(files) {
   const violations = [];
   for (const file of files) {
-    if (TOKENS_FILES.has(file.path) || EMAIL_TEMPLATES.test(file.path)) continue;
+    if (TOKENS_FILES.has(file.path) || EMAIL_TEMPLATES.test(file.path) || PDF_STYLES.test(file.path)) continue;
     file.text.split("\n").forEach((line, index) => {
       if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
       for (const [pattern, what] of RULES)

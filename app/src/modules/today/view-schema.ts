@@ -156,6 +156,20 @@ export const todayProgrammeSchema = z.object({
   ),
 });
 
+// Δείκτες και «ραντάρ κινδύνου» (d9): public.today_kpis. Κάθε δείκτης null όταν ο θεατής δεν έχει το Δικαίωμά του.
+const kpiRiskSchema = z.object({ code: z.string(), count: z.number().int().positive(), link: appLink });
+
+export const todayKpisSchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  turnover: z.number().nullable(),
+  pipeline: z
+    .object({ weighted: z.number().nullable(), total: z.number().nullable(), open: z.number().int().nonnegative() })
+    .nullable(),
+  activeProductions: z.number().int().nonnegative().nullable(),
+  margin: z.object({ margin: z.number().nullable(), months: z.number().int().nonnegative() }).nullable(),
+  risks: z.array(kpiRiskSchema),
+});
+
 // «Νέο» και «Αργότερα» (#241 Σ8): public.today_mark_seen (πότε τελείωσε η προηγούμενη επίσκεψη, null την πρώτη φορά)
 // και public.today_snoozed (τα κλειδιά που κρύβονται ακόμα).
 export const seenAtSchema = z.string().nullable();
@@ -175,6 +189,8 @@ export type TodayMoney = z.output<typeof todayMoneySchema>;
 export type TodayTeam = z.output<typeof todayTeamSchema>;
 export type TeamPerson = TodayTeam["people"][number];
 export type TodayProgramme = z.output<typeof todayProgrammeSchema>;
+export type TodayKpis = z.output<typeof todayKpisSchema>;
+export type KpiRisk = TodayKpis["risks"][number];
 
 export const parseTodayCounts = (data: unknown): TodayCounts =>
   todayCountsSchema.parse(data);
@@ -196,3 +212,5 @@ export const parseTodayTeam = (data: unknown): TodayTeam =>
 
 export const parseTodayProgramme = (data: unknown): TodayProgramme =>
   todayProgrammeSchema.parse(data);
+
+export const parseTodayKpis = (data: unknown): TodayKpis => todayKpisSchema.parse(data);

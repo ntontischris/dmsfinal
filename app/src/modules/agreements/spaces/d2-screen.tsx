@@ -128,7 +128,11 @@ function Body({ agreement, kinds, caps, extras, origin }: BodyProps) {
           <RevisionsSection agreement={agreement} />
         </div>
       )}
-      <SignatureSection agreement={agreement} kinds={kinds} />
+      <SignatureSection
+        agreement={agreement}
+        kinds={kinds}
+        canDownload={caps.canSeeAmounts}
+      />
     </>
   );
 }

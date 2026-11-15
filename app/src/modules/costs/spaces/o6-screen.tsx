@@ -9,8 +9,6 @@ import {
   formatMonth,
   getCostHint,
   listCostMonths,
-  monthOptions,
-  saveCostMonth,
   saveMultipliers,
   type CostHint,
   type CostMonth,
@@ -53,7 +51,6 @@ import {
 } from "./o6-adapter";
 import { decimalText } from "./o6-live";
 import { MethodsEditor } from "./o6-methods";
-import { O6MonthCards } from "./o6-month";
 import { WithholdingEditor } from "./o6-withholding";
 import { AdminCost, MethodsList, RecentChanges } from "./o6-parts";
 
@@ -63,10 +60,8 @@ import "./o6.css";
 // τα έξοδα, οι ώρες και το Εύρος τιμής φαίνονται και αλλάζουν μόνο με «Διαχειρίζεται κόστος».
 // Οι Τρόποι είσπραξης αλλάζουν με «Διαχειρίζεται Ρυθμίσεις» (όπως η κλασική), στη μορφή του ListEditor.
 // Το «Προεπιλεγμένο περιθώριο» του prototype δεν υπάρχει στη βάση.
-
-const MONTHS_AHEAD = 6;
-const FORWARD_NOTE =
-  "Ισχύει από τον μήνα που ορίζεις και μετά, μέχρι να οριστεί νεότερος· οι κλεισμένοι μήνες δεν αλλάζουν.";
+// Χάρτης d7: τα Έξοδα και οι ώρες του μήνα γράφονται σε ένα μόνο σημείο, την I6 «Έξοδα και Κόστος ώρας»· εδώ μένουν οι
+// κανόνες (Τρόποι είσπραξης, παρακράτηση, Εύρος τιμής, όριο Υπέρβασης) και μια ματιά στους μήνες με σύνδεσμο στην I6.
 const RANGE_NOTE =
   "Είναι οδηγός δίπλα στην τιμή κάθε Πακέτου ή Υπηρεσίας (κόστος × πολλαπλασιαστής)· την τιμή τη γράφεις πάντα εσύ.";
 
@@ -146,37 +141,21 @@ function MonthList({
   );
 }
 
-// «Έξοδα του μήνα» + «Παραγωγικές ώρες και Κόστος ώρας»: μία φόρμα του `saveCostMonth`, δύο κουμπιά όπως στο prototype.
-function CostMonthCards({
-  months,
-  hint,
-}: {
-  months: readonly CostMonth[];
-  hint: CostHint;
-}) {
-  const current = athensMonthStart();
+// «Έξοδα και ώρες»: μόνο ανάγνωση. Τα αλλάζει η I6, η μία θέση του κόστους (d7).
+function CostMonthsGlance({ months }: { months: readonly CostMonth[] }) {
   return (
-    <SettingsForm action={saveCostMonth}>
-      <O6MonthCards
-        months={months}
-        options={monthOptions(current, MONTHS_AHEAD)}
-        current={current}
-        inForceMonth={hint.hourCostMonth}
-        forwardNote={FORWARD_NOTE}
-        monthList={
-          <>
-            <MonthList months={months} current={current} />
-            <p className="muted o-hint">
-              <Link href={hrefOf("I6")}>
-                Αναλυτικά έξοδα ανά κατηγορία: Έξοδα και Κόστος ώρας
-              </Link>
-            </p>
-          </>
-        }
-        saveExpenses={<SaveRow card="expenses" />}
-        saveHours={<SaveRow card="hours" />}
-      />
-    </SettingsForm>
+    <SettingsCard title="Έξοδα και ώρες">
+      <MonthList months={months} current={athensMonthStart()} />
+      <p className="btn-row">
+        <Link className="button" data-primary="true" href={hrefOf("I6")}>
+          Έξοδα και Κόστος ώρας
+        </Link>
+      </p>
+      <p className="muted o-hint">
+        Τα Έξοδα και οι Παραγωγικές ώρες κάθε μήνα γράφονται εκεί· από αυτά
+        βγαίνει το Κόστος ώρας.
+      </p>
+    </SettingsCard>
   );
 }
 
@@ -279,7 +258,7 @@ async function O6Body({ canManageCost }: { canManageCost: boolean }) {
       <Withholding rates={rates} canManage={canManageMethods} />
       {months?.ok ? (
         <>
-          <CostMonthCards months={months.data} hint={hint.data} />
+          <CostMonthsGlance months={months.data} />
           <InForce hint={hint.data} />
           <RangeCard hint={hint.data} />
         </>

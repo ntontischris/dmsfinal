@@ -7,9 +7,9 @@ import { NO_MANAGER_LABEL } from "../labels";
 import { BriefPanel, clientTabHref } from "./b2-briefing";
 import { ClientContact } from "./b2-contact";
 import type { ClientPageCtx } from "./b2-context";
+import { ClientPlace } from "./b2-place";
 
 // Η πλαϊνή στήλη: «Στοιχεία» (με εικονίδιο αλλαγής αντί για μεγάλο κουμπί), «Σε αριθμούς» και «Χρήστες Πελάτη».
-// Ο «Χώρος γυρίσματος» λείπει: η βάση δεν κρατά ακόμα διεύθυνση.
 
 const dash = (value: string): string => (value === "" ? "—" : value);
 
@@ -67,6 +67,18 @@ export function ClientSide({ ctx }: { ctx: ClientPageCtx }) {
             value: (
               <span className="b2-contact">
                 <ClientContact
+                  key={client.id}
+                  client={client}
+                  canEdit={ctx.canEdit}
+                />
+              </span>
+            ),
+          },
+          {
+            label: "Διεύθυνση",
+            value: (
+              <span className="b2-contact">
+                <ClientPlace
                   key={client.id}
                   client={client}
                   canEdit={ctx.canEdit}

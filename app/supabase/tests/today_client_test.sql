@@ -284,8 +284,8 @@ select public.t_as('b1');
 select is((select array_agg(c ->> 'code' order by n)
              from jsonb_array_elements(public.today_counts('2026-03-10 10:00+00') -> 'cards') with ordinality x (c, n)
             where c ->> 'code' like 'client\_%'),
-  array['client_waiting', 'client_owes', 'client_requests', 'client_filming', 'client_allowance'],
-  'Ο «Πλήρης» βλέπει τις πέντε κάρτες, στη σειρά του κανόνα 3');
+  array['client_sign', 'client_waiting', 'client_owes', 'client_requests', 'client_filming', 'client_allowance'],
+  'Ο «Πλήρης» βλέπει τις έξι κάρτες (και την «Για υπογραφή» του b11), στη σειρά του κανόνα 3');
 select is(public.t_count(public.today_counts('2026-03-10 10:00+00'), 'client_requests'), 3,
   'Τρέχων ο Πελάτης 1: τα δικά του Αιτήματα');
 select is(public.today_card('client_owes', '2026-03-10 10:00+00') -> 'items' -> 0 ->> 'amount_cents', '35050',

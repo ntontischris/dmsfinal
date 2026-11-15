@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { requestSigningCode, signProposal } from "../actions-public";
 import { SIGN_LABELS, type DeadLinkKind } from "../labels-public";
 import type { PublicProposal } from "../types";
 import { SpacesDeadLink } from "./d5-dead-link";
@@ -101,7 +102,13 @@ export function D5ActiveProposal({
           {view === "idle" && <Choices proposal={proposal} onPick={setView} />}
           {view === "sign" && (
             <D5SignFlow
-              {...form}
+              requestCode={(name, accepted) =>
+                requestSigningCode({ token, name, accepted })
+              }
+              sign={(code) => signProposal({ token, code })}
+              language={language}
+              onDead={setDead}
+              onCancel={form.onCancel}
               managerName={managerName}
               maskedEmail={proposal.maskedEmail}
               codeChannel={proposal.codeChannel}

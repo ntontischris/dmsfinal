@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { createSupabase } from "@/lib/supabase/server";
 
 import {
@@ -32,5 +34,18 @@ export async function getClientAgreement(
     "getClientAgreement",
     supabase.rpc("client_agreement_view", { p_agreement: agreementId }),
     (data) => clientAgreementSchema.parse(data),
+  );
+}
+
+// Μπορεί ο Χρήστης να υπογράψει αυτή την πρόταση εδώ; (Δικαίωμα «Υπογράφει», ανοιχτή πρόταση, email του Υπογράφοντα.)
+export async function getClientCanSign(
+  agreementId: string,
+): Promise<ReadResult<boolean>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "getClientCanSign",
+    supabase.rpc("agreement_client_can_sign", { p_agreement: agreementId }),
+    (data) => z.boolean().parse(data),
   );
 }

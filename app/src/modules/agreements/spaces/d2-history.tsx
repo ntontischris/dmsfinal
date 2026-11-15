@@ -140,9 +140,12 @@ const usedText = (
 export function SignatureSection({
   agreement,
   kinds,
+  canDownload,
 }: {
   agreement: AgreementDetail;
   kinds: readonly KindInfo[];
+  // Το PDF έχει τιμές: μόνο με «Βλέπει ποσά».
+  canDownload: boolean;
 }) {
   const { signature } = agreement;
   if (signature === null) return null;
@@ -175,6 +178,11 @@ export function SignatureSection({
           </>
         )}
       </dl>
+      {canDownload && (
+        <p>
+          <a href={`/app/agreements/${agreement.id}/pdf`}>Λήψη PDF</a>
+        </p>
+      )}
     </Panel>
   );
 }

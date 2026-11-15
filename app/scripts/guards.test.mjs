@@ -82,6 +82,12 @@ describe("check:design", () => {
     expect(findDesignViolations([file("src/lib/email/templates/shell.ts", 'color:#111;')])).toEqual([]);
   });
 
+  it("επιτρέπει χρώματα μόνο στο αρχείο styles ενός PDF, όχι στο πρότυπό του", () => {
+    const text = 'const s = { color: "#111111" };';
+    expect(findDesignViolations([file("src/modules/agreements/pdf/signed-pdf-styles.ts", text)])).toEqual([]);
+    expect(findDesignViolations([file("src/modules/agreements/pdf/signed-pdf.tsx", text)])).toHaveLength(1);
+  });
+
   it("επιτρέπει χρώματα μόνο στο αρχείο των tokens", () => {
     expect(findDesignViolations([file("src/app/globals.css", "--x: oklch(50% 0 0);")])).toEqual([]);
   });

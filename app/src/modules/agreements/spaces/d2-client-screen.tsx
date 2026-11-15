@@ -9,7 +9,7 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import type { ClientAgreement } from "../client-view-schema";
 import { agreementCaps } from "../helpers";
 import { SIGN_LABELS } from "../labels-public";
-import { getClientAgreement } from "../queries-client";
+import { getClientAgreement, getClientCanSign } from "../queries-client";
 import type { ProposalDocument } from "../types";
 import { PrintButton } from "./client-print";
 import {
@@ -18,6 +18,7 @@ import {
   ClientSignature,
   ClientSummary,
 } from "./d2-client-parts";
+import { ClientSignAction } from "./d2-client-sign";
 import { SpacesProposalDocument } from "./d5-document";
 
 import "./d2.css";
@@ -41,14 +42,16 @@ const NOT_FOUND = (
   </Frame>
 );
 
-// Το έγγραφο όπως στον Σύνδεσμο (D5), μόνο για ανάγνωση. Η υπογραφή γίνεται από τον Σύνδεσμο που στάλθηκε με email:
-// ο Σύνδεσμος δεν φυλάσσεται στη βάση, άρα δεν μπορεί να ανοίξει από εδώ.
+// Το έγγραφο όπως στον Σύνδεσμο (D5). Ο Υπογράφων (Δικαίωμα «Υπογράφει», ίδιο email) υπογράφει εδώ με κωδικό·
+// οι άλλοι βλέπουν ότι η υπογραφή γίνεται από τον Σύνδεσμο που στάλθηκε με email.
 function Document({
   document,
   isProposal,
+  signAgreementId = null,
 }: {
   document: ProposalDocument;
   isProposal: boolean;
+  signAgreementId?: string | null;
 }) {
   const t = SIGN_LABELS[document.language];
   return (
@@ -57,7 +60,13 @@ function Document({
       language={document.language}
       footer={
         <div className="stack">
-          {isProposal && (
+          {signAgreementId && (
+            <ClientSignAction
+              agreementId={signAgreementId}
+              language={document.language}
+            />
+          )}
+          {isProposal && !signAgreementId && (
             <p className="note">
               Για να υπογράψετε, ανοίξτε τον Σύνδεσμο της πρότασης που σας
               στάλθηκε με email.
@@ -72,12 +81,22 @@ function Document({
   );
 }
 
-function Body({ agreement }: { agreement: ClientAgreement }) {
+function Body({
+  agreement,
+  canSign,
+}: {
+  agreement: ClientAgreement;
+  canSign: boolean;
+}) {
   const { document } = agreement;
   // Ο πελάτης βλέπει την πρόταση που του στάλθηκε όπως στον Σύνδεσμο.
   if (agreement.state === "proposal")
     return document ? (
-      <Document document={document} isProposal />
+      <Document
+        document={document}
+        isProposal
+        signAgreementId={canSign ? agreement.id : null}
+      />
     ) : (
       <ErrorNotice what="το έγγραφο της πρότασης" />
     );
@@ -93,7 +112,8 @@ function Body({ agreement }: { agreement: ClientAgreement }) {
 }
 
 // D2 Συμφωνία του Χρήστη πελάτη στη νέα εμφάνιση (prototype `screens/D2.tsx`, caps.isClient): η πρόταση ως έγγραφο,
-// η Συμφωνία με το πακέτο, το έγγραφο που υπογράφηκε, τους μήνες και την υπογραφή. Μόνο ανάγνωση.
+// η Συμφωνία με το πακέτο, το έγγραφο που υπογράφηκε, τους μήνες και την υπογραφή.
+// Ο Υπογράφων υπογράφει εδώ την πρόταση (b11).
 export async function SpacesClientAgreement({
   agreementId,
 }: {
@@ -118,9 +138,15 @@ export async function SpacesClientAgreement({
       </Frame>
     );
   if (found.data === null) return NOT_FOUND;
+  // Αν δεν διαβαστεί το «μπορεί να υπογράψει», μένει η σημείωση για τον Σύνδεσμο.
+  const signable =
+    found.data.state === "proposal" ? await getClientCanSign(id.data) : null;
   return (
     <Frame>
-      <Body agreement={found.data} />
+      <Body
+        agreement={found.data}
+        canSign={signable?.ok === true && signable.data}
+      />
     </Frame>
   );
 }

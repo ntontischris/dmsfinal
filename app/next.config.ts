@@ -17,6 +17,10 @@ const proposalHeaders = [
 
 // Το PDF Τιμολογίου (έως 4 MB) ανεβαίνει μέσα από server action· το Vercel κόβει σώματα πάνω από 4,5 MB.
 const nextConfig: NextConfig = {
+  // Η γραμματοσειρά του PDF Συμφωνίας διαβάζεται από τον δίσκο: μπαίνει στο function του route που φτιάχνει το PDF.
+  outputFileTracingIncludes: {
+    "/app/agreements/*/pdf": ["./src/modules/agreements/pdf/fonts/*.ttf"],
+  },
   experimental: {
     serverActions: { bodySizeLimit: "5mb" },
     // Ταχύτητα: μια οθόνη που είδες πριν από λίγο ξανανοίγει αμέσως (πίσω/μπρος, μενού) για 30″. Κάθε αλλαγή που κάνεις

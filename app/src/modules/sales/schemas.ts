@@ -184,3 +184,20 @@ export const stageProbabilitySchema = z.object({
   id: z.uuid(),
   probability: optionalPercent,
 });
+
+// Φροντίδα Πελάτη (b7): Διεύθυνση / Χώρος γυρίσματος και «Υπενθύμισέ με».
+export const clientPlaceSchema = z.object({
+  clientId: z.uuid(),
+  address: text.max(300, "Έως 300 χαρακτήρες."),
+  filmingLocation: text.max(300, "Έως 300 χαρακτήρες."),
+});
+
+export const addReminderSchema = z.object({
+  clientId: z.uuid(),
+  remindOn: z.iso.date("Διάλεξε μέρα για την υπενθύμιση."),
+  note: text
+    .min(1, "Γράψε τι να σου θυμίσω.")
+    .max(300, "Έως 300 χαρακτήρες."),
+});
+
+export const completeReminderSchema = z.object({ reminderId: z.uuid() });
