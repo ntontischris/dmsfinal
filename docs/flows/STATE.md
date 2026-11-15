@@ -9,10 +9,10 @@
 | job_id | wave | stage | round | test_score | preview_url | prototype_commit |
 |---|---|---|---|---|---|---|
 | stino-gyrisma | 1 | functional-approval | 4 | 5/5 (round 4) | https://dmsfinal-app-git-proto-flows-ntontischris-projects.vercel.app | 0d7d455 |
-| xekino-ti-mera | 1 | design | 0 | — | — | — |
-| apanto-se-pelates | 1 | design | 0 | — | — | — |
+| xekino-ti-mera | 1 | test | 1 | — | https://dmsfinal-app-git-proto-flows-ntontischris-projects.vercel.app | 591d61a |
+| apanto-se-pelates | 1 | test | 1 | — | https://dmsfinal-app-git-proto-flows-ntontischris-projects.vercel.app | 591d61a |
 | organono-imerologio | 1 | design | 0 | — | — | — |
-| egkrino-gyrismata | 1 | design | 0 | — | — | — |
+| egkrino-gyrismata | 1 | test | 1 | — | https://dmsfinal-app-git-proto-flows-ntontischris-projects.vercel.app | 591d61a |
 | trexo-paragogi | 1 | design | 0 | — | — | — |
 | paradido-video | 1 | design | 0 | — | — | — |
 | kleino-pelati | 1 | design | 0 | — | — | — |
@@ -31,3 +31,4 @@
 - 2026-11-15 Ιδιοκτήτης Approval 2 → yes («με το πακέτο 2 προχωράμε»); 41 gaps = recommendation; G11 + owner may change crew/equipment. Next: wave 1 research → design.
 - 2026-11-15 wave 1 research → 7 research.md (xekino-ti-mera, apanto-se-pelates, organono-imerologio, egkrino-gyrismata, trexo-paragogi, paradido-video, kleino-pelati); all gates passed. G6 notification: owner decision, no researched precedent. Next: design.
 - 2026-11-15 wave 1 design: 7 flow.md written; cross-flow review fixed 3 overlaps (portal bookings only in egkrino, chat Αίτημα «Γύρισμα» only in apanto; paradido waits without a row until the approval deadline; Σήμερα: one thing = one row). Open for handoff: every flow has «Τίποτα hardcoded» ✗ (guide text in a file + thresholds) → settings.
+- 2026-11-15 wave 1 round A prototype (xekino-ti-mera, apanto-se-pelates, egkrino-gyrismata) → 591d61a; gate passed on preview (doors, queue «Άνοιγμα», branches 2α/2β, ⏳ end text, step kept across Χώροι + reload, «Αργότερα» → «Τελείωσε η μέρα;» + undo). Note for testers: apanto row counts 2 waiting while the Επικοινωνία tile says 6 «Αναμένουν απάντηση». Next: test.
