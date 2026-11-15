@@ -22,3 +22,4 @@
 - 2026-11-14 Ιδιοκτήτης Approval 1 → yes («μου άρεσε… όλη η δομή μου αρέσει»); 32 jobs, 2 orphans removed. Next: gaps.
 - 2026-11-14 Ιδιοκτήτης gaps → 41 gaps (14 missing, 12 done-badly, 15 sources-disagree), 6 jobs without gaps. Approval 2 presented as a page.
 - 2026-11-15 Ιδιοκτήτης Approval 2 → yes («με το πακέτο 2 προχωράμε»); 41 gaps = recommendation; G11 + owner may change crew/equipment. Next: wave 1 research → design.
+- 2026-11-15 wave 1 research → 7 research.md (xekino-ti-mera, apanto-se-pelates, organono-imerologio, egkrino-gyrismata, trexo-paragogi, paradido-video, kleino-pelati); all gates passed. G6 notification: owner decision, no researched precedent. Next: design.
