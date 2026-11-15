@@ -3,7 +3,7 @@
 ## Roles
 | role | phase | status | approval_1 | approval_2 | flows_approved/total | updated |
 |---|---|---|---|---|---|---|
-| Ιδιοκτήτης | gaps | waiting-approval | 2026-11-14 | pending | 0/1 | 2026-11-14 |
+| Ιδιοκτήτης | flows | in-progress | 2026-11-14 | 2026-11-15 | 0/1 | 2026-11-15 |
 
 ## Flows
 | job_id | wave | stage | round | test_score | preview_url | prototype_commit |
@@ -21,3 +21,4 @@
 - 2026-11-14 Ιδιοκτήτης inventory → 761 features (87/87 routes, 134 old rows merged into app rows, 26 old-only); jobs → 32 jobs in 5 waves (wave 1: 8), 2 orphans (remove). Approval 1 presented.
 - 2026-11-14 Ιδιοκτήτης Approval 1 → yes («μου άρεσε… όλη η δομή μου αρέσει»); 32 jobs, 2 orphans removed. Next: gaps.
 - 2026-11-14 Ιδιοκτήτης gaps → 41 gaps (14 missing, 12 done-badly, 15 sources-disagree), 6 jobs without gaps. Approval 2 presented as a page.
+- 2026-11-15 Ιδιοκτήτης Approval 2 → yes («με το πακέτο 2 προχωράμε»); 41 gaps = recommendation; G11 + owner may change crew/equipment. Next: wave 1 research → design.
