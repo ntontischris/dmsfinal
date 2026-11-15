@@ -20,6 +20,8 @@ export interface PendingItem {
   waitingHours: number;
   isWaitingLong: boolean;
   balance: string | null;
+  // Η μέρα του Γυρίσματος έχει περάσει: η έγκριση δεν έχει νόημα χωρίς νέα ώρα.
+  isPast: boolean;
 }
 
 export interface CancelItem {
@@ -43,7 +45,13 @@ export interface RescheduleItem {
   newWhen: string;
   requestedAt: string;
   slotProblem: string | null;
+  // Η ώρα που ζητά έχει ήδη περάσει.
+  isPast: boolean;
 }
+
+// Η ώρα έχει ήδη περάσει τη στιγμή της ανάγνωσης.
+export const isPastStart = (startsAt: string, nowMs: number): boolean =>
+  Date.parse(startsAt) < nowMs;
 
 // «21/09 Δευ 10:00–13:00» σε ώρα Αθήνας.
 export const whenOf = (startsAt: string, hours: number): string =>
@@ -58,7 +66,7 @@ const balanceText = (provision: ProvisionBalance | null): string | null =>
     ? `${provision.kind.label}: ${provision.balance} από ${provision.given + provision.carried} διαθέσιμα μετά από αυτό το Γύρισμα`
     : null;
 
-export const pendingItemOf = (entry: PendingEntry): PendingItem => ({
+export const pendingItemOf = (entry: PendingEntry, nowMs: number): PendingItem => ({
   id: entry.id,
   filmingHref: hrefOf("E3", { id: entry.id }),
   clientName: entry.client?.name ?? NO_CLIENT_LABEL,
@@ -68,6 +76,7 @@ export const pendingItemOf = (entry: PendingEntry): PendingItem => ({
   waitingHours: Math.max(0, Math.round(entry.waitingHours)),
   isWaitingLong: entry.waitingLong,
   balance: balanceText(entry.provision),
+  isPast: isPastStart(entry.startsAt, nowMs),
 });
 
 export const cancelItemOf = (
@@ -85,7 +94,10 @@ export const cancelItemOf = (
   burns: entry.willBurn,
 });
 
-export const rescheduleItemOf = (entry: RescheduleRequestEntry): RescheduleItem => ({
+export const rescheduleItemOf = (
+  entry: RescheduleRequestEntry,
+  nowMs: number,
+): RescheduleItem => ({
   id: entry.id,
   filmingHref: hrefOf("E3", { id: entry.id }),
   clientName: entry.client?.name ?? NO_CLIENT_LABEL,
@@ -94,6 +106,7 @@ export const rescheduleItemOf = (entry: RescheduleRequestEntry): RescheduleItem 
   newWhen: whenOf(entry.newStartsAt, entry.newHours),
   requestedAt: formatDateTime(entry.requestedAt),
   slotProblem: entry.slotProblem,
+  isPast: isPastStart(entry.newStartsAt, nowMs),
 });
 
 // Παλαιότερη αναμονή πρώτα, όπως στο prototype.

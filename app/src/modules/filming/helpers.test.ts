@@ -104,6 +104,30 @@ describe("historyLines", () => {
     const row: FilmingHistoryEntry = { ...event("x"), action: "update", event: null };
     expect(historyLines([row])).toEqual([]);
   });
+
+  it("should say whether a decided request was approved or refused", () => {
+    const texts = historyLines([
+      event("cancel_request_decided", { accepted: true, burned: false }),
+      event("cancel_request_decided", { accepted: false, reason: "Πολύ αργά" }),
+      event("reschedule_decided", { accepted: true }),
+      event("reschedule_decided", { accepted: false, reason: "Γεμάτη μέρα" }),
+    ]).map((line) => line.text);
+    expect(texts).toEqual([
+      "Το αίτημα ακύρωσης εγκρίθηκε",
+      "Το αίτημα ακύρωσης απορρίφθηκε. Λόγος: Πολύ αργά",
+      "Η μετάθεση εγκρίθηκε",
+      "Η μετάθεση απορρίφθηκε. Λόγος: Γεμάτη μέρα",
+    ]);
+  });
+
+  it("should never show a raw event name", () => {
+    const texts = historyLines([
+      event("sheet_issued", { version: 2, change: "Νέα ώρα" }),
+      event("something_new"),
+    ]).map((line) => line.text);
+    expect(texts[0]).toBe("Βγήκε το Δελτίο Γυρίσματος, έκδοση 2");
+    expect(texts[1]).toBe("Αλλαγή στο Γύρισμα");
+  });
 });
 
 describe("openFilmingChoices", () => {

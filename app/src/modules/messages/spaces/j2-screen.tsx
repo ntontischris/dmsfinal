@@ -30,6 +30,7 @@ import {
   THREAD_NO_ACCESS_TEXT,
 } from "../labels";
 import { markThreadReadAfterRender } from "../mark-read";
+import { waitingSinceOf } from "../needs-me";
 import { getInbox, getThread } from "../queries";
 import { sideRequestsOf, timelineOf } from "../request-helpers";
 import type { InboxItem, Thread } from "../view-schema";
@@ -47,6 +48,7 @@ import { Composer } from "./j2-composer";
 import { ReadAtScope } from "./j2-read-at";
 import { ChangeBubble, RequestBox } from "./j2-request";
 import { J2Side } from "./j2-side";
+import { SkipReply } from "./j2-skip-reply";
 
 import "./j.css";
 import "./j2.css";
@@ -204,6 +206,10 @@ export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
   if (thread.messages.length > 0)
     await markThreadReadAfterRender(clientId, newestAt(thread.messages));
   const candidates = await loadCandidates(thread);
+  const item = inbox.ok
+    ? inbox.data.items.find((row) => row.clientId === clientId)
+    : undefined;
+  const isWaiting = item !== undefined && waitingSinceOf(item) !== null;
   return (
     <div data-spaces>
       <AutoRefresh topic={chatTopicOf("team", clientId)} />
@@ -233,6 +239,9 @@ export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
             />
           ) : (
             <p className="muted">{COMPOSER_READONLY}</p>
+          )}
+          {thread.canWrite && isWaiting && (
+            <SkipReply clientId={thread.client.id} />
           )}
         </div>
         <J2Side

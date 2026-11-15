@@ -10,6 +10,9 @@ import {
   queueHeader,
   queueOf,
   rowsOf,
+  inArea,
+  waitingOf,
+  type QueueRow,
 } from "./queue-rows";
 
 const HOUR = 3_600_000;
@@ -156,10 +159,91 @@ describe("queueOf", () => {
   });
 });
 
+const card = (over: Partial<QueueRow> = {}): QueueRow => ({
+  key: "overdue_invoices:i1",
+  title: "Ληξιπρόθεσμο Τιμολόγιο: 2026-041",
+  sub: "Ληξιπρόθεσμα Τιμολόγια",
+  area: "Χρήματα",
+  href: "/app/finance/invoices/i1",
+  since: NOW - HOUR,
+  hasSince: true,
+  amountCents: 62_000,
+  isNew: false,
+  parked: null,
+  ...over,
+});
+
+describe("one list", () => {
+  it("should put rows with an amount first, the largest first, then the oldest", () => {
+    const rows = rowsOf({
+      digests: [apanto(1, NOW - 9 * HOUR)],
+      parked: [],
+      cards: [
+        card({ key: "a", amountCents: 10_000 }),
+        card({ key: "b", amountCents: 90_000 }),
+        card({ key: "c", amountCents: null, since: NOW - 20 * HOUR }),
+      ],
+      later: {},
+      now: NOW,
+    });
+    expect(rows.map((row) => row.key)).toEqual([
+      "b",
+      "a",
+      "c",
+      "apanto-se-pelates",
+    ]);
+  });
+
+  it("should bring a row back on top with «Νέο ·» when its later time passed", () => {
+    const queue = queueOf({
+      digests: [],
+      parked: [],
+      cards: [card({ key: "big", amountCents: 99_000 }), card({ key: "back" })],
+      later: { back: NOW - 1 },
+      now: NOW,
+    });
+    expect(queue.today[0].key).toBe("back");
+    expect(queue.today[0].title).toMatch(/^Νέο · Ληξιπρόθεσμο/);
+    expect(queue.today[1].isNew).toBe(false);
+  });
+
+  it("should keep the header count equal to the rows of the list", () => {
+    const queue = queueOf({
+      digests: [apanto(2, NOW - 30 * HOUR)],
+      parked: [],
+      cards: [card({ key: "x" }), card({ key: "y" })],
+      later: { y: NOW + HOUR },
+      now: NOW,
+    });
+    expect(queueHeader(queue)).toBe(
+      "Τι πρέπει να κάνω τώρα — 1 για σήμερα, 1 από χθες",
+    );
+  });
+
+  it("should filter by area", () => {
+    const rows = [card(), card({ key: "p", area: "Παραγωγή" })];
+    expect(inArea(rows, "Παραγωγή").map((row) => row.key)).toEqual(["p"]);
+    expect(inArea(rows, null)).toHaveLength(2);
+  });
+});
+
+describe("waitingOf", () => {
+  it("should give the real waiting count of a guide", () => {
+    expect(waitingOf([apanto(3)], "apanto-se-pelates")).toBe(3);
+    expect(waitingOf([apanto(3)], "stino-gyrisma")).toBe(0);
+  });
+});
+
 describe("daySentence", () => {
   it("should report closed and postponed counts", () => {
     expect(daySentence(2, 1)).toContain(
       "έκλεισες 2 σήμερα, 1 περιμένουν στο «Αργότερα»",
+    );
+  });
+
+  it("should leave the closed count out when it is not known", () => {
+    expect(daySentence(null, 0)).toBe(
+      "Η λίστα σου άδειασε: 0 περιμένουν στο «Αργότερα» και ξαναβγαίνουν μόνα τους την ώρα τους — ό,τι νέο ζητήσει κίνηση θα μπει εδώ.",
     );
   });
 });

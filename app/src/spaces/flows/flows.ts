@@ -13,6 +13,7 @@ export {
   THREAD_PAGE,
   type Flow,
   type FlowChoice,
+  type FlowLink,
   type FlowStep,
   type Need,
 } from "./flow-registry";
@@ -50,15 +51,19 @@ export const isPickingClient = (
 
 export const isWait = (step: FlowStep): boolean => step.station === "queue";
 
-// Προσθέτει παραμέτρους σε έναν σύνδεσμο, κρατώντας όσες είχε.
+// Η διαδρομή χωρίς παραμέτρους και #σημείο.
+export const pathOf = (href: string): string => href.split(/[?#]/)[0];
+
+// Προσθέτει παραμέτρους σε έναν σύνδεσμο, κρατώντας όσες είχε και το #σημείο του (π.χ. το Μήνυμα του Αιτήματος).
 export const withQuery = (
   href: string,
   extra: Readonly<Record<string, string>>,
 ): string => {
-  const [base, query = ""] = href.split("?");
+  const [rest, hash] = href.split("#");
+  const [base, query = ""] = rest.split("?");
   const params = new URLSearchParams(query);
   Object.entries(extra).forEach(([key, value]) => params.set(key, value));
-  return `${base}?${params.toString()}`;
+  return `${base}?${params.toString()}${hash === undefined ? "" : `#${hash}`}`;
 };
 
 const withPlace = (path: string, flow: Flow, step: number): string =>
@@ -191,13 +196,21 @@ const leadsTo = (flow: Flow, from: number, to: number): boolean =>
   nextOf(flow, from) === to ||
   (flow.steps[from - 1]?.choices?.some((choice) => choice.to === to) ?? false);
 
-// Το «Πίσω»: το πρώτο προηγούμενο βήμα που οδηγεί εδώ· null στο βήμα 1.
+// Το πλησιέστερο προηγούμενο βήμα που δεν ανοίγει μόνο από επιλογή (κλάδος).
+const plainBefore = (flow: Flow, step: number): number => {
+  const index = flow.steps
+    .slice(0, step - 1)
+    .findLastIndex((item) => item.isBranch !== true);
+  return index === -1 ? 1 : index + 1;
+};
+
+// Το «Πίσω»: το πρώτο προηγούμενο βήμα που οδηγεί εδώ, αλλιώς το πλησιέστερο απλό βήμα· null στο βήμα 1.
 export const prevOf = (flow: Flow, step: number): number | null => {
   if (step <= 1) return null;
   const from = flow.steps.findIndex(
     (_, index) => index + 1 < step && leadsTo(flow, index + 1, step),
   );
-  return from === -1 ? step - 1 : from + 1;
+  return from === -1 ? plainBefore(flow, step) : from + 1;
 };
 
 // Ο οδηγός που γυρνά στο βήμα 1 δεν έχει τελευταίο βήμα: τελειώνει όταν αδειάσει η ουρά του.
@@ -246,16 +259,18 @@ export const parseCounts = (raw: string): FilmingCounts | null => {
 };
 
 // Βήμα με «Ξεκίνα από τον πιο παλιό»: η γραμμή που περιμένει πιο πολύ ανοίγει κατευθείαν εκεί που στέλνει ο σταθμός
-// (π.χ. η Συνομιλία του), στο επόμενο βήμα. null = δεν ταιριάζει, ο οδηγός δείχνει τις επιλογές του.
+// (π.χ. η Συνομιλία του), στο βήμα που λέει το είδος της (FlowStep.opens), αλλιώς στο επόμενο. null = δεν ταιριάζει.
 export const oldestHref = (
   flow: Flow,
   step: number,
   href: string | undefined,
+  kind?: string,
 ): string | null => {
   const target = flow.steps[step - 1];
-  const forward = forwardOf(flow, step);
+  const opened = kind === undefined ? undefined : target?.opens?.[kind];
+  const forward = opened ?? forwardOf(flow, step);
   if (!href || !target?.landsOn || forward === null) return null;
-  return target.landsOn.test(href.split("?")[0])
+  return target.landsOn.test(pathOf(href))
     ? withPlace(href, flow, forward)
     : null;
 };

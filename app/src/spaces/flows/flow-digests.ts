@@ -1,12 +1,12 @@
 "use server";
 
 import { createSupabase } from "@/lib/supabase/server";
+import { readNeedsMe } from "@/modules/messages";
 
 import {
   apantoDigest,
   egkrinoDigest,
   parseCardRead,
-  parseInboxRead,
   type JobDigests,
 } from "./digests";
 
@@ -41,14 +41,13 @@ export async function loadJobDigests(): Promise<JobDigests> {
   if (!supabase) return { at, jobs: [] };
   const card = (code: string) =>
     readOr(code, supabase.rpc("today_card", { p_code: code }), parseCardRead);
-  const [inbox, requests, approvals, deletions] = await Promise.all([
-    readOr("inbox", supabase.rpc("messages_inbox"), parseInboxRead),
-    card("requests_mentions"),
+  const [needs, approvals, deletions] = await Promise.all([
+    readNeedsMe(),
     card("filming_approvals"),
     card("google_deletions"),
   ]);
   return {
     at,
-    jobs: [apantoDigest(inbox, requests), egkrinoDigest(approvals, deletions)],
+    jobs: [apantoDigest(needs), egkrinoDigest(approvals, deletions)],
   };
 }

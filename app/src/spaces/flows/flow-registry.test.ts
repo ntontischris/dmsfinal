@@ -4,7 +4,6 @@ import {
   CREW_STEP,
   depthOf,
   flowOf,
-  forwardOf,
   isLast,
   markOf,
   nextOf,
@@ -57,6 +56,41 @@ describe("apanto-se-pelates", () => {
     expect(oldestHref(apanto, 3, "/app/messages/client-1")).toBeNull();
   });
 
+  it("should open each row at the step its kind needs", () => {
+    expect(
+      oldestHref(apanto, 1, "/app/messages/client-1#m-7", "request"),
+    ).toBe("/app/messages/client-1?job=apanto-se-pelates&step=2#m-7");
+    expect(oldestHref(apanto, 1, "/app/messages/client-1", "reply")).toBe(
+      "/app/messages/client-1?job=apanto-se-pelates&step=3",
+    );
+    expect(oldestHref(apanto, 1, "/app/messages/client-1", "mention")).toBe(
+      "/app/messages/client-1?job=apanto-se-pelates&step=3",
+    );
+  });
+
+  it("should move on by itself when the conversation reports what happened", () => {
+    expect(apanto.steps[1].advancesOn).toEqual({
+      worked: 3,
+      rejected: 1,
+      reply: 1,
+    });
+    expect(apanto.steps[2].advancesOn?.reply).toBe(1);
+    expect(apanto.steps[2].advancesOn?.["no-reply"]).toBe(1);
+    expect(apanto.steps[2].choices?.find((choice) => choice.skips)?.to).toBe(1);
+  });
+
+  it("should leave the send button as the main action on steps 2 and 3", () => {
+    expect(apanto.steps[1].isStationPrimary).toBe(true);
+    expect(apanto.steps[2].isStationPrimary).toBe(true);
+  });
+
+  it("should end with the generic done phrase and a tally version", () => {
+    expect(apanto.done).toContain("Κανείς δεν σε περιμένει");
+    expect(apanto.doneTally).toContain("{reply}");
+    expect(apanto.doneTally).toContain("{worked}");
+    expect(apanto.doneTally).toContain("{rejected}");
+  });
+
   it("should resume at the reply once a thread is open", () => {
     expect(
       resumeHref(apanto, 1, { pathname: "/app/messages/client-1", search: "" }),
@@ -86,12 +120,20 @@ describe("egkrino-gyrismata", () => {
     expect([mark, isBranch, then]).toEqual(["2α", true, 1]);
   });
 
-  it("should branch only through the answer choices", () => {
+  it("should answer through the request card, which sends to the right branch", () => {
     expect(nextOf(egkrino, 1)).toBeNull();
-    expect(egkrino.steps[0].choices?.map((choice) => choice.to)).toEqual([
-      2, 3, 4,
-    ]);
-    expect(forwardOf(egkrino, 1)).toBe(2);
+    expect(egkrino.steps[0].choices).toBeUndefined();
+    expect(egkrino.steps[0].submits).toEqual({
+      form: "e2-answer",
+      label: "Στέλνω την απάντηση",
+    });
+    expect(egkrino.steps[2].submits?.form).toBe("e3-offer");
+    expect(egkrino.steps[3].submits?.form).toBe("e2-reason");
+  });
+
+  it("should never claim the templates all went in", () => {
+    expect(CREW_STEP.preset).not.toContain("Μπήκαν τα πρότυπα");
+    expect(CREW_STEP.preset).toContain("ό,τι δεν μπήκε");
   });
 
   it("should wait for the client after proposing times, then loop", () => {
@@ -104,14 +146,18 @@ describe("egkrino-gyrismata", () => {
   it("should go back to the step that led here", () => {
     expect(prevOf(egkrino, 1)).toBeNull();
     expect(prevOf(egkrino, 2)).toBe(1);
-    expect(prevOf(egkrino, 4)).toBe(1);
     expect(prevOf(egkrino, 5)).toBe(3);
   });
 
-  it("should continue at the crew step when a filming opens from the queue", () => {
+  it("should go back from a branch nobody links to the nearest plain step", () => {
+    expect(prevOf(egkrino, 3)).toBe(1);
+    expect(prevOf(egkrino, 4)).toBe(1);
+  });
+
+  it("should keep its place on the filming page while proposing times", () => {
     expect(
-      resumeHref(egkrino, 1, { pathname: "/app/filming/abc", search: "" }),
-    ).toBe("/app/filming/abc?job=egkrino-gyrismata&step=2");
+      resumeHref(egkrino, 3, { pathname: "/app/filming/abc", search: "" }),
+    ).toBe("/app/filming/abc?job=egkrino-gyrismata&step=3");
   });
 
   it("should label the primary button by loop, wait and finish", () => {

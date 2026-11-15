@@ -40,6 +40,18 @@ import { E3ClientActions } from "./e3-client";
 import { E3Crew } from "./e3-crew";
 import { E3Details } from "./e3-details";
 import { E3Equipment } from "./e3-equipment";
+import {
+  E3ClientOfferPart,
+  E3RequestNote,
+  E3TeamOffer,
+  E3TemplateGap,
+} from "./e3-guide-part";
+import {
+  isCrewStepOf,
+  templateGapOf,
+  type GuidePlace,
+} from "./e3-guide-model";
+import { EGKRINO_JOB, EGKRINO_STEPS } from "./e2-guide-model";
 import { E3Sheet } from "./e3-sheet";
 import {
   DONE_KINDS,
@@ -65,7 +77,15 @@ const HOUR_MS = 3_600_000;
 export interface E3EquipmentSource {
   statusLabels: Readonly<Record<string, string>>;
   listTemplates: () => Promise<
-    { ok: true; data: readonly { id: string; name: string }[] } | { ok: false }
+    | {
+        ok: true;
+        data: readonly {
+          id: string;
+          name: string;
+          items?: readonly { id: string; name: string; status: string }[];
+        }[];
+      }
+    | { ok: false }
   >;
 }
 
@@ -444,6 +464,8 @@ async function loadTools(
     itemTemplates: itemTemplates?.ok
       ? itemTemplates.data.map(({ id, name }) => ({ id, name }))
       : [],
+    // Με τα αντικείμενά τους, για το «Τι δεν μπήκε» του οδηγού.
+    equipmentTemplates: itemTemplates?.ok ? itemTemplates.data : [],
     newTimeProblem: newTime?.ok ? newTime.data.problem : null,
     open: open.ok ? open.data : [],
   };
@@ -533,6 +555,7 @@ async function ClientFilming({
       <div className="e3">
         <DoneNotice done={done} card={card} />
         <Header card={card} nowMs={new Date().getTime()} isClient />
+        <E3ClientOfferPart card={card} />
         <E3ClientActions card={card} />
         <ClientBalance card={card} />
         <Notes card={card} />
@@ -547,10 +570,13 @@ export async function SpacesFilming({
   id,
   equipment,
   done,
+  guide = null,
 }: {
   id: string | null;
   equipment: E3EquipmentSource;
   done?: string;
+  // Η θέση του οδηγού (?job=&step=), για τα κομμάτια του οδηγού στη σελίδα.
+  guide?: GuidePlace | null;
 }) {
   const viewer = await getViewer();
   const caps = filmingCaps(viewer);
@@ -580,8 +606,21 @@ export async function SpacesFilming({
     !caps.canApprove &&
     viewerId !== null &&
     card.crew.some((member) => member.userId === viewerId);
+  const isOfferStep =
+    guide?.job === EGKRINO_JOB && guide.step === EGKRINO_STEPS.offer;
+  const gap =
+    isCrewStepOf(guide) && card.viewerCan.crew
+      ? templateGapOf({
+          card,
+          crewTemplates: tools.templates,
+          equipmentTemplates: tools.equipmentTemplates,
+          candidateIds: tools.candidates.map((member) => member.id),
+          statusLabels: equipment.statusLabels,
+        })
+      : null;
   const toolPanels = (
     <>
+      {gap && <E3TemplateGap gap={gap} />}
       {(card.viewerCan.crew || card.crew.length > 0) && (
         <E3Crew
           card={card}
@@ -628,6 +667,8 @@ export async function SpacesFilming({
             statusLabels={equipment.statusLabels}
           />
         )}
+        <E3RequestNote card={card} nowMs={nowMs} />
+        <E3TeamOffer card={card} isOfferStep={isOfferStep} />
         <Header card={card} nowMs={nowMs} isClient={false} />
         <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />
         <E3Details card={card} />

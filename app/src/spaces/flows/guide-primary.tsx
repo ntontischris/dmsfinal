@@ -15,7 +15,10 @@ import {
   type FilmingCounts,
   type Flow,
 } from "./flows";
+import { returnFrom } from "./from-guide";
+import type { Loop } from "./guide-loop";
 import { recordClosed } from "./later";
+import { clearRun } from "./loop-run";
 import { forgetActive, park, readActive, rememberDate, unpark } from "./parked";
 
 export interface GuideProps {
@@ -26,8 +29,11 @@ export interface GuideProps {
   counts: FilmingCounts | null;
   // Η δουλειά τελείωσε: τελευταίο βήμα, ή οδηγός που γυρνά χωρίς άλλη γραμμή.
   isFinished: boolean;
-  // Η γραμμή που περιμένει πιο πολύ (οδηγός που γυρνά, βήμα 1).
+  // Η γραμμή που περιμένει πιο πολύ (οδηγός που γυρνά, βήμα 1) και το είδος της (σε ποιο βήμα ανοίγει).
   oldest: string | undefined;
+  oldestKind?: string;
+  // Ο γύρος του οδηγού που γυρνά.
+  loop?: Loop;
 }
 
 // Η μέρα του γυρίσματος: από τη θέση της καρτέλας, ή από το Ημερολόγιο που ήδη δείχνει τη μέρα.
@@ -48,35 +54,55 @@ const keepFormDate = (flow: Flow, step: number, formId: string) => {
 export const isAtStationOf = (flow: Flow, step: number, pathname: string) =>
   stepHref(flow, step, { pathname }).split("?")[0] === pathname;
 
-// Επιλογές αντί για «Επόμενο»: η πρώτη κύρια. Η απάντηση γράφεται στον σταθμό· η επιλογή λέει πού συνεχίζει.
-function Choices({ flow, step, pathname }: GuideProps) {
-  const choices = flow.steps[step - 1]?.choices ?? [];
-  return choices.map((choice, index) => (
-    <Link
-      key={choice.label}
-      className="button"
-      data-primary={index === 0 ? "true" : undefined}
-      href={stepHref(flow, choice.to, { pathname })}
-    >
-      {choice.label}
-    </Link>
-  ));
+// Επιλογές αντί για «Επόμενο»: η πρώτη κύρια, εκτός αν κύριο είναι το κουμπί του σταθμού (π.χ. «Αποστολή»).
+// Η απάντηση γράφεται στον σταθμό· η επιλογή λέει πού συνεχίζει. «Το αφήνω για μετά» πάει στην επόμενη γραμμή.
+function Choices({ flow, step, pathname, loop }: GuideProps) {
+  const current = flow.steps[step - 1];
+  const choices = current?.choices ?? [];
+  const isPrimary = (index: number) =>
+    index === 0 && current?.isStationPrimary !== true ? "true" : undefined;
+  return choices.map((choice, index) =>
+    choice.skips && loop ? (
+      <button
+        key={choice.label}
+        type="button"
+        className="button"
+        data-primary={isPrimary(index)}
+        onClick={loop.skip}
+      >
+        {choice.label}
+      </button>
+    ) : (
+      <Link
+        key={choice.label}
+        className="button"
+        data-primary={isPrimary(index)}
+        href={stepHref(flow, choice.to, { pathname })}
+        onClick={flow.isLoop && choice.to === 1 ? loop?.handled : undefined}
+      >
+        {choice.label}
+      </Link>
+    ),
+  );
 }
 
-function useHandleNext({ flow, step, pathname, isFinished }: GuideProps) {
+function useHandleNext({ flow, step, pathname, isFinished, loop }: GuideProps) {
   const router = useRouter();
   const current = flow.steps[step - 1];
-  const goHome = () => {
+  const goHome = (href = "/app") => {
     forgetActive();
-    router.push("/app");
+    router.push(href);
   };
   return () => {
     if (isFinished) {
       unpark(flow.id);
       recordClosed(flow.id);
-      return goHome();
+      if (flow.isLoop) clearRun(flow.id);
+      // Οδηγός μέσα σε οδηγό: το «Τέλος» γυρνά σε αυτόν που μας έστειλε.
+      return goHome(returnFrom(flow.id, step) ?? "/app");
     }
     const next = nextOf(flow, step) ?? step;
+    if (flow.isLoop && next === 1) loop?.handled();
     if (isWait(current) && current.then === undefined) {
       park({
         job: flow.id,
@@ -98,7 +124,7 @@ export function PrimaryAction(props: GuideProps) {
   const { flow, step, pathname, counts, isFinished } = props;
   const handleNext = useHandleNext(props);
   const current = flow.steps[step - 1];
-  const start = oldestHref(flow, step, props.oldest);
+  const start = oldestHref(flow, step, props.oldest, props.oldestKind);
   if (current.picksClient) return null;
   if (!isFinished && start)
     return (
@@ -108,7 +134,7 @@ export function PrimaryAction(props: GuideProps) {
     );
   if (!isFinished && current.choices) return <Choices {...props} />;
   const { submits } = current;
-  if (submits && isAtStationOf(flow, step, pathname))
+  if (!isFinished && submits && isAtStationOf(flow, step, pathname))
     return (
       <button
         type="submit"
@@ -120,7 +146,7 @@ export function PrimaryAction(props: GuideProps) {
         {submits.label}
       </button>
     );
-  if (submits)
+  if (!isFinished && submits)
     return (
       <Link
         className="button"

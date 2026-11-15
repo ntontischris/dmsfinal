@@ -88,6 +88,15 @@ describe("flows", () => {
     );
     expect(withQuery("/app", { job: "x" })).toBe("/app?job=x");
   });
+
+  it("should keep the #anchor after the query params", () => {
+    expect(withQuery("/app/messages/c1#m-9", { job: "x" })).toBe(
+      "/app/messages/c1?job=x#m-9",
+    );
+    expect(withQuery("/app/messages/c1?filter=open#m-9", { step: "2" })).toBe(
+      "/app/messages/c1?filter=open&step=2#m-9",
+    );
+  });
 });
 
 describe("resumeHref", () => {

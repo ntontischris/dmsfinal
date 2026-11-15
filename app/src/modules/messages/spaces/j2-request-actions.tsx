@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 
 import type { DeliverableCandidates } from "@/modules/deliverables";
@@ -10,14 +11,17 @@ import {
   completeRequest,
   rejectRequest,
 } from "../actions-requests";
+import type { ThreadProduction } from "../view-schema";
+import { filmingFromRequestHref, tellGuide } from "./guide-signal";
 import type { J2Request } from "./j2-adapter";
 import { DeliverableFromRequest } from "./j2-deliverable-form";
 import { JForm } from "./j2-form";
+import { OtherRequestHelp, TagFirst } from "./j2-request-help";
 
 // Ό,τι χρειάζεται η φόρμα νέου Παραδοτέου (υποψήφια της Παραγωγής) ή ένα κείμενο γιατί δεν υπάρχει.
 export type DeliverableSource =
   | { productionId: string; defaultTitle: string; candidates: DeliverableCandidates }
-  | { note: string };
+  | { note: string; needsTag?: boolean };
 
 type Mode = null | "deliverable" | "done" | "reject";
 
@@ -27,6 +31,8 @@ interface RequestActionsProps {
   request: J2Request;
   assignable: readonly { id: string; name: string }[];
   deliverable: DeliverableSource;
+  // Οι Παραγωγές για την ετικέτα που θέλει το «Νέο Παραδοτέο» (κενό = δεν μπορεί να βάλει ετικέτα).
+  productions: readonly ThreadProduction[];
 }
 
 // Οι ενέργειες ενός ανοιχτού Αιτήματος του prototype (`screens/j2-request.tsx`), δεμένες στα πραγματικά server actions.
@@ -36,15 +42,35 @@ export function RequestActions({
   request,
   assignable,
   deliverable,
+  productions,
 }: RequestActionsProps) {
   const [mode, setMode] = useState<Mode>(null);
+  const pathname = usePathname();
+  const search = useSearchParams();
   const close = useCallback(() => setMode(null), []);
+  // Το Αίτημα δουλεύτηκε ή απορρίφθηκε: ο οδηγός «Απαντώ σε Πελάτες» περνά μόνος του στο επόμενο βήμα.
+  const closeWorked = useCallback(() => {
+    setMode(null);
+    tellGuide("worked");
+  }, []);
+  const closeRejected = useCallback(() => {
+    setMode(null);
+    tellGuide("rejected");
+  }, []);
+  const needsTag =
+    request.kind === "deliverable" && "note" in deliverable && deliverable.needsTag === true;
   const toggle = (next: Mode) => setMode(mode === next ? null : next);
   return (
     <>
+      {request.canHandle && needsTag && (
+        <TagFirst messageId={messageId} productions={productions} />
+      )}
+      {request.canHandle && request.kind === "other" && (
+        <OtherRequestHelp clientId={clientId} />
+      )}
       {request.canHandle && (
         <div className="btn-row">
-          {request.kind === "deliverable" && (
+          {request.kind === "deliverable" && !needsTag && (
             <button
               className="button"
               data-primary
@@ -58,7 +84,10 @@ export function RequestActions({
             <Link
               className="button"
               data-primary
-              href={`/app/filming/new?fromRequest=${messageId}&client=${clientId}`}
+              href={filmingFromRequestHref(
+                `/app/filming/new?fromRequest=${messageId}&client=${clientId}`,
+                { pathname, search },
+              )}
             >
               Κλείσιμο Γυρίσματος από το Αίτημα
             </Link>
@@ -89,14 +118,14 @@ export function RequestActions({
             productionId={deliverable.productionId}
             defaultTitle={deliverable.defaultTitle}
             candidates={deliverable.candidates}
-            onDone={close}
+            onDone={closeWorked}
           />
         ))}
       {mode === "done" && (
         <JForm
           action={completeRequest}
           submitLabel="Ολοκλήρωση Αιτήματος"
-          onSuccess={close}
+          onSuccess={closeWorked}
           onCancel={close}
         >
           <input type="hidden" name="id" value={messageId} />
@@ -126,7 +155,7 @@ export function RequestActions({
           action={rejectRequest}
           submitLabel="Απόρριψη Αιτήματος"
           isDanger
-          onSuccess={close}
+          onSuccess={closeRejected}
           onCancel={close}
         >
           <input type="hidden" name="id" value={messageId} />

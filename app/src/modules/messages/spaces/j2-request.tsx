@@ -44,7 +44,7 @@ function deliverableSourceOf(
   candidates: CandidatesByProduction,
 ): DeliverableSource {
   if (message.productionId === null)
-    return { note: CREATE_DELIVERABLE_NEEDS_TAG };
+    return { note: CREATE_DELIVERABLE_NEEDS_TAG, needsTag: true };
   const found = candidates.get(message.productionId) ?? null;
   if (found === null) return { note: CREATE_DELIVERABLE_NO_ACCESS };
   return {
@@ -89,6 +89,7 @@ export function RequestBox({
           request={request}
           assignable={thread.assignable ?? []}
           deliverable={deliverableSourceOf(thread, message, candidates)}
+          productions={message.canTag ? thread.productions : []}
         />
       )}
     </div>

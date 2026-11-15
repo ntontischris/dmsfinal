@@ -24,8 +24,8 @@
 & .j2-switch { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: start; margin-top: var(--space-2); }
 & .j2-switch .kit-fb { margin-bottom: 0; }
 
-/* Η φόρμα μένει ορατή στο κάτω μέρος· ο διακόπτης δείχνει καθαρά την επιλογή (χρώμα και ✓). */
-& .j2-composer { position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -6px 16px color-mix(in oklab, var(--color-text) 12%, transparent); }
+/* Η φόρμα απάντησης ακολουθεί τη Συνομιλία (δεν κολλά στο κάτω μέρος: δεν σκεπάζει μηνύματα ούτε κουμπιά Αιτήματος)· ο διακόπτης δείχνει καθαρά την επιλογή. */
+& .j2-skip { justify-self: start; }
 & .j2-seg { display: inline-flex; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; width: fit-content; max-width: 100%; }
 & .j2-seg button { font: inherit; font-size: var(--text-sm); padding: var(--space-1) var(--space-3); border: 0; background: transparent; color: var(--color-text); cursor: pointer; }
 & .j2-seg button[aria-pressed='true'] { background: var(--color-accent); color: var(--color-bg); font-weight: 600; }

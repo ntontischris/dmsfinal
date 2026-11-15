@@ -39,6 +39,7 @@ import {
   REQUESTS_EMPTY,
   UNASSIGNED_NOTE,
 } from "../request-labels";
+import { needsMeOf } from "../needs-me";
 import type { Inbox, RequestsView } from "../view-schema";
 import {
   j1ConversationsOf,
@@ -46,7 +47,7 @@ import {
   j1RequestsOf,
   tabLabelOf,
 } from "./j1-adapter";
-import { ConversationList, MentionList } from "./j1-lists";
+import { ConversationList, MentionList, NeedsMeList } from "./j1-lists";
 import { NewMessage } from "./j1-new";
 import { RequestList, ViewLinks } from "./j1-requests";
 
@@ -105,6 +106,7 @@ async function ConversationsTab({
   const rows = j1ConversationsOf(inbox.items, open?.items ?? null);
   return (
     <>
+      <NeedsMeList rows={needsMeOf(inbox.items, open?.items ?? [])} />
       {writable.ok && (
         <NewMessage
           options={writable.data.map((client) => ({

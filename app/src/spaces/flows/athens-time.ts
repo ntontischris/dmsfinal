@@ -105,3 +105,6 @@ export const dayText = (iso: string): string =>
 
 // «Δευ 09:00».
 export const untilText = (until: number): string => timeFormat.format(until);
+
+// Η ώρα της απόδοσης στον server (μία φορά ανά αίτημα).
+export const renderTime = (): number => Date.now();

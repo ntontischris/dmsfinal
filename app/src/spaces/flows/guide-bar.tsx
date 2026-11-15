@@ -9,7 +9,9 @@ import { Panel } from "@/spaces/kit/panel";
 import { Meter } from "@/spaces/kit/parts";
 
 import { useFilmingCounts } from "./filming-counts";
+import { clearFrom, isAppHref, rememberFrom } from "./from-guide";
 import { GuideClients } from "./guide-clients";
+import { BackToFrom, LoopLeftover, useLoop } from "./guide-loop";
 import {
   dateOf,
   isAtStationOf,
@@ -44,7 +46,6 @@ import {
   subscribeParked,
   type FilmingPlace,
 } from "./parked";
-import { useJobDigest } from "./use-job-digest";
 
 import "./flows.css";
 
@@ -60,6 +61,18 @@ function useResume(hasPlace: boolean, pathname: string, search: string) {
     const href = resumeHref(flow, active.step, { pathname, search });
     if (href) router.replace(href);
   }, [hasPlace, pathname, search, router]);
+}
+
+// Οδηγός που άνοιξε από άλλον οδηγό (?from=): η καρτέλα κρατά πού γυρνά.
+function useFromParam(
+  flow: Flow | undefined,
+  from: string | null,
+  step: string | null,
+) {
+  useEffect(() => {
+    if (!flow || !from || !isAppHref(from)) return;
+    rememberFrom(flow.id, { href: from, step: parseStep(step, flow) });
+  }, [flow, from, step]);
 }
 
 // Το Γύρισμα που κράτησε η καρτέλα (στον server: κανένα).
@@ -85,6 +98,7 @@ function GuideActions(props: GuideProps) {
       filming: readActive()?.filming,
     });
     forgetActive();
+    clearFrom(flow.id);
     router.push("/app");
   };
   const current = flow.steps[step - 1];
@@ -114,6 +128,7 @@ function GuideActions(props: GuideProps) {
           Πίσω
         </Link>
       )}
+      <BackToFrom flow={flow} step={step} />
       <button type="button" className="button" onClick={handleExit}>
         Έξοδος
       </button>
@@ -122,14 +137,15 @@ function GuideActions(props: GuideProps) {
 }
 
 // Το τέλος δεν λέει «με ομάδα και εξοπλισμό» όταν ξέρουμε ότι λείπουν: λέει τι λείπει και γυρνά στο βήμα τους.
-function DoneLine({ flow }: { flow: Flow }) {
+// Ο οδηγός που γυρνά λέει τη φράση του με τους αριθμούς του γύρου.
+function DoneLine({ flow, text }: { flow: Flow; text: string }) {
   const filming = useStoredFilming();
   const missing = missingLine(missingAtEnd(flow, filming));
   const back = requiringStep(flow);
   if (!missing || !filming)
     return (
       <p className="flow-guide-done" role="status">
-        {flow.done}
+        {text}
       </p>
     );
   return (
@@ -142,30 +158,55 @@ function DoneLine({ flow }: { flow: Flow }) {
   );
 }
 
-function Guide(props: GuideProps) {
-  const { flow, step, isFinished } = props;
+function GuideMore({ flow, step }: { flow: Flow; step: number }) {
   const current = flow.steps[step - 1];
+  if (!current.hidden && !current.links) return null;
+  return (
+    <details className="flow-guide-more">
+      <summary>Περισσότερα</summary>
+      {current.hidden && <p>{current.hidden}</p>}
+      {current.links?.map((link) => (
+        <p key={link.href}>
+          <Link href={link.href}>{link.label}</Link>
+        </p>
+      ))}
+    </details>
+  );
+}
+
+const asideOf = (flow: Flow, step: number, counter: string | null) => {
+  const place = `Βήμα ${markOf(flow, step)} από ${totalOf(flow)}`;
+  return counter ? `${counter} · ${place}` : place;
+};
+
+function Guide(props: GuideProps) {
+  const { flow, step, isFinished, loop } = props;
+  const current = flow.steps[step - 1];
+  // Ο οδηγός που γυρνά τελείωσε: μόνο η φράση ολοκλήρωσης και το «Τέλος».
+  const isLoopDone = isFinished && flow.isLoop === true;
+  const hasLeftover =
+    !isFinished && loop?.state?.next === null && loop.state.skippedLeft > 0;
   return (
     <div data-spaces className="flow-guide">
       <Panel
         label={`Οδηγός · ${flow.name}`}
-        aside={`Βήμα ${markOf(flow, step)} από ${totalOf(flow)}`}
+        aside={isLoopDone ? "Τέλος" : asideOf(flow, step, loop?.counter ?? null)}
       >
         <Meter
           label={current.area}
-          used={depthOf(flow, step)}
+          used={isLoopDone ? totalOf(flow) : depthOf(flow, step)}
           total={totalOf(flow)}
         />
-        <p className="flow-guide-question">{current.question}</p>
-        <p className="flow-guide-preset">{current.preset}</p>
-        {current.picksClient && <GuideClients flow={flow} step={step} />}
-        {isFinished && <DoneLine flow={flow} />}
-        {current.hidden && (
-          <details className="flow-guide-more">
-            <summary>Περισσότερα</summary>
-            <p>{current.hidden}</p>
-          </details>
+        {!isLoopDone && (
+          <>
+            <p className="flow-guide-question">{current.question}</p>
+            <p className="flow-guide-preset">{current.preset}</p>
+          </>
         )}
+        {current.picksClient && <GuideClients flow={flow} step={step} />}
+        {isFinished && <DoneLine flow={flow} text={loop?.doneText ?? flow.done} />}
+        {hasLeftover && loop && <LoopLeftover loop={loop} />}
+        {!isLoopDone && <GuideMore flow={flow} step={step} />}
         <GuideActions {...props} />
       </Panel>
     </div>
@@ -178,11 +219,13 @@ interface PlacedProps {
   pathname: string;
 }
 
-// Ο οδηγός που γυρνά: στο βήμα 1 διαβάζει τον κανόνα ουράς του· χωρίς γραμμή που περιμένει, τελείωσε.
+// Ο οδηγός που γυρνά: στο βήμα 1 διαβάζει τις γραμμές του· χωρίς γραμμή που περιμένει (ούτε αφημένη για μετά), τελείωσε.
 function PlacedGuide({ flow, step, pathname }: PlacedProps) {
   const counts = useFilmingCounts();
-  const digest = useJobDigest(flow.id, flow.isLoop === true && step === 1);
-  const isFinished = isLast(flow, step) || digest?.count === 0;
+  const loop = useLoop(flow, step, pathname);
+  const next = loop.state?.next;
+  const isFinished =
+    isLast(flow, step) || loop.state?.count === 0;
   // Στη σελίδα του Γυρίσματος ο οδηγός κρατά ποιο είναι και πόσα έχει, για το τέλος και την ουρά.
   const crew = counts?.crew;
   const equipment = counts?.equipment;
@@ -200,7 +243,9 @@ function PlacedGuide({ flow, step, pathname }: PlacedProps) {
       pathname={pathname}
       counts={counts}
       isFinished={isFinished}
-      oldest={digest?.oldest?.href}
+      oldest={next?.href}
+      oldestKind={next?.kind}
+      loop={flow.isLoop ? loop : undefined}
     />
   );
 }
@@ -211,6 +256,7 @@ export function GuideBar() {
   const pathname = usePathname();
   const flow = flowOf(params.get("job"));
   useResume(flow !== undefined, pathname, params.toString());
+  useFromParam(flow, params.get("from"), params.get("step"));
   return flow ? (
     <PlacedGuide
       flow={flow}

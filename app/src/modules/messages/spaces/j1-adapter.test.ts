@@ -40,6 +40,19 @@ const queueItem = (overrides: Partial<QueueItem> = {}): QueueItem => ({
 });
 
 describe("j1ConversationsOf", () => {
+  it("should mark a conversation as waiting only when the client is owed a reply", () => {
+    const [waiting, answered] = j1ConversationsOf(
+      [
+        inboxItem({ waitingSince: "2026-11-01T09:00:00Z" }),
+        inboxItem({ clientId: "c-2", waitingSince: null }),
+      ],
+      null,
+      NOW,
+    );
+    expect(waiting?.isWaiting).toBe(true);
+    expect(answered?.isWaiting).toBe(false);
+  });
+
   it("should count open requests per client when the open view loaded", () => {
     const [row] = j1ConversationsOf(
       [inboxItem()],

@@ -28,13 +28,19 @@ const pendingOf = (over: Partial<PendingEntry> = {}): PendingEntry => ({
 });
 
 test("η κράτηση σε αναμονή γίνεται κάρτα με Παροχή και αναμονή σε ώρες", () => {
-  const item = pendingItemOf(pendingOf());
+  const item = pendingItemOf(pendingOf(), NOW);
+  expect(item.isPast).toBe(false);
   expect(item.filmingHref).toBe("/app/filming/p1");
   expect(item.waitingHours).toBe(24);
   expect(item.when).toMatch(/^21\/09 .+ 10:00–13:00$/);
   expect(item.balance).toBe(
     "Γύρισμα: 2 από 4 διαθέσιμα μετά από αυτό το Γύρισμα",
   );
+});
+
+test("κράτηση σε περασμένη μέρα σημειώνεται", () => {
+  const item = pendingItemOf(pendingOf({ startsAt: "2026-09-19T07:00:00Z" }), NOW);
+  expect(item.isPast).toBe(true);
 });
 
 test("η παλαιότερη κράτηση πρώτη", () => {
