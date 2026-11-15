@@ -23,16 +23,22 @@ revoke all on table public.filming_offers from anon, authenticated;
 
 -- Το Γύρισμα έχει αίτημα που μπορεί να απαντηθεί με πρόταση ώρας.
 create function authz.filming_offer_open(f public.filmings) returns boolean
-language sql stable set search_path = ''
+language plpgsql stable set search_path = ''
 as $$
-  select f.state = 'pending'
+begin
+  return f.state = 'pending'
       or (f.state = 'scheduled' and (f.cancel_request_at is not null or f.reschedule_starts_at is not null));
+end;
 $$;
 
 -- Μία ώρα χωράει ακόμα: μελλοντική, μέσα στο Ωράριο και με χώρο.
 create function authz.offer_time_free(p_starts timestamptz, p_hours numeric, p_id uuid) returns boolean
-language sql stable security definer set search_path = ''
-as $$ select p_starts > now() and authz.slot_problem(p_starts, p_hours, p_id, false) is null; $$;
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  return p_starts > now() and authz.slot_problem(p_starts, p_hours, p_id, false) is null;
+end;
+$$;
 
 -- ───────────── Ομάδα ─────────────
 

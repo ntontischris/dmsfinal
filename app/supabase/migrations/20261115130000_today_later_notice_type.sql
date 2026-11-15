@@ -9,11 +9,13 @@
 --  Κανένας νέος πίνακας, καμία αλλαγή σχήματος.
 
 create or replace function authz.notification_json(n public.notifications) returns jsonb
-language sql stable set search_path = ''
+language plpgsql stable set search_path = ''
 as $$
-  select jsonb_build_object('id', n.id, 'title', n.title, 'body', n.body, 'link', n.link,
+begin
+  return jsonb_build_object('id', n.id, 'title', n.title, 'body', n.body, 'link', n.link,
                             'createdAt', n.created_at, 'isRead', n.read_at is not null,
                             'type', (select e.type from public.events e where e.id = n.event_id));
+end;
 $$;
 
 create function authz.today_snooze_until(p_uid uuid, p_key text, p_until timestamptz, p_now timestamptz)
