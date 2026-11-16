@@ -11,32 +11,58 @@ import { LaterMenu } from "./later-menu";
 import { park, unpark } from "./parked";
 import { readQueueKeys } from "./place-actions";
 import { postponeRows } from "./today-actions";
-import { doneOf, roundCounterOf, XEKINO_LIST } from "./xekino-rows";
+import {
+  doneOf,
+  roundCounterOf,
+  XEKINO_LIST,
+  type QueueRead,
+} from "./xekino-rows";
 import { parseRound, readRoundRaw, subscribeRound } from "./xekino-round";
 
 import "./flows.css";
 
-const POLL_MS = 15_000;
+// Ελαφρύ: μία ανάγνωση στο άνοιγμα, μετά από κάθε αποστολή φόρμας του σταθμού, στην επιστροφή στην καρτέλα,
+// και αραιά ανά λεπτό για ό,τι έκλεισε άλλος.
+const POLL_MS = 60_000;
+const AFTER_SUBMIT_MS = 2_000;
+const BASELINE_KEY = "flows:xekino-baseline:";
 
-// Οι αναγνώσεις της λίστας: η πρώτη στο άνοιγμα, μετά σε κάθε επιστροφή στην καρτέλα και ανά 15″.
-function useQueueReads(): readonly (readonly string[])[] {
-  const [reads, setReads] = useState<readonly (readonly string[])[]>([]);
+// Η πρώτη ανάγνωση της γραμμής μένει στην καρτέλα: ένα remount (redirect του σταθμού) δεν τη χάνει,
+// οπότε η γραμμή δεν δείχνει κατά λάθος «Έγινε ήδη».
+const baselineOf = (item: string, fresh: QueueRead): QueueRead => {
+  try {
+    const saved = window.sessionStorage.getItem(BASELINE_KEY + item);
+    if (saved) return JSON.parse(saved) as QueueRead;
+    window.sessionStorage.setItem(BASELINE_KEY + item, JSON.stringify(fresh));
+  } catch {
+    // Χωρίς sessionStorage η πρώτη ανάγνωση μένει μόνο στη μνήμη.
+  }
+  return fresh;
+};
+
+function useQueueReads(item: string): readonly QueueRead[] {
+  const [reads, setReads] = useState<readonly QueueRead[]>([]);
   useEffect(() => {
     let isLive = true;
     const read = async () => {
       const keys = await readQueueKeys().catch(() => null);
       if (isLive && keys)
-        setReads((old) => (old.length === 0 ? [keys] : [old[0], keys]));
+        setReads((old) =>
+          old.length === 0 ? [baselineOf(item, keys), keys] : [old[0], keys],
+        );
     };
+    const readSoon = () => window.setTimeout(() => void read(), AFTER_SUBMIT_MS);
     void read();
     const id = window.setInterval(() => void read(), POLL_MS);
     window.addEventListener("focus", read);
+    document.addEventListener("submit", readSoon, true);
     return () => {
       isLive = false;
       window.clearInterval(id);
       window.removeEventListener("focus", read);
+      document.removeEventListener("submit", readSoon, true);
     };
-  }, []);
+  }, [item]);
   return reads;
 }
 
@@ -67,7 +93,7 @@ export function XekinoBar({ item, href }: XekinoBarProps) {
   const round = parseRound(
     useSyncExternalStore(subscribeRound, readRoundRaw, () => "null"),
   );
-  const done = doneOf(item, useQueueReads());
+  const done = doneOf(item, useQueueReads(item));
   useXekinoPlace(item, href);
   const backToList = async (query = "") => {
     await unpark(XEKINO_JOB);

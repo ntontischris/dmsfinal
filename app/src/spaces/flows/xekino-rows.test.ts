@@ -120,23 +120,39 @@ describe("round counter", () => {
 });
 
 describe("doneOf", () => {
+  const read = (keys: string[], failed: string[] = []) => ({ keys, failed });
+
   it("should say «Έγινε ήδη» when the row was gone at the first read", () => {
-    expect(doneOf("a", [["b"]])).toEqual({
+    expect(doneOf("c:a", [read(["c:b"])])).toEqual({
       wasDoneBefore: true,
       isDone: false,
     });
   });
 
   it("should mark the row done once it leaves the list", () => {
-    expect(doneOf("a", [["a"], ["a"]]).isDone).toBe(false);
-    expect(doneOf("a", [["a"], []]).isDone).toBe(true);
+    expect(doneOf("c:a", [read(["c:a"]), read(["c:a"])]).isDone).toBe(false);
+    expect(doneOf("c:a", [read(["c:a"]), read([])]).isDone).toBe(true);
   });
 
-  it("should not judge notice rows or before the first read", () => {
-    expect(doneOf("notice:x", [[]])).toEqual({
+  it("should not judge a row whose card failed to load", () => {
+    expect(doneOf("c:a", [read(["c:a"]), read(["d:x"], ["c"])])).toEqual({
       wasDoneBefore: false,
       isDone: false,
     });
-    expect(doneOf("a", [])).toEqual({ wasDoneBefore: false, isDone: false });
+    expect(doneOf("c:a", [read([], ["c"])]).wasDoneBefore).toBe(false);
+  });
+
+  it("should not judge a row that may have been pushed below the card's first rows", () => {
+    expect(
+      doneOf("c:a", [read(["c:a"]), read(["c:z", "c:rest"])]).isDone,
+    ).toBe(false);
+  });
+
+  it("should not judge notice rows or before the first read", () => {
+    expect(doneOf("notice:x", [read([])])).toEqual({
+      wasDoneBefore: false,
+      isDone: false,
+    });
+    expect(doneOf("c:a", [])).toEqual({ wasDoneBefore: false, isDone: false });
   });
 });

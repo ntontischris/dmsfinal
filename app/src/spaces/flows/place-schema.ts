@@ -22,8 +22,12 @@ export const placeSchema = z.object({
 });
 
 
-// Η ανάγνωση (today_places): κάθε θέση με τη δουλειά της. null = άκυρη απάντηση.
+// Η ανάγνωση (today_places): κάθε θέση με τη δουλειά της· μια άκυρη θέση πέφτει μόνη της. null = δεν ήρθε πίνακας.
 export const parsePlaces = (data: unknown) => {
-  const parsed = z.array(placeSchema).safeParse(data);
-  return parsed.success ? parsed.data : null;
+  const list = z.array(z.unknown()).safeParse(data);
+  if (!list.success) return null;
+  return list.data.flatMap((item) => {
+    const place = placeSchema.safeParse(item);
+    return place.success ? [place.data] : [];
+  });
 };

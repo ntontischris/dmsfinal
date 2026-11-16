@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabase } from "@/lib/supabase/server";
 
 import { JOB, placeSchema } from "./place-schema";
+import type { QueueRead } from "./xekino-rows";
 
 // Οι θέσεις των μισών οδηγών στον λογαριασμό (today_flow_places). Η βάση αποφασίζει ποιος μπορεί· εδώ μόνο η είσοδος.
 
@@ -47,11 +48,15 @@ export async function clearPlace(input: unknown): Promise<PlaceResult> {
   return { error: null };
 }
 
-// «Επόμενο ✓» του βήματος 2: τα κλειδιά των γραμμών της λίστας τώρα (κάρτες και Ειδοποιήσεις). null = δεν διαβάστηκαν.
-export async function readQueueKeys(): Promise<readonly string[] | null> {
+// «Επόμενο ✓» του βήματος 2: τα κλειδιά των γραμμών της λίστας τώρα και οι κάρτες που δεν φόρτωσαν (γι' αυτές
+// δεν κρίνεται τίποτα). null = δεν διαβάστηκαν.
+export async function readQueueKeys(): Promise<QueueRead | null> {
   const { loadTodayRows } = await import("./today-load");
   const rows = await loadTodayRows(Date.now());
   return rows.failed.length > 0 && rows.cards.length === 0
     ? null
-    : rows.cards.map((row) => row.key);
+    : {
+        keys: rows.cards.map((row) => row.key),
+        failed: rows.failed.map((card) => card.id),
+      };
 }

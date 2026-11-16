@@ -17,7 +17,7 @@ import { cardRowsOf, isCardRow } from "./today-rows";
 export interface TodayRows {
   cards: readonly QueueRow[];
   // Οι κάρτες που δεν φόρτωσαν: η λίστα το λέει, με σύνδεσμο στην ουρά τους.
-  failed: readonly { title: string; href: string }[];
+  failed: readonly { id: string; title: string; href: string }[];
   // null: ο Χρήστης δεν βλέπει το Ίχνος, οπότε το πλήθος δεν είναι γνωστό.
   closed: readonly ClosedItem[] | null;
   // Τα κλειδιά του «Αργότερα» στη βάση· null = η βάση δεν απάντησε, οπότε μένει το «Αργότερα» του browser.
@@ -53,6 +53,7 @@ async function loadCardRows(now: number) {
     unread: counts.data.unreadNotifications,
     cards: cardRowsOf(built, now),
     failed: failed.map(({ built: { card, content } }) => ({
+      id: card.id,
       title: card.title,
       href: content.allHref,
     })),

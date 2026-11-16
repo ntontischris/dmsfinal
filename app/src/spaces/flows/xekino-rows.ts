@@ -104,17 +104,36 @@ export interface XekinoDone {
   isDone: boolean;
 }
 
+// Μία ανάγνωση της λίστας: τα κλειδιά των γραμμών και οι κάρτες που δεν φόρτωσαν.
+export interface QueueRead {
+  keys: readonly string[];
+  failed: readonly string[];
+}
+
+// Η γραμμή λείπει από την ανάγνωση επειδή έκλεισε — όχι επειδή η κάρτα της δεν φόρτωσε ή επειδή η κάρτα δείχνει
+// μόνο τις πρώτες γραμμές («άλλα N»), οπότε μπορεί απλώς να σπρώχτηκε πιο κάτω.
+const isGoneFrom = (read: QueueRead, item: string): boolean => {
+  const card = item.slice(0, item.indexOf(":"));
+  return (
+    !read.keys.includes(item) &&
+    !read.failed.includes(card) &&
+    !read.keys.includes(`${card}:rest`)
+  );
+};
+
+const NOT_JUDGED: XekinoDone = { wasDoneBefore: false, isDone: false };
+
 // Από τις αναγνώσεις της λίστας: η πρώτη λέει αν ήταν ήδη κλειστή, κάθε επόμενη αν έκλεισε τώρα.
 // Οι γραμμές Ειδοποίησης φεύγουν μόλις ανοίξουν: δεν λένε τίποτα.
 export const doneOf = (
   item: string,
-  reads: readonly (readonly string[])[],
+  reads: readonly QueueRead[],
 ): XekinoDone => {
-  if (item.startsWith("notice:") || reads.length === 0)
-    return { wasDoneBefore: false, isDone: false };
-  const wasDoneBefore = !reads[0].includes(item);
+  if (item.startsWith("notice:") || !item.includes(":") || reads.length === 0)
+    return NOT_JUDGED;
+  const wasDoneBefore = isGoneFrom(reads[0], item);
   return {
     wasDoneBefore,
-    isDone: !wasDoneBefore && !reads[reads.length - 1].includes(item),
+    isDone: !wasDoneBefore && isGoneFrom(reads[reads.length - 1], item),
   };
 };

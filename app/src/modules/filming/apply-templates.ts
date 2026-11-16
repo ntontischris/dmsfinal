@@ -22,26 +22,19 @@ async function templateFor(
   return parsed?.success ? pickTemplate(parsed.data, kindLabel) : undefined;
 }
 
-// Η βάση παραλείπει όποιον έχει άλλο Γύρισμα, αλλά βάζει όποιον έχει ρεπό/άδεια και το αντικείμενο σε σύγκρουση
-// (όταν η ρύθμιση το επιτρέπει). Για τα προεπιλεγμένα ισχύει «ό,τι δεν χωρά δεν μπαίνει»: βγαίνουν εδώ,
-// και το βήμα Συνεργείου τα δείχνει με όνομα και λόγο.
-async function dropWhatDoesNotFit(id: string): Promise<void> {
+// Η βάση παραλείπει όποιον έχει άλλο Γύρισμα· όποιος έχει ρεπό/άδεια μένει μέσα με προειδοποίηση (stino flow.md:
+// «μόνο προειδοποίηση»). Το αντικείμενο σε σύγκρουση (όταν η ρύθμιση το επιτρέπει) απελευθερώνεται εδώ, ένα-ένα,
+// και το βήμα Συνεργείου το δείχνει με όνομα και λόγο.
+async function releaseClashingEquipment(id: string): Promise<void> {
   const card = await getFilming(id);
   if (!card.ok || !card.data) return;
-  const { crew, equipment } = card.data;
-  const fits = crew.filter((member) => !member.isBlocked);
-  const clashes = equipment.filter((line) => line.conflict);
-  await Promise.all([
-    fits.length < crew.length
-      ? callRpc("filming_crew_set", {
-          p_id: id,
-          p_user_ids: fits.map((member) => member.userId),
-        })
-      : null,
-    ...clashes.map((line) =>
-      callRpc("equipment_item_release", { p_item: line.itemId, p_filming: id }),
-    ),
-  ]);
+  for (const line of card.data.equipment.filter((item) => item.conflict)) {
+    const outcome = await callRpc("equipment_item_release", {
+      p_item: line.itemId,
+      p_filming: id,
+    });
+    if (!outcome.ok) console.error("equipment_item_release", outcome.state);
+  }
 }
 
 // Με τη δημιουργία ή την έγκριση μπαίνουν τα προεπιλεγμένα Πρότυπα Συνεργείου και Εξοπλισμού, μόνο όσα χωρούν.
@@ -76,5 +69,5 @@ export async function applyDefaultTemplates(
         })
       : null,
   ]);
-  await dropWhatDoesNotFit(id.data);
+  await releaseClashingEquipment(id.data);
 }
