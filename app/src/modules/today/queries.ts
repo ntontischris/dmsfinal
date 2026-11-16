@@ -24,23 +24,30 @@ import {
 // Ανάγνωση της «Σήμερα». Όλα περνούν από RPC· η βάση αποφασίζει ποιες κάρτες επιτρέπονται.
 // null = ο θεατής δεν έχει «Σήμερα» ή δεν βλέπει την κάρτα (42501).
 
-export async function getTodayCounts(): Promise<ReadResult<TodayCounts | null>> {
-  const supabase = await createSupabase();
-  if (!supabase) return { ok: false };
-  return read("getTodayCounts", supabase.rpc("today_counts"), parseTodayCounts);
-}
+// Μία φορά ανά αίτημα (cache): η λίστα «Τι πρέπει να κάνω τώρα» και η ενημέρωση διαβάζουν τις ίδιες κάρτες.
+export const getTodayCounts = cache(
+  async (): Promise<ReadResult<TodayCounts | null>> => {
+    const supabase = await createSupabase();
+    if (!supabase) return { ok: false };
+    return read(
+      "getTodayCounts",
+      supabase.rpc("today_counts"),
+      parseTodayCounts,
+    );
+  },
+);
 
-export async function getTodayCard(
-  code: string,
-): Promise<ReadResult<CardData | null>> {
-  const supabase = await createSupabase();
-  if (!supabase) return { ok: false };
-  return read(
-    "getTodayCard",
-    supabase.rpc("today_card", { p_code: code }),
-    parseCardData,
-  );
-}
+export const getTodayCard = cache(
+  async (code: string): Promise<ReadResult<CardData | null>> => {
+    const supabase = await createSupabase();
+    if (!supabase) return { ok: false };
+    return read(
+      "getTodayCard",
+      supabase.rpc("today_card", { p_code: code }),
+      parseCardData,
+    );
+  },
+);
 
 // Τα κομμάτια της ενημέρωσης (#241): null = ο θεατής δεν έχει το Δικαίωμα (42501).
 export async function getTodayMoney(): Promise<ReadResult<TodayMoney | null>> {

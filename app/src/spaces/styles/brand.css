@@ -206,3 +206,18 @@
   --kind-red: #d04b33;
 }
 }
+
+/* Γέφυρα για τα shadcn κομμάτια (src/spaces/ui): τα ονόματα του shadcn δείχνουν στα χρώματα της εταιρείας. */
+[data-look='spaces'] {
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-surface-raised);
+  --muted: var(--color-surface);
+  --muted-foreground: var(--color-text-muted);
+  --border: var(--color-border);
+  --border-strong: var(--color-border-strong);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-on-accent);
+  --destructive: var(--color-danger);
+  --ring: var(--color-focus);
+}

@@ -170,6 +170,7 @@ export function E3Crew({
                     run(applyCrewTemplate, {
                       filmingId: card.id,
                       templateId: template.id,
+                      memberCount: String(template.members.length),
                     })
                   }
                 >

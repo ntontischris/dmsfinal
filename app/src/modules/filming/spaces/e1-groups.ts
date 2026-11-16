@@ -15,9 +15,13 @@ export interface E1Filming {
   startsAtMs: number;
   endsAtMs: number;
   state: FilmingState;
+  clientId: string | null;
   clientName: string | null;
   productionTitle: string;
+  location: string | null;
   crew: { confirmed: number; total: number } | null;
+  // Τα άτομα του Συνεργείου, για το φίλτρο «Ποιος πάει»· κενό όταν ο θεατής δεν βλέπει Συνεργείο.
+  crewUserIds: readonly string[];
   signals: FilmingSignals;
 }
 

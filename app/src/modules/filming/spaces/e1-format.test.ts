@@ -12,4 +12,5 @@ test("η αναμονή γράφεται σωστά και για 1 ώρα", () 
   expect(waitingLabel(1)).toBe("1 ώρα");
   expect(waitingLabel(5)).toBe("5 ώρες");
   expect(waitingLabel(72)).toBe("3 ημέρες");
+  expect(waitingLabel(0)).toBe("λιγότερο από 1 ώρα");
 });

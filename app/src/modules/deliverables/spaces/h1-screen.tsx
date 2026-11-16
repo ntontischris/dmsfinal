@@ -4,6 +4,7 @@ import { getViewer, type Viewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
 import { Segmented } from "@/spaces/kit/segmented";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { Strip } from "@/spaces/shell/strip";
 
 import { deliverablesCaps } from "../caps";
 import { CLIENT_QUEUE_NOTE } from "../labels";
@@ -23,6 +24,7 @@ import {
 } from "./h1-model";
 import { ChargesCard, RulesCard } from "./h1-panels";
 import { ReviewTable } from "./h1-review";
+import { deliverablesStripOf } from "./h1-strip-model";
 import { ClientQueueTable, ForMeTable, type ListQuery } from "./h1-rows";
 
 import "./h1.css";
@@ -86,6 +88,14 @@ export async function SpacesDeliverables({ query: raw }: { query: RawQuery }) {
   };
   return (
     <div data-spaces>
+      <Strip
+        stats={deliverablesStripOf({
+          work: itemsOf("mine"),
+          review: views.includes("review") ? itemsOf("review") : null,
+          viewerId,
+        })}
+        now={null}
+      />
       {isScopedOf(viewer) && (
         <p className="note">
           Με αφορά: μόνο Παραδοτέα Παραγωγών όπου είσαι Μέλος.

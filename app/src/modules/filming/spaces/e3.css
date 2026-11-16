@@ -17,8 +17,11 @@
 & .e3-day[aria-pressed='true'] { outline: 2px solid var(--color-accent); }
 & .e3-status { margin: var(--space-2) 0 0; font-size: var(--text-sm); }
 & .e3-quick { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-& .e3-tools > summary { cursor: pointer; font-weight: 600; }
-& .e3-tools[open] > summary { margin-bottom: var(--space-3); }
+/* Κύριες ενέργειες στην κορυφή: τα κουμπιά σε μία σειρά, οι αποφάσεις και τα μηνύματα σε δική τους γραμμή */
+& .e3-hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+& .e3-hero-actions > :not(.btn-row) { flex-basis: 100%; }
+& .e3-hero-actions .btn-row { margin: 0; }
+& .e3-hero-actions .button { border-radius: 999px; min-height: 44px; }
 /* Ύφος ταυτότητας */
 & .e3-day, .e3-banner { border-radius: var(--radius-lg); }
 /* Σημειώσεις: οι αλλαγές γραμμής μένουν (όπως στη σημερινή σελίδα) */

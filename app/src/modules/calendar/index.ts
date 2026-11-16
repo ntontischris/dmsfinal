@@ -5,7 +5,7 @@ export { CALENDAR_VIEWS, type CalendarView } from "./date-range";
 export type { CalendarDay } from "./calendar-days";
 export type { BlockedFormFields } from "./blocked-form";
 export { buildCalendarIcs } from "./ics";
-export { getLinkStatus } from "./queries";
+export { getCalendarView, getLinkStatus } from "./queries";
 export { getCalendarFeed } from "./queries-feed";
 export { calendarHref, type CalendarParams } from "./url-state";
 export type { CalendarGoogle, CalendarMember } from "./types";

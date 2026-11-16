@@ -5,107 +5,55 @@ import { Panel } from "@/spaces/kit/panel";
 
 import { formatCents } from "../helpers";
 import type { OtherCard, QuietCard } from "./a1-brief";
-import type { RankedDecisions } from "./a1-decisions";
-import { decisionFactOf } from "./a1-facts";
-import { isNewSince, itemKeyOf, laterLineOf } from "./a1-later";
-import { LaterButton, UndoLater } from "./a1-later-buttons";
-import type { CardContent } from "./a1-model";
+import { suggestionFactOf } from "./a1-facts";
+import type { CardContent, CardDef } from "./a1-model";
 import type { Programme } from "./a1-programme";
 
 // Τα κομμάτια της Σήμερα της ομάδας (#241). Η σειρά δείχνει το επείγον, όχι σημάδια σε κάθε γραμμή.
 
 const MONEY_SHOWN = 3;
 
-function DecisionTitle({ label, isNew }: { label: string; isNew: boolean }) {
-  return (
-    <>
-      {label}
-      {isNew && <span className="a1-new"> νέο</span>}
-    </>
-  );
+interface MoveSuggestionsProps {
+  decisions: readonly { card: CardDef; content: CardContent }[];
 }
 
-// stamp: «ΕΕΕΕ-ΜΜ-ΗΗTΩΩ:ΛΛ» (Αθήνα), για το «Περιμένει N ημέρες» και το «ξαναβγαίνουν».
-// seenAt: πότε τελείωσε η προηγούμενη επίσκεψη (Σ8)· later: τα κλειδιά που κρύφτηκαν με «Αργότερα».
-export function DecisionsPanel({
-  ranked,
-  stamp,
-  seenAt,
-  later,
-}: {
-  ranked: RankedDecisions;
-  stamp: string;
-  seenAt: string | null;
-  later: readonly string[];
-}) {
-  const today = stamp.slice(0, 10);
-  const laterLine = laterLineOf(later.length, stamp);
+// Ακύρωση ↔ μετάθεση (Σ9): όπου μια θέση που αδειάζει χωρά ανοιχτή μετάθεση, το «Πρότεινε αυτή την ώρα» (μόνο πρόταση,
+// ανοίγει το Γύρισμα). Τα ίδια τα αιτήματα είναι στη λίστα «Τι πρέπει να κάνω τώρα» (Αιτήματα γυρίσματος).
+export function MoveSuggestions({ decisions }: MoveSuggestionsProps) {
+  const rows = decisions
+    .filter(({ card }) => card.id === "filming_approvals")
+    .flatMap(({ card, content }) =>
+      content.rows
+        .filter((row) => row.suggestion)
+        .map((row) => ({ row, fact: suggestionFactOf({ ...row, cardId: card.id }) })),
+    );
+  if (rows.length === 0) return null;
   return (
-    <div className="a1-brief-panel" data-part="decisions">
-      <Panel
-        label="Μόνο εσύ μπορείς"
-        aside={ranked.total > 0 ? ranked.total : undefined}
-      >
-        {ranked.shown.length === 0 ? (
-          <p className="muted a1-empty">Καμία απόφαση δεν σε περιμένει.</p>
-        ) : (
-          <div className="a1-rows">
-            <RowList>
-              {ranked.shown.map((row, index) => (
-                <ListRow
-                  key={`${row.cardId}${row.href}${row.label}`}
-                  lead={<span className="a1-rank">{index + 1}</span>}
-                  title={
-                    <DecisionTitle
-                      label={row.label}
-                      isNew={isNewSince(row, seenAt)}
-                    />
-                  }
-                  sub={decisionFactOf(row, today) || row.cardTitle}
-                  aside={<DecisionActions row={row} />}
-                />
-              ))}
-            </RowList>
-          </div>
-        )}
-        {laterLine && (
-          <div className="a1-quiet a1-later-line">
-            {laterLine} · <UndoLater keys={later} />
-          </div>
-        )}
-        {ranked.more && (
-          <footer className="a1-card-foot">
-            <Link href={ranked.more.href}>Και {ranked.more.count} ακόμα →</Link>
-          </footer>
-        )}
+    <div className="a1-brief-panel" data-part="suggestions">
+      <Panel label="Θέσεις που χωράνε μετάθεση">
+        <RowList>
+          {rows.map(({ row, fact }) => (
+            <ListRow
+              key={`${row.href}${row.label}`}
+              title={row.label}
+              sub={fact ?? undefined}
+              aside={
+                row.suggestion && (
+                  <Link
+                    className="button"
+                    data-ghost="true"
+                    href={row.suggestion.href}
+                    aria-label={`Πρότεινε αυτή την ώρα: ${row.label}`}
+                  >
+                    Πρότεινε αυτή την ώρα
+                  </Link>
+                )
+              }
+            />
+          ))}
+        </RowList>
       </Panel>
     </div>
-  );
-}
-
-function DecisionActions({ row }: { row: RankedDecisions["shown"][number] }) {
-  const itemKey = itemKeyOf(row.cardId, row);
-  return (
-    <span className="a1-decision-actions">
-      {itemKey && <LaterButton itemKey={itemKey} label={row.label} />}
-      {row.suggestion && (
-        <Link
-          className="button"
-          data-ghost="true"
-          href={row.suggestion.href}
-          aria-label={`Πρότεινε αυτή την ώρα: ${row.label}`}
-        >
-          Πρότεινε αυτή την ώρα
-        </Link>
-      )}
-      <Link
-        className="button"
-        href={row.href}
-        aria-label={`Άνοιξε: ${row.label}`}
-      >
-        Άνοιξε
-      </Link>
-    </span>
   );
 }
 
@@ -127,10 +75,9 @@ export function ProgrammePanel({
             {programme.next && (
               <>
                 {" "}
-                Επόμενο:{" "}
-                <Link href={programme.next.href}>
-                  {programme.next.when}
-                </Link>, {programme.next.label}.
+                Επόμενο Γύρισμα: {programme.next.when}
+                {programme.next.label ? ` — ${programme.next.label}` : ""}.{" "}
+                <Link href={programme.next.href}>Άνοιγμα</Link>
               </>
             )}
           </p>

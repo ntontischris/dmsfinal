@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { InboxItem, MentionItem, QueueItem } from "../view-schema";
 import {
+  inboxTabCountsOf,
   j1ConversationsOf,
   j1MentionsOf,
   j1RequestsOf,
@@ -40,6 +41,19 @@ const queueItem = (overrides: Partial<QueueItem> = {}): QueueItem => ({
 });
 
 describe("j1ConversationsOf", () => {
+  it("should mark a conversation as waiting only when the client is owed a reply", () => {
+    const [waiting, answered] = j1ConversationsOf(
+      [
+        inboxItem({ waitingSince: "2026-11-01T09:00:00Z" }),
+        inboxItem({ clientId: "c-2", waitingSince: null }),
+      ],
+      null,
+      NOW,
+    );
+    expect(waiting?.isWaiting).toBe(true);
+    expect(answered?.isWaiting).toBe(false);
+  });
+
   it("should count open requests per client when the open view loaded", () => {
     const [row] = j1ConversationsOf(
       [inboxItem()],
@@ -150,5 +164,28 @@ describe("tabLabelOf", () => {
   it("should add the count only when it loaded", () => {
     expect(tabLabelOf("Αιτήματα", 4)).toBe("Αιτήματα (4)");
     expect(tabLabelOf("Αιτήματα", null)).toBe("Αιτήματα");
+  });
+});
+
+describe("inboxTabCountsOf", () => {
+  it("should count waiting conversations, open client requests and unread mentions", () => {
+    const counts = inboxTabCountsOf(
+      [
+        inboxItem({ clientId: "c-1", waitingSince: "2026-11-01T09:30:00Z" }),
+        inboxItem({ clientId: "c-2", waitingSince: null }),
+      ],
+      3,
+      [
+        queueItem({ messageId: "m-1" }),
+        queueItem({ messageId: "m-2", state: "done" }),
+        queueItem({ messageId: "m-3", kind: "change" }),
+        queueItem({ messageId: null }),
+      ],
+    );
+    expect(counts).toEqual({ conversations: 1, requests: 1, mentions: 3 });
+  });
+
+  it("should leave the request count unknown until the open requests are loaded", () => {
+    expect(inboxTabCountsOf([], 0, null).requests).toBeNull();
   });
 });

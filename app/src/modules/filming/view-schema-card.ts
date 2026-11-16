@@ -37,7 +37,15 @@ export const rowSchema: z.ZodType<FilmingRow> = z.object({
   state,
   client: named.nullable(),
   production: z.object({ id: z.string(), title: z.string() }),
-  crew: z.object({ confirmed: z.number(), total: z.number() }).nullable(),
+  // Τόπος και άτομα Συνεργείου ήρθαν με το 20261116100000· παλαιότερη βάση δεν τα στέλνει.
+  location: z.string().nullable().default(null),
+  crew: z
+    .object({
+      confirmed: z.number(),
+      total: z.number(),
+      userIds: z.array(z.string()).default([]),
+    })
+    .nullable(),
   signals: signalsSchema,
 });
 
@@ -147,7 +155,9 @@ const cardShape = z.object({
   provision: provisionSchema.nullable(),
   crew: z.array(crewSchema),
   vacancies: z
-    .array(z.object({ userId: z.string(), name: z.string(), vacatedAt: z.string() }))
+    .array(
+      z.object({ userId: z.string(), name: z.string(), vacatedAt: z.string() }),
+    )
     .default([]),
   sheet: sheetSummarySchema,
   equipment: z.array(
@@ -181,7 +191,9 @@ const cardShape = z.object({
   team: teamSchema.nullable().default(null),
 });
 
-const toHistoryEntry = (entry: z.infer<typeof historySchema>): FilmingHistoryEntry => ({
+const toHistoryEntry = (
+  entry: z.infer<typeof historySchema>,
+): FilmingHistoryEntry => ({
   at: entry.at,
   action: entry.action,
   event: entry.event,
@@ -190,6 +202,7 @@ const toHistoryEntry = (entry: z.infer<typeof historySchema>): FilmingHistoryEnt
   after: entry.after,
 });
 
-export const cardSchema = cardShape.transform(
-  (row): FilmingCard => ({ ...row, history: row.history.map(toHistoryEntry) }),
-);
+export const cardSchema = cardShape.transform((row): FilmingCard => ({
+  ...row,
+  history: row.history.map(toHistoryEntry),
+}));

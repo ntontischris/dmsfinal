@@ -1,7 +1,10 @@
 // Τύποι του module «Γυρίσματα» (E1–E4, E6, E7, Ρυθμίσεις, F2 Δεσμεύσεις, G2 λίστα). Τα JSON της βάσης έρχονται camelCase·
 // εδώ ό,τι γυρνά η βάση, χωρίς ποσά: οι Παροχές μετριούνται σε πλήθος ή ώρες.
 
-import type { PendingReschedule, RescheduleRequestEntry } from "./booking-types";
+import type {
+  PendingReschedule,
+  RescheduleRequestEntry,
+} from "./booking-types";
 import type { SheetSummary } from "./sheet-types";
 
 export const FILMING_STATES = [
@@ -70,7 +73,8 @@ export interface FilmingRow {
   state: FilmingState;
   client: NamedRef | null;
   production: NamedProduction;
-  crew: { confirmed: number; total: number } | null;
+  location: string | null;
+  crew: { confirmed: number; total: number; userIds: string[] } | null;
   signals: FilmingSignals;
 }
 
@@ -193,7 +197,11 @@ export type FilmingGoogleState = "off" | "none" | "queued" | "error" | "synced";
 
 export interface FilmingTeamInfo {
   details: FilmingDetails;
-  google: { state: FilmingGoogleState; at: string | null; error: string | null };
+  google: {
+    state: FilmingGoogleState;
+    at: string | null;
+    error: string | null;
+  };
   outcome: {
     billable: "none" | "pending" | "invoiced";
     extraBillable: boolean;

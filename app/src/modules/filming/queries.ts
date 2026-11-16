@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createSupabase } from "@/lib/supabase/server";
 
 import { read, type ReadResult } from "./read";
@@ -30,15 +32,18 @@ import { cardSchema, filmingsViewSchema } from "./view-schema-card";
 
 const NOT_VISIBLE = ["P0001", "42501"];
 
-export async function listFilmings(tab: FilmingTab): Promise<ReadResult<FilmingRow[]>> {
-  const supabase = await createSupabase();
-  if (!supabase) return { ok: false };
-  return read(
-    "listFilmings",
-    supabase.rpc("filmings_view", { p_tab: tab, p_limit: 100 }),
-    (data) => filmingsViewSchema.parse(data),
-  );
-}
+// cache(): η λωρίδα και ο Πίνακας της E1 διαβάζουν τα ίδια ανοιχτά Γυρίσματα στο ίδιο αίτημα.
+export const listFilmings = cache(
+  async (tab: FilmingTab): Promise<ReadResult<FilmingRow[]>> => {
+    const supabase = await createSupabase();
+    if (!supabase) return { ok: false };
+    return read(
+      "listFilmings",
+      supabase.rpc("filmings_view", { p_tab: tab, p_limit: 100 }),
+      (data) => filmingsViewSchema.parse(data),
+    );
+  },
+);
 
 // Τα ανοιχτά Γυρίσματα για τη δέσμευση εξοπλισμού από την F2.
 export async function listOpenFilmings(): Promise<ReadResult<FilmingRow[]>> {
@@ -50,8 +55,11 @@ export async function getFilming(
 ): Promise<ReadResult<FilmingCard | null>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
-  const { data, error } = await supabase.rpc("filming_view", { p_id: filmingId });
-  if (error && NOT_VISIBLE.includes(error.code ?? "")) return { ok: true, data: null };
+  const { data, error } = await supabase.rpc("filming_view", {
+    p_id: filmingId,
+  });
+  if (error && NOT_VISIBLE.includes(error.code ?? ""))
+    return { ok: true, data: null };
   if (error) {
     console.error("getFilming:", error.message);
     return { ok: false };
@@ -62,13 +70,17 @@ export async function getFilming(
 export async function getQueue(): Promise<ReadResult<FilmingQueue>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
-  return read("getQueue", supabase.rpc("filming_queue_view"), (data) => queueSchema.parse(data));
+  return read("getQueue", supabase.rpc("filming_queue_view"), (data) =>
+    queueSchema.parse(data),
+  );
 }
 
 export async function listMine(): Promise<ReadResult<MineEntry[]>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
-  return read("listMine", supabase.rpc("filming_mine_view"), (data) => mineViewSchema.parse(data));
+  return read("listMine", supabase.rpc("filming_mine_view"), (data) =>
+    mineViewSchema.parse(data),
+  );
 }
 
 export async function listBookingOptions(
@@ -105,17 +117,25 @@ export async function listCrewCandidates(): Promise<ReadResult<NamedRef[]>> {
 }
 
 // Τα μέλη με κλεισμένο χρόνο που τέμνει το Γύρισμα (μόνο για προειδοποίηση στο Συνεργείο).
-export async function listCrewBlocked(startsAt: string, hours: number): Promise<ReadResult<string[]>> {
+export async function listCrewBlocked(
+  startsAt: string,
+  hours: number,
+): Promise<ReadResult<string[]>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read(
     "listCrewBlocked",
-    supabase.rpc("filming_crew_blocked", { p_starts: startsAt, p_hours: hours }),
+    supabase.rpc("filming_crew_blocked", {
+      p_starts: startsAt,
+      p_hours: hours,
+    }),
     (data) => blockedUserIdsSchema.parse(data),
   );
 }
 
-export async function listEquipmentCandidates(): Promise<ReadResult<EquipmentCandidate[]>> {
+export async function listEquipmentCandidates(): Promise<
+  ReadResult<EquipmentCandidate[]>
+> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read(
@@ -125,7 +145,9 @@ export async function listEquipmentCandidates(): Promise<ReadResult<EquipmentCan
   );
 }
 
-export async function getFilmingSettings(): Promise<ReadResult<FilmingSettings>> {
+export async function getFilmingSettings(): Promise<
+  ReadResult<FilmingSettings>
+> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read(

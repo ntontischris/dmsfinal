@@ -2,6 +2,7 @@
 // prototype. Καθαρές συναρτήσεις· τα κείμενα και οι σύνδεσμοι είναι αυτοί της σημερινής οθόνης.
 
 import { formatWhen, previewLine, threadHref, truncate } from "../helpers";
+import { waitingSinceOf } from "../needs-me";
 import { queueItemHref, resultLink } from "../request-helpers";
 import {
   REQUEST_KIND_LABELS,
@@ -20,6 +21,8 @@ export interface J1Conversation {
   // Ανοιχτά Αιτήματα του Πελάτη που βλέπει ο Χρήστης· null όταν δεν φόρτωσαν.
   openRequests: number | null;
   isPartial: boolean;
+  // Ο Πελάτης έγραψε τελευταίος και κανείς από την ομάδα δεν απάντησε (ούτε πάτησε «Δεν χρειάζεται απάντηση»).
+  isWaiting: boolean;
 }
 
 const openByClient = (open: readonly QueueItem[]): Map<string, number> =>
@@ -46,6 +49,7 @@ export const j1ConversationsOf = (
     unread: item.unread,
     openRequests: counts === null ? null : (counts.get(item.clientId) ?? 0),
     isPartial: item.partial,
+    isWaiting: waitingSinceOf(item) !== null,
   }));
 };
 
@@ -147,3 +151,30 @@ export const j1RequestsOf = (
 // Οι ετικέτες των καρτελών, όπως στο prototype: «Συνομιλίες (N)» κ.λπ. Χωρίς αριθμό όταν δεν φόρτωσε.
 export const tabLabelOf = (name: string, count: number | null): string =>
   count === null ? name : `${name} (${count})`;
+
+export interface InboxTabCounts {
+  conversations: number;
+  // null όταν τα Αιτήματα δεν φόρτωσαν.
+  requests: number | null;
+  mentions: number;
+}
+
+// Οι αριθμοί των καρτελών μετρούν ό,τι δείχνει η λίστα «Χρειάζονται εμένα»: Συνομιλίες που «Περιμένουν απάντηση»,
+// ανοιχτά Αιτήματα μέσα σε Συνομιλία (όλα τα ανοιχτά που βλέπω, όχι μόνο όσα έχουν εμένα υπεύθυνο), αδιάβαστες αναφορές.
+export const inboxTabCountsOf = (
+  items: readonly InboxItem[],
+  mentionsUnread: number,
+  open: readonly QueueItem[] | null,
+): InboxTabCounts => ({
+  conversations: items.filter((item) => waitingSinceOf(item) !== null).length,
+  requests:
+    open === null
+      ? null
+      : open.filter(
+          (item) =>
+            item.messageId !== null &&
+            item.kind !== "change" &&
+            item.state === "open",
+        ).length,
+  mentions: mentionsUnread,
+});

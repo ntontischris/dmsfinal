@@ -11,6 +11,7 @@ import {
 import { athensDate, filmingCaps, listOpenFilmings } from "@/modules/filming";
 import { hrefOf, type HrefParams } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { Strip } from "@/spaces/shell/strip";
 
 import { productionsCaps } from "../caps";
 import { listOwnerCandidates, listProductions } from "../queries";
@@ -29,6 +30,7 @@ import {
   type G1Signals,
   type View,
 } from "./g1-rows";
+import { productionsStripOf } from "./g1-strip-model";
 import { parseMode } from "./board-model";
 import { G1ClientCards } from "./g1-client";
 import { CLIENT_VIEWS } from "./g1-client-model";
@@ -263,6 +265,15 @@ export async function SpacesProductions({ query: raw }: { query: RawQuery }) {
 
   return (
     <div data-spaces>
+      <Strip
+        stats={productionsStripOf({
+          cards: all,
+          signals,
+          canSeeCost: costsCaps(viewer).canView,
+          canReview: deliverablesCaps(viewer).canReview,
+        })}
+        now={null}
+      />
       {isScoped && (
         <p className="note">
           Με αφορά: Παραγωγές όπου είσαι Μέλος (Υπεύθυνος ή με ανάθεση σε

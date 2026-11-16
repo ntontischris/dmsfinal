@@ -1,7 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState, type ChangeEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 
 import { sendMessage } from "../actions";
 import { ATTACHMENT_ACCEPT, formatSize } from "../attachment-rules";
@@ -11,6 +17,7 @@ import {
   type UploadItem,
 } from "../use-attachment-uploads";
 import type { ThreadProduction, WritableClient } from "../view-schema";
+import { isInApanto, tellGuide } from "./guide-signal";
 import { mentionsIn } from "./j2-adapter";
 import { JForm } from "./j2-form";
 
@@ -51,15 +58,25 @@ export function Composer({
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<readonly string[]>([]);
 
-  // Μετά από κάθε αποστολή: καθαρίζει τον συντάκτη και ανανεώνει τη Συνομιλία αμέσως (Μ2).
+  // Στο βήμα «Τι απαντάς;» του οδηγού το πεδίο είναι ήδη έτοιμο για γράψιμο.
+  const search = useSearchParams();
+  const isReplyStep = isInApanto(search) && search.get("step") === "3";
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (isReplyStep) bodyRef.current?.focus();
+  }, [isReplyStep]);
+
+  // Μετά από κάθε αποστολή: καθαρίζει τον συντάκτη και ανανεώνει τη Συνομιλία αμέσως (Μ2). Ο οδηγός μαθαίνει αν
+  // ήταν απάντηση προς τον Πελάτη ή Εσωτερικό μήνυμα.
   const handleSent = useCallback(() => {
+    tellGuide(isInternal ? "note" : "reply");
     setInternal(false);
     setText("");
     setPicked([]);
     setTag(defaultTag);
     resetUploads();
     router.refresh();
-  }, [router, resetUploads, defaultTag]);
+  }, [router, resetUploads, defaultTag, isInternal]);
 
   const mention = (id: string) => {
     const person = mentionable.find((p) => p.id === id);
@@ -146,6 +163,7 @@ export function Composer({
           </select>
         </label>
         <textarea
+          ref={bodyRef}
           className="input"
           name="body"
           aria-label="Νέο Μήνυμα"

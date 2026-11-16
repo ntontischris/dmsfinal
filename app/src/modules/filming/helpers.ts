@@ -1,6 +1,7 @@
 import type { Tone } from "@/components/ui/badge";
 
 import {
+  DECIDED_LABELS,
   EVENT_LABELS,
   SIGNAL_LABELS,
   UNKNOWN_ACTOR_LABEL,
@@ -74,8 +75,20 @@ const reasonOf = (entry: FilmingHistoryEntry): string => {
   return reason === "" ? "" : `. Λόγος: ${reason}`;
 };
 
+// Το όνομα του γεγονότος σε απλά ελληνικά· για όσα κρίνονται, με το αποτέλεσμα (εγκρίθηκε/απορρίφθηκε).
+const labelOf = (entry: FilmingHistoryEntry): string => {
+  const name = entry.event ?? "";
+  const decided = DECIDED_LABELS[name];
+  const accepted = entry.after?.accepted;
+  if (decided && typeof accepted === "boolean")
+    return accepted ? decided.accepted : decided.refused;
+  if (name === "sheet_issued" && typeof entry.after?.version === "number")
+    return `${EVENT_LABELS.sheet_issued}, έκδοση ${entry.after.version}`;
+  return EVENT_LABELS[name] ?? "Αλλαγή στο Γύρισμα";
+};
+
 const eventText = (entry: FilmingHistoryEntry): string =>
-  `${EVENT_LABELS[entry.event ?? ""] ?? entry.event ?? "—"}${reasonOf(entry)}`;
+  `${labelOf(entry)}${reasonOf(entry)}`;
 
 export interface FilmingHistoryLine {
   at: string;

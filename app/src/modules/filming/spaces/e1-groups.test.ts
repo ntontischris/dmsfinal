@@ -21,7 +21,8 @@ const rowOf = (over: Partial<FilmingRow> = {}): FilmingRow => ({
   state: "scheduled",
   client: { id: "c", name: "Κινηση ΑΕ" },
   production: { id: "p", title: "Σεπτέμβριος" },
-  crew: { confirmed: 1, total: 2 },
+  location: null,
+  crew: { confirmed: 1, total: 2, userIds: [] },
   signals: {
     equipmentConflict: false,
     isExtra: false,

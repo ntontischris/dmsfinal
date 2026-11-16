@@ -1,10 +1,13 @@
 import { getViewer } from "@/modules/access";
+import { athensDate } from "@/modules/filming";
+import { Strip } from "@/spaces/shell/strip";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { equipmentCaps } from "../caps";
 import { listBookings, listCategories, listItems } from "../queries";
 import { bookingIndexOf } from "./f1-bookings";
 import { F1Registry } from "./f1-registry";
+import { equipmentStripOf } from "./f1-strip-model";
 
 import "./f.css";
 
@@ -27,15 +30,26 @@ export async function SpacesEquipment() {
     listCategories({ includeRetired: true }),
     listBookings(),
   ]);
+  const openBookings = bookings.ok ? bookings.data : [];
   return (
     <div data-spaces>
+      {items.ok && (
+        <Strip
+          stats={equipmentStripOf({
+            items: items.data,
+            bookings: openBookings,
+            today: athensDate(new Date()),
+          })}
+          now={null}
+        />
+      )}
       <div className="f">
         {items.ok && categories.ok ? (
           <F1Registry
             canManage={caps.canManage}
             items={items.data}
             categories={categories.data}
-            bookings={bookingIndexOf(bookings.ok ? bookings.data : [])}
+            bookings={bookingIndexOf(openBookings)}
           />
         ) : (
           <ErrorNotice what="το μητρώο Εξοπλισμού" />

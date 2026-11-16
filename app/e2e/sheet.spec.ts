@@ -7,6 +7,7 @@ import {
   ensureSignedMonthlyAgreement,
   filmingSpecDay,
   inSpaces,
+  openBox,
   upcomingDay,
   visit,
 } from "./filming-parts";
@@ -20,7 +21,6 @@ test.describe.configure({ mode: "serial", retries: 0 });
 
 // Η Συμφωνία υπογράφεται σε δικά της contexts και κάθε Χρήστης μπαίνει ξεχωριστά: η ροή θέλει περισσότερο χρόνο.
 test.setTimeout(90_000);
-
 
 // Ένα πάνελ της σελίδας του Γυρίσματος, από τον τίτλο του (h2).
 const panel = (page: Page, title: string): Locator =>
@@ -38,15 +38,22 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
   const P = project();
   await signIn(page, "sales@example.com");
   await ensureSignedMonthlyAgreement(page, browser, P);
-  await bookFilmingFromScreen(page, P, upcomingDay(20, Number(filmingSpecDay().slice(8))));
+  await bookFilmingFromScreen(
+    page,
+    P,
+    upcomingDay(20, Number(filmingSpecDay().slice(8))),
+  );
   const filmingUrl = page.url();
 
   await inSpaces(browser, "owner@example.com", async (owner) => {
     await visit(owner, filmingUrl);
     await addToCrew(owner, PRODUCER);
 
+    await openBox(owner, "Δελτίο & ιστορικό");
     const sheet = panel(owner, "Δελτίο γυρίσματος");
-    await expect(sheet.getByText("Δεν έχει σταλεί ακόμα Δελτίο.", { exact: true })).toBeVisible();
+    await expect(
+      sheet.getByText("Δεν έχει σταλεί ακόμα Δελτίο.", { exact: true }),
+    ).toBeVisible();
     await addShot(sheet, "Είσοδος");
     await addShot(sheet, "Πάγκος");
     await expect(lastStatus(sheet)).toContainText("Το Δελτίο αποθηκεύτηκε.");
@@ -58,6 +65,7 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
 
   await inSpaces(browser, "owner@example.com", async (owner) => {
     await visit(owner, filmingUrl);
+    await openBox(owner, "Δελτίο & ιστορικό");
     const sheet = panel(owner, "Δελτίο γυρίσματος");
     const second = sheet.getByRole("textbox", { name: "Κείμενο λήψης 2" });
     await expect(second).toHaveValue("Πάγκος");
@@ -65,11 +73,15 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
     await second.press("Enter");
     await expect(lastStatus(sheet)).toContainText("Το Δελτίο αποθηκεύτηκε.");
 
-    await sheet.getByLabel("Τι άλλαξε (υποχρεωτικό)").fill("Άλλαξε η δεύτερη λήψη");
+    await sheet
+      .getByLabel("Τι άλλαξε (υποχρεωτικό)")
+      .fill("Άλλαξε η δεύτερη λήψη");
     await button(sheet, "Νέα έκδοση").click();
     await expect(lastStatus(sheet)).toContainText("Εκδόθηκε η έκδοση 2");
 
-    await expect(sheet.locator("li", { hasText: "Άλλαξε η δεύτερη λήψη" })).toBeVisible();
+    await expect(
+      sheet.locator("li", { hasText: "Άλλαξε η δεύτερη λήψη" }),
+    ).toBeVisible();
     await expect(sheet.locator("li", { hasText: "Έκδοση 1" })).toBeVisible();
     await expect(sheet.locator("li", { hasText: "Έκδοση 2" })).toBeVisible();
   });
@@ -77,10 +89,15 @@ test("ο Ιδιοκτήτης βγάζει Έκδοση 1, αλλάζει μία
   // Η έκδοση 2 μηδένισε τις απαντήσεις: η Ρένα (μέλος του Συνεργείου, χωρίς Δικαίωμα) επιβεβαιώνει την τρέχουσα έκδοση.
   await inSpaces(browser, "production@example.com", async (producer) => {
     await visit(producer, filmingUrl);
+    await openBox(producer, "Ποιοι πάνε");
     const mine = panel(producer, "Είσαι στο Συνεργείο");
-    await expect(mine.getByText("Περιμένει απάντηση", { exact: true }).first()).toBeVisible();
+    await expect(
+      mine.getByText("Περιμένει απάντηση", { exact: true }).first(),
+    ).toBeVisible();
     await button(mine, "Επιβεβαιώνω").click();
-    await expect(mine.getByText("επιβεβαιώνω", { exact: true }).first()).toBeVisible();
+    await expect(
+      mine.getByText("επιβεβαιώνω", { exact: true }).first(),
+    ).toBeVisible();
     await expect(button(mine, "Επιβεβαιώνω")).toHaveCount(0);
   });
 });
@@ -94,5 +111,7 @@ async function addShot(sheet: Locator, text: string): Promise<void> {
     await expect(button(sheet, "Προσθήκη")).toBeEnabled({ timeout: 1_000 });
   }).toPass();
   await button(sheet, "Προσθήκη").click();
-  await expect(sheet.getByRole("textbox", { name: /^Κείμενο λήψης / }).last()).toHaveValue(text);
+  await expect(
+    sheet.getByRole("textbox", { name: /^Κείμενο λήψης / }).last(),
+  ).toHaveValue(text);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 
 import { Panel } from "@/spaces/kit/panel";
@@ -139,6 +140,7 @@ export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) 
   const [last, setLast] = useState<Outcome | null>(null);
   const [open, setOpen] = useState<Open>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const send = (
     id: string,
     action: FormAction,
@@ -156,7 +158,10 @@ export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) 
         : { ...done, text: state.notice ?? "" };
       setOutcomes((prev) => ({ ...prev, [id]: outcome }));
       setLast(outcome);
-      if (!state.error) setOpen(null);
+      if (state.error) return;
+      setOpen(null);
+      // Η λίστα φρεσκάρει μόνη της (χωρίς F5): η γραμμή που απαντήθηκε φεύγει.
+      router.refresh();
     });
 
   if (pending.length + cancels.length + reschedules.length === 0)
@@ -332,6 +337,14 @@ export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) 
   );
 }
 
+function PastNote() {
+  return (
+    <p className="note" role="alert">
+      Η ώρα έχει ήδη περάσει· η Έγκριση δεν έχει νόημα. Πρότεινε στον Πελάτη άλλη ώρα από το Γύρισμα ή απόρριψε.
+    </p>
+  );
+}
+
 function PendingRow({
   item,
   outcome,
@@ -355,9 +368,13 @@ function PendingRow({
         }
         sub={`${item.when} (${item.hours} ώρες)`}
         aside={
-          <Badge tone={item.isWaitingLong ? "attention" : "waiting"}>
-            περιμένει {waitingLabel(item.waitingHours)}
-          </Badge>
+          item.isPast ? (
+            <Badge tone="attention">η μέρα πέρασε</Badge>
+          ) : (
+            <Badge tone={item.isWaitingLong ? "attention" : "waiting"}>
+              περιμένει {waitingLabel(item.waitingHours)}
+            </Badge>
+          )
         }
       />
       <li className="sx-extra" data-done={!!outcome}>
@@ -371,7 +388,8 @@ function PendingRow({
         </dl>
         {children}
         {outcome && <Result outcome={outcome} />}
-        {!outcome && (
+        {!outcome && item.isPast && <PastNote />}
+        {!outcome && !item.isPast && (
           <p className="note">
             Η Έγκριση δεν χρειάζεται Συνεργείο· ορίζεται μετά, στο Γύρισμα.
           </p>
@@ -454,7 +472,11 @@ function RescheduleRow({
         }
         sub={`${item.when} → ${item.newWhen}`}
         aside={
-          item.slotProblem && <Badge tone="attention">{item.slotProblem}</Badge>
+          item.isPast ? (
+            <Badge tone="attention">η ώρα πέρασε</Badge>
+          ) : (
+            item.slotProblem && <Badge tone="attention">{item.slotProblem}</Badge>
+          )
         }
       />
       <li className="sx-extra" data-done={!!outcome}>
@@ -466,6 +488,7 @@ function RescheduleRow({
           <dt>Ζητήθηκε</dt>
           <dd>{item.requestedAt}</dd>
         </dl>
+        {!outcome && item.isPast && <PastNote />}
         {children}
         {outcome && <Result outcome={outcome} />}
       </li>

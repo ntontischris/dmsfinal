@@ -1,6 +1,8 @@
 // Τα μηνύματα των Προτύπων και του Εξοπλισμού: τι μπήκε και τι παραλείφθηκε, με τον λόγο.
 // Καθαρές συναρτήσεις (όχι αρχείο "use server"): τα actions τις καλούν.
 
+import type { FormState } from "@/lib/form-state";
+
 interface SkippedMember {
   name?: string;
   reason: string;
@@ -29,11 +31,21 @@ const skippedOf = <T>(data: unknown): T[] => {
   return Array.isArray(skipped) ? (skipped as T[]) : [];
 };
 
-export const crewAppliedNotice = (data: unknown): string => {
+// Όταν παραλείφθηκε κάποιος, το μήνυμα είναι προειδοποίηση με τους λόγους· αν δεν μπήκε κανείς, το λέει.
+export const crewAppliedState = (
+  data: unknown,
+  memberCount: number,
+): FormState => {
   const skipped = skippedOf<SkippedMember>(data);
-  return skipped.length === 0
-    ? "Το Πρότυπο εφαρμόστηκε στο Συνεργείο."
-    : `Το Πρότυπο εφαρμόστηκε. Παραλείφθηκαν: ${skipped.map(skippedMemberText).join("· ")}.`;
+  if (skipped.length === 0)
+    return { notice: "Το Πρότυπο εφαρμόστηκε στο Συνεργείο." };
+  const reasons = skipped.map(skippedMemberText).join("· ");
+  return {
+    warning:
+      memberCount > 0 && skipped.length >= memberCount
+        ? `Δεν μπήκε κανείς: ${reasons}.`
+        : `Το Πρότυπο μπήκε εν μέρει. Δεν μπήκαν: ${reasons}.`,
+  };
 };
 
 export const equipmentNotice = (data: unknown): string => {
