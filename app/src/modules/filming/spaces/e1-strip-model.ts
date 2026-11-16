@@ -1,3 +1,4 @@
+import { countStat } from "@/spaces/kit/count-stat";
 import type { StatProps } from "@/spaces/kit/panel";
 
 import { needsOutcome, type E1Filming } from "./e1-groups";
@@ -31,17 +32,8 @@ const isMissingCrew = (
   filming.crew !== null &&
   (filming.crew.total === 0 || filming.signals.crewDeclined);
 
-const statOf = (
-  stat: Omit<StatProps, "value" | "tone">,
-  count: number,
-): StatProps => ({
-  ...stat,
-  value: String(count),
-  tone: count > 0 ? "attention" : undefined,
-});
-
 const requestsStat = (count: number): StatProps =>
-  statOf(
+  countStat(
     {
       label: "Αναμένουν απάντηση",
       hint: "κρατήσεις, αλλαγές, ακυρώσεις",
@@ -52,7 +44,7 @@ const requestsStat = (count: number): StatProps =>
 
 export const filmingStripOf = (input: StripInput): readonly StatProps[] => [
   ...(input.requestCount === null ? [] : [requestsStat(input.requestCount)]),
-  statOf(
+  countStat(
     {
       label: "Θέλουν «έγινε»",
       hint: "τελείωσαν και δεν σημειώθηκαν",
@@ -60,7 +52,7 @@ export const filmingStripOf = (input: StripInput): readonly StatProps[] => [
     },
     input.filmings.filter((f) => needsOutcome(f, input.nowMs)).length,
   ),
-  statOf(
+  countStat(
     {
       label: "Ομάδα που λείπει",
       hint: "επόμενες 7 ημέρες",
