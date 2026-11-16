@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   bookFilmingFromScreen,
   ensureSignedMonthlyAgreement,
+  openBox,
   upcomingDay,
   visit,
 } from "./filming-parts";
@@ -31,6 +32,7 @@ test("ο Ιδιοκτήτης γράφει επαφή και σύνδεσμο α
   await bookFilmingFromScreen(page, P, upcomingDay(24, 20));
   const filmingUrl = page.url();
 
+  await openBox(page, "Πότε & πού");
   const panel = detailsPanel(page);
   await expect(
     panel.getByText("Δεν έχουν μπει στοιχεία χώρου.", { exact: true }),
@@ -62,12 +64,16 @@ test("ο Ιδιοκτήτης γράφει επαφή και σύνδεσμο α
   await expect(outcomeList(page)).toBeVisible();
   await page.getByLabel("Πόσο κράτησε στην πράξη (ώρες)").fill("3");
   await button(page, "Επιβεβαίωση «έγινε»").click();
+  // Τι γίνεται στην αναίρεση το λέει το συρτάρι της «Αναίρεσης», πριν από την επιβεβαίωση.
+  await button(page, "Αναίρεση").click();
   await expect(
     outcomeList(page).getByText("Το Γύρισμα ξαναγίνεται προγραμματισμένο."),
   ).toBeVisible();
+  await page.keyboard.press("Escape");
 
   // Ο σύνδεσμος αρχείων αλλάζει και μετά το «έγινε» (τα αρχεία έρχονται μετά το γύρισμα).
   await visit(page, filmingUrl);
+  await openBox(page, "Πότε & πού");
   await button(detailsPanel(page), "Αλλαγή στοιχείων χώρου").click();
   await detailsPanel(page)
     .getByLabel("Σύνδεσμος αρχείων (https://…)")

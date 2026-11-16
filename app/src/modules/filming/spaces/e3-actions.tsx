@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
+import { Drawer } from "@/spaces/kit/drawer";
 
 import { decideRescheduleRequest } from "../actions-booking";
 import {
@@ -35,6 +35,16 @@ type Form =
   | "move"
   | "refuseMove"
   | null;
+
+const FORM_TITLES: Readonly<Record<Exclude<Form, null>, string>> = {
+  move: "Αλλαγή μέρας/ώρας",
+  reject: "Απόρριψη",
+  done: "Έγινε",
+  noshow: "Δεν έγινε",
+  refuseMove: "Απόρριψη μετάθεσης",
+  cancel: "Ακύρωση από την ομάδα",
+  undo: "Αναίρεση",
+};
 
 interface ActionsProps {
   card: FilmingCard;
@@ -153,7 +163,10 @@ function MoveForm({ card, isPending, onSend, onClose }: FormProps) {
 
 function Notes({ lines }: { lines: readonly string[] }) {
   return (
-    <ul className="stack e3-outcome" aria-label="Τι γίνεται με την Παροχή και τη χρέωση">
+    <ul
+      className="stack e3-outcome"
+      aria-label="Τι γίνεται με την Παροχή και τη χρέωση"
+    >
       {lines.map((line) => (
         <li key={line} className="note">
           {line}
@@ -217,7 +230,7 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
   const cancelHours = card.agreement?.filmingCancelHours;
 
   return (
-    <Panel label="Ενέργειες">
+    <section className="e3-hero-actions" aria-label="Ενέργειες">
       <LastDone log={result ? [result.text] : []} tone={result?.tone ?? "ok"} />
       {isOpen && can.reschedule && form === null && (
         <div className="btn-row">
@@ -230,7 +243,6 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
           </button>
         </div>
       )}
-      {form === "move" && <MoveForm {...formProps} />}
 
       {card.state === "pending" && can.approve && form === null && (
         <div className="btn-row">
@@ -254,16 +266,6 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
             </button>
           )}
         </div>
-      )}
-      {form === "reject" && (
-        <ReasonForm
-          label="Λόγος απόρριψης"
-          confirmLabel="Απόρριψη"
-          isDanger
-          isPending={isPending}
-          onConfirm={(reason) => send(rejectFilming, { ...id, reason })}
-          onClose={close}
-        />
       )}
       {card.state === "pending" && !can.approve && (
         <p className="muted">Περιμένει έγκριση από τη Διαχείριση.</p>
@@ -294,31 +296,7 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
             )}
           </div>
         )}
-      {form === "done" && <DoneForm {...formProps} />}
-      {form === "noshow" && (
-        <DecisionRow
-          note={outcomeNotes(card, "noshow").join(" ")}
-          isDanger
-          isPending={isPending}
-          yes={{
-            label: "Επιβεβαίωση «δεν έγινε»",
-            onClick: () => send(markFilmingNoShow, id),
-          }}
-          no={{ label: "Άκυρο", onClick: close }}
-        />
-      )}
 
-      {form === "refuseMove" && (
-        <ReasonForm
-          label="Λόγος απόρριψης της μετάθεσης"
-          confirmLabel="Απόρριψη μετάθεσης"
-          isPending={isPending}
-          onConfirm={(reason) =>
-            send(decideRescheduleRequest, { ...id, accept: "refuse", reason })
-          }
-          onClose={close}
-        />
-      )}
       {pending && can.decideReschedule && form !== "refuseMove" && (
         <DecisionRow
           note={`Ο πελάτης ζητά μετάθεση στις ${formatDateTime(pending.startsAt)} (${hoursLabel(pending.hours)}). Η παλιά ώρα κρατιέται μέχρι την απάντηση· η Παροχή μένει μία.${newTimeProblem ? ` Προσοχή: ${newTimeProblem}` : ""}`}
@@ -370,21 +348,11 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
           </button>
         </div>
       )}
-      {form === "cancel" && (
-        <ReasonForm
-          label="Λόγος ακύρωσης"
-          confirmLabel="Ακύρωση Γυρίσματος"
-          isDanger
-          isPending={isPending}
-          onConfirm={(reason) => send(cancelFilming, { ...id, reason })}
-          onClose={close}
-        />
-      )}
 
       {(card.state === "done" || card.state === "no_show") &&
         can.undo &&
         form !== "undo" && (
-          <div className="stack">
+          <div className="btn-row">
             <button
               type="button"
               className="button"
@@ -392,24 +360,77 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
             >
               Αναίρεση
             </button>
-            <p className="muted">
-              Για «έγινε» ή «δεν έγινε» που μπήκε κατά λάθος.
-            </p>
-            <Notes lines={outcomeNotes(card, "undo")} />
           </div>
         )}
-      {form === "undo" && (
-        <ReasonForm
-          label="Λόγος αναίρεσης"
-          confirmLabel="Αναίρεση"
-          isPending={isPending}
-          onConfirm={(reason) => send(undoFilmingOutcome, { ...id, reason })}
-          onClose={close}
-        />
-      )}
       {(card.state === "cancelled" || card.state === "rejected") && (
         <p className="muted">Το Γύρισμα είναι τελικό.</p>
       )}
-    </Panel>
+      <Drawer
+        isOpen={form !== null}
+        title={form === null ? "" : FORM_TITLES[form]}
+        onClose={close}
+      >
+        {form === "move" && <MoveForm {...formProps} />}
+        {form === "reject" && (
+          <ReasonForm
+            label="Λόγος απόρριψης"
+            confirmLabel="Απόρριψη"
+            isDanger
+            isPending={isPending}
+            onConfirm={(reason) => send(rejectFilming, { ...id, reason })}
+            onClose={close}
+          />
+        )}
+        {form === "done" && <DoneForm {...formProps} />}
+        {form === "noshow" && (
+          <DecisionRow
+            note={outcomeNotes(card, "noshow").join(" ")}
+            isDanger
+            isPending={isPending}
+            yes={{
+              label: "Επιβεβαίωση «δεν έγινε»",
+              onClick: () => send(markFilmingNoShow, id),
+            }}
+            no={{ label: "Άκυρο", onClick: close }}
+          />
+        )}
+        {form === "refuseMove" && (
+          <ReasonForm
+            label="Λόγος απόρριψης της μετάθεσης"
+            confirmLabel="Απόρριψη μετάθεσης"
+            isPending={isPending}
+            onConfirm={(reason) =>
+              send(decideRescheduleRequest, { ...id, accept: "refuse", reason })
+            }
+            onClose={close}
+          />
+        )}
+        {form === "cancel" && (
+          <ReasonForm
+            label="Λόγος ακύρωσης"
+            confirmLabel="Ακύρωση Γυρίσματος"
+            isDanger
+            isPending={isPending}
+            onConfirm={(reason) => send(cancelFilming, { ...id, reason })}
+            onClose={close}
+          />
+        )}
+        {form === "undo" && (
+          <p className="muted">
+            Για «έγινε» ή «δεν έγινε» που μπήκε κατά λάθος.
+          </p>
+        )}
+        {form === "undo" && <Notes lines={outcomeNotes(card, "undo")} />}
+        {form === "undo" && (
+          <ReasonForm
+            label="Λόγος αναίρεσης"
+            confirmLabel="Αναίρεση"
+            isPending={isPending}
+            onConfirm={(reason) => send(undoFilmingOutcome, { ...id, reason })}
+            onClose={close}
+          />
+        )}
+      </Drawer>
+    </section>
   );
 }

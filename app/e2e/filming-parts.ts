@@ -1,4 +1,9 @@
-import { expect, type Browser, type Locator, type Page } from "@playwright/test";
+import {
+  expect,
+  type Browser,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 
 import { signOutsideSystem } from "./agreements-flows-parts";
 import { addCatalogueLine, draftProposal } from "./agreements-parts";
@@ -45,22 +50,37 @@ export function currentDay(day: number, now: Date = new Date()): string {
 // Μένει πάντα μέσα στον τρέχοντα μήνα, δηλαδή στην τρέχουσα Περίοδο της Συμφωνίας: στο τέλος του μήνα κόβεται στην
 // τελευταία του μέρα (την τελευταία μέρα του μήνα αυτό μπορεί να είναι το σήμερα, που το πεδίο δέχεται).
 // Στις δύο τελευταίες μέρες του μήνα το «avoid» μπορεί να μη χωρά· τότε τα δύο τεστ πέφτουν την ίδια μέρα.
-export function upcomingDay(preferred: number, avoid: number, now: Date = new Date()): string {
+export function upcomingDay(
+  preferred: number,
+  avoid: number,
+  now: Date = new Date(),
+): string {
   const part = (options: Intl.DateTimeFormatOptions): number =>
-    Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Athens", ...options }).format(now));
+    Number(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Athens",
+        ...options,
+      }).format(now),
+    );
   const today = part({ day: "numeric" });
-  const lastDay = new Date(Date.UTC(part({ year: "numeric" }), part({ month: "numeric" }), 0)).getUTCDate();
+  const lastDay = new Date(
+    Date.UTC(part({ year: "numeric" }), part({ month: "numeric" }), 0),
+  ).getUTCDate();
   const day = Math.max(preferred, today + 1);
   const pick = day === avoid ? day + 1 : day;
   return currentDay(Math.min(pick, lastDay), now);
 }
 
 // Η μέρα του Γυρίσματος του filming.spec.ts· το sheet.spec.ts την αποφεύγει, ώστε τα δύο να μη συμπίπτουν.
-export const filmingSpecDay = (now: Date = new Date()): string => upcomingDay(15, 20, now);
+export const filmingSpecDay = (now: Date = new Date()): string =>
+  upcomingDay(15, 20, now);
 
 // Η ροή της Συμφωνίας: η Άννα συντάσσει την πρόταση με μηνιαίο πακέτο, ο Ιδιοκτήτης την υπογράφει εκτός συστήματος.
 // Οι οθόνες των Συμφωνιών δεν είναι της παραγωγής: τρέχουν σε δικό τους context, με την εμφάνιση που ορίζει η εφαρμογή.
-export async function signedMonthlyAgreement(browser: Browser, P: string): Promise<void> {
+export async function signedMonthlyAgreement(
+  browser: Browser,
+  P: string,
+): Promise<void> {
   await inContext(browser, "sales@example.com", async (sales) => {
     const agreementUrl = await draftProposal(sales, {
       title: opportunityTitle(P),
@@ -93,7 +113,10 @@ export async function inSpaces(
 // Η φόρμα της E4 (Νέο Γύρισμα): βρίσκεται από το κουμπί της.
 export const newFilmingForm = (page: Page): Locator =>
   page.locator("form", {
-    has: page.getByRole("button", { name: "Δημιουργία Γυρίσματος", exact: true }),
+    has: page.getByRole("button", {
+      name: "Δημιουργία Γυρίσματος",
+      exact: true,
+    }),
   });
 
 // Η μηνιαία Συμφωνία του project, μόνο αν δεν υπάρχει ήδη. Τα αρχεία μοιράζονται σε μηχανήματα (shards) και τρέχουν
@@ -105,18 +128,23 @@ export async function ensureSignedMonthlyAgreement(
   P: string,
 ): Promise<void> {
   await visit(page, "/app/filming/new");
-  const empty = page.getByText("Κανένας πελάτης με ενεργή Συμφωνία", { exact: true });
+  const empty = page.getByText("Κανένας πελάτης με ενεργή Συμφωνία", {
+    exact: true,
+  });
   const form = newFilmingForm(page);
   await expect(form.or(empty)).toBeVisible();
   if (await form.isVisible()) {
-    const option = form.getByRole("combobox", { name: "Πελάτης", exact: true }).locator("option", { hasText: clientName(P) });
+    const option = form
+      .getByRole("combobox", { name: "Πελάτης", exact: true })
+      .locator("option", { hasText: clientName(P) });
     if ((await option.count()) > 0) return;
   }
   await signedMonthlyAgreement(browser, P);
 }
 
 // Οι δύο λειτουργίες (desktop, mobile) μοιράζονται τη βάση: ώρες που δεν επικαλύπτονται, ώστε το Συνεργείο να μην συγκρούεται.
-export const startTimeOf = (P: string): string => (P === "mobile" ? "15:00" : "10:00");
+export const startTimeOf = (P: string): string =>
+  P === "mobile" ? "15:00" : "10:00";
 
 // Κλείνει Γύρισμα στην E4 για τον Πελάτη της Συμφωνίας (15 του μήνα, 3 ώρες). Μετά την επιτυχία η οθόνη πάει στο Γύρισμα.
 // Οι τιμές της φόρμας ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται μέχρι να μείνει.
@@ -129,7 +157,9 @@ export async function bookFilmingFromScreen(
   const form = newFilmingForm(page);
   const day = form.locator('input[name="date"]');
   await expect(async () => {
-    await form.getByRole("combobox", { name: "Πελάτης", exact: true }).selectOption({ label: clientName(P) });
+    await form
+      .getByRole("combobox", { name: "Πελάτης", exact: true })
+      .selectOption({ label: clientName(P) });
     await day.fill(date);
     await form.locator('input[name="time"]').fill(startTimeOf(P));
     await expect(day).toHaveValue(date, { timeout: 1_000 });
@@ -142,7 +172,9 @@ export async function bookFilmingFromScreen(
 
 // Η γραμμή ενός Γυρίσματος στη λίστα E1 (ο τίτλος της είναι ο Πελάτης).
 export const filmingRow = (page: Page, P: string): Locator =>
-  page.locator("li.part-row", { has: page.getByRole("link", { name: clientName(P), exact: true }) });
+  page.locator("li.part-row", {
+    has: page.getByRole("link", { name: clientName(P), exact: true }),
+  });
 
 // Ανοίγει το Γύρισμα του Πελάτη του τεστ από τη λίστα E1 (η πρώτη γραμμή του).
 export async function openFilmingFromList(
@@ -150,23 +182,46 @@ export async function openFilmingFromList(
   P: string,
 ): Promise<void> {
   await visit(page, "/app/filming");
-  await page.getByRole("link", { name: clientName(P), exact: true }).first().click();
+  await page
+    .getByRole("link", { name: clientName(P), exact: true })
+    .first()
+    .click();
   await expect(page).toHaveURL(FILMING_URL);
 }
 
-// Η γραμμή ενός μέλους στο πάνελ «Συνεργείο» της E3.
+// Τα κουτιά της E3 είναι κλειστά από προεπιλογή: ανοίγει ένα από τον τίτλο του. Πριν ζωντανέψει η σελίδα το κλικ
+// χάνεται, οπότε ξαναδοκιμάζει μέχρι το κουτί να δηλώσει ανοιχτό.
+export async function openBox(page: Page, title: string): Promise<void> {
+  const trigger = page.locator(".box-trigger", {
+    has: page.locator(".box-title").getByText(title, { exact: true }),
+  });
+  await expect(async () => {
+    if ((await trigger.getAttribute("aria-expanded")) !== "true")
+      await trigger.click();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true", {
+      timeout: 1_000,
+    });
+  }).toPass();
+}
+
+// Η γραμμή ενός μέλους στο πάνελ «Συνεργείο» της E3 (μέσα στο κουτί «Ποιοι πάνε»).
 export const crewRow = (page: Page, name: string): Locator =>
   page
-    .locator("section", { has: page.getByRole("heading", { name: "Συνεργείο", exact: true }) })
+    .locator("section", {
+      has: page.getByRole("heading", { name: "Συνεργείο", exact: true }),
+    })
     .locator("li", { hasText: name });
 
 // Προσθέτει άτομο στο Συνεργείο της E3. Η επιλογή ζει στο React· ό,τι διαλεχτεί πριν ζωντανέψει η σελίδα χάνεται.
 export async function addToCrew(page: Page, name: string): Promise<void> {
+  await openBox(page, "Ποιοι πάνε");
   const crew = page.locator("section", {
     has: page.getByRole("heading", { name: "Συνεργείο", exact: true }),
   });
   await expect(async () => {
-    await crew.getByLabel("Άτομο", { exact: true }).selectOption({ label: name });
+    await crew
+      .getByLabel("Άτομο", { exact: true })
+      .selectOption({ label: name });
     await expect(button(crew, "Προσθήκη")).toBeEnabled({ timeout: 1_000 });
   }).toPass();
   await button(crew, "Προσθήκη").click();

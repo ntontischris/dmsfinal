@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import { getViewer, isClientViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
+import { BoxStack, type BoxItem } from "@/spaces/kit/box";
 import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Panel } from "@/spaces/kit/panel";
 import { Avatar, ListRow, Meter, RowList } from "@/spaces/kit/parts";
@@ -36,6 +37,12 @@ import {
   statusLook,
 } from "./e1-groups";
 import { E3Actions } from "./e3-actions";
+import {
+  balanceSummary,
+  crewSummary,
+  equipmentSummary,
+  recordSummary,
+} from "./e3-boxes-model";
 import { E3ClientActions } from "./e3-client";
 import { E3Crew } from "./e3-crew";
 import { E3Details } from "./e3-details";
@@ -58,6 +65,7 @@ import { StatusBadge } from "./e3-ui";
 
 import "./e.css";
 import "./e3.css";
+import "@/spaces/styles/box.css";
 
 const HOUR_MS = 3_600_000;
 
@@ -97,107 +105,126 @@ const asListItem = (card: FilmingCard) =>
     signals: card.signals,
   });
 
-// Ο πελάτης δεν βλέπει τα εσωτερικά (Προέλευση, Έγκριση, Πραγματική διάρκεια)· βλέπει τον λόγο απόρριψης.
-function Header({
+const whenOf = (card: FilmingCard): string =>
+  `${fmtDay(athensDate(card.startsAt))}, ${athensTime(card.startsAt)}–${endOf(card)}`;
+
+// Η κορυφή της σελίδας: τι, κατάσταση, πότε, πού. Από κάτω μπαίνουν οι κύριες ενέργειες.
+function Hero({
   card,
   nowMs,
   isClient,
+  children,
 }: {
   card: FilmingCard;
   nowMs: number;
   isClient: boolean;
+  children: ReactNode;
 }) {
   const clientName = card.client?.name ?? NO_CLIENT_LABEL;
   const look = isClient
     ? clientStatusLook(asListItem(card))
     : statusLook(asListItem(card), nowMs);
   return (
-    <Panel
-      label={clientAndTitle(clientName, card.production.title)}
-      aside={<StatusBadge look={look} />}
-    >
-      <dl className="dl">
-        <dt>Πότε</dt>
-        <dd>
-          {fmtDay(athensDate(card.startsAt))}, {athensTime(card.startsAt)}–
-          {endOf(card)} ({hoursLabel(card.hours)})
-        </dd>
-        <dt>Πού</dt>
-        <dd>{card.location ?? "—"}</dd>
-        {card.signals.pendingReschedule && (
-          <>
-            <dt>Μετάθεση</dt>
-            <dd>
-              Ζητήθηκε {formatDateTime(card.signals.pendingReschedule.startsAt)}
-              · περιμένει έγκριση, η παλιά ώρα κρατιέται
-            </dd>
-          </>
-        )}
-        {card.clientNote && (
-          <>
-            <dt>Σημείωση πελάτη</dt>
-            <dd>{card.clientNote}</dd>
-          </>
-        )}
-        {card.agreement && (
-          <>
-            <dt>Συμφωνία</dt>
-            <dd>
-              {isClient ? (
-                card.agreement.title
-              ) : (
-                <Link href={hrefOf("D2", { id: card.agreement.id })}>
-                  {card.agreement.title}
-                </Link>
-              )}
-            </dd>
-          </>
-        )}
-        <dt>Παραγωγή</dt>
-        <dd>
-          <Link href={hrefOf("G2", { id: card.production.id })}>
-            {card.production.title}
-          </Link>
-        </dd>
-        {!isClient && (
-          <>
-            <dt>Προέλευση</dt>
-            <dd>{ORIGIN_LABELS[card.origin]}</dd>
-            <dt>Έγκριση</dt>
-            <dd>
-              {card.approvedAt
-                ? formatDate(card.approvedAt)
-                : card.rejectedAt
-                  ? `Απορρίφθηκε: ${card.rejectedReason ?? "—"}`
-                  : "Δεν έχει εγκριθεί ακόμα"}
-            </dd>
-          </>
-        )}
-        {isClient && card.state === "rejected" && card.rejectedReason && (
-          <>
-            <dt>Λόγος απόρριψης</dt>
-            <dd>{card.rejectedReason}</dd>
-          </>
-        )}
-        {!isClient && card.actualHours !== null && (
-          <>
-            <dt>Πραγματική διάρκεια</dt>
-            <dd>{hoursLabel(card.actualHours)}</dd>
-          </>
-        )}
-        {!isClient && card.cancelledAt && (
-          <>
-            <dt>Ακύρωση</dt>
-            <dd>
-              {formatDate(card.cancelledAt)}
-              {card.cancelledSide === "client" ? " (πελάτης)" : " (ομάδα)"}
-              {card.cancelledReason ? `: ${card.cancelledReason}` : ""}
-              {card.burned ? " · η Παροχή κάηκε" : ""}
-            </dd>
-          </>
-        )}
-      </dl>
-    </Panel>
+    <header className="hero">
+      <div className="btn-row">
+        <span className="kit-label">
+          {clientAndTitle(clientName, card.production.title)}
+        </span>
+        <StatusBadge look={look} />
+      </div>
+      <h1 className="hero-when">{whenOf(card)}</h1>
+      <p className="hero-where">
+        {card.location ?? "Χωρίς τόπο ακόμα"} · {hoursLabel(card.hours)}
+      </p>
+      {children}
+    </header>
+  );
+}
+
+// Ο πελάτης δεν βλέπει τα εσωτερικά (Προέλευση, Έγκριση, Πραγματική διάρκεια)· βλέπει τον λόγο απόρριψης.
+function Facts({ card, isClient }: { card: FilmingCard; isClient: boolean }) {
+  return (
+    <dl className="dl">
+      <dt>Πότε</dt>
+      <dd>
+        {fmtDay(athensDate(card.startsAt))}, {athensTime(card.startsAt)}–
+        {endOf(card)} ({hoursLabel(card.hours)})
+      </dd>
+      <dt>Πού</dt>
+      <dd>{card.location ?? "—"}</dd>
+      {card.signals.pendingReschedule && (
+        <>
+          <dt>Μετάθεση</dt>
+          <dd>
+            Ζητήθηκε {formatDateTime(card.signals.pendingReschedule.startsAt)}·
+            περιμένει έγκριση, η παλιά ώρα κρατιέται
+          </dd>
+        </>
+      )}
+      {card.clientNote && (
+        <>
+          <dt>Σημείωση πελάτη</dt>
+          <dd>{card.clientNote}</dd>
+        </>
+      )}
+      {card.agreement && (
+        <>
+          <dt>Συμφωνία</dt>
+          <dd>
+            {isClient ? (
+              card.agreement.title
+            ) : (
+              <Link href={hrefOf("D2", { id: card.agreement.id })}>
+                {card.agreement.title}
+              </Link>
+            )}
+          </dd>
+        </>
+      )}
+      <dt>Παραγωγή</dt>
+      <dd>
+        <Link href={hrefOf("G2", { id: card.production.id })}>
+          {card.production.title}
+        </Link>
+      </dd>
+      {!isClient && (
+        <>
+          <dt>Προέλευση</dt>
+          <dd>{ORIGIN_LABELS[card.origin]}</dd>
+          <dt>Έγκριση</dt>
+          <dd>
+            {card.approvedAt
+              ? formatDate(card.approvedAt)
+              : card.rejectedAt
+                ? `Απορρίφθηκε: ${card.rejectedReason ?? "—"}`
+                : "Δεν έχει εγκριθεί ακόμα"}
+          </dd>
+        </>
+      )}
+      {isClient && card.state === "rejected" && card.rejectedReason && (
+        <>
+          <dt>Λόγος απόρριψης</dt>
+          <dd>{card.rejectedReason}</dd>
+        </>
+      )}
+      {!isClient && card.actualHours !== null && (
+        <>
+          <dt>Πραγματική διάρκεια</dt>
+          <dd>{hoursLabel(card.actualHours)}</dd>
+        </>
+      )}
+      {!isClient && card.cancelledAt && (
+        <>
+          <dt>Ακύρωση</dt>
+          <dd>
+            {formatDate(card.cancelledAt)}
+            {card.cancelledSide === "client" ? " (πελάτης)" : " (ομάδα)"}
+            {card.cancelledReason ? `: ${card.cancelledReason}` : ""}
+            {card.burned ? " · η Παροχή κάηκε" : ""}
+          </dd>
+        </>
+      )}
+    </dl>
   );
 }
 
@@ -502,7 +529,13 @@ function Missing() {
 }
 
 // Το μήνυμα μετά από κράτηση ή μετάθεση (`?done=`), όπως το έδειχνε η παλιά σελίδα.
-function DoneNotice({ done, card }: { done: DoneKind | null; card: FilmingCard }) {
+function DoneNotice({
+  done,
+  card,
+}: {
+  done: DoneKind | null;
+  card: FilmingCard;
+}) {
   if (done === null) return null;
   return (
     <p className="e-info" role="status">
@@ -517,8 +550,8 @@ function DoneNotice({ done, card }: { done: DoneKind | null; card: FilmingCard }
 const doneOf = (value: string | undefined): DoneKind | null =>
   DONE_KINDS.find((kind) => kind === value) ?? null;
 
-// Η όψη του πελάτη (prototype `e3-workbench.tsx` με isClient): κεφαλίδα, «Τι μπορείς να κάνεις», υπόλοιπο. Χωρίς banner
-// «έγινε», Συνεργείο, Εξοπλισμό, Δελτίο ή Ιστορικό· καμία λίστα υποψηφίων δεν φορτώνει.
+// Η όψη του πελάτη (prototype `e3-workbench.tsx` με isClient): κορυφή, «Τι μπορείς να κάνεις», και κλειστά κουτιά για
+// στοιχεία, υπόλοιπο, σημειώσεις. Χωρίς Συνεργείο, Εξοπλισμό, Δελτίο ή Ιστορικό· καμία λίστα υποψηφίων δεν φορτώνει.
 async function ClientFilming({
   card,
   done,
@@ -527,22 +560,164 @@ async function ClientFilming({
   done: DoneKind | null;
 }) {
   const open = await listFilmings("open");
+  const notes = notesOf(card);
+  const balance = card.provision ? balanceOf(card.provision) : null;
+  const items: BoxItem[] = [
+    {
+      id: "when",
+      title: "Πότε & πού",
+      summary: card.location ?? "Χωρίς τόπο ακόμα",
+      content: <Facts card={card} isClient />,
+    },
+    ...(balance
+      ? [
+          {
+            id: "balance",
+            title: "Γυρίσματα που σου αναλογούν",
+            summary: `${balance.left} υπόλοιπα`,
+            content: <ClientBalance card={card} />,
+          },
+        ]
+      : []),
+    {
+      id: "notes",
+      title: "Σημειώσεις",
+      summary:
+        notes.length === 0 ? "Καμία σημείωση" : `${notes.length} σημειώσεις`,
+      content: <Notes card={card} />,
+    },
+  ];
   return (
     <div data-spaces>
       <Others rows={open.ok ? open.data : []} currentId={card.id} />
       <div className="e3">
         <DoneNotice done={done} card={card} />
-        <Header card={card} nowMs={new Date().getTime()} isClient />
-        <E3ClientActions card={card} />
-        <ClientBalance card={card} />
-        <Notes card={card} />
+        <Hero card={card} nowMs={new Date().getTime()} isClient>
+          <E3ClientActions card={card} />
+        </Hero>
+        <BoxStack label="Το Γύρισμα" items={items} />
       </div>
     </div>
   );
 }
 
-// E3 Γύρισμα στη νέα εμφάνιση (prototype `screens/E3.tsx` + `e3-workbench.tsx`). Κάθε ενέργεια φαίνεται μόνο όταν το
-// viewerCan της βάσης το επιτρέπει.
+type Tools = Awaited<ReturnType<typeof loadTools>>;
+
+interface TeamBoxesInput {
+  card: FilmingCard;
+  tools: Tools;
+  viewerId: string | null;
+  canApprove: boolean;
+  equipment: E3EquipmentSource;
+}
+
+// Τα πέντε κουτιά της ομάδας. Κάθε κουτί υπάρχει μόνο όταν έχει κάτι να δείξει ή το viewerCan δίνει ενέργεια μέσα του.
+function teamBoxes(input: TeamBoxesInput): BoxItem[] {
+  const { card, viewerId } = input;
+  const slot = card.crew.find((member) => member.userId === viewerId);
+  const balance = card.provision ? balanceOf(card.provision) : null;
+  return [
+    {
+      id: "when",
+      title: "Πότε & πού",
+      summary: card.location ?? "Χωρίς τόπο ακόμα",
+      content: (
+        <>
+          <Facts card={card} isClient={false} />
+          <E3Details card={card} />
+        </>
+      ),
+    },
+    ...crewBox(input, slot ? RESPONSE_WORDS[slot.response] : null),
+    ...equipmentBox(input),
+    ...(balance
+      ? [
+          {
+            id: "balance",
+            title: `Παροχή «${balance.kindLabel}»`,
+            summary: balanceSummary(balance).text,
+            isAlert: balanceSummary(balance).isAlert,
+            content: <Balance card={card} />,
+          },
+        ]
+      : []),
+    {
+      id: "record",
+      title: "Δελτίο & ιστορικό",
+      summary: recordSummary({
+        sheetVersion: card.sheet?.version ?? null,
+        historyCount: historyLines(card.history).length,
+        noteCount: notesOf(card).length,
+      }),
+      content: (
+        <>
+          <SheetPart card={card} />
+          <History card={card} />
+          <Notes card={card} />
+        </>
+      ),
+    },
+  ];
+}
+
+function crewBox(input: TeamBoxesInput, myWord: string | null): BoxItem[] {
+  const { card, tools, viewerId, canApprove, equipment } = input;
+  const hasCrewTools = card.viewerCan.crew || card.crew.length > 0;
+  if (!hasCrewTools && myWord === null) return [];
+  const summary = crewSummary(card.crew);
+  return [
+    {
+      id: "crew",
+      title: "Ποιοι πάνε",
+      summary: myWord ? `Εσύ: ${myWord} · ${summary.text}` : summary.text,
+      isAlert: summary.isAlert,
+      content: (
+        <>
+          {viewerId && (
+            <Mine
+              card={card}
+              viewerId={viewerId}
+              statusLabels={equipment.statusLabels}
+            />
+          )}
+          {hasCrewTools && (
+            <E3Crew
+              card={card}
+              candidates={tools.candidates}
+              templates={tools.templates}
+              blockedIds={tools.blockedIds}
+              canApprove={canApprove}
+            />
+          )}
+        </>
+      ),
+    },
+  ];
+}
+
+function equipmentBox({ card, tools, equipment }: TeamBoxesInput): BoxItem[] {
+  if (!card.viewerCan.equipment && card.equipment.length === 0) return [];
+  const summary = equipmentSummary(card.equipment);
+  return [
+    {
+      id: "equipment",
+      title: "Τι παίρνουμε",
+      summary: summary.text,
+      isAlert: summary.isAlert,
+      content: (
+        <E3Equipment
+          card={card}
+          candidates={tools.items}
+          templates={tools.itemTemplates}
+          statusLabels={equipment.statusLabels}
+        />
+      ),
+    },
+  ];
+}
+
+// E3 Γύρισμα στη νέα εμφάνιση: κορυφή με τις κύριες ενέργειες (οι φόρμες ανοίγουν σε συρτάρι) και κλειστά κουτιά.
+// Κάθε ενέργεια φαίνεται μόνο όταν το viewerCan της βάσης το επιτρέπει.
 export async function SpacesFilming({
   id,
   equipment,
@@ -576,33 +751,13 @@ export async function SpacesFilming({
     );
   const viewerId = viewer.status === "signed-in" ? viewer.userId : null;
   const nowMs = new Date().getTime();
-  const isCrewView =
-    !caps.canApprove &&
-    viewerId !== null &&
-    card.crew.some((member) => member.userId === viewerId);
-  const toolPanels = (
-    <>
-      {(card.viewerCan.crew || card.crew.length > 0) && (
-        <E3Crew
-          card={card}
-          candidates={tools.candidates}
-          templates={tools.templates}
-          blockedIds={tools.blockedIds}
-          canApprove={caps.canApprove}
-        />
-      )}
-      {(card.viewerCan.equipment || card.equipment.length > 0) && (
-        <E3Equipment
-          card={card}
-          candidates={tools.items}
-          templates={tools.itemTemplates}
-          statusLabels={equipment.statusLabels}
-        />
-      )}
-      <SheetPart card={card} />
-      <History card={card} />
-    </>
-  );
+  const items = teamBoxes({
+    card,
+    tools,
+    viewerId,
+    canApprove: caps.canApprove,
+    equipment,
+  });
   return (
     <div data-spaces>
       <Others rows={tools.open} currentId={card.id} />
@@ -614,35 +769,10 @@ export async function SpacesFilming({
             «δεν έγινε».
           </section>
         )}
-        {isCrewView && viewerId && (
-          <Mine
-            card={card}
-            viewerId={viewerId}
-            statusLabels={equipment.statusLabels}
-          />
-        )}
-        <Header card={card} nowMs={nowMs} isClient={false} />
-        <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />
-        <E3Details card={card} />
-        {!isCrewView && viewerId && (
-          <Mine
-            card={card}
-            viewerId={viewerId}
-            statusLabels={equipment.statusLabels}
-          />
-        )}
-        <Balance card={card} />
-        {isCrewView ? (
-          <details className="card e3-tools">
-            <summary>
-              Εργαλεία Γυρίσματος: Συνεργείο, Εξοπλισμός, Δελτίο
-            </summary>
-            {toolPanels}
-          </details>
-        ) : (
-          toolPanels
-        )}
-        <Notes card={card} />
+        <Hero card={card} nowMs={nowMs} isClient={false}>
+          <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />
+        </Hero>
+        <BoxStack label="Το Γύρισμα" items={items} />
       </div>
     </div>
   );

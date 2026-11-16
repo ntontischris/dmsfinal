@@ -4,6 +4,7 @@ import { openItemFromRegistry, openNewItem } from "./equipment-parts";
 import {
   bookFilmingFromScreen,
   ensureSignedMonthlyAgreement,
+  openBox,
   upcomingDay,
   visit,
 } from "./filming-parts";
@@ -45,6 +46,7 @@ test("ο Ιδιοκτήτης βλέπει το επόμενο Γύρισμα σ
 
   await bookFilmingFromScreen(page, P, DAY);
   const filmingUrl = page.url();
+  await openBox(page, "Τι παίρνουμε");
   const panel = equipmentPanel(page);
   await panel
     .getByRole("combobox", { name: "Εξοπλισμός", exact: true })
@@ -72,6 +74,7 @@ test("ο Ιδιοκτήτης βλέπει το επόμενο Γύρισμα σ
 
   // Βλάβη από τη σελίδα του Γυρίσματος.
   await visit(page, filmingUrl);
+  await openBox(page, "Τι παίρνουμε");
   const note = equipmentPanel(page).getByLabel(`Τι έπαθε: ${ITEM};`);
   await expect(async () => {
     if (!(await note.isVisible()))
