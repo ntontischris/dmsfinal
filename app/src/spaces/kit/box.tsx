@@ -53,7 +53,7 @@ export function BoxStack({ label, items }: BoxStackProps) {
           data-alert={item.isAlert ?? false}
         >
           <Accordion.Header className="m-0">
-            <Accordion.Trigger className="box-trigger grid min-h-11 w-full cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-4 rounded-3xl px-5 py-4 text-left">
+            <Accordion.Trigger className="box-trigger grid min-h-11 w-full cursor-pointer border-0 bg-transparent text-inherit grid-cols-[auto_1fr_auto] items-center gap-4 rounded-3xl px-5 py-4 text-left">
               <BoxMark item={item} index={index} />
               <span className="grid min-w-0 gap-0.5">
                 <span className="text-[0.7rem] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
