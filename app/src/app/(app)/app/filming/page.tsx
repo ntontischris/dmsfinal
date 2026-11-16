@@ -3,6 +3,7 @@ import {
   boardParamsSchema,
   listFilterSchema,
 } from "@/modules/filming";
+import { getDeletionRequests } from "@/modules/google";
 
 export const metadata = { title: "Γυρίσματα" };
 
@@ -14,5 +15,11 @@ export default async function FilmingPage({
 }) {
   const params = await searchParams;
   const { tab } = listFilterSchema.parse(params);
-  return <SpacesFilmings tab={tab} board={boardParamsSchema.parse(params)} />;
+  return (
+    <SpacesFilmings
+      tab={tab}
+      board={boardParamsSchema.parse(params)}
+      deletions={await getDeletionRequests()}
+    />
+  );
 }

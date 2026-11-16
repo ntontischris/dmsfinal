@@ -10,7 +10,7 @@ import { Strip } from "@/spaces/shell/strip";
 
 import { filmingCaps } from "../caps";
 import { athensDate } from "../helpers-time";
-import { listFilmings } from "../queries";
+import { getQueue, listFilmings } from "../queries";
 import type { FilmingRow, FilmingTab } from "../types";
 import {
   e1FilmingOf,
@@ -19,6 +19,8 @@ import {
   type E1View,
 } from "./e1-adapter";
 import { E1BoardView } from "./e1-board";
+import { filmingStripOf } from "./e1-strip-model";
+import { requestsOf, type DeletionRequest } from "./e2-guide-model";
 import { boardHref, type BoardParams } from "./e1-board-params";
 import { groupFilmings } from "./e1-groups";
 import { E1Table } from "./e1-table";
@@ -28,6 +30,33 @@ import "./e1.css";
 interface SpacesFilmingsProps {
   tab: FilmingTab;
   board: BoardParams;
+  // Οι διαγραφές στο Google (τις φέρνει η σελίδα από το module του Google): μετρούν στα «Αναμένουν απάντηση».
+  deletions?: readonly DeletionRequest[];
+}
+
+interface TeamStripInput {
+  canApprove: boolean;
+  deletions: readonly DeletionRequest[];
+  nowMs: number;
+}
+
+// Η λωρίδα της Ομάδας στην καρτέλα Γυρίσματα: τα τρία χοντρά των Γυρισμάτων, όχι της υπόλοιπης Παραγωγής.
+async function teamStripOf({ canApprove, deletions, nowMs }: TeamStripInput) {
+  const [open, queue] = await Promise.all([
+    listFilmings("open"),
+    canApprove ? getQueue() : null,
+  ]);
+  return filmingStripOf({
+    filmings: open.ok ? open.data.map(e1FilmingOf) : [],
+    requestCount:
+      queue === null
+        ? null
+        : queue.ok
+          ? requestsOf(queue.data, deletions).length
+          : 0,
+    nowMs,
+    today: athensDate(new Date(nowMs)),
+  });
 }
 
 const isScoped = (viewer: Viewer): boolean =>
@@ -163,7 +192,11 @@ async function ListView({
 // E1 Γυρίσματα στη νέα εμφάνιση. Προεπιλογή ο Πίνακας (τέσσερις στήλες, σύρσιμο, φίλτρα)· η «Λίστα» κρατά τις ομάδες
 // «Θέλουν «έγινε»», επόμενα και παλιά ανά μήνα. Η βάση αποφασίζει τι βλέπει ο Χρήστης· ο Χρήστης πελάτη βλέπει τη δική του
 // όψη, χωρίς Συνεργείο, και ο Πίνακάς του μόνο διαβάζεται.
-export async function SpacesFilmings({ tab, board }: SpacesFilmingsProps) {
+export async function SpacesFilmings({
+  tab,
+  board,
+  deletions = [],
+}: SpacesFilmingsProps) {
   const viewer = await getViewer();
   const caps = filmingCaps(viewer);
   if (!caps.canView)
@@ -175,10 +208,17 @@ export async function SpacesFilmings({ tab, board }: SpacesFilmingsProps) {
       </div>
     );
   const isClient = isClientViewer(viewer);
-  const strip = await getSpaceStrip(
-    codesOfSpace(isClient ? "c-filming" : "production"),
-  );
   const nowMs = new Date().getTime();
+  const strip = isClient
+    ? await getSpaceStrip(codesOfSpace("c-filming"))
+    : {
+        stats: await teamStripOf({
+          canApprove: caps.canApprove,
+          deletions,
+          nowMs,
+        }),
+        now: null,
+      };
   return (
     <div data-spaces>
       <Strip stats={strip.stats} now={strip.now} />
