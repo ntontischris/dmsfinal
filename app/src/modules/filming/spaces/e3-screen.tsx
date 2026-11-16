@@ -57,6 +57,14 @@ import { E3ClientActions } from "./e3-client";
 import { E3Crew } from "./e3-crew";
 import { E3Details } from "./e3-details";
 import { E3Equipment } from "./e3-equipment";
+import {
+  E3ClientOfferPart,
+  E3RequestNote,
+  E3TeamOffer,
+  E3TemplateGap,
+} from "./e3-guide-part";
+import { isCrewStepOf, templateGapOf, type GuidePlace } from "./e3-guide-model";
+import { EGKRINO_JOB, EGKRINO_STEPS } from "./e2-guide-model";
 import { E3Sheet } from "./e3-sheet";
 import {
   DONE_KINDS,
@@ -66,6 +74,7 @@ import {
   fmtDay,
   hoursLabel,
   notesOf,
+  overLineOf,
   replyOf,
   responseTone,
   type DoneKind,
@@ -83,7 +92,15 @@ const HOUR_MS = 3_600_000;
 export interface E3EquipmentSource {
   statusLabels: Readonly<Record<string, string>>;
   listTemplates: () => Promise<
-    { ok: true; data: readonly { id: string; name: string }[] } | { ok: false }
+    | {
+        ok: true;
+        data: readonly {
+          id: string;
+          name: string;
+          items?: readonly { id: string; name: string; status: string }[];
+        }[];
+      }
+    | { ok: false }
   >;
 }
 
@@ -293,8 +310,9 @@ function Balance({ card }: { card: FilmingCard }) {
     >
       <Meter
         label="Καταναλωμένα + δεσμευμένα"
-        used={balance.used + balance.reserved}
+        used={Math.min(balance.used + balance.reserved, balance.total)}
         total={balance.total}
+        tone={balance.over > 0 ? "attention" : undefined}
       />
       <div className="e3-balance">
         <div>
@@ -306,10 +324,17 @@ function Balance({ card }: { card: FilmingCard }) {
         <div>
           <strong>{balance.reserved}</strong>δεσμευμένα
         </div>
-        <div>
-          <strong>{balance.left}</strong>υπόλοιπα
-        </div>
+        {balance.over > 0 ? (
+          <div>
+            <strong>{balance.over}</strong>πάνω από την Παροχή
+          </div>
+        ) : (
+          <div>
+            <strong>{balance.left}</strong>υπόλοιπα
+          </div>
+        )}
       </div>
+      {overLineOf(balance) && <p className="muted">{overLineOf(balance)}</p>}
       <details className="muted">
         <summary>Πώς μετρά η Παροχή</summary>Η Παροχή δεσμεύεται από τη στιγμή
         της κράτησης και καταναλώνεται όταν το Γύρισμα σημειωθεί «έγινε». Αν
@@ -489,6 +514,8 @@ async function loadTools(
     itemTemplates: itemTemplates?.ok
       ? itemTemplates.data.map(({ id, name }) => ({ id, name }))
       : [],
+    // Με τα αντικείμενά τους, για το «Τι δεν μπήκε» του οδηγού.
+    equipmentTemplates: itemTemplates?.ok ? itemTemplates.data : [],
     newTimeProblem: newTime?.ok ? newTime.data.problem : null,
     open: open.ok ? open.data : [],
   };
@@ -613,6 +640,7 @@ async function ClientFilming({
       <Others rows={open.ok ? open.data : []} currentId={card.id} />
       <div className="e3">
         <DoneNotice done={done} card={card} />
+        <E3ClientOfferPart card={card} />
         <Hero card={card} nowMs={new Date().getTime()} isClient>
           <E3ClientActions card={card} />
         </Hero>
@@ -748,10 +776,13 @@ export async function SpacesFilming({
   id,
   equipment,
   done,
+  guide = null,
 }: {
   id: string | null;
   equipment: E3EquipmentSource;
   done?: string;
+  // Η θέση του οδηγού (?job=&step=), για τα κομμάτια του οδηγού στη σελίδα.
+  guide?: GuidePlace | null;
 }) {
   const viewer = await getViewer();
   const caps = filmingCaps(viewer);
@@ -784,9 +815,29 @@ export async function SpacesFilming({
     canApprove: caps.canApprove,
     equipment,
   });
+  const isOfferStep =
+    guide?.job === EGKRINO_JOB && guide.step === EGKRINO_STEPS.offer;
+  const gap =
+    isCrewStepOf(guide) && card.viewerCan.crew
+      ? templateGapOf({
+          card,
+          crewTemplates: tools.templates,
+          equipmentTemplates: tools.equipmentTemplates,
+          candidateIds: tools.candidates.map((member) => member.id),
+          blockedIds: tools.blockedIds,
+          statusLabels: equipment.statusLabels,
+        })
+      : null;
   return (
     <div data-spaces>
       <Others rows={tools.open} currentId={card.id} />
+      {/* Για τον οδηγό «Στήνω γύρισμα»: πόσα μέλη και αντικείμενα έχει το Γύρισμα (από τη βάση). */}
+      <div
+        hidden
+        data-flow-filming
+        data-crew={card.crew.length}
+        data-equipment={card.equipment.length}
+      />
       <div className="e3">
         <DoneNotice done={doneOf(done)} card={card} />
         {needsOutcome(asListItem(card), nowMs) && (
@@ -795,6 +846,13 @@ export async function SpacesFilming({
             «δεν έγινε».
           </section>
         )}
+        <E3RequestNote
+          card={card}
+          nowMs={nowMs}
+          isInGuide={guide?.job === EGKRINO_JOB}
+        />
+        <E3TeamOffer card={card} isOfferStep={isOfferStep} />
+        {gap && <E3TemplateGap gap={gap} />}
         <Hero card={card} nowMs={nowMs} isClient={false}>
           <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />
         </Hero>

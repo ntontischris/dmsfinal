@@ -12,6 +12,11 @@ const inboxItemSchema = z.object({
   lastDeleted: z.boolean(),
   unread: z.number(),
   partial: z.boolean(),
+  // «Περιμένει απάντηση»: από το πιο παλιό αναπάντητο μήνυμα του Πελάτη (null = κανείς δεν περιμένει).
+  // Λείπει μόνο αν η βάση δεν έχει ακόμα το 20261115120500_messages_waiting.
+  waitingSince: z.string().nullable().optional(),
+  // Η πιο παλιά αδιάβαστη @αναφορά σε μένα.
+  mentionSince: z.string().nullable().optional(),
 });
 
 const inboxSchema = z.object({

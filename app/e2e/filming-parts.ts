@@ -13,7 +13,11 @@ import { button, inContext, signIn } from "./sales-parts";
 // Κάθε τεστ φτιάχνει ό,τι χρειάζεται: η Συμφωνία της ροής γράφεται από την ίδια τη ροή, με τον Πελάτη του seed.
 // Οι οθόνες των Γυρισμάτων είναι στη νέα εμφάνιση (Χώροι).
 
-export const FILMING_URL = /\/app\/filming\/[0-9a-f-]{36}$/;
+export const FILMING_URL =
+  /\/app\/filming\/[0-9a-f-]{36}(\?job=[^&]+&step=\d+)?$/;
+
+// Η φόρμα νέου Γυρίσματος ανοίγει πια μόνο μέσα στον οδηγό «Στήνω γύρισμα» (βήμα 2)· η σκέτη διαδρομή στέλνει στο βήμα 1.
+const NEW_FILMING = "/app/filming/new?job=stino-gyrisma&step=2";
 export const PRODUCER = "Ρένα Παραγωγή";
 
 // Ανοίγει μια διεύθυνση και περιμένει να φορτώσουν τα scripts: πριν από αυτό, ένα κλικ σε φόρμα πέφτει σε υποβολή χωρίς JS.
@@ -127,7 +131,7 @@ export async function ensureSignedMonthlyAgreement(
   browser: Browser,
   P: string,
 ): Promise<void> {
-  await visit(page, "/app/filming/new");
+  await visit(page, NEW_FILMING);
   const empty = page.getByText("Κανένας πελάτης με ενεργή Συμφωνία", {
     exact: true,
   });
@@ -153,7 +157,7 @@ export async function bookFilmingFromScreen(
   P: string,
   date: string = currentFifteenth(),
 ): Promise<void> {
-  await visit(page, "/app/filming/new");
+  await visit(page, NEW_FILMING);
   const form = newFilmingForm(page);
   const day = form.locator('input[name="date"]');
   await expect(async () => {

@@ -1,4 +1,5 @@
 import { SpacesClients, parseB1Filters } from "@/modules/sales";
+import { isPickingClient } from "@/spaces/flows/flows";
 import { parsePage } from "@/spaces/kit/pager-model";
 
 export const metadata = { title: "Πελάτες" };
@@ -12,6 +13,8 @@ export default async function ClientsPage({
 }) {
   const params = await searchParams;
   const { q, new: newStamp, deleted } = params;
+  // Στο βήμα «Για ποιον Πελάτη;» του οδηγού η λίστα είναι μέσα στον οδηγό· ο πίνακας θα έβγαζε από αυτόν.
+  if (isPickingClient(params.job, params.step)) return null;
   return (
     <SpacesClients
       query={typeof q === "string" ? q.trim() : ""}

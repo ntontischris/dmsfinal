@@ -48,10 +48,12 @@ export const equipmentSummary = (
 export const balanceSummary = (balance: E3Balance | null): BoxSummary =>
   balance === null
     ? { text: "Χωρίς Παροχή", isAlert: false }
-    : {
-        text: `${balance.left} από ${balance.total} υπόλοιπα`,
-        isAlert: balance.left <= 0,
-      };
+    : balance.over > 0
+      ? { text: `${balance.over} πάνω από τα ${balance.total}`, isAlert: true }
+      : {
+          text: `${balance.left} από ${balance.total} υπόλοιπα`,
+          isAlert: balance.left <= 0,
+        };
 
 interface RecordCounts {
   sheetVersion: number | null;

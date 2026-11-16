@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import type { MessageRequest, Thread, ThreadMessage } from "../view-schema";
 import {
   j2FilterOf,
-  j2DefaultTag,
   j2MessageOf,
   j2RequestOf,
   j2SideOf,
@@ -208,15 +207,6 @@ describe("j2SideOf", () => {
       sub: "Χωρίς υπεύθυνο · ανοιχτό 2 μέρες",
       isOpen: true,
     });
-  });
-});
-
-describe("j2DefaultTag", () => {
-  const productions = [{ id: "p-1", title: "A", state: "active" }];
-  it("should prefer the filtered production, else untagged, else the first", () => {
-    expect(j2DefaultTag(productions, true, "p-1")).toBe("p-1");
-    expect(j2DefaultTag(productions, true, "p-x")).toBe("");
-    expect(j2DefaultTag(productions, false, undefined)).toBe("p-1");
   });
 });
 

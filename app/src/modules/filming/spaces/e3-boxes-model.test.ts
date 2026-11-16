@@ -76,6 +76,7 @@ test("η Παροχή δείχνει τι μένει", () => {
       used: 2,
       reserved: 1,
       left: 2,
+      over: 0,
       kindLabel: "Γύρισμα",
     }),
   ).toEqual({ text: "2 από 5 υπόλοιπα", isAlert: false });
@@ -85,9 +86,20 @@ test("η Παροχή δείχνει τι μένει", () => {
       used: 4,
       reserved: 0,
       left: 0,
+      over: 0,
       kindLabel: "Γύρισμα",
     }).isAlert,
   ).toBe(true);
+  expect(
+    balanceSummary({
+      total: 2,
+      used: 2,
+      reserved: 1,
+      left: 0,
+      over: 1,
+      kindLabel: "Γύρισμα",
+    }),
+  ).toEqual({ text: "1 πάνω από τα 2", isAlert: true });
 });
 
 test("το Δελτίο και το ιστορικό σε μία γραμμή", () => {
