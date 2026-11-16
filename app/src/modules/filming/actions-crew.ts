@@ -3,7 +3,7 @@
 import type { FormState } from "@/lib/form-state";
 
 import { callRpc, finishWith, firstIssue, pick } from "./action-support";
-import { crewAppliedNotice } from "./notices";
+import { crewAppliedState } from "./notices";
 import {
   crewRespondSchema,
   crewSetSchema,
@@ -42,7 +42,12 @@ export async function applyCrewTemplate(
     p_template: template.data.templateId,
   });
   if (!outcome.ok) return outcome.state;
-  return finishWith(outcome, crewAppliedNotice(outcome.data));
+  const applied = crewAppliedState(
+    outcome.data,
+    Number(form.get("memberCount")) || 0,
+  );
+  const done = finishWith(outcome, applied.notice ?? "");
+  return applied.warning ? { warning: applied.warning } : done;
 }
 
 export async function respondToCrew(

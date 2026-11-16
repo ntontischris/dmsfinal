@@ -91,9 +91,10 @@ export function LastDone({
   tone = "ok",
 }: {
   log: readonly string[];
-  tone?: "ok" | "error";
+  tone?: "ok" | "warn" | "error";
 }) {
   const last = log.at(-1);
+  if (last && tone === "warn") return <Warning>{last}</Warning>;
   return (
     <p
       className="feedback-msg e3-status"

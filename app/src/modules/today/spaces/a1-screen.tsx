@@ -140,13 +140,8 @@ function Hello({
         {newChip && <span className="a1-new-chip">{newChip}</span>}
       </p>
       <div className="btn-row">
-        <Link href={hrefOf("A2")}>
-          {unread === 0
-            ? "Καμία νέα Ειδοποίηση"
-            : unread === 1
-              ? "1 νέα Ειδοποίηση →"
-              : `${unread} νέες Ειδοποιήσεις →`}
-        </Link>
+        {/* Οι Ειδοποιήσεις που είναι μόνο ενημέρωση· ό,τι ζητά κίνηση είναι γραμμή της λίστας. */}
+        <Link href={hrefOf("A2")}>Ενημερώσεις ({unread}) →</Link>
         {!isEditing && (
           <Link className="button" href={CUSTOMIZE_PATH}>
             Προσαρμογή

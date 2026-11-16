@@ -32,7 +32,11 @@ export type {
 } from "./booking-types";
 export { bookingSelectionSchema } from "./booking-links";
 export { parseBlockedPrefill, type NewFilmingPrefill } from "./blocked-prefill";
-export { parseFromRequest, type FilmingFromRequest } from "./request-prefill";
+export {
+  parseFromRequest,
+  parsePreferredClient,
+  type FilmingFromRequest,
+} from "./request-prefill";
 export { filmingCaps } from "./caps";
 export { listFilterSchema } from "./schemas";
 export {
@@ -44,7 +48,11 @@ export {
   formatHours,
 } from "./helpers-time";
 export type { ReadResult } from "./read";
-export { getFilmingSettings, listOpenFilmings } from "./queries";
+export {
+  getFilmingSettings,
+  listBookingOptions,
+  listOpenFilmings,
+} from "./queries";
 // Νέα εμφάνιση (Χώροι): οι οθόνες του prototype.
 export { SpacesFilmings } from "./spaces/e1-screen";
 export { SpacesFilming, type E3EquipmentSource } from "./spaces/e3-screen";
@@ -56,3 +64,6 @@ export { SpacesMine } from "./spaces/e6-screen";
 export { SpacesCrewTemplates } from "./spaces/e7-screen";
 // Ctrl+K: αναζήτηση εγγραφών.
 export { searchFilmings } from "./queries-search";
+// Για τη μηχανή των οδηγών: οι γραμμές του «Εγκρίνω αιτήματα γυρίσματος» (ίδια μέτρηση με την κάρτα).
+export { loadEgkrinoRows } from "./spaces/e2-loop-rows";
+export { sentLineOf } from "./spaces/e2-guide-model";

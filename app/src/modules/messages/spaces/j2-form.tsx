@@ -12,6 +12,8 @@ interface JFormProps {
   submitLabel?: string;
   pendingLabel?: string;
   isDanger?: boolean;
+  // Δευτερεύον κουμπί (π.χ. «Δεν χρειάζεται απάντηση» δίπλα στην «Αποστολή»): όχι κύριο.
+  isSecondary?: boolean;
   onlyWhenChanged?: boolean;
   resetOnSuccess?: boolean;
   isDisabled?: boolean;
@@ -30,6 +32,7 @@ export function JForm({
   submitLabel,
   pendingLabel = "Αποθήκευση…",
   isDanger = false,
+  isSecondary = false,
   onlyWhenChanged = false,
   resetOnSuccess = false,
   isDisabled = false,
@@ -62,7 +65,7 @@ export function JForm({
             <button
               className="button"
               type="submit"
-              data-primary={!isDanger}
+              data-primary={!isDanger && !isSecondary}
               data-danger={isDanger}
               disabled={isPending || isDisabled}
             >

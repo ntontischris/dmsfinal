@@ -18,3 +18,4 @@ export { SpacesHistoryLink } from "./spaces/history-link";
 // Ο σύνδεσμος «Ιστορικό αλλαγών» στη νέα εμφάνιση, χωρίς το παλιό component.
 export { historyHref } from "./url";
 export { HISTORY_LINK } from "./labels";
+export { parseAuditPage, type AuditItem } from "./schema";

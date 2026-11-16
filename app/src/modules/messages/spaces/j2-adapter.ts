@@ -304,18 +304,6 @@ export const j2SideOf = (items: readonly SideRequest[]): J2SideRow[] =>
     };
   });
 
-// Η ετικέτα που προεπιλέγεται στον συντάκτη: του ?production= αν επιτρέπεται, αλλιώς καμία (ή η πρώτη όταν δεν
-// επιτρέπεται «χωρίς ετικέτα»). Ίδιος κανόνας με τη σημερινή οθόνη.
-export const j2DefaultTag = (
-  productions: readonly ThreadProduction[],
-  canWriteUntagged: boolean,
-  wanted: string | undefined,
-): string => {
-  if (wanted !== undefined && productions.some((p) => p.id === wanted))
-    return wanted;
-  return canWriteUntagged ? "" : (productions[0]?.id ?? "");
-};
-
 // Οι @αναφορές του Εσωτερικού Μηνύματος: όσοι διαλέχτηκαν και το «@Όνομα» τους έμεινε στο κείμενο (όπως στο prototype).
 export const mentionsIn = (
   text: string,

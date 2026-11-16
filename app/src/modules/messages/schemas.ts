@@ -69,3 +69,4 @@ export const slotsSchema = z.object({ slots: z.array(z.object({ path: z.string()
 export const editSchema = z.object({ id: idSchema, body: bodySchema });
 export const deleteSchema = z.object({ id: idSchema });
 export const tagSchema = z.object({ id: idSchema, productionId: optionalIdSchema });
+export const skipReplySchema = z.object({ clientId: idSchema });

@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 
 import {
   balanceOf,
+  overLineOf,
   doneMessage,
   emptyCrewNote,
   fmtDay,
@@ -42,7 +43,23 @@ test("η Παροχή μετρά και τα μεταφερμένα στο σύ�
       balance: 2,
       kind: { id: "k", label: "Γύρισμα", measure: "per_filming" },
     }),
-  ).toEqual({ total: 5, used: 2, reserved: 1, left: 2, kindLabel: "Γύρισμα" });
+  ).toEqual({ total: 5, used: 2, reserved: 1, left: 2, over: 0, kindLabel: "Γύρισμα" });
+});
+
+test("η Παροχή που ξεπεράστηκε λέει «πάνω από την Παροχή», όχι αρνητικό υπόλοιπο", () => {
+  const balance = balanceOf({
+    given: 2,
+    carried: 0,
+    used: 1,
+    reserved: 2,
+    balance: -1,
+    kind: { id: "k", label: "Γύρισμα", measure: "per_filming" },
+  });
+  expect(balance).toMatchObject({ total: 2, left: 0, over: 1 });
+  expect(overLineOf(balance)).toBe(
+    "Η Περίοδος έχει 3 (καταναλωμένα και δεσμευμένα) ενώ η Συμφωνία δίνει 2 — 1 πάνω από την Παροχή.",
+  );
+  expect(overLineOf({ ...balance, over: 0 })).toBeNull();
 });
 
 const memberOf = (overrides: Partial<CrewMember> = {}): CrewMember => ({

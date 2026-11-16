@@ -5,7 +5,7 @@ import type { FormState } from "@/lib/form-state";
 import { callRpc, finishWith, firstIssue, pick } from "./action-support";
 import { removeFiles } from "./message-storage";
 import { CLIENT_REQUEST_SENT } from "./request-labels";
-import { deleteSchema, deletedSchema, editSchema, sendSchema, tagSchema } from "./schemas";
+import { deleteSchema, deletedSchema, editSchema, sendSchema, skipReplySchema, tagSchema } from "./schemas";
 
 // Μηνύματα (J2): κάθε ενέργεια είναι ένα RPC της βάσης. Η βάση ελέγχει Δικαίωμα, ορατότητα και παράθυρο διόρθωσης.
 
@@ -13,6 +13,7 @@ const SENT = "Το Μήνυμα στάλθηκε.";
 const EDITED = "Η διόρθωση αποθηκεύτηκε.";
 const DELETED = "Το Μήνυμα διαγράφηκε.";
 const TAGGED = "Η ετικέτα άλλαξε.";
+const SKIPPED = "Η Συνομιλία δεν περιμένει πια απάντηση.";
 
 const removedPathsOf = (data: unknown): string[] => {
   const parsed = deletedSchema.safeParse(data);
@@ -67,4 +68,13 @@ export async function setMessageTag(_: FormState, form: FormData): Promise<FormS
     p_production: parsed.data.productionId,
   });
   return finishWith(outcome, TAGGED);
+}
+
+// «Δεν χρειάζεται απάντηση» (για τα «ευχαριστώ» / «οκ»): σβήνει το «Περιμένει απάντηση» χωρίς μήνυμα· αν ο Πελάτης ξαναγράψει,
+// ξαναμπαίνει μόνο του.
+export async function skipReply(_: FormState, form: FormData): Promise<FormState> {
+  const parsed = skipReplySchema.safeParse(pick(form, ["clientId"]));
+  if (!parsed.success) return firstIssue(parsed.error);
+  const outcome = await callRpc("messages_skip_reply", { p_client: parsed.data.clientId });
+  return finishWith(outcome, SKIPPED);
 }

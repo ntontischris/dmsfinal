@@ -97,6 +97,27 @@ export const EVENT_LABELS: Readonly<Record<string, string>> = {
   crew_vacated: "Άδειασε θέση (το μέλος απενεργοποιήθηκε)",
   equipment_changed: "Άλλαξε ο Εξοπλισμός",
   equipment_conflict: "Σύγκρουση εξοπλισμού",
+  reschedule_requested: "Ο Πελάτης ζήτησε άλλη μέρα",
+  reschedule_withdrawn: "Ο Πελάτης απέσυρε το αίτημα για άλλη μέρα",
+  reschedule_decided: "Κρίθηκε το αίτημα για άλλη μέρα",
+  sheet_issued: "Βγήκε το Δελτίο Γυρίσματος",
+  times_offered: "Στάλθηκαν ώρες στον Πελάτη",
+  offer_picked: "Ο Πελάτης διάλεξε ώρα",
+  offer_withdrawn: "Ανακλήθηκαν οι ώρες που στάλθηκαν",
+};
+
+// Γεγονότα με αποτέλεσμα: το κείμενο λέει τι αποφασίστηκε (accepted στο payload).
+export const DECIDED_LABELS: Readonly<
+  Record<string, { accepted: string; refused: string }>
+> = {
+  reschedule_decided: {
+    accepted: "Η μετάθεση εγκρίθηκε",
+    refused: "Η μετάθεση απορρίφθηκε",
+  },
+  cancel_request_decided: {
+    accepted: "Το αίτημα ακύρωσης εγκρίθηκε",
+    refused: "Το αίτημα ακύρωσης απορρίφθηκε",
+  },
 };
 
 export const UNKNOWN_ACTOR_LABEL = "Άγνωστος χρήστης";

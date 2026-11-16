@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { renderTime } from "@/spaces/flows/athens-time";
+import { hiddenRowKeys } from "@/spaces/flows/today-later";
 import { StateNotice } from "@/spaces/screens/shared";
 
 import { arrangeToday } from "../layout";
@@ -16,16 +18,14 @@ import type { ReadResult } from "../read";
 import type { TodayCounts } from "../view-schema";
 import { athensStamp } from "./a1-adapter";
 import { briefOf } from "./a1-brief";
-import { CardError, TodayCard } from "./a1-card";
-import { rankDecisions } from "./a1-decisions";
 import { newChipOf, newCountOf, withoutLater } from "./a1-later";
 import { leadOf } from "./a1-lead";
 import { KpiBrief } from "./a1-kpis-panel";
 import { loadCards } from "./a1-load";
 import { MoneyBrief } from "./a1-money-panel";
 import {
-  DecisionsPanel,
   MoneyPanel,
+  MoveSuggestions,
   OthersFold,
   ProgrammePanel,
 } from "./a1-panels";
@@ -50,8 +50,9 @@ async function partOf<T>(
   }
 }
 
-// Η Σήμερα της ομάδας ως ενημέρωση (#241): μία πρόταση, ό,τι περιμένει μόνο εμένα, το πρόγραμμα, τα χρήματα,
-// και τα υπόλοιπα σε μία κλειστή γραμμή. Οι κρυφές κάρτες (Προσαρμογή) δεν φορτώνονται καθόλου (loadCards).
+// Η Σήμερα της ομάδας ως ενημέρωση (#241): μία πρόταση, το πρόγραμμα, και κλειστό το «Η μέρα με μια ματιά» (χρήματα,
+// ομάδα, οι υπόλοιπες κάρτες). Ό,τι ζητά απόφαση ή κίνηση (μαζί η Υγεία όταν κάτι χάλασε) είναι γραμμή της μίας λίστας
+// «Τι πρέπει να κάνω τώρα» (spaces/flows), όχι δεύτερη λίστα εδώ. Οι κρυφές κάρτες (Προσαρμογή) δεν φορτώνονται καθόλου (loadCards).
 export async function TeamBriefing({
   counts,
   hello,
@@ -96,9 +97,8 @@ export async function TeamBriefing({
   // βγαίνουν από τη λίστα και από το πλήθος (Σ8).
   const decisions = withoutLater(
     withoutRepeats(brief.decisions, null),
-    visit.snoozed,
+    hiddenRowKeys(visit.snoozed, renderTime()),
   );
-  const ranked = rankDecisions(decisions.cards);
   const newChip = newChipOf(newCountOf(decisions.cards, visit.seenAt));
   const programme = brief.week
     ? programmeOf(
@@ -109,8 +109,8 @@ export async function TeamBriefing({
     : null;
   const lead = leadOf({
     filming: programme && { day: programme.day, count: programme.slots.length },
-    decisions:
-      brief.hasDecisions && !brief.isDecisionsPartial ? ranked.total : null,
+    // Το πλήθος των αποφάσεων το λέει μόνο η λίστα (μία πηγή αριθμού).
+    decisions: null,
     overdue: brief.overdue,
     money: brief.money ? money : null,
   });
@@ -119,58 +119,52 @@ export async function TeamBriefing({
       {hello(newChip)}
       {lead && <p className="a1-lead">{lead}</p>}
       {children}
-      {kpis && <KpiBrief kpis={kpis} />}
       {layout.isAllHidden ? (
         <StateNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
           Πάτα «Προσαρμογή» για να εμφανίσεις όσες θέλεις, ή{" "}
           <Link href={CUSTOMIZE_PATH}>γύρνα στην προεπιλογή</Link>.
+          {kpis && (
+            <details className="a1-glance" id="a1-glance">
+              <summary className="kit-label">Η μέρα με μια ματιά</summary>
+              <KpiBrief kpis={kpis} />
+            </details>
+          )}
         </StateNotice>
       ) : (
         <>
-          {brief.healthAlert &&
-            (failed.has(brief.healthAlert.card.id) ? (
-              <CardError card={brief.healthAlert.card} retryHref="/app" />
-            ) : (
-              <TodayCard
-                card={brief.healthAlert.card}
-                content={brief.healthAlert.content}
-              />
-            ))}
-          <div className="a1-top">
-            {brief.hasDecisions && (
-              <DecisionsPanel
-                ranked={ranked}
-                stamp={stamp}
-                seenAt={visit.seenAt}
-                later={decisions.later}
-              />
-            )}
+          {/* Δείκτες, Ραντάρ και «Το πρόγραμμα» κλειστά εδώ: πάνω μένει μόνο η μία λίστα (xekino-ti-mera, βήμα 1). */}
+          <details className="a1-glance" id="a1-glance">
+            <summary className="kit-label">Η μέρα με μια ματιά</summary>
+            {kpis && <KpiBrief kpis={kpis} />}
             {programme && brief.week && (
-              <ProgrammePanel
-                programme={programme}
-                href={brief.week.content.allHref}
-              />
+              <div className="a1-top">
+                <ProgrammePanel
+                  programme={programme}
+                  href={brief.week.content.allHref}
+                />
+              </div>
             )}
-          </div>
-          {(brief.money || team) && (
-            <div className="a1-pair">
-              {brief.money &&
-                (money ? (
-                  <MoneyBrief
-                    money={money}
-                    href={brief.money.content.allHref}
-                  />
-                ) : (
-                  <MoneyPanel content={brief.money.content} />
-                ))}
-              {team && <TeamBrief team={team} />}
-            </div>
-          )}
-          <OthersFold
-            others={brief.others}
-            quiet={brief.quiet}
-            healthOk={brief.healthOk}
-          />
+            {(brief.money || team) && (
+              <div className="a1-pair">
+                {brief.money &&
+                  (money ? (
+                    <MoneyBrief
+                      money={money}
+                      href={brief.money.content.allHref}
+                    />
+                  ) : (
+                    <MoneyPanel content={brief.money.content} />
+                  ))}
+                {team && <TeamBrief team={team} />}
+              </div>
+            )}
+            <MoveSuggestions decisions={brief.decisions} />
+            <OthersFold
+              others={brief.others}
+              quiet={brief.quiet}
+              healthOk={brief.healthOk}
+            />
+          </details>
         </>
       )}
     </>

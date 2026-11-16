@@ -21,6 +21,13 @@ const DATABASE_EVENTS = [
   "crew_vacated",
   "equipment_changed",
   "equipment_conflict",
+  "reschedule_requested",
+  "reschedule_withdrawn",
+  "reschedule_decided",
+  "sheet_issued",
+  "times_offered",
+  "offer_picked",
+  "offer_withdrawn",
 ];
 
 describe("filming labels", () => {

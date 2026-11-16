@@ -19,3 +19,11 @@ export function parseFromRequest(
   const client = z.uuid().safeParse(first(query.client));
   return { messageId: message.data, clientId: client.success ? client.data : null };
 }
+
+// Ο Πελάτης που διαλέχτηκε πριν (π.χ. στον οδηγό «Στήνω γύρισμα»): `?client=<id>` χωρίς Αίτημα.
+export function parsePreferredClient(
+  query: Readonly<Record<string, string | string[] | undefined>>,
+): string | null {
+  const client = z.uuid().safeParse(first(query.client));
+  return client.success ? client.data : null;
+}

@@ -20,6 +20,14 @@ export {
   CLIENT_NO_CLIENT_TITLE,
   INBOX_TITLE,
 } from "./labels";
+export { readNeedsMe } from "./needs-me-read";
+export {
+  needKindLabel,
+  needsMeOf,
+  waitLabel,
+  type NeedKind,
+  type NeedRow,
+} from "./needs-me";
 export { getAttachmentLink } from "./queries";
 export { getMessageSettings } from "./queries-settings";
 export { parseRequestView } from "./request-helpers";
