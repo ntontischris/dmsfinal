@@ -9,10 +9,6 @@ import { messagesCaps } from "../caps";
 import { AutoRefresh } from "../components/auto-refresh";
 import { chatTopicOf } from "../components/refresh-mode";
 import {
-  loadCandidates,
-  type CandidatesByProduction,
-} from "../deliverable-candidates";
-import {
   MESSAGES_PATH,
   filterMessages,
   newestAt,
@@ -30,15 +26,14 @@ import {
   THREAD_NO_ACCESS_TEXT,
 } from "../labels";
 import { markThreadReadAfterRender } from "../mark-read";
-import { waitingSinceOf } from "../needs-me";
 import { getInbox, getThread } from "../queries";
+import { replyTagOf, sortedProductions } from "../reply-tag";
 import { sideRequestsOf, timelineOf } from "../request-helpers";
 import type { InboxItem, Thread } from "../view-schema";
 import { MessageBubble } from "./j-message";
 import { MessageActions } from "./j2-actions";
 import {
   j2ChangeOf,
-  j2DefaultTag,
   j2FilterOf,
   j2HeaderOf,
   j2MessageOf,
@@ -47,6 +42,7 @@ import {
 import { Composer } from "./j2-composer";
 import { ReadAtScope } from "./j2-read-at";
 import { ChangeBubble, RequestBox } from "./j2-request";
+import { loadRequestContext, type RequestContext } from "./j2-request-context";
 import { J2Side } from "./j2-side";
 import { SkipReply } from "./j2-skip-reply";
 
@@ -120,11 +116,11 @@ function ProductionFilter({
 function Timeline({
   thread,
   filters,
-  candidates,
+  context,
 }: {
   thread: Thread;
   filters: MessageFilters;
-  candidates: CandidatesByProduction;
+  context: RequestContext;
 }) {
   const isFiltered =
     filters.production !== undefined || filters.filter !== "all";
@@ -169,7 +165,7 @@ function Timeline({
             <RequestBox
               thread={thread}
               message={message}
-              candidates={candidates}
+              context={context}
             />
           </MessageBubble>
         );
@@ -191,7 +187,8 @@ function Denied({ text }: { text: string }) {
 // J2 Συνομιλία στη νέα εμφάνιση (prototype `screens/J2.tsx`): μόνο τα ορατά Μηνύματα (η βάση φιλτράρει ανά Εύρος),
 // φίλτρα ετικέτας, Αιτήματα με τις ενέργειές τους, συντάκτης και πλαϊνό «Αιτήματα αυτού του Πελάτη».
 export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
-  const caps = messagesCaps(await getViewer());
+  const viewer = await getViewer();
+  const caps = messagesCaps(viewer);
   if (!caps.canChat) return <Denied text={THREAD_NO_ACCESS_TEXT} />;
   if (clientId === undefined) return <Denied text={THREAD_MISSING_TEXT} />;
   const [result, inbox] = await Promise.all([getThread(clientId), getInbox()]);
@@ -201,15 +198,18 @@ export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
         <ErrorNotice what="η Συνομιλία" />
       </div>
     );
-  const thread = result.data;
-  if (thread === null) return <Denied text={THREAD_MISSING_TEXT} />;
+  if (result.data === null) return <Denied text={THREAD_MISSING_TEXT} />;
+  // Οι Παραγωγές με αλφαβητική σειρά σε κάθε λίστα επιλογής της Συνομιλίας.
+  const thread = {
+    ...result.data,
+    productions: sortedProductions(result.data.productions),
+  };
   if (thread.messages.length > 0)
     await markThreadReadAfterRender(clientId, newestAt(thread.messages));
-  const candidates = await loadCandidates(thread);
-  const item = inbox.ok
-    ? inbox.data.items.find((row) => row.clientId === clientId)
-    : undefined;
-  const isWaiting = item !== undefined && waitingSinceOf(item) !== null;
+  const context = await loadRequestContext(
+    thread,
+    viewer.status === "signed-in" ? viewer.userId : null,
+  );
   return (
     <div data-spaces>
       <AutoRefresh topic={chatTopicOf("team", clientId)} />
@@ -222,7 +222,7 @@ export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
       <ProductionFilter thread={thread} filters={filters} />
       <div className="j2-layout">
         <div className="j2-thread">
-          <Timeline thread={thread} filters={filters} candidates={candidates} />
+          <Timeline thread={thread} filters={filters} context={context} />
           {thread.canWrite ? (
             <Composer
               clientId={thread.client.id}
@@ -230,19 +230,13 @@ export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
               productions={thread.productions}
               canWriteUntagged={thread.canWriteUntagged}
               mentionable={thread.mentionable ?? []}
-              defaultTag={j2DefaultTag(
-                thread.productions,
-                thread.canWriteUntagged,
-                filters.production,
-              )}
+              defaultTag={replyTagOf(thread, filters.production)}
               editMinutes={thread.editMinutes}
             />
           ) : (
             <p className="muted">{COMPOSER_READONLY}</p>
           )}
-          {thread.canWrite && isWaiting && (
-            <SkipReply clientId={thread.client.id} />
-          )}
+          {thread.canWrite && <SkipReply clientId={thread.client.id} />}
         </div>
         <J2Side
           rows={j2SideOf(

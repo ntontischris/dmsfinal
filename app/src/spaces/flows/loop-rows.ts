@@ -1,6 +1,7 @@
 // Οι γραμμές ενός οδηγού που γυρνά, για τον browser: «Απαντώ σε Πελάτες» διαβάζει όλη τη λίστα «Χρειάζονται εμένα»,
 // οι άλλοι τον κανόνα ουράς τους (πόσα μένουν + το πιο παλιό). null = δεν διαβάστηκαν.
 
+import { loadEgkrinoLoop } from "./flow-egkrino-rows";
 import { loadJobDigests } from "./flow-digests";
 import { pathOf } from "./flows";
 import { loadNeedsMe } from "./flow-needs";
@@ -34,6 +35,8 @@ const fromDigest = async (job: string): Promise<LoopData | null> => {
 
 const LOADERS: Readonly<Record<string, () => Promise<LoopData | null>>> = {
   "apanto-se-pelates": fromNeeds,
+  // Όλες οι γραμμές ζουν στο /app/filming/queue: το κλειδί είναι το ?req= (rowKeyOf).
+  "egkrino-gyrismata": loadEgkrinoLoop,
 };
 
 export const loadLoopRows = async (job: string): Promise<LoopData | null> => {

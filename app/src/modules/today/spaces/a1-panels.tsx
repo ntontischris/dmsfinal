@@ -75,10 +75,9 @@ export function ProgrammePanel({
             {programme.next && (
               <>
                 {" "}
-                Επόμενο:{" "}
-                <Link href={programme.next.href}>
-                  {programme.next.when}
-                </Link>, {programme.next.label}.
+                Επόμενο Γύρισμα: {programme.next.when}
+                {programme.next.label ? ` — ${programme.next.label}` : ""}.{" "}
+                <Link href={programme.next.href}>Άνοιγμα</Link>
               </>
             )}
           </p>

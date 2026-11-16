@@ -1,11 +1,26 @@
 // Η Συνομιλία λέει στον οδηγό «Απαντώ σε Πελάτες» τι έγινε (απάντηση, δουλειά Αιτήματος, απόρριψη, «Δεν χρειάζεται
 // απάντηση»), ώστε να περάσει μόνος του στο επόμενο βήμα. Χωρίς οδηγό στη σελίδα δεν ακούει κανείς: δεν αλλάζει τίποτα.
 
+import type { FormState } from "@/lib/form-state";
+
 export type GuideOutcome = "reply" | "note" | "worked" | "rejected" | "no-reply";
 
 export const tellGuide = (outcome: GuideOutcome): void => {
   window.dispatchEvent(new CustomEvent("flows:outcome", { detail: outcome }));
 };
+
+type FormAction = (state: FormState, form: FormData) => Promise<FormState>;
+
+// Η φόρμα λέει στον οδηγό τι έγινε μόλις πετύχει η αποθήκευση — πριν η σελίδα ανανεωθεί. Μετά την ανανέωση το κλεισμένο
+// Αίτημα (ή το «Δεν χρειάζεται απάντηση») δεν έχει πια κουμπιά, η φόρμα φεύγει από την οθόνη και δεν προλαβαίνει να το πει.
+export const withSignal =
+  (action: FormAction, outcome: GuideOutcome): FormAction =>
+  async (state, form) => {
+    const result = await action(state, form);
+    if (result.notice !== undefined && result.error === undefined)
+      tellGuide(outcome);
+    return result;
+  };
 
 const APANTO = "apanto-se-pelates";
 

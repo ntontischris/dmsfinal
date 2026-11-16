@@ -7,12 +7,7 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { Strip } from "@/spaces/shell/strip";
 
 import { messagesCaps } from "../caps";
-import {
-  MESSAGES_PATH,
-  threadHref,
-  unreadTotal,
-  type InboxTab,
-} from "../helpers";
+import { MESSAGES_PATH, threadHref, type InboxTab } from "../helpers";
 import {
   CONVERSATIONS_EMPTY_TEXT,
   CONVERSATIONS_EMPTY_TITLE,
@@ -42,6 +37,7 @@ import {
 import { needsMeOf } from "../needs-me";
 import type { Inbox, RequestsView } from "../view-schema";
 import {
+  inboxTabCountsOf,
   j1ConversationsOf,
   j1MentionsOf,
   j1RequestsOf,
@@ -68,16 +64,21 @@ const TAB_HREF: Readonly<Record<InboxTab, string>> = {
 function Tabs({
   tab,
   inbox,
-  requestsMine,
+  open,
 }: {
   tab: InboxTab;
   inbox: Inbox;
-  requestsMine: number | null;
+  open: RequestsView | null;
 }) {
+  const counts = inboxTabCountsOf(
+    inbox.items,
+    inbox.mentionsUnread,
+    open?.items ?? null,
+  );
   const labels: Readonly<Record<InboxTab, string>> = {
-    conversations: tabLabelOf("Συνομιλίες", unreadTotal(inbox.items)),
-    requests: tabLabelOf("Αιτήματα", requestsMine),
-    mentions: tabLabelOf("Με ανέφεραν", inbox.mentionsUnread),
+    conversations: tabLabelOf("Συνομιλίες", counts.conversations),
+    requests: tabLabelOf("Αιτήματα", counts.requests),
+    mentions: tabLabelOf("Με ανέφεραν", counts.mentions),
   };
   return (
     <nav className="tabs" aria-label="Εισερχόμενα">
@@ -174,10 +175,16 @@ async function MentionsTab() {
   );
 }
 
-// Η όψη Αιτημάτων που χρειάζεται κάθε καρτέλα: η επιλεγμένη στα Αιτήματα, τα «όλα τα ανοιχτά» στις Συνομιλίες (για τα
-// «N ανοιχτά Αιτήματα» κάθε Πελάτη), τα «για μένα» στις αναφορές. Οι μετρητές είναι ίδιοι σε κάθε όψη.
-const requestsViewFor = (tab: InboxTab, view: RequestView): RequestView =>
-  tab === "requests" ? view : tab === "conversations" ? "open" : "mine";
+// Τα «όλα τα ανοιχτά» φορτώνουν πάντα (λίστα «Χρειάζονται εμένα» και αριθμοί καρτελών)· η καρτέλα Αιτημάτων φορτώνει
+// και την όψη της, αν είναι άλλη.
+const loadRequests = async (tab: InboxTab, view: RequestView) => {
+  const isOtherView = tab === "requests" && view !== "open";
+  const [open, shown] = await Promise.all([
+    getRequestsView("open"),
+    isOtherView ? getRequestsView(view) : null,
+  ]);
+  return { open, shown: shown ?? open };
+};
 
 // J1 Εισερχόμενα στη νέα εμφάνιση (prototype `screens/J1.tsx`): Συνομιλίες, Αιτήματα, Με ανέφεραν. Η βάση αποφασίζει τι
 // βλέπει ο Χρήστης· οι μετρητές είναι αδιάβαστα δικά του.
@@ -192,11 +199,12 @@ export async function SpacesInbox({ tab, view }: SpacesInboxProps) {
       </div>
     );
   const shownView = allowedView(view, caps.canTransfer);
-  const [inbox, requests, strip] = await Promise.all([
+  const [inbox, { open, shown: requests }, strip] = await Promise.all([
     getInbox(),
-    getRequestsView(requestsViewFor(tab, shownView)),
+    loadRequests(tab, shownView),
     getSpaceStrip(codesOfSpace("talk")),
   ]);
+  const openData = open.ok ? open.data : null;
   if (!inbox.ok)
     return (
       <div data-spaces>
@@ -209,13 +217,10 @@ export async function SpacesInbox({ tab, view }: SpacesInboxProps) {
       <Tabs
         tab={tab}
         inbox={inbox.data}
-        requestsMine={requests.ok ? requests.data.counts.mine : null}
+        open={openData}
       />
       {tab === "conversations" && (
-        <ConversationsTab
-          inbox={inbox.data}
-          open={requests.ok ? requests.data : null}
-        />
+        <ConversationsTab inbox={inbox.data} open={openData} />
       )}
       {tab === "requests" &&
         (requests.ok ? (

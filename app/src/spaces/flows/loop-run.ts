@@ -98,6 +98,11 @@ export const withHandled = (run: LoopRun): LoopRun => ({
   handled: run.handled + 1,
 });
 
+// Το κλειδί της γραμμής όπου είμαστε: το ?req= όταν ο σταθμός δείχνει ένα αίτημα (όλα στην ίδια διαδρομή),
+// αλλιώς η διαδρομή.
+export const rowKeyOf = (pathname: string, search: string): string =>
+  new URLSearchParams(search).get("req") ?? pathname;
+
 export const withSkipped = (run: LoopRun, key: string): LoopRun => ({
   ...run,
   skipped: run.skipped.includes(key) ? run.skipped : [...run.skipped, key],
@@ -124,12 +129,26 @@ export const counterOf = (
   return { k: Math.min(run.handled + skippedLeft + 1, n), n };
 };
 
+// «Αίτημα 2 από 5» (ή «Γραμμή …» όταν ο οδηγός δεν λέει τι μετρά).
+export const counterText = (
+  noun: string | undefined,
+  counter: { k: number; n: number },
+): string => `${noun ?? "Γραμμή"} ${counter.k} από ${counter.n}`;
+
+// Η Απόρριψη είναι κι αυτή απάντηση στον Πελάτη (flow.md): μετρά και στο {reply}.
+const countOf = (tally: Readonly<Record<string, number>>, key: string): number =>
+  (tally[key] ?? 0) + (key === "reply" ? (tally.rejected ?? 0) : 0);
+
 // Η φράση ολοκλήρωσης με τους αριθμούς του γύρου: {reply} → πόσες απαντήσεις κ.λπ.
 export const tallyText = (
   template: string,
   tally: Readonly<Record<string, number>>,
 ): string =>
-  template.replace(/\{(\w+)\}/g, (_, key: string) => String(tally[key] ?? 0));
+  template.replace(/\{(\w+)\}/g, (_, key: string) => String(countOf(tally, key)));
+
+// Ο γύρος τελείωσε: καμία γραμμή δεν περιμένει, ούτε από όσες άφησα για μετά.
+export const isRoundOver = (state: LoopState | null | undefined): boolean =>
+  state !== null && state !== undefined && (state.count === 0 || (state.next === null && state.skippedLeft === 0));
 
 const runKey = (job: string): string => `flows.run.${job}`;
 

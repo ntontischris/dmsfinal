@@ -36,4 +36,10 @@
 & .j2-composer[data-internal='true'] { border: 1px dashed var(--color-attention); }
 & .j2-side a { text-decoration: none; font-weight: 600; }
 & .j2-side a:hover { color: var(--color-accent); }
-& .j2-side-empty { margin: 0; padding: var(--space-3) 1.25rem; } }
+& .j2-side-empty { margin: 0; padding: var(--space-3) 1.25rem; }
+/* Βήμα 2 του οδηγού: οι επιλογές, η προεπιλεγμένη τονισμένη· το κύριο κουμπί είναι η «Συνέχεια» της φόρμας. */
+& .j2-guide-choice { display: grid; gap: var(--space-3); }
+& .j2-choice { display: inline-grid; gap: var(--space-1); }
+& .j2-guide-choice .button[aria-pressed='true'] { border-color: var(--color-accent); background: var(--color-surface-raised); font-weight: 700; }
+& .j2-warning { color: var(--color-attention); font-weight: 600; }
+& .j2-more summary { cursor: pointer; } }

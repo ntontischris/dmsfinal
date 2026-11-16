@@ -34,8 +34,14 @@ test("η κράτηση σε αναμονή γίνεται κάρτα με Πα�
   expect(item.waitingHours).toBe(24);
   expect(item.when).toMatch(/^21\/09 .+ 10:00–13:00$/);
   expect(item.balance).toBe(
-    "Γύρισμα: 2 από 4 διαθέσιμα μετά από αυτό το Γύρισμα",
+    "Γύρισμα: μένουν 2 από 4 μετά από αυτό το Γύρισμα",
   );
+});
+
+test("η Παροχή που ξεπεράστηκε δεν γράφει αρνητικό υπόλοιπο", () => {
+  const provision = { given: 2, carried: 0, used: 1, reserved: 2, balance: -1 };
+  const item = pendingItemOf(pendingOf({ provision: { ...pendingOf().provision!, ...provision } }), NOW);
+  expect(item.balance).toBe("Γύρισμα: 3 από 2 μαζί με αυτό το Γύρισμα — 1 πάνω από την Παροχή");
 });
 
 test("κράτηση σε περασμένη μέρα σημειώνεται", () => {

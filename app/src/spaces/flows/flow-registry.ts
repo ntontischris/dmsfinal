@@ -5,8 +5,9 @@
 import { APANTO } from "./flow-apanto";
 import { EGKRINO } from "./flow-egkrino";
 import { STINO } from "./flow-stino";
+import { XEKINO } from "./flow-xekino";
 import type { Flow } from "./flow-types";
 
 export * from "./flow-types";
 
-export const FLOWS: readonly Flow[] = [STINO, APANTO, EGKRINO];
+export const FLOWS: readonly Flow[] = [STINO, APANTO, EGKRINO, XEKINO];

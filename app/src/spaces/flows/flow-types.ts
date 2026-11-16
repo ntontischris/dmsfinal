@@ -6,6 +6,8 @@ export interface FlowChoice {
   to: number;
   // Σε οδηγό που γυρνά: η γραμμή μένει για μετά (δεν μετρά ως τελειωμένη και δεν ξαναπροτείνεται σε αυτόν τον γύρο).
   skips?: boolean;
+  // Φαίνεται μόνο όταν η σελίδα λέει ότι ισχύει (π.χ. «openRequest»: υπάρχει [data-flow-request-open="true"]).
+  when?: "openRequest";
 }
 
 export interface FlowLink {
@@ -69,6 +71,8 @@ export interface Flow {
   // Η φράση ολοκλήρωσης με τους αριθμούς του γύρου ({reply}, {worked}, {rejected} = πόσες φορές έγινε το καθένα).
   // Χωρίς γραμμή που τελείωσε σε αυτόν τον γύρο, φαίνεται το done.
   doneTally?: string;
+  // Τι μετρά ο μετρητής του γύρου: «Αίτημα 2 από 5» αντί για «Γραμμή 2 από 5».
+  rowNoun?: string;
 }
 
 export const FILMING_PAGE =

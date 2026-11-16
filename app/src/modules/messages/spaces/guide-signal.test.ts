@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { filmingFromRequestHref } from "./guide-signal";
+import { filmingFromRequestHref, withSignal } from "./guide-signal";
 
 const BASE = "/app/filming/new?fromRequest=m1&client=c1";
 
@@ -26,5 +26,36 @@ describe("filmingFromRequestHref", () => {
         search: new URLSearchParams(""),
       }),
     ).toBe(BASE);
+  });
+});
+
+describe("withSignal", () => {
+  const listen = () => {
+    const target = new EventTarget();
+    const heard: string[] = [];
+    target.addEventListener("flows:outcome", (event) =>
+      heard.push(String((event as CustomEvent).detail)),
+    );
+    vi.stubGlobal("window", target);
+    return heard;
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("should tell the guide once the save succeeded", async () => {
+    const heard = listen();
+    const action = withSignal(async () => ({ notice: "Έγινε" }), "worked");
+    const result = await action({}, new FormData());
+    expect(result).toEqual({ notice: "Έγινε" });
+    expect(heard).toEqual(["worked"]);
+  });
+
+  it("should stay silent when the save failed", async () => {
+    const heard = listen();
+    const action = withSignal(async () => ({ error: "Όχι" }), "rejected");
+    await action({}, new FormData());
+    expect(heard).toEqual([]);
   });
 });

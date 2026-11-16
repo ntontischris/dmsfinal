@@ -46,11 +46,7 @@ import {
   E3TeamOffer,
   E3TemplateGap,
 } from "./e3-guide-part";
-import {
-  isCrewStepOf,
-  templateGapOf,
-  type GuidePlace,
-} from "./e3-guide-model";
+import { isCrewStepOf, templateGapOf, type GuidePlace } from "./e3-guide-model";
 import { EGKRINO_JOB, EGKRINO_STEPS } from "./e2-guide-model";
 import { E3Sheet } from "./e3-sheet";
 import {
@@ -61,6 +57,7 @@ import {
   fmtDay,
   hoursLabel,
   notesOf,
+  overLineOf,
   replyOf,
   responseTone,
   type DoneKind,
@@ -268,8 +265,9 @@ function Balance({ card }: { card: FilmingCard }) {
     >
       <Meter
         label="Καταναλωμένα + δεσμευμένα"
-        used={balance.used + balance.reserved}
+        used={Math.min(balance.used + balance.reserved, balance.total)}
         total={balance.total}
+        tone={balance.over > 0 ? "attention" : undefined}
       />
       <div className="e3-balance">
         <div>
@@ -281,10 +279,17 @@ function Balance({ card }: { card: FilmingCard }) {
         <div>
           <strong>{balance.reserved}</strong>δεσμευμένα
         </div>
-        <div>
-          <strong>{balance.left}</strong>υπόλοιπα
-        </div>
+        {balance.over > 0 ? (
+          <div>
+            <strong>{balance.over}</strong>πάνω από την Παροχή
+          </div>
+        ) : (
+          <div>
+            <strong>{balance.left}</strong>υπόλοιπα
+          </div>
+        )}
       </div>
+      {overLineOf(balance) && <p className="muted">{overLineOf(balance)}</p>}
       <details className="muted">
         <summary>Πώς μετρά η Παροχή</summary>Η Παροχή δεσμεύεται από τη στιγμή
         της κράτησης και καταναλώνεται όταν το Γύρισμα σημειωθεί «έγινε». Αν
@@ -524,7 +529,13 @@ function Missing() {
 }
 
 // Το μήνυμα μετά από κράτηση ή μετάθεση (`?done=`), όπως το έδειχνε η παλιά σελίδα.
-function DoneNotice({ done, card }: { done: DoneKind | null; card: FilmingCard }) {
+function DoneNotice({
+  done,
+  card,
+}: {
+  done: DoneKind | null;
+  card: FilmingCard;
+}) {
   if (done === null) return null;
   return (
     <p className="e-info" role="status">
@@ -615,6 +626,7 @@ export async function SpacesFilming({
           crewTemplates: tools.templates,
           equipmentTemplates: tools.equipmentTemplates,
           candidateIds: tools.candidates.map((member) => member.id),
+          blockedIds: tools.blockedIds,
           statusLabels: equipment.statusLabels,
         })
       : null;
@@ -667,7 +679,11 @@ export async function SpacesFilming({
             statusLabels={equipment.statusLabels}
           />
         )}
-        <E3RequestNote card={card} nowMs={nowMs} />
+        <E3RequestNote
+          card={card}
+          nowMs={nowMs}
+          isInGuide={guide?.job === EGKRINO_JOB}
+        />
         <E3TeamOffer card={card} isOfferStep={isOfferStep} />
         <Header card={card} nowMs={nowMs} isClient={false} />
         <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />

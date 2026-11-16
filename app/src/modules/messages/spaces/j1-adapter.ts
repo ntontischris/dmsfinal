@@ -151,3 +151,30 @@ export const j1RequestsOf = (
 // Οι ετικέτες των καρτελών, όπως στο prototype: «Συνομιλίες (N)» κ.λπ. Χωρίς αριθμό όταν δεν φόρτωσε.
 export const tabLabelOf = (name: string, count: number | null): string =>
   count === null ? name : `${name} (${count})`;
+
+export interface InboxTabCounts {
+  conversations: number;
+  // null όταν τα Αιτήματα δεν φόρτωσαν.
+  requests: number | null;
+  mentions: number;
+}
+
+// Οι αριθμοί των καρτελών μετρούν ό,τι δείχνει η λίστα «Χρειάζονται εμένα»: Συνομιλίες που «Περιμένουν απάντηση»,
+// ανοιχτά Αιτήματα μέσα σε Συνομιλία (όλα τα ανοιχτά που βλέπω, όχι μόνο όσα έχουν εμένα υπεύθυνο), αδιάβαστες αναφορές.
+export const inboxTabCountsOf = (
+  items: readonly InboxItem[],
+  mentionsUnread: number,
+  open: readonly QueueItem[] | null,
+): InboxTabCounts => ({
+  conversations: items.filter((item) => waitingSinceOf(item) !== null).length,
+  requests:
+    open === null
+      ? null
+      : open.filter(
+          (item) =>
+            item.messageId !== null &&
+            item.kind !== "change" &&
+            item.state === "open",
+        ).length,
+  mentions: mentionsUnread,
+});

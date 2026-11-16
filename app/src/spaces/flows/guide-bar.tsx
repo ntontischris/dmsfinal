@@ -12,6 +12,7 @@ import { useFilmingCounts } from "./filming-counts";
 import { clearFrom, isAppHref, rememberFrom } from "./from-guide";
 import { GuideClients } from "./guide-clients";
 import { BackToFrom, LoopLeftover, useLoop } from "./guide-loop";
+import { GuidePreset } from "./guide-preset";
 import {
   dateOf,
   isAtStationOf,
@@ -46,6 +47,9 @@ import {
   subscribeParked,
   type FilmingPlace,
 } from "./parked";
+
+import { XEKINO_JOB } from "./flow-xekino";
+import { XekinoBar } from "./xekino-bar";
 
 import "./flows.css";
 
@@ -88,8 +92,8 @@ function useStoredFilming(): FilmingPlace | null {
 function GuideActions(props: GuideProps) {
   const { flow, step, pathname, counts } = props;
   const router = useRouter();
-  const handleExit = () => {
-    park({
+  const handleExit = async () => {
+    await park({
       job: flow.id,
       step,
       reason: "exit",
@@ -129,7 +133,7 @@ function GuideActions(props: GuideProps) {
         </Link>
       )}
       <BackToFrom flow={flow} step={step} />
-      <button type="button" className="button" onClick={handleExit}>
+      <button type="button" className="button" onClick={() => void handleExit()}>
         Έξοδος
       </button>
     </div>
@@ -200,7 +204,7 @@ function Guide(props: GuideProps) {
         {!isLoopDone && (
           <>
             <p className="flow-guide-question">{current.question}</p>
-            <p className="flow-guide-preset">{current.preset}</p>
+            <GuidePreset text={current.preset} />
           </>
         )}
         {current.picksClient && <GuideClients flow={flow} step={step} />}
@@ -257,6 +261,13 @@ export function GuideBar() {
   const flow = flowOf(params.get("job"));
   useResume(flow !== undefined, pathname, params.toString());
   useFromParam(flow, params.get("from"), params.get("step"));
+  // «Ξεκινώ τη μέρα μου»: τα βήματα 1 και 3 είναι η ίδια η Σήμερα· μπάρα μόνο στο βήμα 2, στον σταθμό της γραμμής.
+  if (flow?.id === XEKINO_JOB) {
+    const item = params.get("item");
+    return params.get("step") === "2" && item ? (
+      <XekinoBar item={item} href={`${pathname}?${params.toString()}`} />
+    ) : null;
+  }
   return flow ? (
     <PlacedGuide
       flow={flow}

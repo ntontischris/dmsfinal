@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
 import { Panel } from "@/spaces/kit/panel";
@@ -11,6 +12,7 @@ import { subscribeParked } from "./parked";
 import { daySentence, type Queue } from "./queue-rows";
 import type { ClosedItem } from "./today-closed";
 import type { Later } from "./use-later";
+import { clearRound } from "./xekino-round";
 
 interface PostponedProps {
   queue: Queue;
@@ -61,11 +63,49 @@ interface DaySummaryProps {
   today: string;
   // Ό,τι έκλεισα σήμερα στη βάση (Ίχνος)· null = δεν επιτρέπεται να διαβαστεί.
   closed: readonly ClosedItem[] | null;
+  // Αδιάβαστες Ειδοποιήσεις (μόνο ενημερώσεις)· null = άγνωστο.
+  unread: number | null;
   later: Later;
 }
 
+// Η «μέρα με μια ματιά» είναι κλειστή: ο σύνδεσμος την ανοίγει πριν πάει εκεί.
+const openGlance = () => {
+  const glance = document.getElementById("a1-glance");
+  if (glance instanceof HTMLDetailsElement) glance.open = true;
+};
+
+// Τα κρυφά του βήματος 3: «Η μέρα με μια ματιά» (πιο κάτω στη Σήμερα) και οι Ειδοποιήσεις-ενημερώσεις.
+function DayLinks({ unread }: { unread: number | null }) {
+  return (
+    <div className="btn-row">
+      <a
+        className="button"
+        data-ghost="true"
+        href="#a1-glance"
+        onClick={openGlance}
+      >
+        Η μέρα με μια ματιά
+      </a>
+      <Link className="button" data-ghost="true" href="/app/notifications">
+        Ενημερώσεις{unread === null ? "" : ` (${unread})`} →
+      </Link>
+    </div>
+  );
+}
+
+const finish = (today: string) => {
+  clearRound();
+  finishDay(today);
+};
+
 // Βήμα 3 «Τελείωσε η μέρα;»: μόνο όταν η λίστα άδειασε ή όλα έχουν «Αργότερα».
-export function DaySummary({ queue, today, closed, later }: DaySummaryProps) {
+export function DaySummary({
+  queue,
+  today,
+  closed,
+  unread,
+  later,
+}: DaySummaryProps) {
   const dayDone = useSyncExternalStore(
     subscribeParked,
     readDayDoneRaw,
@@ -86,7 +126,8 @@ export function DaySummary({ queue, today, closed, later }: DaySummaryProps) {
         <>
           {closed && closed.length > 0 && (
             <section className="flow-home-area">
-              <h3 className="kit-label">Τι έκλεισα σήμερα</h3>
+              <h3 className="kit-label">Έκλεισες {closed.length} σήμερα</h3>
+              <p className="muted">Τι έκλεισα σήμερα</p>
               <RowList>
                 {closed.map((item) => (
                   <ListRow
@@ -104,12 +145,13 @@ export function DaySummary({ queue, today, closed, later }: DaySummaryProps) {
             </p>
           )}
           <Postponed queue={queue} restore={later.restore} />
+          <DayLinks unread={unread} />
           <div className="btn-row">
             <button
               type="button"
               className="button"
               data-primary="true"
-              onClick={() => finishDay(today)}
+              onClick={() => finish(today)}
             >
               Τέλος
             </button>

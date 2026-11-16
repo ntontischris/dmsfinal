@@ -21,6 +21,7 @@ const CARD_AREA: Readonly<Record<string, Area>> = {
   my_tasks: "Παραγωγή",
   versions_to_review: "Παραγωγή",
   rounds_over_limit: "Παραγωγή",
+  google_deletions: "Παραγωγή",
   to_invoice: "Χρήματα",
   overdue_invoices: "Χρήματα",
   cost_hours: "Χρήματα",
@@ -44,15 +45,15 @@ const KIND: Readonly<Record<string, string>> = {
   overdue_invoices: "Ληξιπρόθεσμο Τιμολόγιο",
   cost_hours: "Ώρες και Υπέρβαση κόστους",
   unanswered: "Αναπάντητη ερώτηση Βοηθού",
+  google_deletions: "Διαγραφή από το Google",
 };
 
-// Τα μετρά ήδη η γραμμή ενός οδηγού (Απαντώ σε Πελάτες, Αιτήματα γυρίσματος). Το πρόγραμμα της εβδομάδας δεν είναι
+// Τα μετρά ήδη η γραμμή ενός οδηγού (Απαντώ σε Πελάτες, Αιτήματα γυρίσματος· οι διαγραφές στο Google όχι πια). Το πρόγραμμα της εβδομάδας δεν είναι
 // κάτι που κλείνει: μένει στο «Το πρόγραμμα».
 const NOT_ROWS: ReadonlySet<string> = new Set([
   "requests_mentions",
   "unread_messages",
   "filming_approvals",
-  "google_deletions",
   "week_filming",
 ]);
 

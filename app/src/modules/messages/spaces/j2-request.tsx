@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "@/spaces/screens/shared";
 
-import type { CandidatesByProduction } from "../deliverable-candidates";
+import { formProductionOf } from "../deliverable-candidates";
 import {
   CREATE_DELIVERABLE_NEEDS_TAG,
   CREATE_DELIVERABLE_NO_ACCESS,
@@ -12,6 +12,7 @@ import {
 import type { Thread } from "../view-schema";
 import type { J2Change, J2Message, J2Request } from "./j2-adapter";
 import { RequestActions, type DeliverableSource } from "./j2-request-actions";
+import type { RequestContext } from "./j2-request-context";
 
 function ClosingInfo({ request }: { request: J2Request }) {
   if (request.isOpen) return null;
@@ -37,19 +38,26 @@ function ClosingInfo({ request }: { request: J2Request }) {
   );
 }
 
-// Τα υποψήφια της Παραγωγής για τη φόρμα νέου Παραδοτέου, ή γιατί δεν γίνεται.
+// Τα υποψήφια της Παραγωγής για τη φόρμα νέου Παραδοτέου, ή γιατί δεν γίνεται. Αίτημα χωρίς ετικέτα παίρνει την
+// προτεινόμενη Παραγωγή (η τελευταία ετικέτα της Συνομιλίας, αλλιώς η πρώτη αλφαβητικά).
 function deliverableSourceOf(
   thread: Thread,
   message: J2Message,
-  candidates: CandidatesByProduction,
+  context: RequestContext,
 ): DeliverableSource {
-  if (message.productionId === null)
+  const productionId = formProductionOf(thread, message);
+  if (productionId === null)
     return { note: CREATE_DELIVERABLE_NEEDS_TAG, needsTag: true };
-  const found = candidates.get(message.productionId) ?? null;
+  const found = context.candidates.get(productionId) ?? null;
   if (found === null) return { note: CREATE_DELIVERABLE_NO_ACCESS };
+  const title =
+    thread.productions.find((p) => p.id === productionId)?.title ??
+    message.tagTitle ??
+    "";
   return {
-    productionId: message.productionId,
-    defaultTitle: `${thread.client.name} — ${message.tagTitle ?? ""}`,
+    productionId,
+    isSuggested: message.productionId === null,
+    defaultTitle: `${thread.client.name} — ${title}`,
     candidates: found,
   };
 }
@@ -59,11 +67,11 @@ function deliverableSourceOf(
 export function RequestBox({
   thread,
   message,
-  candidates,
+  context,
 }: {
   thread: Thread;
   message: J2Message;
-  candidates: CandidatesByProduction;
+  context: RequestContext;
 }) {
   const request = message.request;
   if (request === null) return null;
@@ -88,8 +96,10 @@ export function RequestBox({
           clientId={thread.client.id}
           request={request}
           assignable={thread.assignable ?? []}
-          deliverable={deliverableSourceOf(thread, message, candidates)}
+          deliverable={deliverableSourceOf(thread, message, context)}
           productions={message.canTag ? thread.productions : []}
+          viewerId={context.viewerId}
+          hasAgreement={context.hasAgreement}
         />
       )}
     </div>

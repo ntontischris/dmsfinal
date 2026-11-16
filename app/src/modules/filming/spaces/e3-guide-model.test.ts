@@ -50,12 +50,13 @@ const equipmentTemplates = [
   },
 ];
 
-const gapOf = (crew: CrewMember[], equipment: EquipmentLine[]) =>
+const gapOf = (crew: CrewMember[], equipment: EquipmentLine[], blockedIds: string[] = []) =>
   templateGapOf({
     card: { crew, equipment, kind: null },
     crewTemplates,
     equipmentTemplates,
     candidateIds: ["u1", "u2"],
+    blockedIds,
     statusLabels: { repair: "Σε επισκευή" },
   });
 
@@ -76,6 +77,11 @@ describe("templateGapOf", () => {
     ]);
   });
 
+  it("should say a template member was left out for a day off or leave", () => {
+    const gap = gapOf([memberOf("u1", "Άννα")], [], ["u2"]);
+    expect(gap.crew[0]).toEqual({ name: "Νίκος", reason: "έχει ρεπό ή άδεια εκείνη την ώρα" });
+  });
+
   it("should be empty when everything went in, and warn about days off", () => {
     const gap = gapOf(
       [memberOf("u1", "Άννα", true), memberOf("u2", "Νίκος"), memberOf("u3", "Μαρία")],
@@ -92,6 +98,7 @@ describe("templateGapOf", () => {
       crewTemplates: [],
       equipmentTemplates: [],
       candidateIds: [],
+      blockedIds: [],
       statusLabels: {},
     });
     expect([gap.crewTemplate, gap.equipmentTemplate]).toEqual([null, null]);

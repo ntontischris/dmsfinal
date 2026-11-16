@@ -46,19 +46,31 @@ interface GapInput {
   }[];
   // Όσοι μπορούν να μπουν σε Συνεργείο (ενεργοί Χρήστες ομάδας).
   candidateIds: readonly string[];
+  // Όσοι έχουν ρεπό ή άδεια την ώρα του Γυρίσματος.
+  blockedIds: readonly string[];
   statusLabels: Readonly<Record<string, string>>;
 }
 
-const missingCrewOf = ({ card, crewTemplates, candidateIds }: GapInput) => {
+const crewReasonOf = (
+  id: string,
+  { candidateIds, blockedIds }: GapInput,
+): string => {
+  if (!candidateIds.includes(id))
+    return "δεν είναι πια ενεργό μέλος της ομάδας";
+  return blockedIds.includes(id)
+    ? "έχει ρεπό ή άδεια εκείνη την ώρα"
+    : "έχει άλλο Γύρισμα αυτή την ώρα";
+};
+
+const missingCrewOf = (input: GapInput) => {
+  const { card, crewTemplates } = input;
   const template = pickTemplate(crewTemplates, card.kind?.label ?? "");
   const inside = new Set(card.crew.map((member) => member.userId));
   const crew = (template?.members ?? [])
     .filter((member) => !inside.has(member.id))
     .map((member) => ({
       name: member.name,
-      reason: candidateIds.includes(member.id)
-        ? "έχει άλλο Γύρισμα αυτή την ώρα"
-        : "δεν είναι πια ενεργό μέλος της ομάδας",
+      reason: crewReasonOf(member.id, input),
     }));
   return { name: template?.name ?? null, crew };
 };

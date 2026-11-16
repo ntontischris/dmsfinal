@@ -282,7 +282,8 @@ export const primaryLabelOf = (
   isFinished: boolean,
 ): string => {
   const current = flow.steps[step - 1];
-  if (isFinished) return "Τέλος";
+  // Ο γύρος τελείωσε: πίσω στη λίστα απ' όπου ήρθαν οι γραμμές (Σήμερα ή ο οδηγός που μας έστειλε).
+  if (isFinished) return flow.isLoop ? "Πίσω στη λίστα" : "Τέλος";
   if (current && isWait(current)) return "Εντάξει, περιμένω";
   return flow.isLoop && nextOf(flow, step) === 1
     ? (flow.nextLabel ?? "Επόμενο")

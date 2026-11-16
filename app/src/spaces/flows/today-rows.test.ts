@@ -102,6 +102,7 @@ describe("cardRowsOf", () => {
     expect(isCardRow("week_filming")).toBe(false);
     expect(isCardRow("client_filming")).toBe(false);
     expect(isCardRow("health")).toBe(true);
+    expect(isCardRow("google_deletions")).toBe(true);
     expect(cardRowsOf([input({}, "requests_mentions")], NOW)).toEqual([]);
   });
 });

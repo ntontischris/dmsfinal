@@ -1,5 +1,5 @@
-// Η ουρά των οδηγών στο prototype: οι δουλειές που έμειναν μισές ή περιμένουν, στο localStorage του browser.
-// Στην πραγματική εφαρμογή θα τις βγάζει ο κανόνας ουράς της κάθε ροής από τη βάση (flow.md → Queue rule).
+// Οι δουλειές που έμειναν μισές ή περιμένουν: στον λογαριασμό (today_flow_places, ίδιες σε κάθε συσκευή) και, για να
+// φαίνονται αμέσως πριν ξαναδιαβαστεί η Σήμερα, και στο localStorage του browser.
 
 // Το Γύρισμα της δουλειάς: η σελίδα του και πόσα μέλη / αντικείμενα είχε την τελευταία φορά που το είδε ο οδηγός.
 export interface FilmingPlace {
@@ -16,6 +16,9 @@ export interface Parked {
   // Η μέρα του γυρίσματος, για το βήμα που ανοίγει το Ημερολόγιο σε αυτήν.
   date?: string;
   filming?: FilmingPlace;
+  // «Ξεκινώ τη μέρα μου»: η γραμμή που είχε ανοίξει και η διεύθυνση του σταθμού της (για το «Συνέχισε»).
+  item?: string;
+  href?: string;
 }
 
 export interface ActivePlace {
@@ -75,11 +78,33 @@ const writeParked = (rows: readonly Parked[]): void => {
   window.dispatchEvent(new Event(PARKED_EVENT));
 };
 
-export const park = (row: Parked): void =>
+// Η θέση γράφεται αμέσως στον browser και μετά στον λογαριασμό· περίμενε το Promise πριν από πλοήγηση.
+export const park = async (row: Parked): Promise<void> => {
   writeParked(withParked(parseParked(readParkedRaw()), row));
+  const { savePlace } = await import("./place-actions");
+  const result = await savePlace(row);
+  if (result.error) console.error("flows.parked.save:", result.error);
+};
 
-export const unpark = (job: string): void =>
+export const unpark = async (job: string): Promise<void> => {
   writeParked(withoutJob(parseParked(readParkedRaw()), job));
+  const { clearPlace } = await import("./place-actions");
+  const result = await clearPlace(job);
+  if (result.error) console.error("flows.parked.clear:", result.error);
+};
+
+// Οι μισές δουλειές της λίστας: του λογαριασμού, συν όσες γράφτηκαν σε αυτόν τον browser μετά την ανάγνωσή του.
+// account = null: ο λογαριασμός δεν διαβάστηκε, μένει ο browser.
+export const mergedParked = (
+  account: readonly Parked[] | null,
+  local: readonly Parked[],
+  readAt: number,
+): readonly Parked[] =>
+  account === null
+    ? local
+    : local
+        .filter((row) => row.at > readAt)
+        .reduce<readonly Parked[]>(withParked, account);
 
 export const subscribeParked = (onChange: () => void): (() => void) => {
   window.addEventListener(PARKED_EVENT, onChange);

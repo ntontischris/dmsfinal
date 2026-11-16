@@ -5,6 +5,8 @@ import { parseAuditPage, type AuditItem } from "@/modules/audit";
 import { getTodayCounts, loadCards, withoutRepeats } from "@/modules/today";
 
 import { startOfToday } from "./athens-time";
+import type { Parked } from "./parked";
+import { parsePlaces } from "./place-schema";
 import type { QueueRow } from "./queue-rows";
 import { closedOf, type ClosedItem } from "./today-closed";
 import { noticeRowsOf, parseNotices } from "./today-notices";
@@ -20,6 +22,10 @@ export interface TodayRows {
   closed: readonly ClosedItem[] | null;
   // Τα κλειδιά του «Αργότερα» στη βάση· null = η βάση δεν απάντησε, οπότε μένει το «Αργότερα» του browser.
   snoozed: readonly string[] | null;
+  // Οι μισοτελειωμένοι οδηγοί στον λογαριασμό· null = δεν διαβάστηκαν (μένει ο browser).
+  places: readonly Parked[] | null;
+  // Αδιάβαστες Ειδοποιήσεις, για το «Ενημερώσεις (N) →»· null = άγνωστο.
+  unread: number | null;
 }
 
 const NO_ROWS: TodayRows = {
@@ -27,13 +33,15 @@ const NO_ROWS: TodayRows = {
   failed: [],
   closed: null,
   snoozed: null,
+  places: null,
+  unread: null,
 };
 // Σελίδες των 50 του Ίχνους: όσες χρειάζονται για μια μέρα, με όριο.
 const MAX_PAGES = 4;
 
 async function loadCardRows(now: number) {
   const counts = await getTodayCounts();
-  if (!counts.ok || !counts.data) return { cards: [], failed: [] };
+  if (!counts.ok || !counts.data) return { cards: [], failed: [], unread: null };
   const team = counts.data.cards.filter((card) => isCardRow(card.code));
   const loaded = await loadCards(team);
   const failed = loaded.filter((item) => item.failed);
@@ -42,6 +50,7 @@ async function loadCardRows(now: number) {
     null,
   );
   return {
+    unread: counts.data.unreadNotifications,
     cards: cardRowsOf(built, now),
     failed: failed.map(({ built: { card, content } }) => ({
       title: card.title,
@@ -124,17 +133,30 @@ async function loadSnoozed(
   return parsed.success ? parsed.data : null;
 }
 
+async function loadPlaces(
+  supabase: Supabase | null,
+): Promise<readonly Parked[] | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("today_places");
+  if (error) {
+    if (error.code !== "42501") console.error("flows.places:", error.message);
+    return null;
+  }
+  return parsePlaces(data);
+}
+
 export async function loadTodayRows(now: number): Promise<TodayRows> {
   try {
     const supabase = await createSupabase();
-    const [rows, closed, notices, snoozed] = await Promise.all([
+    const [rows, closed, notices, snoozed, places] = await Promise.all([
       loadCardRows(now),
       loadClosed(now),
       loadNotices(supabase),
       loadSnoozed(supabase),
+      loadPlaces(supabase),
     ]);
     const cards = [...rows.cards, ...noticeRowsOf(notices, rows.cards, now)];
-    return { ...rows, cards, closed, snoozed };
+    return { ...rows, cards, closed, snoozed, places };
   } catch (error) {
     console.error("flows.today:", error);
     return NO_ROWS;

@@ -36,12 +36,28 @@ const offsetAt = (ms: number): number =>
 export const athensDay = (ms: number): string =>
   new Date(wallOf(ms)).toISOString().slice(0, 10);
 
+// Η στιγμή (ms) που η Αθήνα δείχνει την ώρα τοίχου `wall` («σαν UTC»).
+const fromWall = (wall: number): number => wall - offsetAt(wall - offsetAt(wall));
+
 // Η στιγμή (ms) που η Αθήνα δείχνει τη μέρα στις `hour`:00.
 export const athensAt = (day: string, hour: number): number => {
   const [year, month, date] = day.split("-").map(Number);
-  const wall = Date.UTC(year, month - 1, date, hour);
-  return wall - offsetAt(wall - offsetAt(wall));
+  return fromWall(Date.UTC(year, month - 1, date, hour));
 };
+
+const INPUT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+// «Διαλέγω μέρα και ώρα»: η τιμή του πεδίου («ΕΕΕΕ-ΜΜ-ΗΗTΩΩ:ΛΛ») ως ώρα Αθήνας· null = άκυρη.
+export const athensFromInput = (value: string): number | null => {
+  const match = INPUT.exec(value);
+  if (!match) return null;
+  const [year, month, date, hour, minute] = match.slice(1).map(Number);
+  return fromWall(Date.UTC(year, month - 1, date, hour, minute));
+};
+
+// Η τιμή του πεδίου για μια στιγμή (π.χ. το «νωρίτερο» = τώρα), ώρα Αθήνας.
+export const athensInputOf = (ms: number): string =>
+  new Date(wallOf(ms)).toISOString().slice(0, 16);
 
 export const addDays = (day: string, days: number): string =>
   new Date(Date.parse(`${day}T00:00:00Z`) + days * DAY)
@@ -65,9 +81,9 @@ export const laterOptions = (now: number): readonly LaterOption[] => {
   const today = athensDay(now);
   const toMonday = (8 - weekdayOf(today)) % 7 || 7;
   return [
-    { label: "Σε 3 ώρες", until: now + 3 * 60 * MINUTE },
-    { label: "Αύριο 09:00", until: athensAt(addDays(today, 1), 9) },
-    { label: "Δευτέρα 09:00", until: athensAt(addDays(today, toMonday), 9) },
+    { label: "Σε λίγες ώρες", until: now + 3 * 60 * MINUTE },
+    { label: "Αύριο πρωί", until: athensAt(addDays(today, 1), 9) },
+    { label: "Δευτέρα", until: athensAt(addDays(today, toMonday), 9) },
   ];
 };
 

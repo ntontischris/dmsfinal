@@ -1,20 +1,8 @@
 "use client";
 
-import {
-  useOptimistic,
-  useState,
-  useSyncExternalStore,
-  useTransition,
-} from "react";
+import { useOptimistic, useState, useTransition } from "react";
 
-import {
-  parseLater,
-  postpone as postponeLocal,
-  readLaterRaw,
-  restore as restoreLocal,
-  type LaterMap,
-} from "./later";
-import { subscribeParked } from "./parked";
+import type { LaterMap } from "./later";
 import { postponeRows, restoreRows } from "./today-actions";
 import { dbKeyOf, dbKeysOfRows, laterFromDb } from "./today-later";
 
@@ -36,24 +24,17 @@ const applyChange = (keys: readonly string[], change: Change): string[] => [
   ...change.add,
 ];
 
-// Το «Αργότερα» της λίστας: στη βάση (ίδιο σε κάθε συσκευή)· μόνο αν η βάση δεν απάντησε, στον browser.
+const NOT_READ =
+  "Δεν φάνηκε τι έχεις αφήσει για αργότερα. Ξαναδοκίμασε σε λίγο.";
+
+// Το «Αργότερα» της λίστας ζει μόνο στον λογαριασμό (ίδιο σε κάθε συσκευή). Αν δεν διαβάστηκε, το λέει.
 export function useLater(
   snoozed: readonly string[] | null,
   now: number,
 ): Later {
-  const local = parseLater(
-    useSyncExternalStore(subscribeParked, readLaterRaw, () => "{}"),
-  );
   const [keys, applyOptimistic] = useOptimistic(snoozed ?? [], applyChange);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-  if (snoozed === null)
-    return {
-      later: local,
-      postpone: postponeLocal,
-      restore: restoreLocal,
-      error: null,
-    };
   const db = laterFromDb(keys, now);
   const run = (change: Change, save: () => Promise<{ error: string | null }>) =>
     startTransition(async () => {
@@ -75,6 +56,6 @@ export function useLater(
       if (stale.length === 0) return;
       run({ add: [], remove: stale }, () => restoreRows(stale));
     },
-    error,
+    error: error ?? (snoozed === null ? NOT_READ : null),
   };
 }

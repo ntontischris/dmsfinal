@@ -64,3 +64,6 @@ export { SpacesMine } from "./spaces/e6-screen";
 export { SpacesCrewTemplates } from "./spaces/e7-screen";
 // Ctrl+K: αναζήτηση εγγραφών.
 export { searchFilmings } from "./queries-search";
+// Για τη μηχανή των οδηγών: οι γραμμές του «Εγκρίνω αιτήματα γυρίσματος» (ίδια μέτρηση με την κάρτα).
+export { loadEgkrinoRows } from "./spaces/e2-loop-rows";
+export { sentLineOf } from "./spaces/e2-guide-model";

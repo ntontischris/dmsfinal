@@ -11,7 +11,6 @@ export interface Closed {
   at: number;
 }
 
-const LATER = "flows.later";
 const CLOSED = "flows.closed";
 const DAY_DONE = "flows.dayDone";
 
@@ -59,11 +58,8 @@ export const parseClosed = (raw: string): readonly Closed[] => {
     : [];
 };
 
-export const readLaterRaw = (): string => readRaw(LATER, "{}");
 export const readClosedRaw = (): string => readRaw(CLOSED, "[]");
 export const readDayDoneRaw = (): string => readRaw(DAY_DONE, "");
-
-const readLater = (): LaterMap => parseLater(readLaterRaw());
 
 export const withLater = (
   later: LaterMap,
@@ -81,12 +77,6 @@ export const withoutLater = (
   Object.fromEntries(
     Object.entries(later).filter(([key]) => !keys.includes(key)),
   );
-
-export const postpone = (keys: readonly string[], until: number): void =>
-  write(LATER, withLater(readLater(), keys, until));
-
-export const restore = (keys: readonly string[]): void =>
-  write(LATER, withoutLater(readLater(), keys));
 
 // Το «Τέλος» μιας δουλειάς τη γράφει στα κλεισμένα (κρατά μόνο τα τελευταία, για το «Τι έκλεισα σήμερα»).
 export const recordClosed = (job: string): void =>

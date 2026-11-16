@@ -119,24 +119,31 @@ export async function TeamBriefing({
       {hello(newChip)}
       {lead && <p className="a1-lead">{lead}</p>}
       {children}
-      {kpis && <KpiBrief kpis={kpis} />}
       {layout.isAllHidden ? (
         <StateNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
           Πάτα «Προσαρμογή» για να εμφανίσεις όσες θέλεις, ή{" "}
           <Link href={CUSTOMIZE_PATH}>γύρνα στην προεπιλογή</Link>.
+          {kpis && (
+            <details className="a1-glance" id="a1-glance">
+              <summary className="kit-label">Η μέρα με μια ματιά</summary>
+              <KpiBrief kpis={kpis} />
+            </details>
+          )}
         </StateNotice>
       ) : (
         <>
-          {programme && brief.week && (
-            <div className="a1-top">
-              <ProgrammePanel
-                programme={programme}
-                href={brief.week.content.allHref}
-              />
-            </div>
-          )}
-          <details className="a1-glance">
+          {/* Δείκτες, Ραντάρ και «Το πρόγραμμα» κλειστά εδώ: πάνω μένει μόνο η μία λίστα (xekino-ti-mera, βήμα 1). */}
+          <details className="a1-glance" id="a1-glance">
             <summary className="kit-label">Η μέρα με μια ματιά</summary>
+            {kpis && <KpiBrief kpis={kpis} />}
+            {programme && brief.week && (
+              <div className="a1-top">
+                <ProgrammePanel
+                  programme={programme}
+                  href={brief.week.content.allHref}
+                />
+              </div>
+            )}
             {(brief.money || team) && (
               <div className="a1-pair">
                 {brief.money &&

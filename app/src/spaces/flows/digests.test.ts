@@ -44,7 +44,7 @@ describe("apantoDigest", () => {
 });
 
 describe("egkrinoDigest", () => {
-  it("should add both cards and name the client from the title", () => {
+  it("should count like the guide itself and name the client from the title", () => {
     const approvals = parseCardRead({
       count: 2,
       items: [
@@ -62,11 +62,9 @@ describe("egkrinoDigest", () => {
         },
       ],
     });
-    const digest = egkrinoDigest(
-      approvals,
-      parseCardRead({ count: 1, items: [] }),
-    );
-    expect(digest.count).toBe(3);
+    const digest = egkrinoDigest(approvals, 1);
+    expect(digest.count).toBe(1);
+    expect(egkrinoDigest(approvals, null).count).toBe(2);
     expect(digest.oldest).toEqual({
       who: "Ταβέρνα Χ",
       since: "2026-11-12T09:00:00Z",

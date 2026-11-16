@@ -79,23 +79,23 @@ export const apantoDigest = (needs: readonly NeedRow[] | null): JobDigest => {
 const clientOfTitle = (title: string | undefined): string =>
   (title ?? "").split(": ")[0];
 
-// «Αιτήματα γυρίσματος»: κρατήσεις, μεταθέσεις και ακυρώσεις προς έγκριση, και οι διαγραφές στο Google.
+// «Αιτήματα γυρίσματος»: κρατήσεις, μεταθέσεις και ακυρώσεις προς έγκριση. Το πλήθος είναι του ίδιου του οδηγού
+// (loadEgkrinoRows: ένα ανά Γύρισμα), ώστε η Σήμερα και ο οδηγός να λένε τον ίδιο αριθμό· χωρίς αυτό, της κάρτας.
+// Οι διαγραφές στο Google είναι δική τους γραμμή κάρτας (today-rows).
 export const egkrinoDigest = (
   approvals: CardRead | null,
-  deletions: CardRead | null,
+  count: number | null,
 ): JobDigest => {
-  const cards = [approvals ?? EMPTY_CARD, deletions ?? EMPTY_CARD];
-  const items = cards.flatMap((card) =>
-    card.items.map((item) => ({
-      who: clientOfTitle(item.title),
-      since: item.waiting_since ?? item.at ?? "",
-      day: item.at ?? null,
-      href: item.link,
-    })),
-  );
+  const card = approvals ?? EMPTY_CARD;
+  const items = card.items.map((item) => ({
+    who: clientOfTitle(item.title),
+    since: item.waiting_since ?? item.at ?? "",
+    day: item.at ?? null,
+    href: item.link,
+  }));
   return {
     job: "egkrino-gyrismata",
-    count: cards.reduce((sum, card) => sum + card.count, 0),
+    count: count ?? card.count,
     oldest: oldestOf(items.filter((item) => item.since)),
   };
 };

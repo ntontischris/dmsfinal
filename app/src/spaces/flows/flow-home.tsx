@@ -4,6 +4,7 @@ import { Panel } from "@/spaces/kit/panel";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 
 import type { JobDigests } from "./digests";
+import { XEKINO_JOB } from "./flow-xekino";
 import { FLOWS, stepHref, type Flow } from "./flows";
 import { QueuePanel } from "./queue-panel";
 import { waitingOf } from "./queue-rows";
@@ -22,14 +23,17 @@ const doorSub = (flow: Flow, digests: JobDigests | null): string => {
   return waiting > 0 ? `${waiting} περιμένουν · ${areas}` : areas;
 };
 
+// Η ίδια η λίστα («Ξεκινώ τη μέρα μου») δεν είναι πόρτα: είναι αυτό που βλέπεις πάνω.
+const DOORS = FLOWS.filter((flow) => flow.id !== XEKINO_JOB);
+
 function Doors({ digests }: { digests: JobDigests | null }) {
   return (
     <Panel label="Τι θέλεις να κάνεις;">
-      {areasOf(FLOWS).map((area) => (
+      {areasOf(DOORS).map((area) => (
         <section key={area} className="flow-home-area">
           <h3 className="kit-label">{area}</h3>
           <RowList>
-            {FLOWS.filter((flow) => flow.area === area).map((flow) => (
+            {DOORS.filter((flow) => flow.area === area).map((flow) => (
               <ListRow
                 key={flow.id}
                 title={flow.name}

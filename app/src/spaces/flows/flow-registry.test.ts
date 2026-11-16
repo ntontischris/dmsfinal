@@ -163,8 +163,9 @@ describe("egkrino-gyrismata", () => {
   it("should label the primary button by loop, wait and finish", () => {
     expect(primaryLabelOf(egkrino, 2, false)).toBe("Επόμενο αίτημα");
     expect(primaryLabelOf(egkrino, 5, false)).toBe("Εντάξει, περιμένω");
-    expect(primaryLabelOf(egkrino, 1, true)).toBe("Τέλος");
+    expect(primaryLabelOf(egkrino, 1, true)).toBe("Πίσω στη λίστα");
     expect(primaryLabelOf(stino, 1, false)).toBe("Επόμενο");
+    expect(primaryLabelOf(stino, 5, true)).toBe("Τέλος");
   });
 });
 

@@ -23,23 +23,29 @@ const canAnswer = (card: FilmingCard): boolean =>
   card.viewerCan.decideCancel;
 
 // Για την ομάδα: η ώρα πέρασε → προειδοποίηση· υπάρχει αίτημα → «Απάντησε στο αίτημα».
+// Μέσα στον οδηγό «Εγκρίνω αιτήματα» η απάντηση είναι ήδη το βήμα του: το κουμπί δεν φαίνεται.
 export function E3RequestNote({
   card,
   nowMs,
+  isInGuide,
 }: {
   card: FilmingCard;
   nowMs: number;
+  isInGuide: boolean;
 }) {
   if (!canAnswer(card) || !hasOpenRequest(card)) return null;
   const warning = pastWarningOf(card, nowMs);
+  if (isInGuide && !warning) return null;
   return (
     <section className="card stack" role="status">
       {warning && <p className="e-warn">{warning}</p>}
-      <div className="btn-row">
-        <Link className="button" href={queueHref(1, card.id)}>
-          Απάντησε στο αίτημα
-        </Link>
-      </div>
+      {!isInGuide && (
+        <div className="btn-row">
+          <Link className="button" href={queueHref(1, card.id)}>
+            Απάντησε στο αίτημα
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

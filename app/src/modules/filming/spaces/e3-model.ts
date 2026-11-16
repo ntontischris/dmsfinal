@@ -54,18 +54,28 @@ export interface E3Balance {
   total: number;
   used: number;
   reserved: number;
+  // Όσα μένουν (ποτέ κάτω από 0).
   left: number;
+  // Πόσα είναι πάνω από την Παροχή (καταναλωμένα + δεσμευμένα πέρα από το σύνολο).
+  over: number;
   kindLabel: string;
 }
 
-// Η Παροχή της Περιόδου: σύνολο = όσα δόθηκαν + όσα μεταφέρθηκαν.
+// Η Παροχή της Περιόδου: σύνολο = όσα δόθηκαν + όσα μεταφέρθηκαν. Υπόλοιπο κάτω από 0 = «πάνω από την Παροχή».
 export const balanceOf = (provision: ProvisionBalance): E3Balance => ({
   total: provision.given + provision.carried,
   used: provision.used,
   reserved: provision.reserved,
-  left: provision.balance,
+  left: Math.max(0, provision.balance),
+  over: Math.max(0, -provision.balance),
   kindLabel: provision.kind.label,
 });
+
+// Η φράση κάτω από τον μετρητή όταν η Περίοδος ξεπέρασε την Παροχή (null = χωράει).
+export const overLineOf = (balance: E3Balance): string | null =>
+  balance.over > 0
+    ? `Η Περίοδος έχει ${balance.used + balance.reserved} (καταναλωμένα και δεσμευμένα) ενώ η Συμφωνία δίνει ${balance.total} — ${balance.over} πάνω από την Παροχή.`
+    : null;
 
 export interface E3Reply {
   // Η έκδοση του Δελτίου (κενό = δεν έχει εκδοθεί Δελτίο).

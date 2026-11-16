@@ -5,7 +5,11 @@ import { hrefOf } from "@/spaces/data/screens";
 import { athensDate, athensTime, formatDateTime } from "../helpers-time";
 import { NO_CLIENT_LABEL } from "../labels";
 import type { RescheduleRequestEntry } from "../booking-types";
-import type { CancelRequestEntry, PendingEntry, ProvisionBalance } from "../types";
+import type {
+  CancelRequestEntry,
+  PendingEntry,
+  ProvisionBalance,
+} from "../types";
 import { whenLabel } from "./e1-format";
 
 const HOUR_MS = 3_600_000;
@@ -61,12 +65,24 @@ export const whenOf = (startsAt: string, hours: number): string =>
     athensTime(new Date(Date.parse(startsAt) + hours * HOUR_MS).toISOString()),
   );
 
-const balanceText = (provision: ProvisionBalance | null): string | null =>
-  provision
-    ? `${provision.kind.label}: ${provision.balance} από ${provision.given + provision.carried} διαθέσιμα μετά από αυτό το Γύρισμα`
-    : null;
+// «Γύρισμα: μένει 1 από 2 μετά από αυτό το Γύρισμα» ή, όταν ξεπερνά την Παροχή,
+// «Γύρισμα: 3 από 2 μαζί με αυτό το Γύρισμα — 1 πάνω από την Παροχή».
+export const balanceText = (
+  provision: ProvisionBalance | null,
+): string | null => {
+  if (!provision) return null;
+  const { kind, given, carried, used, reserved, balance } = provision;
+  const total = given + carried;
+  if (balance < 0)
+    return `${kind.label}: ${used + reserved} από ${total} μαζί με αυτό το Γύρισμα — ${-balance} πάνω από την Παροχή`;
+  const left = balance === 1 ? "μένει 1" : `μένουν ${balance}`;
+  return `${kind.label}: ${left} από ${total} μετά από αυτό το Γύρισμα`;
+};
 
-export const pendingItemOf = (entry: PendingEntry, nowMs: number): PendingItem => ({
+export const pendingItemOf = (
+  entry: PendingEntry,
+  nowMs: number,
+): PendingItem => ({
   id: entry.id,
   filmingHref: hrefOf("E3", { id: entry.id }),
   clientName: entry.client?.name ?? NO_CLIENT_LABEL,
@@ -90,7 +106,10 @@ export const cancelItemOf = (
   when: whenOf(entry.startsAt, entry.hours),
   requestedAt: formatDateTime(entry.requestedAt),
   reason: entry.reason,
-  hoursLeft: Math.max(0, Math.round((Date.parse(entry.startsAt) - nowMs) / HOUR_MS)),
+  hoursLeft: Math.max(
+    0,
+    Math.round((Date.parse(entry.startsAt) - nowMs) / HOUR_MS),
+  ),
   burns: entry.willBurn,
 });
 

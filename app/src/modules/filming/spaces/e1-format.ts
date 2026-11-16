@@ -15,7 +15,9 @@ export const whenLabel = (date: string, start: string, end: string): string => {
 export const countLabel = (count: number, one: string, many: string): string =>
   `${count} ${count === 1 ? one : many}`;
 
-export const waitingLabel = (hours: number): string =>
-  hours >= 48
+export const waitingLabel = (hours: number): string => {
+  if (hours < 1) return "λιγότερο από 1 ώρα";
+  return hours >= 48
     ? countLabel(Math.round(hours / 24), "ημέρα", "ημέρες")
     : countLabel(hours, "ώρα", "ώρες");
+};

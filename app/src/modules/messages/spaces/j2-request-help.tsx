@@ -9,13 +9,16 @@ import { CREATE_DELIVERABLE_NEEDS_TAG } from "../request-labels";
 import type { ThreadProduction } from "../view-schema";
 import { JForm } from "./j2-form";
 
-// «Νέο Παραδοτέο» χωρίς ετικέτα Παραγωγής: το λέμε από πριν και η ετικέτα μπαίνει εδώ, στο ίδιο πλαίσιο.
-export function TagFirst({
+// «Νέο Παραδοτέο» χωρίς ετικέτα Παραγωγής: η Παραγωγή είναι ήδη προτεινόμενη (selected). Αν διαλέξεις άλλη, το Αίτημα
+// παίρνει αυτή την ετικέτα και η φόρμα ξαναφορτώνει τα είδη και τους υπευθύνους της. Χωρίς Παραγωγές, το λέμε από πριν.
+export function ProductionPick({
   messageId,
   productions,
+  selected,
 }: {
   messageId: string;
   productions: readonly ThreadProduction[];
+  selected: string | null;
 }) {
   const router = useRouter();
   const handleTagged = useCallback(() => router.refresh(), [router]);
@@ -24,21 +27,19 @@ export function TagFirst({
   return (
     <JForm action={setMessageTag} className="toolbar" onSuccess={handleTagged}>
       <input type="hidden" name="id" value={messageId} />
-      <p className="note">
-        Για Παραδοτέο χρειάζεται πρώτα ετικέτα Παραγωγής: διάλεξέ την εδώ και
-        θα εμφανιστεί το «Δημιουργία Παραδοτέου».
-      </p>
       <label className="toolbar">
-        <span>Ετικέτα Παραγωγής</span>
+        <span>Παραγωγή</span>
         <select
           className="input"
           name="productionId"
-          defaultValue=""
+          defaultValue={selected ?? ""}
           onChange={(event) => event.currentTarget.form?.requestSubmit()}
         >
-          <option value="" disabled>
-            Διάλεξε Παραγωγή…
-          </option>
+          {selected === null && (
+            <option value="" disabled>
+              Διάλεξε Παραγωγή…
+            </option>
+          )}
           {productions.map((p) => (
             <option key={p.id} value={p.id}>
               {p.title}

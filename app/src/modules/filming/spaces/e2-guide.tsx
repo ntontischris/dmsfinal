@@ -70,7 +70,13 @@ interface AnswerChoicesProps {
   onAnswer: (answer: Answer) => void;
 }
 
-function AnswerChoices({ request, lock, approveLine, answer, onAnswer }: AnswerChoicesProps) {
+function AnswerChoices({
+  request,
+  lock,
+  approveLine,
+  answer,
+  onAnswer,
+}: AnswerChoicesProps) {
   return (
     <fieldset className="stack">
       <legend className="kit-label">Η απάντησή σου</legend>
@@ -90,7 +96,9 @@ function AnswerChoices({ request, lock, approveLine, answer, onAnswer }: AnswerC
           {option === "approve" && lock === null && approveLine && (
             <span className="muted">{approveLine}</span>
           )}
-          {option === "approve" && lock && <span className="muted">Κλειδωμένο: {lock}</span>}
+          {option === "approve" && lock && (
+            <span className="muted">Κλειδωμένο: {lock}</span>
+          )}
         </label>
       ))}
     </fieldset>
@@ -107,7 +115,9 @@ function MoreLinks({ request }: { request: GuideRequest }) {
         </li>
         {request.kind === "booking" && (
           <li>
-            <Link href="/app/filming/crew-templates">Αλλάζω ποιοι πάνε πριν εγκρίνω</Link>
+            <Link href="/app/filming/crew-templates">
+              Αλλάζω ποιοι πάνε πριν εγκρίνω
+            </Link>
           </li>
         )}
         <li>
@@ -125,24 +135,43 @@ interface AnswerCardProps {
 }
 
 // Βήμα 1: η κάρτα του αιτήματος. Η προεπιλογή είναι η συνηθισμένη απάντηση· με κλειδωμένο «Εγκρίνω», η πρόταση ώρας.
+// Ο μετρητής «Αίτημα k από N» είναι μόνο στη μπάρα του οδηγού (ένας μετρητής)· η κάρτα λέει είδος και Πελάτη.
 export function E2AnswerCard({ focus, lock, approveLine }: AnswerCardProps) {
-  const { request, index, total } = focus;
+  const { request } = focus;
   const [answer, setAnswer] = useState<Answer>(lock ? "offer" : "approve");
-  const [state, formAction, isPending] = useActionState(answerRequest, INITIAL_FORM_STATE);
+  const [state, formAction, isPending] = useActionState(
+    answerRequest,
+    INITIAL_FORM_STATE,
+  );
   return (
-    <Panel label={`Αίτημα ${index} από ${total} · ${KIND_TITLES[request.kind]}`}>
-      <form id="e2-answer" action={formAction} className="stack" aria-busy={isPending}>
+    <Panel label={`${KIND_TITLES[request.kind]} · ${request.clientName}`}>
+      <form
+        id="e2-answer"
+        action={formAction}
+        className="stack"
+        aria-busy={isPending}
+      >
         <input type="hidden" name="filmingId" value={request.id} />
         <input type="hidden" name="kind" value={request.kind} />
         <input type="hidden" name="kindLabel" value={request.kindLabel} />
-        {request.replaces && <p className="e-info">Αντικαθιστά το προηγούμενο αίτημα του ίδιου Γυρίσματος.</p>}
+        {request.replaces && (
+          <p className="e-info">
+            Αντικαθιστά το προηγούμενο αίτημα του ίδιου Γυρίσματος.
+          </p>
+        )}
         <RequestFacts request={request} />
         {lock && (
           <p className="e-warn" role="alert">
             {lock}
           </p>
         )}
-        <AnswerChoices request={request} lock={lock} approveLine={approveLine} answer={answer} onAnswer={setAnswer} />
+        <AnswerChoices
+          request={request}
+          lock={lock}
+          approveLine={approveLine}
+          answer={answer}
+          onAnswer={setAnswer}
+        />
         {state.error && (
           <p className="e-warn" role="alert">
             {state.error}
@@ -162,16 +191,30 @@ const REASON_LABELS: Readonly<Record<GuideRequest["kind"], string>> = {
 
 // Βήμα 2γ: ο λόγος. Χωρίς λόγο η φόρμα δεν φεύγει (και η βάση ξαναελέγχει).
 export function E2ReasonCard({ request }: { request: GuideRequest }) {
-  const [state, formAction, isPending] = useActionState(answerWithReason, INITIAL_FORM_STATE);
+  const [state, formAction, isPending] = useActionState(
+    answerWithReason,
+    INITIAL_FORM_STATE,
+  );
   return (
     <Panel label={`${KIND_TITLES[request.kind]} · ${request.clientName}`}>
-      <form id="e2-reason" action={formAction} className="stack" aria-busy={isPending}>
+      <form
+        id="e2-reason"
+        action={formAction}
+        className="stack"
+        aria-busy={isPending}
+      >
         <input type="hidden" name="filmingId" value={request.id} />
         <input type="hidden" name="kind" value={request.kind} />
         <RequestFacts request={request} />
         <label className="stack">
           {REASON_LABELS[request.kind]}
-          <textarea className="input" name="reason" rows={3} maxLength={500} required />
+          <textarea
+            className="input"
+            name="reason"
+            rows={3}
+            maxLength={500}
+            required
+          />
         </label>
         {state.error && (
           <p className="e-warn" role="alert">
@@ -189,9 +232,9 @@ export function E2ReasonCard({ request }: { request: GuideRequest }) {
 // Δεν περιμένει κανένα αίτημα: το κύριο κουμπί του οδηγού κλείνει τη δουλειά (όπως το «Τέλος») και γυρνά στη Σήμερα.
 export function E2GuideDone() {
   const router = useRouter();
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    unpark(EGKRINO_JOB);
+    await unpark(EGKRINO_JOB);
     recordClosed(EGKRINO_JOB);
     clearRun(EGKRINO_JOB);
     forgetActive();
@@ -200,7 +243,8 @@ export function E2GuideDone() {
   return (
     <form id="e2-answer" onSubmit={handleSubmit}>
       <p className="e-info" role="status">
-        Απάντησες σε όλα τα αιτήματα. Πάτα το κουμπί του οδηγού για να κλείσει η δουλειά.
+        Απάντησες σε όλα τα αιτήματα. Πάτα το κουμπί του οδηγού για να κλείσει η
+        δουλειά.
       </p>
     </form>
   );
@@ -210,7 +254,8 @@ export function E2GuideDone() {
 export function E2ReasonGone({ nextHref }: { nextHref: string }) {
   return (
     <p className="e-info" role="status">
-      Αυτό το αίτημα απαντήθηκε ήδη. <Link href={nextHref}>Στο επόμενο αίτημα</Link>
+      Αυτό το αίτημα απαντήθηκε ήδη.{" "}
+      <Link href={nextHref}>Στο επόμενο αίτημα</Link>
     </p>
   );
 }

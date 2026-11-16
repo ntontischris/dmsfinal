@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabase } from "@/lib/supabase/server";
+import { loadEgkrinoRows } from "@/modules/filming";
 import { readNeedsMe } from "@/modules/messages";
 
 import {
@@ -41,13 +42,19 @@ export async function loadJobDigests(): Promise<JobDigests> {
   if (!supabase) return { at, jobs: [] };
   const card = (code: string) =>
     readOr(code, supabase.rpc("today_card", { p_code: code }), parseCardRead);
-  const [needs, approvals, deletions] = await Promise.all([
+  const [needs, approvals, egkrino] = await Promise.all([
     readNeedsMe(),
     card("filming_approvals"),
-    card("google_deletions"),
+    loadEgkrinoRows().catch((error: unknown) => {
+      console.error("flows.egkrino:", error);
+      return null;
+    }),
   ]);
   return {
     at,
-    jobs: [apantoDigest(needs), egkrinoDigest(approvals, deletions)],
+    jobs: [
+      apantoDigest(needs),
+      egkrinoDigest(approvals, egkrino?.count ?? null),
+    ],
   };
 }

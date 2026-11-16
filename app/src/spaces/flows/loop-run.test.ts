@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   counterOf,
+  counterText,
   emptyRun,
+  isRoundOver,
   loopStateOf,
   parseRun,
   tallyText,
@@ -11,6 +13,7 @@ import {
   withOutcome,
   withoutSkipped,
   withSkipped,
+  rowKeyOf,
 } from "./loop-run";
 
 const row = (key: string) => ({ key, href: key });
@@ -88,5 +91,28 @@ describe("tallyText", () => {
     expect(
       tallyText("απάντησες σε {reply}, απέρριψες {rejected}", { reply: 2 }),
     ).toBe("απάντησες σε 2, απέρριψες 0");
+  });
+});
+
+describe("round end and counter text", () => {
+  it("should name what the guide counts, «Γραμμή» by default", () => {
+    expect(counterText(undefined, { k: 2, n: 5 })).toBe("Γραμμή 2 από 5");
+    expect(counterText("Αίτημα", { k: 1, n: 2 })).toBe("Αίτημα 1 από 2");
+  });
+
+  it("should be over only when nothing waits, not even rows left for later", () => {
+    expect(isRoundOver({ next: null, count: 0, skippedLeft: 0 })).toBe(true);
+    expect(isRoundOver({ next: null, count: 2, skippedLeft: 2 })).toBe(false);
+    expect(isRoundOver({ next: row("/a"), count: 1, skippedLeft: 0 })).toBe(false);
+    expect(isRoundOver(undefined)).toBe(false);
+  });
+
+  it("should count a rejection as a reply too", () => {
+    expect(tallyText("{reply}/{rejected}", { reply: 1, rejected: 2 })).toBe("3/2");
+  });
+
+  it("should key a request row by ?req= and other rows by the path", () => {
+    expect(rowKeyOf("/app/filming/queue", "job=x&req=f1")).toBe("f1");
+    expect(rowKeyOf("/app/messages/c1", "job=x")).toBe("/app/messages/c1");
   });
 });

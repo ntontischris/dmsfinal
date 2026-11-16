@@ -194,7 +194,24 @@ export const queueHref = (
 export const filmingGuideHref = (id: string, step: number): string =>
   guideHref(`/app/filming/${id}`, step, id);
 
-export const waitHref = (): string => guideHref("/app", EGKRINO_STEPS.wait);
+// Το ⏳3 λέει «Στάλθηκαν N ώρες στον <Πελάτη>»: ο αριθμός και το όνομα πάνε στο URL (?sent=&client=).
+export const waitHref = (sent: number, client: string | null): string => {
+  const query = new URLSearchParams({ sent: String(sent) });
+  if (client) query.set("client", client);
+  return `${guideHref("/app", EGKRINO_STEPS.wait)}&${query.toString()}`;
+};
+
+// Η αρχή του ⏳3: «Στάλθηκαν 3 ώρες στον Πελάτη «Γυμναστήριο Άλφα»». Από το URL (?sent=&client=)·
+// χωρίς αριθμό, «Στάλθηκαν οι ώρες στον Πελάτη».
+const sentHoursOf = (count: number): string => {
+  if (!Number.isInteger(count) || count < 1) return "Στάλθηκαν οι ώρες";
+  return count === 1 ? "Στάλθηκε 1 ώρα" : `Στάλθηκαν ${count} ώρες`;
+};
+
+export const sentLineOf = (sent: string | null, client: string | null): string => {
+  const hours = sentHoursOf(Number(sent));
+  return client ? `${hours} στον Πελάτη «${client}»` : `${hours} στον Πελάτη`;
+};
 
 interface AnswerTarget {
   id: string;
@@ -242,3 +259,16 @@ export const freedLineOf = (
     ? `Θα ελευθερωθούν: ${parts.join(", ")}`
     : "Δεν έχει ομάδα ή εξοπλισμό να ελευθερωθεί.";
 };
+
+// Οι γραμμές του γύρου για τη μπάρα του οδηγού («Αίτημα k από N»): μία ανά Γύρισμα που περιμένει απάντηση,
+// η παλαιότερη πρώτη — η ίδια μέτρηση με την κάρτα. key = το id του Γυρίσματος (το ?req= του URL).
+export const loopRowsOf = (
+  requests: readonly GuideRequest[],
+): { rows: { key: string; href: string; kind: RequestKind }[]; count: number } => ({
+  rows: requests.map((request) => ({
+    key: request.id,
+    href: queueHref(EGKRINO_STEPS.answer, request.id),
+    kind: request.kind,
+  })),
+  count: requests.length,
+});

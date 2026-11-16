@@ -8,8 +8,11 @@ import {
   focusOf,
   freedLineOf,
   lockOf,
+  loopRowsOf,
   requestsOf,
+  sentLineOf,
   teamLineOf,
+  waitHref,
 } from "./e2-guide-model";
 
 const NOW = Date.parse("2026-11-15T09:00:00Z");
@@ -222,5 +225,35 @@ describe("lines", () => {
       "Θα ελευθερωθούν: 2 άτομα, 4 αντικείμενα, το γεγονός στο Google",
     );
     expect(freedLineOf(1, 0, false)).toBe("Θα ελευθερωθούν: 1 άτομο");
+  });
+});
+
+describe("⏳3: Στάλθηκαν N ώρες στον Πελάτη", () => {
+  it("should carry the count and the client name in the wait URL", () => {
+    const href = waitHref(3, "Ταβέρνα");
+    const query = new URL(href, "http://x").searchParams;
+    expect(href.startsWith("/app?job=egkrino-gyrismata&step=5")).toBe(true);
+    expect(sentLineOf(query.get("sent"), query.get("client"))).toBe("Στάλθηκαν 3 ώρες στον Πελάτη «Ταβέρνα»");
+  });
+
+  it("should use the singular for one hour and stay generic without a count", () => {
+    expect(sentLineOf("1", null)).toBe("Στάλθηκε 1 ώρα στον Πελάτη");
+    expect(sentLineOf(null, null)).toBe("Στάλθηκαν οι ώρες στον Πελάτη");
+    expect(waitHref(2, null)).not.toContain("client=");
+  });
+});
+
+describe("loopRowsOf", () => {
+  it("should count one row per filming, the same number as the card", () => {
+    const requests = requestsOf(
+      queueOf({
+        pending: [pendingOf({ id: "b1" }), pendingOf({ id: "b2", createdAt: "2026-11-11T09:00:00Z" })],
+        cancelRequests: [cancelOf("b1", "2026-11-12T09:00:00Z")],
+      }),
+    );
+    const { rows, count } = loopRowsOf(requests);
+    expect(count).toBe(2);
+    expect(rows.map((row) => row.key)).toEqual(["b2", "b1"]);
+    expect(rows[0].href).toBe("/app/filming/queue?job=egkrino-gyrismata&step=1&req=b2");
   });
 });

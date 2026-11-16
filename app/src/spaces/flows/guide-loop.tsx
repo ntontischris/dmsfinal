@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { oldestHref, stepHref, type Flow } from "./flows";
@@ -8,10 +8,13 @@ import { fromLabelOf, parseFrom, readFromRaw, returnFrom } from "./from-guide";
 import { loadLoopRows, type LoopData } from "./loop-rows";
 import {
   counterOf,
+  counterText,
+  isRoundOver,
   loopStateOf,
   parseRun,
   readRun,
   readRunRaw,
+  rowKeyOf,
   subscribeRun,
   tallyText,
   updateRun,
@@ -30,7 +33,7 @@ import { park, readActive } from "./parked";
 export interface Loop {
   // Οι γραμμές που περιμένουν (μόνο στο βήμα 1)· undefined = διαβάζονται, null = δεν διαβάστηκαν.
   state: LoopState | null | undefined;
-  // «Γραμμή k από N», ή null όταν δεν ξέρουμε.
+  // «Γραμμή k από N» (ή «<rowNoun> k από N»), ή null όταν δεν ξέρουμε ή ο γύρος τελείωσε.
   counter: string | null;
   // Η φράση ολοκλήρωσης με τους αριθμούς του γύρου.
   doneText: string;
@@ -105,12 +108,12 @@ function useLoopData(flow: Flow, isOn: boolean, change: (fn: (run: LoopRun) => L
 // Ο σταθμός λέει τι έγινε (απάντηση, δουλειά, απόρριψη…) και ο οδηγός πάει μόνος του εκεί που λέει το βήμα.
 function useOutcome(
   flow: Flow,
-  at: { step: number; pathname: string },
+  at: { step: number; pathname: string; rowKey: string },
   change: (fn: (run: LoopRun) => LoopRun) => void,
   advance: (leaving: string) => Promise<void>,
 ) {
   const router = useRouter();
-  const { step, pathname } = at;
+  const { step, pathname, rowKey } = at;
   const advancesOn = flow.steps[step - 1]?.advancesOn;
   useEffect(() => {
     if (!advancesOn) return;
@@ -119,46 +122,49 @@ function useOutcome(
       const target = advancesOn[outcome];
       if (target === undefined) return;
       change((run) => withOutcome(run, outcome, target === 1));
-      if (target === 1) void advance(pathname);
+      if (target === 1) void advance(rowKey);
       else router.push(stepHref(flow, target, { pathname }));
     };
     window.addEventListener("flows:outcome", handleOutcome);
     return () => window.removeEventListener("flows:outcome", handleOutcome);
-  }, [flow, advancesOn, pathname, change, advance, router]);
+  }, [flow, advancesOn, pathname, rowKey, change, advance, router]);
 }
 
 export function useLoop(flow: Flow, step: number, pathname: string): Loop {
   const { run, change } = useRun(flow.id);
   const advance = useAdvance(flow, change);
   const data = useLoopData(flow, flow.isLoop === true && step === 1, change);
-  useOutcome(flow, { step, pathname }, change, advance);
+  // Τα αιτήματα γυρίσματος ζουν όλα στην ίδια διαδρομή: η γραμμή είναι το ?req=.
+  const rowKey = rowKeyOf(pathname, useSearchParams().toString());
+  useOutcome(flow, { step, pathname, rowKey }, change, advance);
   // Ο κανόνας ουράς μπορεί να μετρά περισσότερες από τις γραμμές που δίνει: μετρά ο αριθμός του.
   const state = data
     ? { ...loopStateOf(data.rows, run?.skipped ?? []), count: data.count }
     : data;
   const skippedLeft = state ? state.skippedLeft : (run?.skipped.length ?? 0);
-  const counter = run ? counterOf(run, skippedLeft) : null;
+  const counter =
+    run && !isRoundOver(state) ? counterOf(run, skippedLeft) : null;
   return {
     state,
-    counter: counter ? `Γραμμή ${counter.k} από ${counter.n}` : null,
+    counter: counter ? counterText(flow.rowNoun, counter) : null,
     doneText: doneTextOf(flow, run),
     skip: () => {
-      change((current) => withSkipped(current, pathname));
-      void advance(pathname);
+      change((current) => withSkipped(current, rowKey));
+      void advance(rowKey);
     },
     handled: () => change(withHandled),
     unskip: () => change(withoutSkipped),
   };
 }
 
-// Τελείωσαν όλες εκτός από όσες άφησα για μετά.
+// Τελείωσαν όλες εκτός από όσες άφησα για μετά: «Μένουν X — Πίσω στη λίστα» (ξαναμπαίνουν στον γύρο).
 export function LoopLeftover({ loop }: { loop: Loop }) {
   const left = loop.state?.skippedLeft ?? 0;
   return (
     <p className="flow-guide-done" role="status">
-      Μένουν {left} που άφησες για μετά.{" "}
+      Μένουν {left} —{" "}
       <button type="button" className="button" data-primary="true" onClick={loop.unskip}>
-        Πίσω σε αυτές
+        Πίσω στη λίστα
       </button>
     </p>
   );
@@ -177,8 +183,8 @@ export function BackToFrom({ flow, step }: { flow: Flow; step: number }) {
   );
   const place = useMemo(() => parseFrom(raw), [raw]);
   if (!place) return null;
-  const handleBack = () => {
-    park({
+  const handleBack = async () => {
+    await park({
       job: flow.id,
       step,
       reason: "exit",
@@ -189,7 +195,7 @@ export function BackToFrom({ flow, step }: { flow: Flow; step: number }) {
     router.push(returnFrom(flow.id, step) ?? place.href);
   };
   return (
-    <button type="button" className="button" onClick={handleBack}>
+    <button type="button" className="button" onClick={() => void handleBack()}>
       {fromLabelOf(place.href)}
     </button>
   );

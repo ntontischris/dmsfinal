@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSyncExternalStore } from "react";
 
 import { labelOf } from "@/spaces/data/spaces";
 
@@ -54,11 +55,33 @@ const keepFormDate = (flow: Flow, step: number, formId: string) => {
 export const isAtStationOf = (flow: Flow, step: number, pathname: string) =>
   stepHref(flow, step, { pathname }).split("?")[0] === pathname;
 
+// Η σελίδα λέει αν υπάρχει ανοιχτό Αίτημα ([data-flow-request-open="true"]): οι επιλογές «when» ακούν κάθε αλλαγή της.
+const subscribePage = (listener: () => void): (() => void) => {
+  const observer = new MutationObserver(listener);
+  observer.observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ["data-flow-request-open"],
+  });
+  return () => observer.disconnect();
+};
+
+const hasOpenRequest = (): boolean =>
+  document.querySelector('[data-flow-request-open="true"]') !== null;
+
+function useHasOpenRequest(): boolean {
+  return useSyncExternalStore(subscribePage, hasOpenRequest, () => false);
+}
+
 // Επιλογές αντί για «Επόμενο»: η πρώτη κύρια, εκτός αν κύριο είναι το κουμπί του σταθμού (π.χ. «Αποστολή»).
 // Η απάντηση γράφεται στον σταθμό· η επιλογή λέει πού συνεχίζει. «Το αφήνω για μετά» πάει στην επόμενη γραμμή.
 function Choices({ flow, step, pathname, loop }: GuideProps) {
   const current = flow.steps[step - 1];
-  const choices = current?.choices ?? [];
+  const hasRequest = useHasOpenRequest();
+  const choices = (current?.choices ?? []).filter(
+    (choice) => choice.when !== "openRequest" || hasRequest,
+  );
   const isPrimary = (index: number) =>
     index === 0 && current?.isStationPrimary !== true ? "true" : undefined;
   return choices.map((choice, index) =>
@@ -93,18 +116,18 @@ function useHandleNext({ flow, step, pathname, isFinished, loop }: GuideProps) {
     forgetActive();
     router.push(href);
   };
-  return () => {
+  return async () => {
     if (isFinished) {
-      unpark(flow.id);
+      await unpark(flow.id);
       recordClosed(flow.id);
       if (flow.isLoop) clearRun(flow.id);
-      // Οδηγός μέσα σε οδηγό: το «Τέλος» γυρνά σε αυτόν που μας έστειλε.
+      // Οδηγός μέσα σε οδηγό: το «Τέλος» γυρνά σε αυτόν που μας έστειλε (π.χ. στη λίστα του «Ξεκινώ τη μέρα μου»).
       return goHome(returnFrom(flow.id, step) ?? "/app");
     }
     const next = nextOf(flow, step) ?? step;
     if (flow.isLoop && next === 1) loop?.handled();
     if (isWait(current) && current.then === undefined) {
-      park({
+      await park({
         job: flow.id,
         step: next,
         reason: "wait",
@@ -162,7 +185,7 @@ export function PrimaryAction(props: GuideProps) {
       className="button"
       data-primary="true"
       disabled={!isFinished && missingOf(current.requires, counts).length > 0}
-      onClick={handleNext}
+      onClick={() => void handleNext()}
     >
       {primaryLabelOf(flow, step, isFinished)}
     </button>

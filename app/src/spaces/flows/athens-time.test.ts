@@ -4,6 +4,8 @@ import {
   agoText,
   athensAt,
   athensDay,
+  athensFromInput,
+  athensInputOf,
   laterOptions,
   startOfToday,
 } from "./athens-time";
@@ -23,12 +25,24 @@ describe("athens time", () => {
     expect(startOfToday(SUNDAY_NOON)).toBe(Date.UTC(2026, 10, 14, 22));
   });
 
-  it("should offer three hours, tomorrow and next Monday", () => {
+  it("should offer a few hours, tomorrow morning and next Monday", () => {
     expect(laterOptions(SUNDAY_NOON)).toEqual([
-      { label: "Σε 3 ώρες", until: SUNDAY_NOON + 3 * HOUR },
-      { label: "Αύριο 09:00", until: Date.UTC(2026, 10, 16, 7) },
-      { label: "Δευτέρα 09:00", until: Date.UTC(2026, 10, 16, 7) },
+      { label: "Σε λίγες ώρες", until: SUNDAY_NOON + 3 * HOUR },
+      { label: "Αύριο πρωί", until: Date.UTC(2026, 10, 16, 7) },
+      { label: "Δευτέρα", until: Date.UTC(2026, 10, 16, 7) },
     ]);
+  });
+
+  it("should read a picked day and time in Athens time", () => {
+    expect(athensFromInput("2026-11-16T14:30")).toBe(Date.UTC(2026, 10, 16, 12, 30));
+    expect(athensFromInput("2026-07-01T09:00")).toBe(Date.UTC(2026, 6, 1, 6));
+    expect(athensFromInput("")).toBeNull();
+    expect(athensFromInput("16/11/2026 14:30")).toBeNull();
+  });
+
+  it("should write the earliest pickable time as Athens wall time", () => {
+    expect(athensInputOf(SUNDAY_NOON)).toBe("2026-11-15T12:00");
+    expect(athensFromInput(athensInputOf(SUNDAY_NOON))).toBe(SUNDAY_NOON);
   });
 
   it("should never offer today's Monday", () => {
