@@ -1,3 +1,13 @@
+import {
+  CalendarClock,
+  Camera,
+  Clock,
+  Gauge,
+  MapPin,
+  ScrollText,
+  StickyNote,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 
@@ -126,16 +136,23 @@ function Hero({
     ? clientStatusLook(asListItem(card))
     : statusLook(asListItem(card), nowMs);
   return (
-    <header className="hero">
-      <div className="btn-row">
+    <header className="hero relative overflow-hidden rounded-3xl border bg-card p-6 sm:p-8">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="kit-label">
           {clientAndTitle(clientName, card.production.title)}
         </span>
         <StatusBadge look={look} />
       </div>
       <h1 className="hero-when">{whenOf(card)}</h1>
-      <p className="hero-where">
-        {card.location ?? "Χωρίς τόπο ακόμα"} · {hoursLabel(card.hours)}
+      <p className="hero-where flex flex-wrap items-center gap-x-4 gap-y-1">
+        <span className="inline-flex items-center gap-1.5">
+          <MapPin className="size-4 text-primary" aria-hidden="true" />
+          {card.location ?? "Χωρίς τόπο ακόμα"}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Clock className="size-4 text-primary" aria-hidden="true" />
+          {hoursLabel(card.hours)}
+        </span>
       </p>
       {children}
     </header>
@@ -566,6 +583,7 @@ async function ClientFilming({
   const items: BoxItem[] = [
     {
       id: "when",
+      icon: <CalendarClock />,
       title: "Πότε & πού",
       summary: card.location ?? "Χωρίς τόπο ακόμα",
       content: <Facts card={card} isClient />,
@@ -574,6 +592,7 @@ async function ClientFilming({
       ? [
           {
             id: "balance",
+            icon: <Gauge />,
             title: "Γυρίσματα που σου αναλογούν",
             summary: `${balance.left} υπόλοιπα`,
             content: <ClientBalance card={card} />,
@@ -582,6 +601,7 @@ async function ClientFilming({
       : []),
     {
       id: "notes",
+      icon: <StickyNote />,
       title: "Σημειώσεις",
       summary:
         notes.length === 0 ? "Καμία σημείωση" : `${notes.length} σημειώσεις`,
@@ -620,6 +640,7 @@ function teamBoxes(input: TeamBoxesInput): BoxItem[] {
   return [
     {
       id: "when",
+      icon: <CalendarClock />,
       title: "Πότε & πού",
       summary: card.location ?? "Χωρίς τόπο ακόμα",
       content: (
@@ -635,6 +656,7 @@ function teamBoxes(input: TeamBoxesInput): BoxItem[] {
       ? [
           {
             id: "balance",
+            icon: <Gauge />,
             title: `Παροχή «${balance.kindLabel}»`,
             summary: balanceSummary(balance).text,
             isAlert: balanceSummary(balance).isAlert,
@@ -644,6 +666,7 @@ function teamBoxes(input: TeamBoxesInput): BoxItem[] {
       : []),
     {
       id: "record",
+      icon: <ScrollText />,
       title: "Δελτίο & ιστορικό",
       summary: recordSummary({
         sheetVersion: card.sheet?.version ?? null,
@@ -669,6 +692,7 @@ function crewBox(input: TeamBoxesInput, myWord: string | null): BoxItem[] {
   return [
     {
       id: "crew",
+      icon: <Users />,
       title: "Ποιοι πάνε",
       summary: myWord ? `Εσύ: ${myWord} · ${summary.text}` : summary.text,
       isAlert: summary.isAlert,
@@ -702,6 +726,7 @@ function equipmentBox({ card, tools, equipment }: TeamBoxesInput): BoxItem[] {
   return [
     {
       id: "equipment",
+      icon: <Camera />,
       title: "Τι παίρνουμε",
       summary: summary.text,
       isAlert: summary.isAlert,

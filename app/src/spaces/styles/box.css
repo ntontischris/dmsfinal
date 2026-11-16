@@ -1,45 +1,13 @@
 /* Κουτιά (kit/box.tsx) και συρτάρι (kit/drawer.tsx). Μόνο tokens του brand.css, μόνο κάτω από [data-look='spaces']. */
 [data-look='spaces'] {
-& .box-stack { display: grid; gap: var(--space-3); min-width: 0; margin-bottom: var(--space-4); }
-& .box {
-  border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface);
-  min-width: 0; transition: border-color 160ms ease, background-color 160ms ease;
-}
-& .box:hover { border-color: var(--color-border-strong); }
-& .box[data-state='open'] { border-color: var(--color-border-strong); background: var(--color-surface-raised); }
-& .box[data-alert='true'] .box-num { color: var(--color-attention); }
-& .box-head { margin: 0; font: inherit; }
-& .box-trigger {
-  display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-4); align-items: center; width: 100%;
-  padding: 1.1rem 1.35rem; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
-  border-radius: var(--radius-lg); min-height: 44px;
-}
 & .box-trigger:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
-& .box-num {
-  font-weight: 800; font-size: 1.9rem; letter-spacing: -0.035em; line-height: 1; color: var(--color-accent);
-  font-variant-numeric: tabular-nums; min-width: 2.6ch;
-}
-& .box-text { display: grid; gap: 0.2rem; min-width: 0; }
-& .box-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); }
-& .box-summary { font-size: 1.05rem; font-weight: 600; overflow-wrap: anywhere; }
-& .box-chevron {
-  width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--color-border-strong);
-  display: grid; place-items: center; transition: transform 200ms ease, background-color 160ms ease;
-}
-& .box-chevron::before {
-  content: ""; width: 0.5rem; height: 0.5rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
-}
-& .box[data-state='open'] .box-chevron { transform: rotate(180deg); background: var(--color-accent); color: var(--color-on-accent); border-color: transparent; }
-& .box-body { padding: 0 1.35rem 1.25rem calc(1.35rem + 2.6ch + var(--space-4)); min-width: 0; overflow-wrap: anywhere; }
+& .box-body { padding: 0 1.25rem 1.25rem calc(1.25rem + 2.75rem + var(--space-4)); min-width: 0; overflow-wrap: anywhere; }
 & .box-body[data-state='closed'] { display: none; }
 :root & .box-body :is(.kit-panel, .card) { background: none; border: 0; border-radius: 0; backdrop-filter: none; margin: 0; overflow: visible; padding: 0; }
 :root & .box-body .kit-panel + .kit-panel { border-top: 1px solid var(--color-border); margin-top: var(--space-3); }
 :root & .box-body .kit-panel-head { background: none; border: 0; padding: var(--space-3) 0 0; }
 :root & .box-body .kit-panel-body { padding: var(--space-2) 0; }
 @media (max-width: 40rem) {
-  & .box-trigger { gap: var(--space-3); padding: 1rem; }
-  & .box-num { font-size: 1.4rem; }
   & .box-body { padding: 0 1rem 1rem; }
 }
 
