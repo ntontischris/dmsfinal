@@ -103,30 +103,25 @@
   }
   & .e1b-card {
     position: relative;
-    display: grid;
-    gap: 0.3rem;
-    padding: var(--space-3) var(--space-3) var(--space-3) 2.4rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-surface-raised);
     min-width: 0;
     overflow-wrap: anywhere;
-  }
-  & .e1b-card[data-draggable="false"] {
-    padding-left: var(--space-3);
+    border-radius: 1rem;
   }
   & .e1b-card[data-dragging="true"] {
     z-index: 5;
-    border-color: var(--color-accent);
     box-shadow: 0 18px 40px
       color-mix(in oklab, var(--brand-midnight) 55%, transparent);
   }
   & .e1b-grip {
     position: absolute;
-    left: 0.35rem;
-    top: 0.5rem;
-    width: 1.8rem;
-    height: 2.4rem;
+    left: 0.2rem;
+    top: 0.75rem;
+    width: 1.6rem;
+    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
     border: 0;
     border-radius: var(--radius-sm);
     background: none;
@@ -151,57 +146,6 @@
   }
   & .e1b-title:hover {
     text-decoration: underline;
-  }
-  & .e1b-when {
-    margin: 0;
-    font-size: var(--text-sm);
-    font-variant-numeric: tabular-nums;
-  }
-  & .e1b-where {
-    margin: 0;
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-  }
-  & .e1b-signals {
-    list-style: none;
-    margin: 0.2rem 0 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-  }
-  & .e1b-signals li {
-    font-size: var(--text-xs);
-    padding: 0.1rem 0.55rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border-strong);
-  }
-  & .e1b-signals li[data-attention="true"] {
-    border-color: color-mix(in oklab, var(--color-accent) 60%, transparent);
-    color: var(--color-accent);
-    background: color-mix(in oklab, var(--color-accent) 10%, transparent);
-    font-weight: 600;
-  }
-  & .e1b-menu {
-    margin-top: 0.2rem;
-    position: relative;
-  }
-  & .e1b-menu summary {
-    cursor: pointer;
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-  }
-  & .e1b-menu-pop {
-    display: grid;
-    gap: var(--space-1);
-    margin-top: var(--space-1);
-  }
-  & .e1b-menu-pop .button {
-    border-radius: 999px;
-    justify-content: flex-start;
   }
   & .e1b-range {
     display: flex;

@@ -12,7 +12,7 @@ interface DrawerProps {
   children: ReactNode;
 }
 
-function useSpacesRoot() {
+export function useSpacesRoot() {
   const anchorRef = useRef<HTMLSpanElement>(null);
   const [root, setRoot] = useState<HTMLElement | null>(null);
   useEffect(() => {

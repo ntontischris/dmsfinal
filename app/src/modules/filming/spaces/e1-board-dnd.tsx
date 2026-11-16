@@ -11,10 +11,38 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
+import {
+  ArrowRight,
+  CalendarClock,
+  EllipsisVertical,
+  GripVertical,
+  MapPin,
+  TriangleAlert,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
+import { cn } from "@/lib/cn";
 import { hrefOf } from "@/spaces/data/screens";
+import { useSpacesRoot } from "@/spaces/kit/drawer";
+import { Badge } from "@/spaces/ui/badge";
+import {
+  Card as UiCard,
+  CardAction,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/spaces/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/spaces/ui/dropdown-menu";
+import { Progress } from "@/spaces/ui/progress";
 
 import { NO_CLIENT_LABEL } from "../labels";
 import { BoardMoveDrawer, type PendingMove } from "./e1-board-drawer";
@@ -43,31 +71,48 @@ interface BoardProps {
 const titleOf = (filming: E1Filming): string =>
   `${filming.clientName ?? NO_CLIENT_LABEL} — ${filming.productionTitle}`;
 
-function Signals({
-  filming,
-  nowMs,
-  isClient,
-}: {
-  filming: E1Filming;
-  nowMs: number;
-  isClient: boolean;
-}) {
-  const labels = isClient
-    ? clientSignalsOf(filming).map((signal) => signal.label)
-    : signalsOf(filming, nowMs).map((signal) => signal.label);
-  const crew =
-    !isClient && filming.crew
-      ? `Συνεργείο ${filming.crew.confirmed}/${filming.crew.total}`
-      : null;
-  const isCrewShort =
-    filming.crew !== null && filming.crew.confirmed < filming.crew.total;
-  if (labels.length === 0 && crew === null) return null;
+function CrewMeter({ crew }: { crew: { confirmed: number; total: number } }) {
+  const isShort = crew.confirmed < crew.total;
+  const percent =
+    crew.total === 0 ? 0 : Math.round((crew.confirmed / crew.total) * 100);
   return (
-    <ul className="e1b-signals">
-      {crew && <li data-attention={isCrewShort}>{crew}</li>}
+    <div className="grid gap-1.5">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <Users className="size-3.5" aria-hidden="true" />
+          Συνεργείο
+        </span>
+        <span
+          className={cn(
+            "font-semibold tabular-nums",
+            isShort ? "text-destructive" : "text-foreground",
+          )}
+        >
+          {crew.confirmed}/{crew.total}
+        </span>
+      </div>
+      <Progress
+        value={percent}
+        aria-label={`Συνεργείο ${crew.confirmed} από ${crew.total}`}
+        className={cn(
+          "h-1.5 bg-muted",
+          isShort && "[&>[data-slot=progress-indicator]]:bg-destructive",
+        )}
+      />
+    </div>
+  );
+}
+
+function Signals({ labels }: { labels: readonly string[] }) {
+  if (labels.length === 0) return null;
+  return (
+    <ul className="flex list-none flex-wrap gap-1.5 p-0">
       {labels.map((label) => (
-        <li key={label} data-attention="true">
-          {label}
+        <li key={label}>
+          <Badge className="gap-1 px-2.5 py-1 font-semibold">
+            <TriangleAlert aria-hidden="true" />
+            {label}
+          </Badge>
         </li>
       ))}
     </ul>
@@ -87,27 +132,49 @@ function MoveMenu({
   targets,
   onMove,
 }: Pick<CardProps, "filming" | "targets" | "onMove">) {
+  const { anchorRef, root } = useSpacesRoot();
   return (
-    <details className="e1b-menu">
-      <summary>Μετακίνηση σε…</summary>
-      <div className="e1b-menu-pop">
-        {targets.map((to) => (
-          <button
-            key={to}
-            type="button"
-            className="button"
-            onClick={(event) => {
-              event.currentTarget.closest("details")?.removeAttribute("open");
-              onMove(filming, to);
-            }}
-          >
-            {columnTitle(to)}
-          </button>
-        ))}
-      </div>
-    </details>
+    <>
+      <span ref={anchorRef} hidden />
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger
+          className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          aria-label={`Μετακίνηση του «${titleOf(filming)}» σε…`}
+        >
+          <EllipsisVertical className="size-4" aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          container={root}
+          align="end"
+          className="min-w-52 rounded-xl p-1.5"
+        >
+          <DropdownMenuLabel className="text-xs text-muted-foreground">
+            Μετακίνηση σε…
+          </DropdownMenuLabel>
+          {targets.map((to) => (
+            <DropdownMenuItem
+              key={to}
+              className="min-h-11 rounded-lg"
+              onSelect={() => onMove(filming, to)}
+            >
+              <ArrowRight aria-hidden="true" />
+              {columnTitle(to)}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }
+
+const signalLabelsOf = (
+  filming: E1Filming,
+  nowMs: number,
+  isClient: boolean,
+): readonly string[] =>
+  (isClient ? clientSignalsOf(filming) : signalsOf(filming, nowMs)).map(
+    (signal) => signal.label,
+  );
 
 function Card({ filming, targets, nowMs, isClient, onMove }: CardProps) {
   const isDraggable = targets.length > 0;
@@ -119,12 +186,13 @@ function Card({ filming, targets, nowMs, isClient, onMove }: CardProps) {
   const style = transform
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
     : undefined;
+  const crew = !isClient ? filming.crew : null;
+  const labels = signalLabelsOf(filming, nowMs, isClient);
   return (
     <li
       ref={setNodeRef}
       className="e1b-card"
       data-dragging={isDragging}
-      data-draggable={isDraggable}
       style={style}
     >
       {isDraggable && (
@@ -135,20 +203,47 @@ function Card({ filming, targets, nowMs, isClient, onMove }: CardProps) {
           {...attributes}
           {...listeners}
         >
-          <span aria-hidden="true">⋮⋮</span>
+          <GripVertical className="size-4" aria-hidden="true" />
         </button>
       )}
-      <Link className="e1b-title" href={hrefOf("E3", { id: filming.id })}>
-        {titleOf(filming)}
-      </Link>
-      <p className="e1b-when">
-        {whenLabel(filming.date, filming.start, filming.end)}
-      </p>
-      {filming.location && <p className="e1b-where">{filming.location}</p>}
-      <Signals filming={filming} nowMs={nowMs} isClient={isClient} />
-      {isDraggable && (
-        <MoveMenu filming={filming} targets={targets} onMove={onMove} />
-      )}
+      <UiCard
+        className={cn(
+          "gap-3 rounded-2xl py-4 shadow-none transition-colors hover:border-border-strong",
+          isDraggable && "pl-6",
+          isDragging && "border-primary",
+        )}
+      >
+        <CardHeader className="gap-1 px-4">
+          <CardTitle className="text-base leading-snug">
+            <Link className="e1b-title" href={hrefOf("E3", { id: filming.id })}>
+              {titleOf(filming)}
+            </Link>
+          </CardTitle>
+          {isDraggable && (
+            <CardAction className="-mt-1.5 -mr-2">
+              <MoveMenu filming={filming} targets={targets} onMove={onMove} />
+            </CardAction>
+          )}
+        </CardHeader>
+        <CardContent className="grid gap-1.5 px-4 text-sm">
+          <p className="m-0 flex items-center gap-2 font-semibold tabular-nums">
+            <CalendarClock className="size-4 text-primary" aria-hidden="true" />
+            {whenLabel(filming.date, filming.start, filming.end)}
+          </p>
+          {filming.location && (
+            <p className="m-0 flex items-center gap-2 text-muted-foreground">
+              <MapPin className="size-4 shrink-0" aria-hidden="true" />
+              {filming.location}
+            </p>
+          )}
+        </CardContent>
+        {(crew || labels.length > 0) && (
+          <CardFooter className="flex-col items-stretch gap-3 px-4">
+            {crew && <CrewMeter crew={crew} />}
+            <Signals labels={labels} />
+          </CardFooter>
+        )}
+      </UiCard>
     </li>
   );
 }
