@@ -2,7 +2,7 @@
 -- Ίχνος (κεφ. 3, ADR 0007, 0010, 0015). Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή.
 -- Ώρες: όλα σχετικά με τη σημερινή μέρα (Ώρα Ελλάδας), ώστε το τεστ να περνά οποιαδήποτε μέρα τρέξει.
 begin;
-select plan(298);
+select plan(300);
 
 -- ───────────── Χρήστες ─────────────
 -- e1 Ιδιοκτήτης · e2 Παραγωγή (Υπεύθυνος των Παραγωγών της Συμφωνίας Α) · e3 Πωλήσεις (Υπεύθυνος του Πελάτη f1)
@@ -741,6 +741,16 @@ select ok(
   'Οι ανοιχτές κρατήσεις έρχονται από το παλαιότερο'
 );
 select is(jsonb_array_length(public.filmings_view('needs_outcome')), 1, 'Το «Θέλουν έγινε» δείχνει το Γύρισμα με έναρξη στο παρελθόν');
+select ok(
+  (select bool_and(e ? 'location') from jsonb_array_elements(public.filmings_view('all')) e),
+  'Κάθε γραμμή της λίστας φέρνει τον τόπο (Πίνακας E1)'
+);
+select ok(
+  (select bool_and(jsonb_typeof(e -> 'crew' -> 'userIds') = 'array'
+                   and jsonb_array_length(e -> 'crew' -> 'userIds') = (e -> 'crew' ->> 'total')::int)
+     from jsonb_array_elements(public.filmings_view('all')) e where e -> 'crew' <> 'null'::jsonb),
+  'Το Συνεργείο της γραμμής φέρνει τα άτομά του (φίλτρο «Ποιος πάει»)'
+);
 select set_config('t.v_open', jsonb_array_length(public.filmings_view('open'))::text, true);
 select set_config('t.v_week', jsonb_array_length(public.filmings_view('week'))::text, true);
 select ok(

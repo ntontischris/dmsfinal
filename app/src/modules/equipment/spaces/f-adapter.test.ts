@@ -29,6 +29,7 @@ const filming = (overrides: Partial<FilmingRow> = {}): FilmingRow => ({
   state: "scheduled",
   client: { id: "c-1", name: "Κυψέλη Καφέ" },
   production: { id: "p-1", title: "Social Νοεμβρίου" },
+  location: null,
   crew: null,
   signals: {
     equipmentConflict: false,

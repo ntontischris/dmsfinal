@@ -20,7 +20,14 @@ const rowJson = {
   client: { id: CLIENT_ID, name: "Ταβέρνα Αρμύρα" },
   production: { id: PRODUCTION_ID, title: "Οκτώβριος 2026" },
   crew: { confirmed: 1, total: 2 },
-  signals: { equipmentConflict: false, isExtra: true, cancelRequest: false, crewDeclined: false, slotProblem: null, pendingReschedule: null },
+  signals: {
+    equipmentConflict: false,
+    isExtra: true,
+    cancelRequest: false,
+    crewDeclined: false,
+    slotProblem: null,
+    pendingReschedule: null,
+  },
 };
 
 const cardJson = {
@@ -33,7 +40,11 @@ const cardJson = {
   state: "scheduled",
   isExtra: false,
   burned: false,
-  kind: { id: "44444444-4444-4444-8444-444444444444", label: "Reel", measure: "per_filming" },
+  kind: {
+    id: "44444444-4444-4444-8444-444444444444",
+    label: "Reel",
+    measure: "per_filming",
+  },
   client: { id: CLIENT_ID, name: "Ταβέρνα Αρμύρα" },
   production: { id: PRODUCTION_ID, title: "Οκτώβριος 2026", isInternal: false },
   agreement: null,
@@ -63,7 +74,14 @@ const cardJson = {
       after: { origin: "team" },
     },
   ],
-  signals: { equipmentConflict: false, isExtra: false, cancelRequest: false, crewDeclined: false, slotProblem: null, pendingReschedule: null },
+  signals: {
+    equipmentConflict: false,
+    isExtra: false,
+    cancelRequest: false,
+    crewDeclined: false,
+    slotProblem: null,
+    pendingReschedule: null,
+  },
   viewerCan: {
     approve: false,
     reject: false,
@@ -86,12 +104,32 @@ const cardJson = {
 describe("filmingsViewSchema", () => {
   it("should read the list rows with their crew count and signals", () => {
     const [row] = filmingsViewSchema.parse([rowJson]);
-    expect(row?.crew).toEqual({ confirmed: 1, total: 2 });
+    expect(row?.crew).toEqual({ confirmed: 1, total: 2, userIds: [] });
     expect(row?.signals.isExtra).toBe(true);
   });
 
+  it("should read the place and the crew people of the board", () => {
+    const [row] = filmingsViewSchema.parse([
+      {
+        ...rowJson,
+        location: "Κολωνάκι",
+        crew: { confirmed: 1, total: 2, userIds: ["u1", "u2"] },
+      },
+    ]);
+    expect(row?.location).toBe("Κολωνάκι");
+    expect(row?.crew?.userIds).toEqual(["u1", "u2"]);
+  });
+
+  it("should default place and crew people when an older database leaves them out", () => {
+    const [row] = filmingsViewSchema.parse([rowJson]);
+    expect(row?.location).toBeNull();
+    expect(row?.crew?.userIds).toEqual([]);
+  });
+
   it("should reject a state the database does not know", () => {
-    expect(() => filmingsViewSchema.parse([{ ...rowJson, state: "archived" }])).toThrow();
+    expect(() =>
+      filmingsViewSchema.parse([{ ...rowJson, state: "archived" }]),
+    ).toThrow();
   });
 });
 
@@ -119,9 +157,22 @@ describe("cardSchema", () => {
     const card = cardSchema.parse({
       ...cardJson,
       team: {
-        details: { contactName: "Κώστας", contactPhone: "210 0000000", filesUrl: "https://example.com/f", updatedAt: null },
-        google: { state: "error", at: "2026-10-09T07:00:00+00:00", error: "403" },
-        outcome: { billable: "pending", extraBillable: true, noShowBurns: false },
+        details: {
+          contactName: "Κώστας",
+          contactPhone: "210 0000000",
+          filesUrl: "https://example.com/f",
+          updatedAt: null,
+        },
+        google: {
+          state: "error",
+          at: "2026-10-09T07:00:00+00:00",
+          error: "403",
+        },
+        outcome: {
+          billable: "pending",
+          extraBillable: true,
+          noShowBurns: false,
+        },
         canEditDetails: true,
       },
     });
@@ -150,7 +201,11 @@ describe("queueSchema", () => {
             used: 1,
             reserved: 0,
             balance: 1,
-            kind: { id: "44444444-4444-4444-8444-444444444444", label: "Reel", measure: "per_filming" },
+            kind: {
+              id: "44444444-4444-4444-8444-444444444444",
+              label: "Reel",
+              measure: "per_filming",
+            },
           },
         },
       ],
@@ -174,9 +229,20 @@ describe("bookingOptionsSchema", () => {
         cancelHours: 48,
         horizonDays: 60,
         bookingNeedsApproval: true,
-        period: { id: "66666666-6666-4666-8666-666666666666", n: 1, starts: "2026-10-01", ends: "2026-10-31" },
+        period: {
+          id: "66666666-6666-4666-8666-666666666666",
+          n: 1,
+          starts: "2026-10-01",
+          ends: "2026-10-31",
+        },
         kinds: [
-          { id: "44444444-4444-4444-8444-444444444444", label: "Reel", measure: "per_filming", defaultHours: 2, balance: null },
+          {
+            id: "44444444-4444-4444-8444-444444444444",
+            label: "Reel",
+            measure: "per_filming",
+            defaultHours: 2,
+            balance: null,
+          },
         ],
       },
     ]);
@@ -215,6 +281,8 @@ describe("crewTemplatesSchema", () => {
         members: [{ userId: CLIENT_ID, name: "Ρένα Παραγωγή" }],
       },
     ]);
-    expect(parsed[0]?.members).toEqual([{ id: CLIENT_ID, name: "Ρένα Παραγωγή" }]);
+    expect(parsed[0]?.members).toEqual([
+      { id: CLIENT_ID, name: "Ρένα Παραγωγή" },
+    ]);
   });
 });

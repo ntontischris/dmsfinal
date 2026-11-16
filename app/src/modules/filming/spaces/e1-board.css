@@ -1,0 +1,227 @@
+/* E1 Πίνακας: τέσσερις στήλες, κάρτες, μετακίνηση. Μόνο tokens του brand. */
+[data-look="spaces"] {
+  & .e1b-board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(16rem, 1fr));
+    gap: var(--space-3);
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+    scroll-snap-type: x proximity;
+    margin-top: var(--space-4);
+  }
+  & .e1b-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    scroll-snap-align: start;
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease,
+      opacity 160ms ease;
+  }
+  & .e1b-col[data-attention="true"] {
+    border-color: color-mix(in oklab, var(--color-accent) 55%, transparent);
+  }
+  & .e1b-col[data-attention="true"] .e1b-count {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+  & .e1b-col[data-target="false"] {
+    opacity: 0.45;
+  }
+  & .e1b-col[data-target="true"] {
+    border-style: dashed;
+    border-color: var(--color-accent);
+  }
+  & .e1b-col[data-over="true"] {
+    background: color-mix(
+      in oklab,
+      var(--color-accent) 10%,
+      var(--color-surface)
+    );
+  }
+  & .e1b-col-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  & .e1b-col-head h2 {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  & .e1b-count {
+    min-width: 1.75rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    text-align: center;
+    font-weight: 700;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    border: 1px solid var(--color-border-strong);
+  }
+  & .e1b-empty {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  & .e1b-cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  & .e1b-card {
+    position: relative;
+    display: grid;
+    gap: 0.3rem;
+    padding: var(--space-3) var(--space-3) var(--space-3) 2.4rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface-raised);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  & .e1b-card[data-draggable="false"] {
+    padding-left: var(--space-3);
+  }
+  & .e1b-card[data-dragging="true"] {
+    z-index: 5;
+    border-color: var(--color-accent);
+    box-shadow: 0 18px 40px
+      color-mix(in oklab, var(--brand-midnight) 55%, transparent);
+  }
+  & .e1b-grip {
+    position: absolute;
+    left: 0.35rem;
+    top: 0.5rem;
+    width: 1.8rem;
+    height: 2.4rem;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-muted);
+    cursor: grab;
+    touch-action: none;
+    font-size: 1rem;
+    letter-spacing: -0.2em;
+  }
+  & .e1b-grip:active {
+    cursor: grabbing;
+  }
+  & .e1b-grip:focus-visible,
+  & .e1b-title:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  & .e1b-title {
+    font-weight: 700;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  & .e1b-title:hover {
+    text-decoration: underline;
+  }
+  & .e1b-when {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+  }
+  & .e1b-where {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  & .e1b-signals {
+    list-style: none;
+    margin: 0.2rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+  & .e1b-signals li {
+    font-size: var(--text-xs);
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-strong);
+  }
+  & .e1b-signals li[data-attention="true"] {
+    border-color: color-mix(in oklab, var(--color-accent) 60%, transparent);
+    color: var(--color-accent);
+    background: color-mix(in oklab, var(--color-accent) 10%, transparent);
+    font-weight: 600;
+  }
+  & .e1b-menu {
+    margin-top: 0.2rem;
+    position: relative;
+  }
+  & .e1b-menu summary {
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+  & .e1b-menu-pop {
+    display: grid;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+  }
+  & .e1b-menu-pop .button {
+    border-radius: 999px;
+    justify-content: flex-start;
+  }
+  & .e1b-range {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+  & .e1b-range label {
+    display: grid;
+    gap: 0.2rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  & .e1b-toggle {
+    display: inline-flex;
+    gap: 0;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  & .e1b-toggle a {
+    padding: 0.4rem 1rem;
+    text-decoration: none;
+    color: var(--color-text);
+    font-size: var(--text-sm);
+  }
+  & .e1b-toggle a[aria-current="page"] {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-weight: 600;
+  }
+  @media (max-width: 48rem) {
+    & .e1b-board {
+      grid-template-columns: repeat(4, minmax(78vw, 1fr));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & .e1b-col {
+      transition: none;
+    }
+  }
+}

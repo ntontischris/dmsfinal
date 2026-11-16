@@ -13,7 +13,12 @@ import {
   stateTone,
   waitingText,
 } from "./helpers";
-import type { BookingAgreement, BookingKind, FilmingHistoryEntry, FilmingRow } from "./types";
+import type {
+  BookingAgreement,
+  BookingKind,
+  FilmingHistoryEntry,
+  FilmingRow,
+} from "./types";
 
 const kind = (overrides: Partial<BookingKind> = {}): BookingKind => ({
   id: "44444444-4444-4444-8444-444444444444",
@@ -24,7 +29,10 @@ const kind = (overrides: Partial<BookingKind> = {}): BookingKind => ({
   ...overrides,
 });
 
-const event = (name: string, after: Record<string, unknown> | null = null): FilmingHistoryEntry => ({
+const event = (
+  name: string,
+  after: Record<string, unknown> | null = null,
+): FilmingHistoryEntry => ({
   at: "2026-10-09T07:00:00.000Z",
   action: "event",
   event: name,
@@ -46,7 +54,12 @@ describe("activeSignals", () => {
 
   it("should return nothing when no signal is on", () => {
     expect(
-      activeSignals({ equipmentConflict: false, isExtra: false, cancelRequest: false, crewDeclined: false }),
+      activeSignals({
+        equipmentConflict: false,
+        isExtra: false,
+        cancelRequest: false,
+        crewDeclined: false,
+      }),
     ).toEqual([]);
   });
 });
@@ -94,14 +107,24 @@ describe("stateTone and waitingText", () => {
 
 describe("historyLines", () => {
   it("should write the event label with the reason of the change", () => {
-    const lines = historyLines([event("cancelled", { reason: "Δεν θα γυριστεί" })]);
+    const lines = historyLines([
+      event("cancelled", { reason: "Δεν θα γυριστεί" }),
+    ]);
     expect(lines).toEqual([
-      { at: "2026-10-09T07:00:00.000Z", actor: "Νίκος", text: "Ακυρώθηκε. Λόγος: Δεν θα γυριστεί" },
+      {
+        at: "2026-10-09T07:00:00.000Z",
+        actor: "Νίκος",
+        text: "Ακυρώθηκε. Λόγος: Δεν θα γυριστεί",
+      },
     ]);
   });
 
   it("should skip the row-level inserts and updates that the events already describe", () => {
-    const row: FilmingHistoryEntry = { ...event("x"), action: "update", event: null };
+    const row: FilmingHistoryEntry = {
+      ...event("x"),
+      action: "update",
+      event: null,
+    };
     expect(historyLines([row])).toEqual([]);
   });
 });
@@ -114,12 +137,28 @@ describe("openFilmingChoices", () => {
       hours: 3,
       state: "scheduled",
       client: null,
-      production: { id: "66666666-6666-4666-8666-666666666666", title: "Showreel" },
+      production: {
+        id: "66666666-6666-4666-8666-666666666666",
+        title: "Showreel",
+      },
+      location: null,
       crew: null,
-      signals: { equipmentConflict: false, isExtra: false, cancelRequest: false, crewDeclined: false, slotProblem: null, pendingReschedule: null },
+      signals: {
+        equipmentConflict: false,
+        isExtra: false,
+        cancelRequest: false,
+        crewDeclined: false,
+        slotProblem: null,
+        pendingReschedule: null,
+      },
     };
     expect(openFilmingChoices([row])).toEqual([
-      { id: row.id, startsAt: row.startsAt, hours: 3, production: row.production },
+      {
+        id: row.id,
+        startsAt: row.startsAt,
+        hours: 3,
+        production: row.production,
+      },
     ]);
   });
 });
@@ -139,7 +178,13 @@ describe("isAboveDefault", () => {
 describe("kindDefaultHours", () => {
   it("should find the default duration of the kind inside the chosen agreement", () => {
     const agreements = [
-      { id: "a1", kinds: [kind({ id: "k1", defaultHours: 2 }), kind({ id: "k2", defaultHours: 4 })] },
+      {
+        id: "a1",
+        kinds: [
+          kind({ id: "k1", defaultHours: 2 }),
+          kind({ id: "k2", defaultHours: 4 }),
+        ],
+      },
     ] as unknown as BookingAgreement[];
     expect(kindDefaultHours(agreements, "a1", "k2")).toBe(4);
     expect(kindDefaultHours(agreements, "missing", "k2")).toBeNull();

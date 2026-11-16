@@ -30,6 +30,7 @@ export const asFilming = (entry: MineEntry): E1Filming =>
     state: entry.state,
     client: entry.client,
     production: entry.production,
+    location: null,
     crew: null,
     signals: {
       equipmentConflict: false,

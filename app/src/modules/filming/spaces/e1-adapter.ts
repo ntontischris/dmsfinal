@@ -18,9 +18,12 @@ export const e1FilmingOf = (row: FilmingRow): E1Filming => {
     startsAtMs,
     endsAtMs,
     state: row.state,
+    clientId: row.client?.id ?? null,
     clientName: row.client?.name ?? null,
     productionTitle: row.production.title,
-    crew: row.crew,
+    location: row.location,
+    crew: row.crew && { confirmed: row.crew.confirmed, total: row.crew.total },
+    crewUserIds: row.crew?.userIds ?? [],
     signals: row.signals,
   };
 };

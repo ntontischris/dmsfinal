@@ -18,6 +18,8 @@ import {
   visibleViews,
   type E1View,
 } from "./e1-adapter";
+import { E1BoardView } from "./e1-board";
+import { boardHref, type BoardParams } from "./e1-board-params";
 import { groupFilmings } from "./e1-groups";
 import { E1Table } from "./e1-table";
 
@@ -25,6 +27,7 @@ import "./e1.css";
 
 interface SpacesFilmingsProps {
   tab: FilmingTab;
+  board: BoardParams;
 }
 
 const isScoped = (viewer: Viewer): boolean =>
@@ -50,6 +53,7 @@ function Views({
             className="tab"
             aria-current={item.id === tab ? "page" : undefined}
             href={hrefOf("E1", {
+              view: "list",
               tab: item.id === "open" ? undefined : item.id,
             })}
           >
@@ -106,7 +110,60 @@ function Groups({
 // Η βάση φιλτράρει ανά καρτέλα και αποφασίζει τι βλέπει ο Χρήστης. Ο Χρήστης πελάτη βλέπει τη δική του όψη (prototype `isClient`):
 // τη λωρίδα του Χώρου «Γυρίσματα» πελάτη, χωρίς Συνεργείο· με την προβολή «Θέλουν «έγινε»» και τα σήματα της σημερινής σελίδας. Η κάρτα υπολοίπου του prototype λείπει
 // (η λίστα της βάσης δεν δίνει υπόλοιπο Παροχής ανά Περίοδο).
-export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
+function ViewToggle({ board }: { board: BoardParams }) {
+  return (
+    <nav className="e1b-toggle" aria-label="Όψη Γυρισμάτων">
+      {(["board", "list"] as const).map((view) => (
+        <Link
+          key={view}
+          href={boardHref(board, { view })}
+          aria-current={board.view === view ? "page" : undefined}
+        >
+          {view === "board" ? "Πίνακας" : "Λίστα"}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+async function ListView({
+  tab,
+  canApprove,
+  isClient,
+  nowMs,
+}: {
+  tab: FilmingTab;
+  canApprove: boolean;
+  isClient: boolean;
+  nowMs: number;
+}) {
+  const views = visibleViews(canApprove);
+  const results = await Promise.all(views.map((view) => listFilmings(view.id)));
+  const counts = new Map(
+    views.map((view, index) => {
+      const result = results[index];
+      return [view.id, result.ok ? result.data.length : null] as const;
+    }),
+  );
+  const current =
+    results[views.findIndex((view) => view.id === tab)] ??
+    (await listFilmings(tab));
+  return (
+    <>
+      <Views views={views} tab={tab} counts={counts} />
+      {current.ok ? (
+        <Groups rows={current.data} nowMs={nowMs} isClient={isClient} />
+      ) : (
+        <ErrorNotice what="τα Γυρίσματα" />
+      )}
+    </>
+  );
+}
+
+// E1 Γυρίσματα στη νέα εμφάνιση. Προεπιλογή ο Πίνακας (τέσσερις στήλες, σύρσιμο, φίλτρα)· η «Λίστα» κρατά τις ομάδες
+// «Θέλουν «έγινε»», επόμενα και παλιά ανά μήνα. Η βάση αποφασίζει τι βλέπει ο Χρήστης· ο Χρήστης πελάτη βλέπει τη δική του
+// όψη, χωρίς Συνεργείο, και ο Πίνακάς του μόνο διαβάζεται.
+export async function SpacesFilmings({ tab, board }: SpacesFilmingsProps) {
   const viewer = await getViewer();
   const caps = filmingCaps(viewer);
   if (!caps.canView)
@@ -118,20 +175,9 @@ export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
       </div>
     );
   const isClient = isClientViewer(viewer);
-  const views = visibleViews(caps.canApprove);
-  const [strip, ...results] = await Promise.all([
-    getSpaceStrip(codesOfSpace(isClient ? "c-filming" : "production")),
-    ...views.map((view) => listFilmings(view.id)),
-  ]);
-  const counts = new Map(
-    views.map((view, index) => {
-      const result = results[index];
-      return [view.id, result.ok ? result.data.length : null] as const;
-    }),
+  const strip = await getSpaceStrip(
+    codesOfSpace(isClient ? "c-filming" : "production"),
   );
-  const current =
-    results[views.findIndex((view) => view.id === tab)] ??
-    (await listFilmings(tab));
   const nowMs = new Date().getTime();
   return (
     <div data-spaces>
@@ -141,25 +187,35 @@ export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
           «Με αφορά»: βλέπεις τα Γυρίσματα στα οποία συμμετέχεις.
         </p>
       )}
-      {isClient && can(viewer, "c.book") && (
-        <div className="toolbar">
+      <div className="toolbar">
+        <ViewToggle board={board} />
+        {isClient && can(viewer, "c.book") && (
           <Link className="button" data-primary="true" href={hrefOf("E5")}>
             Κλείσε νέο Γύρισμα
           </Link>
-        </div>
-      )}
-      {caps.canBook && (
-        <div className="toolbar">
+        )}
+        {caps.canBook && (
           <Link className="button" data-primary="true" href={hrefOf("E4")}>
             Νέο Γύρισμα
           </Link>
-        </div>
-      )}
-      <Views views={views} tab={tab} counts={counts} />
-      {current.ok ? (
-        <Groups rows={current.data} nowMs={nowMs} isClient={isClient} />
+        )}
+      </div>
+      {board.view === "board" ? (
+        <E1BoardView
+          params={board}
+          caps={caps}
+          isClient={isClient}
+          viewerId={viewer.status === "signed-in" ? viewer.userId : null}
+          nowMs={nowMs}
+          today={athensDate(new Date(nowMs))}
+        />
       ) : (
-        <ErrorNotice what="τα Γυρίσματα" />
+        <ListView
+          tab={tab}
+          canApprove={caps.canApprove}
+          isClient={isClient}
+          nowMs={nowMs}
+        />
       )}
     </div>
   );

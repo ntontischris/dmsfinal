@@ -52,14 +52,14 @@ interface ActionsProps {
   newTimeProblem: string | null;
 }
 
-interface FormProps {
+export interface FormProps {
   card: FilmingCard;
   isPending: boolean;
   onSend: (action: FormAction, fields: Record<string, string>) => void;
   onClose: () => void;
 }
 
-function DoneForm({ card, isPending, onSend, onClose }: FormProps) {
+export function DoneForm({ card, isPending, onSend, onClose }: FormProps) {
   const [hours, setHours] = useState(String(card.hours).replace(".", ","));
   const actual = Number(hours.replace(",", "."));
   const isValid = Number.isFinite(actual) && actual > 0;
@@ -104,7 +104,7 @@ function DoneForm({ card, isPending, onSend, onClose }: FormProps) {
 }
 
 // Αλλαγή μέρας/ώρας από την ομάδα: ίδια ενέργεια με τη μετάθεση της παλιάς σελίδας.
-function MoveForm({ card, isPending, onSend, onClose }: FormProps) {
+export function MoveForm({ card, isPending, onSend, onClose }: FormProps) {
   const [date, setDate] = useState(athensDate(card.startsAt));
   const [time, setTime] = useState(athensTime(card.startsAt));
   const [hours, setHours] = useState(String(card.hours).replace(".", ","));
@@ -161,7 +161,7 @@ function MoveForm({ card, isPending, onSend, onClose }: FormProps) {
   );
 }
 
-function Notes({ lines }: { lines: readonly string[] }) {
+export function Notes({ lines }: { lines: readonly string[] }) {
   return (
     <ul
       className="stack e3-outcome"
@@ -176,7 +176,7 @@ function Notes({ lines }: { lines: readonly string[] }) {
   );
 }
 
-function DecisionRow({
+export function DecisionRow({
   note,
   yes,
   no,

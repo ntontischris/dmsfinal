@@ -1,13 +1,18 @@
-import { SpacesFilmings, listFilterSchema } from "@/modules/filming";
+import {
+  SpacesFilmings,
+  boardParamsSchema,
+  listFilterSchema,
+} from "@/modules/filming";
 
 export const metadata = { title: "Γυρίσματα" };
 
-// E1: τα Γυρίσματα. Η καρτέλα είναι στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
+// E1: τα Γυρίσματα. Η όψη (Πίνακας/Λίστα), η καρτέλα και τα φίλτρα είναι στη διεύθυνση· η βάση αποφασίζει τι βλέπεις.
 export default async function FilmingPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { tab } = listFilterSchema.parse(await searchParams);
-  return <SpacesFilmings tab={tab} />;
+  const params = await searchParams;
+  const { tab } = listFilterSchema.parse(params);
+  return <SpacesFilmings tab={tab} board={boardParamsSchema.parse(params)} />;
 }

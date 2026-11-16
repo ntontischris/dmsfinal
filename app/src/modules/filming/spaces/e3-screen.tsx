@@ -101,6 +101,7 @@ const asListItem = (card: FilmingCard) =>
     state: card.state,
     client: card.client,
     production: card.production,
+    location: card.location,
     crew: null,
     signals: card.signals,
   });

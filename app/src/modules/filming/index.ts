@@ -47,6 +47,7 @@ export type { ReadResult } from "./read";
 export { getFilmingSettings, listOpenFilmings } from "./queries";
 // Νέα εμφάνιση (Χώροι): οι οθόνες του prototype.
 export { SpacesFilmings } from "./spaces/e1-screen";
+export { boardParamsSchema } from "./spaces/e1-board-params";
 export { SpacesFilming, type E3EquipmentSource } from "./spaces/e3-screen";
 export { SpacesFilmingQueue } from "./spaces/e2-screen";
 export { SpacesNewFilming } from "./spaces/e4-screen";
