@@ -1,5 +1,6 @@
 import { listTemplates } from "@/modules/equipment";
 import { SpacesFilmingQueue } from "@/modules/filming";
+import { getDeletionRequests } from "@/modules/google";
 
 export const metadata = { title: "Ουρά έγκρισης" };
 
@@ -21,5 +22,12 @@ export default async function FilmingQueuePage({
     textOf(params.job) === EGKRINO_JOB && Number.isInteger(step)
       ? { step, reqId: textOf(params.req) }
       : null;
-  return <SpacesFilmingQueue guide={guide} equipmentTemplates={listTemplates} />;
+  const deletions = guide ? await getDeletionRequests() : [];
+  return (
+    <SpacesFilmingQueue
+      guide={guide}
+      deletions={deletions}
+      equipmentTemplates={listTemplates}
+    />
+  );
 }

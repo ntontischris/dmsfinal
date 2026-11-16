@@ -4,6 +4,7 @@ import type { FilmingQueue, PendingEntry } from "../types";
 import {
   ANSWER_LABELS,
   answerTargetOf,
+  answersOf,
   defaultAnswerOf,
   focusOf,
   freedLineOf,
@@ -233,7 +234,9 @@ describe("⏳3: Στάλθηκαν N ώρες στον Πελάτη", () => {
     const href = waitHref(3, "Ταβέρνα");
     const query = new URL(href, "http://x").searchParams;
     expect(href.startsWith("/app?job=egkrino-gyrismata&step=5")).toBe(true);
-    expect(sentLineOf(query.get("sent"), query.get("client"))).toBe("Στάλθηκαν 3 ώρες στον Πελάτη «Ταβέρνα»");
+    expect(sentLineOf(query.get("sent"), query.get("client"))).toBe(
+      "Στάλθηκαν 3 ώρες στον Πελάτη «Ταβέρνα»",
+    );
   });
 
   it("should use the singular for one hour and stay generic without a count", () => {
@@ -247,13 +250,53 @@ describe("loopRowsOf", () => {
   it("should count one row per filming, the same number as the card", () => {
     const requests = requestsOf(
       queueOf({
-        pending: [pendingOf({ id: "b1" }), pendingOf({ id: "b2", createdAt: "2026-11-11T09:00:00Z" })],
+        pending: [
+          pendingOf({ id: "b1" }),
+          pendingOf({ id: "b2", createdAt: "2026-11-11T09:00:00Z" }),
+        ],
         cancelRequests: [cancelOf("b1", "2026-11-12T09:00:00Z")],
       }),
     );
     const { rows, count } = loopRowsOf(requests);
     expect(count).toBe(2);
     expect(rows.map((row) => row.key)).toEqual(["b2", "b1"]);
-    expect(rows[0].href).toBe("/app/filming/queue?job=egkrino-gyrismata&step=1&req=b2");
+    expect(rows[0].href).toBe(
+      "/app/filming/queue?job=egkrino-gyrismata&step=1&req=b2",
+    );
+  });
+});
+
+describe("διαγραφή στο Google ως τέταρτο είδος αιτήματος", () => {
+  const deletion = {
+    filmingId: "g1",
+    title: "Ταβέρνα — Νοέμβριος",
+    startsAt: "2026-11-23T08:00:00Z",
+    detectedAt: "2026-11-09T09:00:00Z",
+    deadlineAt: "2026-11-16T09:00:00Z",
+  };
+
+  it("μπαίνει στη σειρά με τα άλλα, το παλαιότερο πρώτο", () => {
+    const requests = requestsOf(queueOf({ pending: [pendingOf()] }), [
+      deletion,
+    ]);
+    expect(requests.map((request) => [request.id, request.kind])).toEqual([
+      ["g1", "google"],
+      ["b1", "booking"],
+    ]);
+  });
+
+  it("κύριο κουμπί «Κρατώ το Γύρισμα», δεύτερο «Ακυρώνω κι εδώ», χωρίς πρόταση ώρας", () => {
+    expect(ANSWER_LABELS.google.approve).toBe("Κρατώ το Γύρισμα");
+    expect(ANSWER_LABELS.google.reject).toBe("Ακυρώνω κι εδώ");
+    expect(answersOf("google")).toEqual(["approve", "reject"]);
+    expect(answersOf("booking")).toEqual(["approve", "offer", "reject"]);
+  });
+
+  it("δεν κλειδώνει και μετά το «Κρατώ» πάει στο επόμενο αίτημα", () => {
+    const [request] = requestsOf(queueOf(), [deletion]);
+    expect(lockOf(request!, NOW, null)).toBeNull();
+    expect(
+      answerTargetOf({ id: "g1", kind: "google", answer: "approve" }),
+    ).toBe("/app/filming/queue?job=egkrino-gyrismata&step=1");
   });
 });

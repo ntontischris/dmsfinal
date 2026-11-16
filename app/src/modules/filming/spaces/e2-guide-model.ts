@@ -17,13 +17,14 @@ export const EGKRINO_STEPS = {
   wait: 5,
 } as const;
 
-export type RequestKind = "booking" | "reschedule" | "cancel";
+export type RequestKind = "booking" | "reschedule" | "cancel" | "google";
 export type Answer = "approve" | "offer" | "reject";
 
 export const REQUEST_KINDS: readonly RequestKind[] = [
   "booking",
   "reschedule",
   "cancel",
+  "google",
 ];
 export const ANSWERS: readonly Answer[] = ["approve", "offer", "reject"];
 
@@ -57,6 +58,7 @@ export const KIND_TITLES: Readonly<Record<RequestKind, string>> = {
   booking: "Νέα κράτηση",
   reschedule: "Ζητά μετάθεση",
   cancel: "Ζητά ακύρωση μετά το Όριο",
+  google: "Διαγράφηκε στο Google",
 };
 
 export const ANSWER_LABELS: Readonly<
@@ -77,10 +79,44 @@ export const ANSWER_LABELS: Readonly<
     offer: "Προτείνω άλλη ώρα αντί για ακύρωση",
     reject: "Αρνούμαι",
   },
+  google: {
+    approve: "Κρατώ το Γύρισμα",
+    offer: "",
+    reject: "Ακυρώνω κι εδώ",
+  },
 };
+
+// Η διαγραφή στο Google δεν έχει «Προτείνω άλλη ώρα»: ή κρατάμε το Γύρισμα ή το ακυρώνουμε κι εδώ.
+export const answersOf = (kind: RequestKind): readonly Answer[] =>
+  kind === "google" ? ["approve", "reject"] : ANSWERS;
+
+// Γύρισμα που σβήστηκε στο Google και περιμένει απόφαση (το A7 της Παραγωγής).
+export interface DeletionRequest {
+  filmingId: string;
+  title: string | null;
+  startsAt: string;
+  detectedAt: string;
+}
 
 const client = (entry: { client: { name: string } | null }): string =>
   entry.client?.name ?? NO_CLIENT_LABEL;
+
+const fromDeletion = (entry: DeletionRequest): GuideRequest => ({
+  id: entry.filmingId,
+  kind: "google",
+  clientName: entry.title ?? "Γύρισμα",
+  production: "",
+  when: formatDateTime(entry.startsAt),
+  newWhen: null,
+  startsAt: entry.startsAt,
+  hours: 0,
+  since: entry.detectedAt,
+  reason: null,
+  burns: false,
+  kindLabel: "",
+  replaces: false,
+  slotProblem: null,
+});
 
 const fromQueue = (queue: FilmingQueue): GuideRequest[] => [
   ...queue.pending.map((entry) => ({
@@ -134,8 +170,12 @@ const fromQueue = (queue: FilmingQueue): GuideRequest[] => [
 ];
 
 // Ένα αίτημα ανά Γύρισμα (το νεότερο, με «αντικαθιστά το προηγούμενο»), το παλαιότερο πρώτο.
-export const requestsOf = (queue: FilmingQueue): GuideRequest[] => {
-  const groups = Map.groupBy(fromQueue(queue), (request) => request.id);
+export const requestsOf = (
+  queue: FilmingQueue,
+  deletions: readonly DeletionRequest[] = [],
+): GuideRequest[] => {
+  const all = [...fromQueue(queue), ...deletions.map(fromDeletion)];
+  const groups = Map.groupBy(all, (request) => request.id);
   return [...groups.values()]
     .map((group) => {
       const newest = group.reduce((a, b) => (b.since > a.since ? b : a));
@@ -168,7 +208,7 @@ export const lockOf = (
   nowMs: number,
   slotProblem: string | null,
 ): string | null => {
-  if (request.kind === "cancel") return null;
+  if (request.kind === "cancel" || request.kind === "google") return null;
   if (isPastStart(request.startsAt, nowMs))
     return `Η ώρα (${formatDateTime(request.startsAt)}) έχει ήδη περάσει· δεν εγκρίνεται. Πρότεινε άλλη ώρα ή απόρριψε.`;
   const problem = slotProblem ?? request.slotProblem;
@@ -208,7 +248,10 @@ const sentHoursOf = (count: number): string => {
   return count === 1 ? "Στάλθηκε 1 ώρα" : `Στάλθηκαν ${count} ώρες`;
 };
 
-export const sentLineOf = (sent: string | null, client: string | null): string => {
+export const sentLineOf = (
+  sent: string | null,
+  client: string | null,
+): string => {
   const hours = sentHoursOf(Number(sent));
   return client ? `${hours} στον Πελάτη «${client}»` : `${hours} στον Πελάτη`;
 };
@@ -264,7 +307,10 @@ export const freedLineOf = (
 // η παλαιότερη πρώτη — η ίδια μέτρηση με την κάρτα. key = το id του Γυρίσματος (το ?req= του URL).
 export const loopRowsOf = (
   requests: readonly GuideRequest[],
-): { rows: { key: string; href: string; kind: RequestKind }[]; count: number } => ({
+): {
+  rows: { key: string; href: string; kind: RequestKind }[];
+  count: number;
+} => ({
   rows: requests.map((request) => ({
     key: request.id,
     href: queueHref(EGKRINO_STEPS.answer, request.id),

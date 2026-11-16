@@ -1,12 +1,13 @@
 "use server";
 
 import { loadEgkrinoRows, sentLineOf } from "@/modules/filming";
+import { getDeletionRequests } from "@/modules/google";
 
 // Για τον browser (η μηχανή των οδηγών): το module των Γυρισμάτων δεν μπαίνει σε client αρχείο, μόνο μέσα από εδώ.
 
 // Οι γραμμές του «Εγκρίνω αιτήματα γυρίσματος»: μία ανά Γύρισμα, κλειδί = το ?req=.
 export async function loadEgkrinoLoop() {
-  return loadEgkrinoRows();
+  return loadEgkrinoRows(await getDeletionRequests());
 }
 
 // «Στάλθηκαν 3 ώρες στον Πελάτη «Ταβέρνα»» για το {sent} του βήματος.

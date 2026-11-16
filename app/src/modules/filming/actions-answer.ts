@@ -31,7 +31,16 @@ import {
 // Ο οδηγός «Εγκρίνω αιτήματα γυρίσματος»: μία απάντηση ανά αίτημα, ανάλογα με το είδος του.
 // Μετά την επιτυχία η οθόνη πηγαίνει στο επόμενο βήμα του οδηγού (το URL κρατά το βήμα).
 
+// Διαγραφή στο Google: «Κρατώ» = ξαναγράφεται εκεί· «Ακυρώνω κι εδώ» = ακύρωση με λόγο.
+const googleRpc = (id: string, reason: string | null): Promise<RpcOutcome> =>
+  callRpc("google_deletion_resolve", {
+    p_filming: id,
+    p_restore: reason === null,
+    p_reason: reason,
+  });
+
 const approveRpc = (id: string, kind: RequestKind): Promise<RpcOutcome> => {
+  if (kind === "google") return googleRpc(id, null);
   if (kind === "booking") return callRpc("filming_approve", { p_id: id });
   if (kind === "reschedule")
     return callRpc("filming_decide_reschedule", {
@@ -51,6 +60,7 @@ const refuseRpc = (
   kind: RequestKind,
   reason: string,
 ): Promise<RpcOutcome> => {
+  if (kind === "google") return googleRpc(id, reason);
   if (kind === "booking")
     return callRpc("filming_reject", { p_id: id, p_reason: reason });
   if (kind === "reschedule")

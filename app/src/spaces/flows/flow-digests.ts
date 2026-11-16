@@ -2,6 +2,7 @@
 
 import { createSupabase } from "@/lib/supabase/server";
 import { loadEgkrinoRows } from "@/modules/filming";
+import { getDeletionRequests } from "@/modules/google";
 import { readNeedsMe } from "@/modules/messages";
 
 import {
@@ -45,10 +46,12 @@ export async function loadJobDigests(): Promise<JobDigests> {
   const [needs, approvals, egkrino] = await Promise.all([
     readNeedsMe(),
     card("filming_approvals"),
-    loadEgkrinoRows().catch((error: unknown) => {
-      console.error("flows.egkrino:", error);
-      return null;
-    }),
+    getDeletionRequests()
+      .then(loadEgkrinoRows)
+      .catch((error: unknown) => {
+        console.error("flows.egkrino:", error);
+        return null;
+      }),
   ]);
   return {
     at,

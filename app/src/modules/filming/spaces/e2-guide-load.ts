@@ -19,14 +19,21 @@ export type EquipmentTemplatesSource = () => Promise<
 >;
 
 // Νέα κράτηση: ποιοι θα μπουν από τα προεπιλεγμένα Πρότυπα του είδους.
-async function bookingDetails(request: GuideRequest, equipmentTemplates: EquipmentTemplatesSource): Promise<FocusDetails> {
+async function bookingDetails(
+  request: GuideRequest,
+  equipmentTemplates: EquipmentTemplatesSource,
+): Promise<FocusDetails> {
   const [slot, crew, items] = await Promise.all([
     checkSlot(request.startsAt, request.hours, request.id),
     listCrewTemplates(),
     equipmentTemplates(),
   ]);
-  const crewTemplate = crew.ok ? pickTemplate(crew.data, request.kindLabel) : undefined;
-  const itemTemplate = items.ok ? pickTemplate(items.data, request.kindLabel) : undefined;
+  const crewTemplate = crew.ok
+    ? pickTemplate(crew.data, request.kindLabel)
+    : undefined;
+  const itemTemplate = items.ok
+    ? pickTemplate(items.data, request.kindLabel)
+    : undefined;
   return {
     slotProblem: slot.ok ? slot.data.problem : null,
     approveLine: teamLineOf(
@@ -45,7 +52,11 @@ async function teamDetails(request: GuideRequest): Promise<FocusDetails> {
     slotProblem: null,
     approveLine:
       request.kind === "cancel"
-        ? freedLineOf(crew.length, equipment.length, team?.google.state === "synced")
+        ? freedLineOf(
+            crew.length,
+            equipment.length,
+            team?.google.state === "synced",
+          )
         : teamLineOf(
             crew.map((member) => member.name),
             equipment.map((line) => line.name),
@@ -53,8 +64,17 @@ async function teamDetails(request: GuideRequest): Promise<FocusDetails> {
   };
 }
 
-export const loadFocusDetails = (
+const GOOGLE_DETAILS: FocusDetails = {
+  slotProblem: null,
+  approveLine: "Ξαναγράφεται στο Google όπως ήταν, με την ίδια ομάδα.",
+};
+
+export const loadFocusDetails = async (
   request: GuideRequest,
   equipmentTemplates: EquipmentTemplatesSource,
-): Promise<FocusDetails> =>
-  request.kind === "booking" ? bookingDetails(request, equipmentTemplates) : teamDetails(request);
+): Promise<FocusDetails> => {
+  if (request.kind === "google") return GOOGLE_DETAILS;
+  return request.kind === "booking"
+    ? bookingDetails(request, equipmentTemplates)
+    : teamDetails(request);
+};

@@ -14,7 +14,7 @@ import { Panel } from "@/spaces/kit/panel";
 import { answerRequest, answerWithReason } from "../actions-answer";
 import {
   ANSWER_LABELS,
-  ANSWERS,
+  answersOf,
   EGKRINO_JOB,
   EGKRINO_STEPS,
   KIND_TITLES,
@@ -30,9 +30,11 @@ import {
 function RequestFacts({ request }: { request: GuideRequest }) {
   return (
     <dl className="dl">
-      <dt>Πελάτης</dt>
+      <dt>{request.kind === "google" ? "Γύρισμα" : "Πελάτης"}</dt>
       <dd>
-        {request.clientName} · {request.production}
+        {request.production
+          ? `${request.clientName} · ${request.production}`
+          : request.clientName}
       </dd>
       <dt>{request.newWhen ? "Τώρα" : "Πότε"}</dt>
       <dd>{request.when}</dd>
@@ -80,7 +82,7 @@ function AnswerChoices({
   return (
     <fieldset className="stack">
       <legend className="kit-label">Η απάντησή σου</legend>
-      {ANSWERS.map((option) => (
+      {answersOf(request.kind).map((option) => (
         <label key={option} className="stack">
           <span>
             <input
@@ -187,6 +189,7 @@ const REASON_LABELS: Readonly<Record<GuideRequest["kind"], string>> = {
   booking: "Γιατί απορρίπτεις την κράτηση; (τον λόγο τον βλέπει ο Πελάτης)",
   reschedule: "Γιατί απορρίπτεις τη μετάθεση; (τον λόγο τον βλέπει ο Πελάτης)",
   cancel: "Γιατί αρνείσαι την ακύρωση; (τον λόγο τον βλέπει ο Πελάτης)",
+  google: "Γιατί ακυρώνεται και εδώ; (μένει στο ιστορικό του Γυρίσματος)",
 };
 
 // Βήμα 2γ: ο λόγος. Χωρίς λόγο η φόρμα δεν φεύγει (και η βάση ξαναελέγχει).
@@ -221,9 +224,11 @@ export function E2ReasonCard({ request }: { request: GuideRequest }) {
             {state.error}
           </p>
         )}
-        <Link href={filmingGuideHref(request.id, EGKRINO_STEPS.offer)}>
-          Θες να του προτείνεις ώρα αντί γι&apos; αυτό;
-        </Link>
+        {request.kind !== "google" && (
+          <Link href={filmingGuideHref(request.id, EGKRINO_STEPS.offer)}>
+            Θες να του προτείνεις ώρα αντί γι&apos; αυτό;
+          </Link>
+        )}
       </form>
     </Panel>
   );

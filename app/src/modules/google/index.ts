@@ -1,7 +1,13 @@
 // Module «Google Calendar» (C2δ, #138): η κατάσταση του συγχρονισμού, οι Κανόνες και οι Διαγραφές.
 // Έξω φαίνεται μόνο ό,τι εξάγεται εδώ· τα actions μένουν μέσα και τα καλούν τα δικά τους components.
 export { getGoogleView } from "./queries";
-export type { GoogleActivityEntry, GoogleDeletion, GoogleRules, GoogleView } from "./types";
+export { getDeletionRequests } from "./deletion-requests";
+export type {
+  GoogleActivityEntry,
+  GoogleDeletion,
+  GoogleRules,
+  GoogleView,
+} from "./types";
 export { ageLabel, pendingLabel } from "./helpers";
 // Για τη ρύθμιση του Google στις Ενσωματώσεις της νέας εμφάνισης (N5).
 export { createGoogleCalendar, runGoogleSyncNow } from "./actions-setup";

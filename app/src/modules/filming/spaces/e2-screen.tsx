@@ -14,9 +14,24 @@ import {
   pendingOldestFirst,
   rescheduleItemOf,
 } from "./e2-adapter";
-import { E2AnswerCard, E2GuideDone, E2ReasonCard, E2ReasonGone } from "./e2-guide";
-import { loadFocusDetails, type EquipmentTemplatesSource } from "./e2-guide-load";
-import { EGKRINO_STEPS, focusOf, lockOf, queueHref, requestsOf } from "./e2-guide-model";
+import {
+  E2AnswerCard,
+  E2GuideDone,
+  E2ReasonCard,
+  E2ReasonGone,
+} from "./e2-guide";
+import {
+  loadFocusDetails,
+  type EquipmentTemplatesSource,
+} from "./e2-guide-load";
+import {
+  EGKRINO_STEPS,
+  focusOf,
+  lockOf,
+  queueHref,
+  requestsOf,
+  type DeletionRequest,
+} from "./e2-guide-model";
 import { E2Queue } from "./e2-queue";
 
 import "./e.css";
@@ -43,18 +58,24 @@ export interface E2Guide {
 async function GuideCard({
   guide,
   queue,
+  deletions,
   equipmentTemplates,
   nowMs,
 }: {
   guide: E2Guide;
   queue: FilmingQueue;
+  deletions: readonly DeletionRequest[];
   equipmentTemplates: EquipmentTemplatesSource;
   nowMs: number;
 }) {
-  const requests = requestsOf(queue);
+  const requests = requestsOf(queue, deletions);
   if (guide.step === EGKRINO_STEPS.reason) {
     const request = requests.find((item) => item.id === guide.reqId);
-    return request ? <E2ReasonCard request={request} /> : <E2ReasonGone nextHref={queueHref()} />;
+    return request ? (
+      <E2ReasonCard request={request} />
+    ) : (
+      <E2ReasonGone nextHref={queueHref()} />
+    );
   }
   if (guide.step !== EGKRINO_STEPS.answer) return null;
   const focus = focusOf(requests, guide.reqId);
@@ -81,14 +102,19 @@ function QueueList({
   nowMs: number;
 }) {
   const { pending, cancelRequests, rescheduleRequests } = queue;
-  const isEmpty = pending.length + cancelRequests.length + rescheduleRequests.length === 0;
+  const isEmpty =
+    pending.length + cancelRequests.length + rescheduleRequests.length === 0;
   return (
     <>
       {settings && !isEmpty && <NoAnswerNote settings={settings} />}
       <E2Queue
-        pending={pendingOldestFirst(pending).map((entry) => pendingItemOf(entry, nowMs))}
+        pending={pendingOldestFirst(pending).map((entry) =>
+          pendingItemOf(entry, nowMs),
+        )}
         cancels={cancelRequests.map((entry) => cancelItemOf(entry, nowMs))}
-        reschedules={rescheduleRequests.map((entry) => rescheduleItemOf(entry, nowMs))}
+        reschedules={rescheduleRequests.map((entry) =>
+          rescheduleItemOf(entry, nowMs),
+        )}
         empty={
           <StateNotice kind="empty" title="Τίποτα δεν περιμένει απάντηση.">
             Όταν ένας πελάτης κλείσει Γύρισμα ή ζητήσει ακύρωση μετά το Όριο, θα
@@ -104,9 +130,12 @@ function QueueList({
 // και (μόνο στην εφαρμογή) αιτήματα μετάθεσης. Μόνο όποιος «Εγκρίνει Γυρίσματα».
 export async function SpacesFilmingQueue({
   guide = null,
+  deletions = [],
   equipmentTemplates,
 }: {
   guide?: E2Guide | null;
+  // Οι διαγραφές στο Google που περιμένουν απόφαση (μπαίνουν στον οδηγό ως τέταρτο είδος).
+  deletions?: readonly DeletionRequest[];
   equipmentTemplates: EquipmentTemplatesSource;
 }) {
   const caps = filmingCaps(await getViewer());
@@ -118,7 +147,10 @@ export async function SpacesFilmingQueue({
         </StateNotice>
       </div>
     );
-  const [queue, settings] = await Promise.all([getQueue(), getFilmingSettings()]);
+  const [queue, settings] = await Promise.all([
+    getQueue(),
+    getFilmingSettings(),
+  ]);
   if (!queue.ok)
     return (
       <div data-spaces>
@@ -127,13 +159,25 @@ export async function SpacesFilmingQueue({
     );
   const nowMs = new Date().getTime();
   const isEmpty = requestsOf(queue.data).length === 0;
-  const list = <QueueList queue={queue.data} settings={settings.ok ? settings.data : null} nowMs={nowMs} />;
+  const list = (
+    <QueueList
+      queue={queue.data}
+      settings={settings.ok ? settings.data : null}
+      nowMs={nowMs}
+    />
+  );
   // Χωρίς οδηγό η ουρά είναι η σελίδα. Με τον οδηγό, η κάρτα ενός αιτήματος είναι το βασικό· όλη η λίστα μένει
   // στο «Περισσότερα», κλειστή.
   if (!guide) return <div data-spaces>{list}</div>;
   return (
     <div data-spaces>
-      <GuideCard guide={guide} queue={queue.data} equipmentTemplates={equipmentTemplates} nowMs={nowMs} />
+      <GuideCard
+        guide={guide}
+        queue={queue.data}
+        deletions={deletions}
+        equipmentTemplates={equipmentTemplates}
+        nowMs={nowMs}
+      />
       {!isEmpty && (
         <details className="card">
           <summary>Περισσότερα: όλη η λίστα αιτημάτων</summary>
