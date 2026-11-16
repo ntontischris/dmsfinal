@@ -69,6 +69,26 @@
     font-variant-numeric: tabular-nums;
     border: 1px solid var(--color-border-strong);
   }
+  & .e1b-col-note {
+    margin: calc(-1 * var(--space-1)) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  & .e1b-col-foot {
+    display: grid;
+    gap: var(--space-1);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  & .e1b-col-foot a {
+    color: var(--color-accent);
+    font-weight: 600;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
   & .e1b-empty {
     margin: 0;
     color: var(--color-text-muted);

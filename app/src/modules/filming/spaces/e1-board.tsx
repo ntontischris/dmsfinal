@@ -1,3 +1,4 @@
+import { hrefOf } from "@/spaces/data/screens";
 import { FilterBar } from "@/spaces/kit/filter-bar";
 import { ErrorNotice } from "@/spaces/screens/shared";
 
@@ -132,6 +133,7 @@ export async function E1BoardView({
         nowMs={nowMs}
         caps={boardCaps}
         isClient={isClient}
+        closedHref={hrefOf("E1", { view: "list", tab: "closed" })}
       />
     </>
   );

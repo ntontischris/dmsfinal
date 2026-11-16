@@ -37,6 +37,7 @@ interface BoardProps {
   nowMs: number;
   caps: BoardCaps;
   isClient: boolean;
+  closedHref: string;
 }
 
 const titleOf = (filming: E1Filming): string =>
@@ -152,13 +153,29 @@ function Card({ filming, targets, nowMs, isClient, onMove }: CardProps) {
   );
 }
 
+function ClosedFoot({ column, href }: { column: BoardColumn; href: string }) {
+  if (column.id !== "closed" || column.total === 0) return null;
+  return (
+    <footer className="e1b-col-foot">
+      {column.total > column.filmings.length && (
+        <span>
+          Βλέπεις τα {column.filmings.length} πιο πρόσφατα από {column.total}.
+        </span>
+      )}
+      <Link href={href}>Όλα τα κλειστά →</Link>
+    </footer>
+  );
+}
+
 function Column({
   column,
   isTarget,
+  closedHref,
   children,
 }: {
   column: BoardColumn;
   isTarget: boolean | null;
+  closedHref: string;
   children: ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -176,18 +193,28 @@ function Column({
     >
       <header className="e1b-col-head">
         <h2>{column.title}</h2>
-        <span className="e1b-count">{column.filmings.length}</span>
+        <span className="e1b-count">{column.total}</span>
       </header>
+      {column.id === "closed" && (
+        <p className="e1b-col-note">Τον τελευταίο μήνα</p>
+      )}
       {column.filmings.length === 0 ? (
         <p className="e1b-empty">Τίποτα εδώ.</p>
       ) : (
         <ul className="e1b-cards">{children}</ul>
       )}
+      <ClosedFoot column={column} href={closedHref} />
     </section>
   );
 }
 
-export function E1Board({ columns, nowMs, caps, isClient }: BoardProps) {
+export function E1Board({
+  columns,
+  nowMs,
+  caps,
+  isClient,
+  closedHref,
+}: BoardProps) {
   const [dragged, setDragged] = useState<E1Filming | null>(null);
   const [pending, setPending] = useState<PendingMove | null>(null);
   const sensors = useSensors(
@@ -222,6 +249,7 @@ export function E1Board({ columns, nowMs, caps, isClient }: BoardProps) {
             <Column
               key={column.id}
               column={column}
+              closedHref={closedHref}
               isTarget={
                 draggedTargets === null
                   ? null

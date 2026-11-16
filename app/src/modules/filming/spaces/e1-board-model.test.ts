@@ -174,3 +174,21 @@ test("τα φίλτρα: Πελάτης, Ποιος πάει, Περίοδος, 
   ).toEqual(["b", "c"]);
   expect(run({ isCareOnly: true })).toEqual(["c", "late"]);
 });
+
+test("τα Κλειστά δείχνουν τα 5 πιο πρόσφατα και μετρούν όλα του μήνα", () => {
+  const closed = Array.from({ length: 8 }, (_, i) =>
+    past(`d${i + 1}`, "done", i + 1),
+  );
+  const column = boardOf(closed, NOW).find(({ id }) => id === "closed");
+  expect(idsOf(column?.filmings ?? [])).toEqual(["d1", "d2", "d3", "d4", "d5"]);
+  expect(column?.total).toBe(8);
+});
+
+test("οι ανοιχτές στήλες δείχνουν όλες τις κάρτες τους", () => {
+  const open = Array.from({ length: 7 }, (_, i) =>
+    filmingOf({ id: `s${i}`, startsAtMs: NOW + (i + 1) * DAY }),
+  );
+  const column = boardOf(open, NOW).find(({ id }) => id === "scheduled");
+  expect(column?.filmings).toHaveLength(7);
+  expect(column?.total).toBe(7);
+});

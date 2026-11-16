@@ -12,9 +12,11 @@ export interface BoardColumn {
   title: string;
   isAttention: boolean;
   filmings: readonly E1Filming[];
+  // Όλα τα Γυρίσματα της στήλης· στα Κλειστά οι κάρτες είναι μόνο οι πιο πρόσφατες.
+  total: number;
 }
 
-const COLUMNS: readonly Omit<BoardColumn, "filmings">[] = [
+const COLUMNS: readonly Omit<BoardColumn, "filmings" | "total">[] = [
   { id: "pending", title: "Αναμένουν έγκριση", isAttention: false },
   { id: "scheduled", title: "Προγραμματισμένα", isAttention: false },
   { id: "needs_outcome", title: "Θέλουν «έγινε»", isAttention: true },
@@ -25,6 +27,8 @@ export const columnTitle = (id: BoardColumnId): string =>
   COLUMNS.find((column) => column.id === id)?.title ?? id;
 
 const CLOSED_WINDOW_MS = 30 * 24 * 3_600_000;
+// Τα Κλειστά μαζεύονται: ο Πίνακας δείχνει λίγα, τα υπόλοιπα είναι στη Λίστα.
+export const CLOSED_PREVIEW = 5;
 
 export const columnOf = (filming: E1Filming, nowMs: number): BoardColumnId => {
   if (filming.state === "pending") return "pending";
@@ -44,13 +48,17 @@ export const boardOf = (
   filmings: readonly E1Filming[],
   nowMs: number,
 ): readonly BoardColumn[] =>
-  COLUMNS.map((column) => ({
-    ...column,
-    filmings: filmings
+  COLUMNS.map((column) => {
+    const all = filmings
       .filter((f) => columnOf(f, nowMs) === column.id)
       .filter((f) => column.id !== "closed" || isRecent(f, nowMs))
-      .sort(sorterOf(column.id)),
-  }));
+      .sort(sorterOf(column.id));
+    return {
+      ...column,
+      filmings: column.id === "closed" ? all.slice(0, CLOSED_PREVIEW) : all,
+      total: all.length,
+    };
+  });
 
 // ───────────── Μετακινήσεις ─────────────
 
