@@ -1,11 +1,12 @@
 -- Γυρίσματα: ο Πίνακας της E1 (Kanban) δείχνει τον τόπο στην κάρτα και φιλτράρει «Ποιος πάει».
 -- Η γραμμή της λίστας φέρνει πια τον τόπο και τα άτομα του Συνεργείου (μόνο σε όποιον βλέπει Συνεργείο).
--- Τα δικαιώματα της συνάρτησης μένουν ως έχουν (create or replace).
+-- Τα δικαιώματα της συνάρτησης μένουν ως έχουν (create or replace)· plpgsql όπως η 20261106100000_authz_plpgsql.
 
 create or replace function authz.filming_row(p_filming uuid) returns jsonb
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select jsonb_build_object(
+begin
+  return (select jsonb_build_object(
     'id', f.id,
     'startsAt', f.starts_at,
     'hours', f.hours,
@@ -21,5 +22,6 @@ as $$
     'signals', authz.filming_signals(f.id, authz.can_see_crew(f.id))
   )
   from public.filmings f
-  where f.id = p_filming;
+  where f.id = p_filming);
+end;
 $$;
