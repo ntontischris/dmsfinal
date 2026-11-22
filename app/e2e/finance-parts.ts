@@ -30,6 +30,22 @@ export async function openTab(
   );
 }
 
+// Ανοίγει τον Χώρο και μετά μια σπάνια οθόνη από τα «Εργαλεία» του (π.χ. Αναφορές).
+export async function openShelf(
+  page: Page,
+  space: string,
+  screen: string,
+): Promise<void> {
+  await spaceLink(page, space).click();
+  const nav = page.getByRole("navigation", { name: space, exact: true });
+  const shelf = nav.getByRole("button", { name: "Περισσότερες οθόνες", exact: true });
+  await expect(async () => {
+    if ((await shelf.getAttribute("aria-expanded")) !== "true") await shelf.click();
+    await expect(shelf).toHaveAttribute("aria-expanded", "true", { timeout: 1_000 });
+  }).toPass();
+  await nav.getByRole("link", { name: screen, exact: true }).click();
+}
+
 // Μια κάρτα φίλτρου («Κατάσταση», «Περίοδος», «Πελάτης»…) της σειράς φίλτρων.
 export const filterCard = (scope: Page | Locator, label: string): Locator =>
   scope

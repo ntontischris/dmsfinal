@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { filterCard, openTab, pickFilter, startsWith } from "./finance-parts";
+import { filterCard, openShelf, pickFilter, startsWith } from "./finance-parts";
 import { signIn } from "./sales-parts";
 
 // Αναφορές Ρα (#198): ο Ιδιοκτήτης ανοίγει την M1 από τον Χώρο «Χρήματα», βλέπει τις τρεις οικονομικές Αναφορές, αλλάζει
@@ -17,7 +17,7 @@ test("ο Ιδιοκτήτης ανοίγει τις οικονομικές Αν�
 }) => {
   test.setTimeout(90_000);
   await signIn(page, "owner@example.com");
-  await openTab(page, MONEY, "Αναφορές");
+  await openShelf(page, MONEY, "Αναφορές");
   await expect(page).toHaveURL(new RegExp(`${REPORTS_PATH}$`));
   for (const title of [
     "Τζίρος και Εισπράξεις ανά μήνα",

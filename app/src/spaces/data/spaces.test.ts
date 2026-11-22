@@ -135,6 +135,20 @@ describe("spacesModel: Χώροι από τα Δικαιώματα", () => {
   });
 });
 
+describe("Χρήματα: 4 καρτέλες, τα σπάνια στα «Εργαλεία»", () => {
+  it("δείχνει μόνο τις δουλειές της εβδομάδας ως καρτέλες", () => {
+    const money = space(spacesModel(fullTeam), "money");
+    expect(money?.tabs.map((tab) => tab.code)).toEqual(["I1", "I2", "I4", "I6"]);
+  });
+
+  it("η Κερδοφορία, οι Αναφορές, η Εξαγωγή και η Καρτέλα μένουν στα «Εργαλεία»", () => {
+    const money = space(spacesModel(fullTeam), "money");
+    expect(money?.more.map((link) => link.code)).toEqual(
+      expect.arrayContaining(["I7", "M1", "M2", "I5"]),
+    );
+  });
+});
+
 describe("ποιος Χώρος ανάβει", () => {
   const model = spacesModel(fullTeam);
 

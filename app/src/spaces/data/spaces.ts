@@ -84,8 +84,9 @@ export const SPACES: readonly Space[] = [
     label: "Χρήματα",
     icon: "money",
     audience: "team",
-    tabs: ["I2", "I1", "I4", "I6", "I7", "M1", "M2"],
-    members: ["G3", "I3", "I5"],
+    // Οι δουλειές της εβδομάδας ως καρτέλες· τα σπάνια (Κερδοφορία, Αναφορές, Εξαγωγή, Καρτέλα) στα «Εργαλεία».
+    tabs: ["I1", "I2", "I4", "I6"],
+    members: ["I7", "M1", "M2", "I5", "G3", "I3"],
     links: [{ label: "Τιμές", code: "C1" }],
   },
   {
@@ -288,6 +289,9 @@ const visibleCodes = (
   allows: Allows,
 ): readonly string[] => codes.filter((code) => isCodeVisible(code, allows));
 
+// Σελίδες εκτός μενού που ζουν στα «Εργαλεία» ενός Χώρου (η Εξαγωγή δεν έχει άλλο σύνδεσμο).
+const SHELF_PAGES: readonly string[] = ["M2"];
+
 const isPlacedElsewhere = (code: string, tabs: readonly string[]): boolean =>
   (TOOL_CODES as readonly string[]).includes(code) ||
   (PROFILE_CODES as readonly string[]).includes(code) ||
@@ -298,7 +302,9 @@ const viewOf = (space: Space, allows: Allows): Omit<SpaceView, "links"> => {
   const tabs = visibleCodes(space.tabs, allows);
   const members = visibleCodes(space.members, allows);
   const rest = members.filter(
-    (code) => isNavCode(code) && !isPlacedElsewhere(code, tabs),
+    (code) =>
+      (isNavCode(code) || SHELF_PAGES.includes(code)) &&
+      !isPlacedElsewhere(code, tabs),
   );
   const shownTabs = tabs.length > 0 ? tabs : rest;
   const queues = Object.fromEntries(

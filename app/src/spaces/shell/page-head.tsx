@@ -114,7 +114,7 @@ function MoreScreens({
     <ToolMenu
       summary={
         <>
-          Περισσότερα <Icon name="more" size={14} />
+          Εργαλεία <Icon name="more" size={14} />
         </>
       }
       summaryClassName="page-tab-more"
