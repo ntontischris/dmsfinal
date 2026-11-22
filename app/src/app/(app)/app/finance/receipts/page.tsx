@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { RECEIPTS_TITLE, SpacesReceipts } from "@/modules/finance";
+import {
+  RECEIPTS_TITLE,
+  SpacesReceipts,
+  WithMoneyDeck,
+} from "@/modules/finance";
 
 export const metadata = { title: RECEIPTS_TITLE };
 
@@ -13,11 +17,13 @@ interface ReceiptsPageProps {
 export default async function ReceiptsPage({ searchParams }: ReceiptsPageProps) {
   const params = await searchParams;
   return (
-    <SpacesReceipts
-      query={{
-        clientId: z.uuid().safeParse(params.client).data,
-        invoiceId: z.uuid().safeParse(params.invoice).data,
-      }}
-    />
+    <WithMoneyDeck active="I4">
+      <SpacesReceipts
+        query={{
+          clientId: z.uuid().safeParse(params.client).data,
+          invoiceId: z.uuid().safeParse(params.invoice).data,
+        }}
+      />
+    </WithMoneyDeck>
   );
 }

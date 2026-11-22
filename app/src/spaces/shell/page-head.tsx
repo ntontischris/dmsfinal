@@ -48,11 +48,15 @@ export function PageHead({ model }: PageHeadProps) {
         {view.label}
         <span className="page-head-dot">.</span>
       </h1>
-      {(view.tabs.length > 1 ||
+      {((!view.deck && view.tabs.length > 1) ||
         view.links.length > 0 ||
         view.more.length > 0) && (
-        <nav className="page-tabs" aria-label={view.label}>
-          {view.tabs.map((candidate) => (
+        // Σε Χώρο με κάρτες, οι καρτέλες ζουν στις κάρτες της οθόνης· εδώ μένουν οι σύνδεσμοι και τα «Εργαλεία».
+        <nav
+          className="page-tabs"
+          aria-label={view.deck ? `${view.label}: Εργαλεία` : view.label}
+        >
+          {(view.deck ? [] : view.tabs).map((candidate) => (
             <Link
               key={candidate.code}
               href={candidate.href}

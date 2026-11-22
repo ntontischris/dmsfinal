@@ -1,4 +1,5 @@
 import { SpacesExpenses } from "@/modules/costs";
+import { WithMoneyDeck } from "@/modules/finance";
 
 export const metadata = { title: "Έξοδα και Κόστος ώρας" };
 
@@ -10,8 +11,10 @@ export default async function ExpensesPage({
 }) {
   const query = await searchParams;
   return (
-    <SpacesExpenses
-      month={typeof query.month === "string" ? query.month : undefined}
-    />
+    <WithMoneyDeck active="I6">
+      <SpacesExpenses
+        month={typeof query.month === "string" ? query.month : undefined}
+      />
+    </WithMoneyDeck>
   );
 }

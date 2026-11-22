@@ -49,6 +49,8 @@ export interface Space {
   members: readonly string[];
   // Σύνδεσμοι δίπλα στις καρτέλες προς οθόνη άλλου Χώρου (όχι αντίγραφό της), π.χ. «Τιμές» → Κατάλογος.
   links?: readonly { label: string; code: string }[];
+  // Οι καρτέλες ως μεγάλες κάρτες με αριθμούς (η οθόνη τις ζωγραφίζει), όχι ως γραμμή στην κεφαλίδα.
+  deck?: boolean;
 }
 
 // Ίδιοι Χώροι με το prototype. Οι κωδικοί χωρίς σελίδα στην εφαρμογή (π.χ. Q1) απλώς δεν φαίνονται.
@@ -88,6 +90,7 @@ export const SPACES: readonly Space[] = [
     tabs: ["I1", "I2", "I4", "I6"],
     members: ["I7", "M1", "M2", "I5", "G3", "I3"],
     links: [{ label: "Τιμές", code: "C1" }],
+    deck: true,
   },
   {
     id: "talk",
@@ -270,6 +273,7 @@ export interface SpaceView {
   links: readonly (ScreenLink & { space: string })[];
   // Όλοι οι ορατοί κωδικοί του Χώρου (καρτέλες, μέλη, λεπτομέρειες): ποιος Χώρος ανάβει.
   codes: readonly string[];
+  deck?: boolean;
 }
 
 export interface SpacesModel {
@@ -324,6 +328,7 @@ const viewOf = (space: Space, allows: Allows): Omit<SpaceView, "links"> => {
     queues,
     more: tabs.length > 0 ? rest.map((code) => linkOf(code, allows)) : [],
     codes: [...tabs, ...members],
+    ...(space.deck ? { deck: true } : {}),
   };
 };
 

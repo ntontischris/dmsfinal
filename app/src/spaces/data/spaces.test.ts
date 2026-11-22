@@ -136,6 +136,12 @@ describe("spacesModel: Χώροι από τα Δικαιώματα", () => {
 });
 
 describe("Χρήματα: 4 καρτέλες, τα σπάνια στα «Εργαλεία»", () => {
+  it("οι καρτέλες είναι κάρτες της οθόνης· οι άλλοι Χώροι κρατούν τη γραμμή καρτελών", () => {
+    const model = spacesModel(fullTeam);
+    expect(space(model, "money")?.deck).toBe(true);
+    expect(space(model, "clients")?.deck).toBeUndefined();
+  });
+
   it("δείχνει μόνο τις δουλειές της εβδομάδας ως καρτέλες", () => {
     const money = space(spacesModel(fullTeam), "money");
     expect(money?.tabs.map((tab) => tab.code)).toEqual(["I1", "I2", "I4", "I6"]);
