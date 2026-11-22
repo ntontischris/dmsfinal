@@ -1,11 +1,27 @@
 import Link from "next/link";
 
-import { Entity } from "@/spaces/kit/parts";
 import { hrefOf } from "@/spaces/data/screens";
 import { Badge, fmtDate, fmtMoney } from "@/spaces/screens/shared";
 
 import { daysText, reasonText, sortItemsByDate } from "../billables-helpers";
 import type { BillableClient, BillableItem } from "../billables-view-schema";
+
+const URGENT_DAYS = 30;
+
+const initialsOf = (name: string): string =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+
+const countText = (n: number): string =>
+  `${n} ${n === 1 ? "Τιμολογητέο" : "Τιμολογητέα"}`;
+
+const agreementsOf = (items: readonly BillableItem[]): readonly string[] => [
+  ...new Set(items.map((row) => row.agreementTitle).filter(Boolean)),
+];
 
 function BillableRow({ row }: { row: BillableItem }) {
   return (
@@ -27,18 +43,6 @@ function BillableRow({ row }: { row: BillableItem }) {
       <td data-label="Μέρες ανοιχτό" className="num">
         {row.daysOpen}
       </td>
-      <td data-label="Υπενθύμιση">
-        <span className="i13-signals">
-          {/* d1: μόνο ό,τι στάλθηκε πραγματικά· αλλιώς πόσο περιμένει. */}
-          {row.lastReminderAt ? (
-            <Badge tone="attention">
-              {`υπενθύμιση στάλθηκε ${fmtDate(row.lastReminderAt)}`}
-            </Badge>
-          ) : (
-            `περιμένει ${daysText(row.daysOpen)}`
-          )}
-        </span>
-      </td>
     </tr>
   );
 }
@@ -53,7 +57,6 @@ function BillableTable({ items }: { items: readonly BillableItem[] }) {
           <th>Λόγος</th>
           <th className="num">Ποσό (καθαρό)</th>
           <th className="num">Μέρες ανοιχτό</th>
-          <th>Υπενθύμιση</th>
         </tr>
       </thead>
       <tbody>
@@ -65,51 +68,132 @@ function BillableTable({ items }: { items: readonly BillableItem[] }) {
   );
 }
 
+// d1: μόνο ό,τι στάλθηκε πραγματικά· αλλιώς πόσο περιμένει.
+function RemindersBox({ items }: { items: readonly BillableItem[] }) {
+  const sent = items.filter((row) => row.lastReminderAt);
+  return (
+    <details className="ml-box">
+      <summary>
+        <strong>Υπενθυμίσεις</strong>
+        <small>
+          {sent.length > 0
+            ? `${sent.length} στάλθηκαν`
+            : "καμία ακόμη · στέλνονται μόνες τους"}
+        </small>
+      </summary>
+      <ul>
+        {sortItemsByDate(items).map((row) => (
+          <li key={row.id}>
+            {row.label || reasonText(row.reason)} ·{" "}
+            {row.lastReminderAt ? (
+              <Badge tone="attention">
+                {`υπενθύμιση στάλθηκε ${fmtDate(row.lastReminderAt)}`}
+              </Badge>
+            ) : (
+              `περιμένει ${daysText(row.daysOpen)}`
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 interface GroupProps {
   group: BillableClient;
   canRegister: boolean;
 }
 
-// Η ομάδα ενός Πελάτη του prototype (`screens/i1-group.tsx`) από το billables_view.
-export function ClientGroup({ group, canRegister }: GroupProps) {
-  const { items, open, oldestDays, beyond } = group;
+function ClientPage({ group, canRegister }: GroupProps) {
+  const { items, open, beyond } = group;
+  const agreements = agreementsOf(items);
   return (
-    <details className="kit-panel i13-group">
-      <summary>
-        <span className="i13-sum">
-          <Entity
-            name={group.clientName}
-            sub={
-              <>
-                {items.length} {items.length === 1 ? "Τιμολογητέο" : "Τιμολογητέα"}{" "}
-                · παλαιότερο {oldestDays} {oldestDays === 1 ? "μέρα" : "μέρες"}
-              </>
-            }
-          />
-          <span className="i13-total">
-            <strong>{fmtMoney(open)}</strong> προς τιμολόγηση
-          </span>
+    <div className="ml-page">
+      <header className="ml-hero">
+        <span className="ml-hero-mono" aria-hidden>
+          {initialsOf(group.clientName)}
+        </span>
+        <div>
+          <h3>{group.clientName}</h3>
+          <p>
+            {fmtMoney(open)} προς τιμολόγηση · {countText(items.length)}
+          </p>
           {beyond > 0 && (
             <Badge tone="attention">
               τιμολογήθηκε πέρα από τα Τιμολογητέα κατά {fmtMoney(beyond)}
             </Badge>
           )}
-        </span>
-      </summary>
-      <div className="i13-body">
-        {items.length > 0 && <BillableTable items={items} />}
+        </div>
         {canRegister && (
-          <p>
-            <Link
-              className="button"
-              data-primary="true"
-              href={hrefOf("I3", { client: group.clientId })}
-            >
+          <span className="ml-quick">
+            <Link data-primary href={hrefOf("I3", { client: group.clientId })}>
               Καταχώρηση Τιμολογίου
             </Link>
-          </p>
+          </span>
         )}
-      </div>
-    </details>
+      </header>
+      <details className="ml-box">
+        <summary>
+          <strong>Τιμολογητέα</strong>
+          <small>
+            {countText(items.length)} · {fmtMoney(open)}
+          </small>
+        </summary>
+        <BillableTable items={items} />
+      </details>
+      <details className="ml-box">
+        <summary>
+          <strong>Συμφωνίες</strong>
+          <small>από πού έρχονται τα ποσά</small>
+        </summary>
+        <ul>
+          {agreements.length > 0 ? (
+            agreements.map((title) => <li key={title}>{title}</li>)
+          ) : (
+            <li>—</li>
+          )}
+        </ul>
+      </details>
+      <RemindersBox items={items} />
+    </div>
+  );
+}
+
+// Ένας Πελάτης ως γραμμή του prototype (`dms/xrimata`): πλακίδιο, ετικέτα ηλικίας, όνομα, ποσό, «Τιμολόγησε».
+// Ανοίγει τη σελίδα του μέσα στη λίστα (κλειστή εξ αρχής), με τα πραγματικά Τιμολογητέα του billables_view.
+export function ClientGroup({ group, canRegister }: GroupProps) {
+  const { items, open, oldestDays } = group;
+  const isUrgent =
+    oldestDays >= URGENT_DAYS || items.some((row) => row.lastReminderAt);
+  const agreements = agreementsOf(items);
+  return (
+    <li>
+      <details className="ml-item" data-urgent={isUrgent ? "" : undefined}>
+        <summary className="ml-line">
+          <span className="ml-thumb" aria-hidden>
+            {initialsOf(group.clientName)}
+          </span>
+          <span className="ml-main">
+            <span className="ml-tag">
+              {oldestDays === 0 ? "σήμερα" : daysText(oldestDays)}
+            </span>
+            <strong>{group.clientName}</strong>
+            <small>
+              {countText(items.length)}
+              {agreements[0] ? ` · από ${agreements[0]}` : ""}
+            </small>
+          </span>
+          <span className="ml-amount">{fmtMoney(open)}</span>
+          {canRegister && (
+            <span className="ml-quick">
+              <Link href={hrefOf("I3", { client: group.clientId })}>
+                Τιμολόγησε
+              </Link>
+            </span>
+          )}
+        </summary>
+        <ClientPage group={group} canRegister={canRegister} />
+      </details>
+    </li>
   );
 }

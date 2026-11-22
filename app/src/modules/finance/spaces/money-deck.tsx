@@ -11,6 +11,7 @@ import { financeCaps } from "../caps";
 import { getInvoices } from "../invoices-queries";
 
 import "./money-deck.css";
+import "./money-lines.css";
 
 type Tone = "peri" | "yellow" | "text";
 
@@ -105,16 +106,57 @@ export async function MoneyDeck({ active }: MoneyDeckProps) {
   );
   if (!view) return null;
   const numbers = await loadNumbers(financeCaps(viewer).canView);
+  const receipts = view.tabs.find((tab) => tab.code === "I4");
   return (
-    <nav className="money-deck" aria-label={view.label}>
-      {view.tabs.map((tab, index) => (
-        <ReelLink
-          key={tab.code}
-          tab={tab}
-          index={index}
-          reel={reelOf(tab.code, numbers)}
-          isActive={tab.code === active}
-        />
+    <>
+      <div className="ml-head">
+        <p>Διάλεξε κάρτα. Ό,τι καίει, βγαίνει πρώτο μέσα της.</p>
+        {receipts && (
+          <Link className="ml-cta" href={receipts.href}>
+            + Νέα είσπραξη
+          </Link>
+        )}
+      </div>
+      <nav className="money-deck" aria-label={view.label}>
+        {view.tabs.map((tab, index) => (
+          <ReelLink
+            key={tab.code}
+            tab={tab}
+            index={index}
+            reel={reelOf(tab.code, numbers)}
+            isActive={tab.code === active}
+          />
+        ))}
+      </nav>
+      <Shelf links={view.more} />
+    </>
+  );
+}
+
+// Το ράφι «Ο μήνας» του prototype: τα εργαλεία του μήνα (ήδη στα «Εργαλεία»), εδώ ορατά κάτω από τις κάρτες.
+const SHELF: readonly { code: string; mark: string; label: string; sub: string }[] = [
+  { code: "M1", mark: "≡", label: "Ο μήνας με μια ματιά", sub: "τζίρος, εισπράξεις, έξοδα" },
+  { code: "I7", mark: "%", label: "Κέρδος ανά Παραγωγή", sub: "τι έμεινε από κάθε δουλειά" },
+  { code: "M2", mark: "↧", label: "Πακέτο λογιστή", sub: "εξαγωγή για τον λογιστή" },
+  { code: "I5", mark: "☰", label: "Καρτέλα Πελάτη", sub: "κινήσεις και υπόλοιπο" },
+];
+
+function Shelf({ links }: { links: readonly ScreenLink[] }) {
+  const entries = SHELF.flatMap((entry) => {
+    const link = links.find((candidate) => candidate.code === entry.code);
+    return link ? [{ ...entry, href: link.href }] : [];
+  });
+  if (entries.length === 0) return null;
+  return (
+    <nav className="ml-shelf" aria-label="Ο μήνας">
+      {entries.map((entry) => (
+        <Link key={entry.code} href={entry.href}>
+          <span className="ml-mark" aria-hidden>
+            {entry.mark}
+          </span>
+          <strong>{entry.label}</strong>
+          <small>{entry.sub}</small>
+        </Link>
       ))}
     </nav>
   );

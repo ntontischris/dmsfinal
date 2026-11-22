@@ -86,7 +86,7 @@ test("ο Ιδιοκτήτης βάζει ποσοστό, εισπράττει α
   // Από τη γραμμή του Τιμολογίου: Πελάτης και Τιμολόγιο έρχονται έτοιμα.
   await page.goto(UNPAID_PATH);
   const row = page.locator("tr", { hasText: NUMBER });
-  await row.getByRole("link", { name: "Είσπραξη", exact: true }).click();
+  await row.getByRole("link", { name: "Ήρθε πληρωμή", exact: true }).click();
   await expect(page).toHaveURL(/\/app\/finance\/receipts\?/);
   const form = card(page, RECEIPT_CARD);
   await expect(
