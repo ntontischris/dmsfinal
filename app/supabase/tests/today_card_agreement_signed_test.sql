@@ -138,7 +138,9 @@ select set_config('today.rows', '', true);
 
 -- ───────────── Εξαιρέσεις: παράθυρο, μελλοντικές, δική μου καταχώριση ─────────────
 select ok(not (public.t_id('e1')::text = any(public.t_ids('a1'))), 'Ο Ιδιοκτήτης δεν βλέπει την υπογραφή που κατέγραψε ο ίδιος');
+set session_replication_role = replica;
 update public.agreement_signatures set recorded_at = timestamptz '2026-03-08 10:00+00' where agreement_id = public.t_id('e2');
+reset session_replication_role;
 select ok(not (public.t_id('e2')::text = any(public.t_ids('a1'))), 'Υπογραφή ακριβώς στο previous_seen_at δεν μπαίνει (αυστηρό όριο)');
 select ok(not (public.t_id('e7')::text = any(public.t_ids('a1'))), 'Δεύτερη υπογραφή πριν από το previous_seen_at δεν μπαίνει');
 select ok(public.t_id('e8')::text = any(public.t_ids('a1')), 'Υπογραφή μετά το previous_seen_at μπαίνει');
@@ -151,14 +153,18 @@ select is(public.t_ids('a3'), array[public.t_id('e1')::text, public.t_id('e8')::
   'Η Πωλήσεις βλέπει μόνο τις δικές της, νεότερες πρώτα');
 select ok(not (public.t_id('e5')::text = any(public.t_ids('a3'))), 'Η Πωλήσεις δεν βλέπει τη δική της καταχώριση (recorded_by = p_uid)');
 select ok(not (public.t_id('e7')::text = any(public.t_ids('a3'))), 'Χωρίς γραμμή στο today_seen: υπογραφή πάνω από 3 μέρες δεν μπαίνει');
+set session_replication_role = replica;
 update public.agreement_signatures set recorded_at = timestamptz '2026-03-07 10:00+00' where agreement_id = public.t_id('e7');
+reset session_replication_role;
 select ok(not (public.t_id('e7')::text = any(public.t_ids('a3'))), 'Υπογραφή ακριβώς στις 3 μέρες δεν μπαίνει (αυστηρό όριο)');
 
 -- ───────────── Παράθυρο: seen_at πάνω από 30 λεπτά πριν (όχι previous_seen_at) ─────────────
 -- seen_at 08:00 (2 ώρες πριν το p_now): το «από» είναι το seen_at. Η g4 (μελλοντική) γίνεται υπογραφή 08:30 του Χρήστη a2.
 update public.today_seen set seen_at = timestamptz '2026-03-10 08:00+00' where user_id = public.t_id('a1');
+set session_replication_role = replica;
 update public.agreement_signatures set recorded_at = timestamptz '2026-03-10 08:30+00', recorded_by = public.t_id('a2')
  where agreement_id = public.t_id('e4');
+reset session_replication_role;
 select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00'), 1,
   'Μετά από 30 λεπτά μετράει από το seen_at: μόνο η υπογραφή μετά από αυτό');
 select ok(public.t_id('e4')::text = any(public.t_ids('a1')), 'Η υπογραφή μετά το seen_at μπαίνει');
@@ -166,7 +172,9 @@ select ok(not (public.t_id('e3')::text = any(public.t_ids('a1'))),
   'Υπογραφή ανάμεσα στο previous_seen_at και στο seen_at δεν μπαίνει');
 select ok(not (public.t_id('e8')::text = any(public.t_ids('a1'))),
   'Δεύτερη υπογραφή ανάμεσα στο previous_seen_at και στο seen_at δεν μπαίνει');
+set session_replication_role = replica;
 update public.agreement_signatures set recorded_at = timestamptz '2026-03-10 08:00+00' where agreement_id = public.t_id('e4');
+reset session_replication_role;
 select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00'), 0,
   'Υπογραφή ακριβώς στο seen_at δεν μπαίνει (αυστηρό όριο)');
 
