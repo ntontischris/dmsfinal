@@ -26,8 +26,9 @@ begin
             or (v_scope = 'mine'
                 and (p.owner_id = p_uid
                      or exists (select 1 from public.production_members m where m.production_id = p.id and m.user_id = p_uid)
-                     or exists (select 1 from public.filming_crew x where x.filming_id = f.id and x.user_id = p_uid)
-                     or c.manager_id = p_uid)))
+                     -- Ό,τι βλέπει το Συνεργείο (authz.can_see_crew), χωρίς την άρνηση του ίδιου του Χρήστη.
+                     or exists (select 1 from public.filming_crew x
+                                 where x.filming_id = f.id and x.user_id = p_uid and x.response <> 'declined'))))
      group by f.id, f.starts_at, p.title, c.name, f.location
      order by f.starts_at, f.id;
 end;
