@@ -5,10 +5,10 @@ select plan(41);
 
 -- ───────────── Μητρώο ─────────────
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.sort between 100 and 199),
-  array['proposal_approvals', 'filming_approvals', 'google_deletions', 'unassigned', 'gdpr'],
-  'Οι τέσσερις κάρτες στη ζώνη της ομάδας decide, και η «GDPR με προθεσμία» (#208) στο τέλος');
+  array['proposal_approvals', 'filming_approvals', 'crew_declined', 'crew_silent', 'version_late', 'google_deletions', 'unassigned', 'gdpr'],
+  'Οι επτά κάρτες στη ζώνη της ομάδας decide, και η «GDPR με προθεσμία» (#208) στο τέλος');
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.needs_second_person),
-  array['proposal_approvals', 'unassigned'], 'Κανόνας 8: Προτάσεις προς έγκριση και Χωρίς υπεύθυνο θέλουν δεύτερο άνθρωπο');
+  array['proposal_approvals', 'crew_declined', 'crew_silent', 'version_late', 'unassigned'], 'Κανόνας 8: Προτάσεις προς έγκριση, οι τρεις κάρτες Συνεργείου/Παραδοτέων και Χωρίς υπεύθυνο θέλουν δεύτερο άνθρωπο');
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 όλες οι αποφάσεις χωρίς ποσά · a3 Πωλήσεις · a4 ομάδα χωρίς Ρόλο · a5 μόνο calendar.google ·
@@ -210,14 +210,14 @@ select is((select count(*)::integer
 -- ───────────── Γυρίσματα προς έγκριση ─────────────
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'id'),
   array['booking:00000000-0000-0000-0000-000000000201', 'reschedule:00000000-0000-0000-0000-000000000206',
-        'cancel:00000000-0000-0000-0000-000000000203'],
+        'cancel:00000000-0000-0000-0000-000000000203', 'booking:00000000-0000-0000-0000-000000000202'],
   'Κρατήσεις, μεταθέσεις και ακυρώσεις, τα πιο κοντινά πρώτα· όχι το προγραμματισμένο ούτε η Εσωτερική');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'urgent'),
-  array['true', 'true', 'false'], 'Επείγον σε έως 24 ώρες: η κράτηση απόψε και η νέα ώρα της μετάθεσης');
+  array['true', 'true', 'false', 'false'], 'Επείγον σε έως 24 ώρες: η κράτηση απόψε και η νέα ώρα της μετάθεσης');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'title'),
-  array['Πελάτης Ένα: κράτηση', 'Πελάτης Ένα: ζητά μετάθεση', 'Πελάτης Ένα: ζητά ακύρωση'], 'Τι ζητά ο κάθε Πελάτης');
+  array['Πελάτης Ένα: κράτηση', 'Πελάτης Ένα: ζητά μετάθεση', 'Πελάτης Ένα: ζητά ακύρωση', 'Πελάτης Ένα: κράτηση'], 'Τι ζητά ο κάθε Πελάτης');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-04 21:00+00'), 'urgent'),
-  array['true', 'true', 'true'], 'Περασμένο Γύρισμα: και πάλι επείγον');
+  array['true', 'true', 'true', 'false'], 'Περασμένο Γύρισμα: και πάλι επείγον· η κράτηση της 10/3 όχι');
 
 -- ───────────── Διαγραφές από το Google ─────────────
 select is(public.t_field(authz.today_items_google_deletions(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'id'),
@@ -278,7 +278,7 @@ select is((select array_agg(c ->> 'code' order by n)
              from jsonb_array_elements(public.today_counts(timestamptz '2026-03-03 10:00+00') -> 'cards') with ordinality x (c, n)
             where c ->> 'grp' = 'decide'),
   array['filming_approvals', 'google_deletions', 'gdpr'],
-  'Με έναν Χρήστη ομάδας: χωρίς Προτάσεις προς έγκριση και Χωρίς υπεύθυνο· η «GDPR με προθεσμία» μένει, με 0');
+  'Με έναν Χρήστη ομάδας: χωρίς Προτάσεις προς έγκριση, Χωρίς υπεύθυνο και τις δύο κάρτες Συνεργείου· η «GDPR με προθεσμία» μένει, με 0');
 select throws_ok($$ select public.today_card('unassigned') $$, '42501', null, 'Με έναν Χρήστη ομάδας: Χωρίς υπεύθυνο 42501');
 
 select * from finish();

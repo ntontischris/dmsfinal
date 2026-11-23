@@ -36,7 +36,7 @@ export function ExportRow(props: {
     return { notice: DONE[format] };
   };
   return (
-    <div className={props.family === "finance" ? "m1f-export" : "m1s-export"}>
+    <div className="m1-export">
       <FileButton label="Εξαγωγή σε Excel" task={taskOf("xlsx")} />
       <FileButton label="Εξαγωγή σε CSV" task={taskOf("csv")} />
       <span className="muted">

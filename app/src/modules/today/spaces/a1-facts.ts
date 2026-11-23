@@ -27,7 +27,9 @@ const athensDateOf = (iso: string): string | null => {
 
 // Οι μέρες ανάμεσα σε δύο ημερομηνίες «ΕΕΕΕ-ΜΜ-ΗΗ».
 const daysBetween = (from: string, to: string): number =>
-  Math.round((Date.parse(`${to}T12:00Z`) - Date.parse(`${from}T12:00Z`)) / DAY_MS);
+  Math.round(
+    (Date.parse(`${to}T12:00Z`) - Date.parse(`${from}T12:00Z`)) / DAY_MS,
+  );
 
 export const waitingOf = (
   since: string | undefined,
@@ -57,7 +59,13 @@ const sentenceOf = (text: string): string => {
 
 type FactRow = Pick<
   CardRow,
-  "id" | "amountCents" | "at" | "note" | "waitingSince" | "isSlotFree" | "suggestion"
+  | "id"
+  | "amountCents"
+  | "at"
+  | "note"
+  | "waitingSince"
+  | "isSlotFree"
+  | "suggestion"
 > & { cardId: string };
 
 const leadOf = (row: FactRow): string | null => {
@@ -93,3 +101,17 @@ export const decisionFactOf = (row: FactRow, today: string): string =>
   ]
     .filter(Boolean)
     .join(" ");
+
+// Η δεύτερη γραμμή μιας κάρτας: στις αποφάσεις η ουσία της («Περιμένει 3 ημέρες»), αλλιώς τα μέτρα της γραμμής.
+export const lineSubOf = ({
+  row,
+  cardId,
+  isDecision,
+  today,
+}: {
+  row: CardRow;
+  cardId: string;
+  isDecision: boolean;
+  today: string;
+}): string | undefined =>
+  isDecision ? decisionFactOf({ ...row, cardId }, today) || row.meta : row.meta;

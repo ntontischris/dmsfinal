@@ -3,15 +3,15 @@
 import { useState } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 
 import { createItem } from "../actions-items";
 import { NEW_ITEM_TYPE_LABELS } from "../labels";
 import type { NewItemType, ProvisionKind } from "../types";
 
 import { provisionsIntro } from "./c2-adapter";
+import { C2Step } from "./c2-box";
 import { C2Form, C2Submit, Field } from "./c2-form";
-import { ProvisionsEditorPanel, ProvisionsNote } from "./c2-provisions";
+import { ProvisionsEditor, ProvisionsNote } from "./c2-provisions";
 
 interface C2NewProps {
   kinds: readonly ProvisionKind[];
@@ -43,7 +43,7 @@ const asItem = (type: NewItemType) => ({
   billing: type === "package_monthly" ? ("monthly" as const) : null,
 });
 
-function BasicsPanel({
+function BasicsFields({
   type,
   onType,
 }: {
@@ -51,75 +51,73 @@ function BasicsPanel({
   onType: (type: NewItemType) => void;
 }) {
   return (
-    <Panel label="Βασικά">
-      <dl className="dl">
+    <dl className="dl">
+      <Field
+        id="c2-name"
+        label="Όνομα"
+        editable
+        value={null}
+        input={<input id="c2-name" name="name" className="input" required />}
+      />
+      <Field
+        id="c2-kind"
+        label="Είδος"
+        editable
+        value={null}
+        hint="Το είδος δεν αλλάζει αφού γραφτεί."
+        input={
+          <select
+            id="c2-kind"
+            name="type"
+            className="select"
+            value={type}
+            onChange={(event) => onType(parseType(event.target.value, type))}
+          >
+            {TYPES.map((option) => (
+              <option key={option} value={option}>
+                {NEW_ITEM_TYPE_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        }
+      />
+      {type === "service" && (
         <Field
-          id="c2-name"
-          label="Όνομα"
+          id="c2-unit"
+          label="Μονάδα"
           editable
           value={null}
-          input={<input id="c2-name" name="name" className="input" required />}
-        />
-        <Field
-          id="c2-kind"
-          label="Είδος"
-          editable
-          value={null}
-          hint="Το είδος δεν αλλάζει αφού γραφτεί."
           input={
-            <select
-              id="c2-kind"
-              name="type"
-              className="select"
-              value={type}
-              onChange={(event) => onType(parseType(event.target.value, type))}
-            >
-              {TYPES.map((option) => (
-                <option key={option} value={option}>
-                  {NEW_ITEM_TYPE_LABELS[option]}
-                </option>
-              ))}
-            </select>
-          }
-        />
-        {type === "service" && (
-          <Field
-            id="c2-unit"
-            label="Μονάδα"
-            editable
-            value={null}
-            input={
-              <input
-                id="c2-unit"
-                name="unit"
-                className="input"
-                placeholder="π.χ. ανά reel"
-                required
-              />
-            }
-          />
-        )}
-        <Field
-          id="c2-description"
-          label="Περιγραφή"
-          editable
-          value={null}
-          hint="Εσωτερική. Ό,τι βλέπει ο πελάτης γράφεται στην ενότητα «Δημόσιο»."
-          input={
-            <textarea
-              id="c2-description"
-              name="description"
+            <input
+              id="c2-unit"
+              name="unit"
               className="input"
-              rows={2}
+              placeholder="π.χ. ανά reel"
+              required
             />
           }
         />
-      </dl>
-    </Panel>
+      )}
+      <Field
+        id="c2-description"
+        label="Περιγραφή"
+        editable
+        value={null}
+        hint="Εσωτερική. Ό,τι βλέπει ο πελάτης γράφεται στην ενότητα «Δημόσιο»."
+        input={
+          <textarea
+            id="c2-description"
+            name="description"
+            className="input"
+            rows={2}
+          />
+        }
+      />
+    </dl>
   );
 }
 
-function PricePanel({
+function PriceFields({
   type,
   canEditPrice,
 }: {
@@ -127,7 +125,7 @@ function PricePanel({
   canEditPrice: boolean;
 }) {
   return (
-    <Panel label="Τιμή">
+    <>
       {canEditPrice ? (
         <dl className="dl">
           <Field
@@ -158,12 +156,31 @@ function PricePanel({
         Η τιμή είναι η αρχή για κάθε πρόταση. Στη Συμφωνία αλλάζει ελεύθερα·
         τιμή κάτω από αυτήν είναι Παρέκκλιση.
       </p>
-    </Panel>
+    </>
   );
 }
 
-// Νέο Πακέτο ή Υπηρεσία (prototype C2 με άδεια πεδία): μία φόρμα, η πραγματική ενέργεια createItem.
-// Ώρες, κόστος και «Δημόσιο» ορίζονται στη σελίδα του στοιχείου, μετά τη δημιουργία.
+// Πάνω στη σελίδα: ο τίτλος ακολουθεί το Είδος που διαλέγεις στο βήμα 1.
+function NewHero({ type }: { type: NewItemType }) {
+  const isService = type === "service";
+  return (
+    <header className="ml-hero c2-hero">
+      <span className="ml-hero-mono" aria-hidden="true">
+        {isService ? "ΝΥ" : "ΝΠ"}
+      </span>
+      <div>
+        <span className="ml-tag">{NEW_ITEM_TYPE_LABELS[type]}</span>
+        <h1>{isService ? "Νέα Υπηρεσία" : "Νέο Πακέτο"}</h1>
+        <p className="c2-lead">
+          Όνομα, τιμή και Παροχές· τα υπόλοιπα στη σελίδα του στοιχείου.
+        </p>
+      </div>
+    </header>
+  );
+}
+
+// Νέο Πακέτο ή Υπηρεσία: hero και βήματα Βασικά → Τιμή → Παροχές → Δημιουργία, όπως η Καταχώρηση Τιμολογίου.
+// Μία φόρμα, η πραγματική ενέργεια createItem. Ώρες, κόστος και «Δημόσιο» ορίζονται μετά, στη σελίδα του στοιχείου.
 export function C2New({
   kinds,
   canEditPrice,
@@ -172,25 +189,38 @@ export function C2New({
 }: C2NewProps) {
   const [type, setType] = useState<NewItemType>(initialType);
   return (
-    <C2Form action={createItem}>
-      <div className="grid2">
-        <BasicsPanel type={type} onType={setType} />
-        <PricePanel type={type} canEditPrice={canEditPrice} />
-      </div>
-      <ProvisionsEditorPanel
-        kinds={kinds}
-        initial={[]}
-        isPerPeriod={type === "package_monthly"}
-        intro={provisionsIntro(asItem(type))}
-      >
-        <ProvisionsNote canManageSettings={canManageSettings} />
-      </ProvisionsEditorPanel>
-      <C2Submit
-        label="Δημιουργία"
-        pendingLabel="Δημιουργία…"
-        cancelHref={hrefOf("C1")}
-        aside="Μετά τη δημιουργία ορίζεις ώρες, κόστος και «Δημόσιο» στη σελίδα του στοιχείου."
-      />
-    </C2Form>
+    <div className="ml-stack">
+      <NewHero type={type} />
+      <C2Form action={createItem}>
+        <div className="ml-stack">
+          <C2Step no={1} title="Βασικά" hint="Όνομα, Είδος, Περιγραφή">
+            <BasicsFields type={type} onType={setType} />
+          </C2Step>
+          <C2Step no={2} title="Τιμή" hint={PRICE_SUFFIX[type]}>
+            <PriceFields type={type} canEditPrice={canEditPrice} />
+          </C2Step>
+          <C2Step no={3} title="Παροχές" hint="Τι περιλαμβάνει">
+            <ProvisionsEditor
+              kinds={kinds}
+              initial={[]}
+              isPerPeriod={type === "package_monthly"}
+              intro={provisionsIntro(asItem(type))}
+            >
+              <ProvisionsNote canManageSettings={canManageSettings} />
+            </ProvisionsEditor>
+          </C2Step>
+          <C2Step no={4} title="Δημιουργία">
+            <div className="c2-go">
+              <C2Submit
+                label="Δημιουργία"
+                pendingLabel="Δημιουργία…"
+                cancelHref={hrefOf("C1")}
+                aside="Μετά τη δημιουργία ορίζεις ώρες, κόστος και «Δημόσιο» στη σελίδα του στοιχείου."
+              />
+            </div>
+          </C2Step>
+        </div>
+      </C2Form>
+    </div>
   );
 }

@@ -13,6 +13,9 @@ import {
 } from "../queries-queue";
 import { AccessRequests, UnassignedQueue } from "./b5-queue";
 
+import "../../finance/spaces/money-lines.css";
+import "./b5.css";
+
 const Frame = ({ children }: { children: React.ReactNode }) => (
   <div data-spaces>{children}</div>
 );
@@ -47,16 +50,26 @@ export async function SpacesUnassigned() {
     lists.data.sources.find((source) => source.id === id)?.label ?? "—";
   return (
     <Frame>
-      <p className="note">
-        Πού πάνε οι νέες Ευκαιρίες από τη φόρμα το ορίζεις στις{" "}
-        {caps.canManageSettings ? (
-          <Link href={hrefOf("O2")}>Ρυθμίσεις › Πωλήσεις</Link>
-        ) : (
-          "Ρυθμίσεις › Πωλήσεις"
-        )}
-        . Όσοι αναθέτουν ειδοποιούνται για κάθε νέα Ευκαιρία από φόρμα· αυτόματη
-        μοιρασιά σε πωλητές δεν υπάρχει.
+      <p className="muted b5-what">
+        Δώσε Υπεύθυνο σε ό,τι ήρθε από τη φόρμα και απάντησε στα Αιτήματα
+        πρόσβασης.
       </p>
+      <details className="ml-box b5-box">
+        <summary>
+          <h2 className="ml-box-title">Πού πάνε οι νέες Ευκαιρίες</h2>
+          <small className="muted">ορίζεται στις Ρυθμίσεις › Πωλήσεις</small>
+        </summary>
+        <p className="note">
+          Πού πάνε οι νέες Ευκαιρίες από τη φόρμα το ορίζεις στις{" "}
+          {caps.canManageSettings ? (
+            <Link href={hrefOf("O2")}>Ρυθμίσεις › Πωλήσεις</Link>
+          ) : (
+            "Ρυθμίσεις › Πωλήσεις"
+          )}
+          . Όσοι αναθέτουν ειδοποιούνται για κάθε νέα Ευκαιρία από φόρμα·
+          αυτόματη μοιρασιά σε πωλητές δεν υπάρχει.
+        </p>
+      </details>
       {queue.data.length === 0 && requests.data.length === 0 ? (
         <StateNotice kind="empty" title="Δεν υπάρχει τίποτα σε αναμονή">
           <p>

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 
 import {
   attachSignedFile,
@@ -18,7 +17,7 @@ import type { Lifecycle } from "../lifecycle-schema";
 import { D2Form, D2Scope, IdField } from "./d2-ui";
 
 // Λήξη και συνέχεια μιας υπογεγραμμένης Συμφωνίας (b8, b9, b12): Λύση, «Χωρίς συνέχιση», ανανέωση και υπογεγραμμένο
-// αρχείο. Μικρό πάνελ μέσα στη σημερινή D2· τι φαίνεται το λέει το `can` της βάσης.
+// αρχείο. Ζει στο hero της D2, δίπλα στις ενέργειες· τι φαίνεται το λέει το `can` της βάσης.
 
 const DAY_MS = 86_400_000;
 
@@ -190,11 +189,12 @@ export function LifecyclePanel(props: PanelProps) {
   const { can } = lifecycle;
   if (!isWorthShowing(lifecycle)) return null;
   return (
-    <Panel label="Λήξη και συνέχεια">
+    <section className="d2-life">
+      <h2 className="d2-life-title">Λήξη και συνέχεια</h2>
       <D2Scope>
         <div className="stack">
           <StatusLines {...props} />
-          <div className="btn-row">
+          <div className="btn-row d2-life-actions">
             {can.renew && (
               <D2Form
                 action={renewAgreement}
@@ -224,21 +224,21 @@ export function LifecyclePanel(props: PanelProps) {
                 <input type="hidden" name="note" value="" />
               </D2Form>
             )}
+            {can.setContinuation && lifecycle.noContinuation === null && (
+              <StopForm agreementId={agreementId} />
+            )}
+            {can.dissolve && <DissolveForm {...props} />}
+            {/* Νέο αρχείο → νέο key: η φόρμα κλείνει μόνη της μετά το ανέβασμα. */}
+            {can.attachFile && (
+              <FileForm
+                key={lifecycle.signedFile?.uploadedAt ?? "none"}
+                agreementId={agreementId}
+                hasFile={lifecycle.signedFile !== null}
+              />
+            )}
           </div>
-          {can.setContinuation && lifecycle.noContinuation === null && (
-            <StopForm agreementId={agreementId} />
-          )}
-          {can.dissolve && <DissolveForm {...props} />}
-          {/* Νέο αρχείο → νέο key: η φόρμα κλείνει μόνη της μετά το ανέβασμα. */}
-          {can.attachFile && (
-            <FileForm
-              key={lifecycle.signedFile?.uploadedAt ?? "none"}
-              agreementId={agreementId}
-              hasFile={lifecycle.signedFile !== null}
-            />
-          )}
         </div>
       </D2Scope>
-    </Panel>
+    </section>
   );
 }

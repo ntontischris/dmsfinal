@@ -103,14 +103,6 @@ select g::date, false, 'Αργία ανοιχτή για τα τεστ'
 create function public.t_at(p_days integer, p_time time) returns timestamptz
 language sql stable
 as $$ select (((now() at time zone 'Europe/Athens')::date + p_days) + p_time) at time zone 'Europe/Athens'; $$;
--- Η μέρα «σήμερα + n» μέσα στην Περίοδο 1 της Συμφωνίας: κόβεται στη λήξη της Περιόδου, ώστε οι κρατήσεις να μένουν
--- στην ίδια Περίοδο όποιο μήνα κι αν τρέχει το τεστ (οι Περίοδοι είναι μηνιαίες).
-create function public.t_in_p1(p_agreement uuid, p_days integer, p_hour integer) returns timestamptz
-language sql stable security definer
-as $$
-  select ((least((now() at time zone 'Europe/Athens')::date + p_days, pe.ends)::timestamp + make_interval(hours => p_hour)) at time zone 'Europe/Athens')
-    from public.agreement_periods pe where pe.agreement_id = p_agreement and pe.n = 1;
-$$;
 -- Η δεύτερη μέρα της Περιόδου n της Συμφωνίας, στις 10:00.
 create function public.t_period_day(p_agreement uuid, p_n integer) returns timestamptz
 language sql stable security definer
@@ -139,6 +131,14 @@ select public.agreement_add_catalogue_line(current_setting('t.a')::uuid, '000000
 select public.agreement_add_catalogue_line(current_setting('t.a')::uuid, '00000000-0000-0000-0000-0000000000d4', 1);
 select public.agreement_set_recipients(current_setting('t.a')::uuid, '[{"name":"Μαρία Παπαδάκη","email":"maria@example.com","is_signatory":true}]'::jsonb);
 select public.agreement_sign_outside(current_setting('t.a')::uuid, (now() at time zone 'Europe/Athens')::date, 'Μαρία Παπαδάκη', (now() at time zone 'Europe/Athens')::date, 'contract-a.pdf');
+
+-- Οι Περίοδοι της Α παίρνουν σταθερά παράθυρα από σήμερα, ώστε τα τεστ να μην εξαρτώνται από το ημερολόγιο (ο μήνας τελειώνει).
+set local session_replication_role = 'replica';
+update public.agreement_periods pe
+   set starts = (now() at time zone 'Europe/Athens')::date + case pe.n when 1 then 0 when 2 then 41 else 71 + (pe.n - 3) * 30 end,
+       ends   = (now() at time zone 'Europe/Athens')::date + case pe.n when 1 then 40 when 2 then 70 else 100 + (pe.n - 3) * 30 end
+ where pe.agreement_id = current_setting('t.a')::uuid;
+set local session_replication_role = 'origin';
 
 -- B: εφάπαξ, f1, με μόνο shoot 1 (δεν έχει βίντεο). C: εφάπαξ, f2 (άλλος Πελάτης). D: μηνιαία με έναρξη πριν τον μήνα (used_provisions).
 select set_config('t.b', public.agreement_create('00000000-0000-0000-0000-0000000000c2', 'one_off', 'Εφάπαξ Β')::text, true);
@@ -296,10 +296,10 @@ reset role;
 update public.client_users set role_id = (select r.id from public.roles r where r.name = 'Κράτηση' and r.kind = 'client')
  where user_id = '00000000-0000-0000-0000-0000000000e6';
 set local role authenticated;
-select set_config('t.k1', public.filming_book(current_setting('t.a')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 20, 10), 2, current_setting('t.shoot')::uuid, 'Αθήνα', 'Κάλυψη εκδήλωσης')::text, true);
-select set_config('t.k2', public.filming_book(current_setting('t.a')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 21, 11), 2, current_setting('t.shoot')::uuid, null, null)::text, true);
+select set_config('t.k1', public.filming_book(current_setting('t.a')::uuid, public.t_at(20, time '10:00'), 2, current_setting('t.shoot')::uuid, 'Αθήνα', 'Κάλυψη εκδήλωσης')::text, true);
+select set_config('t.k2', public.filming_book(current_setting('t.a')::uuid, public.t_at(21, time '11:00'), 2, current_setting('t.shoot')::uuid, null, null)::text, true);
 select throws_ok(
-  $$ select public.filming_book(current_setting('t.a')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 22, 12), 2, current_setting('t.shoot')::uuid, null, null) $$,
+  $$ select public.filming_book(current_setting('t.a')::uuid, public.t_at(22, time '12:00'), 2, current_setting('t.shoot')::uuid, null, null) $$,
   'P0001', 'Οι Παροχές της Περιόδου τελείωσαν· στείλε Αίτημα στην ομάδα', 'Τελείωσε η Παροχή της Περιόδου: ο Πελάτης δεν κλείνει μόνος του'
 );
 select is((select public.filmings_view('pending') -> 0 ->> 'state'), 'pending', 'Η κράτηση Πελάτη αναμένει έγκριση όταν το θέλει ο Κανόνας');
@@ -370,7 +370,7 @@ select lives_ok($$ select public.filming_reject(current_setting('t.k2')::uuid, '
 select throws_ok($$ select public.filming_reject(current_setting('t.k1')::uuid, 'Λάθος') $$, 'P0001', 'Μόνο γύρισμα που αναμένει έγκριση απορρίπτεται', 'Προγραμματισμένη κράτηση δεν απορρίπτεται');
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e6","role":"authenticated"}', true);
-select set_config('t.k3', public.filming_book(current_setting('t.a')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 22, 12), 2, current_setting('t.shoot')::uuid, null, null)::text, true);
+select set_config('t.k3', public.filming_book(current_setting('t.a')::uuid, public.t_at(22, time '12:00'), 2, current_setting('t.shoot')::uuid, null, null)::text, true);
 select lives_ok($$ select public.filming_client_cancel(current_setting('t.k3')::uuid, null) $$, 'Ο Πελάτης ακυρώνει κράτηση που αναμένει έγκριση, όποτε θέλει');
 select is((select public.filming_view(current_setting('t.k3')::uuid) ->> 'state'), 'cancelled', 'Η ακυρωμένη κράτηση είναι ακυρωμένη');
 select is((select public.filming_view(current_setting('t.k3')::uuid) ->> 'burned'), 'false', 'Η ακύρωση του Πελάτη πριν την έγκριση δεν καίει Παροχή');

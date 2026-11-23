@@ -74,6 +74,7 @@ test("ο Ιδιοκτήτης βάζει ποσοστό, εισπράττει α
   await signIn(page, "owner@example.com");
   await page.goto(SETTINGS_PATH);
   const rates = card(page, RATES_CARD);
+  await rates.locator("summary").first().click();
   await button(rates, "+ Νέο ποσοστό").click();
   await rates.getByLabel("Ονομασία παρακράτησης").fill(RATE);
   await rates.getByLabel("Ποσοστό (%)").fill("20");
@@ -86,7 +87,7 @@ test("ο Ιδιοκτήτης βάζει ποσοστό, εισπράττει α
   // Από τη γραμμή του Τιμολογίου: Πελάτης και Τιμολόγιο έρχονται έτοιμα.
   await page.goto(UNPAID_PATH);
   const row = page.locator("tr", { hasText: NUMBER });
-  await row.getByRole("link", { name: "Είσπραξη", exact: true }).click();
+  await row.getByRole("link", { name: "Ήρθε πληρωμή", exact: true }).click();
   await expect(page).toHaveURL(/\/app\/finance\/receipts\?/);
   const form = card(page, RECEIPT_CARD);
   await expect(
@@ -118,7 +119,7 @@ test("ο Ιδιοκτήτης βάζει ποσοστό, εισπράττει α
   await expect(payments).toContainText(RATE);
   await expect(card(page, "Αφορά")).toContainText(CLIENT);
   await expect(
-    page.getByRole("link", { name: "Καταχώρηση Είσπραξης" }),
+    page.getByRole("link", { name: "Ήρθε πληρωμή" }),
   ).toHaveCount(0);
 });
 

@@ -163,8 +163,9 @@ select ok(not authz.today_slot_fits(timestamptz '2026-03-13 10:00+00', 1, array[
 select is((select array_agg(i ->> 'id' order by n)
              from jsonb_array_elements(authz.today_items_filming_approvals(public.t_uid('a1'), null, public.t_now()))
                   with ordinality x (i, n) where i ? 'suggest'),
-  array['cancel:00000000-0000-0000-0000-000000000031', 'reschedule:00000000-0000-0000-0000-000000000041'],
-  'Στις τρεις γραμμές της κάρτας: η πρόταση μόνο στο ζεύγος k1 ↔ m1 (όχι στο k2)');
+  array['cancel:00000000-0000-0000-0000-000000000031', 'reschedule:00000000-0000-0000-0000-000000000041',
+        'reschedule:00000000-0000-0000-0000-000000000043', 'reschedule:00000000-0000-0000-0000-000000000044'],
+  'Στις γραμμές της κάρτας (έως δέκα): η πρόταση στο ζεύγος k1 ↔ m1 και στα m3, m4 προς το x1· όχι στο k2, k3, m2');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
 select is(public.today_card('filming_approvals', public.t_now()) -> 'items' -> 0 -> 'suggest' ->> 'client',
   'Ξενοδοχείο Γαλάζιο Ακρογιάλι', 'Μέσα από το public.today_card');

@@ -175,6 +175,12 @@ export const todayKpisSchema = z.object({
 export const seenAtSchema = z.string().nullable();
 export const snoozedSchema = z.array(z.string());
 
+// «Έκλεισες N» (Σήμερα list): public.today_closed. Μετρά πάνω σε όσα περίμεναν το πρωί, όχι μόνο στις γραμμές της οθόνης.
+// Το later του RPC δεν χρειάζεται στην οθόνη (το δείχνει η γραμμή «Για αργότερα»)· το zod το αφήνει έξω.
+export const todayClosedSchema = z.object({
+  closed: z.number().int().nonnegative(),
+});
+
 export interface TodayVisit {
   seenAt: string | null;
   snoozed: readonly string[];
@@ -190,6 +196,7 @@ export type TodayTeam = z.output<typeof todayTeamSchema>;
 export type TeamPerson = TodayTeam["people"][number];
 export type TodayProgramme = z.output<typeof todayProgrammeSchema>;
 export type TodayKpis = z.output<typeof todayKpisSchema>;
+export type TodayClosed = z.output<typeof todayClosedSchema>;
 export type KpiRisk = TodayKpis["risks"][number];
 
 export const parseTodayCounts = (data: unknown): TodayCounts =>
@@ -214,3 +221,6 @@ export const parseTodayProgramme = (data: unknown): TodayProgramme =>
   todayProgrammeSchema.parse(data);
 
 export const parseTodayKpis = (data: unknown): TodayKpis => todayKpisSchema.parse(data);
+
+export const parseTodayClosed = (data: unknown): TodayClosed =>
+  todayClosedSchema.parse(data);

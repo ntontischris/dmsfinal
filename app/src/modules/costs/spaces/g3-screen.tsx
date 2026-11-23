@@ -23,10 +23,11 @@ import {
 } from "./g3-adapter";
 import { G3Workbench } from "./g3-workbench";
 
+import "../../finance/spaces/money-lines.css";
 import "./g3.css";
 
 // G3 Κόστος και ώρες στη νέα εμφάνιση (prototype `screens/G3.tsx`): πάνω η κάρτα «Παραγωγή» (τρεις ομάδες, με αναζήτηση), από κάτω ο
-// πάγκος της επιλεγμένης (?production=). Οι ομάδες, τα νούμερα και το Δικαίωμα έρχονται από τη βάση.
+// πάγκος της επιλεγμένης (?production=): κεφαλίδα με το κόστος και κλειστά κουτιά (μορφή της I8). Οι ομάδες, τα νούμερα και το Δικαίωμα έρχονται από τη βάση.
 
 function Picker({
   groups,
@@ -74,6 +75,12 @@ function Workbench({
 }) {
   return (
     <G3Workbench
+      hero={{
+        title: row.title,
+        client: row.client,
+        state: row.state,
+        backHref: hrefOf("G2", { id: row.productionId }),
+      }}
       key={row.productionId}
       productionId={row.productionId}
       basis={basisOf(row, settings)}
@@ -114,16 +121,10 @@ async function G3Body({ productionId }: { productionId: string | undefined }) {
   return (
     <>
       <Picker groups={picker.groups} currentId={currentId} />
-      <header className="row g3-head">
-        <Link href={hrefOf("G2", { id: currentId })}>
-          Πίσω στην Παραγωγή (G2)
-        </Link>
-      </header>
       <Workbench row={detail.data} settings={picker.settings} />
     </>
   );
 }
-
 
 export async function SpacesCosts({ production }: { production?: string }) {
   const viewer = await getViewer();
@@ -139,7 +140,8 @@ export async function SpacesCosts({ production }: { production?: string }) {
         </div>
       </div>
     );
-  const isValidId = production === undefined || z.uuid().safeParse(production).success;
+  const isValidId =
+    production === undefined || z.uuid().safeParse(production).success;
   return (
     <div data-spaces>
       <div className="g3">

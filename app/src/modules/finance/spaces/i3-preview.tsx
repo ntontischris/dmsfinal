@@ -1,9 +1,8 @@
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 import { fmtDate, fmtMoney } from "@/spaces/screens/shared";
 
 import { coverageOf, coverageText, type Warning } from "../invoices-model";
 import type { OpenBillable } from "../invoices-view-schema";
+import { Fold } from "./i3-parts";
 
 export function WarningsList({ warnings }: { warnings: readonly Warning[] }) {
   if (warnings.length === 0) return null;
@@ -26,30 +25,35 @@ interface PreviewProps {
   toInvoice: number;
 }
 
-// Η κάλυψη των Τιμολογητέων δεξιά (prototype `screens/i3-preview.tsx`), από το υπόδειγμα της βάσης.
+const hintOf = (open: number, toInvoice: number): string =>
+  `Προς τιμολόγηση του Πελάτη: ${fmtMoney(toInvoice)} · ${open === 0 ? "κανένα ανοιχτό" : `${open} ανοιχτά Τιμολογητέα`}`;
+
+// Η κάλυψη των Τιμολογητέων (κλειστό κουτί), από το υπόδειγμα της βάσης: ποιο Τιμολογητέο κλείνει το καθαρό.
 export function CoveragePreview({ open, net, isCredit, toInvoice }: PreviewProps) {
   const { rows, beyond } = coverageOf(open, isCredit ? 0 : net);
   return (
-    <Panel label={`Προς τιμολόγηση του Πελάτη: ${fmtMoney(toInvoice)}`}>
+    <Fold title="Τι καλύπτει" hint={hintOf(open.length, toInvoice)}>
       {open.length === 0 && <p className="muted">Κανένα ανοιχτό Τιμολογητέο.</p>}
-      <RowList>
-        {rows.map((row) => (
-          <ListRow
-            key={row.billable.id}
-            lead={<span className="i13-date">{fmtDate(row.billable.billableOn)}</span>}
-            title={row.billable.label}
-            sub={coverageText(row)}
-            aside={<strong className="i13-money">{fmtMoney(row.billable.open)}</strong>}
-          />
-        ))}
-      </RowList>
+      {rows.length > 0 && (
+        <ul className="ml-list i3-cover">
+          {rows.map((row) => (
+            <li key={row.billable.id} className="ml-line">
+              <span className="ml-thumb i3-day">{fmtDate(row.billable.billableOn).slice(0, 5)}</span>
+              <span className="ml-main">
+                <span className="ml-tag">{coverageText(row)}</span>
+                <strong>{row.billable.label}</strong>
+                <small>{fmtDate(row.billable.billableOn)}</small>
+              </span>
+              <span className="ml-amount">{fmtMoney(row.billable.open)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       {isCredit ? (
         <p className="note">Τα πιστωτικά δεν ξανανοίγουν Τιμολογητέα.</p>
       ) : (
-        beyond > 0 && (
-          <p className="note">Θα τιμολογηθεί πέρα από τα Τιμολογητέα κατά {fmtMoney(beyond)}.</p>
-        )
+        beyond > 0 && <p className="note">Θα τιμολογηθεί πέρα από τα Τιμολογητέα κατά {fmtMoney(beyond)}.</p>
       )}
-    </Panel>
+    </Fold>
   );
 }

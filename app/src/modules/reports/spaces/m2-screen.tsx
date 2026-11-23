@@ -15,6 +15,7 @@ import { getExportOverview } from "../export/queries";
 import type { ExportFormat } from "../export/report-export";
 import type { ExportQuery } from "../export/url";
 import type { PeriodCode } from "../url";
+import { Box } from "./m1-box";
 import { loadPeriods } from "./m1-finance-parts";
 import { DatasetSection } from "./m2-dataset";
 import { LogSection } from "./m2-log";
@@ -44,43 +45,41 @@ async function ExportBody(props: Omit<SpacesExportProps, "viewer">) {
   const datasets = DATASETS.filter((d) =>
     overview.items.some((item) => item.code === d.code),
   );
-  const dataset = datasets.find((d) => d.code === props.dataset) ?? datasets[0];
-  if (!dataset)
+  if (datasets.length === 0)
     return (
       <StateNotice kind="empty" title={NO_DATASETS_TITLE}>
         {NO_DATASETS_TEXT}
       </StateNotice>
     );
-  const item = overview.items.find((entry) => entry.code === dataset.code);
-  // Ό,τι γράφει η διεύθυνση· το σύνολο μπαίνει μόνο όταν το διάλεξε ο Χρήστης (τότε η «Άλλη εξαγωγή» μένει ανοιχτή).
+  const items = datasets.map((dataset) => {
+    const entry = overview.items.find((e) => e.code === dataset.code);
+    return {
+      dataset,
+      usesPeriod: entry?.usesPeriod ?? true,
+      rowCount: entry?.rowCount ?? 0,
+    };
+  });
+  // Ό,τι γράφει η διεύθυνση· όταν είχε ήδη επιλογές, η «Άλλη εξαγωγή» μένει ανοιχτή.
   const query: ExportQuery = { dataset: props.dataset, period, format, month };
   const seesFinance = overview.items.some((entry) => entry.code === "invoices");
-  const section = (
-    <DatasetSection
-      query={{ ...query, dataset: dataset.code }}
-      datasets={datasets}
-      dataset={dataset}
-      usesPeriod={item?.usesPeriod ?? true}
-      rowCount={item?.rowCount ?? 0}
-      period={period}
-      periods={periods ?? []}
-      format={format}
-      canSeeCost={overview.items.some((entry) => entry.code === "expenses")}
-    />
-  );
-  if (!seesFinance) return section;
   return (
     <>
-      <PackSection today={overview.today} query={query} />
-      <details className="kit-panel m2-section" open={props.hasDatasetChoice}>
-        <summary className="m2-summary">
-          <strong>Άλλη εξαγωγή</strong>{" "}
-          <span className="muted">
-            (ένα σύνολο δεδομένων για όποια περίοδο θέλεις, σε Excel ή CSV)
-          </span>
-        </summary>
-        {section}
-      </details>
+      {seesFinance && <PackSection today={overview.today} query={query} />}
+      <Box
+        title={seesFinance ? "Άλλη εξαγωγή" : "Εξαγωγή δεδομένων"}
+        hint={`${items.length} σύνολα δεδομένων για όποια περίοδο θέλεις, σε Excel ή CSV`}
+        isOpen={!seesFinance || props.hasDatasetChoice}
+      >
+        <DatasetSection
+          query={query}
+          items={items}
+          current={props.dataset}
+          period={period}
+          periods={periods ?? []}
+          format={format}
+          canSeeCost={overview.items.some((e) => e.code === "expenses")}
+        />
+      </Box>
     </>
   );
 }
@@ -97,7 +96,11 @@ export function SpacesExport({ viewer, ...props }: SpacesExportProps) {
       </div>
     );
   return (
-    <div data-spaces>
+    <div data-spaces className="m1-page ml-stack">
+      <p className="m1-intro">
+        Κατέβασε το πακέτο του μήνα για τον λογιστή ή ένα σύνολο δεδομένων σε
+        Excel ή CSV.
+      </p>
       <Suspense fallback={<p className="muted">Φορτώνει η Εξαγωγή…</p>}>
         <ExportBody {...props} />
       </Suspense>

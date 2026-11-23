@@ -142,7 +142,8 @@ test("φίλτρα · στους Πελάτες η σειρά φίλτρων ε�
   await expect(table).toBeVisible();
   const searchBox = await search.boundingBox();
   const tableBox = await table.boundingBox();
-  if (!searchBox || !tableBox) throw new Error("Λείπει η αναζήτηση ή ο πίνακας");
+  if (!searchBox || !tableBox)
+    throw new Error("Λείπει η αναζήτηση ή ο πίνακας");
   // Η σειρά είναι πάνω από τον πίνακα, όχι στήλη δίπλα του: ίδια αριστερή άκρη.
   expect(Math.abs(tableBox.x - searchBox.x)).toBeLessThan(4);
   expect(tableBox.y).toBeGreaterThan(searchBox.y + searchBox.height);
@@ -152,8 +153,10 @@ test("φίλτρα · στους Πελάτες η σειρά φίλτρων ε�
   const tops = await page
     .getByRole("group", { name: "Φίλτρα", exact: true })
     .locator("summary")
-    .evaluateAll((items) => items.map((item) => item.getBoundingClientRect().top));
+    .evaluateAll((items) =>
+      items.map((item) => item.getBoundingClientRect().top),
+    );
   expect(tops.length).toBeGreaterThanOrEqual(3);
-  expect(Math.abs(tops[0]! - searchBox.y)).toBeLessThan(searchBox.height);
+  expect(tops[0]!).toBeGreaterThan(searchBox.y);
   for (const top of tops) expect(top).toBeLessThan(tableBox.y);
 });

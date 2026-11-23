@@ -1,10 +1,6 @@
-import Link from "next/link";
-
-import { Entity, Meter, Person } from "@/spaces/kit/parts";
-import { Badge, fmtDate, type BadgeTone } from "@/spaces/screens/shared";
-
 import type { B1Columns, B1Row } from "./b1-adapter";
 import type { B1Filters } from "./b1-filters";
+import { ClientLine, TakenLine } from "./b1-line";
 
 interface ClientsTableProps extends B1Columns {
   // Οι γραμμές μετά τα φίλτρα (σειρά φίλτρων της οθόνης).
@@ -12,15 +8,8 @@ interface ClientsTableProps extends B1Columns {
   filters: B1Filters;
 }
 
-// Η κατάσταση ως χάπι: ενεργός = έμφαση, υποψήφιος = περιμένει, ανενεργός = ξεθωριασμένο.
-const STATUS_TONE: Readonly<Record<string, BadgeTone>> = {
-  Ενεργός: "strong",
-  Υποψήφιος: "waiting",
-  Ανενεργός: "faded",
-};
-
 // Η αναζήτηση ζει στη διεύθυνση (?q=), όπως στην παλιά εμφάνιση: ψάχνει η βάση, όχι μόνο οι 100 πρώτοι.
-// Μπαίνει πρώτη στη σειρά φίλτρων και κρατά τα φίλτρα που ισχύουν.
+// Μένει πάντα ορατή πάνω από τη λίστα (τα φίλτρα είναι στο κλειστό «Φίλτρα») και κρατά τα φίλτρα που ισχύουν.
 export function ClientsSearch({
   query,
   filters,
@@ -59,147 +48,36 @@ export function ClientsSearch({
   );
 }
 
-// Ο πίνακας Πελατών του prototype (`screens/b1-clients-table.tsx`) με πραγματικές γραμμές, σε όλο το πλάτος. Τα φίλτρα
-// και η αναζήτηση είναι στη σειρά φίλτρων από πάνω.
-export function ClientsTable(props: ClientsTableProps) {
-  const {
-    rows: visible,
-    filters,
-    showOwner,
-    showOpportunities,
-    showAgreements,
-    showBalance,
-  } = props;
-
+// Οι Πελάτες ως γραμμές (όπως τα Τιμολόγια): ένας <table> για τις σειρές με κείμενο, κάθε <tr> μία γραμμή-κάρτα.
+// Κάθε παλιά στήλη ζει στη γραμμή: κατάσταση στην ετικέτα, τα υπόλοιπα στη μικρή γραμμή, το Υπόλοιπο δεξιά.
+export function ClientsTable({ rows, filters, ...columns }: ClientsTableProps) {
+  if (rows.length === 0)
+    return (
+      <p className="muted">
+        {filters.isNoShoot
+          ? "Όλοι οι μηνιαίοι Πελάτες έχουν γύρισμα αυτόν τον μήνα (έγινε ή κλεισμένο)."
+          : "Κανένας Πελάτης δεν ταιριάζει με την αναζήτηση και τα φίλτρα."}
+      </p>
+    );
   return (
-    <>
-      {visible.length === 0 ? (
-        <p className="muted">
-          {filters.isNoShoot
-            ? "Όλοι οι μηνιαίοι Πελάτες έχουν γύρισμα αυτόν τον μήνα (έγινε ή κλεισμένο)."
-            : "Κανένας Πελάτης δεν ταιριάζει με την αναζήτηση και τα φίλτρα."}
-        </p>
-      ) : (
-        <div className="scroll">
-          <table className="rtable b1-table">
-            <thead>
-              <tr>
-                <th>Πελάτης</th>
-                <th>Κατάσταση</th>
-                {showOwner && <th>Υπεύθυνος</th>}
-                {showOpportunities && (
-                  <th className="num">Ανοιχτές Ευκαιρίες</th>
-                )}
-                {showOpportunities && <th>Τελευταία επαφή</th>}
-                <th>Πακέτο · αυτός ο μήνας</th>
-                {showAgreements && <th className="num">Ενεργές Συμφωνίες</th>}
-                {showBalance && <th className="num">Υπόλοιπο</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((row) =>
-                row.isTaken && row.ownership ? (
-                  <tr key={row.id} className="taken">
-                    <td colSpan={9}>
-                      <span className="part-title">{row.name}</span>{" "}
-                      <Badge>{row.ownership.badge}</Badge>{" "}
-                      <span className="muted">{row.ownership.note}</span>
-                    </td>
-                  </tr>
-                ) : (
-                  <ClientLine key={row.id} row={row} {...props} />
-                ),
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </>
-  );
-}
-
-function ClientLine({
-  row,
-  showOwner,
-  showOpportunities,
-  showAgreements,
-  showBalance,
-}: ClientsTableProps & { row: B1Row }) {
-  return (
-    <tr>
-      <td data-label="Πελάτης">
-        <Entity name={row.name} href={row.href} sub={row.city || undefined}>
-          {row.ownership && (
-            <>
-              <Badge>{row.ownership.badge}</Badge>{" "}
-              <span className="muted">{row.ownership.note}</span>{" "}
-            </>
-          )}
-          {row.isPossibleDuplicate && (
-            <Link className="b1-duplicate" href={row.mergeHref}>
-              Πιθανό διπλό: συγχώνευση ή όχι
-            </Link>
-          )}
-        </Entity>
-      </td>
-      <td data-label="Κατάσταση">
-        {row.status ? (
-          <Badge tone={STATUS_TONE[row.status]}>{row.status}</Badge>
-        ) : (
-          <span className="muted">—</span>
-        )}
-      </td>
-      {showOwner && (
-        <td data-label="Υπεύθυνος">
-          <Person name={row.owner} />
-        </td>
-      )}
-      {showOpportunities && (
-        <td className="num" data-label="Ανοιχτές Ευκαιρίες">
-          {row.openOpportunities ?? "—"}
-        </td>
-      )}
-      {showOpportunities && (
-        <td data-label="Τελευταία επαφή">
-          {row.lastContact ? (
-            fmtDate(row.lastContact)
+    <table className="ml-table ml-list b1-table">
+      <thead>
+        <tr>
+          <th>Αρχικά</th>
+          <th>Πελάτης</th>
+          <th>Υπόλοιπο</th>
+          <th>Ενέργειες</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) =>
+          row.isTaken && row.ownership ? (
+            <TakenLine key={row.id} row={row} />
           ) : (
-            <span className="muted">καμία</span>
-          )}
-        </td>
-      )}
-      <td data-label="Πακέτο · αυτός ο μήνας">
-        {row.packageName && (
-          <span className="b1-package">{row.packageName}</span>
+            <ClientLine key={row.id} row={row} {...columns} />
+          ),
         )}
-        {row.month ? (
-          <div className="b1-month" aria-label={row.month.text}>
-            {row.month.meters.map((meter) => (
-              <Meter key={meter.label} {...meter} />
-            ))}
-            {row.month.next && (
-              <span className="part-sub">
-                επόμενο γύρισμα <strong>{row.month.next}</strong>
-              </span>
-            )}
-            {row.month.hasNoShoot && (
-              <Badge tone="attention">Χωρίς γύρισμα</Badge>
-            )}
-          </div>
-        ) : (
-          !row.packageName && <span className="muted">—</span>
-        )}
-      </td>
-      {showAgreements && (
-        <td className="num" data-label="Ενεργές Συμφωνίες">
-          {row.activeAgreements ?? "—"}
-        </td>
-      )}
-      {showBalance && (
-        <td className="num b1-balance" data-label="Υπόλοιπο">
-          {row.balance ?? "—"}
-        </td>
-      )}
-    </tr>
+      </tbody>
+    </table>
   );
 }

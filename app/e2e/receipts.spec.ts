@@ -53,7 +53,7 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
 
   await page.goto(SETTINGS_PATH);
   const methods = card(page, METHODS_CARD);
-  await button(methods, "+ Νέα τιμή").click();
+  await methods.locator("summary", { hasText: "+ Νέος τρόπος" }).click();
   await methods.getByLabel("Νέος τρόπος").fill(METHOD);
   await button(methods, "Προσθήκη τρόπου").click();
   await expect(methods.getByRole("status")).toContainText(
@@ -62,6 +62,7 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
 
   await openTab(page, MONEY, RECEIPTS_TAB);
   await expect(page).toHaveURL(new RegExp(`${RECEIPTS_PATH}$`));
+  await page.locator("summary", { hasText: "+ Νέα είσπραξη" }).click();
   const form = card(page, RECEIPT_CARD);
   await form.getByLabel("Πελάτης").selectOption({ label: CLIENT });
   await form.getByLabel("Ποσό (€, με ΦΠΑ)").fill("400");

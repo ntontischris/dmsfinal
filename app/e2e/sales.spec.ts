@@ -127,6 +127,11 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   ).toBeVisible();
   await expect(page.getByRole("button", { name: /Κερδισμένη/ })).toHaveCount(0);
 
+  await page
+    .locator("summary", {
+      has: page.getByRole("heading", { name: "Δραστηριότητες", exact: true }),
+    })
+    .click();
   const activities = card(page, "Δραστηριότητες");
   await activities
     .getByLabel("Είδος Δραστηριότητας")
@@ -147,6 +152,11 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   await shot(page, "b4-opportunity");
 
   // Μετονομασία της Ευκαιρίας: κρατά Στάδιο και Επόμενο βήμα.
+  await page
+    .locator("summary", {
+      has: page.getByRole("heading", { name: "Έλεγχος", exact: true }),
+    })
+    .click();
   await button(page, "Μετονομασία").click();
   const titleField = page.getByLabel("Τίτλος Ευκαιρίας", { exact: true });
   await titleField.fill(`Βίντεο παρουσίασης και reels ${P}`);
@@ -163,6 +173,12 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   await expect(page.getByText("Πρώτο τηλεφώνημα, 08/01/2099")).toBeVisible();
 
   const lostUrl = page.url();
+  if (!(await button(page, "Κλείσιμο ως χαμένη").isVisible()))
+    await page
+      .locator("summary", {
+        has: page.getByRole("heading", { name: "Έλεγχος", exact: true }),
+      })
+      .click();
   await button(page, "Κλείσιμο ως χαμένη").click();
   await field(page, "Λόγος απώλειας").selectOption({ label: "Τιμή" });
   await button(page, "Κλείσιμο ως χαμένη").click();
@@ -180,6 +196,11 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   await expect(page.locator("dt", { hasText: "Συνεχίζει" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Κερδισμένη/ })).toHaveCount(0);
   // Το πάνελ «Πρόταση» (B4): η Άννα μπορεί να συντάξει, άρα βλέπει το «Νέα πρόταση».
+  await page
+    .locator("summary", {
+      has: page.getByRole("heading", { name: "Πρόταση", exact: true }),
+    })
+    .click();
   await expect(button(panel(page, "Πρόταση"), "Νέα πρόταση")).toBeVisible();
 
   // Το όνομα του Πελάτη αλλάζει από τη σελίδα του («Αλλαγή στοιχείων»).
@@ -187,6 +208,11 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
     .getByRole("link", { name: `Νέος Πελάτης ${P}`, exact: true })
     .click();
   const side = inspector(page);
+  await page
+    .locator("summary", {
+      has: page.getByRole("heading", { name: "Στοιχεία", exact: true }),
+    })
+    .click();
   const edit = side.locator("form", { has: page.locator('input[name="afm"]') });
   await expect(async () => {
     if (!(await edit.isVisible()))
@@ -231,7 +257,7 @@ test("Αίτημα πρόσβασης: ο πωλητής ζητά, η Διαχε
 
   await inSpacesContext(browser, "admin@example.com", async (admin) => {
     await admin.goto("/app/unassigned");
-    const request = admin.locator("li.card", { hasText: topic });
+    const request = admin.locator("li.b5-item", { hasText: topic });
     await expect(request).toContainText(`Γυμναστήριο Κίνηση ${P}`);
     await button(request, "Έγκριση").click();
     await expect(request).toHaveCount(0);
@@ -256,7 +282,7 @@ test("η ουρά «Χωρίς υπεύθυνο»: η Διαχείριση αν�
   await signIn(page, "admin@example.com");
   await page.goto("/app/unassigned");
 
-  const item = page.locator("li.card", {
+  const item = page.locator("li.b5-item", {
     has: page.getByRole("link", { name: title, exact: true }),
   });
   await expect(item).toContainText("Νέος Πελάτης");

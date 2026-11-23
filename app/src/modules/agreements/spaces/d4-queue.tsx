@@ -3,218 +3,69 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { useKeptForm } from "@/lib/use-kept-form";
-import { Entity, Person } from "@/spaces/kit/parts";
 import { hrefOf } from "@/spaces/data/screens";
-import { Badge, StateNotice } from "@/spaces/screens/shared";
+import { StateNotice } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
-import { decideApproval } from "../actions-flow";
-import { describeDeviation, formatDate, formatMoney } from "../helpers";
+import { formatMoney } from "../helpers";
 import { KIND_LABELS } from "../labels";
 import type { ApprovalItem } from "../types";
-import { ItemRows } from "./lane-rows";
+import { StatusTag } from "./d1-status-tag";
+import {
+  DecisionForm,
+  ResultLine,
+  type Decision,
+  type Form,
+} from "./d4-decision";
+import { DeviationBox } from "./d4-details";
 
+import "../../finance/spaces/money-lines.css";
+import "./d1-lines.css";
 import "./d4.css";
 
-type Form = "approve" | "reject";
-type Decision = { form: Form; comment: string };
-
-const DEVIATION_LABEL = {
-  new: "νέα",
-  deeper: "βαθύτερη",
-  covered: "ήδη εγκρίθηκε",
-} as const;
-
-function LinesTable({ item }: { item: ApprovalItem }) {
-  const suffix = item.kind === "monthly" ? " / μήνα" : "";
+function ItemTags({ item }: { item: ApprovalItem }) {
   return (
-    <table className="rtable">
-      <thead>
-        <tr>
-          <th>Γραμμή</th>
-          <th className="num">Κατάλογος</th>
-          <th className="num">Πρόταση</th>
-        </tr>
-      </thead>
-      <tbody>
-        {item.lines.map((line, index) => (
-          <tr key={`${line.description}-${index}`}>
-            <td data-label="Γραμμή">
-              {line.quantity > 1
-                ? `${line.quantity} × ${line.description}`
-                : line.description}
-            </td>
-            <td data-label="Κατάλογος" className="num">
-              {line.isFree || line.catalogPrice === null
-                ? "ελεύθερη γραμμή"
-                : `${formatMoney(line.catalogPrice)}${suffix}`}
-            </td>
-            <td data-label="Πρόταση" className="num">
-              {line.unitPrice === null ? (
-                "—"
-              ) : line.isBelow ? (
-                <strong>{`${formatMoney(line.unitPrice)}${suffix}`}</strong>
-              ) : (
-                `${formatMoney(line.unitPrice)}${suffix}`
-              )}
-              {line.isBelow && " ↓"}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-// «Εγκρίνω» / «Απορρίπτω» με την πραγματική ενέργεια· το σχόλιο είναι υποχρεωτικό μόνο στην Απόρριψη.
-function DecisionForm({
-  agreementId,
-  form,
-  onCancel,
-  onDone,
-}: {
-  agreementId: string;
-  form: Form;
-  onCancel: () => void;
-  onDone: (comment: string) => void;
-}) {
-  const [comment, setComment] = useState("");
-  const { state, isPending, onSubmit, formRef } = useKeptForm(
-    async (previous, data: FormData) => {
-      const next = await decideApproval(previous, data);
-      if (next.notice) onDone(comment.trim());
-      return next;
-    },
-  );
-  const isReject = form === "reject";
-  return (
-    <form ref={formRef} className="stack" onSubmit={onSubmit}>
-      <input type="hidden" name="agreementId" value={agreementId} />
-      <input type="hidden" name="decision" value={form} />
-      <label className="stack">
-        {isReject
-          ? "Σχόλιο (υποχρεωτικό: τι να αλλάξει)"
-          : "Σχόλιο (προαιρετικό)"}
-        <textarea
-          className="input"
-          name="comment"
-          rows={3}
-          value={comment}
-          onChange={(event) => setComment(event.target.value)}
-        />
-      </label>
-      {state.error && (
-        <ul className="note" role="alert">
-          <li>{state.error}</li>
-        </ul>
+    <span className="d1l-tags">
+      <StatusTag label={`Αναμένει · ${item.pendingDays} μέρες`} tone="urgent" />
+      <StatusTag label={KIND_LABELS[item.kind]} />
+      <StatusTag label={`Αναθεώρηση ${item.revision}`} />
+      {item.isReminderDue && (
+        <StatusTag label="ξαναειδοποιήθηκαν όσοι εγκρίνουν" />
       )}
-      <div className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-primary={!isReject}
-          data-danger={isReject}
-          disabled={isPending || (isReject && !comment.trim())}
-        >
-          {isReject ? "Απορρίπτω" : "Εγκρίνω"}
-        </button>
-        <button type="button" className="button" onClick={onCancel}>
-          Άκυρο
-        </button>
-      </div>
-    </form>
+      {item.isLowMargin === true && (
+        <StatusTag label="χαμηλό περιθώριο (δεν θέλει Έγκριση)" tone="urgent" />
+      )}
+    </span>
   );
 }
 
-function ResultLine({
-  item,
-  decision,
-}: {
-  item: ApprovalItem;
-  decision: { form: Form; comment: string };
+function QuickActions(props: {
+  href: string;
+  isDeciding: boolean;
+  onChoose: (form: Form) => void;
 }) {
-  const isApproved = decision.form === "approve";
-  const owner = item.managerName ?? "ο Υπεύθυνος";
   return (
-    <section className="card d4-result" role="status">
-      <Badge tone={isApproved ? "strong" : "attention"}>
-        {isApproved ? "εγκρίθηκε" : "απορρίφθηκε"}
-      </Badge>
-      <p>
-        <strong>{item.clientName}</strong> · {item.title} · αναθεώρηση{" "}
-        {item.revision}
-        {decision.comment && ` · «${decision.comment}»`}
-      </p>
-      <p className="muted">
-        {isApproved
-          ? `Εγκρίθηκε και στάλθηκε σε όλους τους παραλήπτες· ειδοποιήθηκε ο/η ${owner}.`
-          : `Ειδοποιήθηκε ο/η ${owner}. Αναθεωρεί και ξαναζητά Έγκριση.`}
-      </p>
-    </section>
+    <span className="ml-quick">
+      {!props.isDeciding && (
+        <>
+          <button
+            type="button"
+            className="d4l-approve"
+            onClick={() => props.onChoose("approve")}
+          >
+            Εγκρίνω
+          </button>
+          <button type="button" onClick={() => props.onChoose("reject")}>
+            Απορρίπτω
+          </button>
+        </>
+      )}
+      <Link href={props.href}>Άνοιγμα για αλλαγές</Link>
+    </span>
   );
 }
 
-function ItemHeader({ item, href }: { item: ApprovalItem; href: string }) {
-  return (
-    <>
-      <div className="card-title">
-        <Entity
-          name={item.clientName}
-          sub={
-            <Link className="part-title" href={href}>
-              {item.title}
-            </Link>
-          }
-        />
-        <span className="btn-row">
-          <Badge>{KIND_LABELS[item.kind]}</Badge>
-          <Badge>Αναθεώρηση {item.revision}</Badge>
-          <Badge tone="attention">Αναμένει · {item.pendingDays} μέρες</Badge>
-          {item.isReminderDue && (
-            <Badge>ξαναειδοποιήθηκαν όσοι εγκρίνουν</Badge>
-          )}
-          {item.isLowMargin === true && (
-            <Badge tone="attention">χαμηλό περιθώριο (δεν θέλει Έγκριση)</Badge>
-          )}
-        </span>
-      </div>
-      <p className="part-sub">
-        Υπεύθυνος: {item.managerName ? <Person name={item.managerName} /> : "—"}
-      </p>
-    </>
-  );
-}
-
-function PreviousApproval({
-  item,
-  canSeeAmounts,
-}: {
-  item: ApprovalItem;
-  canSeeAmounts: boolean;
-}) {
-  const previous = item.previous;
-  if (previous === null) return null;
-  return (
-    <div className="note">
-      <p>
-        Η αναθεώρηση {previous.revision} εγκρίθηκε
-        {previous.decidedByName && ` από ${previous.decidedByName}`}
-        {previous.decidedAt && ` στις ${formatDate(previous.decidedAt)}`}
-        {previous.comment && `: «${previous.comment}»`}. Η Έγκριση δένεται με
-        εκείνη την αναθεώρηση· η νέα βαθαίνει την Παρέκκλιση:
-      </p>
-      <ul className="d5-plain">
-        {item.deviations.map((deviation) => (
-          <li key={deviation.key}>
-            <strong>{DEVIATION_LABEL[deviation.status]}:</strong>{" "}
-            {describeDeviation(deviation, canSeeAmounts)}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
+// Μία πρόταση = μία γραμμή (πελάτης, αναμονή, τίτλος, σύνολο, Εγκρίνω/Απορρίπτω) και από κάτω η Παρέκκλιση σε κλειστό κουτί.
 function ApprovalCard({
   item,
   canSeeAmounts,
@@ -227,63 +78,54 @@ function ApprovalCard({
   const [form, setForm] = useState<Form | null>(null);
   const href = hrefOf("D2", { id: item.agreementId });
   return (
-    <section className="card">
-      <ItemHeader item={item} href={href} />
-      <h3>Παρέκκλιση</h3>
-      <ItemRows
-        isInset
-        items={item.deviations.map((deviation) => ({
-          id: deviation.key,
-          title: describeDeviation(deviation, canSeeAmounts),
-          isHighlighted: deviation.status !== "covered",
-        }))}
-      />
-      {item.lines.length > 0 && <LinesTable item={item} />}
-      {item.total !== null && (
-        <p>
+    <section className="d4-item">
+      <div className="ml-line" data-urgent>
+        <span className="ml-thumb" aria-hidden="true">
+          {initialsOf(item.clientName)}
+        </span>
+        <span className="ml-main">
+          <ItemTags item={item} />
           <strong>
-            Σύνολο {formatMoney(item.total)}
-            {item.kind === "monthly" ? " / μήνα" : " εφάπαξ"}
+            <Link className="d1l-title" href={href}>
+              {item.title}
+            </Link>
           </strong>
-        </p>
-      )}
-      <PreviousApproval item={item} canSeeAmounts={canSeeAmounts} />
-      {form ? (
+          <small>
+            {item.clientName} · Υπεύθυνος: {item.managerName ?? "—"}
+          </small>
+        </span>
+        {item.total !== null && (
+          <span className="ml-amount">
+            {formatMoney(item.total)}
+            <small>
+              {item.kind === "monthly" ? "σύνολο / μήνα" : "σύνολο εφάπαξ"}
+            </small>
+          </span>
+        )}
+        <QuickActions
+          href={href}
+          isDeciding={form !== null}
+          onChoose={setForm}
+        />
+      </div>
+      {form && (
         <DecisionForm
           agreementId={item.agreementId}
           form={form}
           onCancel={() => setForm(null)}
           onDone={(comment) => onDecided({ form, comment })}
         />
-      ) : (
-        <div className="btn-row">
-          <button
-            type="button"
-            className="button"
-            data-primary="true"
-            onClick={() => setForm("approve")}
-          >
-            Εγκρίνω
-          </button>
-          <button
-            type="button"
-            className="button"
-            data-danger="true"
-            onClick={() => setForm("reject")}
-          >
-            Απορρίπτω
-          </button>
-          <Link className="button" href={href}>
-            Άνοιγμα για αλλαγές
-          </Link>
-        </div>
       )}
+      <DeviationBox item={item} canSeeAmounts={canSeeAmounts} />
     </section>
   );
 }
 
-// Η ουρά Εγκρίσεων (prototype `screens/d4-queue.tsx`) πάνω στις πραγματικές προτάσεις. Το αποτέλεσμα μιας απόφασης μένει
-// στη θέση του και όταν η πρόταση φεύγει από τη λίστα.
+const waitingText = (count: number): string =>
+  count === 1 ? "1 πρόταση περιμένει" : `${count} προτάσεις περιμένουν`;
+
+// Η ουρά Εγκρίσεων πάνω στις πραγματικές προτάσεις. Το αποτέλεσμα μιας απόφασης μένει στη θέση του και όταν η πρόταση
+// φεύγει από τη λίστα.
 export function ApprovalQueue({
   items,
   canSeeAmounts,
@@ -304,15 +146,13 @@ export function ApprovalQueue({
       <StateNotice kind="empty" title="Καμία πρόταση δεν περιμένει Έγκριση." />
     );
   return (
-    <>
+    <div className="ml-list d4l-queue">
       {decided.map(({ item, decision }) => (
         <ResultLine key={item.agreementId} item={item} decision={decision} />
       ))}
       <p className="muted">
-        {waiting.length === 1
-          ? "1 πρόταση περιμένει"
-          : `${waiting.length} προτάσεις περιμένουν`}{" "}
-        Έγκριση. Η Έγκριση δεν λήγει ποτέ· μένει εδώ μέχρι να απαντήσει κάποιος.
+        {waitingText(waiting.length)} Έγκριση. Η Έγκριση δεν λήγει ποτέ· μένει
+        εδώ μέχρι να απαντήσει κάποιος.
       </p>
       {waiting.map((item) => (
         <ApprovalCard
@@ -324,6 +164,6 @@ export function ApprovalQueue({
           }
         />
       ))}
-    </>
+    </div>
   );
 }

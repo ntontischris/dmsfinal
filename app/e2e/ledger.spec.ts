@@ -29,6 +29,7 @@ test("ο Ιδιοκτήτης καταχωρεί Είσπραξη και ο πε
   // 1. Προκαταβολή: Είσπραξη χωρίς Τιμολόγιο.
   await signIn(page, "owner@example.com");
   await openTab(page, "Χρήματα", "Εισπράξεις");
+  await page.locator("summary", { hasText: "+ Νέα είσπραξη" }).click();
   const form = card(page, "Νέα Είσπραξη");
   await form.getByLabel("Πελάτης").selectOption({ label: clientName });
   await form.getByLabel("Ποσό (€, με ΦΠΑ)").fill("400");
@@ -36,8 +37,8 @@ test("ο Ιδιοκτήτης καταχωρεί Είσπραξη και ο πε
   await button(form, "Καταχώρηση Είσπραξης").click();
   await expect(form.getByRole("status")).toContainText(/Καταχωρήθηκε 400\s€ από/);
 
-  // 2. Η Καρτέλα της ομάδας: αρνητικό υπόλοιπο «υπέρ του πελάτη» και «Προς τιμολόγηση». Ο Πελάτης διαλέγεται από την
-  // κάρτα «Πελάτης», με το υπόλοιπό του δίπλα στο όνομα.
+  // 2. Η Καρτέλα της ομάδας: αρνητικό υπόλοιπο «υπέρ του πελάτη» στην κεφαλίδα και «Προς τιμολόγηση» σε κλειστό κουτί.
+  // Ο Πελάτης διαλέγεται από την κάρτα «Πελάτης», με το υπόλοιπό του δίπλα στο όνομα.
   await page.goto(LEDGER_PATH);
   await pickFilter(page, "Πελάτης", clientName);
   await expect(page).toHaveURL(/client=[0-9a-f-]{36}/);
@@ -45,7 +46,8 @@ test("ο Ιδιοκτήτης καταχωρεί Είσπραξη και ο πε
     page.getByRole("heading", { name: "Υπόλοιπο υπέρ του πελάτη (με ΦΠΑ)" }),
   ).toBeVisible();
   await expect(page.getByText(/^400\s€$/).first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: TO_INVOICE })).toBeVisible();
+  // Το «Προς τιμολόγηση» είναι κλειστό κουτί κάτω από την κεφαλίδα: φαίνεται ο τίτλος του.
+  await expect(page.locator("summary", { hasText: TO_INVOICE })).toBeVisible();
 
   // 3. Ο Χρήστης πελάτη ανοίγει την Καρτέλα από τον Χώρο «Λογαριασμός» και βλέπει τη δική του, χωρίς «Προς τιμολόγηση».
   await switchUserInSpaces(page, CLIENT_EMAIL(P));
@@ -54,8 +56,9 @@ test("ο Ιδιοκτήτης καταχωρεί Είσπραξη και ο πε
   await expect(
     page.getByRole("heading", { name: "Υπόλοιπο υπέρ σου (με ΦΠΑ)" }),
   ).toBeVisible();
+  // Οι κινήσεις είναι γραμμές (li.ml-line), όχι κελιά πίνακα.
   await expect(
-    page.getByRole("cell", { name: /Είσπραξη/ }).first(),
+    page.locator("li.ml-line").filter({ hasText: /Είσπραξη/ }).first(),
   ).toBeVisible();
   await expect(page.getByText(TO_INVOICE)).toHaveCount(0);
   await expect(page.getByText("Προς τιμολόγηση")).toHaveCount(0);
@@ -73,4 +76,12 @@ test("ο Χρήστης πελάτη βλέπει τη λίστα Τιμολογ
   ).toHaveCount(0);
   // Χωρίς τα σύνολα της ομάδας («Μας χρωστούν…»).
   await expect(page.getByText("Μας χρωστούν", { exact: false })).toHaveCount(0);
+  // Η κεφαλίδα λέει τι μένει να πληρώσει και δείχνει «Πώς πληρώνω» (στην Καρτέλα του).
+  await expect(
+    page.getByRole("heading", { name: "Μένουν να πληρωθούν (με ΦΠΑ)" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Πώς πληρώνω" })).toHaveAttribute(
+    "href",
+    `${LEDGER_PATH}#pay`,
+  );
 });

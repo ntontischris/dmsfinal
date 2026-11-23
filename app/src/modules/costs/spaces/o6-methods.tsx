@@ -5,13 +5,13 @@ import { useState } from "react";
 import type { FormState } from "@/lib/form-state";
 import { useKeptForm } from "@/lib/use-kept-form";
 import type { PaymentMethod } from "@/modules/finance";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge } from "@/spaces/screens/shared";
+
+import { MethodsHead, inUseCount, initialsOf } from "./o6-lines";
 
 // Οι Τρόποι είσπραξης για όποιον τους αλλάζει, στη μορφή του ListEditor του prototype (`screens/o-shared.tsx`), με τις
 // πραγματικές ενέργειες της κλασικής κάρτας: προσθήκη, μετονομασία, απόσυρση και επαναφορά· χωρίς διαγραφή.
-// Οι ενέργειες έρχονται από τη σελίδα (server actions του module Οικονομικά).
+// Οι ενέργειες έρχονται από τη σελίδα (server actions του module Οικονομικά). Μορφή «Χρήματα»: κάθε τρόπος μία γραμμή
+// (ml-line) με γρήγορα κουμπιά· η προσθήκη σε κλειστό κουτί «+ Νέος τρόπος».
 
 export type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
@@ -93,82 +93,79 @@ export function RowAction({
 
 function MethodRow({
   method,
-  index,
   actions,
 }: {
   method: PaymentMethod;
-  index: number;
   actions: MethodActions;
 }) {
   const [isRenaming, setIsRenaming] = useState(false);
   return (
-    <ListRow
-      isFaded={method.retired}
-      lead={<span>{index + 1}</span>}
-      title={method.label}
-      sub={
-        isRenaming && !method.retired ? (
+    <li className="ml-line" data-faded={method.retired || undefined}>
+      <span className="ml-thumb" aria-hidden="true">
+        {initialsOf(method.label)}
+      </span>
+      <span className="ml-main">
+        <span className="ml-tag">
+          {method.retired ? "Αποσύρθηκε" : "Σε χρήση"}
+        </span>
+        <strong>{method.label}</strong>
+        {isRenaming && !method.retired && (
           <RenameForm save={actions.save} method={method} />
-        ) : undefined
-      }
-      aside={
-        <>
-          <Badge tone={method.retired ? "faded" : "ok"}>
-            {method.retired ? "Αποσύρθηκε" : "Σε χρήση"}
-          </Badge>
-          {!method.retired && (
-            <button
-              type="button"
-              className="button"
-              aria-expanded={isRenaming}
-              aria-label={`Μετονομασία: ${method.label}`}
-              onClick={() => setIsRenaming((current) => !current)}
-            >
-              Μετονομασία
-            </button>
-          )}
-          <RowAction
-            action={method.retired ? actions.restore : actions.retire}
-            id={method.id}
-            label={method.retired ? "Επαναφορά" : "Απόσυρση"}
-          />
-        </>
-      }
-    />
+        )}
+      </span>
+      <span className="ml-quick">
+        {!method.retired && (
+          <button
+            type="button"
+            aria-expanded={isRenaming}
+            aria-label={`Μετονομασία: ${method.label}`}
+            onClick={() => setIsRenaming((current) => !current)}
+          >
+            Μετονομασία
+          </button>
+        )}
+        <RowAction
+          action={method.retired ? actions.restore : actions.retire}
+          id={method.id}
+          label={method.retired ? "Επαναφορά" : "Απόσυρση"}
+        />
+      </span>
+    </li>
   );
 }
 
 function AddMethod({ save }: { save: Action }) {
-  const [isOpen, setIsOpen] = useState(false);
   const { state, isPending, onSubmit, formRef } = useKeptForm(save, {
     resetOnSuccess: true,
   });
-  if (!isOpen)
-    return (
-      <button type="button" className="button" onClick={() => setIsOpen(true)}>
-        + Νέα τιμή
-      </button>
-    );
   return (
-    <form ref={formRef} className="btn-row" onSubmit={onSubmit}>
-      <input type="hidden" name="id" value="" />
-      <input
-        className="input"
-        name="label"
-        maxLength={MAX_LABEL}
-        aria-label="Νέος τρόπος"
-        placeholder="Νέος τρόπος"
-      />
-      <button
-        type="submit"
-        className="button"
-        data-primary="true"
-        disabled={isPending}
-      >
-        Προσθήκη τρόπου
-      </button>
-      <FormNote state={state} />
-    </form>
+    <details className="ml-box ml-new">
+      <summary>
+        <strong>+ Νέος τρόπος</strong>
+        <small>
+          Ένα όνομα, μόνο στα ελληνικά. Φαίνεται αμέσως στη «Νέα είσπραξη».
+        </small>
+      </summary>
+      <form ref={formRef} className="btn-row" onSubmit={onSubmit}>
+        <input type="hidden" name="id" value="" />
+        <input
+          className="input"
+          name="label"
+          maxLength={MAX_LABEL}
+          aria-label="Νέος τρόπος"
+          placeholder="Νέος τρόπος"
+        />
+        <button
+          type="submit"
+          className="button"
+          data-primary="true"
+          disabled={isPending}
+        >
+          Προσθήκη τρόπου
+        </button>
+        <FormNote state={state} />
+      </form>
+    </details>
   );
 }
 
@@ -180,23 +177,15 @@ export function MethodsEditor({
   actions: MethodActions;
 }) {
   return (
-    <div className="o-card">
-      <Panel label="Τρόποι είσπραξης" aside={<Badge>μόνο ελληνικά</Badge>}>
-        <RowList>
-          {methods.map((method, index) => (
-            <MethodRow
-              key={method.id}
-              method={method}
-              index={index}
-              actions={actions}
-            />
-          ))}
-        </RowList>
-        <div className="btn-row o-list-actions">
-          <AddMethod save={actions.save} />
-        </div>
-        <p className="muted o-hint">{METHODS_NOTE}</p>
-      </Panel>
-    </div>
+    <section className="o6-methods">
+      <MethodsHead inUse={inUseCount(methods)} />
+      <ul className="ml-list">
+        {methods.map((method) => (
+          <MethodRow key={method.id} method={method} actions={actions} />
+        ))}
+      </ul>
+      <AddMethod save={actions.save} />
+      <p className="muted o-hint">{METHODS_NOTE}</p>
+    </section>
   );
 }

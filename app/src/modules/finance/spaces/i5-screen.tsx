@@ -8,14 +8,14 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { financeCaps } from "../caps";
 import { getInvoices } from "../invoices-queries";
 import { LEDGER_NO_ACCESS_TEXT } from "../ledger-labels";
-import { getLedger, listLedgerClients } from "../ledger-queries";
-import type { InvoiceItem } from "../invoices-view-schema";
+import { listLedgerClients } from "../ledger-queries";
 import type { LedgerClient } from "../ledger-view-schema";
-import { balanceHintOf, i5ClientIdOf, i5RowsOf } from "./i5-adapter";
-import { BalanceCards, PaymentCard, ToInvoiceCard } from "./i5-cards";
-import { LedgerTable } from "./i5-ledger";
+import { balanceHintOf, i5ClientIdOf } from "./i5-adapter";
+import { I5Body } from "./i5-body";
 
 import "./i245.css";
+import "./money-lines.css";
+import "./i5-lines.css";
 
 const Spaces = ({ children }: { children: ReactNode }) => (
   <div data-spaces>{children}</div>
@@ -46,43 +46,7 @@ function ClientPicker(props: {
   );
 }
 
-async function I5Body(props: {
-  clientId: string;
-  invoices: readonly InvoiceItem[] | null;
-}) {
-  const ledger = await getLedger(props.clientId);
-  if (!ledger.ok) return <ErrorNotice what="η Καρτέλα Πελάτη" />;
-  const { data } = ledger;
-  const rows = i5RowsOf(data.entries, props.clientId, props.invoices);
-  return (
-    <>
-      <BalanceCards balance={data.balance} overdue={data.overdue} />
-      {rows.length === 0 ? (
-        <StateNotice kind="empty" title="Καμία κίνηση">
-          Δεν υπάρχουν Τιμολόγια ή Εισπράξεις για αυτόν τον Πελάτη.
-        </StateNotice>
-      ) : (
-        <LedgerTable rows={rows} />
-      )}
-      <p className="note">
-        Μόνο το Τιμολόγιο δημιουργεί οφειλή. Αρνητικό υπόλοιπο σημαίνει υπόλοιπο
-        υπέρ του πελάτη (π.χ. προκαταβολή), που συμψηφίζεται με το επόμενο
-        Τιμολόγιο.
-      </p>
-      <div className="grid2">
-        {data.payment && <PaymentCard payment={data.payment} />}
-        {data.toInvoice && (
-          <ToInvoiceCard
-            amount={data.toInvoice.amount}
-            count={data.toInvoice.count}
-          />
-        )}
-      </div>
-    </>
-  );
-}
-
-// I5 Καρτέλα Πελάτη στη νέα εμφάνιση (prototype `screens/I5.tsx`), μόνο για την ομάδα (Οικονομικά + ποσά για όλους):
+// I5 Καρτέλα Πελάτη στη νέα εμφάνιση (Χρήματα restyle: διάλεξε Πελάτη → κεφαλίδα → κουτιά → κινήσεις), μόνο για την ομάδα (Οικονομικά + ποσά για όλους):
 // ο Χρήστης πελάτη έχει τη δική του (SpacesClientLedger). Πελάτες = όσοι έχουν κινήσεις (clients_with_finance)· ο ?client= διαλέγει,
 // αλλιώς ο πρώτος. Η κατάσταση κάθε Τιμολογίου έρχεται από το invoices_view· αν δεν φορτώσει, η Καρτέλα φαίνεται χωρίς αυτήν.
 export async function SpacesLedger({ clientId }: { clientId?: string }) {
@@ -116,10 +80,14 @@ export async function SpacesLedger({ clientId }: { clientId?: string }) {
     );
   return (
     <Spaces>
+      <div className="ml-head i5-head">
+        <p>Διάλεξε Πελάτη: τι χρωστά, τι μπήκε και κάθε κίνηση του λογαριασμού του.</p>
+      </div>
       <ClientPicker clients={clients.data} current={current} />
       <I5Body
         clientId={current}
         invoices={invoices.ok ? invoices.data.items : null}
+        canRegister={caps.canRegister}
       />
     </Spaces>
   );

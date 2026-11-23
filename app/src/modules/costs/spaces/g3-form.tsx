@@ -3,9 +3,9 @@
 import { useState, useTransition } from "react";
 
 import type { FormState } from "@/lib/form-state";
-import { Panel } from "@/spaces/kit/panel";
 
 import { saveProductionEstimate } from "../actions";
+import { G3Box } from "./g3-box";
 import type { HoursForm, HoursValue } from "./g3-model";
 
 // Prototype `screens/g3-form.tsx`. Η φόρμα στέλνει στο πραγματικό saveProductionHours· η εκτίμηση της Εσωτερικής στο
@@ -31,6 +31,10 @@ interface G3FormProps {
   isSaving: boolean;
   onChange: (change: Partial<HoursForm>) => void;
   onSave: () => void;
+  // Ανοιχτό όταν λείπουν ώρες και ο Χρήστης μπορεί να τις γράψει: αυτή είναι η δουλειά της σελίδας.
+  isOpen: boolean;
+  // Η φόρμα έχει νούμερα που δεν αποθηκεύτηκαν (το σήμα τα δείχνει ήδη).
+  isDirty: boolean;
 }
 
 const n = (value: number | null): string =>
@@ -73,9 +77,6 @@ function ReadOnly({ saved }: { saved: HoursValue }) {
         <dt>Άμεσο κόστος</dt>
         <dd>{n(saved.directCost)}</dd>
       </dl>
-      <p className="note">
-        Τις γράφει μόνο όποιος «Διαχειρίζεται κόστος» (αρχικά ο Ιδιοκτήτης).
-      </p>
     </>
   );
 }
@@ -220,20 +221,49 @@ function HoursFields(props: G3FormProps) {
   );
 }
 
+const hoursHint = (props: G3FormProps): string => {
+  if (!props.canManageCost) return "μόνο ανάγνωση";
+  return props.saved.shoot === null && props.saved.edit === null
+    ? "+ γράψε ώρες γυρίσματος και μοντάζ"
+    : `+ γύρισμα ${n(props.saved.shoot)} ώ · μοντάζ ${n(props.saved.edit)} ώ`;
+};
+
 export function G3Form(props: G3FormProps) {
   return (
-    <Panel label="Πραγματικές ώρες">
-      {!props.canManageCost ? (
-        <ReadOnly saved={props.saved} />
-      ) : (
-        <HoursFields {...props} />
-      )}
+    <>
+      <G3Box
+        title="Πραγματικές ώρες"
+        hint={hoursHint(props)}
+        isOpen={props.isOpen}
+        isNew={props.canManageCost}
+      >
+        {!props.canManageCost ? (
+          <ReadOnly saved={props.saved} />
+        ) : (
+          <HoursFields {...props} />
+        )}
+        {props.isDirty && props.canManageCost && (
+          <p className="note">
+            Το σήμα «Υπέρβαση κόστους» δείχνει τα νούμερα της φόρμας (δεν έχουν
+            αποθηκευτεί ακόμα).
+          </p>
+        )}
+      </G3Box>
       {props.canManageCost && props.isInternal && (
-        <InternalEstimateForm
-          productionId={props.productionId}
-          value={props.internalEstimate}
-        />
+        <G3Box
+          title="Εκτίμηση εσωτερικής δουλειάς"
+          hint={
+            props.internalEstimate
+              ? `γύρισμα ${n(props.internalEstimate.shoot)} ώ · μοντάζ ${n(props.internalEstimate.edit)} ώ`
+              : "+ προαιρετική, μόνο ο Ιδιοκτήτης"
+          }
+        >
+          <InternalEstimateForm
+            productionId={props.productionId}
+            value={props.internalEstimate}
+          />
+        </G3Box>
       )}
-    </Panel>
+    </>
   );
 }

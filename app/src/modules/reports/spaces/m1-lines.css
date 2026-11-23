@@ -1,0 +1,41 @@
+/* M1 Αναφορές και M2 Εξαγωγή στην εμφάνιση «Χρήματα» (money-lines.css): γεγονότα, ράφι Αναφορών, γραμμές. Μόνο tokens. */
+.m1-intro { margin: 0 0 1rem; color: var(--color-text-muted); }
+.m1-page { display: grid; gap: .9rem; }
+.m1-page > * { margin: 0; }
+.ml-hero h2 { margin: 0; font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -.02em; }
+.ml-hero .m1-month { font-size: .8rem; font-weight: 700; color: var(--brand-periwinkle); }
+
+/* Λίγοι αριθμοί δίπλα-δίπλα: στο hero και πάνω από τα κουτιά μιας Αναφοράς */
+.m1-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: .55rem; margin: 0; }
+.m1-facts > div {
+  display: grid; gap: .15rem; padding: .7rem .9rem; border-radius: 14px; min-width: 0;
+  border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 14%, transparent);
+  background: color-mix(in oklab, var(--brand-deep) 60%, transparent);
+}
+.m1-facts dt { color: var(--color-text-muted); font-size: .78rem; font-weight: 700; }
+.m1-facts dd { margin: 0; display: grid; gap: .1rem; }
+.m1-facts strong { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.m1-facts small { color: var(--color-text-muted); font-size: .75rem; }
+.ml-hero .m1-facts { position: relative; margin-top: .6rem; }
+.ml-hero .m1-facts > div { background: color-mix(in oklab, var(--brand-midnight) 70%, transparent); }
+
+/* Ράφι Αναφορών: μία σειρά μαλακών καρτών ανά οικογένεια */
+.m1-family { margin: 0 0 .5rem; font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-muted); }
+.m1-picker { margin-bottom: 1.1rem; }
+
+/* Γραμμές Πελατών/Ευκαιριών μέσα στα κουτιά */
+.ml-box .ml-list { margin: 0; }
+.m1-share { display: block; height: 4px; margin-top: .3rem; border-radius: 999px; overflow: hidden; background: color-mix(in oklab, var(--color-text) 10%, transparent); }
+.m1-share > span { display: block; height: 100%; border-radius: 999px; background: var(--brand-periwinkle); }
+.ml-line[data-total] { --c: var(--brand-yellow); }
+.ml-line[aria-current="true"] { border-color: color-mix(in oklab, var(--c) 55%, transparent); }
+.ml-box .rtable { margin: 0; }
+.ml-box .note, .ml-box .muted { margin: .5rem 0 0; }
+
+/* Εξαγωγή Αναφοράς και επιλογές της Εξαγωγής: μία μαλακή σειρά */
+.m1-export { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; justify-content: flex-start; }
+.m1-choices { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin: 0 0 .8rem; }
+.m1-choices .kit-fb { margin-bottom: 0; }
+.m1-cols { display: flex; flex-wrap: wrap; gap: .35rem; margin: .25rem 0 0; }
+.ml-main strong a { color: inherit; text-decoration: none; }
+.ml-main strong a:hover { color: var(--brand-periwinkle); }

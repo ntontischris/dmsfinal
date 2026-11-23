@@ -18,18 +18,13 @@ import { getClient, getClientCard } from "../queries-clients";
 import type { ClientDetail, ClientRow, SalesCaps } from "../types";
 import { AccessRequest } from "./access-request";
 import { allowedTabs, type B2TabRights } from "./b2-adapter";
-import {
-  AttentionPanel,
-  ClientLead,
-  ClientNotices,
-  clientTabHref,
-} from "./b2-briefing";
+import { AttentionPanel, ClientNotices, clientTabHref } from "./b2-briefing";
 import {
   deriveClientPage,
   type ClientPageCtx,
   type ClientPageInput,
 } from "./b2-context";
-import { ClientHeader } from "./b2-header";
+import { ClientHero } from "./b2-header";
 import { loadClient } from "./b2-load";
 import {
   CLIENT_TAB_LABELS,
@@ -37,11 +32,11 @@ import {
   resolveClientTab,
   type ClientTab,
 } from "./b2-page-model";
-import { ClientSide } from "./b2-side";
 import { ClientTabBody } from "./b2-tab-bodies";
 
+import "../../finance/spaces/money-lines.css";
 import "./b2.css";
-import "./b2-panels.css";
+import "./b2-lines.css";
 
 interface SpacesClientProps {
   clientId: string;
@@ -115,7 +110,7 @@ function Merged({ client }: { client: ClientDetail }) {
   );
 }
 
-// Οι πέντε καρτέλες στη σειρά· οι «Χρήστες Πελάτη» ανοίγουν από την πλαϊνή στήλη.
+// Οι πέντε καρτέλες στη σειρά· οι «Χρήστες Πελάτη» ανοίγουν από το κουτί «Στοιχεία».
 function ClientTabsNav({
   ctx,
   active,
@@ -184,24 +179,18 @@ async function ClientView(props: ClientViewProps) {
   return (
     <Frame>
       <div className="b2">
-        <ClientHeader ctx={ctx} />
-        <ClientLead ctx={ctx} />
+        <ClientHero ctx={ctx} />
         <ClientNotices ctx={ctx} />
         <AttentionPanel ctx={ctx} />
-        <div className="b2-split">
-          <div className="b2-main">
-            <ClientTabsNav ctx={ctx} active={active} />
-            <ClientTabBody ctx={ctx} tab={active} />
-          </div>
-          <ClientSide ctx={ctx} />
-        </div>
+        <ClientTabsNav ctx={ctx} active={active} />
+        <ClientTabBody ctx={ctx} tab={active} focus={props.tab} />
       </div>
     </Frame>
   );
 }
 
-// B2 Σελίδα Πελάτη στη νέα εμφάνιση, «Πέντε ενωμένες καρτέλες»: κεφαλίδα-ενημέρωση (στάδιο, πρόταση-σύνοψη,
-// βηματόμετρο, «Χρειάζεται προσοχή»), πέντε καρτέλες ανά δουλειά και πλαϊνή στήλη «Στοιχεία». Η πρόσβαση αποφασίζεται
+// B2 Σελίδα Πελάτη στο ύφος των «Χρημάτων», «Πέντε ενωμένες καρτέλες»: κεφαλίδα με το Επόμενο βήμα, «Χρειάζεται
+// προσοχή» πάντα ορατό, πέντε καρτέλες ανά δουλειά με κλειστά κουτιά (τα «Στοιχεία» στην Επισκόπηση). Η πρόσβαση αποφασίζεται
 // στη βάση, όπως στη σημερινή σελίδα.
 export async function SpacesClient({
   clientId,

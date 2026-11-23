@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { setPublic } from "../actions-items";
 import type { CatalogueItem } from "../types";
 
 import { visitorLine } from "./c2-adapter";
+import { C2Box } from "./c2-box";
 import { C2Form, C2Submit, Dash, Field } from "./c2-form";
 
 const INTRO =
@@ -148,7 +147,7 @@ function EditablePublic({ item }: { item: CatalogueItem }) {
   const [showsPrice, setShowsPrice] = useState(item.showsPrice);
   return (
     <C2Form action={setPublic} itemId={item.id}>
-      <Panel label="Δημόσιο">
+      <C2Box title="Δημόσιο" hint={visitorLine(item, { isPublic, showsPrice })}>
         <p className="muted">{INTRO}</p>
         <PublicFields
           item={item}
@@ -159,7 +158,7 @@ function EditablePublic({ item }: { item: CatalogueItem }) {
           onShowsPrice={setShowsPrice}
         />
         <C2Submit label="Αποθήκευση" onlyWhenChanged />
-      </Panel>
+      </C2Box>
     </C2Form>
   );
 }
@@ -175,7 +174,13 @@ export function C2Public({
   if (item.kind !== "package") return null;
   if (!canEdit)
     return (
-      <Panel label="Δημόσιο">
+      <C2Box
+        title="Δημόσιο"
+        hint={visitorLine(item, {
+          isPublic: item.isPublic,
+          showsPrice: item.showsPrice,
+        })}
+      >
         <p className="muted">{INTRO}</p>
         <PublicFields
           item={item}
@@ -183,7 +188,7 @@ export function C2Public({
           isPublic={item.isPublic}
           showsPrice={item.showsPrice}
         />
-      </Panel>
+      </C2Box>
     );
   // Το key αλλάζει μόνο με αρχειοθέτηση/επαναφορά: τα κουτάκια ξαναγεμίζουν από το item, χωρίς να χαθεί το «Αποθηκεύτηκε».
   return <EditablePublic key={`${item.id}:${item.isRetired}`} item={item} />;

@@ -1,24 +1,10 @@
 import type { ReactNode } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { getPeriods } from "../queries";
 import { isPeriodCode, type PeriodCode } from "../url";
 import type { ReportPeriod } from "../view-schema";
 
 // Κοινά κομμάτια των σωμάτων Αναφορών (prototype `screens/m1-finance-parts.tsx`). Το ExportRow είναι στο m1-export-row.
-
-export function SummaryCard(props: {
-  label: string;
-  basis: string;
-  value: string;
-}) {
-  return (
-    <Panel label={props.label} aside={props.basis}>
-      <strong className="m1f-big">{props.value}</strong>
-    </Panel>
-  );
-}
 
 export function Cell(props: {
   label: string;

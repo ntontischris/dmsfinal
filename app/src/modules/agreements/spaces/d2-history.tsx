@@ -1,4 +1,3 @@
-import { Panel } from "@/spaces/kit/panel";
 import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 
 import { formatDate, formatDateTime } from "../helpers";
@@ -8,6 +7,7 @@ import type {
   KindInfo,
   SignatureInfo,
 } from "../types";
+import { D2Box } from "./d2-box";
 import { ItemRows } from "./lane-rows";
 
 // Αιτήματα αλλαγών, Αναθεωρήσεις και Υπογραφή (prototype `screens/d2-history.tsx`), από την πραγματική Συμφωνία.
@@ -32,7 +32,10 @@ export function ChangeRequestsSection({
 }) {
   const { changeRequests: requests, revision } = agreement;
   return (
-    <Panel label="Αιτήματα αλλαγών από τον πελάτη">
+    <D2Box
+      title="Αιτήματα αλλαγών από τον πελάτη"
+      hint={requests.length === 0 ? "κανένα" : `${requests.length} αιτήματα`}
+    >
       {requests.length === 0 ? (
         <p className="muted">Κανένα αίτημα αλλαγών.</p>
       ) : (
@@ -57,7 +60,7 @@ export function ChangeRequestsSection({
         />
       )}
       <p className="muted">Νέα αναθεώρηση τα καθαρίζει από τη μέτρηση.</p>
-    </Panel>
+    </D2Box>
   );
 }
 
@@ -71,7 +74,10 @@ export function RevisionsSection({
     (a, b) => b.number - a.number,
   );
   return (
-    <Panel label="Αναθεωρήσεις">
+    <D2Box
+      title="Αναθεωρήσεις"
+      hint={`${newestFirst.length} · τελευταία v${newestFirst[0]?.number ?? "—"}`}
+    >
       <ItemRows
         items={newestFirst.map((revision) => {
           const { approval } = revision;
@@ -108,11 +114,11 @@ export function RevisionsSection({
           };
         })}
       />
-    </Panel>
+    </D2Box>
   );
 }
 
-const channelText = (signature: SignatureInfo): string => {
+export const channelText = (signature: SignatureInfo): string => {
   if (signature.method === "outside")
     return `εκτός συστήματος: ${signature.reference ?? "—"}`;
   const delivery =
@@ -140,22 +146,18 @@ const usedText = (
 export function SignatureSection({
   agreement,
   kinds,
-  canDownload,
 }: {
   agreement: AgreementDetail;
   kinds: readonly KindInfo[];
-  // Το PDF έχει τιμές: μόνο με «Βλέπει ποσά».
-  canDownload: boolean;
 }) {
   const { signature } = agreement;
   if (signature === null) return null;
   const used = usedText(signature, kinds);
   return (
-    <Panel label="Υπογραφή">
-      <p>
-        Υπέγραψε {signature.signedName} στις {formatDate(signature.signedOn)}{" "}
-        {channelText(signature)}
-      </p>
+    <D2Box
+      title="Υπογραφή"
+      hint={`${signature.signedName} · ${formatDate(signature.signedOn)}`}
+    >
       <dl className="dl">
         {signature.ip && (
           <>
@@ -178,11 +180,6 @@ export function SignatureSection({
           </>
         )}
       </dl>
-      {canDownload && (
-        <p>
-          <a href={`/app/agreements/${agreement.id}/pdf`}>Λήψη PDF</a>
-        </p>
-      )}
-    </Panel>
+    </D2Box>
   );
 }

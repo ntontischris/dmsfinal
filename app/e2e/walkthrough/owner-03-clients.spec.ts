@@ -161,6 +161,11 @@ test("03 · νέος Πελάτης με Επωνυμία, Πόλη και ΑΦ�
     tabs.getByRole("link", { name: "Επισκόπηση", exact: true }),
   ).toHaveAttribute("aria-current", "page");
 
+  await page
+    .locator("summary", {
+      has: page.getByRole("heading", { name: "Στοιχεία", exact: true }),
+    })
+    .click();
   const edit = side.locator("form", { has: page.locator('input[name="afm"]') });
   await expect(async () => {
     if (!(await edit.isVisible()))
@@ -388,6 +393,10 @@ const filtersRow = (page: Page) =>
   page.getByRole("group", { name: "Φίλτρα", exact: true });
 
 async function openCard(page: Page, label: string) {
+  // Τα φίλτρα ζουν σε κλειστό κουτί «Φίλτρα» (ανοίγει μόνο του όταν κάποιο είναι ενεργό).
+  const box = page.locator("details.b1-filters");
+  if ((await box.getAttribute("open")) === null)
+    await box.locator("summary").first().click();
   const card = filtersRow(page)
     .locator("details")
     .filter({

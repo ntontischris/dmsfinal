@@ -1,5 +1,4 @@
 import { FilterBar } from "@/spaces/kit/filter-bar";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import {
@@ -8,6 +7,7 @@ import {
   RECEIPT_COLUMNS,
 } from "../export/datasets";
 import { packMonths, pickPackMonth, type ExportQuery } from "../export/url";
+import { Box } from "./m1-box";
 import { PackButton } from "./m2-buttons";
 import { m2Href, packButtonLabel, packMonthLabel } from "./m2-model";
 
@@ -37,17 +37,36 @@ function SheetColumns() {
 
 // Πακέτο λογιστή (prototype `screens/m2-pack.tsx`): οι τελευταίοι 6 μήνες ως σήμερα (ημερομηνία της βάσης), προεπιλογή ο
 // πρώτος κλεισμένος. Το .zip το φτιάχνει ο browser από ό,τι δίνει η βάση (export_accountant_pack, που γράφει Ίχνος).
+// Στην εμφάνιση «Χρήματα»: hero με τον μήνα και το ένα κύριο κουμπί· ο μήνας μια μαλακή κάρτα, το περιεχόμενο σε κουτί.
 export function PackSection(props: { today: string; query: ExportQuery }) {
   const months = packMonths(props.today);
   const current = months[0];
   const month = pickPackMonth(months, props.query.month);
   return (
-    <div className="m2-section">
-      <Panel label="Πακέτο λογιστή">
-        <p className="muted">
-          Ό,τι χρειάζεται ο λογιστής για έναν μήνα, με ένα κουμπί. Αρχικά
-          επιλέγεται ο τελευταίος μήνας που έκλεισε· διάλεξε άλλον αν θέλεις.
-        </p>
+    <>
+      <header className="ml-hero">
+        <span className="ml-hero-mono" aria-hidden="true">
+          ZIP
+        </span>
+        <div>
+          <h2>Πακέτο λογιστή</h2>
+          <p className="ml-hero-amount">
+            {packMonthLabel(month, current)}
+            <small>Excel + τα PDF των Τιμολογίων του μήνα</small>
+          </p>
+          <p className="muted">
+            Ό,τι χρειάζεται ο λογιστής για έναν μήνα, με ένα κουμπί. Αρχικά
+            επιλέγεται ο τελευταίος μήνας που έκλεισε· διάλεξε άλλον αν θέλεις.
+          </p>
+        </div>
+        <div className="ml-quick">
+          <PackButton
+            month={month}
+            label={`${packButtonLabel(month)} (.zip)`}
+          />
+        </div>
+      </header>
+      <div className="m1-choices">
         <FilterBar
           label="Μήνας"
           filters={[
@@ -67,19 +86,15 @@ export function PackSection(props: { today: string; query: ExportQuery }) {
             σήμερα.
           </p>
         )}
+      </div>
+      <Box title="Τι έχει το πακέτο" hint="3 φύλλα Excel και τα PDF">
         <p className="muted">
           Ένα αρχείο .zip με ένα Excel (Τιμολόγια, Εισπράξεις και, για όποιον
-          βλέπει Κόστος ή ποσά, Έξοδα) και τα PDF των Τιμολογίων του μήνα. Τα πιστωτικά είναι στο φύλλο «Τιμολόγια»,
-          με «Είδος: Πιστωτικό».
+          βλέπει Κόστος ή ποσά, Έξοδα) και τα PDF των Τιμολογίων του μήνα. Τα
+          πιστωτικά είναι στο φύλλο «Τιμολόγια», με «Είδος: Πιστωτικό».
         </p>
         <SheetColumns />
-        <div className="btn-row">
-          <PackButton
-            month={month}
-            label={`${packButtonLabel(month)} (.zip)`}
-          />
-        </div>
-      </Panel>
-    </div>
+      </Box>
+    </>
   );
 }

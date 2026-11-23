@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import { updateBasics } from "../actions-draft";
-import { endOfTerm, formatDate, formatMoney, periodLabel } from "../helpers";
+import { formatDate, formatMoney, periodLabel } from "../helpers";
 import type {
   AgreementDetail,
   Language,
   PeriodRow,
   PeriodState,
 } from "../types";
+import { D2Box } from "./d2-box";
+import { endText } from "./d2-model";
 import { D2Form, Field, IdField, NumberInput } from "./d2-ui";
 
 // «Έναρξη και διάρκεια» και «Περίοδοι» (prototype `screens/d2-schedule.tsx`, `d2-history.tsx`). Τίτλος, γλώσσα και Ισχύς
@@ -23,16 +24,6 @@ const LANGUAGES: readonly { value: Language; label: string }[] = [
   { value: "el", label: "Ελληνικά" },
   { value: "en", label: "English" },
 ];
-
-const endText = (a: AgreementDetail): string => {
-  if (a.kind === "one_off") return "Όταν παραδοθεί η Παραγωγή";
-  if (a.endOn !== null) return formatDate(a.endOn);
-  if (a.startOn !== null && a.durationMonths !== null)
-    return formatDate(endOfTerm(a.startOn, a.durationMonths));
-  return a.durationMonths === null
-    ? "ορίζεται με την Έναρξη"
-    : `${a.durationMonths} μήνες από την υπογραφή, μείον μία μέρα`;
-};
 
 function StartInput({ agreement }: { agreement: AgreementDetail }) {
   const [isOnSignature, setIsOnSignature] = useState(
@@ -167,7 +158,10 @@ function ScheduleRows({ agreement }: { agreement: AgreementDetail }) {
 
 export function ScheduleSection({ agreement }: { agreement: AgreementDetail }) {
   return (
-    <Panel label="Έναρξη και διάρκεια">
+    <D2Box
+      title="Έναρξη και διάρκεια"
+      hint={`${agreement.startOn === null ? "έναρξη με την υπογραφή" : formatDate(agreement.startOn)} → ${endText(agreement)}`}
+    >
       {agreement.can.edit ? (
         <D2Form
           action={updateBasics}
@@ -185,7 +179,7 @@ export function ScheduleSection({ agreement }: { agreement: AgreementDetail }) {
           μέρα της υπογραφής.
         </p>
       )}
-    </Panel>
+    </D2Box>
   );
 }
 
@@ -259,8 +253,9 @@ export function PeriodsSection({
   const showProduction =
     canSeeProductions && periods.some((p) => p.productionId !== null);
   return (
-    <Panel
-      label={agreement.state === "proposal" ? "Σχέδιο Περιόδων" : "Περίοδοι"}
+    <D2Box
+      title={agreement.state === "proposal" ? "Σχέδιο Περιόδων" : "Περίοδοι"}
+      hint={`${periods.length} Περίοδοι`}
     >
       <p className="muted">
         Ημερολογιακοί μήνες. Η μερική πρώτη δίνει ολόκληρες Παροχές, η μερική
@@ -290,6 +285,6 @@ export function PeriodsSection({
           </tbody>
         </table>
       </div>
-    </Panel>
+    </D2Box>
   );
 }

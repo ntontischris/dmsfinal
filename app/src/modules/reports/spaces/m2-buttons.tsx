@@ -44,6 +44,7 @@ export function DatasetButton(props: {
   period?: PeriodCode;
   format: ExportFormat;
   what: string;
+  isPrimary?: boolean;
 }) {
   const router = useRouter();
   const task = async () => {
@@ -59,5 +60,5 @@ export function DatasetButton(props: {
         .join(" "),
     };
   };
-  return <FileButton label="Εξαγωγή" task={task} isPrimary />;
+  return <FileButton label="Εξαγωγή" task={task} isPrimary={props.isPrimary} />;
 }

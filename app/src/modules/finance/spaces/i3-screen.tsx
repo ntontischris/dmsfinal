@@ -5,18 +5,17 @@ import { hrefOf } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { financeCaps } from "../caps";
-import type { InvoiceDetail } from "../invoice-detail-schema";
-import { KIND_LABELS } from "../invoices-labels";
 import { getInvoiceContext, getInvoiceDetail } from "../invoices-queries";
 import { athensToday } from "../money";
 import { listClientOptions } from "../queries";
-import type { ReadResult } from "../read";
 import type { ClientOption } from "../types";
-import { I3Correct } from "./i3-correct";
-import { InvoiceTrail } from "./i3-trail";
+import { CorrectionPage } from "./i3-correction";
+import { I3Hero, Step } from "./i3-parts";
 import { I3Workbench } from "./i3-workbench";
 
 import "./i13.css";
+import "./money-lines.css";
+import "./i3-lines.css";
 
 export interface SpacesNewInvoiceQuery {
   // Ήδη ελεγμένα ως uuid από τη σελίδα.
@@ -24,60 +23,95 @@ export interface SpacesNewInvoiceQuery {
   invoiceId?: string;
 }
 
-function ClientPicker({ clients, clientId }: { clients: readonly ClientOption[]; clientId: string | undefined }) {
+// Βήμα 1: ο Πελάτης στη διεύθυνση (?client=), με φόρμα GET.
+function ClientStep({
+  clients,
+  clientId,
+}: {
+  clients: readonly ClientOption[];
+  clientId: string | undefined;
+}) {
+  const name = clients.find((c) => c.id === clientId)?.name;
   return (
-    <form method="get" action={hrefOf("I3")} className="toolbar">
-      <label>
-        Πελάτης{" "}
-        <select className="select" name="client" defaultValue={clientId ?? ""}>
-          {clientId === undefined && <option value="">Διάλεξε…</option>}
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button type="submit" className="button">
-        Αλλαγή
-      </button>
-    </form>
+    <Step
+      no={1}
+      title="Πελάτης"
+      hint={name ?? "Διάλεξε τον Πελάτη του Τιμολογίου για να συνεχίσεις."}
+    >
+      <form method="get" action={hrefOf("I3")} className="toolbar">
+        <label>
+          Πελάτης{" "}
+          <select
+            className="select"
+            name="client"
+            defaultValue={clientId ?? ""}
+          >
+            {clientId === undefined && <option value="">Διάλεξε…</option>}
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" className="button">
+          {clientId === undefined ? "Συνέχεια" : "Αλλαγή"}
+        </button>
+      </form>
+    </Step>
   );
 }
 
-async function Workbench({ clientId }: { clientId: string }) {
+async function Workbench({
+  clientId,
+  clientStep,
+}: {
+  clientId: string;
+  clientStep: ReactNode;
+}) {
   const ctx = await getInvoiceContext(clientId);
-  if (!ctx.ok) return <ErrorNotice what="τα στοιχεία του Πελάτη" />;
-  return <I3Workbench key={clientId} clientId={clientId} ctx={ctx.data} today={athensToday()} />;
+  if (!ctx.ok)
+    return (
+      <div className="ml-stack">
+        {clientStep}
+        <ErrorNotice what="τα στοιχεία του Πελάτη" />
+      </div>
+    );
+  return (
+    <I3Workbench
+      key={clientId}
+      clientId={clientId}
+      ctx={ctx.data}
+      today={athensToday()}
+      clientStep={clientStep}
+    />
+  );
+}
+
+// Χωρίς Πελάτη: hero χωρίς ποσό και μόνο το βήμα 1.
+function NoClient({ clientStep }: { clientStep: ReactNode }) {
+  return (
+    <div className="ml-stack">
+      <I3Hero
+        tag="Νέο τιμολόγιο"
+        title="Νέο τιμολόγιο"
+        facts={[]}
+        lead="Ανεβάζεις το PDF που εξέδωσες, γράφεις τα στοιχεία του και το καταχωρείς. Πρώτα ο Πελάτης."
+      />
+      {clientStep}
+    </div>
+  );
 }
 
 const wrap = (body: ReactNode) => <div data-spaces>{body}</div>;
 
-// Διόρθωση (?invoice=): το Ίχνος και η Διόρθωση/Ακύρωση της καταχώρισης, όπως στο prototype κάτω από τον πάγκο.
-// Πάνω τους μία γραμμή λέει ποια καταχώριση είναι (είδος, αριθμός, Πελάτης, τι διορθώνει), όπως η κλασική σελίδα.
-function CorrectionPart({ detail }: { detail: ReadResult<InvoiceDetail> }) {
-  if (!detail.ok) return <ErrorNotice what="η καταχώριση" />;
-  const invoice = detail.data;
-  return (
-    <>
-      <p className="muted">
-        {KIND_LABELS[invoice.kind]} {invoice.number} · {invoice.clientName}
-        {invoice.creditForNumber && ` · διορθώνει ${invoice.creditForNumber}`}
-      </p>
-      <InvoiceTrail number={invoice.number} trail={invoice.trail} />
-      {invoice.voided !== null && (
-        <StateNotice kind="empty" title="Η καταχώριση είναι ακυρωμένη">
-          Λόγος: {invoice.voided.reason}
-        </StateNotice>
-      )}
-      {invoice.voided === null && invoice.can.correct && <I3Correct key={invoice.id} invoice={invoice} />}
-    </>
-  );
-}
-
-// I3 Καταχώρηση Τιμολογίου στη νέα εμφάνιση (prototype `screens/I3.tsx`): Πελάτης, πάγκος καταχώρησης με κάλυψη των
-// Τιμολογητέων, και με ?invoice= το Ίχνος και η Διόρθωση/Ακύρωση. Όλα πάνω στις πραγματικές ενέργειες.
-export async function SpacesNewInvoice({ query }: { query: SpacesNewInvoiceQuery }) {
+// I3 Καταχώρηση Τιμολογίου: hero με το σύνολο και τα βήματα Πελάτης → PDF → Στοιχεία → Έλεγχος και καταχώρηση.
+// Με ?invoice= η σελίδα της διόρθωσης: Διόρθωση, Ακύρωση, Ίχνος. Όλα πάνω στις πραγματικές ενέργειες.
+export async function SpacesNewInvoice({
+  query,
+}: {
+  query: SpacesNewInvoiceQuery;
+}) {
   const caps = financeCaps(await getViewer());
   if (!caps.canView || !caps.canRegisterInvoices)
     return wrap(
@@ -85,19 +119,24 @@ export async function SpacesNewInvoice({ query }: { query: SpacesNewInvoiceQuery
         Μόνο όποιος καταχωρεί Τιμολόγια.
       </StateNotice>,
     );
+  const detail = query.invoiceId
+    ? await getInvoiceDetail(query.invoiceId)
+    : null;
+  if (detail?.ok) return wrap(<CorrectionPage detail={detail} />);
   const clients = await listClientOptions();
-  if (!clients.ok) return wrap(<ErrorNotice what="την Καταχώρηση Τιμολογίου" />);
-  const detail = query.invoiceId ? await getInvoiceDetail(query.invoiceId) : null;
-  const clientId = (detail?.ok ? detail.data.clientId : undefined) ?? query.clientId;
+  if (!clients.ok)
+    return wrap(<ErrorNotice what="την Καταχώρηση Τιμολογίου" />);
+  const clientStep = (
+    <ClientStep clients={clients.data} clientId={query.clientId} />
+  );
   return wrap(
     <>
-      <ClientPicker clients={clients.data} clientId={clientId} />
-      {clientId === undefined ? (
-        <p className="muted">Διάλεξε τον Πελάτη του Τιμολογίου για να συνεχίσεις.</p>
+      {detail !== null && <CorrectionPage detail={detail} />}
+      {query.clientId === undefined ? (
+        <NoClient clientStep={clientStep} />
       ) : (
-        <Workbench clientId={clientId} />
+        <Workbench clientId={query.clientId} clientStep={clientStep} />
       )}
-      {detail !== null && <CorrectionPart detail={detail} />}
     </>,
   );
 }

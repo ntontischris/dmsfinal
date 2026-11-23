@@ -1,5 +1,4 @@
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 import { Entity, Person } from "@/spaces/kit/parts";
 import {
   Badge,
@@ -17,7 +16,7 @@ import { money, monthlyText } from "./m1-adapter";
 import { NoAmountsNote } from "./m1-finance-parts";
 import { ExportRow } from "./m1-export-row";
 import type { ReportBodyProps } from "./m1-model";
-import { Cards, Section, rowValue } from "./m1-sales-parts";
+import { Cards, Section, opportunitiesHint, rowValue } from "./m1-sales-parts";
 
 // Κερδισμένες και χαμένες, Πηγές Ευκαιριών (prototype `screens/m1-sales-results.tsx`) πάνω στα report_sales_results και
 // report_sales_sources. Ποσοστά από τη βάση.
@@ -98,7 +97,7 @@ export function ResultsBody(props: ReportBodyProps & { data: SalesResults }) {
     );
   }
   return (
-    <div className="m1s-body">
+    <div className="m1s-body ml-stack">
       <NoAmountsNote amounts={data.amounts} />
       <Cards
         items={[
@@ -112,7 +111,10 @@ export function ResultsBody(props: ReportBodyProps & { data: SalesResults }) {
         ]}
       />
       {data.lossReasons.length > 0 && (
-        <Section title="Λόγοι απώλειας">
+        <Section
+          title="Λόγοι απώλειας"
+          hint={`${data.lossReasons.length} λόγοι · ${data.totals.lost} χαμένες`}
+        >
           <div className="scroll">
             <table className="rtable m1s-table">
               <thead>
@@ -135,7 +137,10 @@ export function ResultsBody(props: ReportBodyProps & { data: SalesResults }) {
           </div>
         </Section>
       )}
-      <Section title="Οι Ευκαιρίες που έκλεισαν">
+      <Section
+        title="Οι Ευκαιρίες που έκλεισαν"
+        hint={`${opportunitiesHint(data.rows.length)} · ${data.totals.won} κερδισμένες`}
+      >
         <ClosedTable rows={data.rows} showOwner={data.showSeller} />
       </Section>
       {canExport && (
@@ -199,9 +204,12 @@ export function SourcesBody(props: ReportBodyProps & { data: SalesSources }) {
     );
   }
   return (
-    <div className="m1s-body">
+    <div className="m1s-body ml-stack">
       <p className="note">Μετρά τις Ευκαιρίες που άνοιξαν μέσα στην περίοδο.</p>
-      <Panel label="Πηγή" isFlush>
+      <Section
+        title="Πηγή"
+        hint={`${data.rows.length} πηγές · ${data.totals.opened} άνοιξαν`}
+      >
         <div className="scroll">
           <table className="rtable m1s-table">
             <thead>
@@ -240,8 +248,11 @@ export function SourcesBody(props: ReportBodyProps & { data: SalesSources }) {
             </tbody>
           </table>
         </div>
-      </Panel>
-      <Section title="Οι Ευκαιρίες της περιόδου">
+      </Section>
+      <Section
+        title="Οι Ευκαιρίες της περιόδου"
+        hint={opportunitiesHint(data.opportunities.length)}
+      >
         <SourcesOpportunities data={data} />
       </Section>
       {canExport && (

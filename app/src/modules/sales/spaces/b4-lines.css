@@ -1,0 +1,20 @@
+/* B4 Σελίδα Ευκαιρίας στη μορφή των «Χρημάτων»: κεφαλίδα με τη δουλειά της μέρας, κλειστά κουτιά από κάτω. */
+[data-look='spaces'] {
+& .b4-page { gap: 1rem; }
+& .b4-hero > div { min-width: 0; max-width: 52rem; }
+& .b4-hero h1 { margin: .35rem 0 0; font-size: clamp(1.4rem, 2.8vw, 2rem); letter-spacing: -.02em; }
+& .b4-tags { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0; }
+& .b4-facts { display: flex; flex-wrap: wrap; gap: .5rem; margin: .8rem 0 0; }
+& .b4-facts > div {
+  display: grid; gap: .15rem; min-width: 0; padding: .45rem .75rem; border-radius: 12px;
+  background: color-mix(in oklab, var(--brand-midnight) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 14%, transparent);
+}
+& .b4-facts > .b4-fact-wide { flex: 1 1 100%; }
+& .b4-facts dt { color: var(--color-text-muted); font-size: .72rem; font-weight: 700; }
+& .b4-facts dd { margin: 0; font-size: var(--text-sm); }
+& .b4-facts dd a { color: var(--color-text); }
+& .b4-facts :is(select, input, button) { font-size: var(--text-xs); }
+& .b4-hero .note { margin: .7rem 0 0; }
+& .b4-hero > .ml-quick { flex-wrap: wrap; justify-content: flex-end; max-width: 22rem; }
+}

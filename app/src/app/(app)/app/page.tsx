@@ -10,11 +10,14 @@ export default async function TodayPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { customize } = await searchParams;
+  const { customize, g } = await searchParams;
   return (
     <>
       <SpacesFirstSteps />
-      <SpacesToday isCustomizing={customize === "1"} />
+      <SpacesToday
+        isCustomizing={customize === "1"}
+        group={typeof g === "string" ? g : undefined}
+      />
     </>
   );
 }

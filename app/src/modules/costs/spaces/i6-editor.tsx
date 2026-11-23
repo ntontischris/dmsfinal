@@ -1,21 +1,18 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 
 import { INITIAL_FORM_STATE, type FormState } from "@/lib/form-state";
-import { Panel } from "@/spaces/kit/panel";
-import { fmtMoney } from "@/spaces/screens/shared";
 
 import { saveExpenses } from "../actions-expenses";
 import type { ExpenseCategory } from "../expenses-schema";
-import { CategoryCard } from "./i6-category";
+import { CategoryRow } from "./i6-row";
+import { I6Facts, I6HeroShell } from "./i6-hero";
 import {
   addCategory,
   applyEdit,
   applyRemoval,
   draftsTotal,
-  fmtRate,
-  rateOf,
   toCategories,
   toDrafts,
   undoLast,
@@ -26,6 +23,8 @@ import {
 
 // Ο επεξεργαστής Εξόδων (prototype `screens/i6-editor.tsx`). Προσθήκη της εφαρμογής: η «Αποθήκευση» στο πραγματικό
 // `saveExpenses` (όλη η ανάλυση μαζί με τις ώρες) και το σύνολο ενός μήνα που έχει μόνο σύνολο, χωρίς ανάλυση.
+// Εμφάνιση «Χρημάτων»: η κεφαλίδα (ml-hero) με το Κόστος ώρας και τη μία «Αποθήκευση», κάθε κατηγορία μία γραμμή που
+// ανοίγει, και η προσθήκη κατηγορίας σε κλειστό κουτί «+ Νέα κατηγορία».
 
 interface EditorProps {
   month: string;
@@ -36,40 +35,9 @@ interface EditorProps {
   canEditHours?: boolean;
   // Μήνας χωρίς ανάλυση: το ένα σύνολό του μετρά όσο δεν υπάρχουν γραμμές.
   baseTotal?: number;
-}
-
-interface SummaryProps {
-  total: number;
-  hours: number;
-  editable: boolean;
-  onHours: (hours: number) => void;
-}
-
-function Summary({ total, hours, editable, onHours }: SummaryProps) {
-  return (
-    <Panel label="Κόστος ώρας">
-      <p className="i67-big">{fmtRate(rateOf(total, hours))}</p>
-      <dl className="dl">
-        <dt>Σύνολο εξόδων</dt>
-        <dd>{fmtMoney(total)}</dd>
-        <dt>Παραγωγικές ώρες</dt>
-        <dd>
-          {editable ? (
-            <input
-              className="input"
-              type="number"
-              min={1}
-              aria-label="Παραγωγικές ώρες"
-              value={hours}
-              onChange={(e) => onHours(Number(e.target.value) || 0)}
-            />
-          ) : (
-            hours
-          )}
-        </dd>
-      </dl>
-    </Panel>
-  );
+  // Οι καρτέλες μηνών και οι σημειώσεις του μήνα, μέσα στην κεφαλίδα.
+  tabs: ReactNode;
+  notes?: ReactNode;
 }
 
 interface SaveProps {
@@ -90,7 +58,7 @@ function SaveRow({ month, cats, hours, touched, onSaved }: SaveProps) {
     INITIAL_FORM_STATE,
   );
   return (
-    <form action={action}>
+    <form action={action} className="i6-save-form">
       <input type="hidden" name="month" value={month} />
       <input
         type="hidden"
@@ -108,7 +76,7 @@ function SaveRow({ month, cats, hours, touched, onSaved }: SaveProps) {
           {state.notice}
         </p>
       )}
-      <p className="btn-row">
+      <p>
         <button
           type="submit"
           className="button"
@@ -122,91 +90,128 @@ function SaveRow({ month, cats, hours, touched, onSaved }: SaveProps) {
   );
 }
 
-export function I6Editor({
-  month,
-  categories,
-  productiveHours,
-  editable,
-  canEditHours = editable,
-  baseTotal = 0,
-}: EditorProps) {
+function NewCategoryBox({ onAdd }: { onAdd: () => void }) {
+  return (
+    <details className="ml-box ml-new">
+      <summary>
+        <strong>+ Νέα κατηγορία</strong>
+        <small>
+          Κατηγορία → έξοδα → γραμμές με ποσό. Μετά η «Αποθήκευση» πάνω δεξιά.
+        </small>
+      </summary>
+      <p>
+        <button type="button" className="button" onClick={onAdd}>
+          Προσθήκη κατηγορίας
+        </button>
+      </p>
+    </details>
+  );
+}
+
+function UndoBar({ message, onUndo }: { message: string; onUndo: () => void }) {
+  // Στο τέλος και «κολλημένο» κάτω: φαίνεται όπου κι αν πατήθηκε η αφαίρεση.
+  return (
+    <p className="note btn-row i67-undo" role="status">
+      <span>{message}</span>
+      <button
+        type="button"
+        className="button"
+        data-primary="true"
+        onClick={onUndo}
+      >
+        Αναίρεση
+      </button>
+    </p>
+  );
+}
+
+function useEditor(categories: readonly ExpenseCategory[], productiveHours: number) {
   const [state, setState] = useState<EditorState>(() => ({
     cats: toDrafts(categories),
     undo: null,
   }));
   const [hours, setHours] = useState(productiveHours);
   const [touched, setTouched] = useState(false);
-  const { cats, undo } = state;
+  const [added, setAdded] = useState<readonly string[]>([]);
   const update = (edit: Edit) => {
     setState((current) => applyEdit(current, edit));
     setTouched(true);
   };
-  const remove = (edit: Edit, message: string) => {
-    setState((current) => applyRemoval(current, edit, message));
-    setTouched(true);
+  return {
+    ...state,
+    hours,
+    touched,
+    added,
+    update,
+    remove: (edit: Edit, message: string) => {
+      setState((current) => applyRemoval(current, edit, message));
+      setTouched(true);
+    },
+    updateHours: (value: number) => {
+      setHours(value);
+      setTouched(true);
+    },
+    addNew: () => {
+      const id = crypto.randomUUID();
+      setAdded((ids) => [...ids, id]);
+      update(addCategory(id));
+    },
+    undoNow: () => setState(undoLast),
+    saved: () => setTouched(false),
   };
-  const updateHours = (value: number) => {
-    setHours(value);
-    setTouched(true);
-  };
-  const total = cats.length > 0 ? draftsTotal(cats) : baseTotal;
+}
+
+export function I6Editor(props: EditorProps) {
+  const { month, editable, canEditHours = editable, baseTotal = 0 } = props;
+  const ed = useEditor(props.categories, props.productiveHours);
+  const total = ed.cats.length > 0 ? draftsTotal(ed.cats) : baseTotal;
   return (
-    <div className="stack" style={{ alignItems: "stretch" }}>
-      <Summary
-        total={total}
-        hours={hours}
-        editable={canEditHours}
-        onHours={updateHours}
-      />
-      {touched && (
+    <>
+      <I6HeroShell
+        tabs={props.tabs}
+        notes={props.notes}
+        actions={
+          editable && (
+            <SaveRow
+              month={month}
+              cats={ed.cats}
+              hours={ed.hours}
+              touched={ed.touched}
+              onSaved={ed.saved}
+            />
+          )
+        }
+      >
+        <I6Facts
+          month={month}
+          total={total}
+          hours={ed.hours}
+          canEditHours={canEditHours}
+          onHours={ed.updateHours}
+        />
+      </I6HeroShell>
+      {ed.touched && (
         <p className="note" role="status">
           Ισχύει από αυτόν τον μήνα και μετά· οι κλεισμένοι μήνες δεν αλλάζουν.
         </p>
       )}
-      {cats.map((cat, ci) => (
-        <CategoryCard
-          key={cat.id}
-          cat={cat}
-          ci={ci}
-          editable={editable}
-          update={update}
-          remove={remove}
-        />
-      ))}
-      {editable && (
-        <p>
-          <button
-            type="button"
-            className="button"
-            onClick={() => update(addCategory(crypto.randomUUID()))}
-          >
-            Προσθήκη κατηγορίας
-          </button>
-        </p>
+      {ed.cats.length > 0 && (
+        <ol className="ml-list i6-cats" aria-label="Κατηγορίες εξόδων">
+          {ed.cats.map((cat, ci) => (
+            <CategoryRow
+              key={cat.id}
+              cat={cat}
+              ci={ci}
+              isNew={ed.added.includes(cat.id)}
+              editable={editable}
+              update={ed.update}
+              remove={ed.remove}
+            />
+          ))}
+        </ol>
       )}
-      {editable && (
-        <SaveRow
-          month={month}
-          cats={cats}
-          hours={hours}
-          touched={touched}
-          onSaved={() => setTouched(false)}
-        />
-      )}
-      {/* Στο τέλος και «κολλημένο» κάτω: φαίνεται όπου κι αν πατήθηκε η αφαίρεση. */}
-      {undo && (
-        <p className="note btn-row i67-undo" role="status">
-          <span>{undo.message}</span>
-          <button
-            type="button"
-            className="button"
-            data-primary="true"
-            onClick={() => setState(undoLast)}
-          >
-            Αναίρεση
-          </button>
-        </p>
-      )}
-    </div>
+      {editable && <NewCategoryBox onAdd={ed.addNew} />}
+      {ed.undo && <UndoBar message={ed.undo.message} onUndo={ed.undoNow} />}
+    </>
   );
 }

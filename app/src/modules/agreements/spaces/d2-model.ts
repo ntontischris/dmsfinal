@@ -1,6 +1,11 @@
 // Καθαρές συναρτήσεις της D2 στη νέα εμφάνιση (prototype `screens/d2-model.ts`, `d2-action-bar.tsx`), με την πραγματική Συμφωνία.
 
-import { formatDate, formatNumber, provisionsText } from "../helpers";
+import {
+  endOfTerm,
+  formatDate,
+  formatNumber,
+  provisionsText,
+} from "../helpers";
 import type {
   AgreementDetail,
   AgreementLine,
@@ -100,3 +105,14 @@ export const approvedRevisionOf = (
 // Μια γραμμή του ποσού της τιμής για το Σύνολο: «/ μήνα» για τη μηνιαία.
 export const perPeriodSuffix = (kind: AgreementDetail["kind"]): string =>
   kind === "monthly" ? " / μήνα" : "";
+
+// Πότε λήγει η Συμφωνία, σε λέξεις (κουτί «Έναρξη και διάρκεια» και hero).
+export const endText = (a: AgreementDetail): string => {
+  if (a.kind === "one_off") return "Όταν παραδοθεί η Παραγωγή";
+  if (a.endOn !== null) return formatDate(a.endOn);
+  if (a.startOn !== null && a.durationMonths !== null)
+    return formatDate(endOfTerm(a.startOn, a.durationMonths));
+  return a.durationMonths === null
+    ? "ορίζεται με την Έναρξη"
+    : `${a.durationMonths} μήνες από την υπογραφή, μείον μία μέρα`;
+};

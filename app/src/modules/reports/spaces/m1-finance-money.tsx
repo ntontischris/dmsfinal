@@ -1,12 +1,12 @@
-import { Panel } from "@/spaces/kit/panel";
 import { Badge, StateNotice, fmtPercent } from "@/spaces/screens/shared";
 
 import { monthLabel } from "../format";
 import { PARTIAL_BADGE } from "../labels";
 import type { ExpensesByCategory, ProfitReport } from "../money-schema";
 import { DASH, money, shareWidth } from "./m1-adapter";
+import { Box, Facts } from "./m1-box";
 import { ExportRow } from "./m1-export-row";
-import { Cell, SummaryCard } from "./m1-finance-parts";
+import { Cell } from "./m1-finance-parts";
 import type { ReportBodyProps } from "./m1-model";
 
 // Έξοδα ανά κατηγορία και Έσοδα − Έξοδα = Κέρδος (d8, οι Αναφορές του παλιού DMS) πάνω στα report_expenses_by_category
@@ -39,7 +39,10 @@ function ExpensesNotes({ data }: { data: ExpensesByCategory }) {
 
 function ExpensesTable({ data }: { data: ExpensesByCategory }) {
   return (
-    <Panel label="Κατηγορίες" isFlush>
+    <Box
+      title="Κατηγορίες"
+      hint={`${data.rows.length} κατηγορίες · ${money(data.totals.amount)}`}
+    >
       <div className="scroll">
         <table className="rtable m1f-table">
           <thead>
@@ -85,7 +88,7 @@ function ExpensesTable({ data }: { data: ExpensesByCategory }) {
           </tbody>
         </table>
       </div>
-    </Panel>
+    </Box>
   );
 }
 
@@ -102,7 +105,7 @@ export function ExpensesBody(
     );
   }
   return (
-    <div className="m1f-wrap">
+    <div className="m1f-wrap ml-stack">
       <ExpensesTable data={data} />
       <ExpensesNotes data={data} />
       {canExport && (
@@ -114,7 +117,10 @@ export function ExpensesBody(
 
 function ProfitTable({ data }: { data: ProfitReport }) {
   return (
-    <Panel label="Μήνες" isFlush>
+    <Box
+      title="Μήνες"
+      hint={`${data.months.length} μήνες · Έσοδα, Έξοδα, Κέρδος`}
+    >
       <div className="scroll">
         <table className="rtable m1f-table">
           <thead>
@@ -150,26 +156,38 @@ function ProfitTable({ data }: { data: ProfitReport }) {
           </tbody>
         </table>
       </div>
-    </Panel>
+    </Box>
   );
 }
 
 export function ProfitBody(props: ReportBodyProps & { data: ProfitReport }) {
   const { data, report, filters, canExport } = props;
   return (
-    <div className="m1f-wrap">
-      <div className="m1f-cards">
-        <SummaryCard
-          label="Κέρδος"
-          basis="χωρίς ΦΠΑ"
-          value={money(data.totals.profit)}
-        />
-        <SummaryCard
-          label="Περιθώριο"
-          basis="Κέρδος / Έσοδα"
-          value={percent(data.totals.margin)}
-        />
-      </div>
+    <div className="m1f-wrap ml-stack">
+      <Facts
+        items={[
+          {
+            label: "Έσοδα",
+            basis: "χωρίς ΦΠΑ",
+            value: money(data.totals.income),
+          },
+          {
+            label: "Έξοδα",
+            basis: "από το Κόστος",
+            value: money(data.totals.expenses),
+          },
+          {
+            label: "Κέρδος",
+            basis: "χωρίς ΦΠΑ",
+            value: money(data.totals.profit),
+          },
+          {
+            label: "Περιθώριο",
+            basis: "Κέρδος / Έσοδα",
+            value: percent(data.totals.margin),
+          },
+        ]}
+      />
       <ProfitTable data={data} />
       {data.missingMonths > 0 && (
         <p className="note">

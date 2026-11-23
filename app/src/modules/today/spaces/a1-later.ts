@@ -51,16 +51,6 @@ export const isNewSince = (row: CardRow, seenAt: string | null): boolean => {
   return Number.isFinite(since) && since > Date.parse(seenAt);
 };
 
-export const newCountOf = (
-  cards: readonly Built[],
-  seenAt: string | null,
-): number =>
-  cards.reduce(
-    (sum, { content }) =>
-      sum + content.rows.filter((row) => isNewSince(row, seenAt)).length,
-    0,
-  );
-
 // Το σήμα δίπλα στην ημερομηνία: «3 νέα από την τελευταία φορά».
 export const newChipOf = (count: number): string | null =>
   count === 0

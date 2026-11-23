@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  lineSubOf,
   decisionFactOf,
   daysWord,
   suggestionFactOf,
@@ -54,9 +55,9 @@ describe("decisionFactOf", () => {
   });
 
   it("πρόταση χωρίς ποσό (χωρίς «Βλέπει ποσά»)", () => {
-    expect(
-      decisionFactOf({ cardId: "proposal_approvals" }, TODAY),
-    ).toBe("Με Παρέκκλιση.");
+    expect(decisionFactOf({ cardId: "proposal_approvals" }, TODAY)).toBe(
+      "Με Παρέκκλιση.",
+    );
   });
 
   it("κράτηση: η ώρα, πόσο περιμένει και αν η ώρα είναι ακόμα ελεύθερη", () => {
@@ -70,7 +71,9 @@ describe("decisionFactOf", () => {
         },
         TODAY,
       ),
-    ).toBe("Τρίτη 10/11, 17:00. Περιμένει 3 ημέρες. Η ώρα είναι ακόμα ελεύθερη.");
+    ).toBe(
+      "Τρίτη 10/11, 17:00. Περιμένει 3 ημέρες. Η ώρα είναι ακόμα ελεύθερη.",
+    );
   });
 
   it("κράτηση που δεν χωρά πια: καμία φράση για τη θέση (οι κρατήσεις δεν λήγουν)", () => {
@@ -151,7 +154,11 @@ describe("suggestionFactOf", () => {
 
   it("μετάθεση: γράφει τη θέση, και αν άδειασε ήδη", () => {
     expect(
-      suggestionFactOf({ id: "reschedule:m1", cardId: "filming_approvals", suggestion }),
+      suggestionFactOf({
+        id: "reschedule:m1",
+        cardId: "filming_approvals",
+        suggestion,
+      }),
     ).toBe("Θέση που αδειάζει: Τετάρτη 11/11, 12:00. Χωράει αυτή τη μετάθεση.");
     expect(
       suggestionFactOf({
@@ -163,10 +170,18 @@ describe("suggestionFactOf", () => {
   });
 
   it("ποτέ «ο πελάτης το θέλει»· χωρίς πρόταση ή σε άλλη κάρτα: καμία φράση", () => {
-    const fact = suggestionFactOf({ id: "cancel:k1", cardId: "filming_approvals", suggestion });
+    const fact = suggestionFactOf({
+      id: "cancel:k1",
+      cardId: "filming_approvals",
+      suggestion,
+    });
     expect(fact).not.toMatch(/θέλει|ζήτησε/);
-    expect(suggestionFactOf({ id: "cancel:k1", cardId: "filming_approvals" })).toBeNull();
-    expect(suggestionFactOf({ id: "x", cardId: "unassigned", suggestion })).toBeNull();
+    expect(
+      suggestionFactOf({ id: "cancel:k1", cardId: "filming_approvals" }),
+    ).toBeNull();
+    expect(
+      suggestionFactOf({ id: "x", cardId: "unassigned", suggestion }),
+    ).toBeNull();
     expect(
       suggestionFactOf({
         id: "reschedule:m1",
@@ -174,5 +189,36 @@ describe("suggestionFactOf", () => {
         suggestion: { ...suggestion, startsAt: "όχι-ημερομηνία" },
       }),
     ).toBeNull();
+  });
+});
+
+describe("lineSubOf", () => {
+  const row = {
+    label: "Πρόταση",
+    href: "/x",
+    meta: "3.940,00 €",
+    waitingSince: "2026-11-01T10:00:00+00:00",
+  };
+
+  it("should show the decision fact on a decision line", () => {
+    expect(
+      lineSubOf({
+        row,
+        cardId: "proposal_approvals",
+        isDecision: true,
+        today: "2026-11-05",
+      }),
+    ).toBe("Με Παρέκκλιση. Περιμένει 4 ημέρες.");
+  });
+
+  it("should show only the row meta on a line that is not a decision", () => {
+    expect(
+      lineSubOf({
+        row,
+        cardId: "my_tasks",
+        isDecision: false,
+        today: "2026-11-05",
+      }),
+    ).toBe("3.940,00 €");
   });
 });

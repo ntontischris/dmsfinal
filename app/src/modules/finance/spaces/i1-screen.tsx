@@ -8,6 +8,7 @@ import { financeCaps } from "../caps";
 import { ClientGroup } from "./i1-group";
 
 import "./i13.css";
+import "./money-lines.css";
 
 const NOTE = "Τα Τιμολογητέα δεν είναι οφειλή· ο πελάτης δεν τα βλέπει.";
 
@@ -49,9 +50,11 @@ export async function SpacesToInvoice() {
               {groups.length} {groups.length === 1 ? "Πελάτης" : "Πελάτες"}
             </span>
           </p>
-          {groups.map((g) => (
-            <ClientGroup key={g.clientId} group={g} canRegister={caps.canRegisterInvoices} />
-          ))}
+          <ol className="ml-list">
+            {groups.map((g) => (
+              <ClientGroup key={g.clientId} group={g} canRegister={caps.canRegisterInvoices} />
+            ))}
+          </ol>
         </>
       )}
     </div>

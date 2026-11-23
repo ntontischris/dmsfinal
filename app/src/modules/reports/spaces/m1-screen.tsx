@@ -3,8 +3,6 @@ import { Suspense } from "react";
 
 import { can, type Viewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 import { StateNotice } from "@/spaces/screens/shared";
 
 import {
@@ -23,11 +21,14 @@ import {
   UNKNOWN_REPORT_TITLE,
 } from "../labels";
 import { REPORTS_PATH, reportHref } from "../url";
+import { Box, initialsOf } from "./m1-box";
 import { FinanceReport } from "./m1-finance";
 import type { ReportBodyProps } from "./m1-model";
+import { MonthHero } from "./m1-month";
 import { SalesReport } from "./m1-sales";
 
 import "./m1.css";
+import "./m1-lines.css";
 
 const FAMILIES: readonly ReportFamily[] = ["finance", "sales"];
 const FAMILY_LABELS: Readonly<Record<ReportFamily, string>> = {
@@ -35,43 +36,51 @@ const FAMILY_LABELS: Readonly<Record<ReportFamily, string>> = {
   sales: "Πωλήσεις",
 };
 
+function Picker({ reports }: { reports: readonly ReportDefinition[] }) {
+  return (
+    <>
+      {FAMILIES.map((family) => {
+        const own = reports.filter((r) => r.family === family);
+        if (own.length === 0) return null;
+        return (
+          <section key={family} className="m1-picker">
+            <h2 className="m1-family">
+              {FAMILY_LABELS[family]} · {own.length}
+            </h2>
+            <nav className="ml-shelf" aria-label={FAMILY_LABELS[family]}>
+              {own.map((r) => (
+                <Link key={r.id} href={reportHref({ report: r.id })}>
+                  <span className="ml-mark" aria-hidden="true">
+                    {initialsOf(r.title)}
+                  </span>
+                  <strong>{r.title}</strong>
+                  <small>{r.answers}</small>
+                </Link>
+              ))}
+            </nav>
+          </section>
+        );
+      })}
+    </>
+  );
+}
+
 function Catalogue({ viewer }: { viewer: Viewer }) {
   const reports = visibleReports(viewer);
   return (
-    <>
+    <div className="m1-page">
+      <p className="m1-intro">
+        Διάλεξε μια Αναφορά· ανοίγει με τα φίλτρα της στη διεύθυνση.
+      </p>
+      <Suspense fallback={<p className="muted">Φορτώνει ο μήνας…</p>}>
+        <MonthHero viewer={viewer} />
+      </Suspense>
       {reports.length === 0 && (
         <StateNotice kind="empty" title={NONE_VISIBLE_TITLE}>
           {NONE_VISIBLE_TEXT}
         </StateNotice>
       )}
-      {FAMILIES.map((family) => {
-        const own = reports.filter((r) => r.family === family);
-        if (own.length === 0) return null;
-        return (
-          <Panel
-            key={family}
-            label={FAMILY_LABELS[family]}
-            aside={own.length}
-            isFlush
-          >
-            <RowList>
-              {own.map((r) => (
-                <ListRow
-                  key={r.id}
-                  title={r.title}
-                  sub={r.answers}
-                  href={reportHref({ report: r.id })}
-                  aside={
-                    <span className="m1-go" aria-hidden="true">
-                      →
-                    </span>
-                  }
-                />
-              ))}
-            </RowList>
-          </Panel>
-        );
-      })}
+      <Picker reports={reports} />
       {can(viewer, "finance.cost") && (
         <p className="note">
           Κερδοφορία ανά Παραγωγή, Πελάτη και μήνα:{" "}
@@ -85,7 +94,7 @@ function Catalogue({ viewer }: { viewer: Viewer }) {
           <Link href={hrefOf("M2")}>Εξαγωγή δεδομένων</Link>.
         </p>
       )}
-    </>
+    </div>
   );
 }
 
@@ -101,14 +110,20 @@ function ReportView(props: {
     canExport: !!report.exportSpec && can(viewer, "reports.export"),
   };
   return (
-    <>
-      <p>
-        <Link href={REPORTS_PATH}>← Όλες οι Αναφορές</Link>
-      </p>
-      <div className="card-title">
-        <h2>{report.title}</h2>
-      </div>
-      <p className="muted">{report.answers}</p>
+    <div className="m1-page">
+      <header className="ml-hero">
+        <span className="ml-hero-mono" aria-hidden="true">
+          {initialsOf(report.title)}
+        </span>
+        <div>
+          <span className="ml-tag">{FAMILY_LABELS[report.family]}</span>
+          <h2>{report.title}</h2>
+          <p>{report.answers}</p>
+        </div>
+        <div className="ml-quick">
+          <Link href={REPORTS_PATH}>← Όλες οι Αναφορές</Link>
+        </div>
+      </header>
       <Suspense
         key={`${report.id}-${filters.period}-${filters.clientId ?? ""}-${filters.sellerId ?? ""}`}
         fallback={<p className="muted">Φορτώνει η Αναφορά…</p>}
@@ -119,11 +134,10 @@ function ReportView(props: {
           <SalesReport {...body} />
         )}
       </Suspense>
-      <details className="m1-basis">
-        <summary>Πώς μετράει</summary>
+      <Box title="Πώς μετράει" hint="η βάση του υπολογισμού">
         <p>{report.basis}</p>
-      </details>
-    </>
+      </Box>
+    </div>
   );
 }
 

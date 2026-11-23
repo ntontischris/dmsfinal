@@ -6,7 +6,6 @@ import {
   itemKeyOf,
   laterLineOf,
   newChipOf,
-  newCountOf,
   withoutLater,
 } from "./a1-later";
 import { leadOf } from "./a1-lead";
@@ -97,19 +96,8 @@ describe("withoutLater", () => {
   });
 });
 
-describe("newCountOf / newChipOf", () => {
-  it("μετρά τα νέα που δεν κρύφτηκαν", () => {
-    const { cards: kept } = withoutLater(
-      [
-        cardOf("a", [
-          rowOf("1", { waitingSince: "2026-11-05T09:00:00+00:00" }),
-          rowOf("2", { waitingSince: "2026-11-05T10:00:00+00:00" }),
-          rowOf("3", { waitingSince: "2026-11-01T10:00:00+00:00" }),
-        ]),
-      ],
-      ["a:2"],
-    );
-    expect(newCountOf(kept, SEEN_AT)).toBe(1);
+describe("newChipOf", () => {
+  it("should say how many new items, in Greek singular or plural", () => {
     expect(newChipOf(1)).toBe("1 νέο από την τελευταία φορά");
     expect(newChipOf(3)).toBe("3 νέα από την τελευταία φορά");
     expect(newChipOf(0)).toBeNull();

@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import { setCost } from "../actions-items";
@@ -26,6 +25,7 @@ import type {
   ItemCost,
 } from "../types";
 
+import { C2Box } from "./c2-box";
 import { C2Form, C2Submit, Field } from "./c2-form";
 
 interface CostProps {
@@ -235,14 +235,27 @@ function CostSummary({ item, hint }: Pick<CostProps, "item" | "hint">) {
   );
 }
 
+// Η υπόδειξη του κλειστού κουτιού: το εκτιμώμενο κόστος και το περιθώριο, ή τι λείπει.
+const costHint = ({ item, hint }: Pick<CostProps, "item" | "hint">): string => {
+  if (hint === null || hint.hourCost === null)
+    return "Δεν έχει οριστεί Κόστος ώρας";
+  const cost = costOf(item, hint);
+  if (cost === null) return "ώρες, Άμεσο κόστος, εύρος τιμής";
+  const base = `εκτ. κόστος ${formatMoney(cost.estimatedCost)} · ${formatHours(cost.totalHours)}`;
+  if (item.price === null) return base;
+  const margin = marginOf(item.price, cost);
+  const low = margin.isBelowMin ? " · κάτω από την ελάχιστη" : "";
+  return `${base} · περιθώριο ${formatPercent(margin.percent)}${low}`;
+};
+
 function CostPanel(props: CostProps & { isForm: boolean }) {
   return (
-    <Panel label="Κόστος και περιθώριο">
+    <C2Box title="Κόστος και περιθώριο" hint={costHint(props)}>
       <CostFields {...props} />
       <CostSummary item={props.item} hint={props.hint} />
       <p className="muted">{COST_INTERNAL_NOTE}</p>
       {props.isForm && <C2Submit label="Αποθήκευση" onlyWhenChanged />}
-    </Panel>
+    </C2Box>
   );
 }
 

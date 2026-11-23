@@ -34,6 +34,7 @@ export { getLedger } from "./ledger-queries";
 // Χώροι: I1, I2, I3
 export { SpacesInvoices } from "./spaces/i2-screen";
 export { SpacesToInvoice } from "./spaces/i1-screen";
+export { WithMoneyDeck } from "./spaces/money-deck";
 export { SpacesNewInvoice } from "./spaces/i3-screen";
 export { SpacesInvoice } from "./spaces/i8-screen";
 // Χώροι: I4, I5

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
 import { StateNotice } from "@/spaces/screens/shared";
 
 import {
@@ -19,6 +18,7 @@ import {
   sortOptions,
 } from "../helpers";
 import type { AgreementDetail, CatalogueOption, KindInfo } from "../types";
+import { D2Box } from "./d2-box";
 import { LineRow, lineFormIds, type LineColumns } from "./d2-line-row";
 import { perPeriodSuffix } from "./d2-model";
 import { D2Form, D2Scope, IdField, NumberInput } from "./d2-ui";
@@ -195,6 +195,48 @@ function LineForms({ agreement }: { agreement: AgreementDetail }) {
   );
 }
 
+const linesHint = (agreement: AgreementDetail, perPeriod: string): string => {
+  const { lines, totals, can } = agreement;
+  if (lines.length === 0) return "καμία γραμμή ακόμα";
+  const count = lines.length === 1 ? "1 γραμμή" : `${lines.length} γραμμές`;
+  if (!can.seeAmounts || totals === null) return count;
+  return `${count} · ${formatMoney(totals.price)}${perPeriod} χωρίς ΦΠΑ`;
+};
+
+function LinesTable({
+  agreement,
+  kinds,
+}: Pick<LinesProps, "agreement" | "kinds">) {
+  const { can, lines } = agreement;
+  const columns: LineColumns = { amount: can.seeAmounts, cost: can.seeCost };
+  return (
+    <table className="ml-table ml-list d2-lines">
+      <thead>
+        <tr>
+          <th>Αρχικά</th>
+          <th>
+            Γραμμή · Ποσότητα{columns.amount && " · Τιμή μονάδας"} · Παροχές
+            {columns.cost && " · Ώρες γύρ. / μοντ."}
+          </th>
+          {columns.amount && <th>Σύνολο</th>}
+          {can.edit && <th>Αλλαγές</th>}
+        </tr>
+      </thead>
+      <tbody>
+        {lines.map((line) => (
+          <LineRow
+            key={line.id}
+            line={line}
+            agreement={agreement}
+            kinds={kinds}
+            columns={columns}
+          />
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 export function LinesSection({
   agreement,
   kinds,
@@ -202,10 +244,10 @@ export function LinesSection({
   isOptionsFailed,
 }: LinesProps) {
   const { can, lines } = agreement;
-  const columns: LineColumns = { amount: can.seeAmounts, cost: can.seeCost };
   const perPeriod = agreement.kind === "monthly" ? " ανά μήνα" : "";
   return (
-    <Panel label="Γραμμές" aside={`Τιμές χωρίς ΦΠΑ${perPeriod}`}>
+    <D2Box title="Γραμμές" hint={linesHint(agreement, perPeriod)}>
+      <p className="muted">Τιμές χωρίς ΦΠΑ{perPeriod}</p>
       <D2Scope messageAt="top">
         {lines.length === 0 ? (
           <p className="muted">
@@ -214,31 +256,7 @@ export function LinesSection({
               : "Δεν υπάρχουν γραμμές ακόμα."}
           </p>
         ) : (
-          <div className="scroll">
-            <table className="rtable">
-              <thead>
-                <tr>
-                  <th>Γραμμή</th>
-                  <th className="num">Ποσότητα</th>
-                  {columns.amount && <th className="num">Τιμή μονάδας</th>}
-                  <th>Παροχές</th>
-                  {columns.cost && <th className="num">Ώρες γύρ. / μοντ.</th>}
-                  <th className="num">Σύνολο</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((line) => (
-                  <LineRow
-                    key={line.id}
-                    line={line}
-                    agreement={agreement}
-                    kinds={kinds}
-                    columns={columns}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <LinesTable agreement={agreement} kinds={kinds} />
         )}
         {can.edit && <LineForms agreement={agreement} />}
         {can.edit && isOptionsFailed && (
@@ -252,6 +270,6 @@ export function LinesSection({
         )}
       </D2Scope>
       <LinesTotals agreement={agreement} />
-    </Panel>
+    </D2Box>
   );
 }

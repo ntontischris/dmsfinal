@@ -5,9 +5,9 @@ import { z } from "zod";
 import { getViewer } from "@/modules/access";
 import { getCompany } from "@/modules/settings";
 import { hrefOf } from "@/spaces/data/screens";
-import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
-import { catalogueCaps, itemKindLabel } from "../helpers";
+import { catalogueCaps, toCatalogueRow } from "../helpers";
 import {
   getActualHours,
   getCatalogueItem,
@@ -15,8 +15,12 @@ import {
   listProvisionKinds,
 } from "../queries-items";
 
+import "../../finance/spaces/money-lines.css";
+import "./catalogue-lines.css";
+
 import { C2Basics } from "./c2-basics";
 import { C2Cost } from "./c2-cost";
+import { C2Hero } from "./c2-hero";
 import { C2New } from "./c2-new";
 import { C2Provisions } from "./c2-provisions";
 import { C2Public } from "./c2-public";
@@ -26,8 +30,8 @@ const Frame = ({ children }: { children: ReactNode }) => (
   <div data-spaces>{children}</div>
 );
 
-// C2 Πακέτο ή Υπηρεσία στη νέα εμφάνιση (prototype `screens/C2.tsx`): κεφαλίδα, σήματα και οι ενότητες του prototype.
-// Κάθε ενότητα έχει τη δική της πραγματική ενέργεια και το δικό της κουμπί (όχι ένα «Αποθήκευση» για όλη τη σελίδα).
+// C2 Πακέτο ή Υπηρεσία στη μορφή των «Χρημάτων»: hero (όνομα, Είδος, τιμή, κόστος/περιθώριο, Αρχειοθέτηση) και κλειστά κουτιά.
+// Κάθε κουτί έχει τη δική του πραγματική ενέργεια και το δικό του κουμπί (όχι ένα «Αποθήκευση» για όλη τη σελίδα).
 export async function SpacesCatalogueItem({ itemId }: { itemId: string }) {
   const viewer = await getViewer();
   const caps = catalogueCaps(viewer);
@@ -74,49 +78,38 @@ export async function SpacesCatalogueItem({ itemId }: { itemId: string }) {
   const actualHours = actual?.ok ? actual.data : null;
   // Αν δεν διαβαστεί ο ΦΠΑ, λείπει μόνο η υπόδειξη «Με ΦΠΑ».
   const vatRate = company?.ok ? company.data.vat_rate : null;
-  const isReadOnly = !caps.canManage;
+  const row = toCatalogueRow(found, { kinds: kinds.data, hint: costHint });
   return (
     <Frame>
-      <div className="card-title">
-        <h2>{found.name}</h2>
-        <span className="btn-row">
-          <Badge tone="strong">{itemKindLabel(found)}</Badge>
-          {found.isPublic && <Badge>Δημόσιο</Badge>}
-          {found.isRetired && <Badge>Αρχειοθετημένο</Badge>}
-          {isReadOnly && <Badge>Μόνο ανάγνωση</Badge>}
-        </span>
+      <div className="ml-stack">
+        <C2Hero item={found} row={row} caps={caps} />
+        <C2Basics item={found} caps={caps} vatRate={vatRate} />
+        <C2Provisions item={found} kinds={kinds.data} caps={caps} />
+        <C2Cost item={found} hint={costHint} caps={caps} actual={actualHours} />
+        {found.kind === "package" && (
+          <C2Public item={found} canEdit={caps.canManage} />
+        )}
+        <C2Usage item={found} canManage={caps.canManage} />
       </div>
-      {isReadOnly && (
-        <p className="note">
-          Βλέπεις τιμές και Παροχές για να διαλέγεις γραμμές στην πρόταση. Οι
-          ώρες και το κόστος είναι εσωτερικά.
-        </p>
-      )}
-      <C2Basics item={found} caps={caps} vatRate={vatRate} />
-      <C2Provisions item={found} kinds={kinds.data} caps={caps} />
-      <C2Cost
-        item={found}
-        hint={costHint}
-        caps={caps}
-        actual={actualHours}
-      />
-      {found.kind === "package" && (
-        <C2Public item={found} canEdit={caps.canManage} />
-      )}
-      <C2Usage item={found} canManage={caps.canManage} />
     </Frame>
   );
 }
 
 // Νέο Πακέτο ή Υπηρεσία (prototype C2 με `?new=`): η ίδια σελίδα με άδεια πεδία· η πραγματική φόρμα δημιουργίας.
-export async function SpacesNewCatalogueItem({ type }: { type: string | undefined }) {
+export async function SpacesNewCatalogueItem({
+  type,
+}: {
+  type: string | undefined;
+}) {
   const viewer = await getViewer();
   const caps = catalogueCaps(viewer);
   if (!caps.canManage)
     return (
       <Frame>
         <StateNotice kind="denied" title="Χωρίς δικαίωμα">
-          <p>Νέο Πακέτο ή Υπηρεσία γράφει μόνο όποιος «Διαχειρίζεται Κατάλογο».</p>
+          <p>
+            Νέο Πακέτο ή Υπηρεσία γράφει μόνο όποιος «Διαχειρίζεται Κατάλογο».
+          </p>
         </StateNotice>
       </Frame>
     );
@@ -124,9 +117,6 @@ export async function SpacesNewCatalogueItem({ type }: { type: string | undefine
   const isService = type === "service";
   return (
     <Frame>
-      <div className="card-title">
-        <h2>{isService ? "Νέα Υπηρεσία" : "Νέο Πακέτο"}</h2>
-      </div>
       {!kinds.ok ? (
         <ErrorNotice what="τα είδη Παροχής" />
       ) : (

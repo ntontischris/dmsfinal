@@ -1,17 +1,25 @@
-import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { Entity, ListRow, RowList } from "@/spaces/kit/parts";
+import Link from "next/link";
+
+import { Entity } from "@/spaces/kit/parts";
 import { Badge, StateNotice } from "@/spaces/screens/shared";
 
+import { hrefOf } from "@/spaces/data/screens";
 import type { SalesOpenRow, SalesPipeline } from "../sales-schema";
 import { money, monthlyText, openSub } from "./m1-adapter";
 import { NoAmountsNote } from "./m1-finance-parts";
 import { ExportRow } from "./m1-export-row";
 import type { ReportBodyProps } from "./m1-model";
-import { Cards, Section, rowValue } from "./m1-sales-parts";
+import { initialsOf } from "./m1-box";
+import { Cards, Section, opportunitiesHint, rowValue } from "./m1-sales-parts";
 
 // Ανοιχτές Ευκαιρίες ανά Στάδιο (prototype `screens/m1-sales-pipeline.tsx`) πάνω στο report_sales_pipeline.
 // Η βάση κρίνει Εύρος, Πωλητή και ποσά.
+
+const KIND_TAGS = {
+  monthly: "μηνιαία",
+  one_off: "εφάπαξ",
+  none: "χωρίς πρόταση",
+} as const;
 
 function OpenList({
   rows,
@@ -21,24 +29,34 @@ function OpenList({
   showOwner: boolean;
 }) {
   return (
-    <RowList>
+    <ul className="ml-list">
       {rows.map((row) => (
-        <ListRow
+        <li
           key={row.opportunityId}
-          title={`${row.title} · ${row.clientName}`}
-          href={hrefOf("B4", { id: row.opportunityId })}
-          sub={openSub(row.stageLabel, row.managerName, showOwner)}
-          aside={
-            <>
-              <span className="m1s-money">{rowValue(row.kind, row.value)}</span>
-              {row.managerName === null && (
-                <Badge tone="attention">Χωρίς υπεύθυνο</Badge>
-              )}
-            </>
-          }
-        />
+          className="ml-line"
+          data-urgent={row.managerName === null || undefined}
+        >
+          <span className="ml-thumb" aria-hidden="true">
+            {initialsOf(row.clientName)}
+          </span>
+          <span className="ml-main">
+            <span className="ml-tag">{KIND_TAGS[row.kind ?? "none"]}</span>
+            <strong>
+              <Link href={hrefOf("B4", { id: row.opportunityId })}>
+                {`${row.title} · ${row.clientName}`}
+              </Link>
+            </strong>
+            <small>{openSub(row.stageLabel, row.managerName, showOwner)}</small>
+          </span>
+          <span className="ml-amount">
+            {rowValue(row.kind, row.value)}
+            {row.managerName === null && (
+              <Badge tone="attention">Χωρίς υπεύθυνο</Badge>
+            )}
+          </span>
+        </li>
       ))}
-    </RowList>
+    </ul>
   );
 }
 
@@ -53,7 +71,7 @@ export function PipelineBody(props: ReportBodyProps & { data: SalesPipeline }) {
   }
   const showOwner = data.showSeller && !filters.sellerId;
   return (
-    <div className="m1s-body">
+    <div className="m1s-body ml-stack">
       <NoAmountsNote amounts={data.amounts} />
       <Cards
         items={[
@@ -62,7 +80,10 @@ export function PipelineBody(props: ReportBodyProps & { data: SalesPipeline }) {
           { label: "Εφάπαξ αξία", value: money(data.totals.oneOff) },
         ]}
       />
-      <Panel label="Στάδιο" isFlush>
+      <Section
+        title="Στάδιο"
+        hint={`${data.stages.length} στάδια · ${opportunitiesHint(data.totals.count)}`}
+      >
         <div className="scroll">
           <table className="rtable m1s-table">
             <thead>
@@ -97,8 +118,11 @@ export function PipelineBody(props: ReportBodyProps & { data: SalesPipeline }) {
             </tbody>
           </table>
         </div>
-      </Panel>
-      <Section title="Οι ανοιχτές Ευκαιρίες">
+      </Section>
+      <Section
+        title="Οι ανοιχτές Ευκαιρίες"
+        hint={`${opportunitiesHint(data.rows.length)} · χωρίς υπεύθυνο με κόκκινη τελεία`}
+      >
         <OpenList rows={data.rows} showOwner={showOwner} />
       </Section>
       {canExport && (

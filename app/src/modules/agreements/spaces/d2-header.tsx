@@ -3,12 +3,14 @@ import type { ReactNode } from "react";
 
 import { Steps } from "@/spaces/kit/steps";
 import { hrefOf } from "@/spaces/data/screens";
+import { initialsOf } from "@/spaces/shell/avatar";
 import { Badge } from "@/spaces/screens/shared";
 
 import { proposalSteps } from "../components/agreement-header";
 import { statusLabel } from "../helpers";
 import { KIND_LABELS } from "../labels";
 import type { AgreementCaps, AgreementDetail } from "../types";
+import { HeroAmount, HeroFacts, HeroWarnings } from "./d2-hero-notes";
 import { isInternal } from "./d2-load";
 
 interface HeaderProps {
@@ -17,50 +19,56 @@ interface HeaderProps {
   expiresInDays: number | null;
   // «Ιστορικό αλλαγών» (Ίχνος): σύνδεσμος του module Ίχνος στη νέα εμφάνιση.
   historyLink: ReactNode;
+  // Οι ενέργειες (πρόταση, λήξη/συνέχεια, PDF): στο `.ml-quick` του hero.
+  actions: ReactNode;
 }
 
-// Η κεφαλίδα του prototype (`screens/d2-header.tsx`): τίτλος, Πελάτης · Ευκαιρία · Υπεύθυνος, σήματα και η πορεία.
-export function D2Header({
+function Subtitle({
   agreement,
   caps,
-  expiresInDays,
-  historyLink,
-}: HeaderProps) {
-  const internal = isInternal(caps);
+}: Omit<HeaderProps, "expiresInDays" | "historyLink" | "actions">) {
   return (
-    <header className="d2-header">
-      <h1>{agreement.title || "Χωρίς τίτλο"}</h1>
-      <p className="muted">
-        <Link href={hrefOf("B2", { id: agreement.client.id })}>
-          {agreement.client.name}
-        </Link>
-        {" · Ευκαιρία "}
-        <Link href={hrefOf("B4", { id: agreement.opportunity.id })}>
-          {agreement.opportunity.title}
-        </Link>
-        {` · Υπεύθυνος: ${agreement.opportunity.managerName ?? "—"}`}
-      </p>
-      <span className="btn-row">
-        <Badge tone="strong">{statusLabel(agreement)}</Badge>
-        <Badge>{KIND_LABELS[agreement.kind]}</Badge>
-        {internal && <Badge>αναθεώρηση {agreement.revision}</Badge>}
-        {expiresInDays !== null && (
-          <Badge tone="attention">
-            {expiresInDays === 0
-              ? "λήγει σήμερα"
-              : `λήγει σε ${expiresInDays} ${expiresInDays === 1 ? "μέρα" : "μέρες"}`}
-          </Badge>
-        )}
-        {agreement.cost?.isLowMargin === true && (
-          <Badge tone="attention">χαμηλό περιθώριο</Badge>
-        )}
-        {!caps.canDraft && <Badge>Μόνο ανάγνωση</Badge>}
-        {historyLink}
+    <p>
+      <Link href={hrefOf("B2", { id: agreement.client.id })}>
+        {agreement.client.name}
+      </Link>
+      {" · Ευκαιρία "}
+      <Link href={hrefOf("B4", { id: agreement.opportunity.id })}>
+        {agreement.opportunity.title}
+      </Link>
+      {` · Υπεύθυνος: ${agreement.opportunity.managerName ?? "—"} · ${KIND_LABELS[agreement.kind]}`}
+      {isInternal(caps) && ` · αναθεώρηση ${agreement.revision}`}
+    </p>
+  );
+}
+
+// Το hero της D2 (μορφή I8): κατάσταση, τίτλος, Πελάτης, η τιμή μεγάλη, χρόνος σε μικρά στοιχεία, οι προειδοποιήσεις,
+// η πορεία της πρότασης και δεξιά/κάτω οι ενέργειες.
+export function D2Header(props: HeaderProps) {
+  const { agreement, caps, historyLink, actions } = props;
+  return (
+    <header className="ml-hero d2-hero">
+      <span className="ml-hero-mono" aria-hidden="true">
+        {initialsOf(agreement.client.name)}
       </span>
-      <Steps
-        steps={proposalSteps(agreement.path)}
-        label="Πορεία της πρότασης"
-      />
+      <div>
+        <Badge tone="strong">{statusLabel(agreement)}</Badge>
+        <h1>{agreement.title || "Χωρίς τίτλο"}</h1>
+        <Subtitle agreement={agreement} caps={caps} />
+        <HeroAmount agreement={agreement} />
+        <HeroFacts agreement={agreement} />
+        <HeroWarnings
+          agreement={agreement}
+          caps={caps}
+          expiresInDays={props.expiresInDays}
+        />
+        <span className="btn-row">{historyLink}</span>
+        <Steps
+          steps={proposalSteps(agreement.path)}
+          label="Πορεία της πρότασης"
+        />
+      </div>
+      <div className="ml-quick d2-quick">{actions}</div>
     </header>
   );
 }

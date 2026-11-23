@@ -56,7 +56,7 @@ test("ο Ιδιοκτήτης καταχωρεί τιμολόγιο με PDF κ�
 
   await page.goto(`${NEW_PATH}?client=${clientId}`);
   await expect(
-    page.getByRole("heading", { name: "Βήμα 1: Ανέβασμα PDF" }),
+    page.getByRole("heading", { name: "PDF του Τιμολογίου" }),
   ).toBeVisible();
   await page.locator('input[type="file"]').setInputFiles(PDF_FIXTURE);
   await fieldOf(page, "Αριθμός").fill(number);

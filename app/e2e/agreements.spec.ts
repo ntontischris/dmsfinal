@@ -11,6 +11,7 @@ import {
   draftProposal,
   inSpacesContext,
   openAgreementByTitle,
+  openBox,
   openOpportunity,
   openWith,
   sendAndReadLink,
@@ -209,6 +210,7 @@ test("ο Ιδιοκτήτης καταχωρίζει υπογραφή εκτός
 
   await inSpacesContext(browser, "owner@example.com", async (owner) => {
     await owner.goto(agreementUrl);
+    await openBox(owner, "Γραμμές");
     await expect(control(owner, "Ώρες γυρίσματος")).toBeVisible();
     await expect(control(owner, "Ώρες μοντάζ")).toBeVisible();
 

@@ -1,12 +1,12 @@
-import { Panel } from "@/spaces/kit/panel";
 import { Badge, StateNotice } from "@/spaces/screens/shared";
 
 import { monthLabel } from "../format";
 import { hasMovement } from "../helpers";
 import type { TurnoverMonth, TurnoverMonthly } from "../view-schema";
 import { money, quietText, turnoverChartOf } from "./m1-adapter";
+import { Box, Facts } from "./m1-box";
 import { ExportRow } from "./m1-export-row";
-import { Cell, NoAmountsNote, SummaryCard } from "./m1-finance-parts";
+import { Cell, NoAmountsNote } from "./m1-finance-parts";
 import type { ReportBodyProps } from "./m1-model";
 
 // Τζίρος και Εισπράξεις ανά μήνα (prototype `screens/m1-finance-turnover.tsx`) πάνω στο report_turnover_monthly.
@@ -16,7 +16,10 @@ import type { ReportBodyProps } from "./m1-model";
 function Chart({ months }: { months: readonly TurnoverMonth[] }) {
   const { bars, quiet } = turnoverChartOf(months);
   return (
-    <Panel label="Μήνες">
+    <Box
+      title="Μήνες"
+      hint={`γράφημα · ${bars.length} ${bars.length === 1 ? "μήνας" : "μήνες"} με κίνηση`}
+    >
       <div className="m1f-chart" aria-hidden="true">
         <span className="m1f-legend">
           Πρώτη μπάρα: Τζίρος (χωρίς ΦΠΑ, κατά έκδοση) · δεύτερη: Εισπράξεις (με
@@ -43,7 +46,7 @@ function Chart({ months }: { months: readonly TurnoverMonth[] }) {
         ))}
         {quiet > 0 && <span className="m1f-legend">{quietText(quiet)}</span>}
       </div>
-    </Panel>
+    </Box>
   );
 }
 
@@ -59,7 +62,10 @@ function Invoices({ count, credits }: { count: number; credits: number }) {
 function Table({ data }: { data: TurnoverMonthly }) {
   const { totals } = data;
   return (
-    <Panel label="Πίνακας" isFlush>
+    <Box
+      title="Πίνακας"
+      hint={`${data.months.length} ${data.months.length === 1 ? "μήνας" : "μήνες"} · ${totals.invoiceCount} Τιμολόγια · ${totals.receiptCount} Εισπράξεις`}
+    >
       <div className="scroll">
         <table className="rtable m1f-table">
           <thead>
@@ -113,7 +119,7 @@ function Table({ data }: { data: TurnoverMonthly }) {
           </tbody>
         </table>
       </div>
-    </Panel>
+    </Box>
   );
 }
 
@@ -130,21 +136,23 @@ export function TurnoverBody(
     );
   }
   return (
-    <div className="m1f-wrap">
+    <div className="m1f-wrap ml-stack">
       <NoAmountsNote amounts={data.amounts} />
       {data.client && <p className="note">Μόνο για: {data.client.name}</p>}
-      <div className="m1f-cards">
-        <SummaryCard
-          label="Τζίρος περιόδου"
-          basis="χωρίς ΦΠΑ"
-          value={money(data.totals.turnover)}
-        />
-        <SummaryCard
-          label="Εισπράξεις περιόδου"
-          basis="με ΦΠΑ"
-          value={money(data.totals.collections)}
-        />
-      </div>
+      <Facts
+        items={[
+          {
+            label: "Τζίρος περιόδου",
+            basis: "χωρίς ΦΠΑ",
+            value: money(data.totals.turnover),
+          },
+          {
+            label: "Εισπράξεις περιόδου",
+            basis: "με ΦΠΑ",
+            value: money(data.totals.collections),
+          },
+        ]}
+      />
       {data.amounts && <Chart months={data.months} />}
       <Table data={data} />
       {canExport && (

@@ -9,11 +9,13 @@ import { IN_PROGRESS_DAYS, isInProgress } from "../in-progress";
 import { LIST_LIMIT, listAgreements } from "../queries-agreements";
 import { AgreementsTable } from "./d1-agreements-table";
 
+import "../../finance/spaces/money-lines.css";
+
 const Frame = ({ children }: { children: React.ReactNode }) => (
   <div data-spaces>{children}</div>
 );
 
-// D1 Συμφωνίες στη νέα εμφάνιση (prototype `screens/D1.tsx`, όψη ομάδας). Δεν υπάρχει «Νέα Συμφωνία»: η πρόταση ξεκινά
+// D1 Συμφωνίες (όψη ομάδας) στη μορφή των «Χρημάτων»: μία γραμμή για κάθε Συμφωνία. Δεν υπάρχει «Νέα Συμφωνία»: η πρόταση ξεκινά
 // από την Ευκαιρία. Με ?view=in_progress (από τη Σήμερα) μόνο οι προτάσεις σε εξέλιξη, όπως στη σημερινή σελίδα.
 export async function SpacesAgreements({ view }: { view: string | undefined }) {
   const viewer = await getViewer();
@@ -41,22 +43,23 @@ export async function SpacesAgreements({ view }: { view: string | undefined }) {
   const isReadOnly = !caps.canDraft && !caps.canDeviate;
   return (
     <Frame>
-      <div className="toolbar">
-        <span className="muted grow">
-          {isFiltered && (
+      <div className="ml-head">
+        <p>
+          Βρες μια Συμφωνία και άνοιξέ τη.
+          {caps.canDraft && (
             <>
-              Μόνο οι προτάσεις σε εξέλιξη (λήγουν σε {IN_PROGRESS_DAYS} μέρες ή
-              τις άνοιξε ο πελάτης).{" "}
-              <Link href={hrefOf("D1")}>Όλες οι Συμφωνίες</Link>
+              {" "}
+              Νέα πρόταση ξεκινά πάντα μέσα από μια Ευκαιρία:{" "}
+              <Link href={hrefOf("B3")}>άνοιξε το Pipeline</Link>.
             </>
           )}
-        </span>
+        </p>
         {isReadOnly && <Badge>Μόνο ανάγνωση</Badge>}
       </div>
-      {caps.canDraft && (
-        <p className="note">
-          Νέα πρόταση ξεκινά πάντα μέσα από μια Ευκαιρία:{" "}
-          <Link href={hrefOf("B3")}>άνοιξε το Pipeline</Link>.
+      {isFiltered && (
+        <p className="muted">
+          Μόνο οι προτάσεις σε εξέλιξη (λήγουν σε {IN_PROGRESS_DAYS} μέρες ή τις
+          άνοιξε ο πελάτης). <Link href={hrefOf("D1")}>Όλες οι Συμφωνίες</Link>
         </p>
       )}
       {isFiltered && found.data.length >= LIST_LIMIT && (

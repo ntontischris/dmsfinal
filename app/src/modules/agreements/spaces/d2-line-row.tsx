@@ -1,16 +1,16 @@
 "use client";
 
+import { initialsOf } from "@/spaces/shell/avatar";
 import { Badge } from "@/spaces/screens/shared";
 
 import { formatMoney } from "../helpers";
 import { DEVIATION_STATUS_LABELS } from "../labels";
 import type { AgreementDetail, AgreementLine, KindInfo } from "../types";
+import { LineEdit } from "./d2-line-edit";
 import { hoursText, lineDeviationsOf, lineProvisionsText } from "./d2-model";
-import { ProvisionsCell } from "./d2-provisions";
-import { NumberInput, decimalInput, moneyInput } from "./d2-ui";
 
-// Μία γραμμή του πίνακα «Γραμμές» (prototype `screens/d2-lines.tsx`). Όποιος γράφει την πρόταση βλέπει πεδία στη θέση
-// των τιμών· τα πεδία ανήκουν στις φόρμες της γραμμής (`form=`), που ζουν κάτω από τον πίνακα με τα πραγματικά actions.
+// Μία γραμμή του κουτιού «Γραμμές» στη μορφή `ml-line` (πλακίδιο, ετικέτες, περιγραφή, μικρή γραμμή με ποσότητα, τιμή,
+// Παροχές και ώρες, σύνολο). Όποιος γράφει την πρόταση βλέπει από κάτω τα πεδία της (`LineEdit`).
 
 export const lineFormIds = (lineId: string) => ({
   update: `d2-line-${lineId}`,
@@ -38,182 +38,83 @@ const DEVIATION_SHORT: Readonly<Record<string, string>> = {
 const moneyOrDash = (value: number | null): string =>
   value === null ? "—" : formatMoney(value);
 
-function DescriptionCell({ line, agreement }: LineRowProps) {
-  const isEditing = agreement.can.edit;
-  const form = lineFormIds(line.id).update;
+function LineTags({
+  line,
+  agreement,
+}: Omit<LineRowProps, "kinds" | "columns">) {
   const deviations = lineDeviationsOf(agreement.deviations, line.id);
-  const isOffCatalogue =
-    line.unitPrice !== null &&
-    line.catalogPrice !== null &&
-    line.unitPrice !== line.catalogPrice;
+  if (line.kind !== "free" && deviations.length === 0) return null;
   return (
-    <div>
-      {isEditing ? (
-        <span className="stack">
-          <input
-            className="input d2-wide"
-            name="description"
-            form={form}
-            aria-label="Περιγραφή"
-            defaultValue={line.description}
-          />
-          <input
-            className="input d2-wide"
-            name="descriptionEn"
-            form={form}
-            aria-label="Περιγραφή (English)"
-            placeholder="English"
-            defaultValue={line.descriptionEn}
-          />
-        </span>
-      ) : (
-        line.description
-      )}
-      {isOffCatalogue && line.catalogPrice !== null && (
-        <div className="muted">Κατάλογος: {formatMoney(line.catalogPrice)}</div>
-      )}
-      {(line.kind === "free" || deviations.length > 0) && (
-        <div className="btn-row">
-          {line.kind === "free" && <Badge>Ελεύθερη γραμμή</Badge>}
-          {deviations.map((d) => (
-            <Badge
-              key={d.key}
-              tone={d.status === "covered" ? undefined : "attention"}
-            >
-              {DEVIATION_SHORT[d.kind]
-                ? `${DEVIATION_SHORT[d.kind]}: ${DEVIATION_STATUS_LABELS[d.status]}`
-                : `Παρέκκλιση: ${DEVIATION_STATUS_LABELS[d.status]}`}
-            </Badge>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function HoursCell({ line, agreement }: LineRowProps) {
-  const form = lineFormIds(line.id).update;
-  if (!agreement.can.edit || !agreement.can.editCost)
-    return (
-      <span className="stack">
-        <span>{hoursText(line)}</span>
-        <span className="muted">
-          Άμεσο κόστος {moneyOrDash(line.directCost)}
-        </span>
-      </span>
-    );
-  const value = (n: number | null, toText: (v: number) => string) =>
-    n === null ? "" : toText(n);
-  return (
-    <span className="stack">
-      <NumberInput
-        name="hoursShoot"
-        form={form}
-        label="Ώρες γυρίσματος"
-        inputMode="decimal"
-        defaultValue={value(line.hoursShoot, decimalInput)}
-        suffix="γύρ."
-      />
-      <NumberInput
-        name="hoursEdit"
-        form={form}
-        label="Ώρες μοντάζ"
-        inputMode="decimal"
-        defaultValue={value(line.hoursEdit, decimalInput)}
-        suffix="μοντ."
-      />
-      <NumberInput
-        name="directCost"
-        form={form}
-        label="Άμεσο κόστος"
-        inputMode="decimal"
-        defaultValue={value(line.directCost, moneyInput)}
-        suffix="€ άμεσο"
-      />
+    <span className="btn-row">
+      {line.kind === "free" && <span className="ml-tag">Ελεύθερη γραμμή</span>}
+      {deviations.map((d) => (
+        <Badge
+          key={d.key}
+          tone={d.status === "covered" ? undefined : "attention"}
+        >
+          {DEVIATION_SHORT[d.kind]
+            ? `${DEVIATION_SHORT[d.kind]}: ${DEVIATION_STATUS_LABELS[d.status]}`
+            : `Παρέκκλιση: ${DEVIATION_STATUS_LABELS[d.status]}`}
+        </Badge>
+      ))}
     </span>
   );
 }
 
-function PriceCell({ line, agreement }: LineRowProps) {
-  const { can } = agreement;
-  if (!can.edit || !can.editPrices || line.unitPrice === null)
-    return <>{moneyOrDash(line.unitPrice)}</>;
-  return (
-    <NumberInput
-      name="unitPrice"
-      form={lineFormIds(line.id).update}
-      label="Τιμή μονάδας"
-      inputMode="decimal"
-      defaultValue={moneyInput(line.unitPrice)}
-      suffix="€"
-    />
-  );
-}
+// Ό,τι ήταν στήλες του παλιού πίνακα (ποσότητα, τιμή μονάδας, Κατάλογος, Παροχές, ώρες, άμεσο κόστος) σε μία μικρή γραμμή.
+const detailOf = ({
+  line,
+  kinds,
+  columns,
+}: Omit<LineRowProps, "agreement">) => {
+  const isOffCatalogue =
+    line.unitPrice !== null &&
+    line.catalogPrice !== null &&
+    line.unitPrice !== line.catalogPrice;
+  return [
+    columns.amount
+      ? `${line.quantity}× ${moneyOrDash(line.unitPrice)}`
+      : `${line.quantity}×`,
+    isOffCatalogue && line.catalogPrice !== null
+      ? `Κατάλογος: ${formatMoney(line.catalogPrice)}`
+      : null,
+    `Παροχές: ${lineProvisionsText(line, kinds)}`,
+    columns.cost
+      ? `ώρες γύρ. / μοντ. ${hoursText(line)} · άμεσο κόστος ${moneyOrDash(line.directCost)}`
+      : null,
+  ]
+    .filter((part) => part !== null)
+    .join(" · ");
+};
 
 export function LineRow(props: LineRowProps) {
   const { line, agreement, kinds, columns } = props;
-  const isEditing = agreement.can.edit;
-  const ids = lineFormIds(line.id);
+  const { can } = agreement;
   return (
-    <tr>
-      <td data-label="Γραμμή">
-        <DescriptionCell {...props} />
+    <tr className="ml-line">
+      <td className="ml-thumb" aria-hidden="true">
+        {initialsOf(line.description || "—")}
       </td>
-      <td className="num" data-label="Ποσότητα">
-        {isEditing ? (
-          <NumberInput
-            name="quantity"
-            form={ids.update}
-            label="Ποσότητα"
-            min={1}
-            max={999}
-            defaultValue={String(line.quantity)}
-          />
-        ) : (
-          `${line.quantity}×`
-        )}
+      <td className="ml-main">
+        <LineTags line={line} agreement={agreement} />
+        <strong>{line.description}</strong>
+        <small>{detailOf(props)}</small>
       </td>
       {columns.amount && (
-        <td className="num" data-label="Τιμή μονάδας">
-          <PriceCell {...props} />
-        </td>
+        <td className="ml-amount">{moneyOrDash(line.lineTotal)}</td>
       )}
-      <td data-label="Παροχές">
-        {isEditing ? (
-          <ProvisionsCell
-            formId={ids.provisions}
+      {can.edit && (
+        <td className="ml-edit">
+          <LineEdit
+            line={line}
             kinds={kinds}
-            initial={line.provisions}
+            columns={columns}
+            canEditPrices={can.editPrices}
+            canEditCost={can.editCost}
+            ids={lineFormIds(line.id)}
           />
-        ) : (
-          lineProvisionsText(line, kinds)
-        )}
-      </td>
-      {columns.cost && (
-        <td className="num" data-label="Ώρες γύρ. / μοντ.">
-          <HoursCell {...props} />
         </td>
       )}
-      <td className="num" data-label="Σύνολο">
-        <div>
-          {columns.amount && <strong>{moneyOrDash(line.lineTotal)}</strong>}
-          {isEditing && (
-            <div className="btn-row">
-              <button
-                type="submit"
-                className="button"
-                data-primary="true"
-                form={ids.update}
-              >
-                Αποθήκευση γραμμής
-              </button>
-              <button type="submit" className="button" form={ids.remove}>
-                Αφαίρεση
-              </button>
-            </div>
-          )}
-        </div>
-      </td>
     </tr>
   );
 }

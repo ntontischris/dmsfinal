@@ -21,7 +21,8 @@ import {
   type ItemDraft,
 } from "./i6-model";
 
-// Μία κατηγορία Εξόδων με τα έξοδα και τις γραμμές της (prototype `screens/i6-category.tsx`, αυτούσιο).
+// Μία κατηγορία Εξόδων με τα έξοδα και τις γραμμές της (prototype `screens/i6-category.tsx`): το σώμα που ανοίγει η
+// γραμμή της κατηγορίας (`i6-row.tsx`).
 
 export interface CategoryProps {
   cat: CategoryDraft;
@@ -184,8 +185,7 @@ export function CategoryCard({
   remove,
 }: CategoryProps) {
   return (
-    <section className="kit-panel i67-cat">
-      <div className="kit-panel-body i67-cat-body">
+    <div className="i67-cat-body">
       <div className="i67-total">
         <TextCell
           value={cat.name}
@@ -209,7 +209,6 @@ export function CategoryCard({
       {editable && (
         <CategoryActions cat={cat} ci={ci} update={update} remove={remove} />
       )}
-      </div>
-    </section>
+    </div>
   );
 }

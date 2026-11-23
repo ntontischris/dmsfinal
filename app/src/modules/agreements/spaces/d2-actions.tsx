@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-
 import { Badge } from "@/spaces/screens/shared";
 
 import {
@@ -14,11 +12,11 @@ import {
 import { MANUAL_DELIVERY_NOTE } from "../labels";
 import type { AgreementDetail } from "../types";
 import { ApprovalActions, RevisionButton } from "./d2-actions-review";
-import { pathHint, type LossReason } from "./d2-model";
+import type { LossReason } from "./d2-model";
 import { OutsideSignatureForm, type UsedKind } from "./d2-outside";
 import { D2Form, D2Scope, IdField, NumberInput, plural } from "./d2-ui";
 
-// Οι ενέργειες στην κορυφή της σελίδας (prototype `screens/d2-action-bar.tsx` + `d2-actions.tsx`). Φαίνονται μόνο όσες
+// Οι ενέργειες στο hero της σελίδας (prototype `screens/d2-action-bar.tsx` + `d2-actions.tsx`). Φαίνονται μόνο όσες
 // επιτρέπει το `can` της βάσης· κάθε κουμπί καλεί το πραγματικό action.
 
 interface ActionsProps {
@@ -27,7 +25,6 @@ interface ActionsProps {
   usedKinds: readonly UsedKind[];
   today: string;
   pendingDays: number | null;
-  preview: ReactNode | null; // «Όπως θα τη δει ο πελάτης»: μόνο για όποιον «Βλέπει ποσά»
 }
 
 function SendActions({ agreement }: { agreement: AgreementDetail }) {
@@ -171,41 +168,16 @@ function FlowActions(props: ActionsProps) {
   );
 }
 
+// Οι ενέργειες της πρότασης στο hero (`.ml-quick`). Η προεπισκόπηση «Όπως θα τη δει ο πελάτης» είναι δικό της κουτί.
 export function ActionBar(props: ActionsProps) {
-  const { agreement, preview } = props;
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const hint = pathHint(agreement);
-  const isProposal = agreement.state === "proposal";
+  if (props.agreement.state !== "proposal") return null;
   return (
-    <>
-      <section className="card d2-actions" aria-label="Ενέργειες">
-        {hint && <p className="muted">{hint}</p>}
-        <D2Scope>
-          <div className="btn-row">
-            {isProposal && <FlowActions {...props} />}
-            {preview && (
-              <button
-                type="button"
-                className="button"
-                aria-expanded={isPreviewOpen}
-                onClick={() => setIsPreviewOpen(!isPreviewOpen)}
-              >
-                {isPreviewOpen
-                  ? "Κλείσιμο προεπισκόπησης"
-                  : "Όπως θα τη δει ο πελάτης"}
-              </button>
-            )}
-          </div>
-        </D2Scope>
-      </section>
-      {isPreviewOpen && preview && (
-        <section
-          className="card d2-preview"
-          aria-label="Όπως θα τη δει ο πελάτης"
-        >
-          {preview}
-        </section>
-      )}
-    </>
+    <section className="d2-actions" aria-label="Ενέργειες">
+      <D2Scope>
+        <div className="btn-row">
+          <FlowActions {...props} />
+        </div>
+      </D2Scope>
+    </section>
   );
 }

@@ -34,6 +34,7 @@ export function NoteToggle({
             clientId={clientId}
             rows={rows}
             canLog
+            isLines
             kinds={kinds}
             openOpportunities={openOpportunities}
           />

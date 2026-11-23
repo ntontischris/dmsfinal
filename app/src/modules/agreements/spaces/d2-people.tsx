@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
 import { Avatar } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 
@@ -11,6 +10,7 @@ import { reissueLink, revokeLink } from "../actions-flow";
 import { formatDate } from "../helpers";
 import { LINK_STATUS_LABELS } from "../labels";
 import type { AgreementDetail, LinkInfo, Recipient } from "../types";
+import { D2Box } from "./d2-box";
 import { D2Form, D2Scope, Field, IdField } from "./d2-ui";
 import { ItemRows } from "./lane-rows";
 
@@ -251,7 +251,10 @@ function RecipientsList({
 export function PeopleSection({ agreement }: { agreement: AgreementDetail }) {
   const { can } = agreement;
   return (
-    <Panel label="Υπογράφων και παραλήπτες">
+    <D2Box
+      title="Υπογράφων και παραλήπτες"
+      hint={`${agreement.recipients.find((r) => r.isSignatory)?.name ?? "χωρίς Υπογράφοντα"} · ${agreement.recipients.length} άτομα`}
+    >
       <D2Scope>
         {can.edit ? (
           <RecipientsEditor agreement={agreement} />
@@ -263,6 +266,6 @@ export function PeopleSection({ agreement }: { agreement: AgreementDetail }) {
         )}
       </D2Scope>
       <p className="note">{NOTE}</p>
-    </Panel>
+    </D2Box>
   );
 }

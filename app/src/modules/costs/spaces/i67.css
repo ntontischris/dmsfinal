@@ -1,7 +1,6 @@
 /* I6 «Έξοδα και Κόστος ώρας» και I7 «Κερδοφορία» (prototype screens/i67.css, αυτούσιο). Μόνο tokens. */
 [data-look='spaces'] {
 & .i67-big { font-size: 2rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
-& .i67-cat { min-width: 0; }
 & .i67-item { border-top: 1px solid color-mix(in oklab, var(--color-text) 7%, transparent); padding: var(--space-2) 0; min-width: 0; }
 & .i67-line { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; padding: var(--space-1) 0; min-width: 0; }
 & .i67-line > span, & .i67-line > .input { min-width: 0; overflow-wrap: anywhere; }
@@ -22,7 +21,29 @@
 & .i67-money { font-weight: 700; font-variant-numeric: tabular-nums; }
 & .i67-glass .part-tile { width: 2.2rem; height: 2.2rem; font-size: 0.8rem; }
 & .i67-big { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-& .i67-cat { margin-bottom: var(--space-4); }
 & .i67-cat-sum { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 & .i67-cat-body .i67-total { padding-bottom: var(--space-2); }
 }
+
+/* Εμφάνιση «Χρημάτων» (money-lines.css): η κεφαλίδα της I6, οι κατηγορίες ως γραμμές, το κέρδος της I7 κατά πρόσημο */
+.i6-hero .tabs { margin: .4rem 0 0; }
+.i6-facts { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.2rem; }
+.i6-facts strong { color: var(--color-text); font-variant-numeric: tabular-nums; }
+.i6-hours { width: 6rem; display: inline-block; }
+.ml-hero > .i6-save { flex-direction: column; align-items: flex-end; max-width: 18rem; }
+.i6-save-form { display: grid; gap: .4rem; justify-items: end; }
+.i6-save-form p { margin: 0; text-align: right; }
+.ml-quick .i6-open {
+  padding: .45rem .85rem; border-radius: 999px; font-size: .82rem; font-weight: 700; white-space: nowrap;
+  border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent);
+}
+.ml-item[open] .i6-open { border-color: var(--brand-periwinkle); }
+.ml-page .i67-cat-body { min-width: 0; }
+.i7-line .i67-signals { align-items: center; }
+.i7-line .ml-main strong a { color: inherit; text-decoration: none; }
+.i7-line .ml-main strong a:hover { text-decoration: underline; }
+.ml-amount[data-sign="gain"] { color: var(--color-ok); }
+.ml-amount[data-sign="loss"] { color: var(--color-danger); }
+.ml-amount[data-sign="none"] { color: var(--color-text-muted); }
+.ml-hero-amount.i7-profit[data-sign="gain"] { color: var(--color-ok) !important; }
+.ml-hero-amount.i7-profit[data-sign="loss"] { color: var(--color-danger) !important; }

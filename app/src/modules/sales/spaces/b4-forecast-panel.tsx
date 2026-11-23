@@ -1,12 +1,15 @@
-import { getViewer } from "@/modules/access";
-import { Panel } from "@/spaces/kit/panel";
 import { ErrorNotice } from "@/spaces/screens/shared";
 
-import { canSeeAmounts } from "../helpers";
 import { NO_MANAGER_LABEL } from "../labels";
-import { getOpportunityForecast } from "../queries-forecast";
 import { listHandoffCandidates } from "../queries-queue";
-import type { ListItem, Opportunity, SalesCaps } from "../types";
+import type { ReadResult } from "../read";
+import type {
+  ForecastRow,
+  ListItem,
+  Opportunity,
+  OpportunityForecast,
+  SalesCaps,
+} from "../types";
 import { ForecastEditor, ManagerChange } from "./b4-forecast";
 import {
   closeText,
@@ -15,62 +18,91 @@ import {
   weightedText,
 } from "./forecast-adapter";
 
-// B4 · Πρόβλεψη μιας ανοιχτής Ευκαιρίας (b3): τι περιμένουμε να φέρει και πότε. Η αλλαγή μένει κλειστή μέχρι να τη ζητήσεις.
-export async function ForecastPanel({
+// Η υπόδειξη του κουτιού: η Πιθανότητα και η σταθμισμένη (με «Βλέπει ποσά»)· για τον Υπεύθυνο και η αλλαγή.
+const hintOf = (
+  row: ForecastRow | null,
+  hasAmounts: boolean,
+  canWork: boolean,
+): string =>
+  [
+    `Πιθανότητα ${probabilityText(row)}`,
+    hasAmounts ? `σταθμ. ${weightedText(row)}` : null,
+    `κλείσιμο ${closeText(row)}`,
+    canWork ? "Αλλαγή πρόβλεψης" : null,
+  ]
+    .filter((part) => part !== null)
+    .join(" · ");
+
+function ForecastFacts(props: {
+  row: ForecastRow | null;
+  hasAmounts: boolean;
+}) {
+  const { row, hasAmounts } = props;
+  return (
+    <dl className="dl">
+      {hasAmounts && (
+        <>
+          <dt>Αξία</dt>
+          <dd>{valueText(row)}</dd>
+        </>
+      )}
+      <dt>Πιθανότητα</dt>
+      <dd>{probabilityText(row)}</dd>
+      {hasAmounts && (
+        <>
+          <dt>Σταθμισμένη</dt>
+          <dd>{weightedText(row)}</dd>
+        </>
+      )}
+      <dt>Αναμενόμενο κλείσιμο</dt>
+      <dd>{closeText(row)}</dd>
+    </dl>
+  );
+}
+
+// B4 · Πρόβλεψη μιας ανοιχτής Ευκαιρίας (b3) σε κλειστό κουτί: τι περιμένουμε να φέρει και πότε, και η αλλαγή της.
+// Την ανάγνωση τη φέρνει η σελίδα (τη χρειάζεται και η κεφαλίδα για το μεγάλο ποσό).
+export function ForecastBox({
   opportunity,
   stages,
   canWork,
+  found,
+  hasAmounts,
 }: {
   opportunity: Opportunity;
   stages: readonly ListItem[];
   canWork: boolean;
+  found: ReadResult<OpportunityForecast>;
+  hasAmounts: boolean;
 }) {
-  if (opportunity.outcome !== "open") return null;
-  const [viewer, found] = await Promise.all([
-    getViewer(),
-    getOpportunityForecast(opportunity.id),
-  ]);
-  if (!found.ok)
-    return (
-      <Panel label="Πρόβλεψη">
-        <ErrorNotice what="η Πρόβλεψη" />
-      </Panel>
-    );
-  const row = found.data.row;
-  const hasAmounts = canSeeAmounts(viewer);
+  const row = found.ok ? found.data.row : null;
   const stage = stages.find((item) => item.id === opportunity.stageId);
   return (
-    <Panel label="Πρόβλεψη" aside={hasAmounts ? weightedText(row) : undefined}>
-      <dl className="dl">
-        {hasAmounts && (
-          <>
-            <dt>Αξία</dt>
-            <dd>{valueText(row)}</dd>
-          </>
+    <section>
+      <details className="ml-box">
+        <summary>
+          <h2 className="ml-box-title">Πρόβλεψη</h2>
+          <small>
+            {found.ok ? hintOf(row, hasAmounts, canWork) : "Δεν διαβάστηκε"}
+          </small>
+        </summary>
+        {!found.ok ? (
+          <ErrorNotice what="η Πρόβλεψη" />
+        ) : (
+          <div className="b4-box-body">
+            <ForecastFacts row={row} hasAmounts={hasAmounts} />
+            {canWork && (
+              <ForecastEditor
+                opportunityId={opportunity.id}
+                forecast={found.data}
+                stageProbability={stage?.probability ?? null}
+                canSeeAmounts={hasAmounts}
+              />
+            )}
+          </div>
         )}
-        <dt>Πιθανότητα</dt>
-        <dd>{probabilityText(row)}</dd>
-        {hasAmounts && (
-          <>
-            <dt>Σταθμισμένη</dt>
-            <dd>{weightedText(row)}</dd>
-          </>
-        )}
-        <dt>Αναμενόμενο κλείσιμο</dt>
-        <dd>{closeText(row)}</dd>
-      </dl>
-      {canWork && (
-        <details>
-          <summary>Αλλαγή πρόβλεψης</summary>
-          <ForecastEditor
-            opportunityId={opportunity.id}
-            forecast={found.data}
-            stageProbability={stage?.probability ?? null}
-            canSeeAmounts={hasAmounts}
-          />
-        </details>
-      )}
-    </Panel>
+      </details>
+    </section>
   );
 }
 
