@@ -1,0 +1,146 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+
+import "../../finance/spaces/money-lines.css";
+import { CardError } from "./a1-card";
+import { isNewSince, laterLineOf } from "./a1-later";
+import { LaterButton, UndoLater } from "./a1-later-buttons";
+import type { ListGroup, ListLine } from "./a1-list";
+import type { CardDef } from "./a1-model";
+
+// Η Σήμερα ως μία λίστα σε 7 ομάδες (#Σήμερα list): η γραμμή κορυφής κλειστή, κάτω οι ομάδες με γραμμές `ml-line`.
+
+// Το ρήμα του κουμπιού κίνησης ανά κάρτα· όπου δεν υπάρχει, «Άνοιξε».
+const ACTION_LABEL: Readonly<Record<string, string>> = {
+  unread_messages: "Απάντησε",
+  requests_mentions: "Απάντησε",
+  to_invoice: "Τιμολόγησε",
+  unassigned: "Ανάθεσε",
+  versions_to_review: "Δες",
+};
+const DEFAULT_ACTION = "Άνοιξε";
+const RETRY_HREF = "/app";
+
+export interface TodayListProps {
+  // Η γραμμή κορυφής («Μένουν N · Υ € να μπουν»)· πατημένη ανοίγει τα πάνελ από κάτω.
+  topline: string;
+  panels: ReactNode;
+  groups: readonly ListGroup[];
+  // Οι κάρτες που φορτώθηκαν (και οι χαλασμένες), για τον τίτλο του CardError.
+  cards: readonly CardDef[];
+  seenAt: string | null;
+  // Τα κλειδιά που κρύφτηκαν με «Αργότερα» και η ώρα της στιγμής (για τη γραμμή «ξαναβγαίνουν»).
+  later: readonly string[];
+  stamp: string;
+  isCompanyQuiet: boolean;
+}
+
+function LineRow({ line, seenAt }: { line: ListLine; seenAt: string | null }) {
+  const { row, cardId, laterKey } = line;
+  const action = ACTION_LABEL[cardId] ?? DEFAULT_ACTION;
+  return (
+    <div className="ml-line" data-urgent={row.isUrgent || undefined}>
+      <span className="ml-main">
+        <strong>
+          {row.isUrgent && (
+            <span className="a1-urgent-mark" role="img" aria-label="επείγον">
+              !
+            </span>
+          )}{" "}
+          {row.label}
+          {isNewSince(row, seenAt) && <span className="a1-new"> νέο</span>}
+        </strong>
+        {row.meta && <small>{row.meta}</small>}
+      </span>
+      <span className="ml-quick">
+        {row.suggestion && (
+          <Link
+            href={row.suggestion.href}
+            aria-label={`Πρότεινε αυτή την ώρα: ${row.label}`}
+          >
+            Πρότεινε αυτή την ώρα
+          </Link>
+        )}
+        {laterKey && <LaterButton itemKey={laterKey} label={row.label} />}
+        <Link
+          data-primary
+          href={row.href}
+          aria-label={`${action}: ${row.label}`}
+        >
+          {action}
+        </Link>
+      </span>
+    </div>
+  );
+}
+
+function GroupBlock({
+  group,
+  cards,
+  seenAt,
+}: {
+  group: ListGroup;
+  cards: readonly CardDef[];
+  seenAt: string | null;
+}) {
+  const failedCards = group.failed.flatMap((code) =>
+    cards.filter((card) => card.id === code),
+  );
+  return (
+    <section className="a1-zone" data-zone={group.id}>
+      <h2 className="a1-zone-title">{group.title}</h2>
+      <div className="ml-list">
+        {failedCards.map((card) => (
+          <CardError key={card.id} card={card} retryHref={RETRY_HREF} />
+        ))}
+        {group.lines.map((line) => (
+          <LineRow
+            key={`${line.cardId}${line.row.href}${line.row.label}`}
+            line={line}
+            seenAt={seenAt}
+          />
+        ))}
+      </div>
+      {group.more.map((item) => (
+        <p key={item.href} className="a1-quiet">
+          <Link href={item.href}>Και {item.count} ακόμα →</Link>
+        </p>
+      ))}
+    </section>
+  );
+}
+
+export function TodayList({
+  topline,
+  panels,
+  groups,
+  cards,
+  seenAt,
+  later,
+  stamp,
+  isCompanyQuiet,
+}: TodayListProps) {
+  const laterLine = laterLineOf(later.length, stamp);
+  return (
+    <>
+      <details className="a1-topline">
+        <summary>{topline}</summary>
+        <div className="a1-topline-body">{panels}</div>
+      </details>
+      {groups.map((group) => (
+        <GroupBlock
+          key={group.id}
+          group={group}
+          cards={cards}
+          seenAt={seenAt}
+        />
+      ))}
+      {isCompanyQuiet && <p className="a1-quiet">Όλα λειτουργούν</p>}
+      {laterLine && (
+        <div className="a1-quiet a1-later-line">
+          {laterLine} · <UndoLater keys={later} />
+        </div>
+      )}
+    </>
+  );
+}

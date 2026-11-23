@@ -4,110 +4,12 @@ import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Panel } from "@/spaces/kit/panel";
 
 import { formatCents } from "../helpers";
-import type { OtherCard, QuietCard } from "./a1-brief";
-import type { RankedDecisions } from "./a1-decisions";
-import { decisionFactOf } from "./a1-facts";
-import { isNewSince, itemKeyOf, laterLineOf } from "./a1-later";
-import { LaterButton, UndoLater } from "./a1-later-buttons";
 import type { CardContent } from "./a1-model";
 import type { Programme } from "./a1-programme";
 
-// Τα κομμάτια της Σήμερα της ομάδας (#241). Η σειρά δείχνει το επείγον, όχι σημάδια σε κάθε γραμμή.
+// Τα κομμάτια της Σήμερα της ομάδας (#241): το πρόγραμμα και τα χρήματα, μέσα στη γραμμή κορυφής.
 
 const MONEY_SHOWN = 3;
-
-function DecisionTitle({ label, isNew }: { label: string; isNew: boolean }) {
-  return (
-    <>
-      {label}
-      {isNew && <span className="a1-new"> νέο</span>}
-    </>
-  );
-}
-
-// stamp: «ΕΕΕΕ-ΜΜ-ΗΗTΩΩ:ΛΛ» (Αθήνα), για το «Περιμένει N ημέρες» και το «ξαναβγαίνουν».
-// seenAt: πότε τελείωσε η προηγούμενη επίσκεψη (Σ8)· later: τα κλειδιά που κρύφτηκαν με «Αργότερα».
-export function DecisionsPanel({
-  ranked,
-  stamp,
-  seenAt,
-  later,
-}: {
-  ranked: RankedDecisions;
-  stamp: string;
-  seenAt: string | null;
-  later: readonly string[];
-}) {
-  const today = stamp.slice(0, 10);
-  const laterLine = laterLineOf(later.length, stamp);
-  return (
-    <div className="a1-brief-panel" data-part="decisions">
-      <Panel
-        label="Μόνο εσύ μπορείς"
-        aside={ranked.total > 0 ? ranked.total : undefined}
-      >
-        {ranked.shown.length === 0 ? (
-          <p className="muted a1-empty">Καμία απόφαση δεν σε περιμένει.</p>
-        ) : (
-          <div className="a1-rows">
-            <RowList>
-              {ranked.shown.map((row, index) => (
-                <ListRow
-                  key={`${row.cardId}${row.href}${row.label}`}
-                  lead={<span className="a1-rank">{index + 1}</span>}
-                  title={
-                    <DecisionTitle
-                      label={row.label}
-                      isNew={isNewSince(row, seenAt)}
-                    />
-                  }
-                  sub={decisionFactOf(row, today) || row.cardTitle}
-                  aside={<DecisionActions row={row} />}
-                />
-              ))}
-            </RowList>
-          </div>
-        )}
-        {laterLine && (
-          <div className="a1-quiet a1-later-line">
-            {laterLine} · <UndoLater keys={later} />
-          </div>
-        )}
-        {ranked.more && (
-          <footer className="a1-card-foot">
-            <Link href={ranked.more.href}>Και {ranked.more.count} ακόμα →</Link>
-          </footer>
-        )}
-      </Panel>
-    </div>
-  );
-}
-
-function DecisionActions({ row }: { row: RankedDecisions["shown"][number] }) {
-  const itemKey = itemKeyOf(row.cardId, row);
-  return (
-    <span className="a1-decision-actions">
-      {itemKey && <LaterButton itemKey={itemKey} label={row.label} />}
-      {row.suggestion && (
-        <Link
-          className="button"
-          data-ghost="true"
-          href={row.suggestion.href}
-          aria-label={`Πρότεινε αυτή την ώρα: ${row.label}`}
-        >
-          Πρότεινε αυτή την ώρα
-        </Link>
-      )}
-      <Link
-        className="button"
-        href={row.href}
-        aria-label={`Άνοιξε: ${row.label}`}
-      >
-        Άνοιξε
-      </Link>
-    </span>
-  );
-}
 
 export function ProgrammePanel({
   programme,
@@ -187,60 +89,5 @@ export function MoneyPanel({ content }: { content: CardContent }) {
         </footer>
       </Panel>
     </div>
-  );
-}
-
-interface OthersFoldProps {
-  others: readonly OtherCard[];
-  quiet: readonly QuietCard[];
-  healthOk: QuietCard | null;
-}
-
-// Όλες οι υπόλοιπες κάρτες σε μία κλειστή γραμμή: τίτλος, πλήθος, σύνδεσμος.
-export function OthersFold({ others, quiet, healthOk }: OthersFoldProps) {
-  if (others.length + quiet.length === 0 && !healthOk) return null;
-  return (
-    <details className="a1-others">
-      <summary>
-        {others.length > 0 ? `Και άλλα ${others.length}` : "Και άλλα"}
-      </summary>
-      {others.length > 0 && (
-        <ul className="a1-other-list">
-          {others.map((other) => (
-            <li key={other.id}>
-              <Link href={other.isFailed ? "/app" : other.href}>
-                {other.title}
-              </Link>
-              <span className="a1-other-count">
-                {other.isFailed ? "δεν φόρτωσε" : other.count}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {healthOk && (
-        <p className="a1-quiet">
-          <span className="a1-quiet-mark" aria-hidden>
-            ✓
-          </span>{" "}
-          <Link href={healthOk.href}>{healthOk.title}</Link>: όλα λειτουργούν.
-        </p>
-      )}
-      {quiet.length > 0 && (
-        <p className="a1-quiet">
-          <span className="a1-quiet-mark" aria-hidden>
-            ✓
-          </span>{" "}
-          Δεν σε περιμένει τίποτα σε:{" "}
-          {quiet.map((card, index) => (
-            <span key={card.id}>
-              {index > 0 && ", "}
-              <Link href={card.href}>{card.title}</Link>
-            </span>
-          ))}
-          .
-        </p>
-      )}
-    </details>
   );
 }

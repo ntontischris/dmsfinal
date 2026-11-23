@@ -65,22 +65,20 @@
 & .a1-zone-title { display: inline-flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; }
 & .a1-zone[data-zone='urgent'] > .a1-zone-title { color: var(--color-text); }
 & .a1-zone[data-zone='urgent'] > .a1-zone-title::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-rec); }
-/* Η Σήμερα της ομάδας ως ενημέρωση (#241): μία πρόταση, δύο στήλες πάνω (αποφάσεις | πρόγραμμα), μία στήλη στο κινητό. */
+/* Η Σήμερα της ομάδας ως ενημέρωση (#241): μία πρόταση πάνω από τη γραμμή κορυφής και τη λίστα. */
 & .a1-lead { margin: 0 0 var(--space-4); max-width: 62ch; font-size: 1.1rem; line-height: 1.45; color: var(--color-text); }
-& .a1-top { display: grid; gap: 0 var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
-@media (min-width: 60rem) { & .a1-top:has(> :nth-child(2)) { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); } }
+/* Γραμμή κορυφής (κλειστή): «Μένουν N · Υ € να μπουν»· τα πάνελ (Δείκτες, Πρόγραμμα, Χρήματα, Ομάδα) μέσα, κλειστά. */
+& .a1-topline { margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+& .a1-topline > summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+& .a1-topline[open] > summary { margin-bottom: var(--space-3); }
+& .a1-topline-body { display: grid; gap: var(--space-3); min-width: 0; }
+/* Οι γραμμές της λίστας: μία στήλη κειμένου και τα κουμπιά δεξιά (ml-line χωρίς πλακίδιο). */
+& .a1-zone .ml-line { grid-template-columns: minmax(0, 1fr) auto; }
 & .a1-brief-panel { min-width: 0; }
 & .a1-brief-panel .kit-panel-body { display: flex; flex-direction: column; gap: var(--space-2); }
-& .a1-rank, & .a1-time, & .a1-amount { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+& .a1-time, & .a1-amount { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
 & .a1-amount { color: var(--color-text); font-weight: 600; }
 & .a1-day { margin: 0; font-size: var(--text-sm); font-weight: 600; }
-& .a1-others { margin-top: var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
-& .a1-others > summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
-& .a1-others[open] > summary { margin-bottom: var(--space-3); }
-& .a1-other-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-& .a1-other-list li { display: flex; gap: var(--space-2); align-items: baseline; justify-content: space-between; min-width: 0; }
-& .a1-other-list a { text-decoration: none; color: var(--color-text); overflow-wrap: anywhere; }
-& .a1-other-count { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--color-text-muted); flex: none; }
 /* Κομμάτι 2 (#241): Χρήματα και Η ομάδα δίπλα-δίπλα, οι μπάρες των οφειλετών και ο ρυθμός του μήνα. */
 & .a1-pair { display: grid; gap: 0 var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 60rem) { & .a1-pair:has(> :nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -126,7 +124,6 @@
    δίπλα στο «Άνοιξε» και η Αναίρεση ως σύνδεσμος μέσα στην ήσυχη γραμμή. */
 & .a1-new { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-accent); white-space: nowrap; }
 & .a1-new-chip { display: inline-block; margin-left: var(--space-2); padding: 0.1rem 0.6rem; border: 1px solid color-mix(in oklab, var(--color-accent) 40%, transparent); border-radius: 999px; background: color-mix(in oklab, var(--color-accent) 10%, transparent); color: var(--color-accent); font-size: 0.75rem; font-weight: 600; vertical-align: middle; white-space: nowrap; }
-& .a1-decision-actions { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 & .a1-later-form { display: inline-flex; gap: var(--space-2); align-items: center; }
 :root & .button[data-ghost='true'] { border-color: transparent; color: var(--color-text-muted); font-weight: 500; }
 :root & .button[data-ghost='true']:hover { color: var(--color-text); background: color-mix(in oklab, var(--color-text) 8%, transparent); }
