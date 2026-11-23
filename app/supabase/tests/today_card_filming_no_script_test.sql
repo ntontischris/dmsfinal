@@ -1,7 +1,7 @@
 -- Σήμερα: κάρτα «Γύρισμα χωρίς σενάριο» (filming_no_script). Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 -- Οι ώρες είναι σχετικές με το now() της συναλλαγής, ώστε το τεστ να μην εξαρτάται από ημερομηνία.
 begin;
-select plan(26);
+select plan(27);
 
 -- ───────────── Βοηθοί ─────────────
 create function public.t_uid(p_last text) returns uuid
@@ -10,7 +10,7 @@ create function public.t_fid(p_last text) returns text
 language sql immutable as $$ select '00000000-0000-0000-0000-0000000000' || p_last; $$;
 
 -- ───────────── Χρήστες ─────────────
--- a1 Ιδιοκτήτης (όλα) · a2 Παραγωγή (μέλος της d1, και μέλος του Συνεργείου του f10) · a3 Πωλήσεις (χωρίς Δελτίο)
+-- a1 Ιδιοκτήτης (όλα) · a2 Παραγωγή (μέλος της d1, και μέλος του Συνεργείου του fa) · a3 Πωλήσεις (χωρίς Δελτίο)
 -- a4 Λογιστής (χωρίς Δελτίο) · a5 Παραγωγή, μέλος της d2
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
@@ -48,7 +48,7 @@ insert into public.production_members (production_id, user_id) values
   ('00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000a5');
 
 -- f1: σε 1 μέρα, χωρίς Δελτίο (μετράει, επείγον, πρώτο)     · f4: σε 1 μέρα 2 ώρες, Δελτίο με κενές λήψεις (μετράει)
--- f9: σε 1 μέρα 3 ώρες, Πελάτης c1 στη d2 (μετράει)         · f10: σε 1 μέρα 4 ώρες, d2, μέλος του Συνεργείου ο a2
+-- f9: σε 1 μέρα 3 ώρες, εσωτερικό στη d2 (μετράει)          · fa: σε 1 μέρα 4 ώρες, d2, μέλος του Συνεργείου ο a2
 -- f2: σε 2 μέρες 23 ώρες (μέσα στο παράθυρο των 3 ημερών, μετράει, τελευταίο)
 -- f3: σε 1 μέρα, Δελτίο με λήψεις (δεν μετράει) · f5: σε 3 μέρες 1 ώρα (έξω από το παράθυρο)
 -- f6: χθες (πέρασε) · f7: σε 1 μέρα, ακυρωμένο · f8: σε 1 μέρα, απορριμμένο
@@ -58,9 +58,9 @@ insert into public.filmings (id, production_id, client_id, starts_at, hours, loc
    now() + interval '1 day', 2, 'Στούντιο Α', 'team', 'pending', false, null, null, null, null),
   ('00000000-0000-0000-0000-0000000000f4', '00000000-0000-0000-0000-0000000000d1', null,
    now() + interval '1 day 2 hours', 2, 'Στούντιο Β', 'team', 'scheduled', false, null, null, null, null),
-  ('00000000-0000-0000-0000-0000000000f9', '00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000c1',
-   now() + interval '1 day 3 hours', 2, 'Κατάστημα', 'team', 'scheduled', true, null, null, null, null),
-  ('00000000-0000-0000-0000-0000000000f10', '00000000-0000-0000-0000-0000000000d2', null,
+  ('00000000-0000-0000-0000-0000000000f9', '00000000-0000-0000-0000-0000000000d2', null,
+   now() + interval '1 day 3 hours', 2, 'Κατάστημα', 'team', 'scheduled', false, null, null, null, null),
+  ('00000000-0000-0000-0000-0000000000fa', '00000000-0000-0000-0000-0000000000d2', null,
    now() + interval '1 day 4 hours', 2, 'Στούντιο Γ', 'team', 'scheduled', false, null, null, null, null),
   ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000d1', null,
    now() + interval '2 days 23 hours', 2, 'Στούντιο Α', 'team', 'scheduled', false, null, null, null, null),
@@ -80,7 +80,7 @@ insert into public.filming_sheets (filming_id, shots) values
   (public.t_fid('f4')::uuid, '[]'::jsonb);
 
 insert into public.filming_crew (filming_id, user_id, response, reason, responded_at) values
-  (public.t_fid('f10')::uuid, '00000000-0000-0000-0000-0000000000a2', 'pending', null, null);
+  (public.t_fid('fa')::uuid, '00000000-0000-0000-0000-0000000000a2', 'pending', null, null);
 
 reset session_replication_role;
 
@@ -93,7 +93,7 @@ select is((select count(*)::integer from jsonb_array_elements(authz.today_items_
 -- ───────────── Σειρά: πιο κοντινό πρώτο, και ισοπαλία με id ─────────────
 select is((select array_agg(v ->> 'id' order by n)
              from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) with ordinality x (v, n)),
-  array[public.t_fid('f1'), public.t_fid('f4'), public.t_fid('f9'), public.t_fid('f10'), public.t_fid('f2')],
+  array[public.t_fid('f1'), public.t_fid('f4'), public.t_fid('f9'), public.t_fid('fa'), public.t_fid('f2')],
   'Η σειρά είναι η ώρα έναρξης και μετά id');
 
 -- ───────────── Γραμμή: τίτλος, υπότιτλος με μέρα, ώρα και Πελάτη ή χώρο, σύνδεσμος, επείγον ─────────────
@@ -102,8 +102,8 @@ select is((select v ->> 'title' from jsonb_array_elements(authz.today_items_film
   'Εσωτερικό podcast', 'Ο τίτλος είναι η Παραγωγή');
 select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f9')),
-  to_char((now() + interval '1 day 3 hours') at time zone 'Europe/Athens', 'DD/MM HH24:MI') || ' · Καφέ Αθηνά, Κατάστημα',
-  'Ο υπότιτλος έχει μέρα, ώρα, Πελάτη και χώρο');
+  to_char((now() + interval '1 day 3 hours') at time zone 'Europe/Athens', 'DD/MM HH24:MI') || ' · Κατάστημα',
+  'Ο υπότιτλος έχει μέρα, ώρα και χώρο, χωρίς Πελάτη σε εσωτερικό Γύρισμα');
 select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f1')),
   to_char((now() + interval '1 day') at time zone 'Europe/Athens', 'DD/MM HH24:MI') || ' · Στούντιο Α',
@@ -113,6 +113,9 @@ select is((select v ->> 'link' from jsonb_array_elements(authz.today_items_filmi
   '/app/filming/' || public.t_fid('f1'), 'Η γραμμή ανοίγει το Γύρισμα');
 select is((select (v ->> 'urgent')::boolean from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f1')), true, 'Γύρισμα αύριο είναι επείγον');
+-- f2 είναι 2 μέρες και 23 ώρες μακριά: η ημερολογιακή διαφορά του είναι 2 ή 3 ανάλογα με την ώρα, άρα δεν είναι επείγον.
+select is((select (v ->> 'urgent')::boolean from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) x (v)
+            where v ->> 'id' = public.t_fid('f2')), false, 'Γύρισμα σε 2 μέρες δεν είναι επείγον');
 
 -- ───────────── Κλειστό Δελτίο και παράθυρο ─────────────
 select is((select count(*)::integer from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) x (v)
@@ -132,11 +135,11 @@ select is((select count(*)::integer from jsonb_array_elements(authz.today_items_
 
 -- ───────────── Ορατότητα «με αφορά»: μέλος της Παραγωγής ή του Συνεργείου ─────────────
 select is(authz.today_count_filming_no_script(public.t_uid('a2'), null, now()), 4,
-  'Η Παραγωγή βλέπει τα Γυρίσματα της d1 και το f10 ως μέλος του Συνεργείου του');
+  'Η Παραγωγή βλέπει τα Γυρίσματα της d1 και το fa ως μέλος του Συνεργείου του');
 select is((select count(*)::integer from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a2'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f9')), 0, 'Η Παραγωγή δεν βλέπει το f9 της d2, όπου δεν είναι μέλος ούτε στο Συνεργείο');
 select is((select count(*)::integer from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a2'), null, now())) x (v)
-            where v ->> 'id' = public.t_fid('f10')), 1, 'Η Παραγωγή βλέπει το f10 ως μέλος του Συνεργείου του');
+            where v ->> 'id' = public.t_fid('fa')), 1, 'Η Παραγωγή βλέπει το fa ως μέλος του Συνεργείου του');
 select is(authz.today_count_filming_no_script(public.t_uid('a5'), null, now()), 2,
   'Μέλος της d2 βλέπει τα δύο Γυρίσματα της d2 και τίποτα από τη d1');
 

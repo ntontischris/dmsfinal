@@ -1,6 +1,6 @@
 -- Σήμερα: κάρτα «Γύρισμα χωρίς σενάριο» (filming_no_script). Μία γραμμή ανά Γύρισμα μελλοντικό μέσα στις επόμενες
 -- 3 μέρες (starts_at > now και ≤ now + 3 μέρες), ανοιχτό (pending/scheduled), χωρίς λήψεις: δεν έχει Δελτίο
--- γυρίσματος (filming_sheets) ή το Δελτίο του έχει κενό shots. Επείγον αν είναι σε ≤ 2 μέρες (ώρα Αθήνας).
+-- γυρίσματος (filming_sheets) ή το Δελτίο του έχει κενό shots. Επείγον αν είναι σε ≤ 1 μέρα (ώρα Αθήνας).
 -- Ορατότητα: όπως το Δελτίο (authz.can_crew_filming, δικαίωμα filming.crew): όλα, ή όσα έχει ως Ιδιοκτήτης ή Μέλος
 -- την Παραγωγή ή ως μέλος του Συνεργείου του Γυρίσματος.
 
@@ -10,14 +10,14 @@ language plpgsql stable security definer set search_path = ''
 as $$
 declare
   v_scope text := authz.user_scope(p_uid, 'filming.crew');
-  v_today date := (p_now at time zone 'Europe/Athens')::date;
+  v_today date := authz.today_work_day(p_now);
 begin
   return query
     select f.id, p.title,
            concat_ws(' · ', to_char(f.starts_at at time zone 'Europe/Athens', 'DD/MM HH24:MI'),
                      nullif(concat_ws(', ', c.name, f.location), '')),
            f.starts_at,
-           (f.starts_at at time zone 'Europe/Athens')::date - v_today <= 2
+           authz.today_work_day(f.starts_at) - v_today <= 1
       from public.filmings f
       join public.productions p on p.id = f.production_id
       left join public.clients c on c.id = f.client_id
