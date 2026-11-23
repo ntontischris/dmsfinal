@@ -24,6 +24,7 @@ export const GROUPS: readonly { id: TodayGroupId; title: string }[] = [
 export const GROUP_OF: Readonly<Record<string, TodayGroupId>> = {
   week_filming: "time",
   filming_no_script: "time",
+  equipment_repair: "time",
   unread_messages: "client",
   requests_mentions: "client",
   filming_approvals: "client",
