@@ -100,6 +100,16 @@ describe("listOf", () => {
     expect(labelsOf(findGroup(groups, "time"))).toEqual(["today", "tomorrow"]);
   });
 
+  it("should put crew_declined in the externals group", () => {
+    const groups = listOf({
+      built: [builtOf("crew_declined", [rowOf("c", { isUrgent: true })])],
+      failed: new Set(),
+      stamp: STAMP,
+    });
+    expect(groupIds(groups)).toEqual(["externals"]);
+    expect(labelsOf(findGroup(groups, "externals"))).toEqual(["c"]);
+  });
+
   it("should hide group company unless a line is urgent", () => {
     const quiet = listOf({
       built: [builtOf("unanswered", [rowOf("q")])],
