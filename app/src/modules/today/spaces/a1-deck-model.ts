@@ -44,7 +44,33 @@ const NOUN_OF: Readonly<Record<string, string>> = {
   unanswered: "αναπάντητες ερωτήσεις",
 };
 
-export const nounOf = (cardId: string): string => NOUN_OF[cardId] ?? OTHER_NOUN;
+// Ο ενικός, όπου διαφέρει: «1 πρόταση», «Και 1 ακόμα ληξιπρόθεσμο».
+const SINGULAR_OF: Readonly<Record<string, string>> = {
+  week_filming: "γύρισμα",
+  unread_messages: "μήνυμα",
+  requests_mentions: "αίτημα",
+  filming_approvals: "έγκριση γυρίσματος",
+  versions_to_review: "έκδοση",
+  proposal_approvals: "πρόταση",
+  my_tasks: "εργασία",
+  my_deliverables: "παραδοτέο",
+  client_reminders: "υπενθύμιση",
+  crew_declined: "άρνηση",
+  version_late: "καθυστερημένη έκδοση",
+  overdue_invoices: "ληξιπρόθεσμο",
+  rounds_over_limit: "γύρος πάνω από όριο",
+  cost_hours: "θέλει ώρες",
+  next_steps_due: "επόμενο βήμα",
+  proposals_in_progress: "πρόταση σε εξέλιξη",
+  agreement_ending: "Συμφωνία λήγει",
+  agreement_signed: "νέα Συμφωνία",
+  unanswered: "αναπάντητη ερώτηση",
+};
+
+export const nounOf = (cardId: string, count = 2): string =>
+  (count === 1 ? SINGULAR_OF[cardId] : undefined) ??
+  NOUN_OF[cardId] ??
+  OTHER_NOUN;
 
 // Πού βρίσκεται ο Πελάτης στη γραμμή κάθε κάρτας (όπως τη χτίζει η βάση)· όσες λείπουν δεν έχουν Πελάτη.
 const CLIENT_IN_LABEL: ReadonlySet<string> = new Set([
@@ -58,6 +84,7 @@ const CLIENT_IN_NOTE: ReadonlySet<string> = new Set([
   "cost_hours",
   "proposal_approvals",
   "versions_to_review",
+  "rounds_over_limit",
 ]);
 
 // Το σύμβολο της ομάδας, όταν η γραμμή δεν έχει Πελάτη.
@@ -189,7 +216,7 @@ export const breakdownOf = (group: ListGroup): string => {
   const sorted = [...countsOf(group)].sort((a, b) => b[1] - a[1]);
   const named = sorted
     .slice(0, MAX_NAMED)
-    .map(([cardId, count]) => `${count} ${nounOf(cardId)}`);
+    .map(([cardId, count]) => `${count} ${nounOf(cardId, count)}`);
   const rest = sorted
     .slice(MAX_NAMED)
     .reduce((sum, [, count]) => sum + count, 0);
@@ -198,7 +225,7 @@ export const breakdownOf = (group: ListGroup): string => {
 };
 
 export const moreLabelOf = ({ cardId, count }: ListMore): string =>
-  `Και ${count} ακόμα ${nounOf(cardId)} →`;
+  `Και ${count} ακόμα ${nounOf(cardId, count)} →`;
 
 // «ΕΠΕΙΓΕΙ» μόνο σε ό,τι μετράει και η πρώτη πρόταση (αποφάσεις, ληξιπρόθεσμα) και σε επείγουσα υγεία συστήματος.
 const isUrgentLine = (

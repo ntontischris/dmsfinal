@@ -89,6 +89,9 @@ describe("thumbOf", () => {
     expect(
       thumbOf(line("versions_to_review", rowOf("Φωτογραφίες · νέα προϊόντα", { note: "Κοσμηματοπωλείο Αστέρι · Έκδοση 1" }))),
     ).toEqual({ text: "ΚΑ", isIcon: false });
+    expect(
+      thumbOf(line("rounds_over_limit", rowOf("Έξτρα reel", { note: "Κτήμα Αμπελώνες · Social media" }))),
+    ).toEqual({ text: "ΚΑ", isIcon: false });
   });
 
   it("χωρίς Πελάτη, το σύμβολο της ομάδας", () => {
@@ -122,12 +125,19 @@ describe("breakdownOf", () => {
       failed: [],
     };
     expect(breakdownOf(group)).toBe("5 ληξιπρόθεσμα · 1 προς τιμολόγηση · 1 άλλο");
+    const one: ListGroup = { ...group, lines: [{ cardId: "proposal_approvals", row: rowOf("p"), laterKey: null }], more: [] };
+    expect(breakdownOf(one)).toBe("1 πρόταση");
   });
 });
 
 describe("moreLabelOf", () => {
   it("λέει τι είναι τα υπόλοιπα", () => {
     expect(moreLabelOf({ cardId: "my_tasks", count: 5, href: "/x" })).toBe("Και 5 ακόμα εργασίες →");
+  });
+
+  it("ένα στοιχείο σε ενικό", () => {
+    expect(moreLabelOf({ cardId: "overdue_invoices", count: 1, href: "/x" })).toBe("Και 1 ακόμα ληξιπρόθεσμο →");
+    expect(moreLabelOf({ cardId: "to_invoice", count: 1, href: "/x" })).toBe("Και 1 ακόμα προς τιμολόγηση →");
   });
 });
 
