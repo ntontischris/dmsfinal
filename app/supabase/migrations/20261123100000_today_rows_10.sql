@@ -7,6 +7,14 @@ $$ select coalesce(nullif(current_setting('today.rows', true), '')::int, 10) $$;
 
 revoke all on function authz.today_rows() from public, anon, authenticated;
 
+create or replace function authz.today_work_rows_json(p_rows jsonb) returns jsonb
+language sql stable set search_path = ''
+as $$
+  select coalesce(jsonb_agg(r - 'rn' order by (r ->> 'rn')::integer), '[]'::jsonb)
+    from jsonb_array_elements(coalesce(p_rows, '[]'::jsonb)) r
+   where (r ->> 'rn')::integer <= authz.today_rows();
+$$;
+
 create or replace function authz.today_items_health(p_uid uuid, p_client uuid, p_now timestamptz) returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
