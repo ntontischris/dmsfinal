@@ -34,6 +34,7 @@ export const GROUP_OF: Readonly<Record<string, TodayGroupId>> = {
   unassigned: "externals",
   crew_declined: "externals",
   crew_silent: "externals",
+  version_late: "externals",
   to_invoice: "money",
   overdue_invoices: "money",
   rounds_over_limit: "money",

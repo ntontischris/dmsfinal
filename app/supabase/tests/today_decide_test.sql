@@ -5,10 +5,10 @@ select plan(41);
 
 -- ───────────── Μητρώο ─────────────
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.sort between 100 and 199),
-  array['proposal_approvals', 'filming_approvals', 'crew_declined', 'crew_silent', 'google_deletions', 'unassigned', 'gdpr'],
-  'Οι έξι κάρτες στη ζώνη της ομάδας decide, και η «GDPR με προθεσμία» (#208) στο τέλος');
+  array['proposal_approvals', 'filming_approvals', 'crew_declined', 'crew_silent', 'version_late', 'google_deletions', 'unassigned', 'gdpr'],
+  'Οι επτά κάρτες στη ζώνη της ομάδας decide, και η «GDPR με προθεσμία» (#208) στο τέλος');
 select is((select array_agg(c.code order by c.sort) from public.today_cards c where c.grp = 'decide' and c.needs_second_person),
-  array['proposal_approvals', 'crew_declined', 'crew_silent', 'unassigned'], 'Κανόνας 8: Προτάσεις προς έγκριση, οι δύο κάρτες Συνεργείου και Χωρίς υπεύθυνο θέλουν δεύτερο άνθρωπο');
+  array['proposal_approvals', 'crew_declined', 'crew_silent', 'version_late', 'unassigned'], 'Κανόνας 8: Προτάσεις προς έγκριση, οι τρεις κάρτες Συνεργείου/Παραδοτέων και Χωρίς υπεύθυνο θέλουν δεύτερο άνθρωπο');
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a2 όλες οι αποφάσεις χωρίς ποσά · a3 Πωλήσεις · a4 ομάδα χωρίς Ρόλο · a5 μόνο calendar.google ·
