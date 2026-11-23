@@ -13,6 +13,7 @@ import { INITIAL_FORM_STATE } from "@/lib/form-state";
 
 import { moveOpportunityStage } from "../actions-opportunities";
 import type { BoardCard } from "./b3-adapter";
+import { nearestStage, resolveStage, type Override } from "./b3-drag-target";
 
 // Πόσα pixel πρέπει να κινηθεί ο δείκτης για να θεωρηθεί σύρσιμο και όχι κλικ.
 const DRAG_THRESHOLD = 6;
@@ -20,6 +21,7 @@ const CONTROLS = "button, select, input, textarea, label";
 
 interface Grab {
   id: string;
+  base: string;
   from: string;
   el: HTMLElement;
   x: number;
@@ -27,12 +29,24 @@ interface Grab {
   isDragging: boolean;
 }
 
-// Η Στήλη κάτω από τον δείκτη (η κάρτα που σέρνεται δεν πιάνει τον δείκτη όσο κινείται).
+// Η Στήλη όπου θα πέσει η κάρτα: η πιο κοντινή στον δείκτη, ακόμα κι αν αφεθεί σε κενό ή κάτω από κοντή Στήλη.
 const stageAt = (x: number, y: number): string | null =>
-  document
-    .elementFromPoint(x, y)
-    ?.closest<HTMLElement>("[data-stage-id]")
-    ?.getAttribute("data-stage-id") ?? null;
+  nearestStage(
+    [...document.querySelectorAll<HTMLElement>("[data-stage-id]")].map(
+      (el) => {
+        const r = el.getBoundingClientRect();
+        return {
+          id: el.dataset.stageId ?? "",
+          left: r.left,
+          right: r.right,
+          top: r.top,
+          bottom: r.bottom,
+        };
+      },
+    ),
+    x,
+    y,
+  );
 
 function lift(grab: Grab, dx: number, dy: number) {
   grab.el.style.transform = `translate(${dx}px, ${dy}px) rotate(1.5deg)`;
@@ -60,16 +74,18 @@ function swallowNextClick() {
 // η ίδια ενέργεια με τη λίστα «Μετακίνηση σε Στάδιο». Αν γυρίσει λάθος, η κάρτα γυρίζει πίσω.
 export function useStageDrag() {
   const router = useRouter();
-  const [moved, setMoved] = useState<Readonly<Record<string, string>>>({});
+  const [moved, setMoved] = useState<Readonly<Record<string, Override>>>({});
   const [overStage, setOverStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const grabRef = useRef<Grab | null>(null);
 
-  const stageOf = (card: BoardCard): string => moved[card.id] ?? card.stageId;
+  const stageOf = (card: BoardCard): string =>
+    resolveStage(card.stageId, moved[card.id]);
 
-  const save = (id: string, from: string, to: string) => {
+  const save = (grab: Grab, to: string) => {
+    const { id, base } = grab;
     setError(null);
-    setMoved((prev) => ({ ...prev, [id]: to }));
+    setMoved((prev) => ({ ...prev, [id]: { base, to } }));
     const form = new FormData();
     form.set("opportunityId", id);
     form.set("stageId", to);
@@ -77,7 +93,7 @@ export function useStageDrag() {
       const result = await moveOpportunityStage(INITIAL_FORM_STATE, form);
       if (!result.error) return router.refresh();
       setError(result.error);
-      setMoved((prev) => ({ ...prev, [id]: from }));
+      setMoved((prev) => ({ ...prev, [id]: { base, to: base } }));
     });
   };
 
@@ -100,7 +116,7 @@ export function useStageDrag() {
     const to = stageAt(event.clientX, event.clientY);
     settle(grab);
     swallowNextClick();
-    if (to && to !== grab.from) save(grab.id, grab.from, to);
+    if (to && to !== grab.from) save(grab, to);
   };
 
   const onCancel = () => {
@@ -120,6 +136,7 @@ export function useStageDrag() {
         event.currentTarget.setPointerCapture(event.pointerId);
         grabRef.current = {
           id: card.id,
+          base: card.stageId,
           from: stageOf(card),
           el: event.currentTarget,
           x: event.clientX,
