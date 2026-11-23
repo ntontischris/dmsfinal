@@ -1,7 +1,7 @@
 -- Σήμερα: κάρτα «Δεν απάντησε» (crew_silent). Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 -- Όλες οι ημερομηνίες είναι σχετικές με τη σημερινή μέρα της Αθήνας, ώστε το τεστ να μην εξαρτάται από ημερομηνία ή τέλος μήνα.
 begin;
-select plan(17);
+select plan(21);
 
 -- ───────────── Βοηθοί ─────────────
 create function public.t_uid(p_last text) returns uuid
@@ -21,18 +21,21 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'production@example.com'),
   ('00000000-0000-0000-0000-0000000000a3', 'sales@example.com'),
+  ('00000000-0000-0000-0000-0000000000a4', 'accountant@example.com'),
   ('00000000-0000-0000-0000-0000000000a5', 'member@example.com'),
   ('00000000-0000-0000-0000-0000000000b1', 'b1@client-one.example.gr');
 insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'Γιώργος', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'Πέτρος', 'production@example.com'),
   ('00000000-0000-0000-0000-0000000000a3', 'Άννα', 'sales@example.com'),
+  ('00000000-0000-0000-0000-0000000000a4', 'Ελένη', 'accountant@example.com'),
   ('00000000-0000-0000-0000-0000000000a5', 'Σοφία', 'member@example.com');
 insert into public.team_user_roles (user_id, role_id)
 select u.id::uuid, r.id
   from (values ('00000000-0000-0000-0000-0000000000a1', 'Ιδιοκτήτης'),
                ('00000000-0000-0000-0000-0000000000a2', 'Παραγωγή'),
                ('00000000-0000-0000-0000-0000000000a3', 'Πωλήσεις'),
+               ('00000000-0000-0000-0000-0000000000a4', 'Λογιστής'),
                ('00000000-0000-0000-0000-0000000000a5', 'Παραγωγή')) as u (id, role_name)
   join public.roles r on r.name = u.role_name and r.kind = 'team';
 
@@ -69,7 +72,9 @@ insert into public.filmings (id, production_id, client_id, starts_at, hours, loc
   ('00000000-0000-0000-0000-0000000000f5', '00000000-0000-0000-0000-0000000000d1', null,
    public.t_day_at(3), 2, 'Στούντιο Α', 'team', 'scheduled', false, null, null),
   ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000c1',
-   public.t_day_at(4), 2, 'Κατάστημα', 'team', 'scheduled', true, null, null);
+   public.t_day_at(4), 2, 'Κατάστημα', 'team', 'scheduled', true, null, null),
+  ('00000000-0000-0000-0000-0000000000f7', '00000000-0000-0000-0000-0000000000d2', null,
+   public.t_day_at(3), 2, 'Στούντιο Β', 'team', 'scheduled', false, null, null);
 
 insert into public.filming_crew (filming_id, user_id, response, reason, responded_at, added_at) values
   ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000a2', 'pending', null, null, now() - interval '2 days'),
@@ -79,7 +84,9 @@ insert into public.filming_crew (filming_id, user_id, response, reason, responde
   ('00000000-0000-0000-0000-0000000000f4', '00000000-0000-0000-0000-0000000000a3', 'pending', null, null, now() - interval '2 days'),
   ('00000000-0000-0000-0000-0000000000f5', '00000000-0000-0000-0000-0000000000a3', 'pending', null, null, now() - interval '1 hour'),
   ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000a5', 'confirmed', null, now(), now() - interval '2 days'),
-  ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000a2', 'pending', null, null, now() - interval '2 days');
+  ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000a2', 'pending', null, null, now() - interval '2 days'),
+  ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000a1', 'pending', null, null, now() - interval '2 days'),
+  ('00000000-0000-0000-0000-0000000000f7', '00000000-0000-0000-0000-0000000000a1', 'pending', null, null, now() - interval '2 days');
 
 reset session_replication_role;
 
@@ -88,7 +95,7 @@ select is(authz.today_count_crew_silent(public.t_uid('a1'), null, now()), 3,
   'Ο Ιδιοκτήτης βλέπει τα 3 μελλοντικά Γυρίσματα με σιωπηλό μέλος (χωρίς το παρελθόν, το ακυρωμένο και το πρόσφατο)');
 select is((select count(*)::integer from jsonb_array_elements(authz.today_items_crew_silent(public.t_uid('a1'), null, now())) x),
   3, 'Οι γραμμές είναι ένα ανά Γύρισμα και όχι ανά άτομο');
-select is((select array_agg(x ->> 'id' order by n)
+select is((select array_agg(v ->> 'id' order by n)
              from jsonb_array_elements(authz.today_items_crew_silent(public.t_uid('a1'), null, now())) with ordinality x (v, n)),
   array[public.t_fid('f1'), public.t_fid('f6'), public.t_fid('f2')], 'Οι γραμμές είναι σε σειρά ημερομηνίας');
 select is((select x ->> 'subtitle' from jsonb_array_elements(authz.today_items_crew_silent(public.t_uid('a1'), null, now())) x
@@ -138,6 +145,21 @@ select is((select grp || '|' || kind || '|' || audience || '|' || link from publ
   'decide|action|team|/app/filming', 'Η κάρτα είναι στη ζώνη αποφάσεων, ως ενέργεια ομάδας, προς /app/filming');
 select is((select sort || '|' || needs_second_person::text from public.today_cards where code = 'crew_silent'),
   '126|true', 'Η κάρτα έχει σειρά 126 και θέλει δεύτερο άνθρωπο (κανόνας 8)');
+
+-- ───────────── Ο ίδιος ο Χρήστης: η δική του σιωπή δεν μπαίνει στη γραμμή του ─────────────
+-- Ο Ιδιοκτήτης είναι σιωπηλός στο f2 μαζί με τη Σοφία· το όνομά του λείπει. Στο f7 είναι ο μόνος σιωπηλός.
+select is((select x ->> 'subtitle' from jsonb_array_elements(authz.today_items_crew_silent(public.t_uid('a1'), null, now())) x
+            where x ->> 'id' = public.t_fid('f2')),
+  'Δεν έχει απαντήσει: Σοφία', 'Ο Ιδιοκτήτης δεν μετράει τον εαυτό του σε Γύρισμα με άλλο σιωπηλό μέλος');
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_crew_silent(public.t_uid('a1'), null, now())) x
+            where x ->> 'id' = public.t_fid('f7')), 0,
+  'Ο Ιδιοκτήτης δεν βλέπει το Γύρισμα όπου η μόνη σιωπή είναι η δική του');
+
+-- ───────────── Άρνηση πρόσβασης: Λογιστής χωρίς Γυρίσματα ─────────────
+select is(authz.today_count_crew_silent(public.t_uid('a4'), null, now()), null,
+  'Ο Λογιστής (χωρίς Γυρίσματα) δεν παίρνει κάρτα');
+select throws_ok($$ select authz.today_items_crew_silent('00000000-0000-0000-0000-0000000000a4', null, now()) $$,
+  '42501', null, 'Οι γραμμές δεν δίνονται σε όποιον δεν βλέπει Γυρίσματα');
 
 select * from finish();
 rollback;

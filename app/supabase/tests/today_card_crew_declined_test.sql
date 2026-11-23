@@ -1,7 +1,7 @@
 -- Σήμερα: κάρτα «Βρες αντικαταστάτη» (crew_declined). Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 -- Όλες οι ημερομηνίες είναι σχετικές με τη σημερινή μέρα της Αθήνας, ώστε το τεστ να μην εξαρτάται από ημερομηνία ή τέλος μήνα.
 begin;
-select plan(15);
+select plan(16);
 
 -- ───────────── Βοηθοί ─────────────
 create function public.t_uid(p_last text) returns uuid
@@ -65,6 +65,8 @@ insert into public.filmings (id, production_id, client_id, starts_at, hours, loc
                              cancelled_at, cancelled_side) values
   ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000c1',
    public.t_day_at(5), 2, 'Κατάστημα', 'team', 'scheduled', true, null, null),
+  ('00000000-0000-0000-0000-0000000000f7', '00000000-0000-0000-0000-0000000000d2', null,
+   public.t_day_at(3), 2, 'Στούντιο Β', 'team', 'scheduled', false, null, null),
   ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000d1', null,
    public.t_day_at(2), 2, 'Στούντιο Α', 'team', 'scheduled', false, null, null),
   ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000d2', null,
@@ -83,7 +85,8 @@ insert into public.filming_crew (filming_id, user_id, response, reason, responde
   ('00000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-0000000000a2', 'declined', 'Άρρωστος', now()),
   ('00000000-0000-0000-0000-0000000000f4', '00000000-0000-0000-0000-0000000000a2', 'declined', 'Άρρωστος', now()),
   ('00000000-0000-0000-0000-0000000000f5', '00000000-0000-0000-0000-0000000000a2', 'pending', null, null),
-  ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000a2', 'declined', 'Άλλη υποχρέωση', now());
+  ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000a2', 'declined', 'Άλλη υποχρέωση', now()),
+  ('00000000-0000-0000-0000-0000000000f7', '00000000-0000-0000-0000-0000000000a1', 'declined', 'Ταξίδι', now());
 
 reset session_replication_role;
 
@@ -132,6 +135,12 @@ select is(authz.today_count_crew_declined(public.t_uid('b1'), public.t_uid('c1')
 -- ───────────── Μητρώο: η κάρτα στη ζώνη αποφάσεων, με σύνδεσμο στα Γυρίσματα ─────────────
 select is((select grp || '|' || kind || '|' || audience || '|' || link from public.today_cards where code = 'crew_declined'),
   'decide|action|team|/app/filming', 'Η κάρτα είναι στη ζώνη αποφάσεων, ως ενέργεια ομάδας, προς /app/filming');
+
+-- ───────────── Ο ίδιος ο Χρήστης: η δική του άρνηση δεν μπαίνει στη γραμμή του ─────────────
+-- Ο Ιδιοκτήτης αρνήθηκε μόνος του το f7 (μελλοντικό)· δεν βλέπει τη δική του άρνηση.
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_crew_declined(public.t_uid('a1'), null, now())) x
+            where x ->> 'id' = public.t_fid('f7')), 0,
+  'Ο Ιδιοκτήτης δεν βλέπει το Γύρισμα όπου η μόνη άρνηση είναι η δική του');
 
 select * from finish();
 rollback;

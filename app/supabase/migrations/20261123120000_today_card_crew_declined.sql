@@ -18,7 +18,7 @@ begin
       from public.filmings f
       join public.productions p on p.id = f.production_id
       left join public.clients c on c.id = f.client_id
-      join public.filming_crew fc on fc.filming_id = f.id and fc.response = 'declined'
+      join public.filming_crew fc on fc.filming_id = f.id and fc.response = 'declined' and fc.user_id <> p_uid
       join public.team_users u on u.user_id = fc.user_id
      where f.state in ('pending', 'scheduled')
        and f.starts_at > p_now

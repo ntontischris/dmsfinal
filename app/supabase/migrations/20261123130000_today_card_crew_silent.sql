@@ -2,6 +2,7 @@
 -- (filming_crew.response = 'pending') και προστέθηκε πριν από πάνω από 24 ώρες (added_at)· μελλοντικό (starts_at > now),
 -- ανοιχτό (pending/scheduled)· επείγον αν είναι σε ≤ 2 μέρες (ώρα Αθήνας). Ίδιο Δικαίωμα και ορατότητα με την
 -- «Βρες αντικαταστάτη», χωρίς την εκκρεμότητα του ίδιου του Χρήστη.
+-- Γνωστό όριο: μετά από αλλαγή ώρας που μηδενίζει απαντήσεις, το added_at δεν αλλάζει, άρα η κάρτα δείχνει αμέσως σιωπηλούς.
 
 create function authz.today_silent_rows(p_uid uuid, p_now timestamptz)
 returns table (id uuid, title text, names text, starts_at timestamptz, urgent boolean)
@@ -22,6 +23,7 @@ begin
       join public.filming_crew fc on fc.filming_id = f.id
                                  and fc.response = 'pending'
                                  and fc.added_at < p_now - interval '24 hours'
+                                 and fc.user_id <> p_uid
       join public.team_users u on u.user_id = fc.user_id
      where f.state in ('pending', 'scheduled')
        and f.starts_at > p_now
