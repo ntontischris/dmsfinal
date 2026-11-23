@@ -1,19 +1,13 @@
-// «Έκλεισες N» της λίστας «Σήμερα»: καθαρή συνάρτηση, χωρίς βάση. Τα νούμερα έρχονται από public.today_closed.
+// «Έκλεισες N» της λίστας «Σήμερα»: καθαρή συνάρτηση, χωρίς βάση. Το «ξαναβγαίνουν αύριο» το δείχνει η γραμμή «Για αργότερα».
 
-export interface ClosedCounts {
+export interface ClosedCount {
   closed: number;
-  later: number;
   // Οι γραμμές που φαίνονται τώρα (remainingOf της λίστας).
   remaining: number;
 }
 
-// Όταν η λίστα άδειασε: «Έκλεισες N σήμερα» και, αν υπάρχουν, τα «ξαναβγαίνουν αύριο». Αλλιώς μόνο το μικρό «Έκλεισες N».
-export function closedNotesOf({ closed, later, remaining }: ClosedCounts): string[] {
-  if (remaining > 0) {
-    return closed > 0 ? [`Έκλεισες ${closed}`] : [];
-  }
-  return [
-    closed > 0 ? `Έκλεισες ${closed} σήμερα` : null,
-    later > 0 ? `${later} ξαναβγαίνουν αύριο το πρωί` : null,
-  ].filter((note): note is string => note !== null);
+// Όταν η λίστα άδειασε: «Έκλεισες N σήμερα». Αλλιώς μόνο το μικρό «Έκλεισες N». Χωρίς κλεισμένες, τίποτα.
+export function closedNoteOf({ closed, remaining }: ClosedCount): string | null {
+  if (closed <= 0) return null;
+  return remaining > 0 ? `Έκλεισες ${closed}` : `Έκλεισες ${closed} σήμερα`;
 }

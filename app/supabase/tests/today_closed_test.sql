@@ -1,10 +1,10 @@
 -- Σήμερα: «Έκλεισες N» (public.today_closed). Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 -- Όλες οι ημερομηνίες είναι σχετικές με τη σημερινή μέρα της Αθήνας, ώστε το τεστ να μην εξαρτάται από ημερομηνία ή τέλος μήνα.
 begin;
-select plan(9);
+select plan(13);
 
 -- ───────────── Χρήστες ─────────────
--- a1 Ιδιοκτήτης · a2 δεύτερο ενεργό μέλος ομάδας (χωρίς αυτό η κάρτα ρόλου κρύβεται)
+-- a1 Ιδιοκτήτης · a2 δεύτερο μέλος ομάδας με τον ίδιο ρόλο (έχει κάρτες, άρα η πρώτη του κλήση δεν είναι τετριμμένη)
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'owner@example.com'),
   ('00000000-0000-0000-0000-0000000000a2', 'member@example.com');
@@ -13,7 +13,8 @@ insert into public.team_users (user_id, name, email) values
   ('00000000-0000-0000-0000-0000000000a2', 'Σοφία', 'member@example.com');
 insert into public.team_user_roles (user_id, role_id)
 select u.id::uuid, r.id
-  from (values ('00000000-0000-0000-0000-0000000000a1', 'Ιδιοκτήτης')) as u (id, role_name)
+  from (values ('00000000-0000-0000-0000-0000000000a1', 'Ιδιοκτήτης'),
+               ('00000000-0000-0000-0000-0000000000a2', 'Ιδιοκτήτης')) as u (id, role_name)
   join public.roles r on r.name = u.role_name and r.kind = 'team';
 
 -- ───────────── Δεδομένα ─────────────
@@ -92,13 +93,41 @@ select is(public.today_closed(), '{"closed": 3, "later": 1}'::jsonb,
   'Νέο ληξιπρόθεσμο μέσα στη μέρα δεν αλλάζει το closed');
 reset role;
 
--- ───────────── Άλλος Χρήστης ─────────────
+-- ───────────── Σε «Αργότερα» και μετά πληρώθηκε: μετράει ως κλεισμένο ─────────────
+set session_replication_role = replica;
+insert into public.receipts (client_id, received_on, amount, method_id, invoice_ids)
+select '00000000-0000-0000-0000-0000000000c1', (now() at time zone 'Europe/Athens')::date, 124,
+       (select m.id from public.payment_methods m where m.label = 'Τραπεζική κατάθεση'),
+       array['00000000-0000-0000-0000-000000000105'::uuid];
+reset session_replication_role;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.today_closed(), '{"closed": 4, "later": 0}'::jsonb,
+  'Σε «Αργότερα» και μετά πληρώθηκε: closed = 4, later = 0');
+reset role;
+
+-- ───────────── Κρυμμένη κάρτα μέσα στη μέρα: τα κλειδιά της δεν μετράνε ─────────────
+insert into public.today_prefs (user_id, hidden) values
+  (public.t_uid('a1'), array['overdue_invoices']);
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+set local role authenticated;
+select is(public.today_closed(), '{"closed": 0, "later": 0}'::jsonb,
+  'Κάρτα που κρύφτηκε μέσα στη μέρα: closed = 0, όχι όλα τα ληξιπρόθεσμα');
+reset role;
+
+-- ───────────── Δεύτερος Ιδιοκτήτης: η δική του αφετηρία έχει τα κλειδιά του ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated"}', true);
 set local role authenticated;
-select is((select count(*) from public.today_day_start where user_id = public.t_uid('a1')), 0::bigint,
-  'Άλλος Χρήστης δεν διαβάζει τη γραμμή του Ιδιοκτήτη');
 select is(public.today_closed(), '{"closed": 0, "later": 0}'::jsonb,
-  'Ο άλλος Χρήστης έχει τη δική του αφετηρία: 0 και 0');
+  'Η πρώτη κλήση του δεύτερου Χρήστη: 0 και 0');
+select is((select count(*) from unnest((select keys from public.today_day_start)) k where k like 'overdue_invoices:%'),
+  9::bigint, 'Η αφετηρία του δεύτερου έχει τα 9 ανοιχτά (02–10 και Ζ-99), όχι τα 12');
+select throws_ok($$ insert into public.today_day_start (user_id, day) values (auth.uid(), current_date) $$, '42501', null,
+  'Ο Χρήστης δεν γράφει απευθείας στην αφετηρία');
+select is((select count(*) from public.today_day_start where user_id = public.t_uid('a1')), 0::bigint,
+  'Ο δεύτερος Χρήστης δεν διαβάζει την αφετηρία του Ιδιοκτήτη');
 reset role;
 
 select * from finish();

@@ -176,9 +176,9 @@ export const seenAtSchema = z.string().nullable();
 export const snoozedSchema = z.array(z.string());
 
 // «Έκλεισες N» (Σήμερα list): public.today_closed. Μετρά πάνω σε όσα περίμεναν το πρωί, όχι μόνο στις γραμμές της οθόνης.
+// Το later του RPC δεν χρειάζεται στην οθόνη (το δείχνει η γραμμή «Για αργότερα»)· το zod το αφήνει έξω.
 export const todayClosedSchema = z.object({
   closed: z.number().int().nonnegative(),
-  later: z.number().int().nonnegative(),
 });
 
 export interface TodayVisit {

@@ -4,7 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import "../../finance/spaces/money-lines.css";
 import { getTodayClosed } from "../queries";
 import { CardError } from "./a1-card";
-import { closedNotesOf } from "./a1-closed";
+import { closedNoteOf } from "./a1-closed";
 import { lineSubOf } from "./a1-facts";
 import { isNewSince, laterLineOf } from "./a1-later";
 import { LaterButton, UndoLater } from "./a1-later-buttons";
@@ -178,11 +178,8 @@ function CompanyNote({ company }: { company: CompanyState }) {
 async function ClosedNote({ remaining }: { remaining: number }) {
   const result = await getTodayClosed();
   if (!result.ok || !result.data) return null;
-  const notes = closedNotesOf({ ...result.data, remaining });
-  if (notes.length === 0) return null;
-  return (
-    <p className="a1-quiet">{notes.join(" · ")}</p>
-  );
+  const note = closedNoteOf({ closed: result.data.closed, remaining });
+  return note ? <p className="a1-quiet">{note}</p> : null;
 }
 
 export function TodayList({

@@ -19,6 +19,8 @@ export const GROUPS: readonly { id: TodayGroupId; title: string }[] = [
   { id: "company", title: "Η εταιρεία δουλεύει" },
 ];
 
+// Η ομάδα «company» εδώ πρέπει να ταιριάζει με τον κατάλογο του today_loaded_cards
+// (supabase/migrations/20261123110100_today_closed_fix.sql, «Έκλεισες»).
 export const GROUP_OF: Readonly<Record<string, TodayGroupId>> = {
   week_filming: "time",
   unread_messages: "client",
