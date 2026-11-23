@@ -1,7 +1,7 @@
 -- Σήμερα: κάρτα «Κάμερα σε επισκευή» (equipment_repair). Μία γραμμή ανά (Γύρισμα, αντικείμενο Εξοπλισμού) όπου
 -- το αντικείμενο είναι in_repair και δεσμευμένο σε Γύρισμα που θα γίνει στις επόμενες 7 μέρες (starts_at > now και
 -- ≤ now + 7 μέρες). Το Γύρισμα είναι pending ή scheduled, όπως στο filming_no_script. Ταξινόμηση: η ώρα έναρξης, μετά id.
--- Επείγον αν το Γύρισμα είναι σε ≤ 1 μέρα (ώρα Αθήνας, authz.today_work_day). Υπότιτλος: μέρα/ώρα · λόγος επισκευής.
+-- Επείγον αν το Γύρισμα είναι σε ≤ 1 μέρα (ώρα Αθήνας, authz.today_work_day). Υπότιτλος: ο λόγος επισκευής· η μέρα και η ώρα είναι η ετικέτα «at» (μία φορά).
 -- Σύνδεσμος: το Γύρισμα. Id γραμμής: «filming_id:item_id».
 -- Ορατότητα: μιμείται ακριβώς το δικαίωμα που ελέγχει η αλλαγή Εξοπλισμού Γυρίσματος (public.filming_equipment_set →
 -- authz.can_reserve_for_filming → authz.scope_covers_filming('equipment.reserve')): ο Χρήστης πρέπει να έχει
@@ -19,8 +19,7 @@ begin
   return query
     select fe.filming_id::text || ':' || fe.item_id::text,
            i.name,
-           concat_ws(' · ', to_char(f.starts_at at time zone 'Europe/Athens', 'DD/MM HH24:MI'),
-                     nullif(trim(i.status_note), '')),
+           nullif(trim(i.status_note), ''),
            f.starts_at,
            authz.today_work_day(f.starts_at) - v_today <= 1
       from public.filming_equipment fe

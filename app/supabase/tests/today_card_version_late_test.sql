@@ -110,11 +110,11 @@ select is((select array_agg(v ->> 'id' order by n)
   array[public.t_did('06'), public.t_did('05'), public.t_did('01'), public.t_did('02'), public.t_did('03'), public.t_did('11')],
   'Η σειρά είναι προθεσμία και μετά id');
 
--- ───────────── Γραμμή: υπεύθυνος και προθεσμία στο υπότιτλο, σύνδεσμος στο Παραδοτέο, επείγον ─────────────
+-- ───────────── Γραμμή: υπεύθυνος στο υπότιτλο, σύνδεσμος στο Παραδοτέο, επείγον ─────────────
 select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('02')),
-  'Υπεύθυνος: Σοφία · προθεσμία ' || to_char(public.t_date(1), 'DD/MM'),
-  'Ο υπότιτλος λέει τον υπεύθυνο και την προθεσμία');
+  'Υπεύθυνος: Σοφία',
+  'Ο υπότιτλος λέει μόνο τον υπεύθυνο (η προθεσμία είναι η ετικέτα «προθεσμία»)');
 select is((select v ->> 'link' from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('02')),
   '/app/deliverables/' || public.t_did('02'), 'Η γραμμή ανοίγει το Παραδοτέο');

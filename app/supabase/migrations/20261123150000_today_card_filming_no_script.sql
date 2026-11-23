@@ -14,8 +14,7 @@ declare
 begin
   return query
     select f.id, p.title,
-           concat_ws(' · ', to_char(f.starts_at at time zone 'Europe/Athens', 'DD/MM HH24:MI'),
-                     nullif(concat_ws(', ', c.name, f.location), '')),
+           nullif(concat_ws(', ', c.name, f.location), ''),
            f.starts_at,
            authz.today_work_day(f.starts_at) - v_today <= 1
       from public.filmings f

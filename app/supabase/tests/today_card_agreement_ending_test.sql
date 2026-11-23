@@ -117,7 +117,8 @@ select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_a
   'Ο υπότιτλος είναι ο τίτλος της Συμφωνίας· η ημερομηνία λήξης δίνεται από την εφαρμογή');
 select is((select v ->> 'link' from jsonb_array_elements(authz.today_items_agreement_ending(public.t_id('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_id('f2')::text),
-  '/app/clients/' || public.t_id('c2')::text || '?tab=agreements', 'Η γραμμή ανοίγει την καρτέλα Συμφωνιών του Πελάτη');
+  '/app/clients/' || public.t_id('c2')::text || '?tab=agreements&agreement=' || public.t_id('f2')::text,
+  'Η γραμμή ανοίγει την καρτέλα Συμφωνιών του Πελάτη, με τη Συμφωνία');
 select is((select (v ->> 'urgent')::boolean from jsonb_array_elements(authz.today_items_agreement_ending(public.t_id('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_id('f2')::text), true, 'Λήξη σε 3 μέρες είναι επείγον');
 select is((select (v ->> 'urgent')::boolean from jsonb_array_elements(authz.today_items_agreement_ending(public.t_id('a1'), null, now())) x (v)
@@ -218,6 +219,7 @@ select public.t_id(x.aid), public.t_id(x.oid), 'monthly', x.title, x.state, x.pa
 update public.agreement_defaults set renewal_lead_days = 45 where id;
 
 reset session_replication_role;
+select set_config('today.rows', '100', true);
 
 select ok(not (public.t_id('91')::text = any(public.t_ids('a1'))),
   'Ενεργή Συμφωνία μπλοκάρεται από μεταγενέστερη υπογεγραμμένη με έναρξη μετά τη λήξη');

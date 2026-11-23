@@ -113,8 +113,8 @@ select is((select v ->> 'title' from jsonb_array_elements(authz.today_items_equi
   'Ηχογράφος (τεστ)', 'Ο τίτλος είναι το όνομα του αντικειμένου');
 select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_equipment_repair(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f1') || ':' || public.t_eid('e3')),
-  to_char((now() + interval '12 hours') at time zone 'Europe/Athens', 'DD/MM HH24:MI') || ' · Σπασμένη οθόνη',
-  'Ο υπότιτλος έχει μέρα, ώρα του Γυρίσματος και τον λόγο επισκευής');
+  'Σπασμένη οθόνη',
+  'Ο υπότιτλος έχει μόνο τον λόγο επισκευής (η ώρα είναι η ετικέτα «at»)');
 select is((select v ->> 'link' from jsonb_array_elements(authz.today_items_equipment_repair(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f1') || ':' || public.t_eid('e3')),
   '/app/filming/' || public.t_fid('f1'), 'Η γραμμή ανοίγει το Γύρισμα');

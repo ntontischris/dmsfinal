@@ -32,6 +32,7 @@ const DATED: Readonly<Record<string, string>> = {
   client_reminders: "υπενθύμιση",
   proposals_in_progress: "λήγει",
   agreement_ending: "λήγει",
+  version_late: "προθεσμία",
 };
 
 // Το κουμπί μιας κάρτας, όπου η εφαρμογή έχει ήδη ενέργεια (οι renderers του cards/client.tsx).

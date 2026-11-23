@@ -102,12 +102,12 @@ select is((select v ->> 'title' from jsonb_array_elements(authz.today_items_film
   'Εσωτερικό podcast', 'Ο τίτλος είναι η Παραγωγή');
 select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f9')),
-  to_char((now() + interval '1 day 3 hours') at time zone 'Europe/Athens', 'DD/MM HH24:MI') || ' · Κατάστημα',
-  'Ο υπότιτλος έχει μέρα, ώρα και χώρο, χωρίς Πελάτη σε εσωτερικό Γύρισμα');
+  'Κατάστημα',
+  'Ο υπότιτλος έχει μόνο τον χώρο (η μέρα και η ώρα είναι η ετικέτα «at»), χωρίς Πελάτη σε εσωτερικό Γύρισμα');
 select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f1')),
-  to_char((now() + interval '1 day') at time zone 'Europe/Athens', 'DD/MM HH24:MI') || ' · Στούντιο Α',
-  'Χωρίς Πελάτη, ο υπότιτλος έχει μέρα, ώρα και χώρο');
+  'Στούντιο Α',
+  'Χωρίς Πελάτη, ο υπότιτλος έχει μόνο τον χώρο');
 select is((select v ->> 'link' from jsonb_array_elements(authz.today_items_filming_no_script(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_fid('f1')),
   '/app/filming/' || public.t_fid('f1'), 'Η γραμμή ανοίγει το Γύρισμα');

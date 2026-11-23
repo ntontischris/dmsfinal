@@ -224,3 +224,30 @@ describe("contentOf agreement_ending", () => {
     expect(row.at).toBeUndefined();
   });
 });
+
+describe("contentOf version_late", () => {
+  it("should show the deadline day as a «προθεσμία» label on the assignee line", () => {
+    const card = cardOf({
+      code: "version_late",
+      grp: "decide",
+      link: "/app/deliverables",
+    });
+    const content = contentOf(
+      card,
+      dataOf([
+        itemOf({
+          id: "d-1",
+          title: "Reel Φθινοπώρου",
+          subtitle: "Υπεύθυνος: Σοφία",
+          at: "2026-11-26T22:00:00Z",
+          urgent: true,
+          link: "/app/deliverables/d-1",
+        }),
+      ]),
+    );
+    const [row] = content.rows;
+    expect(row.note).toBe("Υπεύθυνος: Σοφία · προθεσμία 27 Νοε");
+    expect(row.meta).toBe("Υπεύθυνος: Σοφία · προθεσμία 27 Νοε");
+    expect(row.at).toBeUndefined();
+  });
+});

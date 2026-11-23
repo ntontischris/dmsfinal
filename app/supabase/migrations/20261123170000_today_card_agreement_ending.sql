@@ -5,7 +5,7 @@
 --  • δεν μπλοκάρει άλλη Συμφωνία του ίδιου Πελάτη: υπογεγραμμένη ή ενεργή με έναρξη μετά τη λήξη, ή πρόταση ζωντανή
 --    (όχι χαμένη ή ληγμένη, σε ισχύ) με έναρξη μετά τη λήξη ή χωρίς έναρξη και δημιουργημένη μετά από αυτή.
 -- Επείγον αν λήγει σε έως 7 μέρες. Ταξινόμηση: η λήξη, μετά id. Υπότιτλος: ο τίτλος· η ημερομηνία λήξης είναι η ετικέτα «λήγει»
--- της εφαρμογής (DATED). Σύνδεσμος: η καρτέλα Συμφωνιών του Πελάτη. Ορατότητα: μιμείται το authz.today_proposal_rows.
+-- της εφαρμογής (DATED). Σύνδεσμος: η καρτέλα Συμφωνιών του Πελάτη, με την Συμφωνία (ώστε δύο Συμφωνίες του ίδιου Πελάτη να μένουν χωριστές). Ορατότητα: μιμείται το authz.today_proposal_rows.
 -- Χωρίς το δικαίωμα ή με p_client: count null, items 42501.
 
 create function authz.today_agreement_ending_rows(p_uid uuid, p_now timestamptz)
@@ -63,7 +63,7 @@ begin
              'id', r.id::text, 'title', r.client_name,
              'subtitle', r.title,
              'at', authz.today_work_day_at(r.end_on), 'urgent', r.urgent,
-             'link', '/app/clients/' || r.client_id::text || '?tab=agreements')
+             'link', '/app/clients/' || r.client_id::text || '?tab=agreements&agreement=' || r.id::text)
            order by r.end_on, r.id)
       from (select * from authz.today_agreement_ending_rows(p_uid, p_now) x
              order by x.end_on, x.id limit authz.today_rows()) r),

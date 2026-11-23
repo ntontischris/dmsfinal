@@ -68,7 +68,7 @@ begin
   return coalesce((
     select jsonb_agg(jsonb_build_object(
              'id', r.id, 'title', r.title,
-             'subtitle', 'Υπεύθυνος: ' || r.assignee || ' · προθεσμία ' || to_char(r.deadline, 'DD/MM'),
+             'subtitle', 'Υπεύθυνος: ' || r.assignee,
              'at', authz.today_work_day_at(r.deadline), 'urgent', r.deadline <= v_today + 1,
              'link', '/app/deliverables/' || r.id)
            order by r.deadline, r.id)
