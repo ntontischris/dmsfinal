@@ -35,7 +35,8 @@ begin
             or (v_scope = 'mine'
                 and (p.owner_id = p_uid
                      or exists (select 1 from public.production_members m where m.production_id = p.id and m.user_id = p_uid)
-                     or exists (select 1 from public.filming_crew x where x.filming_id = f.id and x.user_id = p_uid))));
+                     or exists (select 1 from public.filming_crew x where x.filming_id = f.id and x.user_id = p_uid))))
+     order by f.starts_at, fe.filming_id, fe.item_id;
 end;
 $$;
 
