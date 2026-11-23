@@ -64,8 +64,8 @@ select public.t_id(x.oid), public.t_id(x.cid), 'Ευκαιρία ' || x.oid,
        (select s.id from public.sales_stages s where s.code = 'proposal'),
        (select s.id from public.sales_sources s where s.code = 'phone'),
        public.t_id(x.mgr), 'Επόμενο', date '2026-03-13'
-  from (values ('o1', 'c1', 'a3'), ('o2', 'c2', 'a1'), ('o3', 'c3', 'a1'), ('o4', 'c4', 'a1'),
-               ('o5', 'c5', 'a3'), ('o6', 'c6', 'a1'), ('o7', 'c7', 'a3'), ('o8', 'c8', 'a3')) as x (oid, cid, mgr);
+  from (values ('d1', 'c1', 'a3'), ('d2', 'c2', 'a1'), ('d3', 'c3', 'a1'), ('d4', 'c4', 'a1'),
+               ('d5', 'c5', 'a3'), ('d6', 'c6', 'a1'), ('d7', 'c7', 'a3'), ('d8', 'c8', 'a3')) as x (oid, cid, mgr);
 
 -- Συμφωνίες σε υπογεγραμμένη κατάσταση (state <> proposal, path signed, signed_at σε στιγμή πριν το p_now).
 insert into public.agreements (id, opportunity_id, kind, title, state, path, valid_until, start_on, duration_months, end_on,
@@ -74,33 +74,33 @@ insert into public.agreements (id, opportunity_id, kind, title, state, path, val
 select public.t_id(x.gid), public.t_id(x.oid), 'monthly', x.title, x.state, 'signed', date '2026-03-20',
        date '2026-03-01', 6, date '2026-09-01', 15, 'lost', 'new_opportunity', 48, 48, false, false,
        timestamptz '2026-03-01 10:00+00', timestamptz '2026-02-20 10:00+00'
-  from (values ('g1', 'o1', 'Μηνιαίο A', 'active'), ('g2', 'o2', 'Μηνιαίο B', 'active'),
-               ('g3', 'o3', 'Μηνιαίο C', 'active'), ('g4', 'o4', 'Μηνιαίο D', 'active'),
-               ('g5', 'o5', 'Μηνιαίο E', 'active'), ('g6', 'o6', 'Μηνιαίο F', 'expired'),
-               ('g7', 'o7', 'Μηνιαίο G', 'active'), ('g8', 'o8', 'Μηνιαίο H', 'active')) as x (gid, oid, title, state);
+  from (values ('e1', 'd1', 'Μηνιαίο A', 'active'), ('e2', 'd2', 'Μηνιαίο B', 'active'),
+               ('e3', 'd3', 'Μηνιαίο C', 'active'), ('e4', 'd4', 'Μηνιαίο D', 'active'),
+               ('e5', 'd5', 'Μηνιαίο E', 'active'), ('e6', 'd6', 'Μηνιαίο F', 'expired'),
+               ('e7', 'd7', 'Μηνιαίο G', 'active'), ('e8', 'd8', 'Μηνιαίο H', 'active')) as x (gid, oid, title, state);
 
 -- Σύνδεσμος πρότασης για τη g3 (η υπογραφή με Σύνδεσμο θέλει γραμμή και τρόπο κωδικού).
 insert into public.agreement_links (id, agreement_id, recipient_name, recipient_email, is_signatory, revision, token_hash)
-values (public.t_id('l3'), public.t_id('g3'), 'Επαφή 3', 'client3@example.com', true, 1, 'tok-l3');
+values (public.t_id('f3'), public.t_id('e3'), 'Επαφή 3', 'client3@example.com', true, 1, 'tok-l3');
 
 -- Υπογραφές: recorded_by = ποιος την κατέγραψε (null για υπογραφή του Πελάτη μέσω Συνδέσμου).
 insert into public.agreement_signatures (agreement_id, method, signed_name, signed_on, recorded_at, recorded_by,
                                          link_id, otp_delivery, document_hash, reference) values
-  (public.t_id('g1'), 'outside', 'Υπογράφων 1', date '2026-03-09', timestamptz '2026-03-09 09:00+00', public.t_id('a1'),
+  (public.t_id('e1'), 'outside', 'Υπογράφων 1', date '2026-03-09', timestamptz '2026-03-09 09:00+00', public.t_id('a1'),
    null, null, 'hash-g1', 'Email 9/3'),
-  (public.t_id('g2'), 'outside', 'Υπογράφων 2', date '2026-03-05', timestamptz '2026-03-05 10:00+00', public.t_id('a3'),
+  (public.t_id('e2'), 'outside', 'Υπογράφων 2', date '2026-03-05', timestamptz '2026-03-05 10:00+00', public.t_id('a3'),
    null, null, 'hash-g2', 'Email 5/3'),
-  (public.t_id('g3'), 'link', 'Υπογράφων 3', date '2026-03-09', timestamptz '2026-03-09 12:00+00', null,
-   public.t_id('l3'), 'manual', 'hash-g3', ''),
-  (public.t_id('g4'), 'outside', 'Υπογράφων 4', date '2026-03-11', timestamptz '2026-03-11 10:00+00', public.t_id('a1'),
+  (public.t_id('e3'), 'link', 'Υπογράφων 3', date '2026-03-09', timestamptz '2026-03-09 12:00+00', null,
+   public.t_id('f3'), 'manual', 'hash-g3', ''),
+  (public.t_id('e4'), 'outside', 'Υπογράφων 4', date '2026-03-11', timestamptz '2026-03-11 10:00+00', public.t_id('a1'),
    null, null, 'hash-g4', 'Email 11/3'),
-  (public.t_id('g5'), 'outside', 'Υπογράφων 5', date '2026-03-09', timestamptz '2026-03-09 11:00+00', public.t_id('a3'),
+  (public.t_id('e5'), 'outside', 'Υπογράφων 5', date '2026-03-09', timestamptz '2026-03-09 11:00+00', public.t_id('a3'),
    null, null, 'hash-g5', 'Email 9/3'),
-  (public.t_id('g6'), 'outside', 'Υπογράφων 6', date '2026-03-09', timestamptz '2026-03-09 13:00+00', public.t_id('a2'),
+  (public.t_id('e6'), 'outside', 'Υπογράφων 6', date '2026-03-09', timestamptz '2026-03-09 13:00+00', public.t_id('a2'),
    null, null, 'hash-g6', 'Email 9/3'),
-  (public.t_id('g7'), 'outside', 'Υπογράφων 7', date '2026-03-06', timestamptz '2026-03-06 10:00+00', public.t_id('a1'),
+  (public.t_id('e7'), 'outside', 'Υπογράφων 7', date '2026-03-06', timestamptz '2026-03-06 10:00+00', public.t_id('a1'),
    null, null, 'hash-g7', 'Email 6/3'),
-  (public.t_id('g8'), 'outside', 'Υπογράφων 8', date '2026-03-08', timestamptz '2026-03-08 12:00+00', public.t_id('a2'),
+  (public.t_id('e8'), 'outside', 'Υπογράφων 8', date '2026-03-08', timestamptz '2026-03-08 12:00+00', public.t_id('a2'),
    null, null, 'hash-g8', 'Email 8/3');
 
 reset session_replication_role;
@@ -113,16 +113,16 @@ insert into public.today_seen (user_id, seen_at, previous_seen_at) values
 -- ───────────── Θετικό: ο Ιδιοκτήτης, από το previous_seen_at, νεότερα πρώτα ─────────────
 select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00'), 4,
   'Ο Ιδιοκτήτης βλέπει τις τέσσερις υπογραφές μετά το previous_seen_at, χωρίς τη δική του');
-select is(public.t_ids('a1'), array[public.t_id('g6')::text, public.t_id('g3')::text, public.t_id('g5')::text, public.t_id('g8')::text],
+select is(public.t_ids('a1'), array[public.t_id('e6')::text, public.t_id('e3')::text, public.t_id('e5')::text, public.t_id('e8')::text],
   'Η σειρά είναι η πιο πρόσφατη υπογραφή πρώτη');
-select is(public.t_item('a1', 'g3') ->> 'title', 'Πελάτης 3 (τεστ)', 'Ο τίτλος της γραμμής είναι το όνομα του Πελάτη');
-select is(public.t_item('a1', 'g3') ->> 'subtitle', 'Μηνιαίο C · Υπογραφή με Σύνδεσμο',
+select is(public.t_item('a1', 'e3') ->> 'title', 'Πελάτης 3 (τεστ)', 'Ο τίτλος της γραμμής είναι το όνομα του Πελάτη');
+select is(public.t_item('a1', 'e3') ->> 'subtitle', 'Μηνιαίο C · Υπογραφή με Σύνδεσμο',
   'Ο υπότιτλος της υπογραφής με Σύνδεσμο λέει τον τρόπο, χωρίς ημερομηνία');
-select is(public.t_item('a1', 'g6') ->> 'subtitle', 'Μηνιαίο F · Υπογραφή εκτός συστήματος',
+select is(public.t_item('a1', 'e6') ->> 'subtitle', 'Μηνιαίο F · Υπογραφή εκτός συστήματος',
   'Ο υπότιτλος της υπογραφής εκτός συστήματος λέει τον τρόπο');
-select is((public.t_item('a1', 'g6') ->> 'at')::timestamptz, timestamptz '2026-03-09 13:00+00',
+select is((public.t_item('a1', 'e6') ->> 'at')::timestamptz, timestamptz '2026-03-09 13:00+00',
   'Η ώρα της γραμμής είναι η στιγμή της υπογραφής');
-select is(public.t_item('a1', 'g3') ->> 'link', '/app/agreements/' || public.t_id('g3')::text,
+select is(public.t_item('a1', 'e3') ->> 'link', '/app/agreements/' || public.t_id('e3')::text,
   'Η γραμμή ανοίγει τη Συμφωνία');
 select is((select bool_and((v ->> 'urgent')::boolean)
              from jsonb_array_elements(authz.today_items_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00')) x (v)),
@@ -137,36 +137,36 @@ select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestampt
 select set_config('today.rows', '', true);
 
 -- ───────────── Εξαιρέσεις: παράθυρο, μελλοντικές, δική μου καταχώριση ─────────────
-select ok(not (public.t_id('g1')::text = any(public.t_ids('a1'))), 'Ο Ιδιοκτήτης δεν βλέπει την υπογραφή που κατέγραψε ο ίδιος');
-update public.agreement_signatures set recorded_at = timestamptz '2026-03-08 10:00+00' where agreement_id = public.t_id('g2');
-select ok(not (public.t_id('g2')::text = any(public.t_ids('a1'))), 'Υπογραφή ακριβώς στο previous_seen_at δεν μπαίνει (αυστηρό όριο)');
-select ok(not (public.t_id('g7')::text = any(public.t_ids('a1'))), 'Δεύτερη υπογραφή πριν από το previous_seen_at δεν μπαίνει');
-select ok(public.t_id('g8')::text = any(public.t_ids('a1')), 'Υπογραφή μετά το previous_seen_at μπαίνει');
-select ok(not (public.t_id('g4')::text = any(public.t_ids('a1'))), 'Υπογραφή με στιγμή μετά το p_now δεν μπαίνει');
+select ok(not (public.t_id('e1')::text = any(public.t_ids('a1'))), 'Ο Ιδιοκτήτης δεν βλέπει την υπογραφή που κατέγραψε ο ίδιος');
+update public.agreement_signatures set recorded_at = timestamptz '2026-03-08 10:00+00' where agreement_id = public.t_id('e2');
+select ok(not (public.t_id('e2')::text = any(public.t_ids('a1'))), 'Υπογραφή ακριβώς στο previous_seen_at δεν μπαίνει (αυστηρό όριο)');
+select ok(not (public.t_id('e7')::text = any(public.t_ids('a1'))), 'Δεύτερη υπογραφή πριν από το previous_seen_at δεν μπαίνει');
+select ok(public.t_id('e8')::text = any(public.t_ids('a1')), 'Υπογραφή μετά το previous_seen_at μπαίνει');
+select ok(not (public.t_id('e4')::text = any(public.t_ids('a1'))), 'Υπογραφή με στιγμή μετά το p_now δεν μπαίνει');
 
 -- ───────────── Εύρος «τα δικά μου»: Πωλήσεις, χωρίς γραμμή στο today_seen (3 μέρες) ─────────────
 select is(authz.today_count_agreement_signed(public.t_id('a3'), null, timestamptz '2026-03-10 10:00+00'), 2,
   'Η Πωλήσεις βλέπει μόνο τις υπογραφές των δικών της Συμφωνιών μέσα στις 3 μέρες');
-select is(public.t_ids('a3'), array[public.t_id('g1')::text, public.t_id('g8')::text],
+select is(public.t_ids('a3'), array[public.t_id('e1')::text, public.t_id('e8')::text],
   'Η Πωλήσεις βλέπει μόνο τις δικές της, νεότερες πρώτα');
-select ok(not (public.t_id('g5')::text = any(public.t_ids('a3'))), 'Η Πωλήσεις δεν βλέπει τη δική της καταχώριση (recorded_by = p_uid)');
-select ok(not (public.t_id('g7')::text = any(public.t_ids('a3'))), 'Χωρίς γραμμή στο today_seen: υπογραφή πάνω από 3 μέρες δεν μπαίνει');
-update public.agreement_signatures set recorded_at = timestamptz '2026-03-07 10:00+00' where agreement_id = public.t_id('g7');
-select ok(not (public.t_id('g7')::text = any(public.t_ids('a3'))), 'Υπογραφή ακριβώς στις 3 μέρες δεν μπαίνει (αυστηρό όριο)');
+select ok(not (public.t_id('e5')::text = any(public.t_ids('a3'))), 'Η Πωλήσεις δεν βλέπει τη δική της καταχώριση (recorded_by = p_uid)');
+select ok(not (public.t_id('e7')::text = any(public.t_ids('a3'))), 'Χωρίς γραμμή στο today_seen: υπογραφή πάνω από 3 μέρες δεν μπαίνει');
+update public.agreement_signatures set recorded_at = timestamptz '2026-03-07 10:00+00' where agreement_id = public.t_id('e7');
+select ok(not (public.t_id('e7')::text = any(public.t_ids('a3'))), 'Υπογραφή ακριβώς στις 3 μέρες δεν μπαίνει (αυστηρό όριο)');
 
 -- ───────────── Παράθυρο: seen_at πάνω από 30 λεπτά πριν (όχι previous_seen_at) ─────────────
 -- seen_at 08:00 (2 ώρες πριν το p_now): το «από» είναι το seen_at. Η g4 (μελλοντική) γίνεται υπογραφή 08:30 του Χρήστη a2.
 update public.today_seen set seen_at = timestamptz '2026-03-10 08:00+00' where user_id = public.t_id('a1');
 update public.agreement_signatures set recorded_at = timestamptz '2026-03-10 08:30+00', recorded_by = public.t_id('a2')
- where agreement_id = public.t_id('g4');
+ where agreement_id = public.t_id('e4');
 select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00'), 1,
   'Μετά από 30 λεπτά μετράει από το seen_at: μόνο η υπογραφή μετά από αυτό');
-select ok(public.t_id('g4')::text = any(public.t_ids('a1')), 'Η υπογραφή μετά το seen_at μπαίνει');
-select ok(not (public.t_id('g3')::text = any(public.t_ids('a1'))),
+select ok(public.t_id('e4')::text = any(public.t_ids('a1')), 'Η υπογραφή μετά το seen_at μπαίνει');
+select ok(not (public.t_id('e3')::text = any(public.t_ids('a1'))),
   'Υπογραφή ανάμεσα στο previous_seen_at και στο seen_at δεν μπαίνει');
-select ok(not (public.t_id('g8')::text = any(public.t_ids('a1'))),
+select ok(not (public.t_id('e8')::text = any(public.t_ids('a1'))),
   'Δεύτερη υπογραφή ανάμεσα στο previous_seen_at και στο seen_at δεν μπαίνει');
-update public.agreement_signatures set recorded_at = timestamptz '2026-03-10 08:00+00' where agreement_id = public.t_id('g4');
+update public.agreement_signatures set recorded_at = timestamptz '2026-03-10 08:00+00' where agreement_id = public.t_id('e4');
 select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00'), 0,
   'Υπογραφή ακριβώς στο seen_at δεν μπαίνει (αυστηρό όριο)');
 
