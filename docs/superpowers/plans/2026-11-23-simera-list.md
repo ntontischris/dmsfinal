@@ -97,19 +97,32 @@
 ### Task 4: «Έκλεισες N»
 
 **Files:**
-- Create: `app/supabase/migrations/20261123110000_today_day_start.sql`, `app/supabase/tests/today_day_start_test.sql`, (χωρίς νέο TS module — ο υπολογισμός είναι στη βάση)
-- Modify: `app/src/modules/today/queries.ts` (`getTodayVisit`), `app/src/modules/today/view-schema.ts`, `a1-list-view.tsx`
+- Create: `app/supabase/migrations/20261123110000_today_closed.sql`, `app/supabase/tests/today_closed_test.sql`
+- Modify: `app/src/modules/today/queries.ts`, `app/src/modules/today/view-schema.ts`, `a1-list-view.tsx`
+
+**Κανόνας:** το «Έκλεισες» μετρά πάνω σε **όλα** όσα περιμένουν, ανεξάρτητα από τις 10 γραμμές της οθόνης. Υπολογίζεται ολόκληρο στη βάση.
 
 **Interfaces:**
 - Produces:
+  - Σε κάθε `authz.today_items_<code>` (Task 2) προστίθεται `p_limit int default 10`. Η οθόνη καλεί με την προεπιλογή.
+  - `authz.today_waiting_keys(p_uid uuid, p_now timestamptz) returns text[]`: όλα τα `<code>:<id>` των ορατών στον Χρήστη καρτών των ομάδων 1–6 (κάθε items με `p_limit => 1000`, μόνο τα `id`).
   - Πίνακας `public.today_day_start(user_id uuid, day date, keys text[], primary key (user_id, day))`, RLS: μόνο ο ίδιος.
-  - RPC `public.today_day_start(p_keys text[]) returns text[]` — αν δεν υπάρχει γραμμή για (auth.uid(), σήμερα Αθήνα) την γράφει με `p_keys` και επιστρέφει `p_keys`· αλλιώς επιστρέφει τα αποθηκευμένα χωρίς αλλαγή.
-  - `function closedOf(input: { startKeys: readonly string[]; nowKeys: ReadonlySet<string>; snoozed: ReadonlySet<string> }): { closed: number; later: number }` — closed = startKeys που δεν είναι ούτε τώρα ούτε στο snoozed· later = startKeys στο snoozed.
+  - RPC `public.today_closed() returns jsonb` `{closed int, later int}`:
+    - Αν δεν υπάρχει γραμμή για (auth.uid(), σημερινή μέρα σε ώρα Αθήνας), τη γράφει με τα τωρινά κλειδιά και επιστρέφει `{0,0}`.
+    - Αλλιώς: closed = πρωινά κλειδιά που δεν είναι ούτε τώρα ούτε στο snoozed· later = πρωινά κλειδιά που είναι στο snoozed.
+    - Κλειδιά που εμφανίστηκαν μέσα στη μέρα δεν μετράνε.
+  - `getTodayClosed()` στο `queries.ts` και `todayClosedSchema` στο `view-schema.ts`.
 
-- [ ] **Step 1:** pgTAP: πρώτη κλήση γράφει, δεύτερη επιστρέφει τα πρώτα κλειδιά, άλλος Χρήστης δεν βλέπει τη γραμμή (denial).
-- [ ] **Step 2:** Vitest `closedOf`: `should count rows gone since the morning as closed`, `should not count snoozed rows as closed`, `should ignore rows that appeared after the morning`.
-- [ ] **Step 3:** FAIL → υλοποίηση → PASS (vitest τοπικά, pgTAP στο CI).
-- [ ] **Step 4:** Στη λίστα: όταν `remainingOf === 0` → «Έκλεισες N σήμερα» + (αν later > 0) «M ξαναβγαίνουν αύριο το πρωί». Όταν η λίστα έχει γραμμές και closed > 0 → μικρό «Έκλεισες N» δίπλα στη γραμμή κορυφής.
+- [ ] **Step 1:** pgTAP:
+  - (α) Η πρώτη κλήση επιστρέφει `{0,0}` και γράφει γραμμή.
+  - (β) 12 ληξιπρόθεσμα το πρωί· πληρώνονται 3, ανάμεσά τους το 11ο και το 12ο → `closed = 3`. Αυτό αποδεικνύει ότι μετρά πέρα από τις 10.
+  - (γ) Ένα σε «Αργότερα» → `later = 1`, όχι closed.
+  - (δ) Νέο τιμολόγιο μέσα στη μέρα δεν αλλάζει το closed.
+  - (ε) Άλλος Χρήστης δεν διαβάζει τη γραμμή (denial).
+- [ ] **Step 2:** push → CI pgTAP FAIL (η συνάρτηση δεν υπάρχει) → υλοποίηση → PASS.
+- [ ] **Step 3:** Το `getTodayClosed()` φορτώνεται σε **δικό του `<Suspense>`** (fallback: τίποτα), ώστε η λίστα να μην το περιμένει.
+  - Όταν `remainingOf === 0`: «Έκλεισες N σήμερα», και αν later > 0, «M ξαναβγαίνουν αύριο το πρωί».
+  - Όταν η λίστα έχει γραμμές και closed > 0: μικρό «Έκλεισες N» δίπλα στη γραμμή κορυφής.
 - [ ] **Step 4:** commit `feat(today): tell how many lines were closed today`.
 
 ### Tasks 5–11: Οι 7 νέες κάρτες (μία ανά task, αυτή τη σειρά)
