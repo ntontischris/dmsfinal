@@ -4,7 +4,7 @@
 
 **Goal:** Η Σήμερα της ομάδας γίνεται μία λίστα σε 7 σταθερές ομάδες με κίνηση + «Αργότερα» ανά γραμμή, γραμμή κορυφής, «Έκλεισες N», και 7 νέες κάρτες.
 
-**Architecture:** Οι κάρτες φορτώνονται όπως σήμερα (`loadCards` → `Built[]`). Μια νέα καθαρή συνάρτηση (`a1-list.ts`) τις αντιστοιχίζει σε ομάδες και ταξινομεί τις γραμμές· ένα νέο server component (`a1-list-view.tsx`) τις ζωγραφίζει και αντικαθιστά τις ζώνες στο `TeamBriefing`. Η βάση αλλάζει μόνο σε τρία σημεία: όριο γραμμών 3→50, «αρχή της μέρας» για το «Έκλεισες», και οι 7 νέες κάρτες (μητρώο `today_cards` + `authz.today_count_<code>` / `authz.today_items_<code>`).
+**Architecture:** Οι κάρτες φορτώνονται όπως σήμερα (`loadCards` → `Built[]`). Μια νέα καθαρή συνάρτηση (`a1-list.ts`) τις αντιστοιχίζει σε ομάδες και ταξινομεί τις γραμμές· ένα νέο server component (`a1-list-view.tsx`) τις ζωγραφίζει και αντικαθιστά τις ζώνες στο `TeamBriefing`. Η βάση αλλάζει μόνο σε τρία σημεία: όριο γραμμών 3→10, «αρχή της μέρας» για το «Έκλεισες», και οι 7 νέες κάρτες (μητρώο `today_cards` + `authz.today_count_<code>` / `authz.today_items_<code>`).
 
 **Tech Stack:** Next.js 16 App Router (Server Components), Supabase Postgres + pgTAP, Zod, Vitest.
 
@@ -27,7 +27,7 @@
 2. Κάρτα που απέτυχε να φορτώσει → μένει στη θέση της ομάδας της ως γραμμή «Ξαναδοκίμασε», δεν εξαφανίζεται σιωπηλά. Test στην Task 1.
 3. Χρήστης χωρίς «Βλέπει ποσά» → καμία ομάδα «Χρήματα» και κανένα ποσό στη γραμμή κορυφής. Test στην Task 3.
 4. Όλα «Αργότερα» → η λίστα δείχνει το «Έκλεισες» και «N ξαναβγαίνουν», όχι «Όλα καθαρά» χωρίς λόγο. Test στην Task 4.
-5. Κάρτα με count > γραμμές (πάνω από 50) → γραμμή «και άλλα N» προς τη λίστα της κάρτας. Test στην Task 1.
+5. Κάρτα με count > γραμμές (πάνω από 10) → γραμμή «και άλλα N» προς τη λίστα της κάρτας. Test στην Task 1.
 
 ---
 
@@ -55,7 +55,7 @@
   - `should keep only today and tomorrow in week_filming and drop pending-approval rows` — γραμμές με `at` σε 3 μέρες ή `note: "αναμένει έγκριση"` λείπουν (`stamp` "2026-11-25T09:00").
   - `should hide group company unless a line is urgent`.
   - `should show a card that failed as a failed entry of its group`.
-  - `should add a "more" link when count exceeds loaded rows` — count 60, 50 γραμμές → `more: [{ count: 10, href }]`.
+  - `should add a "more" link when count exceeds loaded rows` — count 34, 10 γραμμές → `more: [{ count: 24, href }]`.
   - `should drop empty groups`.
   - `describe("remainingOf")`: `should count lines of all shown groups plus the more counts`.
 - [ ] **Step 2:** `npx vitest run src/modules/today/spaces/a1-list.test.ts` → FAIL (module not found).
@@ -63,17 +63,17 @@
 - [ ] **Step 4:** ίδια εντολή → PASS.
 - [ ] **Step 5:** commit `feat(today): group the day's cards into seven ordered groups`.
 
-### Task 2: Όριο γραμμών 3 → 50
+### Task 2: Όριο γραμμών 3 → 10
 
 **Files:**
-- Create: `app/supabase/migrations/20261123100000_today_rows_50.sql`
-- Test: `app/supabase/tests/today_rows_50_test.sql`
+- Create: `app/supabase/migrations/20261123100000_today_rows_10.sql`
+- Test: `app/supabase/tests/today_rows_10_test.sql`
 
 - [ ] **Step 1:** Για κάθε `authz.today_items_<code>` με `limit 3`, βρες τον **τελευταίο** ορισμό του (`grep -n "function authz.today_items_<code>" supabase/migrations/*.sql`, μεγαλύτερο όνομα αρχείου κερδίζει· π.χ. `filming_approvals` → `20261110100000_today_move_suggest.sql`). Λίστα: client_allowance, client_filming, client_requests, client_waiting, cost_hours, filming_approvals, gdpr, google_deletions, health, overdue_invoices, proposal_approvals, readiness, rounds_over_limit, to_invoice, unassigned, unread_messages, week_filming, και όποια κάρτα δουλειάς (`20261016120000_today_work.sql`) έχει όριο. Ο τοπ-3 «οφειλέτες» του `today_money` **μένει** 3 (είναι πάνελ, όχι λίστα).
-- [ ] **Step 2:** Γράψε το pgTAP test πρώτα: σπέρνει 5 ληξιπρόθεσμα τιμολόγια ως Ιδιοκτήτης (όπως `today_money_test.sql`) και `is(jsonb_array_length(today_card('overdue_invoices')->'items'), 5)`· ένα δεύτερο για `unassigned` με 4. Ακολουθεί το checklist: denial test (Πελάτης δεν παίρνει την κάρτα), δεν διαβάζει κλειστούς πίνακες.
-- [ ] **Step 3:** Η migration: `create or replace` κάθε συνάρτησης με αυτούσιο τον τελευταίο ορισμό και `limit 50` στη θέση του `limit 3`. Κανένα άλλο diff (έλεγχος: `diff` του σώματος με το αρχικό δείχνει μόνο τον αριθμό).
+- [ ] **Step 2:** Γράψε το pgTAP test πρώτα: σπέρνει 12 ληξιπρόθεσμα τιμολόγια ως Ιδιοκτήτης (όπως `today_money_test.sql`) και `is(jsonb_array_length(today_card('overdue_invoices')->'items'), 10)`· ένα δεύτερο για `unassigned` με 12 → 10. Ακολουθεί το checklist: denial test (Πελάτης δεν παίρνει την κάρτα), δεν διαβάζει κλειστούς πίνακες.
+- [ ] **Step 3:** Η migration: `create or replace` κάθε συνάρτησης με αυτούσιο τον τελευταίο ορισμό και `limit 10` στη θέση του `limit 3`. Κανένα άλλο diff (έλεγχος: `diff` του σώματος με το αρχικό δείχνει μόνο τον αριθμό).
 - [ ] **Step 4:** push σε draft PR → CI `pgTAP` πράσινο.
-- [ ] **Step 5:** commit `feat(today): load every waiting row, not only the first three`.
+- [ ] **Step 5:** commit `feat(today): load up to ten rows per card`.
 
 ### Task 3: Η λίστα στην οθόνη + γραμμή κορυφής
 
@@ -114,7 +114,7 @@
 
 ### Tasks 5–11: Οι 7 νέες κάρτες (μία ανά task, αυτή τη σειρά)
 
-Κάθε task ίδιο σχήμα: migration `20261123<1N>0000_today_card_<code>.sql` (γραμμή στο `today_cards` με `audience 'team'`, το σωστό `grp` της βάσης, Δικαίωμα όπως οι συγγενικές κάρτες· `authz.today_count_<code>` + `authz.today_items_<code>` με `limit 50`, `urgent`, `link`) → pgTAP (θετικό, αρνητικό/άλλος Ρόλος, όριο του κατωφλιού) → γραμμή στο `GROUP_OF` + test στο `a1-list.test.ts` → έλεγχοι → commit `feat(today): add the <τίτλος> card`.
+Κάθε task ίδιο σχήμα: migration `20261123<1N>0000_today_card_<code>.sql` (γραμμή στο `today_cards` με `audience 'team'`, το σωστό `grp` της βάσης, Δικαίωμα όπως οι συγγενικές κάρτες· `authz.today_count_<code>` + `authz.today_items_<code>` με `limit 10`, `urgent`, `link`) → pgTAP (θετικό, αρνητικό/άλλος Ρόλος, όριο του κατωφλιού) → γραμμή στο `GROUP_OF` + test στο `a1-list.test.ts` → έλεγχοι → commit `feat(today): add the <τίτλος> card`.
 
 | Task | code | Ομάδα (`GROUP_OF`) | Ορισμός (σταθερές με σχόλιο στο RPC) | link |
 |---|---|---|---|---|
