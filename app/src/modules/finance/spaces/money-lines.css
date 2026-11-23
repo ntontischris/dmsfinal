@@ -93,7 +93,9 @@
 .ml-hero-amount[data-open="true"] { color: var(--brand-periwinkle) !important; }
 .ml-hero-amount small { display: block; margin-top: .35rem; font-size: .82rem; font-weight: 500; color: var(--color-text-muted); }
 .ml-hero p { margin: 0; color: var(--color-text-muted); }
-.ml-hero .ml-quick { position: relative; }
+.ml-hero .ml-quick { position: relative; z-index: 1; flex-wrap: nowrap; }
+.ml-hero .ml-quick a { background: color-mix(in oklab, var(--brand-midnight) 85%, transparent); }
+.ml-hero .ml-quick a[data-primary] { background: var(--brand-periwinkle); }
 .ml-stack { display: grid; gap: .7rem; }
 .ml-stack > section { margin: 0; }
 .ml-box-title { margin: 0; font-size: 1rem; font-weight: 800; }
@@ -128,4 +130,5 @@
   .ml-amount { grid-column: 2; text-align: left; }
   .ml-quick { grid-column: 1 / -1; justify-content: flex-start; }
   .ml-hero-mono { font-size: 5rem; }
+  .ml-hero .ml-quick { flex-wrap: wrap; }
 }

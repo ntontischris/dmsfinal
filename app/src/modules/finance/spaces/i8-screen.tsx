@@ -59,6 +59,9 @@ const paymentMeta = (p: InvoicePayment): string =>
     .filter((part): part is string => part !== null)
     .join(" · ");
 
+const capitalize = (text: string): string =>
+  text.charAt(0).toUpperCase() + text.slice(1);
+
 const initialsOf = (number: string): string =>
   number.replace(/[^\p{L}\p{N}]/gu, "").slice(-4);
 
@@ -130,7 +133,7 @@ function Hero(props: {
           {statusText(money.status)}
         </Badge>
         <h1>
-          {KIND_LABELS[detail.kind]} {detail.number}
+          {capitalize(KIND_LABELS[detail.kind])} {detail.number}
         </h1>
         <p>{subtitleOf(detail)}</p>
         <p className="ml-hero-amount" data-open={money.remaining > 0}>
