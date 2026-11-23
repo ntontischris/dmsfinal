@@ -64,7 +64,7 @@ insert into public.production_members (production_id, user_id) values
 insert into public.filmings (id, production_id, client_id, starts_at, hours, location, origin, state, is_extra,
                              cancelled_at, cancelled_side) values
   ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000c1',
-   public.t_day_at(5), 2, 'Κατάστημα', 'team', 'scheduled', false, null, null),
+   public.t_day_at(5), 2, 'Κατάστημα', 'team', 'scheduled', true, null, null),
   ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000d1', null,
    public.t_day_at(2), 2, 'Στούντιο Α', 'team', 'scheduled', false, null, null),
   ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000d2', null,
