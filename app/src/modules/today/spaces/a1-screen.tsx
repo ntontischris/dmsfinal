@@ -233,8 +233,10 @@ async function TodayCards({ counts }: { counts: TodayCounts }) {
 // βάσης (μόνο όσες επιτρέπουν τα Δικαιώματα, με τη σειρά των Προτιμήσεών του). Για την ομάδα ενημέρωση, για τον Πελάτη κάρτες.
 export async function SpacesToday({
   isCustomizing,
+  group,
 }: {
   isCustomizing: boolean;
+  group?: string;
 }) {
   const [viewer, counts] = await Promise.all([getViewer(), getTodayCounts()]);
   if (!counts.ok)
@@ -266,6 +268,7 @@ export async function SpacesToday({
       {isTeamOf(viewer) ? (
         <TeamBriefing
           counts={counts.data}
+          group={group}
           hello={(newChip) => (
             <Hello
               viewer={viewer}

@@ -218,7 +218,7 @@ export function listOf(input: ListInput): readonly ListGroup[] {
 }
 
 // Η εταιρεία μετράει μόνο τα επείγοντα (η σύνοψη «Μένουν N» της σελίδας)· οι άλλες ομάδες και τα «και άλλα N».
-const countedOf = (group: ListGroup): number => {
+export const countedOf = (group: ListGroup): number => {
   if (group.id === "company") {
     return group.lines.filter((line) => line.row.isUrgent).length;
   }

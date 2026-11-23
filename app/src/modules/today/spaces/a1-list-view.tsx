@@ -5,14 +5,16 @@ import "../../finance/spaces/money-lines.css";
 import { getTodayClosed } from "../queries";
 import { CardError } from "./a1-card";
 import { closedNoteOf } from "./a1-closed";
-import { lineSubOf } from "./a1-facts";
+import { TodayDeck } from "./a1-deck";
+import { initialsOf, lineTagOf, selectedGroupOf } from "./a1-deck-model";
+import { lineSubOf, wholeEuros } from "./a1-facts";
 import { isNewSince, laterLineOf } from "./a1-later";
 import { LaterButton, UndoLater } from "./a1-later-buttons";
 import { remainingOf, type ListGroup, type ListLine } from "./a1-list";
 import type { CardDef } from "./a1-model";
 import type { CompanyItem, CompanyState } from "./a1-topline";
 
-// Η Σήμερα ως μία λίστα σε 7 ομάδες (#Σήμερα list): η γραμμή κορυφής κλειστή, κάτω οι ομάδες με γραμμές `ml-line`.
+// Η Σήμερα στη μορφή των «Χρημάτων»: κάρτες-κάδρα για τις 7 ομάδες, κάτω η λίστα της ανοιχτής με γραμμές `ml-line`.
 
 // Το ρήμα του κουμπιού κίνησης ανά κάρτα· όπου δεν υπάρχει, «Άνοιξε».
 const ACTION_LABEL: Readonly<Record<string, string>> = {
@@ -34,8 +36,11 @@ export function TopLine({
   panels: ReactNode;
 }) {
   return (
-    <details className="a1-topline">
-      <summary>{topline}</summary>
+    <details className="ml-box a1-topline">
+      <summary>
+        <strong>{topline}</strong>
+        <small>Δείκτες, πρόγραμμα, χρήματα και ομάδα</small>
+      </summary>
       <div className="a1-topline-body">{panels}</div>
     </details>
   );
@@ -54,6 +59,8 @@ export interface TodayListProps {
   company: CompanyState;
   // Οι κάρτες που είναι αποφάσεις (το «Μόνο εσύ μπορείς» της προηγούμενης έκδοσης): μόνο αυτές παίρνουν την ουσία.
   decisionIds: ReadonlySet<string>;
+  // Η κάρτα που διάλεξε ο Χρήστης (?g=)· αλλιώς η πρώτη με επείγον.
+  requestedGroup?: string;
 }
 
 function LineRow({
@@ -70,19 +77,27 @@ function LineRow({
   const { row, cardId, laterKey } = line;
   const action = ACTION_LABEL[cardId] ?? DEFAULT_ACTION;
   const sub = lineSubOf({ row, cardId, isDecision, today });
+  const tag = lineTagOf(row, today);
   return (
     <div className="ml-line" data-urgent={row.isUrgent || undefined}>
+      <span
+        className="ml-thumb"
+        {...(row.isUrgent
+          ? { role: "img", "aria-label": "επείγον" }
+          : { "aria-hidden": true })}
+      >
+        {initialsOf(row.label)}
+      </span>
       <span className="ml-main">
+        {tag && <span className="ml-tag">{tag}</span>}
         <strong>
-          {row.isUrgent && (
-            <span className="a1-urgent-mark" role="img" aria-label="επείγον">
-              !
-            </span>
-          )}{" "}
           {row.label}
           {isNewSince(row, seenAt) && <span className="a1-new"> νέο</span>}
         </strong>
         {sub && <small>{sub}</small>}
+      </span>
+      <span className="ml-amount">
+        {row.amountCents !== undefined && wholeEuros(row.amountCents)}
       </span>
       <span className="ml-quick">
         {row.suggestion && (
@@ -94,11 +109,7 @@ function LineRow({
           </Link>
         )}
         {laterKey && <LaterButton itemKey={laterKey} label={row.label} />}
-        <Link
-          data-primary
-          href={row.href}
-          aria-label={`${action}: ${row.label}`}
-        >
+        <Link href={row.href} aria-label={`${action}: ${row.label}`}>
           {action}
         </Link>
       </span>
@@ -192,26 +203,28 @@ export function TodayList({
   stamp,
   company,
   decisionIds,
+  requestedGroup,
 }: TodayListProps) {
   const laterLine = laterLineOf(later.length, stamp);
   const today = stamp.slice(0, 10);
   const remaining = remainingOf(groups);
+  const active = selectedGroupOf(groups, requestedGroup);
   return (
     <>
+      <TodayDeck groups={groups} activeId={active?.id ?? null} />
       <TopLine topline={topline} panels={panels} />
       <Suspense fallback={null}>
         <ClosedNote remaining={remaining} />
       </Suspense>
-      {groups.map((group) => (
+      {active && (
         <GroupBlock
-          key={group.id}
-          group={group}
+          group={active}
           cards={cards}
           seenAt={seenAt}
           today={today}
           decisionIds={decisionIds}
         />
-      ))}
+      )}
       <CompanyNote company={company} />
       {laterLine && (
         <div className="a1-quiet a1-later-line">

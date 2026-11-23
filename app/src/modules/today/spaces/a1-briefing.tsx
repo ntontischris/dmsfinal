@@ -95,9 +95,12 @@ function TodayPanels({ kpis, programme, money, team }: PanelsProps) {
 export async function TeamBriefing({
   counts,
   hello,
+  group,
   children,
 }: {
   counts: TodayCounts;
+  // Η κάρτα που άνοιξε ο Χρήστης (?g=)· το URL είναι η πηγή αλήθειας.
+  group?: string;
   // Ο χαιρετισμός, με το σήμα «N νέα από την τελευταία φορά» (Σ8) δίπλα στην ημερομηνία.
   hello: (newChip: string | null) => ReactNode;
   // Η Προσαρμογή, όταν είναι ανοιχτή: κάτω από την πρόταση, πάνω από τα κομμάτια.
@@ -202,6 +205,7 @@ export async function TeamBriefing({
           stamp={stamp}
           company={companyStateOf(unsnoozed.cards, list)}
           decisionIds={new Set(brief.decisions.map(({ card }) => card.id))}
+          requestedGroup={group}
         />
       )}
     </>
