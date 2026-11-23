@@ -503,9 +503,9 @@ set local role authenticated;
 
 -- Πρώτο: έγινε ανά βίντεο (μέρα). Δύο Γυρίσματα την ίδια μέρα = μία μέρα.
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
-select set_config('t.v1', public.filming_create(current_setting('t.a')::uuid, public.t_at(9, time '10:00'), 1, current_setting('t.video')::uuid, null, null)::text, true);
+select set_config('t.v1', public.filming_create(current_setting('t.a')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 9, 10), 1, current_setting('t.video')::uuid, null, null)::text, true);
 select is((select public.filming_view(current_setting('t.v1')::uuid) ->> 'isExtra'), 'false', 'Βίντεο της ημέρας δεν είναι έξτρα');
-select set_config('t.v2', public.filming_create(current_setting('t.a')::uuid, public.t_at(9, time '15:00'), 2, current_setting('t.video')::uuid, null, null)::text, true);
+select set_config('t.v2', public.filming_create(current_setting('t.a')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 9, 15), 2, current_setting('t.video')::uuid, null, null)::text, true);
 select is((select public.filming_view(current_setting('t.v2')::uuid) ->> 'isExtra'), 'false', 'Δεύτερο βίντεο την ίδια μέρα δεν είναι έξτρα (η μέρα μετρά μία φορά)');
 select lives_ok($$ select public.filming_mark_done(current_setting('t.v2')::uuid, 2) $$, 'Το δεύτερο βίντεο της μέρας σημειώνεται «έγινε»');
 reset role;
@@ -603,7 +603,7 @@ select is(
   2, 'Εφαρμογή Προτύπου: όσοι είναι απασχολημένοι παραλείπονται και λέγονται'
 );
 select is(jsonb_array_length(public.filming_view(current_setting('t.x13')::uuid) -> 'crew'), 0, 'Μετά από παράλειψη όλων, το Συνεργείο μένει κενό');
-select set_config('t.x14', public.filming_create(current_setting('t.a')::uuid, public.t_at(12, time '10:00'), 1, current_setting('t.reel')::uuid, null, null)::text, true);
+select set_config('t.x14', public.filming_create(current_setting('t.a')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 12, 10), 1, current_setting('t.reel')::uuid, null, null)::text, true);
 select is(
   jsonb_array_length(public.filming_crew_apply_template(current_setting('t.x14')::uuid, current_setting('t.tpl')::uuid) -> 'skipped'),
   0, 'Εφαρμογή Προτύπου σε ελεύθερο Γύρισμα δεν παραλείπει κανέναν'
@@ -675,15 +675,15 @@ select throws_ok($$ select public.equipment_item_view(current_setting('t.cam1'):
 
 -- ───────────── Μετάθεση: διάρκεια, σύγκρουση Συνεργείου, νέο μέλος, χωρίς καύση ─────────────
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
-select lives_ok($$ select public.filming_reschedule(current_setting('t.x14')::uuid, public.t_at(12, time '10:00'), 12) $$, 'Η μετάθεση αλλάζει μόνο τη διάρκεια');
+select lives_ok($$ select public.filming_reschedule(current_setting('t.x14')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 12, 10), 12) $$, 'Η μετάθεση αλλάζει μόνο τη διάρκεια');
 select is((select public.filming_view(current_setting('t.x14')::uuid) ->> 'isExtra'), 'true', 'Μεγαλύτερη διάρκεια πέρα από το υπόλοιπο κάνει το Γύρισμα έξτρα');
-select lives_ok($$ select public.filming_reschedule(current_setting('t.x14')::uuid, public.t_at(12, time '10:00'), 1) $$, 'Επιστροφή στη μία ώρα');
+select lives_ok($$ select public.filming_reschedule(current_setting('t.x14')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 12, 10), 1) $$, 'Επιστροφή στη μία ώρα');
 select is((select public.filming_view(current_setting('t.x14')::uuid) ->> 'isExtra'), 'false', 'Με τη μία ώρα το Γύρισμα ξαναγίνεται κανονικό');
 select set_config('t.q', public.filming_create(current_setting('t.a')::uuid, public.t_at(13, time '10:00'), 1, current_setting('t.reel')::uuid, null, null)::text, true);
 select lives_ok($$ select public.filming_crew_set(current_setting('t.q')::uuid, array['00000000-0000-0000-0000-0000000000e7']::uuid[]) $$, 'Το μέλος του Συνεργείου είναι ελεύθερο την ημέρα 13');
-select throws_ok($$ select public.filming_reschedule(current_setting('t.q')::uuid, public.t_at(12, time '10:30'), 1) $$, 'P0001', 'Το άτομο Μαρία έχει άλλο Γύρισμα αυτή την ώρα', 'Μετάθεση πάνω σε μέλος του Συνεργείου με άλλο Γύρισμα μπλοκάρει');
+select throws_ok($$ select public.filming_reschedule(current_setting('t.q')::uuid, public.t_in_p1(current_setting('t.a')::uuid, 12, 10), 1) $$, 'P0001', 'Το άτομο Μαρία έχει άλλο Γύρισμα αυτή την ώρα', 'Μετάθεση πάνω σε μέλος του Συνεργείου με άλλο Γύρισμα μπλοκάρει');
 reset role;
-update public.filmings set starts_at = public.t_at(12, time '10:30') where id = current_setting('t.q')::uuid;
+update public.filmings set starts_at = public.t_in_p1(current_setting('t.a')::uuid, 12, 10) where id = current_setting('t.q')::uuid;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 select lives_ok(
