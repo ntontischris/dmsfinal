@@ -9,7 +9,7 @@ import {
 export const metadata = { title: RECEIPTS_TITLE };
 
 interface ReceiptsPageProps {
-  searchParams: Promise<{ client?: string; invoice?: string }>;
+  searchParams: Promise<{ client?: string; invoice?: string; new?: string }>;
 }
 
 // I4: οι Εισπράξεις (Χώροι). Η λίστα θέλει «Βλέπει Οικονομικά» και «Βλέπει ποσά»· η καταχώρηση και η διόρθωση «Καταχωρεί Εισπράξεις».
@@ -22,6 +22,7 @@ export default async function ReceiptsPage({ searchParams }: ReceiptsPageProps) 
         query={{
           clientId: z.uuid().safeParse(params.client).data,
           invoiceId: z.uuid().safeParse(params.invoice).data,
+          isNew: params.new === "1",
         }}
       />
     </WithMoneyDeck>

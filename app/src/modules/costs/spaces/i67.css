@@ -26,3 +26,7 @@
 & .i67-cat-sum { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 & .i67-cat-body .i67-total { padding-bottom: var(--space-2); }
 }
+
+/* Εισαγωγή του Χώρου «Χρήματα» (ίδιο ύφος με τα κάδρα): μία πρόταση πάνω από τους μήνες */
+.i67-head { margin: 0 0 1rem; }
+.i67-head p { margin: 0; max-width: 40rem; color: var(--color-text-muted); font-size: 1.02rem; }

@@ -110,11 +110,14 @@ interface BodyProps {
 function Body({ view, tabs, current, history }: BodyProps) {
   return (
     <>
+      <header className="i67-head">
+        <p>
+          Τι κοστίζει η εταιρεία κάθε μήνα και πόσο βγαίνει η ώρα. Διάλεξε
+          μήνα· ο νέος ξεκινά ως αντίγραφο του προηγούμενου και κλείνει μόνος
+          του όταν τελειώσει.
+        </p>
+      </header>
       <MonthTabs tabs={tabs} month={view.month} current={current} />
-      <p className="note">
-        Ένας μήνας κλείνει αυτόματα όταν τελειώσει. Ο νέος μήνας ξεκινά ως
-        αντίγραφο του προηγούμενου.
-      </p>
       <MonthBody view={view} />
       <HourCostHistory rows={history} />
     </>

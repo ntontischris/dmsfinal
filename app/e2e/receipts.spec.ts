@@ -62,6 +62,7 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
 
   await openTab(page, MONEY, RECEIPTS_TAB);
   await expect(page).toHaveURL(new RegExp(`${RECEIPTS_PATH}$`));
+  await page.locator("summary", { hasText: "+ Νέα είσπραξη" }).click();
   const form = card(page, RECEIPT_CARD);
   await form.getByLabel("Πελάτης").selectOption({ label: CLIENT });
   await form.getByLabel("Ποσό (€, με ΦΠΑ)").fill("400");

@@ -63,11 +63,14 @@
 .ml-amount { text-align: right; font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--c); white-space: nowrap; }
 .ml-amount small { display: block; font-size: .72rem; font-weight: 500; color: var(--color-text-muted); }
 .ml-quick { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
-.ml-quick a {
+.ml-quick a, .ml-quick button {
+  font: inherit; cursor: pointer; background: transparent;
   padding: .45rem .85rem; border-radius: 999px; font-size: .82rem; font-weight: 700; white-space: nowrap; text-decoration: none;
   color: var(--color-text); border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent);
 }
-.ml-quick a:hover { border-color: var(--brand-periwinkle); }
+.ml-quick .i245-sub { max-width: 18rem; text-align: right; }
+.ml-line[data-faded] { opacity: .6; }
+.ml-quick a:hover, .ml-quick button:hover { border-color: var(--brand-periwinkle); }
 .ml-quick a[data-primary] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
 
 /* Γραμμή που ανοίγει (details): η σελίδα του Πελάτη μέσα της */
@@ -83,9 +86,17 @@
   background: radial-gradient(100% 120% at 100% 0%, color-mix(in oklab, var(--brand-periwinkle) 22%, transparent), transparent 60%), linear-gradient(160deg, var(--brand-deep), var(--brand-midnight)); }
 .ml-hero-mono { position: absolute; right: .6rem; bottom: -1.6rem; font-size: 7rem; font-weight: 800; letter-spacing: -.08em; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px color-mix(in oklab, var(--brand-periwinkle) 30%, transparent); pointer-events: none; }
 .ml-hero > div { position: relative; display: grid; gap: .25rem; }
-.ml-hero h3 { margin: 0; font-size: 1.5rem; letter-spacing: -.02em; }
+.ml-hero h3, .ml-hero h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.02em; }
+.ml-hero h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+.ml-hero > div > :first-child { justify-self: start; }
+.ml-hero-amount { margin-top: .4rem !important; font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; color: var(--color-text) !important; }
+.ml-hero-amount[data-open="true"] { color: var(--brand-periwinkle) !important; }
+.ml-hero-amount small { display: block; margin-top: .35rem; font-size: .82rem; font-weight: 500; color: var(--color-text-muted); }
 .ml-hero p { margin: 0; color: var(--color-text-muted); }
 .ml-hero .ml-quick { position: relative; }
+.ml-stack { display: grid; gap: .7rem; }
+.ml-stack > section { margin: 0; }
+.ml-box-title { margin: 0; font-size: 1rem; font-weight: 800; }
 .ml-box { border-radius: 14px; border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--brand-deep) 55%, transparent); }
 .ml-box > summary { position: relative; display: grid; gap: .1rem; padding: .8rem 1rem .8rem 1.3rem; list-style: none; cursor: pointer; }
 .ml-box > summary::-webkit-details-marker { display: none; }
@@ -103,6 +114,14 @@
 .ml-table tr.ml-line > td.ml-thumb { display: grid; padding: 0; }
 .ml-table tr.ml-line > td.ml-main { display: grid; }
 .ml-table tr.ml-line > td.ml-quick { display: flex; }
+.ml-table tr.ml-line > td.ml-edit { grid-column: 1 / -1; }
+.ml-table tr.ml-line > td.ml-amount { display: block; }
+
+/* Καταχώρηση μέσα σε κλειστό κουτί (I4): ανοίγει με το «+ Νέα είσπραξη» */
+.ml-new { margin: 0 0 1.2rem; }
+.ml-new > summary strong { font-size: 1.05rem; }
+.ml-new[open] > summary::before { background: var(--brand-rec); }
+.ml-new .kit-panel { margin: 0; border: 0; background: transparent; }
 
 @media (max-width: 40rem) {
   .ml-line { grid-template-columns: auto minmax(0, 1fr); }

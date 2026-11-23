@@ -26,6 +26,7 @@ import {
 } from "./i4-model";
 
 import "./i245.css";
+import "./money-lines.css";
 
 const Spaces = ({ children }: { children: ReactNode }) => (
   <div data-spaces>{children}</div>
@@ -39,6 +40,20 @@ const activeMethodsOf = (methods: readonly PaymentMethod[]) =>
 export interface ReceiptsQuery {
   clientId?: string;
   invoiceId?: string;
+  // Από το «+ Νέα είσπραξη» του Χώρου: το κουτί της καταχώρησης ανοίγει.
+  isNew?: boolean;
+}
+
+function NewReceiptBox(props: { isOpen: boolean; children: ReactNode }) {
+  return (
+    <details className="ml-box ml-new" open={props.isOpen}>
+      <summary>
+        <strong>+ Νέα είσπραξη</strong>
+        <small>Πελάτης → ποσό → τρόπος. Τα Τιμολόγια κλείνουν από το παλαιότερο.</small>
+      </summary>
+      {props.children}
+    </details>
+  );
 }
 
 function FormSlot(props: {
@@ -103,17 +118,23 @@ export async function SpacesReceipts({ query = {} }: { query?: ReceiptsQuery }) 
       {!invoices.ok && (
         <ErrorNotice what="τα Τιμολόγια (για το «Θα εξοφλήσει» και το «Για Τιμολόγιο»)" />
       )}
-      <FormSlot
-        clients={clients}
-        methods={methods.data}
-        rates={rates}
-        openByClient={items === null ? null : openInvoicesByClient(items)}
-        query={query}
-      />
-      <p className="note">
-        Οι τρόποι είσπραξης και τα ποσοστά παρακράτησης αλλάζουν στις Ρυθμίσεις › Οικονομικά. Η διόρθωση και
-        η διαγραφή θέλουν λόγο και γράφονται στο ίχνος.
-      </p>
+      {clients !== null && (
+        <NewReceiptBox
+          isOpen={Boolean(query.isNew || query.clientId || query.invoiceId)}
+        >
+          <FormSlot
+            clients={clients}
+            methods={methods.data}
+            rates={rates}
+            openByClient={items === null ? null : openInvoicesByClient(items)}
+            query={query}
+          />
+          <p className="note">
+            Οι τρόποι είσπραξης και τα ποσοστά παρακράτησης αλλάζουν στις Ρυθμίσεις › Οικονομικά. Η διόρθωση και
+            η διαγραφή θέλουν λόγο και γράφονται στο ίχνος.
+          </p>
+        </NewReceiptBox>
+      )}
       {rows.length === 0 ? (
         <StateNotice kind="empty" title="Καμία Είσπραξη">
           Δεν έχει καταχωρηθεί Είσπραξη ακόμη.

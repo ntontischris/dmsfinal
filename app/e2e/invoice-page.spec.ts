@@ -118,7 +118,7 @@ test("ο Ιδιοκτήτης βάζει ποσοστό, εισπράττει α
   await expect(payments).toContainText(RATE);
   await expect(card(page, "Αφορά")).toContainText(CLIENT);
   await expect(
-    page.getByRole("link", { name: "Καταχώρηση Είσπραξης" }),
+    page.getByRole("link", { name: "Ήρθε πληρωμή" }),
   ).toHaveCount(0);
 });
 

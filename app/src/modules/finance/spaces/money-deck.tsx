@@ -112,7 +112,7 @@ export async function MoneyDeck({ active }: MoneyDeckProps) {
       <div className="ml-head">
         <p>Διάλεξε κάρτα. Ό,τι καίει, βγαίνει πρώτο μέσα της.</p>
         {receipts && (
-          <Link className="ml-cta" href={receipts.href}>
+          <Link className="ml-cta" href={`${receipts.href}?new=1`}>
             + Νέα είσπραξη
           </Link>
         )}

@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import { Entity, Person } from "@/spaces/kit/parts";
 import { fmtDate, fmtMoney } from "@/spaces/screens/shared";
 
-import { correctReceipt, deleteReceipt } from "../actions";
-import { decimalText } from "../money";
 import type { PaymentMethod } from "../types";
 import type { I4Row } from "./i4-adapter";
+import { ReasonBox, type Action } from "./i4-reason";
+
+import "./money-lines.css";
 
 interface I4ListProps {
   rows: readonly I4Row[];
@@ -17,180 +17,11 @@ interface I4ListProps {
   today: string;
 }
 
-type Action = "διόρθωση" | "διαγραφή";
 interface Editing {
   id: string;
   action: Action;
 }
 type Trail = Readonly<Record<string, string>>;
-
-interface Correction {
-  amount: string;
-  receivedOn: string;
-  methodId: string;
-  note: string;
-  // Η παρακράτηση διορθώνεται (d6)· με μηδέν φεύγει και το είδος. Τα δεμένα Τιμολόγια μένουν όπως ήταν.
-  withheld: string;
-  withholdingId: string;
-  invoiceIds: string;
-}
-
-const correctionOf = (r: I4Row): Correction => ({
-  amount: decimalText(r.amount),
-  receivedOn: r.date,
-  methodId: r.methodId,
-  note: r.note,
-  withheld: r.withheld > 0 ? decimalText(r.withheld) : "",
-  withholdingId: r.withholdingId ?? "",
-  invoiceIds: r.invoiceIds.join(","),
-});
-
-const isZero = (text: string): boolean =>
-  (Number(text.replace(",", ".")) || 0) === 0;
-
-// Παρακράτηση μηδέν = χωρίς είδος (η βάση δεν δέχεται είδος χωρίς ποσό).
-const sentOf = (c: Correction): Correction =>
-  isZero(c.withheld) ? { ...c, withheld: "", withholdingId: "" } : c;
-
-const formDataOf = (
-  id: string,
-  reason: string,
-  correction: Correction | null,
-): FormData => {
-  const data = new FormData();
-  data.set("id", id);
-  data.set("reason", reason);
-  Object.entries(correction ?? {}).forEach(([key, value]) =>
-    data.set(key, value),
-  );
-  return data;
-};
-
-// Τα πεδία της διόρθωσης (ποσό, ημερομηνία, Τρόπος, σημείωση)· ο Τρόπος της Είσπραξης μένει διαθέσιμος κι αν αποσύρθηκε.
-function CorrectionFields(props: {
-  value: Correction;
-  methods: readonly PaymentMethod[];
-  onChange: (patch: Partial<Correction>) => void;
-}) {
-  const { value, onChange } = props;
-  return (
-    <>
-      <input
-        className="input"
-        aria-label="Ποσό (€, με ΦΠΑ)"
-        value={value.amount}
-        onChange={(e) => onChange({ amount: e.target.value })}
-      />
-      <input
-        className="input"
-        type="date"
-        aria-label="Ημερομηνία"
-        value={value.receivedOn}
-        onChange={(e) => onChange({ receivedOn: e.target.value })}
-      />
-      <select
-        className="select"
-        aria-label="Τρόπος"
-        value={value.methodId}
-        onChange={(e) => onChange({ methodId: e.target.value })}
-      >
-        {props.methods
-          .filter((m) => !m.retired || m.id === value.methodId)
-          .map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label}
-            </option>
-          ))}
-      </select>
-      <input
-        className="input"
-        aria-label="Σημείωση"
-        placeholder="Σημείωση"
-        value={value.note}
-        onChange={(e) => onChange({ note: e.target.value })}
-      />
-      {value.withholdingId !== "" && (
-        <input
-          className="input"
-          aria-label="Ποσό παρακράτησης (€)"
-          placeholder="Παρακράτηση"
-          value={value.withheld}
-          onChange={(e) => onChange({ withheld: e.target.value })}
-        />
-      )}
-    </>
-  );
-}
-
-function ReasonBox(props: {
-  row: I4Row;
-  action: Action;
-  methods: readonly PaymentMethod[];
-  onDone: (reason: string) => void;
-  onCancel: () => void;
-}) {
-  const [reason, setReason] = useState("");
-  const [correction, setCorrection] = useState(() => correctionOf(props.row));
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const isDelete = props.action === "διαγραφή";
-  const handleConfirm = () =>
-    startTransition(async () => {
-      const data = formDataOf(
-        props.row.id,
-        reason.trim(),
-        isDelete ? null : sentOf(correction),
-      );
-      const state = isDelete
-        ? await deleteReceipt({}, data)
-        : await correctReceipt({}, data);
-      if (state.error) return setError(state.error);
-      props.onDone(reason.trim());
-    });
-  return (
-    <div className="stack">
-      {!isDelete && (
-        <CorrectionFields
-          value={correction}
-          methods={props.methods}
-          onChange={(patch) => setCorrection((prev) => ({ ...prev, ...patch }))}
-        />
-      )}
-      <input
-        className="input"
-        placeholder={`Λόγος ${isDelete ? "διαγραφής" : "διόρθωσης"} (υποχρεωτικός)`}
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-      />
-      <div className="btn-row">
-        <button
-          type="button"
-          className="button"
-          data-danger={isDelete}
-          disabled={reason.trim() === "" || isPending}
-          onClick={handleConfirm}
-        >
-          {isPending ? "Αποθήκευση…" : "Επιβεβαίωση"}
-        </button>
-        <button type="button" className="button" onClick={props.onCancel}>
-          Άκυρο
-        </button>
-      </div>
-      <span
-        className="feedback-msg"
-        data-tone="error"
-        data-shown={error !== null}
-        role="alert"
-      >
-        {error && (
-          <>
-            <span aria-hidden="true">!</span> {error}
-          </>
-        )}
-      </span>
-    </div>
-  );
-}
 
 function RowActions(props: {
   row: I4Row;
@@ -204,9 +35,9 @@ function RowActions(props: {
         Διαγράφηκε. Λόγος: {props.row.deletedReason}
       </span>
     );
-  if (!props.row.canEdit) return <>—</>;
+  if (!props.row.canEdit) return null;
   return (
-    <div className="btn-row">
+    <>
       <button
         type="button"
         className="button"
@@ -221,7 +52,7 @@ function RowActions(props: {
       >
         Διαγραφή
       </button>
-    </div>
+    </>
   );
 }
 
@@ -236,42 +67,55 @@ interface RowProps {
   onCancel: () => void;
 }
 
-const invoicesText = (invoices: I4Row["invoices"]): string => {
-  if (invoices === null) return "—";
-  return invoices.length > 0 ? invoices.join(", ") : "υπόλοιπο υπέρ του πελάτη";
+const invoicesText = (invoices: I4Row["invoices"]): string | null => {
+  if (invoices === null) return null;
+  return invoices.length > 0
+    ? `για ${invoices.join(", ")}`
+    : "υπόλοιπο υπέρ του πελάτη";
 };
+
+const initialsOf = (name: string): string =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+
+const detailsOf = (r: I4Row): string =>
+  [
+    r.deletedReason === null ? invoicesText(r.invoices) : null,
+    r.note || null,
+    r.by ? `καταχώρησε ${r.by}` : null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(" · ");
 
 function ReceiptLine(p: RowProps) {
   const { r } = p;
   const active = p.editing?.id === r.id ? p.editing : null;
   return (
-    <tr>
-      <td data-label="Ημερομηνία">{fmtDate(r.date)}</td>
-      <td data-label="Πελάτης" className="i245-cell">
-        <Entity name={r.clientName} />
+    <tr className="ml-line" data-faded={r.deletedReason !== null || undefined}>
+      <td className="ml-thumb" aria-hidden="true">
+        {initialsOf(r.clientName)}
       </td>
-      <td data-label="Ποσό" className="num i245-money">
+      <td className="ml-main">
+        <span className="ml-tag">
+          {fmtDate(r.date)} · {r.method}
+        </span>
+        <strong>{r.clientName}</strong>
+        <small>{detailsOf(r)}</small>
+      </td>
+      <td className="ml-amount">
         {fmtMoney(r.amount)}
         {r.withheld > 0 && (
-          <div className="muted">
+          <small>
             + {r.withholdingLabel ?? "παρακράτηση"} {fmtMoney(r.withheld)}
-          </div>
+          </small>
         )}
       </td>
-      <td data-label="Για Τιμολόγιο" className="i245-cell">
-        {r.deletedReason === null ? invoicesText(r.invoices) : "—"}
-      </td>
-      <td data-label="Τρόπος" className="i245-cell">
-        {r.method}
-      </td>
-      <td data-label="Σημείωση" className="i245-cell">
-        {r.note || "—"}
-      </td>
-      <td data-label="Ποιος">
-        <Person name={r.by} />
-      </td>
       {p.hasActions && (
-        <td data-label="Ενέργειες" className="i245-cell">
+        <td className={active ? "ml-edit" : "ml-quick"}>
           {active ? (
             <ReasonBox
               row={r}
@@ -292,13 +136,9 @@ function ReceiptLine(p: RowProps) {
 function HeadRow({ hasActions }: { hasActions: boolean }) {
   return (
     <tr>
-      <th>Ημερομηνία</th>
       <th>Πελάτης</th>
-      <th className="num">Ποσό</th>
-      <th>Για Τιμολόγιο</th>
-      <th>Τρόπος</th>
-      <th>Σημείωση</th>
-      <th>Ποιος</th>
+      <th>Είσπραξη</th>
+      <th>Ποσό</th>
       {hasActions && <th>Ενέργειες</th>}
     </tr>
   );
@@ -317,8 +157,7 @@ export function I4List({ rows, methods, hasActions, today }: I4ListProps) {
     setEditing(null);
   };
   return (
-    <div className="scroll i245-glass">
-      <table className="rtable">
+    <table className="ml-table ml-list">
         <thead>
           <HeadRow hasActions={hasActions} />
         </thead>
@@ -337,7 +176,6 @@ export function I4List({ rows, methods, hasActions, today }: I4ListProps) {
             />
           ))}
         </tbody>
-      </table>
-    </div>
+    </table>
   );
 }

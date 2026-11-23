@@ -29,6 +29,7 @@ test("ο Ιδιοκτήτης καταχωρεί Είσπραξη και ο πε
   // 1. Προκαταβολή: Είσπραξη χωρίς Τιμολόγιο.
   await signIn(page, "owner@example.com");
   await openTab(page, "Χρήματα", "Εισπράξεις");
+  await page.locator("summary", { hasText: "+ Νέα είσπραξη" }).click();
   const form = card(page, "Νέα Είσπραξη");
   await form.getByLabel("Πελάτης").selectOption({ label: clientName });
   await form.getByLabel("Ποσό (€, με ΦΠΑ)").fill("400");
