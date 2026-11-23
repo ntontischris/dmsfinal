@@ -5,6 +5,7 @@ import {
   athensStamp,
   builtOf,
   cardDefOf,
+  contentOf,
   needsItems,
 } from "./a1-adapter";
 import { nowOf } from "./a1-now";
@@ -167,5 +168,32 @@ describe("athensStamp", () => {
     expect(athensStamp(new Date("2026-07-01T21:30:00Z"))).toBe(
       "2026-07-02T00:30",
     );
+  });
+});
+
+describe("contentOf agreement_ending", () => {
+  it("should show the end day as a «λήγει» label without a time", () => {
+    const card = cardOf({
+      code: "agreement_ending",
+      grp: "work",
+      link: "/app/clients",
+    });
+    const content = contentOf(
+      card,
+      dataOf([
+        itemOf({
+          id: "a-1",
+          title: "Μηνιαίο P2",
+          subtitle: "Μηνιαίο P2",
+          at: "2026-11-26T22:00:00Z",
+          urgent: true,
+          link: "/app/clients/c-2?tab=agreements",
+        }),
+      ]),
+    );
+    const [row] = content.rows;
+    expect(row.note).toBe("Μηνιαίο P2 · λήγει 27 Νοε");
+    expect(row.meta).toBe("Μηνιαίο P2 · λήγει 27 Νοε");
+    expect(row.at).toBeUndefined();
   });
 });

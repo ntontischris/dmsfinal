@@ -1,7 +1,7 @@
 -- Σήμερα: κάρτα «Λήγει η Συμφωνία» (agreement_ending). Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 -- Οι ημερομηνίες είναι σχετικές με το σήμερα της Αθήνας και μακριά από τα όρια (3, 12, 20, 40 μέρες· −3 για το παρελθόν).
 begin;
-select plan(26);
+select plan(33);
 
 -- ───────────── Βοηθοί ─────────────
 create function public.t_id(p_last text) returns uuid
@@ -113,8 +113,8 @@ select is((select v ->> 'title' from jsonb_array_elements(authz.today_items_agre
   'Ο τίτλος της γραμμής είναι το όνομα του Πελάτη');
 select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_agreement_ending(public.t_id('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_id('f2')::text),
-  'Μηνιαίο P2 · λήγει ' || to_char((now() at time zone 'Europe/Athens')::date + 3, 'DD/MM/YYYY'),
-  'Ο υπότιτλος έχει τίτλο Συμφωνίας και ημερομηνία λήξης');
+  'Μηνιαίο P2',
+  'Ο υπότιτλος είναι ο τίτλος της Συμφωνίας· η ημερομηνία λήξης δίνεται από την εφαρμογή');
 select is((select v ->> 'link' from jsonb_array_elements(authz.today_items_agreement_ending(public.t_id('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_id('f2')::text),
   '/app/clients/' || public.t_id('c2')::text || '?tab=agreements', 'Η γραμμή ανοίγει την καρτέλα Συμφωνιών του Πελάτη');
@@ -164,6 +164,75 @@ select set_config('today.rows', '2', true);
 select is((select count(*)::integer from jsonb_array_elements(authz.today_items_agreement_ending(public.t_id('a1'), null, now())) x (v)),
   2, 'Το όριο γραμμών κόβει τις γραμμές στο όριο');
 select is(authz.today_count_agreement_ending(public.t_id('a1'), null, now()), 3, 'Το πλήθος μένει ολόκληρο πίσω από το όριο');
+
+-- ───────────── Μπλοκάρισμα: μεταγενέστερες Συμφωνίες, ζωντανές και νεκρές προτάσεις, όριο προθεσμίας ─────────────
+-- Τελευταίο μπλοκ: προσθέτει γραμμές, γι' αυτό μπαίνει μετά τους ελέγχους πάνω. Το όριο γραμμών μηδενίζεται.
+-- 91 μπλοκάρεται από 92 (υπογεγραμμένη, έναρξη μετά τη λήξη)· 93 δεν μπλοκάρεται από 94 (λήγει νωρίτερα, έναρξη πριν)·
+-- 95 δεν μπλοκάρεται από 96 (άλλος Πελάτης)· 97 δεν μπλοκάρεται από 98 (χαμένη, χωρίς έναρξη)·
+-- 99 δεν μπλοκάρεται από 9a (ληγμένη)· 9b δεν μπλοκάρεται από 9c (ισχύς έληξε πριν σήμερα).
+select set_config('today.rows', '', true);
+set session_replication_role = replica;
+
+insert into public.clients (id, name, contact_name, contact_email, manager_id) values
+  (public.t_id('b1'), 'Πελάτης Β1 (τεστ)', 'Επαφή Β1', 'client14@example.com', public.t_id('a1')),
+  (public.t_id('b2'), 'Πελάτης Β2 (τεστ)', 'Επαφή Β2', 'client15@example.com', public.t_id('a1')),
+  (public.t_id('b3'), 'Πελάτης Β3 (τεστ)', 'Επαφή Β3', 'client16@example.com', public.t_id('a1')),
+  (public.t_id('b4'), 'Πελάτης Β4 (τεστ)', 'Επαφή Β4', 'client17@example.com', public.t_id('a1')),
+  (public.t_id('b5'), 'Πελάτης Β5 (τεστ)', 'Επαφή Β5', 'client18@example.com', public.t_id('a1')),
+  (public.t_id('b6'), 'Πελάτης Β6 (τεστ)', 'Επαφή Β6', 'client19@example.com', public.t_id('a1')),
+  (public.t_id('b7'), 'Πελάτης Β7 (τεστ)', 'Επαφή Β7', 'client20@example.com', public.t_id('a1'));
+
+insert into public.opportunities (id, client_id, title, stage_id, source_id, manager_id, next_step, next_step_due)
+select public.t_id(x.oid), public.t_id(x.cid), 'Ευκαιρία ' || x.oid,
+       (select s.id from public.sales_stages s where s.code = 'proposal'),
+       (select s.id from public.sales_sources s where s.code = 'phone'),
+       public.t_id('a1'), 'Επόμενο', (now() at time zone 'Europe/Athens')::date + 3
+  from (values ('d1', 'b1'), ('d2', 'b1'), ('d3', 'b2'), ('d4', 'b2'), ('d5', 'b3'), ('d6', 'b4'),
+               ('d7', 'b5'), ('d8', 'b5'), ('d9', 'b6'), ('da', 'b6'), ('db', 'b7'), ('dc', 'b7')) as x (oid, cid);
+
+with t as (select (now() at time zone 'Europe/Athens')::date as today)
+insert into public.agreements (id, opportunity_id, kind, title, state, path, valid_until, start_on, duration_months, end_on,
+                               payment_days, unused_provisions, renewal, filming_notice_hours, filming_cancel_hours,
+                               late_cancel_burns, no_show_burns, signed_at, created_at)
+select public.t_id(x.aid), public.t_id(x.oid), 'monthly', x.title, x.state, x.path, t.today + x.valid_off,
+       t.today + x.start_off, 6, t.today + x.end_off,
+       15, 'lost', 'new_opportunity', 48, 48, false, false,
+       case when x.state = 'proposal' then null else now() - interval '2 days' end,
+       case when x.state = 'proposal' then now() else now() - interval '2 days' end
+  from t
+  cross join (values
+    ('91', 'd1', 'Ενεργή, μπλοκαρισμένη', 'active', 'signed', -100, 12, 5),
+    ('92', 'd2', 'Υπογεγραμμένη επόμενη', 'signed', 'signed', 20, 50, 5),
+    ('93', 'd3', 'Ενεργή, δεν μπλοκάρεται', 'active', 'signed', -100, 12, 5),
+    ('94', 'd4', 'Λήγει νωρίτερα', 'active', 'signed', -100, 5, 5),
+    ('95', 'd5', 'Ενεργή, άλλος Πελάτης', 'active', 'signed', -100, 12, 5),
+    ('96', 'd6', 'Πρόταση άλλου Πελάτη', 'proposal', 'sent', 20, 50, 5),
+    ('97', 'd7', 'Ενεργή, χαμένη πρόταση', 'active', 'signed', -100, 12, 5),
+    ('98', 'd8', 'Χαμένη πρόταση', 'proposal', 'lost', null, 50, 5),
+    ('99', 'd9', 'Ενεργή, ληγμένη πρόταση', 'active', 'signed', -100, 12, 5),
+    ('9a', 'da', 'Ληγμένη πρόταση', 'proposal', 'expired', null, 50, 5),
+    ('9b', 'db', 'Ενεργή, πρόταση με ληγμένη ισχύ', 'active', 'signed', -100, 12, 5),
+    ('9c', 'dc', 'Πρόταση με ληγμένη ισχύ', 'proposal', 'sent', null, 50, -3)
+  ) as x (aid, oid, title, state, path, start_off, end_off, valid_off);
+
+update public.agreement_defaults set renewal_lead_days = 45 where id;
+
+reset session_replication_role;
+
+select ok(not (public.t_id('91')::text = any(public.t_ids('a1'))),
+  'Ενεργή Συμφωνία μπλοκάρεται από μεταγενέστερη υπογεγραμμένη με έναρξη μετά τη λήξη');
+select ok(public.t_id('93')::text = any(public.t_ids('a1')),
+  'Μεταγενέστερη Συμφωνία που λήγει νωρίτερα (έναρξη πριν τη λήξη) δεν μπλοκάρει');
+select ok(public.t_id('95')::text = any(public.t_ids('a1')),
+  'Μεταγενέστερη πρόταση άλλου Πελάτη δεν μπλοκάρει');
+select ok(public.t_id('97')::text = any(public.t_ids('a1')),
+  'Χαμένη πρόταση χωρίς έναρξη δεν μπλοκάρει');
+select ok(public.t_id('99')::text = any(public.t_ids('a1')),
+  'Ληγμένη πρόταση χωρίς έναρξη δεν μπλοκάρει');
+select ok(public.t_id('9b')::text = any(public.t_ids('a1')),
+  'Πρόταση με ισχύ που έληξε πριν από σήμερα δεν μπλοκάρει');
+select ok(public.t_id('f4')::text = any(public.t_ids('a1')),
+  'Με renewal_lead_days 45 η λήξη σε 40 μέρες μπαίνει');
 
 select * from finish();
 rollback;
