@@ -1,12 +1,14 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import "../../finance/spaces/money-lines.css";
+import { getTodayClosed } from "../queries";
 import { CardError } from "./a1-card";
+import { closedNotesOf } from "./a1-closed";
 import { lineSubOf } from "./a1-facts";
 import { isNewSince, laterLineOf } from "./a1-later";
 import { LaterButton, UndoLater } from "./a1-later-buttons";
-import type { ListGroup, ListLine } from "./a1-list";
+import { remainingOf, type ListGroup, type ListLine } from "./a1-list";
 import type { CardDef } from "./a1-model";
 import type { CompanyItem, CompanyState } from "./a1-topline";
 
@@ -172,6 +174,17 @@ function CompanyNote({ company }: { company: CompanyState }) {
   return company.isClear ? <p className="a1-quiet">Όλα λειτουργούν</p> : null;
 }
 
+// «Έκλεισες N» (Σήμερα list): σε δικό του Suspense, ώστε η λίστα να μην περιμένει τη βάση. Αν αποτύχει, τίποτα.
+async function ClosedNote({ remaining }: { remaining: number }) {
+  const result = await getTodayClosed();
+  if (!result.ok || !result.data) return null;
+  const notes = closedNotesOf({ ...result.data, remaining });
+  if (notes.length === 0) return null;
+  return (
+    <p className="a1-quiet">{notes.join(" · ")}</p>
+  );
+}
+
 export function TodayList({
   topline,
   panels,
@@ -185,9 +198,13 @@ export function TodayList({
 }: TodayListProps) {
   const laterLine = laterLineOf(later.length, stamp);
   const today = stamp.slice(0, 10);
+  const remaining = remainingOf(groups);
   return (
     <>
       <TopLine topline={topline} panels={panels} />
+      <Suspense fallback={null}>
+        <ClosedNote remaining={remaining} />
+      </Suspense>
       {groups.map((group) => (
         <GroupBlock
           key={group.id}

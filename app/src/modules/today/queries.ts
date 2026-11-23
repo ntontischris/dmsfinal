@@ -7,12 +7,14 @@ import {
   parseCardData,
   parseSeenAt,
   parseSnoozed,
+  parseTodayClosed,
   parseTodayCounts,
   parseTodayKpis,
   parseTodayMoney,
   parseTodayProgramme,
   parseTodayTeam,
   type CardData,
+  type TodayClosed,
   type TodayCounts,
   type TodayKpis,
   type TodayMoney,
@@ -54,6 +56,13 @@ export async function getTodayKpis(): Promise<ReadResult<TodayKpis | null>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
   return read("getTodayKpis", supabase.rpc("today_kpis"), parseTodayKpis);
+}
+
+// «Έκλεισες N» (Σήμερα list): null = ο θεατής δεν έχει τη Σήμερα. Σε αποτυχία το ίδιο με το null (η οθόνη δεν δείχνει τίποτα).
+export async function getTodayClosed(): Promise<ReadResult<TodayClosed | null>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("getTodayClosed", supabase.rpc("today_closed"), parseTodayClosed);
 }
 
 export async function getTodayTeam(): Promise<ReadResult<TodayTeam | null>> {
