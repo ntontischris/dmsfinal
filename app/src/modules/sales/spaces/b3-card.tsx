@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type HTMLAttributes } from "react";
 
 import { useKeptForm } from "@/lib/use-kept-form";
 import { Due, Person } from "@/spaces/kit/parts";
@@ -160,14 +160,17 @@ export function BoardCardLine({
   today,
   stages,
   lossReasons,
+  dragProps,
 }: {
   card: BoardCard;
   today: string;
   stages: readonly ListItem[];
   lossReasons: readonly ListItem[];
+  dragProps?: HTMLAttributes<HTMLDivElement>;
 }) {
   return (
     <div
+      {...dragProps}
       className="kcard b3-card ml-line"
       data-forgotten={card.isForgotten}
       data-urgent={card.isForgotten || undefined}

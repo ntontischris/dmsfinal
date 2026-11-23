@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import type { ListItem } from "../types";
 import type { BoardCard } from "./b3-adapter";
 import { CallList } from "./b3-call-list";
+import { useStageDrag } from "./b3-drag";
 import { BoardCardLine } from "./b3-card";
 import { QUIET_DAYS, cardMatches, type BoardFilter } from "./b3-filters";
 
@@ -56,13 +57,21 @@ function StageColumns(props: {
   columns: readonly ListItem[];
   open: readonly BoardCard[];
   renderCard: (card: BoardCard) => ReactNode;
+  drag: ReturnType<typeof useStageDrag>;
 }) {
   return (
     <div className="kanban b3-kanban">
       {props.columns.map((stage) => {
-        const inStage = props.open.filter((card) => card.stageId === stage.id);
+        const inStage = props.open.filter(
+          (card) => props.drag.stageOf(card) === stage.id,
+        );
         return (
-          <section key={stage.id} className="kcol" aria-label={stage.label}>
+          <section
+            key={stage.id}
+            className="kcol"
+            aria-label={stage.label}
+            {...props.drag.columnProps(stage.id)}
+          >
             <h3>
               <span>{stage.label}</span>
               <span className="muted">{inStage.length}</span>
@@ -111,6 +120,7 @@ export function PipelineBoard({
   lossReasons,
 }: BoardProps) {
   const [filter, setFilter] = useState<BoardFilter>("all");
+  const drag = useStageDrag();
   const allOpen = cards.filter((card) => card.outcome === "open");
   const open = allOpen.filter((card) => cardMatches(card, filter, today));
   const closed = cards.filter((card) => card.outcome !== "open");
@@ -126,6 +136,7 @@ export function PipelineBoard({
       today={today}
       stages={stages}
       lossReasons={lossReasons}
+      dragProps={drag.cardProps(card)}
     />
   );
   return (
@@ -143,7 +154,17 @@ export function PipelineBoard({
       {filter !== "all" ? (
         <CallList cards={open} filter={filter} today={today} />
       ) : (
-        <StageColumns columns={columns} open={open} renderCard={renderCard} />
+        <StageColumns
+          columns={columns}
+          open={open}
+          renderCard={renderCard}
+          drag={drag}
+        />
+      )}
+      {drag.error && (
+        <p className="note" role="alert">
+          {drag.error}
+        </p>
       )}
       <p className="note">
         «Κερδισμένη» δεν μπαίνει με το χέρι: γίνεται μόνη της όταν υπογράψει ο

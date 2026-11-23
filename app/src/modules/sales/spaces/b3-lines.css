@@ -20,6 +20,12 @@
 & .b3-counts strong { color: var(--color-text); }
 
 /* Στήλες: πιο ήρεμο φόντο, η κάρτα είναι γραμμή-κάρτα (πλακίδιο, ετικέτα, τίτλος, ποσό) */
+/* Οι Στήλες μοιράζονται το πλάτος: όλες φαίνονται χωρίς οριζόντια κύλιση στην οθόνη υπολογιστή */
+& .kanban.b3-kanban { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(12.5rem, 1fr); align-items: start; }
+& .b3-kanban .kcol { min-width: 0; transition: border-color .2s, background-color .2s; }
+& .b3-kanban .kcol[data-drop-over] { border-color: var(--brand-periwinkle); background: color-mix(in oklab, var(--brand-periwinkle) 12%, transparent); }
+& .b3-kanban .kcard[draggable="true"] { cursor: grab; }
+& .b3-kanban .kcard[draggable="true"]:active { cursor: grabbing; }
 & .b3-kanban .kcol { border-radius: 18px; border-color: color-mix(in oklab, var(--color-text) 8%, transparent); background: color-mix(in oklab, var(--brand-deep) 45%, transparent); }
 & :is(.b3-kanban, .b3-closed) .kcard.b3-card.ml-line {
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: .3rem .65rem;
@@ -45,4 +51,7 @@
 /* Κλεισμένες και «Πάρε τηλέφωνο» */
 & .b3-calls { display: grid; gap: .6rem; }
 & .b3-calls .ml-main a { color: var(--color-text); }
+@media (max-width: 40rem) {
+  & .kanban.b3-kanban { grid-auto-flow: row; grid-auto-columns: auto; }
+}
 }
