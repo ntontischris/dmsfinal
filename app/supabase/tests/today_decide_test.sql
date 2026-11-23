@@ -210,14 +210,14 @@ select is((select count(*)::integer
 -- ───────────── Γυρίσματα προς έγκριση ─────────────
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'id'),
   array['booking:00000000-0000-0000-0000-000000000201', 'reschedule:00000000-0000-0000-0000-000000000206',
-        'cancel:00000000-0000-0000-0000-000000000203'],
+        'cancel:00000000-0000-0000-0000-000000000203', 'booking:00000000-0000-0000-0000-000000000202'],
   'Κρατήσεις, μεταθέσεις και ακυρώσεις, τα πιο κοντινά πρώτα· όχι το προγραμματισμένο ούτε η Εσωτερική');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'urgent'),
-  array['true', 'true', 'false'], 'Επείγον σε έως 24 ώρες: η κράτηση απόψε και η νέα ώρα της μετάθεσης');
+  array['true', 'true', 'false', 'false'], 'Επείγον σε έως 24 ώρες: η κράτηση απόψε και η νέα ώρα της μετάθεσης');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'title'),
-  array['Πελάτης Ένα: κράτηση', 'Πελάτης Ένα: ζητά μετάθεση', 'Πελάτης Ένα: ζητά ακύρωση'], 'Τι ζητά ο κάθε Πελάτης');
+  array['Πελάτης Ένα: κράτηση', 'Πελάτης Ένα: ζητά μετάθεση', 'Πελάτης Ένα: ζητά ακύρωση', 'Πελάτης Ένα: κράτηση'], 'Τι ζητά ο κάθε Πελάτης');
 select is(public.t_field(authz.today_items_filming_approvals(public.t_uid('a1'), null, timestamptz '2026-03-04 21:00+00'), 'urgent'),
-  array['true', 'true', 'true'], 'Περασμένο Γύρισμα: και πάλι επείγον');
+  array['true', 'true', 'true', 'false'], 'Περασμένο Γύρισμα: και πάλι επείγον· η κράτηση της 10/3 όχι');
 
 -- ───────────── Διαγραφές από το Google ─────────────
 select is(public.t_field(authz.today_items_google_deletions(public.t_uid('a1'), null, timestamptz '2026-03-03 10:00+00'), 'id'),
