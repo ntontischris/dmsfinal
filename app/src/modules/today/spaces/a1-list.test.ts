@@ -120,6 +120,16 @@ describe("listOf", () => {
     expect(labelsOf(findGroup(groups, "externals"))).toEqual(["s"]);
   });
 
+  it("should put filming_no_script in the time group", () => {
+    const groups = listOf({
+      built: [builtOf("filming_no_script", [rowOf("g", { isUrgent: true })])],
+      failed: new Set(),
+      stamp: STAMP,
+    });
+    expect(groupIds(groups)).toEqual(["time"]);
+    expect(labelsOf(findGroup(groups, "time"))).toEqual(["g"]);
+  });
+
   it("should put version_late in the externals group", () => {
     const groups = listOf({
       built: [builtOf("version_late", [rowOf("v", { isUrgent: true })])],

@@ -23,6 +23,7 @@ export const GROUPS: readonly { id: TodayGroupId; title: string }[] = [
 // (supabase/migrations/20261123110100_today_closed_fix.sql, «Έκλεισες»).
 export const GROUP_OF: Readonly<Record<string, TodayGroupId>> = {
   week_filming: "time",
+  filming_no_script: "time",
   unread_messages: "client",
   requests_mentions: "client",
   filming_approvals: "client",
