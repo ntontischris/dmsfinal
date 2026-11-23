@@ -34,7 +34,13 @@ const builtOf = (id: string, count: number): Built => ({
 
 describe("toplineOf", () => {
   it("should join remaining and money", () => {
-    expect(toplineOf(base)).toBe("Μένουν 7 · 1.840 € να μπουν");
+    expect(toplineOf(base)).toBe("Μένουν 7 · 1.840 € προς τιμολόγηση");
+  });
+
+  it("should split the money into overdue plus to invoice", () => {
+    expect(toplineOf({ ...base, overdueCents: 375100, toInvoiceCents: 490000 })).toBe(
+      "Μένουν 7 · 3.751 € ληξιπρόθεσμα + 4.900 € προς τιμολόγηση",
+    );
   });
 
   it("should omit money without the amounts permission", () => {

@@ -1,4 +1,4 @@
-// Η γραμμή κορυφής της Σήμερα: «Μένουν N · Υ € να μπουν», και η εταιρεία (ομάδα 7) όταν δεν έχει επείγον.
+// Η γραμμή κορυφής της Σήμερα: «Μένουν N · Χ € ληξιπρόθεσμα + Υ € προς τιμολόγηση», και η εταιρεία (ομάδα 7) όταν δεν έχει επείγον.
 // Καθαρές συναρτήσεις: το πλήθος και τα ποσά έρχονται έτοιμα από τη λίστα και από το today_money.
 
 import type { Built } from "./a1-adapter";
@@ -39,8 +39,11 @@ const moneyTextOf = ({
   canSeeAmounts,
 }: ToplineInput): string | null => {
   if (!canSeeAmounts) return null;
-  const total = (overdueCents ?? 0) + (toInvoiceCents ?? 0);
-  return total > 0 ? `${wholeEuros(total)} να μπουν` : null;
+  const parts = [
+    overdueCents ? `${wholeEuros(overdueCents)} ληξιπρόθεσμα` : null,
+    toInvoiceCents ? `${wholeEuros(toInvoiceCents)} προς τιμολόγηση` : null,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" + ") : null;
 };
 
 export function toplineOf(input: ToplineInput): string {

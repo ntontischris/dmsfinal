@@ -199,13 +199,23 @@ describe("listOf", () => {
   it("should add a more link when count exceeds loaded rows", () => {
     const rows = Array.from({ length: 10 }, (_, i) => rowOf(`r${i}`));
     const groups = listOf({
-      built: [builtOf("to_invoice", rows, 34)],
+      built: [builtOf("overdue_invoices", rows, 34)],
       failed: new Set(),
       stamp: STAMP,
     });
     expect(findGroup(groups, "money")?.more).toEqual([
-      { count: 24, href: "/x" },
+      { cardId: "overdue_invoices", count: 24, href: "/x" },
     ]);
+  });
+
+  it("should give to_invoice no more link because its count is billables and its rows are Clients", () => {
+    const rows = Array.from({ length: 3 }, (_, i) => rowOf(`r${i}`));
+    const groups = listOf({
+      built: [builtOf("to_invoice", rows, 12)],
+      failed: new Set(),
+      stamp: STAMP,
+    });
+    expect(findGroup(groups, "money")?.more).toEqual([]);
   });
 
   it("should drop empty groups", () => {
@@ -282,7 +292,7 @@ describe("remainingOf", () => {
     const groups = listOf({
       built: [
         builtOf("unread_messages", [rowOf("u1"), rowOf("u2")]),
-        builtOf("to_invoice", rows, 34),
+        builtOf("overdue_invoices", rows, 34),
       ],
       failed: new Set(),
       stamp: STAMP,

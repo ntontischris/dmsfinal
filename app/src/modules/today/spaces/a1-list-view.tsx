@@ -6,7 +6,12 @@ import { getTodayClosed } from "../queries";
 import { CardError } from "./a1-card";
 import { closedNoteOf } from "./a1-closed";
 import { TodayDeck } from "./a1-deck";
-import { initialsOf, lineTagOf, selectedGroupOf } from "./a1-deck-model";
+import {
+  lineTagOf,
+  moreLabelOf,
+  selectedGroupOf,
+  thumbOf,
+} from "./a1-deck-model";
 import { lineSubOf, wholeEuros } from "./a1-facts";
 import { isNewSince, laterLineOf } from "./a1-later";
 import { LaterButton, UndoLater } from "./a1-later-buttons";
@@ -78,6 +83,7 @@ function LineRow({
   const action = ACTION_LABEL[cardId] ?? DEFAULT_ACTION;
   const sub = lineSubOf({ row, cardId, isDecision, today });
   const tag = lineTagOf(row, today);
+  const thumb = thumbOf(line);
   return (
     <div className="ml-line" data-urgent={row.isUrgent || undefined}>
       <span
@@ -85,8 +91,9 @@ function LineRow({
         {...(row.isUrgent
           ? { role: "img", "aria-label": "επείγον" }
           : { "aria-hidden": true })}
+        data-icon={thumb.isIcon || undefined}
       >
-        {initialsOf(row.label)}
+        {thumb.text}
       </span>
       <span className="ml-main">
         {tag && <span className="ml-tag">{tag}</span>}
@@ -152,7 +159,7 @@ function GroupBlock({
       </div>
       {group.more.map((item) => (
         <p key={item.href} className="a1-quiet">
-          <Link href={item.href}>Και {item.count} ακόμα →</Link>
+          <Link href={item.href}>{moreLabelOf(item)}</Link>
         </p>
       ))}
     </section>
@@ -208,10 +215,14 @@ export function TodayList({
   const laterLine = laterLineOf(later.length, stamp);
   const today = stamp.slice(0, 10);
   const remaining = remainingOf(groups);
-  const active = selectedGroupOf(groups, requestedGroup);
+  const active = selectedGroupOf(groups, requestedGroup, decisionIds);
   return (
     <>
-      <TodayDeck groups={groups} activeId={active?.id ?? null} />
+      <TodayDeck
+        groups={groups}
+        activeId={active?.id ?? null}
+        decisionIds={decisionIds}
+      />
       <TopLine topline={topline} panels={panels} />
       <Suspense fallback={null}>
         <ClosedNote remaining={remaining} />

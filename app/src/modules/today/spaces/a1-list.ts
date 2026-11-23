@@ -59,6 +59,7 @@ export interface ListLine {
 }
 
 export interface ListMore {
+  cardId: string;
   count: number;
   href: string;
 }
@@ -129,11 +130,16 @@ const summaryRowOf = ({ card, content }: Built): CardRow | null => {
       };
 };
 
-// Η εβδομάδα κρύβει ό,τι είναι εκτός σήμερα/αύριο στο «Πρόγραμμα», όχι στο «και άλλα N».
+// Κάρτες χωρίς «και άλλα N»: η εβδομάδα κρύβει ό,τι είναι εκτός σήμερα/αύριο στο «Πρόγραμμα»· το «Προς τιμολόγηση»
+// μετράει Τιμολογητέα αλλά δίνει μία γραμμή ανά Πελάτη (όλοι οι Πελάτες φαίνονται), άρα η διαφορά δεν είναι κρυμμένες γραμμές.
+const NO_MORE: ReadonlySet<string> = new Set(["week_filming", "to_invoice"]);
+
 const moreOf = ({ card, content }: Built): ListMore[] => {
-  if (card.id === "week_filming") return [];
+  if (NO_MORE.has(card.id)) return [];
   const hidden = content.count - content.rows.length;
-  return hidden > 0 ? [{ count: hidden, href: content.allHref }] : [];
+  return hidden > 0
+    ? [{ cardId: card.id, count: hidden, href: content.allHref }]
+    : [];
 };
 
 const prepareCard = (built: Built, stamp: string): Prepared => {

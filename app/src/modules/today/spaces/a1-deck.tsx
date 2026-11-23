@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import "../../finance/spaces/money-deck.css";
 import "./a1-deck.css";
-import { facesOf, isUrgentGroup } from "./a1-deck-model";
+import { breakdownOf, facesOf, isUrgentGroup } from "./a1-deck-model";
 import { countedOf, type ListGroup } from "./a1-list";
 
 // Οι ομάδες της Σήμερα ως κάρτες-κάδρα, όπως τα «Χρήματα»: διαλέγεις κάρτα, η λίστα της ανοίγει από κάτω (?g=).
@@ -12,26 +12,16 @@ const TONE_OF: Readonly<Partial<Record<ListGroup["id"], string>>> = {
   company: "text",
 };
 
-const HINT_OF: Readonly<Record<ListGroup["id"], string>> = {
-  time: "γυρίσματα σήμερα και αύριο",
-  client: "απάντησε, ενέκρινε, δες",
-  mine: "εργασίες και παραδοτέα",
-  externals: "συνεργάτες και εκκρεμότητες",
-  money: "τιμολόγησε, κυνήγησε",
-  keep: "επόμενα βήματα και Συμφωνίες",
-  company: "ό,τι δεν λειτουργεί",
-};
-
 function GroupReel({
   group,
-  index,
   isActive,
+  decisionIds,
 }: {
   group: ListGroup;
-  index: number;
   isActive: boolean;
+  decisionIds: ReadonlySet<string>;
 }) {
-  const isUrgent = isUrgentGroup(group);
+  const isUrgent = isUrgentGroup(group, decisionIds);
   return (
     <Link
       className="money-reel"
@@ -43,7 +33,6 @@ function GroupReel({
     >
       <span className="money-reel-vf" aria-hidden />
       <span className="money-reel-top">
-        <span>{String(index + 1).padStart(2, "0")}</span>
         {isUrgent && <i className="money-rec">ΕΠΕΙΓΕΙ</i>}
       </span>
       <span className="money-reel-count">{countedOf(group)}</span>
@@ -54,7 +43,7 @@ function GroupReel({
             <span key={face}>{face}</span>
           ))}
         </span>
-        <small>{HINT_OF[group.id]}</small>
+        <small>{breakdownOf(group)}</small>
       </span>
     </Link>
   );
@@ -63,9 +52,11 @@ function GroupReel({
 export function TodayDeck({
   groups,
   activeId,
+  decisionIds,
 }: {
   groups: readonly ListGroup[];
   activeId: string | null;
+  decisionIds: ReadonlySet<string>;
 }) {
   return (
     <>
@@ -73,12 +64,12 @@ export function TodayDeck({
         <p>Διάλεξε κάρτα. Ό,τι καίει, βγαίνει πρώτο μέσα της.</p>
       </div>
       <nav className="money-deck today-deck" aria-label="Οι ομάδες της Σήμερα">
-        {groups.map((group, index) => (
+        {groups.map((group) => (
           <GroupReel
             key={group.id}
             group={group}
-            index={index}
             isActive={group.id === activeId}
+            decisionIds={decisionIds}
           />
         ))}
       </nav>
