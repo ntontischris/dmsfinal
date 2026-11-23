@@ -1,6 +1,7 @@
-// Η γραμμή κορυφής της Σήμερα: «Μένουν N · Υ € να μπουν», και η ήσυχη ένδειξη της ομάδας «Η εταιρεία δουλεύει».
+// Η γραμμή κορυφής της Σήμερα: «Μένουν N · Υ € να μπουν», και η εταιρεία (ομάδα 7) όταν δεν έχει επείγον.
 // Καθαρές συναρτήσεις: το πλήθος και τα ποσά έρχονται έτοιμα από τη λίστα και από το today_money.
 
+import type { Built } from "./a1-adapter";
 import { wholeEuros } from "./a1-facts";
 import { GROUP_OF, type ListGroup } from "./a1-list";
 
@@ -10,6 +11,20 @@ export interface ToplineInput {
   toInvoiceCents: number | null;
   // Το today_money φόρτωσε (ο Ρόλος βλέπει ποσά): αλλιώς κανένα ποσό.
   canSeeAmounts: boolean;
+}
+
+// Μία εταιρική κάρτα με πλήθος, που δεν φαίνεται ως γραμμή της ομάδας 7 (μόνο τα επείγοντα μπαίνουν εκεί).
+export interface CompanyItem {
+  id: string;
+  title: string;
+  count: number;
+  href: string;
+}
+
+export interface CompanyState {
+  items: readonly CompanyItem[];
+  // Όλες οι εταιρικές κάρτες είναι χωρίς πλήθος και η ομάδα 7 λείπει: «Όλα λειτουργούν».
+  isClear: boolean;
 }
 
 const COMPANY_GROUP = "company";
@@ -46,11 +61,43 @@ export function toInvoiceCentsOf(groups: readonly ListGroup[]): number | null {
     : null;
 }
 
-// Η ομάδα «Η εταιρεία δουλεύει» λείπει (δεν έχει επείγον) αλλά η βάση έδωσε έστω μία από τις κάρτες της.
-export function isCompanyQuietOf(
+const isCompanyCard = (item: Built): boolean =>
+  GROUP_OF[item.card.id] === COMPANY_GROUP;
+
+// Οι εταιρικές κάρτες με πλήθος που δεν φαίνονται ήδη ως γραμμές ή σφάλματα της ομάδας 7.
+const companyItemsOf = (
+  built: readonly Built[],
   groups: readonly ListGroup[],
-  cardCodes: readonly string[],
-): boolean {
+): CompanyItem[] => {
+  const company = groups.find((group) => group.id === COMPANY_GROUP);
+  const listed = new Set([
+    ...(company?.lines.map((line) => line.cardId) ?? []),
+    ...(company?.failed ?? []),
+  ]);
+  return built
+    .filter(
+      (item) =>
+        isCompanyCard(item) &&
+        !listed.has(item.card.id) &&
+        item.content.count > 0,
+    )
+    .map(({ card, content }) => ({
+      id: card.id,
+      title: card.title,
+      count: content.count,
+      href: content.allHref,
+    }));
+};
+
+// Η εταιρεία στη σύνοψη της λίστας: όσα θέλουν προσοχή (πλήθος) και, όταν δεν υπάρχει τίποτα, το «Όλα λειτουργούν».
+export function companyStateOf(
+  built: readonly Built[],
+  groups: readonly ListGroup[],
+): CompanyState {
   const isShown = groups.some((group) => group.id === COMPANY_GROUP);
-  return !isShown && cardCodes.some((code) => GROUP_OF[code] === COMPANY_GROUP);
+  const items = companyItemsOf(built, groups);
+  return {
+    items,
+    isClear: !isShown && items.length === 0 && built.some(isCompanyCard),
+  };
 }

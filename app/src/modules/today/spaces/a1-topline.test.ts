@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import type { Built } from "./a1-adapter";
 import type { ListGroup } from "./a1-list";
-import { isCompanyQuietOf, toInvoiceCentsOf, toplineOf } from "./a1-topline";
+import { companyStateOf, toInvoiceCentsOf, toplineOf } from "./a1-topline";
 
 const base = {
   remaining: 7,
@@ -13,13 +14,8 @@ const base = {
 const groupOf = (
   id: ListGroup["id"],
   lines: ListGroup["lines"] = [],
-): ListGroup => ({
-  id,
-  title: id,
-  lines,
-  more: [],
-  failed: [],
-});
+  failed: readonly string[] = [],
+): ListGroup => ({ id, title: id, lines, more: [], failed });
 
 const lineOf = (cardId: string, amountCents?: number) => ({
   cardId,
@@ -29,6 +25,11 @@ const lineOf = (cardId: string, amountCents?: number) => ({
     href: "/x",
     ...(amountCents !== undefined ? { amountCents } : {}),
   },
+});
+
+const builtOf = (id: string, count: number): Built => ({
+  card: { id, title: `Τίτλος ${id}`, source: "A1", kind: "status" },
+  content: { count, rows: [], allHref: `/app/${id}`, emptyText: "" },
 });
 
 describe("toplineOf", () => {
@@ -54,17 +55,47 @@ describe("toplineOf", () => {
   });
 });
 
-describe("isCompanyQuietOf", () => {
-  it("should show the quiet line when the company group is left out and its card is loaded", () => {
-    expect(isCompanyQuietOf([groupOf("money")], ["health", "gdpr"])).toBe(true);
+describe("companyStateOf", () => {
+  it("should say all is well when the company group is left out and every company card is at zero", () => {
+    const state = companyStateOf(
+      [builtOf("health", 0), builtOf("gdpr", 0)],
+      [groupOf("money")],
+    );
+    expect(state).toEqual({ items: [], isClear: true });
   });
 
-  it("should not show the quiet line when the company group is visible", () => {
-    expect(isCompanyQuietOf([groupOf("company")], ["health"])).toBe(false);
+  it("should list each company card with a count and not say all is well", () => {
+    const state = companyStateOf(
+      [builtOf("health", 0), builtOf("gdpr", 2)],
+      [groupOf("money")],
+    );
+    expect(state.isClear).toBe(false);
+    expect(state.items).toEqual([
+      { id: "gdpr", title: "Τίτλος gdpr", count: 2, href: "/app/gdpr" },
+    ]);
   });
 
-  it("should not show the quiet line when no company card was loaded", () => {
-    expect(isCompanyQuietOf([groupOf("money")], ["to_invoice"])).toBe(false);
+  it("should leave out company cards already shown as lines of the company group", () => {
+    const state = companyStateOf(
+      [builtOf("health", 1), builtOf("gdpr", 2)],
+      [groupOf("company", [lineOf("health")])],
+    );
+    expect(state.isClear).toBe(false);
+    expect(state.items.map((item) => item.id)).toEqual(["gdpr"]);
+  });
+
+  it("should leave out a failed company card because the group shows it", () => {
+    const state = companyStateOf(
+      [builtOf("health", 3)],
+      [groupOf("company", [], ["health"])],
+    );
+    expect(state).toEqual({ items: [], isClear: false });
+  });
+
+  it("should not say all is well when no company card was loaded", () => {
+    expect(
+      companyStateOf([builtOf("to_invoice", 0)], [groupOf("money")]),
+    ).toEqual({ items: [], isClear: false });
   });
 });
 

@@ -3,10 +3,12 @@ import type { ReactNode } from "react";
 
 import "../../finance/spaces/money-lines.css";
 import { CardError } from "./a1-card";
+import { decisionFactOf } from "./a1-facts";
 import { isNewSince, laterLineOf } from "./a1-later";
 import { LaterButton, UndoLater } from "./a1-later-buttons";
 import type { ListGroup, ListLine } from "./a1-list";
 import type { CardDef } from "./a1-model";
+import type { CompanyItem, CompanyState } from "./a1-topline";
 
 // Η Σήμερα ως μία λίστα σε 7 ομάδες (#Σήμερα list): η γραμμή κορυφής κλειστή, κάτω οι ομάδες με γραμμές `ml-line`.
 
@@ -21,8 +23,23 @@ const ACTION_LABEL: Readonly<Record<string, string>> = {
 const DEFAULT_ACTION = "Άνοιξε";
 const RETRY_HREF = "/app";
 
+// Η γραμμή κορυφής (κλειστή) και τα πάνελ της μέσα της: Δείκτες, Πρόγραμμα, Χρήματα, Η ομάδα.
+export function TopLine({
+  topline,
+  panels,
+}: {
+  topline: string;
+  panels: ReactNode;
+}) {
+  return (
+    <details className="a1-topline">
+      <summary>{topline}</summary>
+      <div className="a1-topline-body">{panels}</div>
+    </details>
+  );
+}
+
 export interface TodayListProps {
-  // Η γραμμή κορυφής («Μένουν N · Υ € να μπουν»)· πατημένη ανοίγει τα πάνελ από κάτω.
   topline: string;
   panels: ReactNode;
   groups: readonly ListGroup[];
@@ -32,12 +49,22 @@ export interface TodayListProps {
   // Τα κλειδιά που κρύφτηκαν με «Αργότερα» και η ώρα της στιγμής (για τη γραμμή «ξαναβγαίνουν»).
   later: readonly string[];
   stamp: string;
-  isCompanyQuiet: boolean;
+  company: CompanyState;
 }
 
-function LineRow({ line, seenAt }: { line: ListLine; seenAt: string | null }) {
+function LineRow({
+  line,
+  seenAt,
+  today,
+}: {
+  line: ListLine;
+  seenAt: string | null;
+  today: string;
+}) {
   const { row, cardId, laterKey } = line;
   const action = ACTION_LABEL[cardId] ?? DEFAULT_ACTION;
+  const fact = decisionFactOf({ ...row, cardId }, today);
+  const sub = [row.meta, fact].filter(Boolean).join(" · ");
   return (
     <div className="ml-line" data-urgent={row.isUrgent || undefined}>
       <span className="ml-main">
@@ -50,7 +77,7 @@ function LineRow({ line, seenAt }: { line: ListLine; seenAt: string | null }) {
           {row.label}
           {isNewSince(row, seenAt) && <span className="a1-new"> νέο</span>}
         </strong>
-        {row.meta && <small>{row.meta}</small>}
+        {sub && <small>{sub}</small>}
       </span>
       <span className="ml-quick">
         {row.suggestion && (
@@ -78,10 +105,12 @@ function GroupBlock({
   group,
   cards,
   seenAt,
+  today,
 }: {
   group: ListGroup;
   cards: readonly CardDef[];
   seenAt: string | null;
+  today: string;
 }) {
   const failedCards = group.failed.flatMap((code) =>
     cards.filter((card) => card.id === code),
@@ -98,6 +127,7 @@ function GroupBlock({
             key={`${line.cardId}${line.row.href}${line.row.label}`}
             line={line}
             seenAt={seenAt}
+            today={today}
           />
         ))}
       </div>
@@ -110,6 +140,32 @@ function GroupBlock({
   );
 }
 
+function CompanyItemRow({ item }: { item: CompanyItem }) {
+  return (
+    <li>
+      <Link href={item.href}>{item.title}</Link>
+      <span className="a1-company-count">{item.count}</span>
+    </li>
+  );
+}
+
+// Η εταιρεία (ομάδα 7) χωρίς επείγον: μία κλειστή γραμμή με όσες κάρτες θέλουν προσοχή, αλλιώς «Όλα λειτουργούν».
+function CompanyNote({ company }: { company: CompanyState }) {
+  if (company.items.length > 0) {
+    return (
+      <details className="a1-company">
+        <summary>Η εταιρεία: {company.items.length} σε αναμονή</summary>
+        <ul className="a1-company-list">
+          {company.items.map((item) => (
+            <CompanyItemRow key={item.id} item={item} />
+          ))}
+        </ul>
+      </details>
+    );
+  }
+  return company.isClear ? <p className="a1-quiet">Όλα λειτουργούν</p> : null;
+}
+
 export function TodayList({
   topline,
   panels,
@@ -118,24 +174,23 @@ export function TodayList({
   seenAt,
   later,
   stamp,
-  isCompanyQuiet,
+  company,
 }: TodayListProps) {
   const laterLine = laterLineOf(later.length, stamp);
+  const today = stamp.slice(0, 10);
   return (
     <>
-      <details className="a1-topline">
-        <summary>{topline}</summary>
-        <div className="a1-topline-body">{panels}</div>
-      </details>
+      <TopLine topline={topline} panels={panels} />
       {groups.map((group) => (
         <GroupBlock
           key={group.id}
           group={group}
           cards={cards}
           seenAt={seenAt}
+          today={today}
         />
       ))}
-      {isCompanyQuiet && <p className="a1-quiet">Όλα λειτουργούν</p>}
+      <CompanyNote company={company} />
       {laterLine && (
         <div className="a1-quiet a1-later-line">
           {laterLine} · <UndoLater keys={later} />

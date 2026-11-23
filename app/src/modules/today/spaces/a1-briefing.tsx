@@ -22,10 +22,10 @@ import type {
 import { athensStamp, type Built } from "./a1-adapter";
 import { briefOf } from "./a1-brief";
 import { rankDecisions } from "./a1-decisions";
-import { newChipOf, newCountOf, withoutLater } from "./a1-later";
+import { isNewSince, newChipOf, withoutLater } from "./a1-later";
 import { leadOf } from "./a1-lead";
 import { listOf, remainingOf } from "./a1-list";
-import { TodayList } from "./a1-list-view";
+import { TodayList, TopLine } from "./a1-list-view";
 import { KpiBrief } from "./a1-kpis-panel";
 import { loadCards } from "./a1-load";
 import { MoneyBrief } from "./a1-money-panel";
@@ -37,7 +37,7 @@ import {
   type Programme,
 } from "./a1-programme";
 import { TeamBrief } from "./a1-team-panel";
-import { isCompanyQuietOf, toInvoiceCentsOf, toplineOf } from "./a1-topline";
+import { companyStateOf, toInvoiceCentsOf, toplineOf } from "./a1-topline";
 import { withoutRepeats } from "./a1-zones";
 
 const MONEY_CARD = "overdue_invoices";
@@ -139,7 +139,6 @@ export async function TeamBriefing({
     hasMoneyPanel: money !== null,
   });
   const ranked = rankDecisions(withoutRepeats(brief.decisions, null));
-  const newChip = newChipOf(newCountOf(unsnoozed.cards, visit.seenAt));
   const programme = brief.week
     ? programmeOf(
         brief.week.content.rows,
@@ -155,43 +154,53 @@ export async function TeamBriefing({
     money: brief.money ? money : null,
   });
   const list = listOf({ built: unsnoozed.cards, failed, stamp });
+  // Το σήμα «νέα» μετράει τις γραμμές που φαίνονται, όχι όλες τις φορτωμένες.
+  const newChip = newChipOf(
+    list
+      .flatMap((group) => group.lines)
+      .filter((line) => isNewSince(line.row, visit.seenAt)).length,
+  );
   const topline = toplineOf({
     remaining: remainingOf(list),
     overdueCents: money?.overdueCents ?? null,
     toInvoiceCents: toInvoiceCentsOf(list),
     canSeeAmounts: money !== null,
   });
+  const panels = (
+    <TodayPanels
+      kpis={kpis}
+      programme={
+        programme && brief.week
+          ? { data: programme, href: brief.week.content.allHref }
+          : null
+      }
+      money={brief.money ? { data: money, card: brief.money } : null}
+      team={team}
+    />
+  );
   return (
     <>
       {hello(newChip)}
       {lead && <p className="a1-lead">{lead}</p>}
       {children}
       {layout.isAllHidden ? (
-        <StateNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
-          Πάτα «Προσαρμογή» για να εμφανίσεις όσες θέλεις, ή{" "}
-          <Link href={CUSTOMIZE_PATH}>γύρνα στην προεπιλογή</Link>.
-        </StateNotice>
+        <>
+          <TopLine topline={topline} panels={panels} />
+          <StateNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
+            Πάτα «Προσαρμογή» για να εμφανίσεις όσες θέλεις, ή{" "}
+            <Link href={CUSTOMIZE_PATH}>γύρνα στην προεπιλογή</Link>.
+          </StateNotice>
+        </>
       ) : (
         <TodayList
           topline={topline}
-          panels={
-            <TodayPanels
-              kpis={kpis}
-              programme={
-                programme && brief.week
-                  ? { data: programme, href: brief.week.content.allHref }
-                  : null
-              }
-              money={brief.money ? { data: money, card: brief.money } : null}
-              team={team}
-            />
-          }
+          panels={panels}
           groups={list}
           cards={loaded.map((item) => item.built.card)}
           seenAt={visit.seenAt}
           later={unsnoozed.later}
           stamp={stamp}
-          isCompanyQuiet={isCompanyQuietOf(list, shownCodes)}
+          company={companyStateOf(unsnoozed.cards, list)}
         />
       )}
     </>
