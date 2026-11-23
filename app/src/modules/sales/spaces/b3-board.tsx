@@ -132,7 +132,7 @@ export function PipelineBoard({
   const renderCard = (card: BoardCard) => (
     <BoardCardLine
       key={card.id}
-      card={card}
+      card={{ ...card, stageId: drag.stageOf(card) }}
       today={today}
       stages={stages}
       lossReasons={lossReasons}

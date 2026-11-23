@@ -185,7 +185,7 @@ export function BoardCardLine({
         <CardWork card={card} today={today} />
         {card.canWork && (
           <div className="b3-controls">
-            <MoveStage card={card} stages={stages} />
+            <MoveStage key={card.stageId} card={card} stages={stages} />
             <CloseLost card={card} reasons={lossReasons} />
           </div>
         )}
