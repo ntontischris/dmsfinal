@@ -22,7 +22,7 @@
 /* Στήλες: πιο ήρεμο φόντο, η κάρτα είναι γραμμή-κάρτα (πλακίδιο, ετικέτα, τίτλος, ποσό) */
 & .b3-kanban .kcol { border-radius: 18px; border-color: color-mix(in oklab, var(--color-text) 8%, transparent); background: color-mix(in oklab, var(--brand-deep) 45%, transparent); }
 & :is(.b3-kanban, .b3-closed) .kcard.b3-card.ml-line {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: .3rem .65rem;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: .3rem .65rem;
   margin-bottom: .55rem; padding: .7rem .75rem; border-radius: 18px; font-size: var(--text-sm);
   border: 1px solid color-mix(in oklab, var(--c) 14%, transparent);
   background:
@@ -34,7 +34,7 @@
 & .b3-card .ml-thumb { width: 2.3rem; height: 2.3rem; border-radius: 11px; font-size: .8rem; }
 & .b3-card .ml-main strong { font-size: .95rem; }
 & .b3-card .b3-title { color: var(--color-text); text-decoration: none; }
-& .b3-card .ml-amount { font-size: .95rem; }
+& .b3-card .ml-amount { grid-column: 2; text-align: left; font-size: .95rem; }
 & .b3-card > .b3-more { grid-column: 1 / -1; display: grid; gap: .3rem; min-width: 0; }
 & .b3-card .b3-step { margin: 0; font-size: var(--text-xs); }
 & .b3-card .b3-contact { color: var(--color-text-muted); font-size: .75rem; }
