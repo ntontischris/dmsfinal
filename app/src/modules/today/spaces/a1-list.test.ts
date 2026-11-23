@@ -171,9 +171,42 @@ describe("listOf", () => {
     expect(line?.laterKey).toBeNull();
     expect(line?.row.isUrgent).toBe(true);
   });
+
+  it("should give week_filming no more link even when its count exceeds loaded rows", () => {
+    const groups = listOf({
+      built: [
+        builtOf("week_filming", [rowOf("t", { at: "2026-11-25T10:00" })], 30),
+      ],
+      failed: new Set(),
+      stamp: "2026-11-25T09:00",
+    });
+    expect(findGroup(groups, "time")?.more).toEqual([]);
+  });
+
+  it("should show the company group with a failed entry when a company card failed", () => {
+    const groups = listOf({
+      built: [],
+      failed: new Set(["health"]),
+      stamp: STAMP,
+    });
+    const company = findGroup(groups, "company");
+    expect(company?.failed).toEqual(["health"]);
+    expect(company?.lines).toEqual([]);
+  });
 });
 
 describe("remainingOf", () => {
+  it("should count only urgent lines of the company group and no more links", () => {
+    const groups = listOf({
+      built: [
+        builtOf("unanswered", [rowOf("q", { isUrgent: true }), rowOf("p")], 5),
+      ],
+      failed: new Set(),
+      stamp: STAMP,
+    });
+    expect(remainingOf(groups)).toBe(1);
+  });
+
   it("should count lines of all shown groups plus the more counts", () => {
     const rows = Array.from({ length: 10 }, (_, i) => rowOf(`r${i}`));
     const groups = listOf({

@@ -120,7 +120,9 @@ const summaryRowOf = ({ card, content }: Built): CardRow | null => {
       };
 };
 
-const moreOf = ({ content }: Built): ListMore[] => {
+// Η εβδομάδα κρύβει ό,τι είναι εκτός σήμερα/αύριο στο «Πρόγραμμα», όχι στο «και άλλα N».
+const moreOf = ({ card, content }: Built): ListMore[] => {
+  if (card.id === "week_filming") return [];
   const hidden = content.count - content.rows.length;
   return hidden > 0 ? [{ count: hidden, href: content.allHref }] : [];
 };
@@ -206,13 +208,18 @@ export function listOf(input: ListInput): readonly ListGroup[] {
   );
 }
 
-// Πόσες δουλειές μένουν: οι γραμμές των ομάδων που φαίνονται, και όσα κρύβονται πίσω από «και άλλα N».
-export function remainingOf(groups: readonly ListGroup[]): number {
-  return groups.reduce(
-    (sum, group) =>
-      sum +
-      group.lines.length +
-      group.more.reduce((moreSum, item) => moreSum + item.count, 0),
-    0,
+// Η εταιρεία μετράει μόνο τα επείγοντα (η σύνοψη «Μένουν N» της σελίδας)· οι άλλες ομάδες και τα «και άλλα N».
+const countedOf = (group: ListGroup): number => {
+  if (group.id === "company") {
+    return group.lines.filter((line) => line.row.isUrgent).length;
+  }
+  return (
+    group.lines.length +
+    group.more.reduce((moreSum, item) => moreSum + item.count, 0)
   );
+};
+
+// Πόσες δουλειές μένουν σε όλες τις ομάδες που φαίνονται.
+export function remainingOf(groups: readonly ListGroup[]): number {
+  return groups.reduce((sum, group) => sum + countedOf(group), 0);
 }
