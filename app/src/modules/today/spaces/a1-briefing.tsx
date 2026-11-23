@@ -201,6 +201,7 @@ export async function TeamBriefing({
           later={unsnoozed.later}
           stamp={stamp}
           company={companyStateOf(unsnoozed.cards, list)}
+          decisionIds={new Set(brief.decisions.map(({ card }) => card.id))}
         />
       )}
     </>

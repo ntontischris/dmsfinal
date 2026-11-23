@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import "../../finance/spaces/money-lines.css";
 import { CardError } from "./a1-card";
-import { decisionFactOf } from "./a1-facts";
+import { lineSubOf } from "./a1-facts";
 import { isNewSince, laterLineOf } from "./a1-later";
 import { LaterButton, UndoLater } from "./a1-later-buttons";
 import type { ListGroup, ListLine } from "./a1-list";
@@ -50,21 +50,24 @@ export interface TodayListProps {
   later: readonly string[];
   stamp: string;
   company: CompanyState;
+  // Οι κάρτες που είναι αποφάσεις (το «Μόνο εσύ μπορείς» της προηγούμενης έκδοσης): μόνο αυτές παίρνουν την ουσία.
+  decisionIds: ReadonlySet<string>;
 }
 
 function LineRow({
   line,
   seenAt,
   today,
+  isDecision,
 }: {
   line: ListLine;
   seenAt: string | null;
   today: string;
+  isDecision: boolean;
 }) {
   const { row, cardId, laterKey } = line;
   const action = ACTION_LABEL[cardId] ?? DEFAULT_ACTION;
-  const fact = decisionFactOf({ ...row, cardId }, today);
-  const sub = [row.meta, fact].filter(Boolean).join(" · ");
+  const sub = lineSubOf({ row, cardId, isDecision, today });
   return (
     <div className="ml-line" data-urgent={row.isUrgent || undefined}>
       <span className="ml-main">
@@ -106,11 +109,13 @@ function GroupBlock({
   cards,
   seenAt,
   today,
+  decisionIds,
 }: {
   group: ListGroup;
   cards: readonly CardDef[];
   seenAt: string | null;
   today: string;
+  decisionIds: ReadonlySet<string>;
 }) {
   const failedCards = group.failed.flatMap((code) =>
     cards.filter((card) => card.id === code),
@@ -128,6 +133,7 @@ function GroupBlock({
             line={line}
             seenAt={seenAt}
             today={today}
+            isDecision={decisionIds.has(line.cardId)}
           />
         ))}
       </div>
@@ -175,6 +181,7 @@ export function TodayList({
   later,
   stamp,
   company,
+  decisionIds,
 }: TodayListProps) {
   const laterLine = laterLineOf(later.length, stamp);
   const today = stamp.slice(0, 10);
@@ -188,6 +195,7 @@ export function TodayList({
           cards={cards}
           seenAt={seenAt}
           today={today}
+          decisionIds={decisionIds}
         />
       ))}
       <CompanyNote company={company} />
