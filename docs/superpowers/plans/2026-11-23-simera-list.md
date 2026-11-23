@@ -97,7 +97,7 @@
 ### Task 4: «Έκλεισες N»
 
 **Files:**
-- Create: `app/supabase/migrations/20261123110000_today_day_start.sql`, `app/supabase/tests/today_day_start_test.sql`, `app/src/modules/today/spaces/a1-closed.ts`, `app/src/modules/today/spaces/a1-closed.test.ts`
+- Create: `app/supabase/migrations/20261123110000_today_day_start.sql`, `app/supabase/tests/today_day_start_test.sql`, (χωρίς νέο TS module — ο υπολογισμός είναι στη βάση)
 - Modify: `app/src/modules/today/queries.ts` (`getTodayVisit`), `app/src/modules/today/view-schema.ts`, `a1-list-view.tsx`
 
 **Interfaces:**
@@ -110,7 +110,7 @@
 - [ ] **Step 2:** Vitest `closedOf`: `should count rows gone since the morning as closed`, `should not count snoozed rows as closed`, `should ignore rows that appeared after the morning`.
 - [ ] **Step 3:** FAIL → υλοποίηση → PASS (vitest τοπικά, pgTAP στο CI).
 - [ ] **Step 4:** Στη λίστα: όταν `remainingOf === 0` → «Έκλεισες N σήμερα» + (αν later > 0) «M ξαναβγαίνουν αύριο το πρωί». Όταν η λίστα έχει γραμμές και closed > 0 → μικρό «Έκλεισες N» δίπλα στη γραμμή κορυφής.
-- [ ] **Step 5:** commit `feat(today): tell how many lines were closed today`.
+- [ ] **Step 4:** commit `feat(today): tell how many lines were closed today`.
 
 ### Tasks 5–11: Οι 7 νέες κάρτες (μία ανά task, αυτή τη σειρά)
 
