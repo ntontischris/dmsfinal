@@ -1,7 +1,7 @@
 -- Σήμερα: κάρτα «Αργεί η Έκδοση» (version_late). Φανταστικά δεδομένα· όλα ζουν μέσα στη συναλλαγή.
 -- Όλες οι ημερομηνίες είναι σχετικές με τη σημερινή μέρα της Αθήνας, ώστε το τεστ να μην εξαρτάται από ημερομηνία ή τέλος μήνα.
 begin;
-select plan(24);
+select plan(26);
 
 -- ───────────── Βοηθοί ─────────────
 create function public.t_uid(p_last text) returns uuid
@@ -41,6 +41,7 @@ set session_replication_role = replica;
 
 insert into public.productions (id, title, client_id, agreement_id, owner_id, state, delivered_at, delivered_note) values
   ('00000000-0000-0000-0000-0000000000d1', 'Εσωτερικό showreel', null, null, '00000000-0000-0000-0000-0000000000a1', 'open', null, null),
+  ('00000000-0000-0000-0000-0000000000d3', 'Παραδομένο έργο', null, null, '00000000-0000-0000-0000-0000000000a1', 'delivered', now() - interval '20 days', 'Παραδόθηκε'),
   ('00000000-0000-0000-0000-0000000000d2', 'Εσωτερικό podcast', null, null, '00000000-0000-0000-0000-0000000000a1', 'open', null, null);
 insert into public.production_members (production_id, user_id) values
   ('00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000a2'),
@@ -53,28 +54,32 @@ insert into public.production_members (production_id, user_id) values
 -- dd11 χωρίς ίχνος ανάθεσης: η created_at είναι η ανάθεση, η Έκδοση είναι πριν από αυτήν (μετράει)
 insert into public.deliverables (id, production_id, kind_id, title, charge, assignee_id, deadline,
                                  cancelled_at, cancel_reason, cancel_outcome, approved_at, created_at) values
-  (public.t_did('01'), '00000000-0000-0000-0000-0000000000d2', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('01')::uuid, '00000000-0000-0000-0000-0000000000d2', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Podcast επεισόδιο 1', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(1), null, null, null, null, now() - interval '10 days'),
-  (public.t_did('02'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('02')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel Α', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(1), null, null, null, null, now() - interval '10 days'),
-  (public.t_did('03'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('03')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel Β', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(1), null, null, null, null, now() - interval '10 days'),
-  (public.t_did('04'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('04')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel Γ', 'included', '00000000-0000-0000-0000-0000000000a1', public.t_date(1), null, null, null, null, now() - interval '10 days'),
-  (public.t_did('05'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('05')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel Δ', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(0), null, null, null, null, now() - interval '10 days'),
-  (public.t_did('06'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('06')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel Ε', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(-1), null, null, null, null, now() - interval '10 days'),
-  (public.t_did('07'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('07')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel ΣΤ', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(1), now(), 'Αλλαγή σχεδίου', 'consumed', null, now() - interval '10 days'),
-  (public.t_did('08'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('08')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel Ζ', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(0), null, null, null, now(), now() - interval '10 days'),
-  (public.t_did('09'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('09')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel Η', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(2), null, null, null, null, now() - interval '10 days'),
-  (public.t_did('10'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+  (public.t_did('10')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
    'Reel Θ', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(1), null, null, null, null, now() - interval '10 days'),
-  (public.t_did('11'), '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
-   'Reel Ι', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(1), null, null, null, null, now() - interval '10 days');
+  (public.t_did('11')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+   'Reel Ι', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(1), null, null, null, null, now() - interval '10 days'),
+  (public.t_did('12')::uuid, '00000000-0000-0000-0000-0000000000d3', (select k.id from public.provision_kinds k where k.code = 'reel'),
+   'Reel Κ', 'included', '00000000-0000-0000-0000-0000000000a5', public.t_date(1), null, null, null, null, now() - interval '10 days'),
+  (public.t_did('13')::uuid, '00000000-0000-0000-0000-0000000000d1', (select k.id from public.provision_kinds k where k.code = 'reel'),
+   'Reel Λ', 'included', '00000000-0000-0000-0000-0000000000a5', null, null, null, null, null, now() - interval '10 days');
 
 -- Το ίχνος των αναθέσεων: dd03 πήγε από τον Πέτρο στη Σοφία πριν 2 μέρες· dd10 στη Σοφία πριν 3 μέρες.
 insert into public.audit_log (at, actor_id, action, entity, entity_id, before, after) values
@@ -87,9 +92,9 @@ insert into public.audit_log (at, actor_id, action, entity, entity_id, before, a
    jsonb_build_object('assignee_id', '00000000-0000-0000-0000-0000000000a5'));
 
 insert into public.deliverable_versions (deliverable_id, number, url, host, state, created_at) values
-  (public.t_did('03'), 1, 'https://example.com/dd03/v1', 'example.com', 'in_review', now() - interval '5 days'),
-  (public.t_did('10'), 1, 'https://example.com/dd10/v1', 'example.com', 'in_review', now() - interval '1 day'),
-  (public.t_did('11'), 1, 'https://example.com/dd11/v1', 'example.com', 'in_review', now() - interval '20 days');
+  (public.t_did('03')::uuid, 1, 'https://example.com/dd03/v1', 'example.com', 'in_review', now() - interval '5 days'),
+  (public.t_did('10')::uuid, 1, 'https://example.com/dd10/v1', 'example.com', 'in_review', now() - interval '1 day'),
+  (public.t_did('11')::uuid, 1, 'https://example.com/dd11/v1', 'example.com', 'in_review', now() - interval '20 days');
 
 reset session_replication_role;
 
@@ -133,6 +138,12 @@ select is((select count(*)::integer from jsonb_array_elements(authz.today_items_
 select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
             where v ->> 'id' = public.t_did('11')), 1,
   'Χωρίς ίχνος ανάθεσης, η created_at μετράει ως ανάθεση· η Έκδοση πριν από αυτήν δεν μετράει');
+
+-- ───────────── Κλειστή Παραγωγή και χωρίς προθεσμία: δεν μπαίνουν ─────────────
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+            where v ->> 'id' = public.t_did('12')), 0, 'Παραδοτέο σε παραδομένη Παραγωγή δεν μπαίνει');
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+            where v ->> 'id' = public.t_did('13')), 0, 'Παραδοτέο χωρίς προθεσμία δεν μπαίνει');
 
 -- ───────────── Ο υπεύθυνος δεν βλέπει τη δική του καθυστέρηση ─────────────
 select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)

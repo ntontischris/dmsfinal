@@ -11,7 +11,7 @@ language plpgsql stable security definer set search_path = ''
 as $$
 declare
   v_scope text := authz.user_scope(p_uid, 'deliverables.work');
-  v_limit date := (p_now at time zone 'Europe/Athens')::date + 1;
+  v_limit date := authz.today_work_day(p_now) + 1;
 begin
   return query
     select d.id, d.title, u.name, d.deadline
@@ -31,6 +31,7 @@ begin
       ) s
      where d.assignee_id is not null
        and d.assignee_id <> p_uid
+       and p.state = 'open'
        and d.cancelled_at is null
        and d.approved_at is null
        and d.deadline <= v_limit
@@ -59,7 +60,7 @@ create function authz.today_items_version_late(p_uid uuid, p_client uuid, p_now 
 language plpgsql stable security definer set search_path = ''
 as $$
 declare
-  v_today date := (p_now at time zone 'Europe/Athens')::date;
+  v_today date := authz.today_work_day(p_now);
 begin
   if p_client is not null or authz.user_scope(p_uid, 'deliverables.work') is null then
     raise exception 'Δεν έχεις Δικαίωμα για αυτή την ενέργεια' using errcode = '42501';
