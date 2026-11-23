@@ -140,6 +140,16 @@ describe("listOf", () => {
     expect(labelsOf(findGroup(groups, "keep"))).toEqual(["a"]);
   });
 
+  it("should put agreement_signed in the keep group", () => {
+    const groups = listOf({
+      built: [builtOf("agreement_signed", [rowOf("s")])],
+      failed: new Set(),
+      stamp: STAMP,
+    });
+    expect(groupIds(groups)).toEqual(["keep"]);
+    expect(labelsOf(findGroup(groups, "keep"))).toEqual(["s"]);
+  });
+
   it("should put equipment_repair in the time group", () => {
     const groups = listOf({
       built: [builtOf("equipment_repair", [rowOf("k", { isUrgent: true })])],

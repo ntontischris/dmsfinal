@@ -171,6 +171,33 @@ describe("athensStamp", () => {
   });
 });
 
+describe("contentOf agreement_signed", () => {
+  it("should show the signing time once and no date prefix in the subtitle", () => {
+    const card = cardOf({
+      code: "agreement_signed",
+      grp: "work",
+      link: "/app/clients",
+    });
+    const content = contentOf(
+      card,
+      dataOf([
+        itemOf({
+          id: "s-1",
+          title: "Πελάτης 3 (τεστ)",
+          subtitle: "Μηνιαίο C · Υπογραφή με Σύνδεσμο",
+          at: "2026-11-25T10:30:00Z",
+          link: "/app/agreements/a-1",
+        }),
+      ]),
+    );
+    const [row] = content.rows;
+    expect(row.note).toBe("Μηνιαίο C · Υπογραφή με Σύνδεσμο");
+    expect(row.meta?.match(/\d{1,2}:\d{2}/g)).toHaveLength(1);
+    expect(row.meta).not.toMatch(/λήγει|προθεσμία/);
+    expect(row.at).toBe("2026-11-25T10:30:00Z");
+  });
+});
+
 describe("contentOf agreement_ending", () => {
   it("should show the end day as a «λήγει» label without a time", () => {
     const card = cardOf({
