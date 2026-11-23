@@ -24,8 +24,8 @@
 & .kanban.b3-kanban { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(12.5rem, 1fr); align-items: start; }
 & .b3-kanban .kcol { min-width: 0; transition: border-color .2s, background-color .2s; }
 & .b3-kanban .kcol[data-drop-over] { border-color: var(--brand-periwinkle); background: color-mix(in oklab, var(--brand-periwinkle) 12%, transparent); }
-& .b3-kanban .kcard[draggable="true"] { cursor: grab; }
-& .b3-kanban .kcard[draggable="true"]:active { cursor: grabbing; }
+& .b3-kanban .kcard[data-draggable] { cursor: grab; user-select: none; touch-action: pan-y; }
+& .b3-kanban .kcard[data-dragging] { position: relative; z-index: 20; cursor: grabbing; box-shadow: 0 24px 50px -20px var(--brand-periwinkle); }
 & .b3-kanban .kcol { border-radius: 18px; border-color: color-mix(in oklab, var(--color-text) 8%, transparent); background: color-mix(in oklab, var(--brand-deep) 45%, transparent); }
 & :is(.b3-kanban, .b3-closed) .kcard.b3-card.ml-line {
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: .3rem .65rem;
