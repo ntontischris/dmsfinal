@@ -29,6 +29,11 @@ describe("initialsOf", () => {
     expect(initialsOf("Φούρνος Παπαδόπουλου — Reels Νοεμβρίου")).toBe("ΦΠ");
   });
 
+  it("σταματά στη μέση τελεία και αγνοεί σύμβολα", () => {
+    expect(initialsOf("Φωτογραφίες · νέα προϊόντα")).toBe("Φ");
+    expect(initialsOf("Reel • προϊόν της εβδομάδας")).toBe("R");
+  });
+
   it("μία λέξη δίνει ένα γράμμα, κενή ετικέτα τίποτα", () => {
     expect(initialsOf("ανάθεση")).toBe("Α");
     expect(initialsOf("  ")).toBe("");

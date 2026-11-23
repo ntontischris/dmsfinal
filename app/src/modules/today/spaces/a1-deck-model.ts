@@ -8,11 +8,11 @@ import type { CardRow } from "./a1-model";
 const DAY_MS = 86_400_000;
 const MAX_FACES = 3;
 
-// Ο Πελάτης είναι το πρώτο μέρος του «{Πελάτης} — {Έργο}»· δύο λέξεις → δύο γράμματα.
+// Το πρώτο μέρος της ετικέτας (πριν από «—», «·» ή «•»)· δύο λέξεις → δύο γράμματα, μόνο λέξεις με γράμματα.
 export const initialsOf = (label: string): string =>
-  (label.split(" — ")[0] ?? "")
+  (label.split(/\s[—·•]\s/)[0] ?? "")
     .split(/\s+/)
-    .filter(Boolean)
+    .filter((word) => /\p{L}/u.test(word))
     .slice(0, 2)
     .map((word) => word.charAt(0).toUpperCase())
     .join("");
