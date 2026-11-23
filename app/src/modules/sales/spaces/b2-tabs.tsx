@@ -5,7 +5,8 @@ import {
 } from "@/modules/productions";
 import { ErrorNotice } from "@/spaces/screens/shared";
 
-import { ProductionsSection } from "./b2-sections";
+import { Box } from "./b2-box";
+import { ProductionLines } from "./b2-sections";
 
 // Οι καρτέλες της B2 που φορτώνουν δικά τους δεδομένα μόνο όταν ανοίγουν.
 
@@ -32,5 +33,17 @@ export async function ProductionsTab({ clientId }: { clientId: string }) {
       state: PRODUCTION_STATE_LABELS[production.state],
       isOpen: production.state === "open",
     }));
-  return <ProductionsSection rows={rows} />;
+  const openCount = rows.filter((row) => row.isOpen).length;
+  // Μόνο αυτό το κουτί στην καρτέλα: ανοιχτό, αφού ο Χρήστης ήρθε γι' αυτό.
+  return (
+    <div className="ml-stack">
+      <Box
+        title="Παραγωγές"
+        hint={`${rows.length} Παραγωγές · ${openCount} ανοιχτές`}
+        isOpen
+      >
+        <ProductionLines rows={rows} />
+      </Box>
+    </div>
+  );
 }

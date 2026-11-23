@@ -4,12 +4,16 @@ import { useState } from "react";
 
 import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import { mergeClients, resolveDuplicate } from "../actions-queue";
 import { DUPLICATE_REASON_LABELS, NO_MANAGER_LABEL } from "../labels";
 import type { DuplicatePair, DuplicateSide } from "../types";
 import { RowForm, useDoneNotes } from "./b5-forms";
 import { ItemRows } from "./lane-rows";
+
+import "../../finance/spaces/money-lines.css";
+import "./b6.css";
 
 const fieldsOf = (side: DuplicateSide): readonly [string, string][] => [
   ["Επωνυμία", side.legalName || "—"],
@@ -64,56 +68,80 @@ function Pair({
   const survivorName =
     survivorId === pair.candidate.id ? pair.candidate.name : pair.existing.name;
   return (
-    <section>
-      <p className="note">
-        Πιθανό διπλό: {DUPLICATE_REASON_LABELS[pair.reason]}.
-      </p>
-      <div className="compare">
-        <Side side={pair.candidate} title="Νέος, με σήμα «Πιθανό διπλό»" />
-        <Side side={pair.existing} title="Υπάρχων" />
-      </div>
-      <div className="toolbar">
-        <label>
-          Ο Πελάτης που μένει:{" "}
-          <select
-            className="select"
-            value={survivorId}
-            onChange={(event) => setSurvivorId(event.target.value)}
+    <section className="b6-pair">
+      <div className="ml-line" data-urgent="">
+        <span className="ml-thumb" aria-hidden="true">
+          {initialsOf(pair.candidate.name)}
+        </span>
+        <span className="ml-main">
+          <span className="ml-tag">
+            Πιθανό διπλό: {DUPLICATE_REASON_LABELS[pair.reason]}
+          </span>
+          <strong className="b6-names">
+            <span role="heading" aria-level={3}>
+              {pair.candidate.name}
+            </span>
+            {" ↔ "}
+            <span role="heading" aria-level={3}>
+              {pair.existing.name}
+            </span>
+          </strong>
+          <small>
+            Η Συγχώνευση ενώνει τους δύο Πελάτες σε έναν, με όλες τις
+            Ευκαιρίες, Συμφωνίες και το ιστορικό τους. Το «είναι άλλος» κλείνει
+            το σήμα χωρίς ένωση.
+          </small>
+        </span>
+        <div className="ml-quick b6-quick">
+          <label className="b6-survivor">
+            Ο Πελάτης που μένει:{" "}
+            <select
+              className="select"
+              value={survivorId}
+              onChange={(event) => setSurvivorId(event.target.value)}
+            >
+              <option value={pair.existing.id}>{pair.existing.name}</option>
+              <option value={pair.candidate.id}>{pair.candidate.name}</option>
+            </select>
+          </label>
+          <RowForm
+            action={mergeClients}
+            submitLabel="Συγχώνευση"
+            isPrimary
+            onDone={() =>
+              onDone(
+                `Συγχωνεύθηκαν: ο ενιαίος Πελάτης είναι «${survivorName}», με όλες τις Ευκαιρίες και το ιστορικό και των δύο.`,
+              )
+            }
           >
-            <option value={pair.existing.id}>{pair.existing.name}</option>
-            <option value={pair.candidate.id}>{pair.candidate.name}</option>
-          </select>
-        </label>
-        <RowForm
-          action={mergeClients}
-          submitLabel="Συγχώνευση"
-          isPrimary
-          onDone={() =>
-            onDone(
-              `Συγχωνεύθηκαν: ο ενιαίος Πελάτης είναι «${survivorName}», με όλες τις Ευκαιρίες και το ιστορικό και των δύο.`,
-            )
-          }
-        >
-          <input type="hidden" name="survivorId" value={survivorId} />
-          <input type="hidden" name="absorbedId" value={absorbedId} />
-        </RowForm>
-        <RowForm
-          action={resolveDuplicate}
-          submitLabel="Είναι άλλος"
-          onDone={() =>
-            onDone(
-              `«${pair.candidate.name}»: σημειώθηκε «είναι άλλος». Το σήμα έκλεισε, οι Πελάτες μένουν χωριστοί.`,
-            )
-          }
-        >
-          <input type="hidden" name="flagId" value={pair.flagId} />
-        </RowForm>
+            <input type="hidden" name="survivorId" value={survivorId} />
+            <input type="hidden" name="absorbedId" value={absorbedId} />
+          </RowForm>
+          <RowForm
+            action={resolveDuplicate}
+            submitLabel="Είναι άλλος"
+            onDone={() =>
+              onDone(
+                `«${pair.candidate.name}»: σημειώθηκε «είναι άλλος». Το σήμα έκλεισε, οι Πελάτες μένουν χωριστοί.`,
+              )
+            }
+          >
+            <input type="hidden" name="flagId" value={pair.flagId} />
+          </RowForm>
+        </div>
       </div>
-      <p className="muted">
-        Η Συγχώνευση ενώνει τους δύο Πελάτες σε έναν, με όλες τις Ευκαιρίες,
-        Συμφωνίες και το ιστορικό τους. Το «είναι άλλος» κλείνει το σήμα χωρίς
-        ένωση.
-      </p>
+      <details className="ml-box b6-sides">
+        <summary>
+          <h3 className="ml-box-title">Σύγκριση των δύο</h3>
+          <small className="muted">
+            στοιχεία, Συμφωνίες, Παραγωγές και Τιμολόγια κάθε πλευράς
+          </small>
+        </summary>
+        <div className="compare">
+          <Side side={pair.candidate} title="Νέος, με σήμα «Πιθανό διπλό»" />
+          <Side side={pair.existing} title="Υπάρχων" />
+        </div>
+      </details>
     </section>
   );
 }

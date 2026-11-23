@@ -9,7 +9,6 @@ import { card, project, signIn } from "./sales-parts";
 // Ιστορικό. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-
 const SENDS_PATH = "/app/settings/sends";
 
 const filtersRow = (page: Page) =>
@@ -122,6 +121,11 @@ test("ο Ιδιοκτήτης βλέπει την αποστολή στο K3, φ
     .getByRole("link", { name: "Επικοινωνία" })
     .click();
   await expect(page).toHaveURL(/tab=comms/);
+  await page
+    .locator("summary", {
+      has: page.getByRole("heading", { name: "Τι στάλθηκε", exact: true }),
+    })
+    .click();
   // Η ενότητα της καρτέλας περιέχει το πάνελ με τον ίδιο τίτλο: παίρνουμε το εσωτερικό.
   const panel = card(page, "Τι στάλθηκε στον Πελάτη").last();
   await expect(panel).toBeVisible();

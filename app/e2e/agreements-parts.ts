@@ -10,6 +10,15 @@ import { z } from "zod";
 import { control, panel } from "./catalogue-parts";
 import { button, signIn, tableRow } from "./sales-parts";
 
+// Ανοίγει ένα κλειστό κουτί (details.ml-box) της Σελίδας Συμφωνίας με τον τίτλο του και το επιστρέφει.
+export async function openBox(page: Page, title: string): Promise<Locator> {
+  const box = panel(page, title);
+  const details = box.locator("details.ml-box").first();
+  if ((await details.getAttribute("open")) === null)
+    await details.locator("> summary").click();
+  return box;
+}
+
 // Βοηθητικά του e2e/agreements.spec.ts (σε δικό τους αρχείο για να μένει το spec κάτω από 300 γραμμές), στη νέα εμφάνιση (Χώροι).
 // Οι Πελάτες και οι Ευκαιρίες έρχονται από το e2e/seed.mjs· κάθε Συμφωνία γράφεται από την οθόνη, όπως θα την έγραφε ο πωλητής.
 // Τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το όνομα του project.
@@ -77,6 +86,7 @@ export async function draftProposal(
 ): Promise<string> {
   await openOpportunity(page, proposal.title);
   const form = panel(page, "Πρόταση");
+  await form.locator("summary").first().click();
   const kind = control(form, "Είδος");
   await openWith(button(form, "Νέα πρόταση"), kind);
   await kind.selectOption({ label: proposal.kind });
@@ -89,7 +99,7 @@ export async function draftProposal(
 }
 
 export async function addCatalogueLine(page: Page, name: string) {
-  const lines = panel(page, "Γραμμές");
+  const lines = await openBox(page, "Γραμμές");
   await control(lines, "Προσθήκη από τον Κατάλογο").selectOption({
     label: name,
   });
@@ -103,7 +113,7 @@ export async function addFreeLine(
   page: Page,
   line: { description: string; price: string },
 ) {
-  const lines = panel(page, "Γραμμές");
+  const lines = await openBox(page, "Γραμμές");
   await control(lines, "Περιγραφή ελεύθερης γραμμής").fill(line.description);
   await control(lines, "Τιμή ελεύθερης γραμμής (€)").fill(line.price);
   await button(lines, "Προσθήκη ελεύθερης γραμμής").click();

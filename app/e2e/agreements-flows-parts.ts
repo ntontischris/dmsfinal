@@ -96,7 +96,7 @@ export async function saveAndWait(page: Page, scope: Locator) {
 
 // Η κάρτα μιας πρότασης στην ουρά Εγκρίσεων (D4)· το αποτέλεσμα μιας απόφασης είναι δική του κάρτα (`d4-result`).
 const approvalCard = (owner: Page, title: string): Locator =>
-  owner.locator("section.card:not(.d4-result)").filter({ hasText: title });
+  owner.locator("section.d4-item").filter({ hasText: title });
 const approvalResult = (owner: Page, title: string): Locator =>
   owner.locator("section.d4-result").filter({ hasText: title });
 
@@ -232,6 +232,11 @@ export async function checkSignedByLink(
   await expect(
     page.getByText("Κερδισμένη με την υπογραφή του Υπογράφοντα"),
   ).toBeVisible();
+  await page
+    .locator("summary", {
+      has: page.getByRole("heading", { name: "Δραστηριότητες", exact: true }),
+    })
+    .click();
   await expect(
     page.getByText(`Υπογράφηκε η Συμφωνία από ${SIGNATORY}`).first(),
   ).toBeVisible();

@@ -1,0 +1,112 @@
+[data-look="spaces"] {
+  /* D2 στη μορφή I8: hero + κλειστά κουτιά + γραμμές `ml-line`. Μόνο tokens· το λεξιλόγιο είναι το money-lines.css. */
+
+  /* Hero: οι ενέργειες πάνε σε δική τους σειρά κάτω από τα στοιχεία, γιατί ανοίγουν φόρμες. */
+  & .d2-hero > div {
+    min-width: 0;
+    flex: 1 1 24rem;
+  }
+  & .d2-hero .kit-steps {
+    margin-top: 0.5rem;
+  }
+  & .d2-hero .note {
+    margin: 0.2rem 0 0;
+    color: var(--color-text);
+  }
+  & .d2-hero-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.9rem;
+    font-size: 0.85rem;
+  }
+  & .ml-hero > .ml-quick.d2-quick {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.6rem 1rem;
+  }
+  & .d2-quick > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  & .d2-quick .d2-form {
+    max-width: 36rem;
+  }
+  & .d2-quick .d2-actions form > .btn-row > .button[data-primary="true"] {
+    background: var(--brand-rec);
+    border-color: transparent;
+    color: var(--color-text);
+  }
+
+  /* Λήξη και συνέχεια: μικρό μπλοκ μέσα στο hero, ίδια γραμματοσειρά με τα κουτιά. */
+  & .d2-life {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 14px;
+    border: 1px solid
+      color-mix(in oklab, var(--brand-periwinkle) 18%, transparent);
+    background: color-mix(in oklab, var(--brand-midnight) 60%, transparent);
+  }
+  & .d2-life-title {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  & .d2-life-actions {
+    align-items: flex-start;
+  }
+
+  /* Κουτιά: ο τίτλος είναι h2 μέσα στο summary (το e2e βρίσκει το κουτί από τον τίτλο). */
+  & .d2 .ml-box-title {
+    margin: 0;
+  }
+  & .d2-box-body {
+    display: grid;
+    gap: 0.7rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Γραμμές: τα πεδία της γραμμής κάτω από αυτή, σε σειρά που αναδιπλώνεται. */
+  & .d2-lines tr.ml-line > td.ml-main small {
+    color: var(--color-text-muted);
+  }
+  & .d2-lines td.ml-amount {
+    white-space: nowrap;
+  }
+  & .d2-line-edit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    align-items: flex-end;
+    padding-top: 0.6rem;
+    border-top: 1px solid
+      color-mix(in oklab, var(--brand-periwinkle) 14%, transparent);
+  }
+  & .d2-edit-field {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  & .d2-edit-field > small {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  & .d2-line-save {
+    margin-left: auto;
+  }
+
+  @media (max-width: 40rem) {
+    & .d2-line-save {
+      margin-left: 0;
+    }
+    & .d2-edit-field {
+      width: 100%;
+    }
+  }
+}

@@ -1,7 +1,5 @@
 "use client";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { setMoneyTerms, updateTerms } from "../actions-draft";
 import { formatDate } from "../helpers";
 import { AUTO_RENEWAL_NOTE } from "../labels";
@@ -9,11 +7,11 @@ import type { AgreementDetail, Renewal, UnusedProvisions } from "../types";
 import { FilmingRows, changedHint, days, type RowsProps } from "./d2-term-rows";
 import { MoneyRows } from "./d2-terms-money";
 import { MilestoneTerms, RevisionLimitTerms } from "./d2-terms-more";
+import { D2Box } from "./d2-box";
 import { D2Form, Field, IdField, NumberInput } from "./d2-ui";
 
 // Οι Όροι της Συμφωνίας (prototype `screens/d2-terms.tsx`): πεδίο για όποιον γράφει την πρόταση, κείμενο για τους άλλους,
 // και η προεπιλογή δίπλα όταν άλλαξε. Κάθε ομάδα πεδίων αποθηκεύεται με το δικό της πραγματικό action.
-
 
 const UNUSED_TEXT: Readonly<Record<UnusedProvisions, string>> = {
   lost: "Χάνονται στο τέλος κάθε Περιόδου",
@@ -151,7 +149,10 @@ export function TermsSection({ agreement }: { agreement: AgreementDetail }) {
   const rows = { terms, baseline, isMonthly, isEditing: can.edit };
   const canEditMoney = can.edit && can.editPrices;
   return (
-    <Panel label="Όροι">
+    <D2Box
+      title="Όροι"
+      hint={`πληρωμή σε ${terms.paymentDays} μέρες${isMonthly ? "" : " · δόσεις σε ορόσημα"}`}
+    >
       {agreement.state !== "proposal" && signature && (
         <p className="note">
           Οι όροι πάγωσαν με την υπογραφή στις {formatDate(signature.signedOn)}.
@@ -190,6 +191,6 @@ export function TermsSection({ agreement }: { agreement: AgreementDetail }) {
           θέλει Έγκριση.
         </p>
       )}
-    </Panel>
+    </D2Box>
   );
 }

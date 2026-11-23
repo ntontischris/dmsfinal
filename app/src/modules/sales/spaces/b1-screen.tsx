@@ -4,21 +4,18 @@ import {
   columnFilterGroups,
   filterByColumns,
 } from "@/spaces/kit/column-filters";
-import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Pager } from "@/spaces/kit/pager";
 import { pageOf } from "@/spaces/kit/pager-model";
 import { codesOfSpace } from "@/spaces/data/spaces";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
-import { Strip } from "@/spaces/shell/strip";
 
 import { athensToday, salesCaps, toPickerClient } from "../helpers";
-import { listAllClients } from "../queries-clients";
 import { listSalesLists } from "../queries-lists";
-import { listAllClientOverviews } from "../queries-overview";
 import type { ClientRow, SalesCaps } from "../types";
 import { b1ColumnsOf, b1RowsOf, type B1Row } from "./b1-adapter";
 import { ClientsSearch, ClientsTable } from "./b1-clients-table";
 import { b1ColumnFilters } from "./b1-columns";
+import { B1FiltersBox } from "./b1-filters-box";
 import {
   applyB1Filters,
   b1FilterGroups,
@@ -26,9 +23,13 @@ import {
   type B1Filters,
 } from "./b1-filters";
 import { NewOpportunity } from "./b1-new-opportunity";
+import { B1Top } from "./b1-top";
+import { listClientsOnce, listOverviewsOnce } from "./clients-once";
 import { GuideLink } from "./guide-link";
 
+import "../../finance/spaces/money-lines.css";
 import "./b1.css";
+import "./b1-lines.css";
 
 interface SpacesClientsProps {
   query: string;
@@ -109,13 +110,13 @@ function ClientsList({
   );
   return (
     <>
-      <FilterBar
-        name="b1-filters"
+      <div className="kit-fb b1-search">
+        <ClientsSearch query={query} filters={filters} />
+      </div>
+      <B1FiltersBox
         filters={[...legacy.filters, ...columnGroups]}
         clearHref={legacy.clearHref}
-      >
-        <ClientsSearch query={query} filters={filters} />
-      </FilterBar>
+      />
       <ClientsTable rows={current.items} filters={filters} {...shown} />
       <Pager page={current} hrefOf={(n) => b1Href(query, filters, n)} />
     </>
@@ -142,7 +143,7 @@ export async function SpacesClients({
       </div>
     );
   const [clients, strip] = await Promise.all([
-    listAllClients(query),
+    listClientsOnce(query),
     getSpaceStrip(codesOfSpace("clients")),
   ]);
   if (!clients.ok)
@@ -151,13 +152,17 @@ export async function SpacesClients({
         <ErrorNotice what="η λίστα Πελατών" />
       </div>
     );
-  const overviews = await listAllClientOverviews(
+  const overviews = await listOverviewsOnce(
     clients.data.filter((row) => row.canOpen).map((row) => row.id),
   );
   const rows = b1RowsOf(clients.data, overviews.ok ? overviews.data : [], caps);
   return (
     <div data-spaces>
-      <Strip stats={strip.stats} now={strip.now} />
+      <p className="b1-what">
+        Βρες έναν Πελάτη και άνοιξέ τον· ό,τι θέλει προσοχή έχει κόκκινη
+        κουκκίδα.
+      </p>
+      <B1Top stats={strip.stats} now={strip.now} />
       {isDeleted && (
         <p className="note" role="status">
           Ο Πελάτης διαγράφηκε.

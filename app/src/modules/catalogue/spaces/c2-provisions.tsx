@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 
 import { setProvisions } from "../actions-items";
+import { provisionsText } from "../helpers";
 import type {
   CatalogueCaps,
   CatalogueItem,
@@ -23,6 +23,7 @@ import {
   toDrafts,
   type DraftRow,
 } from "./c2-adapter";
+import { C2Box } from "./c2-box";
 import { C2Form, C2Submit } from "./c2-form";
 import { ItemRows } from "./lane-rows";
 
@@ -100,7 +101,8 @@ function RowInputs({ row, rows, kinds, isPerPeriod, onChange }: RowInputProps) {
 }
 
 // Ο επεξεργαστής Παροχών (prototype ProvisionsSection): γράφει ένα κρυφό πεδίο `provisions` (JSON) για τη φόρμα γύρω του.
-export function ProvisionsEditorPanel({
+// Χωρίς δικό του πλαίσιο: μπαίνει σε κουτί (σελίδα στοιχείου) ή σε βήμα (νέο στοιχείο).
+export function ProvisionsEditor({
   kinds,
   initial,
   isPerPeriod,
@@ -133,9 +135,12 @@ export function ProvisionsEditorPanel({
     </button>
   );
   return (
-    <Panel label="Παροχές" aside={addButton}>
+    <>
       <input type="hidden" name="provisions" value={serializeDrafts(rows)} />
-      <p className="muted">{intro}</p>
+      <div className="c2-bar">
+        <p className="muted">{intro}</p>
+        {addButton}
+      </div>
       {rows.length === 0 ? (
         <p className="muted">Καμία Παροχή.</p>
       ) : (
@@ -168,7 +173,7 @@ export function ProvisionsEditorPanel({
         />
       )}
       {children}
-    </Panel>
+    </>
   );
 }
 
@@ -182,7 +187,7 @@ interface C2ProvisionsProps {
 function ReadOnlyProvisions({ item, kinds, caps }: C2ProvisionsProps) {
   const isPerPeriod = item.billing === "monthly";
   return (
-    <Panel label="Παροχές">
+    <>
       <p className="muted">{provisionsIntro(item)}</p>
       {item.provisions.length === 0 ? (
         <p className="muted">Καμία Παροχή.</p>
@@ -206,24 +211,42 @@ function ReadOnlyProvisions({ item, kinds, caps }: C2ProvisionsProps) {
         />
       )}
       <ProvisionsNote canManageSettings={caps.canManageSettings} />
-    </Panel>
+    </>
+  );
+}
+
+// Η υπόδειξη του κλειστού κουτιού: οι Παροχές σε μία γραμμή («2 Γυρίσματα, 8 reels»).
+const provisionsHint = ({ item, kinds }: C2ProvisionsProps): string =>
+  item.provisions.length === 0
+    ? "Καμία Παροχή"
+    : provisionsText(item.provisions, kinds);
+
+function Editable({ item, kinds, caps }: C2ProvisionsProps) {
+  return (
+    <C2Form action={setProvisions} itemId={item.id}>
+      <div className="c2-box-body">
+        <ProvisionsEditor
+          kinds={kinds}
+          initial={item.provisions}
+          isPerPeriod={item.billing === "monthly"}
+          intro={provisionsIntro(item)}
+        >
+          <ProvisionsNote canManageSettings={caps.canManageSettings} />
+          <C2Submit label="Αποθήκευση" onlyWhenChanged />
+        </ProvisionsEditor>
+      </div>
+    </C2Form>
   );
 }
 
 export function C2Provisions(props: C2ProvisionsProps) {
-  const { item, kinds, caps } = props;
-  if (!caps.canManage) return <ReadOnlyProvisions {...props} />;
   return (
-    <C2Form action={setProvisions} itemId={item.id}>
-      <ProvisionsEditorPanel
-        kinds={kinds}
-        initial={item.provisions}
-        isPerPeriod={item.billing === "monthly"}
-        intro={provisionsIntro(item)}
-      >
-        <ProvisionsNote canManageSettings={caps.canManageSettings} />
-        <C2Submit label="Αποθήκευση" onlyWhenChanged />
-      </ProvisionsEditorPanel>
-    </C2Form>
+    <C2Box title="Παροχές" hint={provisionsHint(props)}>
+      {props.caps.canManage ? (
+        <Editable {...props} />
+      ) : (
+        <ReadOnlyProvisions {...props} />
+      )}
+    </C2Box>
   );
 }

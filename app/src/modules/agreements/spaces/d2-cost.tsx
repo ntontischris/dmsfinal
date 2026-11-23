@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import { marginOf, priceRange } from "../cost";
@@ -13,6 +12,7 @@ import {
 } from "../helpers";
 import { DEVIATION_STATUS_LABELS } from "../labels";
 import type { AgreementDetail, CostBlock } from "../types";
+import { D2Box } from "./d2-box";
 import { approvedRevisionOf } from "./d2-model";
 
 // Κόστος και περιθώριο, Παρεκκλίσεις (prototype `screens/d2-cost.tsx`) με τα πραγματικά νούμερα της βάσης.
@@ -52,12 +52,14 @@ export function CostSection({ agreement }: { agreement: AgreementDetail }) {
   const perPeriod = agreement.kind === "monthly" ? " ανά Περίοδο" : "";
   const hasDiscount = totals !== null && totals.discountedPrice < totals.price;
   return (
-    <Panel
-      label="Κόστος και περιθώριο"
-      aside={
+    <D2Box
+      title="Κόστος και περιθώριο"
+      hint={
         cost.isLowMargin ? (
           <Badge tone="attention">χαμηλό περιθώριο</Badge>
-        ) : undefined
+        ) : estimated === null ? undefined : (
+          `κόστος ${formatMoney(estimated)}${perPeriod}`
+        )
       }
     >
       <dl className="dl">
@@ -112,9 +114,15 @@ export function CostSection({ agreement }: { agreement: AgreementDetail }) {
       <p className="muted">
         Οι ώρες και το κόστος είναι εσωτερικά· ο πελάτης δεν τα βλέπει ποτέ.
       </p>
-    </Panel>
+    </D2Box>
   );
 }
+
+const deviationsHint = (a: AgreementDetail): string => {
+  if (a.deviations.length === 0) return "καμία";
+  const count = `${a.deviations.length} ${a.deviations.length === 1 ? "Παρέκκλιση" : "Παρεκκλίσεις"}`;
+  return a.needsApproval ? `${count} · θέλει Έγκριση` : count;
+};
 
 // Κάθε Παρέκκλιση με το αν την καλύπτει η τελευταία Έγκριση. Η βάση τις δίνει μόνο σε όποιον τις δικαιούται.
 export function DeviationsSection({
@@ -127,7 +135,7 @@ export function DeviationsSection({
   const approvedIn = approvedRevisionOf(agreement);
   const isProposal = agreement.state === "proposal";
   return (
-    <Panel label="Παρεκκλίσεις">
+    <D2Box title="Παρεκκλίσεις" hint={deviationsHint(agreement)}>
       {deviations.length === 0 ? (
         <p className="muted">
           {isProposal
@@ -166,6 +174,6 @@ export function DeviationsSection({
           Σε σχέση με τον Κατάλογο και τις προεπιλογές της στιγμής της πρότασης.
         </p>
       )}
-    </Panel>
+    </D2Box>
   );
 }

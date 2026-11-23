@@ -104,6 +104,7 @@ test("η Διαχείριση βλέπει κόστος και περιθώρι�
   await expect(cost).toContainText("6 ώρες");
   await expect(cost).toContainText("14 ώρες");
   await expect(control(cost, "Ώρες γυρίσματος")).toHaveCount(0);
+  await cost.locator("summary").first().click();
   await expect(control(cost, "Άμεσο κόστος")).toBeVisible();
   await shot(page, "c2-admin");
 
@@ -135,6 +136,7 @@ test("ο Ιδιοκτήτης αλλάζει ώρες και τιμή, και τ
   // Δίπλα στην εκτίμηση, ο μέσος όρος των πραγματικών ωρών (b14)· οι αριθμοί ελέγχονται στο pgTAP.
   await expect(cost).toContainText("Πραγματικές ώρες (μ.ό.)");
   await expect(cost).toContainText("ανά μονάδα");
+  await cost.locator("summary").first().click();
   await control(cost, "Ώρες γυρίσματος").fill("5");
   await control(cost, "Ώρες μοντάζ").fill("7");
   await button(cost, "Αποθήκευση").click();
@@ -146,6 +148,12 @@ test("ο Ιδιοκτήτης αλλάζει ώρες και τιμή, και τ
 
   // «Βασικά» και «Τιμή» είναι μία φόρμα με ένα κουμπί κάτω από τα δύο πάνελ.
   const basics = page.locator("form", { has: page.locator("#c2-price") });
+  await page
+    .locator("#c2-price")
+    .locator("xpath=ancestor::details[1]")
+    .locator("summary")
+    .first()
+    .click();
   await control(basics, "Τιμή χωρίς ΦΠΑ").fill("600");
   await button(basics, "Αποθήκευση").click();
   await expect(basics.getByRole("status")).toContainText(

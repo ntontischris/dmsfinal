@@ -12,6 +12,7 @@ import {
 import { athensLocal } from "../helpers";
 import type { ListItem } from "../types";
 import { activityTimeBounds, type B2ActivityRow } from "./activity-rows";
+import { ActivityLines } from "./b2-activity-lines";
 import { RowForm, useDoneNotes } from "./b5-forms";
 import { ItemRows } from "./lane-rows";
 import { SpacesActionForm } from "./spaces-form";
@@ -26,6 +27,8 @@ interface ActivityLogProps {
   openOpportunities: readonly { id: string; title: string }[];
   // Σελίδα Πελάτη (B2): η Δραστηριότητα γράφεται και κατευθείαν στον Πελάτη, χωρίς Ευκαιρία.
   clientId?: string;
+  // Σελίδα Πελάτη: οι γραμμές στο ύφος των «Χρημάτων» (ml-line)· η B4 κρατά τις γραμμές της.
+  isLines?: boolean;
 }
 
 function KindSelect({
@@ -181,6 +184,7 @@ export function ActivityLog({
   kinds,
   openOpportunities,
   clientId,
+  isLines = false,
 }: ActivityLogProps) {
   const active = kinds.filter((kind) => !kind.isRetired);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -220,6 +224,24 @@ export function ActivityLog({
       {notes.view}
       {rows.length === 0 ? (
         <p className="muted">Καμία Δραστηριότητα ακόμα.</p>
+      ) : isLines ? (
+        <ActivityLines
+          rows={rows}
+          editingId={editingId}
+          renderEdit={(row) => (
+            <EditRow row={row} kinds={kinds} onDone={onDone} />
+          )}
+          renderActions={(row) => (
+            <RowActions
+              row={row}
+              isEditing={editingId === row.id}
+              onToggleEdit={() =>
+                setEditingId(editingId === row.id ? null : row.id)
+              }
+              onDone={onDone}
+            />
+          )}
+        />
       ) : (
         <ItemRows
           items={rows.map((activity) => ({

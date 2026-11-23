@@ -1,13 +1,8 @@
-/* Σελίδα Πελάτη, «Πέντε ενωμένες καρτέλες»: κεφαλίδα-ενημέρωση, κύρια στήλη με καρτέλες, πλαϊνή στήλη «Στοιχεία».
-   Periwinkle παντού, Butter Yellow μόνο για το γύρισμα, REC μόνο ως τελεία. Τα πάνελ: b2-panels.css. */
+/* Σελίδα Πελάτη, «Πέντε ενωμένες καρτέλες»: τα μικρά κομμάτια (στάδιο, «?», μενού «⋯», Κύριο πρόσωπο, σημείωση).
+   Periwinkle παντού, Butter Yellow μόνο για το γύρισμα, REC μόνο ως τελεία. Κεφαλίδα και γραμμές: b2-lines.css. */
 [data-look='spaces'] {
 & .b2 { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
-& .b2 > *, & .b2-main > * { min-width: 0; }
-& .b2-head { display: grid; gap: var(--space-2); }
-& .b2-title { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; min-width: 0; }
-& .b2-title h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
-& .b2-title-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-left: auto; }
-& .b2-title-actions > .new-lead, & .b2-title-actions > .b2-note-form { flex-basis: 100%; }
+& .b2 > * { min-width: 0; }
 & .b2-stage { display: inline-flex; gap: var(--space-1); align-items: center; position: relative; }
 & .b2-why > summary {
   list-style: none; cursor: pointer; display: inline-grid; place-items: center; width: 1.3rem; height: 1.3rem;
@@ -19,50 +14,22 @@
   border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-raised);
   font-size: var(--text-sm);
 }
-& .b2-relationship h2 { margin: 0 0 var(--space-2); font-size: var(--text-sm); font-weight: 500; color: var(--color-text-muted); }
 & .b2-relationship .kit-steps { margin: 0; max-width: 40rem; }
 & .b2-relationship .kit-step[data-state='done']::before {
   background: color-mix(in oklab, var(--brand-periwinkle) 18%, transparent);
   border-color: var(--brand-periwinkle); color: var(--brand-periwinkle);
 }
 & .b2-relationship .kit-step[data-state='done']::after { background: var(--brand-periwinkle); }
-& .b2-lead { margin: 0; max-width: 62ch; font-size: 1.1rem; line-height: 1.45; color: var(--color-text); }
-& .b2-lead-sm { font-size: var(--text-base); }
 & .b2-line { margin: 0; font-size: var(--text-sm); overflow-wrap: anywhere; }
-& .b2-big { margin: 0; font-size: 1.05rem; font-weight: 600; }
 & .b2-num { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
 & .b2-rec { color: var(--color-text-muted); font-weight: 500; font-size: var(--text-sm); }
 & .b2-rec::before {
   content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.35rem; border-radius: 50%;
   background: var(--brand-rec); vertical-align: middle;
 }
-& .b2-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-end; font-size: var(--text-sm); }
-& .b2-foot a:not(.button) {
-  padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong);
-  font-weight: 600; text-decoration: none; color: var(--color-text);
-}
 & .b2-filming { margin: 0; padding-left: var(--space-3); border-left: 3px solid var(--brand-yellow); font-size: var(--text-sm); }
 
-/* Διάταξη: κύρια στήλη και πλαϊνή δεξιά σε desktop, από κάτω σε κινητό */
-& .b2-split { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
-@media (min-width: 60rem) {
-  & .b2-split { grid-template-columns: minmax(0, 1fr) 20rem; }
-}
-& .b2-main, & .b2-side { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
-& .b2-side > p { margin: 0; }
-/* Ο inspector δεν κολλά εδώ: από κάτω του ακολουθούν άλλα πάνελ, που αλλιώς περνούν πάνω από τη φόρμα του */
-& .b2-side > .kit-inspector { position: static; }
 & .b2-tabs { margin-bottom: 0; }
-& .b2-facts { display: grid; grid-template-columns: 1fr auto; gap: var(--space-1) var(--space-3); margin: 0; font-size: var(--text-sm); }
-& .b2-facts dd { margin: 0; text-align: right; }
-& .b2-jump { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
-& .b2-jump a {
-  padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong);
-  text-decoration: none; color: var(--color-text); font-size: var(--text-sm); font-weight: 600;
-}
-& .b2-section { display: grid; gap: var(--space-4); scroll-margin-top: 5rem; }
-& .b2-periods { margin-top: var(--space-3); }
-& .b2-periods h3 { margin: 0 0 var(--space-2); font-size: var(--text-base); font-weight: 500; }
 & .b2-note-form {
   flex-basis: 100%; display: grid; gap: var(--space-2); padding: var(--space-3);
   border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface);

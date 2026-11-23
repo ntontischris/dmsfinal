@@ -1,25 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-
-import { Entity, Person } from "@/spaces/kit/parts";
-import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 
 import { filterRows } from "../helpers";
 import { BUCKET_LABELS, KIND_LABELS } from "../labels";
-import type {
-  AgreementRowView,
-  Bucket,
-  BucketFilter,
-  KindFilter,
-} from "../types";
+import type { AgreementRowView, BucketFilter, KindFilter } from "../types";
+import { AgreementLine } from "./d1-agreement-line";
 
+import "../../finance/spaces/money-lines.css";
 import "./d1.css";
+import "./d1-lines.css";
 
 interface AgreementsTableProps {
   rows: readonly AgreementRowView[];
-  // Η στήλη του ποσού μόνο όταν ο Χρήστης «Βλέπει ποσά» (αλλιώς η βάση στέλνει null).
+  // Το ποσό μόνο όταν ο Χρήστης «Βλέπει ποσά» (αλλιώς η βάση στέλνει null).
   showAmount: boolean;
   canSeeCost: boolean;
 }
@@ -37,17 +31,10 @@ const KINDS: readonly { id: KindFilter; label: string }[] = [
   { id: "one_off", label: KIND_LABELS.one_off },
 ];
 
-// Προτάσεις περιμένουν τον πελάτη, ενεργές = έμφαση, κλειστές ξεθωριάζουν.
-const BUCKET_TONE: Readonly<Record<Bucket, BadgeTone | undefined>> = {
-  proposal: "waiting",
-  active: "strong",
-  closed: "faded",
-};
-
 const countLabel = (count: number): string =>
   count === 1 ? "1 Συμφωνία" : `${count} Συμφωνίες`;
 
-// Η λίστα Συμφωνιών (prototype `screens/d1-agreements-table.tsx`): Προβολή, αναζήτηση και Είδος στον browser.
+// Η λίστα Συμφωνιών ως γραμμές των «Χρημάτων»: Προβολή, αναζήτηση και Είδος στον browser.
 export function AgreementsTable({
   rows,
   showAmount,
@@ -66,7 +53,7 @@ export function AgreementsTable({
 
   return (
     <>
-      <div className="toolbar">
+      <div className="toolbar d1l-views">
         <div className="d1-seg" role="group" aria-label="Ποιες Συμφωνίες">
           {VIEWS.map((item) => (
             <button
@@ -114,88 +101,26 @@ export function AgreementsTable({
           </button>
         </div>
       ) : (
-        <div className="scroll">
-          <table className="rtable">
-            <thead>
-              <tr>
-                <th>Πελάτης</th>
-                <th>Συμφωνία</th>
-                <th>Είδος</th>
-                <th>Κατάσταση</th>
-                {showAmount && <th className="num">Ποσό</th>}
-                <th>Χρόνος</th>
-                <th>Υπεύθυνος</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((row) => (
-                <AgreementTableRow
-                  key={row.id}
-                  row={row}
-                  showAmount={showAmount}
-                  canSeeCost={canSeeCost}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <table className="ml-table ml-list d1l-list">
+          <thead>
+            <tr>
+              <th>Πελάτης</th>
+              <th>Συμφωνία</th>
+              {showAmount && <th>Ποσό</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((row) => (
+              <AgreementLine
+                key={row.id}
+                row={row}
+                showAmount={showAmount}
+                canSeeCost={canSeeCost}
+              />
+            ))}
+          </tbody>
+        </table>
       )}
     </>
-  );
-}
-
-function AgreementTableRow({
-  row,
-  showAmount,
-  canSeeCost,
-}: {
-  row: AgreementRowView;
-  showAmount: boolean;
-  canSeeCost: boolean;
-}) {
-  return (
-    <tr>
-      <td data-label="Πελάτης">
-        <Entity name={row.clientName} href={row.clientHref} />
-      </td>
-      <td data-label="Συμφωνία">
-        <Link className="part-title" href={row.href}>
-          {row.title}
-        </Link>
-      </td>
-      <td data-label="Είδος">
-        <span className="part-sub">{row.kindLabel}</span>
-      </td>
-      <td data-label="Κατάσταση">
-        <span className="d1-cell">
-          <Badge tone={row.isAttention ? "attention" : BUCKET_TONE[row.bucket]}>
-            {row.statusLabel}
-          </Badge>
-          {row.hasChangeRequests && <Badge tone="attention">Ζήτησε αλλαγές</Badge>}
-          {canSeeCost && row.isLowMargin && (
-            <Badge tone="attention">χαμηλό περιθώριο</Badge>
-          )}
-        </span>
-      </td>
-      {showAmount && (
-        <td className="num" data-label="Ποσό">
-          <span className="d1-cell">
-            <strong>{row.amount ?? "—"}</strong>
-            {row.discountNote && (
-              <span className="d1-small">{row.discountNote}</span>
-            )}
-          </span>
-        </td>
-      )}
-      <td data-label="Χρόνος">
-        <span className="d1-cell">
-          <span>{row.timeText}</span>
-          {row.expiryText && <Badge tone="attention">{row.expiryText}</Badge>}
-        </span>
-      </td>
-      <td data-label="Υπεύθυνος">
-        {row.managerName ? <Person name={row.managerName} /> : "—"}
-      </td>
-    </tr>
   );
 }

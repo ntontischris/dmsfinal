@@ -19,11 +19,14 @@ import {
 import type { CostHint } from "../types";
 import { CatalogueTable } from "./c1-catalogue-table";
 
+import "../../finance/spaces/money-lines.css";
+import "./catalogue-lines.css";
+
 const Frame = ({ children }: { children: React.ReactNode }) => (
   <div data-spaces>{children}</div>
 );
 
-// Η γραμμή του Κόστους ώρας πάνω από τον Κατάλογο (prototype `.note`), για όποιον βλέπει κόστος.
+// Η γραμμή του Κόστους ώρας πάνω από τον Κατάλογο, για όποιον βλέπει κόστος: προειδοποίηση αν λείπει, αλλιώς αχνή.
 function CostNote({ hint }: { hint: CostHint | null }) {
   if (hint === null || hint.hourCost === null)
     return (
@@ -36,7 +39,7 @@ function CostNote({ hint }: { hint: CostHint | null }) {
   const { min, target, max } = hint.multipliers;
   const month = hint.hourCostMonth ? ` ${formatMonth(hint.hourCostMonth)}` : "";
   return (
-    <p className="note">
+    <p className="c1-fact">
       Κόστος ώρας{month}: <strong>{formatMoney(hint.hourCost)}</strong> · Εύρος
       τιμής ×{formatMultiplier(min)} / ×{formatMultiplier(target)} / ×
       {formatMultiplier(max)}. Αλλάζουν στις{" "}
@@ -45,7 +48,7 @@ function CostNote({ hint }: { hint: CostHint | null }) {
   );
 }
 
-// C1 Κατάλογος στη νέα εμφάνιση (prototype `screens/C1.tsx`). Τα ποσά που ο Χρήστης δεν δικαιούται έρχονται null.
+// C1 Κατάλογος στη μορφή των «Χρημάτων»: μία γραμμή «τι κάνω εδώ;», τα δύο κουμπιά, και τα στοιχεία ως γραμμές. Τα ποσά που ο Χρήστης δεν δικαιούται έρχονται null.
 export async function SpacesCatalogue() {
   const viewer = await getViewer();
   const caps = catalogueCaps(viewer);
@@ -74,25 +77,21 @@ export async function SpacesCatalogue() {
   );
   return (
     <Frame>
-      <div className="toolbar">
-        <span className="muted grow">
+      <div className="ml-head">
+        <p>
           {caps.canManage
             ? "Ό,τι αλλάζεις εδώ ισχύει για νέες προτάσεις. Οι υπογεγραμμένες Συμφωνίες κρατούν το δικό τους."
             : "Μόνο ανάγνωση: τιμές και Παροχές, για να διαλέγεις γραμμές στην πρόταση."}
-        </span>
+        </p>
         {caps.canManage && (
-          <span className="btn-row">
-            <Link
-              className="button"
-              data-primary="true"
-              href="/app/catalogue/new?type=package"
-            >
+          <div className="c1-actions">
+            <Link className="ml-cta" href="/app/catalogue/new?type=package">
               Νέο Πακέτο
             </Link>
-            <Link className="button" href="/app/catalogue/new?type=service">
+            <Link className="c1-ghost" href="/app/catalogue/new?type=service">
               Νέα Υπηρεσία
             </Link>
-          </span>
+          </div>
         )}
       </div>
       {caps.canSeeCost && <CostNote hint={costHint} />}

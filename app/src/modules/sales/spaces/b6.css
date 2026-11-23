@@ -1,0 +1,12 @@
+[data-look='spaces'] {
+/* Πιθανά διπλά σε γραμμές: η απόφαση δεξιά, η σύγκριση των δύο πλευρών σε κουτί που ανοίγει */
+& .b6-pair { display: grid; gap: .35rem; margin-bottom: var(--space-4); }
+& .b6-quick { grid-column: 3 / -1; align-items: center; }
+& .b6-quick form { display: contents; }
+& .b6-quick button[data-primary] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
+& .b6-survivor { display: flex; align-items: center; gap: .4rem; font-size: .82rem; }
+& .b6-sides .compare { padding: 0 1rem 1rem; }
+}
+@media (max-width: 40rem) {
+  [data-look='spaces'] .b6-quick { grid-column: 1 / -1; }
+}

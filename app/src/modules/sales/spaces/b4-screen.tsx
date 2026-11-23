@@ -9,45 +9,38 @@ import {
   type ProposalSummary,
   type ReadResult as AgreementsRead,
 } from "@/modules/agreements";
-import { Panel } from "@/spaces/kit/panel";
 import { hrefOf } from "@/spaces/data/screens";
-import {
-  Badge,
-  ErrorNotice,
-  StateNotice,
-  fmtDate,
-} from "@/spaces/screens/shared";
+import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
-import { athensToday, isForgotten, salesCaps } from "../helpers";
-import { OUTCOME_LABELS } from "../labels";
+import { athensToday, canSeeAmounts, salesCaps } from "../helpers";
+import { getOpportunityForecast } from "../queries-forecast";
 import { getActivityLookups, listSalesLists } from "../queries-lists";
 import {
   getOpportunity,
   listOpportunityActivities,
 } from "../queries-opportunities";
+import type { ReadResult } from "../read";
 import type {
   ActivityLookups,
   ActivityRow,
-  ListItem,
   Opportunity,
+  OpportunityForecast,
   SalesCaps,
   SalesLists,
 } from "../types";
 import { toActivityRows } from "./activity-rows";
-import { ActivityLog } from "./b2-activity-log";
-import {
-  CloseLost,
-  FollowUp,
-  NextStepEditor,
-  SaidYes,
-  StageSelect,
-} from "./b4-controls";
-import { ForecastPanel, ManagerField } from "./b4-forecast-panel";
-import { noteKindId } from "./b4-said-yes";
-import { TitleEditor } from "./b4-title";
+import { ActivitiesBox, ControlBox } from "./b4-boxes";
+import { FollowUp } from "./b4-controls";
+import { ForecastBox } from "./b4-forecast-panel";
+import { OpportunityHero } from "./b4-hero";
+
+import "../../finance/spaces/money-lines.css";
+import "./b4-lines.css";
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
-  <div data-spaces>{children}</div>
+  <div data-spaces className="ml-stack b4-page">
+    {children}
+  </div>
 );
 
 const DAY_MS = 86_400_000;
@@ -55,9 +48,6 @@ const plusDays = (isoDate: string, days: number): string =>
   new Date(Date.parse(`${isoDate}T00:00:00Z`) + days * DAY_MS)
     .toISOString()
     .slice(0, 10);
-
-const labelOf = (items: readonly ListItem[], id: string | null): string =>
-  items.find((item) => item.id === id)?.label ?? "—";
 
 const canWorkOn = (caps: SalesCaps, o: Opportunity): boolean =>
   caps.canManage &&
@@ -100,224 +90,116 @@ interface WorkbenchProps {
   isOwner: boolean;
   canCreateProposal: boolean;
   proposal: AgreementsRead<ProposalSummary | null>;
+  forecast: ReadResult<OpportunityForecast>;
+  hasAmounts: boolean;
 }
 
-function Facts({
+// Οι σημειώσεις της κλεισμένης Ευκαιρίας στην κεφαλίδα: κερδισμένη με την υπογραφή, ή χαμένη με «Νέα Ευκαιρία από αυτήν».
+function ClosedNotes({
   opportunity,
-  lists,
   caps,
-  canWork,
   today,
 }: {
   opportunity: Opportunity;
-  lists: SalesLists;
   caps: SalesCaps;
-  canWork: boolean;
   today: string;
 }) {
-  const isOpen = opportunity.outcome === "open";
+  if (opportunity.outcome === "won")
+    return (
+      <p className="note">
+        Κερδισμένη με την υπογραφή του Υπογράφοντα. Δεν αλλάζει με το χέρι.
+      </p>
+    );
+  if (opportunity.outcome !== "lost") return null;
   return (
-    <dl className="dl">
-      {canWork && (
-        <>
-          <dt>Τίτλος</dt>
-          <dd>
-            <TitleEditor
-              opportunityId={opportunity.id}
-              title={opportunity.title}
-              stageId={opportunity.stageId}
-              nextStep={opportunity.nextStep}
-              nextStepDue={opportunity.nextStepDue}
-            />
-          </dd>
-        </>
+    <div className="stack">
+      <p className="note">
+        Μια χαμένη Ευκαιρία δεν ξανανοίγει. Αν ο πελάτης το ξανασκεφτεί, ανοίγει
+        νέα, με σύνδεσμο σε αυτήν.
+      </p>
+      {canFollowUpOn(caps, opportunity) && (
+        <FollowUp
+          lostId={opportunity.id}
+          title={opportunity.title}
+          sourceId={opportunity.sourceId}
+          defaultDue={plusDays(today, 3)}
+        />
       )}
-      <dt>Πελάτης</dt>
-      <dd>
-        <Link href={hrefOf("B2", { id: opportunity.clientId })}>
-          {opportunity.clientName ?? "—"}
-        </Link>
-      </dd>
-      <dt>Στάδιο</dt>
-      <dd>
-        {canWork ? (
-          <StageSelect
-            opportunityId={opportunity.id}
-            stageId={opportunity.stageId}
-            stages={lists.stages}
-          />
-        ) : (
-          labelOf(lists.stages, opportunity.stageId)
-        )}
-      </dd>
-      <dt>Υπεύθυνος</dt>
-      <dd>
-        <ManagerField opportunity={opportunity} caps={caps} />
-      </dd>
-      <dt>Πηγή</dt>
-      <dd>
-        {labelOf(lists.sources, opportunity.sourceId)}
-        {opportunity.referredBy && ` — ${opportunity.referredBy}`}
-      </dd>
-      <dt>Επόμενο βήμα</dt>
-      <dd>
-        {canWork ? (
-          <NextStepEditor
-            opportunityId={opportunity.id}
-            title={opportunity.title}
-            stageId={opportunity.stageId}
-            nextStep={opportunity.nextStep}
-            nextStepDue={opportunity.nextStepDue}
-            isOverdue={isForgotten(opportunity, today)}
-            dueText={
-              opportunity.nextStepDue ? fmtDate(opportunity.nextStepDue) : null
-            }
-          />
-        ) : isOpen && opportunity.nextStepDue ? (
-          `${opportunity.nextStep}, ${fmtDate(opportunity.nextStepDue)}`
-        ) : (
-          "—"
-        )}
-      </dd>
-      {opportunity.followsId && (
-        <>
-          <dt>Συνεχίζει</dt>
-          <dd>
-            <Link href={hrefOf("B4", { id: opportunity.followsId })}>
-              {opportunity.followsTitle ?? "—"}
-            </Link>
-          </dd>
-        </>
-      )}
-    </dl>
+    </div>
   );
 }
 
-// Η Σελίδα Ευκαιρίας (prototype `screens/b4-workbench.tsx`): ταυτότητα και δουλειά, πρόταση, Δραστηριότητες.
-function Workbench({
-  opportunity,
-  lists,
-  activities,
-  lookups,
-  caps,
-  isOwner: viewerIsOwner,
-  canCreateProposal,
-  proposal,
-}: WorkbenchProps) {
-  const hasProposal = proposal.ok && proposal.data !== null;
-  const today = athensToday();
-  const canWork = canWorkOn(caps, opportunity);
+// Τα κλειστά κουτιά κάτω από την κεφαλίδα: Πρόταση, Πρόβλεψη (ανοιχτή), Έλεγχος (για τον Υπεύθυνο), Δραστηριότητες.
+function Boxes(props: WorkbenchProps & { canWork: boolean }) {
+  const { opportunity, lists, caps, canWork } = props;
   const isOpen = opportunity.outcome === "open";
-  const lossReason = opportunity.lossReasonId
-    ? labelOf(lists.lossReasons, opportunity.lossReasonId)
-    : null;
-  const rows = toActivityRows(activities, lookups, {
+  const rows = toActivityRows(props.activities, props.lookups, {
     who: {
       userId: caps.userId,
-      isOwner: viewerIsOwner,
+      isOwner: props.isOwner,
       canManage: caps.canManage,
     },
     showOpportunity: false,
   });
   return (
-    <Frame>
-      <div className="stack">
-        <Panel
-          label={opportunity.title}
-          aside={
-            <span className="btn-row">
-              <Badge tone="strong">{OUTCOME_LABELS[opportunity.outcome]}</Badge>
-              {lossReason && opportunity.outcome === "lost" && (
-                <Badge>Λόγος απώλειας: {lossReason}</Badge>
-              )}
-            </span>
-          }
-        >
-          {canWork && (
-            <nav className="btn-row" aria-label="Ενέργειες Ευκαιρίας">
-              <a className="button" href="#b4-activities">
-                Σημείωση ή κλήση
-              </a>
-              <a className="button" href="#b4-proposal">
-                {hasProposal
-                  ? "Πρόταση: αποστολή, Παράταση, κλείσιμο"
-                  : "Νέα πρόταση"}
-              </a>
-              <SaidYes
-                opportunityId={opportunity.id}
-                kindId={noteKindId(lists.activityKinds)}
-                hasProposal={hasProposal}
-                proposalHref={
-                  proposal.ok && proposal.data
-                    ? hrefOf("D2", { id: proposal.data.agreementId })
-                    : "#b4-proposal"
-                }
-              />
-            </nav>
-          )}
-          <Facts
-            opportunity={opportunity}
-            lists={lists}
-            caps={caps}
-            canWork={canWork}
-            today={today}
-          />
-          {opportunity.outcome === "won" && (
-            <p className="note">
-              Κερδισμένη με την υπογραφή του Υπογράφοντα. Δεν αλλάζει με το
-              χέρι.
-            </p>
-          )}
-          {opportunity.outcome === "lost" && (
-            <div className="stack">
-              <p className="note">
-                Μια χαμένη Ευκαιρία δεν ξανανοίγει. Αν ο πελάτης το ξανασκεφτεί,
-                ανοίγει νέα, με σύνδεσμο σε αυτήν.
-              </p>
-              {canFollowUpOn(caps, opportunity) && (
-                <FollowUp
-                  lostId={opportunity.id}
-                  title={opportunity.title}
-                  sourceId={opportunity.sourceId}
-                  defaultDue={plusDays(today, 3)}
-                />
-              )}
-            </div>
-          )}
-          {canWork && (
-            <CloseLost
-              opportunityId={opportunity.id}
-              reasons={lists.lossReasons}
-            />
-          )}
-        </Panel>
-
-        <ForecastPanel
+    <>
+      <SpacesProposalPanel
+        opportunityId={opportunity.id}
+        found={props.proposal}
+        canCreate={props.canCreateProposal && isOpen}
+        defaultTitle={opportunity.title}
+      />
+      {isOpen && (
+        <ForecastBox
           opportunity={opportunity}
           stages={lists.stages}
           canWork={canWork}
+          found={props.forecast}
+          hasAmounts={props.hasAmounts}
         />
+      )}
+      {canWork && (
+        <ControlBox opportunity={opportunity} lossReasons={lists.lossReasons} />
+      )}
+      <ActivitiesBox
+        opportunity={opportunity}
+        rows={rows}
+        canLog={canWork}
+        kinds={lists.activityKinds}
+      />
+    </>
+  );
+}
 
-        <div id="b4-proposal" />
-        <SpacesProposalPanel
-          opportunityId={opportunity.id}
-          found={proposal}
-          canCreate={canCreateProposal && isOpen}
-          defaultTitle={opportunity.title}
-        />
-
-        <div id="b4-activities" />
-        <Panel label="Δραστηριότητες">
-          <ActivityLog
-            rows={rows}
-            canLog={canWork}
-            kinds={lists.activityKinds}
-            openOpportunities={[
-              { id: opportunity.id, title: opportunity.title },
-            ]}
-          />
-        </Panel>
-      </div>
+// Η Σελίδα Ευκαιρίας στη μορφή των «Χρημάτων»: κεφαλίδα με τη δουλειά της μέρας και από κάτω κλειστά κουτιά.
+function Workbench(props: WorkbenchProps) {
+  const { opportunity, caps, proposal, forecast, hasAmounts } = props;
+  const today = athensToday();
+  const canWork = canWorkOn(caps, opportunity);
+  const found = proposal.ok ? proposal.data : null;
+  const heroForecast =
+    opportunity.outcome === "open" && forecast.ok
+      ? { row: forecast.data.row, hasAmounts }
+      : null;
+  return (
+    <Frame>
+      <OpportunityHero
+        opportunity={opportunity}
+        lists={props.lists}
+        caps={caps}
+        canWork={canWork}
+        today={today}
+        forecast={heroForecast}
+        proposal={{
+          hasProposal: found !== null,
+          href: found
+            ? hrefOf("D2", { id: found.agreementId })
+            : "#b4-proposal",
+        }}
+      >
+        <ClosedNotes opportunity={opportunity} caps={caps} today={today} />
+      </OpportunityHero>
+      <Boxes {...props} canWork={canWork} />
     </Frame>
   );
 }
@@ -343,13 +225,15 @@ export async function SpacesOpportunity({
     );
   if (!z.uuid().safeParse(opportunityId).success) return <Missing />;
   const agreements = agreementCaps(viewer);
-  const [found, activities, lookups, lists, proposal] = await Promise.all([
-    getOpportunity(opportunityId),
-    listOpportunityActivities(opportunityId),
-    getActivityLookups(),
-    listSalesLists(),
-    getProposalSummary(opportunityId),
-  ]);
+  const [found, activities, lookups, lists, proposal, forecast] =
+    await Promise.all([
+      getOpportunity(opportunityId),
+      listOpportunityActivities(opportunityId),
+      getActivityLookups(),
+      listSalesLists(),
+      getProposalSummary(opportunityId),
+      getOpportunityForecast(opportunityId),
+    ]);
   if (!found.ok || !activities.ok || !lookups.ok || !lists.ok)
     return (
       <Frame>
@@ -367,6 +251,8 @@ export async function SpacesOpportunity({
       isOwner={isOwner(viewer)}
       canCreateProposal={agreements.canDraft}
       proposal={proposal}
+      forecast={forecast}
+      hasAmounts={canSeeAmounts(viewer)}
     />
   );
 }

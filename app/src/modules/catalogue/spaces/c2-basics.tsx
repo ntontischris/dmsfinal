@@ -1,7 +1,5 @@
 "use client";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { updateItem } from "../actions-items";
 import { moneyInput } from "../components/item-basics-form-parts";
 import { itemKindLabel, priceSuffix, priceText } from "../helpers";
@@ -9,6 +7,7 @@ import { FORWARD_NOTE } from "../labels";
 import type { CatalogueCaps, CatalogueItem } from "../types";
 
 import { vatHint } from "./c2-adapter";
+import { C2Box, C2Sub } from "./c2-box";
 import { C2Form, C2Submit, Dash, Field } from "./c2-form";
 
 interface BasicsProps {
@@ -25,65 +24,63 @@ const PRICE_NOTE =
 function BasicsSection({ item, caps }: BasicsProps) {
   const editable = caps.canManage;
   return (
-    <Panel label="Βασικά">
-      <dl className="dl">
+    <dl className="dl">
+      <Field
+        id="c2-name"
+        label="Όνομα"
+        editable={editable}
+        value={item.name}
+        input={
+          <input
+            id="c2-name"
+            name="name"
+            className="input"
+            defaultValue={item.name}
+            required
+          />
+        }
+      />
+      <Field
+        id="c2-kind"
+        label="Είδος"
+        editable={false}
+        value={itemKindLabel(item)}
+        hint={editable ? KIND_HINT : undefined}
+      />
+      {item.kind === "service" && (
         <Field
-          id="c2-name"
-          label="Όνομα"
+          id="c2-unit"
+          label="Μονάδα"
           editable={editable}
-          value={item.name}
+          value={item.unit || <Dash />}
           input={
             <input
-              id="c2-name"
-              name="name"
+              id="c2-unit"
+              name="unit"
               className="input"
-              defaultValue={item.name}
-              required
+              defaultValue={item.unit}
+              placeholder="π.χ. ανά reel"
             />
           }
         />
-        <Field
-          id="c2-kind"
-          label="Είδος"
-          editable={false}
-          value={itemKindLabel(item)}
-          hint={editable ? KIND_HINT : undefined}
-        />
-        {item.kind === "service" && (
-          <Field
-            id="c2-unit"
-            label="Μονάδα"
-            editable={editable}
-            value={item.unit || <Dash />}
-            input={
-              <input
-                id="c2-unit"
-                name="unit"
-                className="input"
-                defaultValue={item.unit}
-                placeholder="π.χ. ανά reel"
-              />
-            }
+      )}
+      <Field
+        id="c2-description"
+        label="Περιγραφή"
+        editable={editable}
+        value={item.description || <Dash />}
+        hint="Εσωτερική. Ό,τι βλέπει ο πελάτης γράφεται στην ενότητα «Δημόσιο»."
+        input={
+          <textarea
+            id="c2-description"
+            name="description"
+            className="input"
+            rows={2}
+            defaultValue={item.description}
           />
-        )}
-        <Field
-          id="c2-description"
-          label="Περιγραφή"
-          editable={editable}
-          value={item.description || <Dash />}
-          hint="Εσωτερική. Ό,τι βλέπει ο πελάτης γράφεται στην ενότητα «Δημόσιο»."
-          input={
-            <textarea
-              id="c2-description"
-              name="description"
-              className="input"
-              rows={2}
-              defaultValue={item.description}
-            />
-          }
-        />
-      </dl>
-    </Panel>
+        }
+      />
+    </dl>
   );
 }
 
@@ -92,7 +89,7 @@ function PriceSection({ item, caps, vatRate }: BasicsProps) {
   if (!caps.canSeePrice || item.price === null) return null;
   const hint = vatHint(item.price, vatRate);
   return (
-    <Panel label="Τιμή">
+    <C2Sub title="Τιμή">
       <dl className="dl">
         <Field
           id="c2-price"
@@ -121,29 +118,45 @@ function PriceSection({ item, caps, vatRate }: BasicsProps) {
         />
       </dl>
       <p className="muted">{PRICE_NOTE}</p>
-    </Panel>
+    </C2Sub>
   );
 }
 
 function Sections(props: BasicsProps) {
-  const hasPrice = props.caps.canSeePrice && props.item.price !== null;
-  if (!hasPrice) return <BasicsSection {...props} />;
   return (
-    <div className="grid2">
+    <>
       <BasicsSection {...props} />
       <PriceSection {...props} />
-    </div>
+    </>
   );
 }
 
-// «Βασικά» και «Τιμή» του prototype: μία ενέργεια (updateItem), άρα μία φόρμα και για τα δύο πάνελ.
+// Η υπόδειξη του κλειστού κουτιού: Είδος, Μονάδα, Περιγραφή και η τιμή (για όποιον τη βλέπει).
+const basicsHint = ({ item, caps }: BasicsProps): string =>
+  [
+    itemKindLabel(item),
+    item.kind === "service" && item.unit ? item.unit : null,
+    item.description ? "με περιγραφή" : "χωρίς περιγραφή",
+    caps.canSeePrice ? priceText(item) : null,
+  ]
+    .filter((part): part is string => part !== null && part !== "")
+    .join(" · ");
+
+// «Βασικά» και «Τιμή» του prototype: μία ενέργεια (updateItem), άρα μία φόρμα μέσα σε ένα κλειστό κουτί.
 // Όποιος δεν Διαχειρίζεται Κατάλογο βλέπει τα ίδια ως κείμενο, χωρίς κουμπί.
 export function C2Basics(props: BasicsProps) {
-  if (!props.caps.canManage) return <Sections {...props} />;
   return (
-    <C2Form action={updateItem} itemId={props.item.id}>
-      <Sections {...props} />
-      <C2Submit label="Αποθήκευση" onlyWhenChanged aside={FORWARD_NOTE} />
-    </C2Form>
+    <C2Box title="Βασικά" hint={basicsHint(props)}>
+      {props.caps.canManage ? (
+        <C2Form action={updateItem} itemId={props.item.id}>
+          <div className="c2-box-body">
+            <Sections {...props} />
+            <C2Submit label="Αποθήκευση" onlyWhenChanged aside={FORWARD_NOTE} />
+          </div>
+        </C2Form>
+      ) : (
+        <Sections {...props} />
+      )}
+    </C2Box>
   );
 }

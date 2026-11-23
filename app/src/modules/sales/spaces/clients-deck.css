@@ -1,0 +1,6 @@
+/* Οι κάρτες-κάδρα του Χώρου «Πελάτες»: ίδιο κάδρο με τα «Χρήματα» (money-deck.css), λίγο χαμηλότερες για να φαίνεται η λίστα. */
+.clients-deck { height: 15rem; }
+.clients-deck .money-reel-foot small { overflow-wrap: anywhere; }
+@media (max-width: 40rem) {
+  .clients-deck { height: auto; }
+}

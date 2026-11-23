@@ -12,6 +12,7 @@ import { agreementCaps, athensToday } from "../helpers";
 import { getAgreement, listProvisionKinds } from "../queries-agreements";
 import type { AgreementCaps, AgreementDetail, KindInfo } from "../types";
 import { ActionBar } from "./d2-actions";
+import { D2Box } from "./d2-box";
 import { CostSection, DeviationsSection } from "./d2-cost";
 import { D2Header } from "./d2-header";
 import {
@@ -37,18 +38,21 @@ import { TermsSection } from "./d2-terms";
 
 import { SpacesProposalDocument } from "./d5-document";
 
+import "../../finance/spaces/money-lines.css";
 import "./d2.css";
+import "./d2-lines.css";
 
 const Frame = ({ children }: { children: ReactNode }) => (
   <div data-spaces>
-    <div className="d2">{children}</div>
+    <div className="d2 ml-stack">{children}</div>
   </div>
 );
 
 // «Όπως θα τη δει ο πελάτης»: το έγγραφο της D5 (ίδιο με τον Σύνδεσμο πρότασης)· η βάση το δίνει μόνο σε όποιον «Βλέπει ποσά».
-const previewOf = (extras: D2Extras): ReactNode | null =>
-  extras.preview === null ? null : (
-    <div className="stack">
+function PreviewBox({ extras }: { extras: D2Extras }) {
+  if (extras.preview === null) return null;
+  return (
+    <D2Box title="Όπως θα τη δει ο πελάτης" hint="το έγγραφο της πρότασης">
       <p className="note" role="note">
         {DOC_LABELS.el.preview}
       </p>
@@ -56,8 +60,9 @@ const previewOf = (extras: D2Extras): ReactNode | null =>
         document={extras.preview}
         language={extras.preview.language}
       />
-    </div>
+    </D2Box>
   );
+}
 
 interface BodyProps {
   agreement: AgreementDetail;
@@ -67,25 +72,22 @@ interface BodyProps {
   origin: string;
 }
 
-// Η σειρά του prototype (`screens/d2-workbench.tsx`): ενέργειες, Γραμμές, κόστος/Παρεκκλίσεις, Όροι, έναρξη/παραλήπτες,
-// Περίοδοι, και στο τέλος τα εξερχόμενα και το ιστορικό.
-function Body({ agreement, kinds, caps, extras, origin }: BodyProps) {
-  const internal = isInternal(caps);
+// Οι ενέργειες του hero: της πρότασης, λήξη/συνέχεια και η «Λήψη PDF» της υπογεγραμμένης.
+function HeroActions({
+  agreement,
+  kinds,
+  caps,
+  extras,
+}: Omit<BodyProps, "origin">) {
   const today = athensToday();
-  const hasCost = agreement.cost !== null;
-  const hasDeviations = agreement.deviations.length > 0 || agreement.can.edit;
   return (
     <>
-      {agreement.can.closeLost && extras.isLossReasonsFailed && (
-        <ErrorNotice what="οι λόγοι απώλειας (το «Κλείσιμο ως χαμένη» δεν γίνεται τώρα)" />
-      )}
       <ActionBar
         agreement={agreement}
         lossReasons={extras.lossReasons}
         usedKinds={usedKindsOf(agreement, kinds)}
         today={today}
         pendingDays={pendingApprovalDays(agreement)}
-        preview={previewOf(extras)}
       />
       {extras.lifecycle && (
         <LifecyclePanel
@@ -94,23 +96,32 @@ function Body({ agreement, kinds, caps, extras, origin }: BodyProps) {
           today={today}
         />
       )}
+      {agreement.signature !== null && caps.canSeeAmounts && (
+        <a className="button" href={`/app/agreements/${agreement.id}/pdf`}>
+          Λήψη PDF
+        </a>
+      )}
+    </>
+  );
+}
+
+// Κάτω από το hero: κλειστά κουτιά με τη σειρά του prototype (`screens/d2-workbench.tsx`) — Γραμμές, κόστος/Παρεκκλίσεις,
+// Όροι, έναρξη/παραλήπτες, Περίοδοι, εξερχόμενα, ιστορικό, υπογραφή και η προεπισκόπηση.
+function Boxes({ agreement, kinds, caps, extras, origin }: BodyProps) {
+  const internal = isInternal(caps);
+  return (
+    <>
       <LinesSection
         agreement={agreement}
         kinds={kinds}
         options={extras.options}
         isOptionsFailed={extras.isOptionsFailed}
       />
-      {(hasCost || hasDeviations) && (
-        <div className="grid2">
-          <CostSection agreement={agreement} />
-          <DeviationsSection agreement={agreement} />
-        </div>
-      )}
+      <CostSection agreement={agreement} />
+      <DeviationsSection agreement={agreement} />
       <TermsSection agreement={agreement} />
-      <div className="grid2">
-        <ScheduleSection agreement={agreement} />
-        {internal && <PeopleSection agreement={agreement} />}
-      </div>
+      <ScheduleSection agreement={agreement} />
+      {internal && <PeopleSection agreement={agreement} />}
       <PeriodsSection
         agreement={agreement}
         canSeeProductions={caps.canSeeProductions}
@@ -122,17 +133,10 @@ function Body({ agreement, kinds, caps, extras, origin }: BodyProps) {
           emailSenderConnected={agreement.emailSenderConnected}
         />
       )}
-      {internal && (
-        <div className="grid2">
-          <ChangeRequestsSection agreement={agreement} />
-          <RevisionsSection agreement={agreement} />
-        </div>
-      )}
-      <SignatureSection
-        agreement={agreement}
-        kinds={kinds}
-        canDownload={caps.canSeeAmounts}
-      />
+      {internal && <ChangeRequestsSection agreement={agreement} />}
+      {internal && <RevisionsSection agreement={agreement} />}
+      <SignatureSection agreement={agreement} kinds={kinds} />
+      <PreviewBox extras={extras} />
     </>
   );
 }
@@ -187,8 +191,18 @@ export async function SpacesAgreement({
     loadExtras(found.data, caps),
     requestOrigin(),
   ]);
+  const body = {
+    agreement: found.data,
+    kinds: kinds.data,
+    caps,
+    extras,
+    origin,
+  };
   return (
     <Frame>
+      {found.data.can.closeLost && extras.isLossReasonsFailed && (
+        <ErrorNotice what="οι λόγοι απώλειας (το «Κλείσιμο ως χαμένη» δεν γίνεται τώρα)" />
+      )}
       <D2Header
         agreement={found.data}
         caps={caps}
@@ -200,14 +214,9 @@ export async function SpacesAgreement({
             id={found.data.id}
           />
         }
+        actions={<HeroActions {...body} />}
       />
-      <Body
-        agreement={found.data}
-        kinds={kinds.data}
-        caps={caps}
-        extras={extras}
-        origin={origin}
-      />
+      <Boxes {...body} />
     </Frame>
   );
 }

@@ -1,0 +1,59 @@
+/* C1 Κατάλογος και C2 Πακέτο / Υπηρεσία στη μορφή των «Χρημάτων» (money-lines.css). Μόνο tokens. */
+
+/* C1: κεφαλή με το «τι κάνω εδώ;» και τα δύο κουμπιά */
+.c1-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.c1-ghost {
+  display: inline-flex; align-items: center; padding: .7rem 1.2rem; border-radius: 999px; font-weight: 700;
+  text-decoration: none; color: var(--color-text); border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent);
+}
+.c1-ghost:hover { border-color: var(--brand-periwinkle); }
+.c1-fact { margin: 0 0 1rem; font-size: .85rem; color: var(--color-text-muted); }
+.c1-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: 0 0 1rem; }
+.c1-filters .input { flex: 1 1 14rem; min-width: 0; }
+.c1-filters > label { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: var(--color-text-muted); }
+
+/* C1: γραμμή του Καταλόγου */
+.c1-line .ml-main strong a { color: inherit; text-decoration: none; }
+.c1-line .ml-main strong a:hover { text-decoration: underline; text-decoration-color: var(--brand-periwinkle); }
+.c1-line[data-kind="service"] { --c: var(--brand-yellow); }
+.c1-warn { color: var(--brand-yellow) !important; font-weight: 700 !important; }
+
+/* C2: hero και κουμπιά μέσα του */
+.c2-hero { --c: var(--brand-periwinkle); }
+.c2-hero .c2-tags { display: flex; flex-wrap: wrap; gap: .35rem; }
+.c2-hero .c2-lead { max-width: 40rem; font-size: .9rem; }
+.c2-hero .ml-quick .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .4rem; margin: 0; }
+.c2-hero .ml-quick button { background: color-mix(in oklab, var(--brand-midnight) 85%, transparent); }
+
+/* C2: σώμα κουτιού και κουμπί μέσα στο κουτί */
+.c2-box-body { display: grid; gap: .8rem; min-width: 0; }
+.c2-box-body > .grid2, .c2-box-body > .row, .c2-box-body > .note, .c2-box-body > p { margin: 0; }
+.c2-sub { display: grid; gap: .5rem; min-width: 0; }
+.c2-sub > h3 { margin: 0; font-size: .92rem; font-weight: 800; }
+.c2-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; }
+.c2-bar > p { margin: 0; }
+
+/* C2 νέο: βήματα με αριθμό (όπως η Καταχώρηση Τιμολογίου) */
+.c2-step {
+  margin: 0; padding: .9rem 1rem 1rem; border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 16%, transparent);
+  background: linear-gradient(160deg, color-mix(in oklab, var(--brand-deep) 75%, transparent), color-mix(in oklab, var(--brand-midnight) 75%, transparent));
+}
+.c2-step-head { display: flex; align-items: center; gap: .8rem; margin: 0 0 .8rem; }
+.c2-step-head > div { display: grid; gap: .1rem; min-width: 0; }
+.c2-step-head small { color: var(--color-text-muted); font-size: .8rem; overflow-wrap: anywhere; }
+.c2-step-no {
+  flex: none; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%;
+  font-weight: 800; color: var(--brand-periwinkle);
+  border: 1.5px solid color-mix(in oklab, var(--brand-periwinkle) 60%, transparent);
+}
+.c2-step-body { display: grid; gap: .8rem; min-width: 0; }
+.c2-step-body > .dl, .c2-step-body > p, .c2-step-body > .note { margin: 0; }
+
+/* Το ένα κύριο κουμπί της νέας σελίδας (κόκκινο) */
+.c2-go button[type="submit"] {
+  display: inline-flex; align-items: center; padding: .75rem 1.3rem; border: 0; border-radius: 999px;
+  font: inherit; font-weight: 800; cursor: pointer; color: var(--color-text); background: var(--brand-rec);
+  box-shadow: 0 14px 34px -14px var(--brand-rec);
+}
+.c2-go button[type="submit"]:disabled { cursor: not-allowed; opacity: .45; box-shadow: none; }

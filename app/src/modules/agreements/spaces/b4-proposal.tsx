@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { Panel } from "@/spaces/kit/panel";
 import { hrefOf } from "@/spaces/data/screens";
 import { Badge, ErrorNotice } from "@/spaces/screens/shared";
 
@@ -92,39 +91,59 @@ function Summary({ summary }: { summary: ProposalSummary }) {
   );
 }
 
-// Το πάνελ «Πρόταση» της Σελίδας Ευκαιρίας στη νέα εμφάνιση (prototype `screens/b4-proposal.tsx`, στη μορφή του
-// σημερινού πάνελ): δημιουργία, περίληψη και γρήγορη αποστολή. Μία Συμφωνία ανά Ευκαιρία· τα ποσά μόνο σε όποιον τα βλέπει.
-// Οι γραμμές, το κόστος και το χρονολόγιο της πρότασης του prototype είναι στη Σελίδα Συμφωνίας (D2).
-export function SpacesProposalPanel({
+// Η υπόδειξη του κλειστού κουτιού: είδος, κατάσταση και σύνολο (όταν το βλέπεις).
+const hintOf = (found: ReadResult<ProposalSummary | null>): string => {
+  if (!found.ok) return "Δεν διαβάστηκε";
+  if (found.data === null) return "Δεν υπάρχει πρόταση ακόμα";
+  const summary = found.data;
+  return [
+    KIND_LABELS[summary.kind],
+    statusLabel(summary),
+    summary.total !== null ? formatMoney(summary.total) : null,
+  ]
+    .filter((part) => part !== null)
+    .join(" · ");
+};
+
+function ProposalBody({
   opportunityId,
   found,
   canCreate,
   defaultTitle,
 }: SpacesProposalPanelProps) {
-  if (!found.ok)
-    return (
-      <Panel label="Πρόταση">
-        <ErrorNotice what="η πρόταση" />
-      </Panel>
-    );
-  if (found.data === null)
-    return (
-      <Panel label="Πρόταση">
-        <p className="muted">
-          Δεν υπάρχει πρόταση ακόμα. Γραμμές, Όροι, Υπογράφων και Ισχύς
-          γράφονται στη Σελίδα Συμφωνίας.
-        </p>
-        {canCreate && (
-          <CreateProposal
-            opportunityId={opportunityId}
-            defaultTitle={defaultTitle}
-          />
-        )}
-      </Panel>
-    );
+  if (!found.ok) return <ErrorNotice what="η πρόταση" />;
+  if (found.data !== null) return <Summary summary={found.data} />;
   return (
-    <Panel label="Πρόταση">
-      <Summary summary={found.data} />
-    </Panel>
+    <>
+      <p className="muted">
+        Δεν υπάρχει πρόταση ακόμα. Γραμμές, Όροι, Υπογράφων και Ισχύς γράφονται
+        στη Σελίδα Συμφωνίας.
+      </p>
+      {canCreate && (
+        <CreateProposal
+          opportunityId={opportunityId}
+          defaultTitle={defaultTitle}
+        />
+      )}
+    </>
+  );
+}
+
+// Το κουτί «Πρόταση» της Σελίδας Ευκαιρίας (κλειστό, στη μορφή των «Χρημάτων»): δημιουργία, περίληψη και γρήγορη
+// αποστολή. Μία Συμφωνία ανά Ευκαιρία· τα ποσά μόνο σε όποιον τα βλέπει. Οι γραμμές, το κόστος και το χρονολόγιο
+// της πρότασης είναι στη Σελίδα Συμφωνίας (D2). Το #b4-proposal είναι μέσα στο σώμα, ώστε ο σύνδεσμος να ανοίγει το κουτί.
+export function SpacesProposalPanel(props: SpacesProposalPanelProps) {
+  return (
+    <section>
+      <details className="ml-box">
+        <summary>
+          <h2 className="ml-box-title">Πρόταση</h2>
+          <small>{hintOf(props.found)}</small>
+        </summary>
+        <div id="b4-proposal" className="stack">
+          <ProposalBody {...props} />
+        </div>
+      </details>
+    </section>
   );
 }

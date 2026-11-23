@@ -1,39 +1,22 @@
 "use client";
 
-import { Panel } from "@/spaces/kit/panel";
-
-import { restoreItem, retireItem } from "../actions-items";
 import { formatDateTime } from "../helpers";
 import type { CatalogueItem } from "../types";
 
 import { usesText } from "./c2-adapter";
-import { C2Form, C2Submit } from "./c2-form";
+import { RETIRE_NOTE, RETIRED_NOTE } from "./c2-archive";
+import { C2Box } from "./c2-box";
 
-function RetireOrRestore({ item }: { item: CatalogueItem }) {
-  if (item.isRetired)
-    return (
-      <C2Form action={restoreItem} itemId={item.id}>
-        <C2Submit
-          label="Επαναφορά"
-          pendingLabel="Επαναφορά…"
-          isPrimary={false}
-          aside="Αρχειοθετημένο: δεν προσφέρεται σε νέες προτάσεις."
-        />
-      </C2Form>
-    );
-  return (
-    <C2Form action={retireItem} itemId={item.id}>
-      <C2Submit
-        label="Αρχειοθέτηση"
-        pendingLabel="Αρχειοθέτηση…"
-        isDanger
-        aside="Δεν διαγράφεται. Η αρχειοθέτηση το βγάζει από τις νέες προτάσεις και την Ιστοσελίδα· οι Συμφωνίες που το έχουν συνεχίζουν."
-      />
-    </C2Form>
-  );
-}
+const usageHint = (item: CatalogueItem): string =>
+  [
+    item.uses === null ? null : `σε ${item.uses} Συμφωνίες`,
+    `αλλαγή ${formatDateTime(item.updatedAt)}`,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(" · ");
 
 // Χρήση και ιστορικό. Το «Σε χρήση» το στέλνει η βάση μόνο σε όποιον Διαχειρίζεται Κατάλογο (αλλιώς null και η γραμμή λείπει).
+// Το κουμπί Αρχειοθέτηση/Επαναφορά ζει στο hero· εδώ μένει η εξήγησή του.
 export function C2Usage({
   item,
   canManage,
@@ -42,7 +25,7 @@ export function C2Usage({
   canManage: boolean;
 }) {
   return (
-    <Panel label="Χρήση και ιστορικό">
+    <C2Box title="Χρήση και ιστορικό" hint={usageHint(item)}>
       <dl className="dl">
         {item.uses !== null && (
           <>
@@ -61,7 +44,9 @@ export function C2Usage({
           {formatDateTime(item.updatedAt)}, {item.updatedByName ?? "το σύστημα"}
         </dd>
       </dl>
-      {canManage && <RetireOrRestore item={item} />}
-    </Panel>
+      {canManage && (
+        <p className="muted">{item.isRetired ? RETIRED_NOTE : RETIRE_NOTE}</p>
+      )}
+    </C2Box>
   );
 }

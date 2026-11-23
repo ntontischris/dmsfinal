@@ -5,12 +5,10 @@ import {
   filterByColumns,
   type ColumnSelection,
 } from "@/spaces/kit/column-filters";
-import { FilterBar } from "@/spaces/kit/filter-bar";
-import { StatGrid } from "@/spaces/kit/panel";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { athensToday, salesCaps } from "../helpers";
-import { getPipelineValue, listForecastRows } from "../queries-forecast";
+import { listForecastRows } from "../queries-forecast";
 import { listSalesLists } from "../queries-lists";
 import { listPipeline } from "../queries-opportunities";
 import { listClientLastContacts } from "../queries-overview";
@@ -18,11 +16,13 @@ import type { Opportunity, SalesCaps } from "../types";
 import { boardCardsOf, type BoardCard } from "./b3-adapter";
 import { PipelineBoard } from "./b3-board";
 import { b3ColumnFilters, b3Href } from "./b3-columns";
-import { pipelineStats } from "./forecast-adapter";
-import { GuideLink } from "./guide-link";
+import { PipelineFilters } from "./b3-filters-box";
+import { PipelineHero } from "./b3-hero";
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
-  <div data-spaces>{children}</div>
+  <div data-spaces className="ml-stack b3-page">
+    {children}
+  </div>
 );
 
 const labelsOf = (
@@ -34,13 +34,6 @@ const labelsOf = (
 const canWorkOn = (caps: SalesCaps, o: Opportunity): boolean =>
   caps.manageScope === "all" ||
   (caps.userId !== null && o.managerId === caps.userId);
-
-// Οι δείκτες της πρόβλεψης (b3) πάνω από τον πίνακα· αν δεν διαβαστούν, ο πίνακας μένει χωρίς αυτούς.
-async function ForecastStats({ today }: { today: string }) {
-  const value = await getPipelineValue(today);
-  if (!value.ok) return <ErrorNotice what="η πρόβλεψη του Pipeline" />;
-  return <StatGrid items={pipelineStats(value.data)} />;
-}
 
 // Υπεύθυνος, Πηγή, Κλείσιμο ως κάρτες φίλτρων· στενεύουν τις κάρτες πριν φτάσουν στον πίνακα.
 function filteredBoard(
@@ -108,13 +101,11 @@ export async function SpacesPipeline({
   const { visible, groups } = filteredBoard(cards, selection, today);
   return (
     <Frame>
-      <div className="toolbar">
-        <span className="muted grow">
-          {caps.manageScope === "mine" &&
-            "Βλέπεις τις Ευκαιρίες σου και όσες αφορούν τους Πελάτες σου."}
-        </span>
-        <GuideLink />
-      </div>
+      <PipelineHero
+        today={today}
+        isMine={caps.manageScope === "mine"}
+        hasCards={cards.length > 0}
+      />
       {cards.length === 0 ? (
         <StateNotice kind="empty" title="Δεν υπάρχουν ανοιχτές Ευκαιρίες">
           <p>
@@ -124,14 +115,7 @@ export async function SpacesPipeline({
         </StateNotice>
       ) : (
         <>
-          <ForecastStats today={today} />
-          {groups.length > 0 && (
-            <FilterBar
-              name="b3-filters"
-              filters={groups}
-              clearHref={b3Href({})}
-            />
-          )}
+          <PipelineFilters groups={groups} />
           <PipelineBoard
             today={today}
             cards={visible}

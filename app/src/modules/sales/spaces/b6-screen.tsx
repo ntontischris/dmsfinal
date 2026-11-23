@@ -29,6 +29,10 @@ export async function SpacesDuplicates() {
     );
   return (
     <Frame>
+      <p className="muted">
+        Κάθε γραμμή είναι δύο Πελάτες που μοιάζουν: συγχώνευσέ τους ή πες «είναι
+        άλλος».
+      </p>
       {pairs.data.length === 0 ? (
         <StateNotice kind="empty" title="Κανένα Πιθανό διπλό">
           <p>

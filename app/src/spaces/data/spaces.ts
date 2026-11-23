@@ -72,6 +72,8 @@ export const SPACES: readonly Space[] = [
     audience: "team",
     tabs: ["B1", "B3", "D1", "C1"],
     members: ["B2", "B4", "B5", "B6", "C2", "D2", "D4", "N2"],
+    // Οι 4 καρτέλες ως κάρτες της οθόνης, όπως στα «Χρήματα»· οι ουρές (Χωρίς υπεύθυνο, Πιθανά διπλά, Εγκρίσεις) μένουν φίλτρα.
+    deck: true,
   },
   {
     id: "production",

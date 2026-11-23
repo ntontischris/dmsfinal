@@ -26,8 +26,8 @@ export const screenHeader = (page: Page): Locator =>
 // Η κεφαλίδα της Σελίδας Πακέτου ή Υπηρεσίας (C2) στους Χώρους: ο τίτλος του στοιχείου και τα σήματά του.
 export const itemHeader = (page: Page): Locator =>
   page
-    .locator("div.card-title", {
-      has: page.getByRole("heading", { level: 2 }),
+    .locator("header.ml-hero", {
+      has: page.getByRole("heading", { level: 1 }),
     })
     .first();
 
@@ -65,6 +65,7 @@ export async function publishArchiveRestore(
   const { itemUrl, name } = item;
   await page.goto(itemUrl);
   const pub = panel(page, "Δημόσιο");
+  await pub.locator("summary").first().click();
   await pub.locator("#c2-is-public").check();
   await button(pub, "Αποθήκευση").click();
   await expect(pub.getByRole("alert")).toContainText(

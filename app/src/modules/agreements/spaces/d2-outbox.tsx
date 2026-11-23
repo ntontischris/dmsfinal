@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import { markOutbox } from "../actions-flow";
 import { formatDateTime, proposalUrl } from "../helpers";
 import { MANUAL_DELIVERY_NOTE, OUTBOX_KIND_LABELS } from "../labels";
 import type { OutboxItem, OutboxStatus } from "../types";
+import { D2Box } from "./d2-box";
 import { D2Form, D2Scope } from "./d2-ui";
 import { ItemRows } from "./lane-rows";
 
@@ -143,6 +143,10 @@ export function OutboxSection({
   origin,
   emailSenderConnected,
 }: OutboxProps) {
+  // Ανοιχτό όταν κάτι περιμένει να το παραδώσεις· μένει όπως το βρήκε ο χρήστης μετά από κάθε ενέργεια.
+  const [isOpenAtLoad] = useState(() =>
+    items.some((i) => isActionable(i, emailSenderConnected)),
+  );
   if (items.length === 0) return null;
   const pending = items.filter((i) => isActionable(i, emailSenderConnected));
   const rest = items.filter((i) => !isActionable(i, emailSenderConnected));
@@ -155,39 +159,44 @@ export function OutboxSection({
       <TaskBody item={item} />
     );
   return (
-    <div id="outbox">
-      <Panel label="Εξερχόμενα">
-        {!emailSenderConnected && (
-          <p className="muted">{MANUAL_DELIVERY_NOTE}</p>
-        )}
-        <D2Scope messageAt="top">
-          {pending.length > 0 && (
-            <ItemRows
-              items={pending.map((item) => ({
-                id: item.id,
-                title: OUTBOX_KIND_LABELS[item.kind],
-                sub: body(item),
-                aside: <Badge tone="strong">{STATUS_TEXT[item.status]}</Badge>,
-              }))}
-            />
-          )}
-        </D2Scope>
-        {rest.length > 0 && (
+    <D2Box
+      id="outbox"
+      title="Εξερχόμενα"
+      hint={
+        pending.length > 0
+          ? `${pending.length} περιμένουν να τα παραδώσεις`
+          : `${rest.length} παραδόθηκαν`
+      }
+      isOpen={isOpenAtLoad}
+    >
+      {!emailSenderConnected && <p className="muted">{MANUAL_DELIVERY_NOTE}</p>}
+      <D2Scope messageAt="top">
+        {pending.length > 0 && (
           <ItemRows
-            items={rest.map((item) => ({
+            items={pending.map((item) => ({
               id: item.id,
-              isFaded: true,
-              title: `${OUTBOX_KIND_LABELS[item.kind]} · ${item.toName}`,
-              sub: item.handledAt ? formatDateTime(item.handledAt) : undefined,
-              aside: (
-                <Badge tone={item.status === "failed" ? "attention" : "faded"}>
-                  {STATUS_TEXT[item.status]}
-                </Badge>
-              ),
+              title: OUTBOX_KIND_LABELS[item.kind],
+              sub: body(item),
+              aside: <Badge tone="strong">{STATUS_TEXT[item.status]}</Badge>,
             }))}
           />
         )}
-      </Panel>
-    </div>
+      </D2Scope>
+      {rest.length > 0 && (
+        <ItemRows
+          items={rest.map((item) => ({
+            id: item.id,
+            isFaded: true,
+            title: `${OUTBOX_KIND_LABELS[item.kind]} · ${item.toName}`,
+            sub: item.handledAt ? formatDateTime(item.handledAt) : undefined,
+            aside: (
+              <Badge tone={item.status === "failed" ? "attention" : "faded"}>
+                {STATUS_TEXT[item.status]}
+              </Badge>
+            ),
+          }))}
+        />
+      )}
+    </D2Box>
   );
 }

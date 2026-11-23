@@ -139,7 +139,7 @@ describe("Χρήματα: 4 καρτέλες, τα σπάνια στα «Εργ�
   it("οι καρτέλες είναι κάρτες της οθόνης· οι άλλοι Χώροι κρατούν τη γραμμή καρτελών", () => {
     const model = spacesModel(fullTeam);
     expect(space(model, "money")?.deck).toBe(true);
-    expect(space(model, "clients")?.deck).toBeUndefined();
+    expect(space(model, "production")?.deck).toBeUndefined();
   });
 
   it("δείχνει μόνο τις δουλειές της εβδομάδας ως καρτέλες", () => {
@@ -152,6 +152,16 @@ describe("Χρήματα: 4 καρτέλες, τα σπάνια στα «Εργ�
     expect(money?.more.map((link) => link.code)).toEqual(
       expect.arrayContaining(["I7", "M1", "M2", "I5"]),
     );
+  });
+});
+
+describe("Πελάτες: οι καρτέλες ως κάρτες της οθόνης", () => {
+  it("κρατά τις 4 καρτέλες ως κάρτες και τις ουρές ως φίλτρα", () => {
+    const clients = space(spacesModel(fullTeam), "clients");
+    expect(clients?.deck).toBe(true);
+    expect(clients?.tabs.map((tab) => tab.code)).toEqual(["B1", "B3", "D1", "C1"]);
+    expect(clients?.queues.B1?.map((queue) => queue.code)).toEqual(["B5", "B6"]);
+    expect(clients?.queues.D1?.map((queue) => queue.code)).toEqual(["D4"]);
   });
 });
 

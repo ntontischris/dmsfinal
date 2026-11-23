@@ -1,0 +1,10 @@
+/* D1 / D4 ως γραμμές των «Χρημάτων» (money-lines.css): ετικέτες κατάστασης με «?», τίτλος-σύνδεσμος, ουρά Εγκρίσεων. */
+.d1l-views { margin-bottom: .4rem; }
+.d1l-list { margin-top: .8rem; }
+.d1l-tags { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .4rem; }
+.d1l-tag { display: inline-flex; align-items: center; gap: .25em; white-space: nowrap; }
+.d1l-tag .ml-tag[data-tone='waiting'] { color: var(--brand-yellow); background: color-mix(in oklab, var(--brand-yellow) 14%, transparent); }
+.d1l-tag .ml-tag[data-tone='urgent'] { color: var(--color-text); background: color-mix(in oklab, var(--brand-rec) 30%, transparent); }
+.d1l-title { color: inherit; text-decoration: none; }
+.d1l-title:hover, .d1l-title:focus-visible { text-decoration: underline; text-underline-offset: .2em; }
+.d1l-list .ml-main small a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--color-text) 30%, transparent); text-underline-offset: .2em; }
