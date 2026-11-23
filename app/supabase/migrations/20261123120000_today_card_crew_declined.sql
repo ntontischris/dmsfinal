@@ -65,9 +65,9 @@ $$;
 
 -- ───────────── Μητρώο ─────────────
 
-insert into public.today_cards (code, grp, kind, audience, sort, label_el, label_en, link, count_fn, items_fn) values
+insert into public.today_cards (code, grp, kind, audience, sort, label_el, label_en, link, count_fn, items_fn, needs_second_person) values
   ('crew_declined', 'decide', 'action', 'team', 125, 'Βρες αντικαταστάτη', 'Find a replacement', '/app/filming',
-   'authz.today_count_crew_declined(uuid, uuid, timestamptz)', 'authz.today_items_crew_declined(uuid, uuid, timestamptz)');
+   'authz.today_count_crew_declined(uuid, uuid, timestamptz)', 'authz.today_items_crew_declined(uuid, uuid, timestamptz)', true);
 
 -- ───────────── Δικαιώματα ─────────────
 
