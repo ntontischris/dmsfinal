@@ -111,42 +111,42 @@ select is((select array_agg(v ->> 'id' order by n)
   'Η σειρά είναι προθεσμία και μετά id');
 
 -- ───────────── Γραμμή: υπεύθυνος και προθεσμία στο υπότιτλο, σύνδεσμος στο Παραδοτέο, επείγον ─────────────
-select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select v ->> 'subtitle' from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('02')),
   'Υπεύθυνος: Σοφία · προθεσμία ' || to_char(public.t_date(1), 'DD/MM'),
   'Ο υπότιτλος λέει τον υπεύθυνο και την προθεσμία');
-select is((select v ->> 'link' from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select v ->> 'link' from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('02')),
   '/app/deliverables/' || public.t_did('02'), 'Η γραμμή ανοίγει το Παραδοτέο');
-select is((select (v ->> 'urgent')::boolean from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select (v ->> 'urgent')::boolean from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('02')), true, 'Προθεσμία αύριο είναι επείγουσα (κανόνας 5)');
 
 -- ───────────── Αποκλεισμοί ─────────────
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('07')), 0, 'Ακυρωμένο Παραδοτέο δεν μπαίνει');
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('08')), 0, 'Εγκεκριμένο Παραδοτέο δεν μπαίνει');
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('09')), 0, 'Προθεσμία σε 2 μέρες δεν μπαίνει');
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('10')), 0, 'Έκδοση μετά την ανάθεση: δεν μπαίνει');
 
 -- ───────────── Ανάθεση που ξαναγίνεται: η Έκδοση πριν τη νέα ανάθεση δεν μετράει, άρα μπαίνει ─────────────
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('03')), 1,
   'Η Έκδοση πριν από την τελευταία ανάθεση δεν μετράει, άρα το Παραδοτέο μπαίνει');
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('11')), 1,
   'Χωρίς ίχνος ανάθεσης, η created_at μετράει ως ανάθεση· η Έκδοση πριν από αυτήν δεν μετράει');
 
 -- ───────────── Κλειστή Παραγωγή και χωρίς προθεσμία: δεν μπαίνουν ─────────────
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('12')), 0, 'Παραδοτέο σε παραδομένη Παραγωγή δεν μπαίνει');
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('13')), 0, 'Παραδοτέο χωρίς προθεσμία δεν μπαίνει');
 
 -- ───────────── Ο υπεύθυνος δεν βλέπει τη δική του καθυστέρηση ─────────────
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)
             where v ->> 'id' = public.t_did('04')), 0, 'Ο Ιδιοκτήτης, υπεύθυνος της dd04, δεν τη βλέπει');
 select is(authz.today_count_version_late(public.t_uid('a5'), null, now()), 0,
   'Η Σοφία, υπεύθυνη της μόνης καθυστέρησης που βλέπει (dd01), δεν βλέπει τίποτα');
@@ -154,7 +154,7 @@ select is(authz.today_count_version_late(public.t_uid('a5'), null, now()), 0,
 -- ───────────── Ορατότητα «με αφορά»: η Παραγωγή βλέπει μόνο τις Παραγωγές της ─────────────
 select is(authz.today_count_version_late(public.t_uid('a2'), null, now()), 6,
   'Το Μέλος της d1 βλέπει τις καθυστερημένες της d1, συμπεριλαμβανομένης της dd04');
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a2'), null, now())) x (v, n)
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a2'), null, now())) x (v)
             where v ->> 'id' = public.t_did('01')), 0, 'Το Μέλος της d1 δεν βλέπει το Παραδοτέο της d2');
 
 -- ───────────── Χωρίς Δικαίωμα: Πωλήσεις και Λογιστής ─────────────
@@ -175,7 +175,7 @@ select ok((select needs_second_person from public.today_cards where code = 'vers
 
 -- ───────────── Όριο: έως δέκα γραμμές, το πλήθος δεν περικόπτεται ─────────────
 select set_config('today.rows', '2', true);
-select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v, n)),
+select is((select count(*)::integer from jsonb_array_elements(authz.today_items_version_late(public.t_uid('a1'), null, now())) x (v)),
   2, 'Το όριο γραμμών κόβει τις γραμμές στο όριο');
 select is(authz.today_count_version_late(public.t_uid('a1'), null, now()), 6, 'Το πλήθος μένει ολόκληρο πίσω από το όριο');
 
