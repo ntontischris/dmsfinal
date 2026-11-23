@@ -113,15 +113,16 @@ test("ο Ιδιοκτήτης εξάγει Πελάτες και τους βλέ
   await expect(page).toHaveURL(/\/app\/reports\/export$/);
   await expect(page.getByRole("heading", { name: "Πακέτο λογιστή" })).toBeVisible();
 
-  // Η «Άλλη εξαγωγή» ανοίγει από κάτω από το Πακέτο λογιστή· το σύνολο διαλέγεται από την κάρτα του.
+  // Η «Άλλη εξαγωγή» είναι κλειστό κουτί κάτω από το Πακέτο λογιστή· κάθε σύνολο είναι μια γραμμή με δικό της κουμπί.
   await page.locator("summary", { hasText: "Άλλη εξαγωγή" }).click();
-  await pickFilter(page, "Σύνολο δεδομένων", "Πελάτες");
-  await expect(page).toHaveURL(/dataset=clients/);
+  const clientsLine = page.locator("li.ml-line", { has: page.getByText("Πελάτες", { exact: true }) });
   const datasetDownload = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Εξαγωγή", exact: true }).click();
+  await clientsLine.getByRole("button", { name: "Εξαγωγή", exact: true }).click();
   expect((await datasetDownload).suggestedFilename()).toBe("Πελάτες.xlsx");
 
   await page.reload();
+  // Το Ιστορικό είναι κλειστό κουτί· ανοίγει από τον τίτλο του.
+  await page.locator("summary", { hasText: "Ιστορικό εξαγωγών" }).click();
   const history = page.getByRole("heading", { name: "Ιστορικό εξαγωγών" }).locator("xpath=ancestor::section[1]");
   await expect(history.getByText("Πελάτες · Excel").first()).toBeVisible();
 });

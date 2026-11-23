@@ -4,14 +4,13 @@ import { useState } from "react";
 
 import { useKeptForm } from "@/lib/use-kept-form";
 import type { WithholdingRate } from "@/modules/finance";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge } from "@/spaces/screens/shared";
-
+import { G3Box } from "./g3-box";
+import { inUseCount } from "./o6-lines";
 import { FormNote, RowAction, type Action } from "./o6-methods";
 
 // Τα ποσοστά παρακράτησης φόρου (d6) για όποιον «Διαχειρίζεται Ρυθμίσεις»: ονομασία και ποσοστό, αλλαγή, απόσυρση,
 // επαναφορά· χωρίς διαγραφή. Το ποσοστό είναι μόνο πρόταση στη «Νέα Είσπραξη»· το ποσό το γράφει ο Χρήστης.
+// Μορφή «Χρήματα»: δικό του κλειστό κουτί, κάθε ποσοστό μία γραμμή (ml-line) με γρήγορα κουμπιά.
 
 export interface WithholdingActions {
   save: Action;
@@ -71,45 +70,42 @@ function RateForm(props: {
 
 function RateRow(props: {
   rate: WithholdingRate;
-  index: number;
   actions: WithholdingActions;
 }) {
   const { rate, actions } = props;
   const [isEditing, setIsEditing] = useState(false);
   return (
-    <ListRow
-      isFaded={rate.retired}
-      lead={<span>{props.index + 1}</span>}
-      title={`${rate.label} · ${percentText(rate.percent)}`}
-      sub={
-        isEditing && !rate.retired ? (
+    <li className="ml-line" data-faded={rate.retired || undefined}>
+      <span className="ml-thumb" aria-hidden="true">
+        {percentText(rate.percent)}
+      </span>
+      <span className="ml-main">
+        <span className="ml-tag">
+          {rate.retired ? "Αποσύρθηκε" : "Σε χρήση"}
+        </span>
+        <strong>{`${rate.label} · ${percentText(rate.percent)}`}</strong>
+        {isEditing && !rate.retired && (
           <RateForm save={actions.save} rate={rate} submitLabel="Αποθήκευση" />
-        ) : undefined
-      }
-      aside={
-        <>
-          <Badge tone={rate.retired ? "faded" : "ok"}>
-            {rate.retired ? "Αποσύρθηκε" : "Σε χρήση"}
-          </Badge>
-          {!rate.retired && (
-            <button
-              type="button"
-              className="button"
-              aria-expanded={isEditing}
-              aria-label={`Αλλαγή: ${rate.label}`}
-              onClick={() => setIsEditing((current) => !current)}
-            >
-              Αλλαγή
-            </button>
-          )}
-          <RowAction
-            action={rate.retired ? actions.restore : actions.retire}
-            id={rate.id}
-            label={rate.retired ? "Επαναφορά" : "Απόσυρση"}
-          />
-        </>
-      }
-    />
+        )}
+      </span>
+      <span className="ml-quick">
+        {!rate.retired && (
+          <button
+            type="button"
+            aria-expanded={isEditing}
+            aria-label={`Αλλαγή: ${rate.label}`}
+            onClick={() => setIsEditing((current) => !current)}
+          >
+            Αλλαγή
+          </button>
+        )}
+        <RowAction
+          action={rate.retired ? actions.restore : actions.retire}
+          id={rate.id}
+          label={rate.retired ? "Επαναφορά" : "Απόσυρση"}
+        />
+      </span>
+    </li>
   );
 }
 
@@ -124,32 +120,33 @@ function AddRate({ save }: { save: Action }) {
   return <RateForm save={save} submitLabel="Προσθήκη ποσοστού" />;
 }
 
+const hintOf = (rates: readonly WithholdingRate[]): string =>
+  rates.length === 0
+    ? "Κανένα ποσοστό ακόμα · + Νέο ποσοστό"
+    : `${inUseCount(rates)} σε χρήση · ${rates
+        .filter((rate) => !rate.retired)
+        .map((rate) => percentText(rate.percent))
+        .join(", ")}`;
+
 export function WithholdingEditor(props: {
   rates: readonly WithholdingRate[];
   actions: WithholdingActions;
 }) {
   return (
-    <div className="o-card">
-      <Panel label="Παρακράτηση φόρου">
-        {props.rates.length === 0 ? (
-          <p className="muted">Κανένα ποσοστό ακόμα.</p>
-        ) : (
-          <RowList>
-            {props.rates.map((rate, index) => (
-              <RateRow
-                key={rate.id}
-                rate={rate}
-                index={index}
-                actions={props.actions}
-              />
-            ))}
-          </RowList>
-        )}
-        <div className="btn-row o-list-actions">
-          <AddRate save={props.actions.save} />
-        </div>
-        <p className="muted o-hint">{RATES_NOTE}</p>
-      </Panel>
-    </div>
+    <G3Box title="Παρακράτηση φόρου" hint={hintOf(props.rates)}>
+      {props.rates.length === 0 ? (
+        <p className="muted">Κανένα ποσοστό ακόμα.</p>
+      ) : (
+        <ul className="ml-list">
+          {props.rates.map((rate) => (
+            <RateRow key={rate.id} rate={rate} actions={props.actions} />
+          ))}
+        </ul>
+      )}
+      <div className="btn-row o-list-actions">
+        <AddRate save={props.actions.save} />
+      </div>
+      <p className="muted o-hint">{RATES_NOTE}</p>
+    </G3Box>
   );
 }

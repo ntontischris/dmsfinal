@@ -89,9 +89,14 @@ function CreditForSelect({ form, ctx, onChange }: FieldsProps) {
 
 const isKind = (value: string): value is InvoiceKind => INVOICE_KINDS.some((kind) => kind === value);
 
-// Είδος, αριθμός, ημερομηνίες (prototype `screens/i3-fields.tsx`). Το πιστωτικό δεν στέλνει λήξη (όπως η βάση).
-export function InvoiceFields({ form, ctx, onChange }: FieldsProps) {
-  const isCredit = form.kind === "credit";
+// Βήμα «Στοιχεία»: είδος, αριθμός, έκδοση, καθαρό (και για πιστωτικό ποιο διορθώνει). Το καθαρό προσυμπληρώνει
+// ΦΠΑ και σύνολο με τον συντελεστή του υποδείγματος.
+export function InvoiceFields({
+  form,
+  ctx,
+  onChange,
+  onReplace,
+}: FieldsProps & { onReplace: (next: DraftForm) => void }) {
   return (
     <div className="i13-fields">
       <Field label="Είδος">
@@ -110,13 +115,7 @@ export function InvoiceFields({ form, ctx, onChange }: FieldsProps) {
           ))}
         </select>
       </Field>
-      <TextField
-        label="Αριθμός"
-        name="number"
-        maxLength={40}
-        value={form.number}
-        onChange={(number) => onChange({ number })}
-      />
+      <TextField label="Αριθμός" name="number" maxLength={40} value={form.number} onChange={(number) => onChange({ number })} />
       <TextField
         label="Ημερομηνία έκδοσης"
         name="issueDate"
@@ -124,7 +123,23 @@ export function InvoiceFields({ form, ctx, onChange }: FieldsProps) {
         value={form.issueDate}
         onChange={(issueDate) => onChange({ issueDate })}
       />
-      {!isCredit && (
+      <TextField
+        label="Καθαρό (€)"
+        name="net"
+        inputMode="decimal"
+        value={form.net}
+        onChange={(net) => onReplace(withNet(form, net, ctx.vatRate))}
+      />
+      {form.kind === "credit" && <CreditForSelect form={form} ctx={ctx} onChange={onChange} />}
+    </div>
+  );
+}
+
+// Τα σπάνια πεδία (κλειστό κουτί): λήξη, ΦΠΑ, σύνολο, ΜΑΡΚ, ΑΦΜ του PDF. Το πιστωτικό δεν στέλνει λήξη (όπως η βάση).
+export function ExtraFields({ form, ctx, onChange }: FieldsProps) {
+  return (
+    <div className="i13-fields">
+      {form.kind !== "credit" && (
         <TextField
           label={`Λήξη (προσυμπληρωμένη: ${ctx.paymentDays} μέρες)`}
           name="dueDate"
@@ -133,27 +148,6 @@ export function InvoiceFields({ form, ctx, onChange }: FieldsProps) {
           onChange={(dueOverride) => onChange({ dueOverride })}
         />
       )}
-      {isCredit && <CreditForSelect form={form} ctx={ctx} onChange={onChange} />}
-    </div>
-  );
-}
-
-// Καθαρό, ΦΠΑ, σύνολο, ΜΑΡΚ, ΑΦΜ του PDF. Το καθαρό προσυμπληρώνει ΦΠΑ και σύνολο με τον συντελεστή του υποδείγματος.
-export function AmountFields({
-  form,
-  ctx,
-  onChange,
-  onReplace,
-}: FieldsProps & { onReplace: (next: DraftForm) => void }) {
-  return (
-    <div className="i13-fields">
-      <TextField
-        label="Καθαρό (€)"
-        name="net"
-        inputMode="decimal"
-        value={form.net}
-        onChange={(net) => onReplace(withNet(form, net, ctx.vatRate))}
-      />
       <TextField
         label={`ΦΠΑ (€) · αναμενόμενο ${String(ctx.vatRate).replace(".", ",")}%`}
         name="vat"

@@ -1,12 +1,23 @@
-/* G3 Κόστος και ώρες: prototype `screens/g3.css`, αυτούσιο, μέσα στη νέα εμφάνιση */
+/* G3 Κόστος και ώρες στην εμφάνιση «Χρήματα» (money-lines.css): κεφαλίδα, προειδοποίηση, γραμμές κόστους. Μόνο tokens. */
 [data-look='spaces'] {
-& .g3 { min-width: 0; }
-& .g3-head { margin-bottom: var(--space-4); }
-& .g3-head h1 { margin: 0; font-size: 1.25rem; }
+& .g3 { display: grid; gap: .9rem; min-width: 0; }
+& .g3 .ml-hero { margin: 0; }
 & .g3 fieldset { border: 1px solid var(--color-border); border-radius: var(--radius-lg); max-width: 100%; }
+& .g3 .ml-new form { display: grid; gap: .7rem; max-width: 36rem; }
 
-/* screens2 */
-& .g3-date { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-text); white-space: nowrap; }
-& .g3 .rtable td.g3-actual { font-weight: 700; font-variant-numeric: tabular-nums; }
-& .g3 .rtable td.num { font-variant-numeric: tabular-nums; }
-& .g3 .kit-panel-body .part-rows { margin-inline: -1.25rem; } }
+/* Προειδοποίηση: φαίνεται μόνο όταν λείπουν ώρες */
+& .g3-warn {
+  display: grid; gap: .3rem; padding: .8rem 1rem .8rem 1.3rem; border-radius: 14px; position: relative;
+  border: 1px solid color-mix(in oklab, var(--brand-rec) 35%, transparent);
+  background: color-mix(in oklab, var(--brand-rec) 8%, transparent);
+}
+& .g3-warn::before { content: ""; position: absolute; left: .55rem; top: .8rem; bottom: .8rem; width: 3px; border-radius: 3px; background: var(--brand-rec); }
+& .g3-warn .ml-tag { --c: var(--brand-rec); }
+& .g3-warn small { color: var(--color-text-muted); font-size: .82rem; }
+
+/* Γραμμές κόστους: τρεις στήλες (πλακίδιο, γραμμή, πραγματικό) */
+& .g3 .ml-table .ml-line { grid-template-columns: auto minmax(0, 1fr) auto; }
+& .g3 .ml-line[data-strong] .ml-main strong { font-weight: 800; }
+& .g3 .ml-box .ml-list { margin: 0 0 .8rem; }
+& .g3-actual { font-variant-numeric: tabular-nums; }
+}

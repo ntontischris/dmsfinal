@@ -21,7 +21,6 @@ const NOT_ALLOWED = "Χωρίς δικαίωμα";
 // και θα έκρυβε το πραγματικό λάθος.
 test.describe.configure({ retries: 0 });
 
-
 // Οι σύνδεσμοι προς τις Ρυθμίσεις Συμφωνιών και Οικονομικών, όπου κι αν βρίσκονται στη σελίδα.
 const SETTINGS_LINKS =
   'a[href="/app/settings/agreements"], a[href="/app/settings/finance"]';
@@ -246,6 +245,7 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
     /40,00\s€/,
   );
   await expect(page.locator("#o6-expenses")).toHaveCount(0);
+  await months.locator("summary").first().click();
   await months.getByRole("link", { name: "Έξοδα και Κόστος ώρας" }).click();
   await expect(page).toHaveURL(/\/app\/finance\/expenses$/);
   await shot(page, "o6-owner");
@@ -255,9 +255,16 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
   await page.locator("nav.tabs a.tab").last().click();
   await expect(page).toHaveURL(/\?month=\d{4}-\d{2}$/);
   if ((await page.getByLabel("Ποσό γραμμής").count()) === 0) {
+    await page.getByText("+ Νέα κατηγορία", { exact: true }).click();
     await page.getByRole("button", { name: "Προσθήκη κατηγορίας" }).click();
     await page.getByRole("button", { name: "Προσθήκη εξόδου" }).click();
     await page.getByRole("button", { name: "Προσθήκη γραμμής" }).click();
+  } else {
+    await page
+      .locator("details.ml-item", { has: page.getByLabel("Ποσό γραμμής") })
+      .first()
+      .locator("summary")
+      .click();
   }
   await page.getByLabel("Ποσό γραμμής").first().fill("9900");
   await page.getByLabel("Παραγωγικές ώρες").fill("220");
@@ -266,9 +273,9 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
     page.getByRole("status").filter({ hasText: "Αποθηκεύτηκε" }),
   ).toBeVisible();
   const history = panel(page, "Ιστορικό Κόστους ώρας");
-  await expect(history.locator("tr", { hasText: "μελλοντικός" }).first()).toContainText(
-    /45,00\s€/,
-  );
+  await expect(
+    history.locator("tr", { hasText: "μελλοντικός" }).first(),
+  ).toContainText(/45,00\s€/);
   await expect(history.locator("tr", { hasText: "τρέχων" })).toContainText(
     /40,00\s€/,
   );
@@ -276,6 +283,7 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
   await page.goto("/app/settings/finance");
 
   const range = panel(page, "Εύρος τιμής και Υπέρβαση κόστους");
+  await range.locator("summary").first().click();
   const minimum = rowTitled(range, "Ελάχιστη");
   const saveMin = async (value: string, margin: RegExp) => {
     await control(range, "Πολλαπλασιαστής Ελάχιστη").fill(value);

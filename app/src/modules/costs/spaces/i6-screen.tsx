@@ -21,14 +21,18 @@ import {
   type HistoryRow,
 } from "./i6-adapter";
 import { I6Editor } from "./i6-editor";
+import { I6HeroShell } from "./i6-hero";
 import { HourCostHistory } from "./i6-history";
 import { fmtMonth } from "./i6-model";
 
+import "../../finance/spaces/money-lines.css";
 import "./i67.css";
 
 // I6 Έξοδα και Κόστος ώρας στη νέα εμφάνιση (prototype `screens/I6.tsx`). Τη βλέπει όποιος «Βλέπει κόστος και
 // κερδοφορία»· τα έξοδα και τις ώρες τα αλλάζει όποιος «Διαχειρίζεται κόστος» (όπως η O6), μόνο σε τρέχοντα ή επόμενο μήνα.
 // Το «Καταχωρεί Έξοδα» του prototype (Λογιστής) δεν υπάρχει ακόμα ως Δικαίωμα.
+// Εμφάνιση «Χρημάτων» (όπως η I8): κεφαλίδα με τους μήνες και το Κόστος ώρας, οι κατηγορίες ως γραμμές, το Ιστορικό σε
+// κλειστό κουτί.
 
 interface TabsProps {
   tabs: readonly string[];
@@ -71,15 +75,7 @@ function SeedNote({ seed }: { seed: EditorSeed }) {
   return null;
 }
 
-function MonthBody({ view }: { view: MonthExpenses }) {
-  const seed = seedOf(view);
-  const isUnsaved = view.saved === null;
-  if (!seed || (isUnsaved && !view.canEdit))
-    return (
-      <StateNotice kind="empty" title="Δεν υπάρχουν έξοδα για αυτόν τον μήνα">
-        Δεν έχει καταχωρηθεί κόστος για τον μήνα που διάλεξες.
-      </StateNotice>
-    );
+function MonthNotes({ view, seed }: { view: MonthExpenses; seed: EditorSeed }) {
   return (
     <>
       {view.isClosed && <Badge>κλεισμένος μήνας: μόνο ανάγνωση</Badge>}
@@ -87,15 +83,6 @@ function MonthBody({ view }: { view: MonthExpenses }) {
         <p className="note">Βλέπεις τα έξοδα χωρίς επεξεργασία.</p>
       )}
       {view.canEdit && <SeedNote seed={seed} />}
-      <I6Editor
-        key={view.month}
-        month={view.month}
-        categories={seed.categories}
-        productiveHours={seed.productiveHours}
-        baseTotal={seed.baseTotal}
-        editable={view.canEdit}
-        canEditHours={view.canEdit}
-      />
     </>
   );
 }
@@ -107,20 +94,42 @@ interface BodyProps {
   history: readonly HistoryRow[];
 }
 
+// Ο μήνας: με επεξεργαστή, η κεφαλίδα του (Κόστος ώρας, Αποθήκευση) ζει μέσα στον επεξεργαστή· χωρίς, μόνο οι μήνες.
+function MonthBody({ view, tabs, current }: Omit<BodyProps, "history">) {
+  const seed = seedOf(view);
+  const monthTabs = (
+    <MonthTabs tabs={tabs} month={view.month} current={current} />
+  );
+  if (!seed || (view.saved === null && !view.canEdit))
+    return (
+      <>
+        <I6HeroShell tabs={monthTabs} />
+        <StateNotice kind="empty" title="Δεν υπάρχουν έξοδα για αυτόν τον μήνα">
+          Δεν έχει καταχωρηθεί κόστος για τον μήνα που διάλεξες.
+        </StateNotice>
+      </>
+    );
+  return (
+    <I6Editor
+      key={view.month}
+      month={view.month}
+      categories={seed.categories}
+      productiveHours={seed.productiveHours}
+      baseTotal={seed.baseTotal}
+      editable={view.canEdit}
+      canEditHours={view.canEdit}
+      tabs={monthTabs}
+      notes={<MonthNotes view={view} seed={seed} />}
+    />
+  );
+}
+
 function Body({ view, tabs, current, history }: BodyProps) {
   return (
-    <>
-      <header className="i67-head">
-        <p>
-          Τι κοστίζει η εταιρεία κάθε μήνα και πόσο βγαίνει η ώρα. Διάλεξε
-          μήνα· ο νέος ξεκινά ως αντίγραφο του προηγούμενου και κλείνει μόνος
-          του όταν τελειώσει.
-        </p>
-      </header>
-      <MonthTabs tabs={tabs} month={view.month} current={current} />
-      <MonthBody view={view} />
+    <div className="ml-stack">
+      <MonthBody view={view} tabs={tabs} current={current} />
       <HourCostHistory rows={history} />
-    </>
+    </div>
   );
 }
 

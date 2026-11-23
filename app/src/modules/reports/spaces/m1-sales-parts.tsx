@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import type { OpportunityKind } from "../sales-schema";
 import { money, monthlyText } from "./m1-adapter";
+import { Box, Facts } from "./m1-box";
 
 import "./m1-sales.css";
 
@@ -24,28 +23,28 @@ export function Cards({
   items: readonly { label: string; value: string; hint?: string }[];
 }) {
   return (
-    <div className="m1s-cards">
-      {items.map((item) => (
-        <Panel key={item.label} label={item.label} aside={item.hint}>
-          <strong className="m1s-big">{item.value}</strong>
-        </Panel>
-      ))}
-    </div>
+    <Facts
+      items={items.map((item) => ({
+        label: item.label,
+        value: item.value,
+        basis: item.hint,
+      }))}
+    />
   );
 }
 
-export function Section({
-  title,
-  children,
-}: {
+// Ένα κλειστό κουτί της Αναφοράς· η υπόδειξη λέει τι έχει μέσα.
+export function Section(props: {
   title: string;
+  hint: string;
   children: ReactNode;
 }) {
   return (
-    <div className="m1s-section">
-      <Panel label={title} isFlush>
-        {children}
-      </Panel>
-    </div>
+    <Box title={props.title} hint={props.hint}>
+      {props.children}
+    </Box>
   );
 }
+
+export const opportunitiesHint = (count: number): string =>
+  count === 1 ? "1 Ευκαιρία" : `${count} Ευκαιρίες`;

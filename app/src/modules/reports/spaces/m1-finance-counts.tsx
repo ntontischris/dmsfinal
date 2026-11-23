@@ -1,11 +1,11 @@
-import { Panel } from "@/spaces/kit/panel";
 import { Badge, StateNotice, fmtPercent } from "@/spaces/screens/shared";
 
 import type { PaymentMethodsReport, ProductionsReport } from "../money-schema";
 import { PRODUCTION_TYPE_LABELS } from "../reports/productions";
 import { DASH, money } from "./m1-adapter";
+import { Box, Facts } from "./m1-box";
 import { ExportRow } from "./m1-export-row";
-import { Cell, NoAmountsNote, SummaryCard } from "./m1-finance-parts";
+import { Cell, NoAmountsNote } from "./m1-finance-parts";
 import type { ReportBodyProps } from "./m1-model";
 
 // Τρόποι πληρωμής και Παραγωγές ανά κατάσταση (d8, οι Αναφορές του παλιού DMS) πάνω στα report_payment_methods και
@@ -17,7 +17,10 @@ const percent = (value: number | null): string =>
 function MethodsTable({ data }: { data: PaymentMethodsReport }) {
   const { totals } = data;
   return (
-    <Panel label="Τρόποι πληρωμής" isFlush>
+    <Box
+      title="Τρόποι πληρωμής"
+      hint={`${data.rows.length} τρόποι · ${totals.receiptCount} Εισπράξεις · ${money(totals.amount)}`}
+    >
       <div className="scroll">
         <table className="rtable m1f-table">
           <thead>
@@ -61,7 +64,7 @@ function MethodsTable({ data }: { data: PaymentMethodsReport }) {
           </tbody>
         </table>
       </div>
-    </Panel>
+    </Box>
   );
 }
 
@@ -82,7 +85,7 @@ export function PaymentMethodsBody(
     );
   }
   return (
-    <div className="m1f-wrap">
+    <div className="m1f-wrap ml-stack">
       <NoAmountsNote amounts={data.amounts} />
       <MethodsTable data={data} />
       <p className="note">
@@ -100,7 +103,10 @@ const TOTAL_ROW = "";
 function ProductionsTable({ data }: { data: ProductionsReport }) {
   const lines = [...data.rows, { ...data.totals, type: TOTAL_ROW }];
   return (
-    <Panel label="Είδη" isFlush>
+    <Box
+      title="Είδη"
+      hint={`${data.rows.length} είδη · ${data.totals.open} ανοιχτές · ${data.totals.delivered} παραδόθηκαν`}
+    >
       <div className="scroll">
         <table className="rtable m1f-table">
           <thead>
@@ -140,7 +146,7 @@ function ProductionsTable({ data }: { data: ProductionsReport }) {
           </tbody>
         </table>
       </div>
-    </Panel>
+    </Box>
   );
 }
 
@@ -156,19 +162,21 @@ export function ProductionsBody(
     );
   }
   return (
-    <div className="m1f-wrap">
-      <div className="m1f-cards">
-        <SummaryCard
-          label="Ξεκίνησαν"
-          basis="στην περίοδο"
-          value={String(data.totals.total)}
-        />
-        <SummaryCard
-          label="Παραδόθηκαν"
-          basis="στην περίοδο"
-          value={String(data.deliveredInPeriod)}
-        />
-      </div>
+    <div className="m1f-wrap ml-stack">
+      <Facts
+        items={[
+          {
+            label: "Ξεκίνησαν",
+            basis: "στην περίοδο",
+            value: String(data.totals.total),
+          },
+          {
+            label: "Παραδόθηκαν",
+            basis: "στην περίοδο",
+            value: String(data.deliveredInPeriod),
+          },
+        ]}
+      />
       <ProductionsTable data={data} />
       <p className="note">
         Η κατάσταση είναι η σημερινή. Το «Παραδόθηκαν στην περίοδο» μετρά και

@@ -1,30 +1,35 @@
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 import { fmtDate } from "@/spaces/screens/shared";
 
 import { TRAIL_EMPTY } from "../invoice-corrections-labels";
 import { trailText } from "../invoice-detail-helpers";
 import type { TrailEntry } from "../invoice-detail-schema";
 import { athensToday } from "../money";
+import { Box } from "./i3-parts";
 
-// Το Ίχνος της καταχώρισης (prototype `screens/i3-trail.tsx`): ποιος, πότε, τι άλλαξε. Άδειο όταν ο θεατής δεν το βλέπει.
-export function InvoiceTrail({ number, trail }: { number: string; trail: readonly TrailEntry[] }) {
+const dayOf = (at: string): string => fmtDate(athensToday(new Date(at)));
+
+// Το Ίχνος της καταχώρισης (κλειστό κουτί): ποιος, πότε, τι άλλαξε. Άδειο όταν ο θεατής δεν το βλέπει.
+export function InvoiceTrail({ trail }: { trail: readonly TrailEntry[] }) {
+  const hint = trail.length === 0 ? "κενό για εσένα" : `${trail.length} ενέργειες: ποιος, πότε, τι άλλαξε`;
   return (
-    <Panel label={`Ίχνος καταχώρισης: ${number}`}>
+    <Box title="Ίχνος καταχώρισης" hint={hint}>
       {trail.length === 0 ? (
         <p className="muted">{TRAIL_EMPTY}</p>
       ) : (
-        <RowList>
+        <ul className="ml-list i3-cover">
           {trail.map((entry) => (
-            <ListRow
-              key={`${entry.at}-${entry.action}-${entry.reason ?? ""}`}
-              lead={<span className="i13-date">{fmtDate(athensToday(new Date(entry.at)))}</span>}
-              title={trailText(entry)}
-              sub={entry.byName ?? "—"}
-            />
+            <li key={`${entry.at}-${entry.action}-${entry.reason ?? ""}`} className="ml-line">
+              <span className="ml-thumb i3-day">{dayOf(entry.at).slice(0, 5)}</span>
+              <span className="ml-main">
+                <strong>{trailText(entry)}</strong>
+                <small>
+                  {dayOf(entry.at)} · {entry.byName ?? "—"}
+                </small>
+              </span>
+            </li>
           ))}
-        </RowList>
+        </ul>
       )}
-    </Panel>
+    </Box>
   );
 }

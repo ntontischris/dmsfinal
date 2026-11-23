@@ -1,0 +1,16 @@
+/* Καρτέλα Πελάτη και όψεις Χρημάτων του Χρήστη πελάτη (I5, I2 πελάτη): ό,τι λείπει από το money-lines.css. */
+.i5-hero-label { margin: .3rem 0 0; font-size: .85rem; font-weight: 600; letter-spacing: 0; color: var(--color-text-muted); }
+.i5-hero .ml-hero-amount > span { display: block; }
+.i5-moves { display: grid; gap: .6rem; margin: 1.2rem 0 0; }
+.i5-moves .ml-box-title small { font-weight: 500; }
+.i5-line[data-side="credit"] { --c: var(--brand-periwinkle); }
+.i5-line[data-side="debit"] { --c: color-mix(in oklab, var(--brand-periwinkle) 55%, var(--color-text)); }
+.i5-running { display: grid; justify-items: end; gap: .1rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.i5-running small { color: var(--color-text-muted); font-size: .72rem; }
+.i5-box-actions { justify-content: flex-start; margin-top: .6rem; }
+.i5-head { margin-bottom: .8rem; }
+
+@media (max-width: 40rem) {
+  .i5-running { grid-column: 1 / -1; justify-items: start; }
+}
+.i5-gap { margin: 0 0 1rem; }

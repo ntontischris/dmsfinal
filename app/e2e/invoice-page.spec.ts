@@ -74,6 +74,7 @@ test("ο Ιδιοκτήτης βάζει ποσοστό, εισπράττει α
   await signIn(page, "owner@example.com");
   await page.goto(SETTINGS_PATH);
   const rates = card(page, RATES_CARD);
+  await rates.locator("summary").first().click();
   await button(rates, "+ Νέο ποσοστό").click();
   await rates.getByLabel("Ονομασία παρακράτησης").fill(RATE);
   await rates.getByLabel("Ποσοστό (%)").fill("20");

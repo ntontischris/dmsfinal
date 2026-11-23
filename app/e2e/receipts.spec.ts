@@ -53,7 +53,7 @@ test("ο Ιδιοκτήτης προσθέτει τρόπο, καταχωρεί,
 
   await page.goto(SETTINGS_PATH);
   const methods = card(page, METHODS_CARD);
-  await button(methods, "+ Νέα τιμή").click();
+  await methods.locator("summary", { hasText: "+ Νέος τρόπος" }).click();
   await methods.getByLabel("Νέος τρόπος").fill(METHOD);
   await button(methods, "Προσθήκη τρόπου").click();
   await expect(methods.getByRole("status")).toContainText(

@@ -15,7 +15,6 @@ const companyTabs = (page: Page) =>
 const chips = (page: Page) => page.getByRole("list", { name: "Ενεργά φίλτρα" });
 const auditRows = (page: Page) => page.locator("li.part-row");
 
-
 test("ο Ιδιοκτήτης φιλτράρει το Ίχνος και τα φίλτρα μένουν στη διεύθυνση", async ({
   page,
 }) => {
@@ -148,11 +147,10 @@ test("ο Ιδιοκτήτης εξάγει το Ίχνος με τα φίλτρ�
   );
 
   await page.goto("/app/reports/export?dataset=audit");
-  await expect(
-    page
-      .locator("details.kit-fb-card", { hasText: "Σύνολο δεδομένων" })
-      .locator(".kit-fb-chip"),
-  ).toHaveText("Ίχνος ενεργειών");
+  await expect(page.locator('li.ml-line[aria-current="true"]')).toContainText(
+    "Ίχνος ενεργειών",
+  );
+  await page.locator("summary", { hasText: "Ιστορικό εξαγωγών" }).click();
   const history = page
     .getByRole("heading", { name: "Ιστορικό εξαγωγών" })
     .locator("xpath=ancestor::section[1]");

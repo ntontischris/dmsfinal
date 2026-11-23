@@ -1,108 +1,140 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge, fmtMoney } from "@/spaces/screens/shared";
 
+import { LEDGER_NOTE } from "../ledger-labels";
 import type { LedgerView } from "../ledger-view-schema";
 import { CopyButton } from "./i5-pay";
 
-// Οι κάρτες της Καρτέλας του prototype (`screens/i5-cards.tsx`), για την ομάδα και για τον Χρήστη πελάτη (isClient).
-// Η λίστα ανοιχτών Τιμολογίων μέσα στο «Πώς πληρώνω» δεν μεταφέρθηκε: η Καρτέλα της βάσης δεν δίνει υπόλοιπο ανά Τιμολόγιο.
+// Η κεφαλίδα και τα κλειστά κουτιά της Καρτέλας (Χρήματα restyle, όπως το I8): για την ομάδα και για τον Χρήστη πελάτη.
 
-const balanceLabel = (inFavour: boolean, isClient: boolean): string => {
-  if (isClient)
-    return inFavour
-      ? "Υπόλοιπο υπέρ σου (με ΦΠΑ)"
-      : "Χρωστάς από Τιμολόγια (με ΦΠΑ)";
-  return inFavour
-    ? "Υπόλοιπο υπέρ του πελάτη (με ΦΠΑ)"
-    : "Χρωστά από Τιμολόγια (με ΦΠΑ)";
-};
+export const initialsOf = (name: string): string =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
 
-export function BalanceCards(props: {
-  balance: number;
-  overdue: number;
-  isClient?: boolean;
-}) {
-  const inFavour = props.balance < 0;
+interface MoneyHeroProps {
+  mono: string;
+  title: string;
+  // Η ετικέτα του μεγάλου αριθμού· μένει επικεφαλίδα (τη ζητούν τα e2e).
+  label: string;
+  amount: number;
+  isOpen: boolean;
+  facts: string;
+  hasWarning: boolean;
+  actions?: ReactNode;
+}
+
+export function MoneyHero(props: MoneyHeroProps) {
   return (
-    <div className="i245-totals">
-      <Panel label={balanceLabel(inFavour, props.isClient ?? false)}>
-        <div className="i245-big i245-bignum">
-          {fmtMoney(Math.abs(props.balance))}
-        </div>
-      </Panel>
-      <Panel
-        label="Ληξιπρόθεσμο"
-        aside={
-          props.overdue > 0 ? (
-            <Badge tone="attention">ληξιπρόθεσμο</Badge>
-          ) : undefined
-        }
-      >
-        <div className="i245-big i245-bignum" data-late={props.overdue > 0}>
-          {fmtMoney(props.overdue)}
-        </div>
-      </Panel>
-    </div>
+    <header className="ml-hero i5-hero">
+      <span className="ml-hero-mono" aria-hidden="true">
+        {props.mono}
+      </span>
+      <div>
+        {props.hasWarning && <Badge tone="attention">ληξιπρόθεσμο</Badge>}
+        <h1>{props.title}</h1>
+        <h2 className="i5-hero-label">{props.label}</h2>
+        <p className="ml-hero-amount" data-open={props.isOpen}>
+          <span>{fmtMoney(props.amount)}</span>
+          <small>{props.facts}</small>
+        </p>
+      </div>
+      {props.actions && <div className="ml-quick">{props.actions}</div>}
+    </header>
   );
 }
 
-// Ο πελάτης τις διαβάζει ως «Πώς πληρώνω»· οι εσωτερικοί ρόλοι βλέπουν τι δείχνεται στον πελάτη (στοιχεία από τις Ρυθμίσεις).
-export function PaymentCard({
-  payment,
-  isClient = false,
-}: {
+export function Box(props: {
+  title: string;
+  hint: string;
+  id?: string;
+  isOpen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section>
+      <details className="ml-box" id={props.id} open={props.isOpen}>
+        <summary>
+          <h2 className="ml-box-title">{props.title}</h2>
+          <small>{props.hint}</small>
+        </summary>
+        <div>{props.children}</div>
+      </details>
+    </section>
+  );
+}
+
+// Ο πελάτης το διαβάζει ως «Πώς πληρώνω»· η ομάδα βλέπει τι δείχνεται στον πελάτη (στοιχεία από τις Ρυθμίσεις).
+export function PaymentBox(props: {
   payment: NonNullable<LedgerView["payment"]>;
   isClient?: boolean;
+  isOpen?: boolean;
 }) {
+  const { payment, isClient = false } = props;
   return (
-    <div id="pay">
-      <Panel
-        label={
-          isClient ? "Πώς πληρώνω" : "Οδηγίες πληρωμής που βλέπει ο πελάτης"
-        }
-      >
-        <dl className="dl">
-          <dt>Δικαιούχος</dt>
-          <dd>{payment.holder}</dd>
-          <dt>Τράπεζα</dt>
-          <dd>{payment.bank}</dd>
-          <dt>IBAN</dt>
-          <dd className="i5-pay-line">
-            <span className="i245-iban">{payment.iban}</span>
-            <CopyButton value={payment.iban} what="το IBAN" />
-          </dd>
-          <dt>Αιτιολογία</dt>
-          <dd>
-            {isClient
-              ? "ο αριθμός του Τιμολογίου που πληρώνεις"
-              : "ο αριθμός του Τιμολογίου που πληρώνει ο πελάτης"}
-          </dd>
-        </dl>
-      </Panel>
-    </div>
+    <Box
+      id="pay"
+      isOpen={props.isOpen}
+      title={isClient ? "Πώς πληρώνω" : "Οδηγίες πληρωμής που βλέπει ο πελάτης"}
+      hint={`${payment.bank} · IBAN με αντιγραφή`}
+    >
+      <dl className="dl">
+        <dt>Δικαιούχος</dt>
+        <dd>{payment.holder}</dd>
+        <dt>Τράπεζα</dt>
+        <dd>{payment.bank}</dd>
+        <dt>IBAN</dt>
+        <dd className="i5-pay-line">
+          <span className="i245-iban">{payment.iban}</span>
+          <CopyButton value={payment.iban} what="το IBAN" />
+        </dd>
+        <dt>Αιτιολογία</dt>
+        <dd>
+          {isClient
+            ? "ο αριθμός του Τιμολογίου που πληρώνεις"
+            : "ο αριθμός του Τιμολογίου που πληρώνει ο πελάτης"}
+        </dd>
+      </dl>
+    </Box>
   );
 }
 
-export function ToInvoiceCard(props: { amount: number; count: number }) {
+const billablesText = (count: number): string =>
+  count === 1 ? "1 ανοιχτό Τιμολογητέο" : `${count} ανοιχτά Τιμολογητέα`;
+
+export function ToInvoiceBox(props: { amount: number; count: number }) {
   return (
-    <Panel
-      label="Δουλειά που δεν τιμολογήθηκε ακόμα"
-      aside={<Link href={hrefOf("I1")}>Άνοιγμα Τιμολογητέων</Link>}
+    <Box
+      title="Δουλειά που δεν τιμολογήθηκε ακόμα"
+      hint={`${fmtMoney(props.amount)} · ${billablesText(props.count)}`}
     >
-      <div className="i245-big i245-bignum">{fmtMoney(props.amount)}</div>
       <p className="muted">
-        {props.count === 1
-          ? "1 ανοιχτό Τιμολογητέο"
-          : `${props.count} ανοιχτά Τιμολογητέα`}{" "}
-        (καθαρά ποσά, χωρίς ΦΠΑ).
+        {billablesText(props.count)} (καθαρά ποσά, χωρίς ΦΠΑ).
       </p>
       <p className="note">
         Ο πελάτης δεν το βλέπει. Δεν είναι οφειλή· μόνο το Τιμολόγιο δημιουργεί
         οφειλή.
       </p>
-    </Panel>
+      <div className="ml-quick i5-box-actions">
+        <Link href={hrefOf("I1")}>Άνοιγμα Τιμολογητέων</Link>
+      </div>
+    </Box>
+  );
+}
+
+export function NoteBox() {
+  return (
+    <Box
+      title="Πώς διαβάζεται το υπόλοιπο"
+      hint="Μόνο το Τιμολόγιο δημιουργεί οφειλή"
+    >
+      <p className="note">{LEDGER_NOTE}</p>
+    </Box>
   );
 }

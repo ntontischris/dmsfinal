@@ -1,9 +1,9 @@
-import { Panel } from "@/spaces/kit/panel";
 import { fmtMoney, fmtPercent } from "@/spaces/screens/shared";
 
+import { G3Box } from "./g3-box";
 import type { Figures } from "./g3-model";
 
-// Prototype `screens/g3-table.tsx`. Η εξήγηση της τιμής (Περίοδος, Τιμολογητέα έξτρα) λείπει: η γραμμή κόστους δεν τα φέρνει.
+// Prototype `screens/g3-table.tsx`, ως γραμμές (ml-line) σε κλειστό κουτί: κάθε γραμμή = εκτίμηση, πραγματικό, διαφορά. Η εξήγηση της τιμής (Περίοδος, Τιμολογητέα έξτρα) λείπει: η γραμμή κόστους δεν τα φέρνει.
 
 const NONE = "—";
 
@@ -113,6 +113,35 @@ const rowsOf = (f: Figures, isInternal: boolean): readonly Row[] => {
   ];
 };
 
+const thumbOf = (label: string): string =>
+  label
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+
+function CostLine({ row }: { row: Row }) {
+  return (
+    <tr className="ml-line" data-strong={row.strong || undefined}>
+      <td className="ml-thumb" aria-hidden="true">
+        {thumbOf(row.label)}
+      </td>
+      <td className="ml-main" data-label="Γραμμή">
+        <span className="ml-tag">Εκτίμηση {row.estimate}</span>
+        <strong>{row.label}</strong>
+        <small>Διαφορά {row.diff}</small>
+      </td>
+      <td className="ml-amount g3-actual" data-label="Πραγματικό">
+        {row.actual}
+        <small>πραγματικό</small>
+      </td>
+    </tr>
+  );
+}
+
+const hintOf = (f: Figures): string =>
+  `κόστος ${money(f.estimate?.cost)} → ${money(f.actual?.cost)}`;
+
 export function G3Table({
   figures,
   isInternal,
@@ -121,37 +150,21 @@ export function G3Table({
   isInternal: boolean;
 }) {
   return (
-    <Panel label="Εκτίμηση και πραγματικό">
-      <div className="scroll">
-        <table className="rtable">
-          <thead>
-            <tr>
-              <th>Γραμμή</th>
-              <th className="num">Εκτίμηση</th>
-              <th className="num">Πραγματικό</th>
-              <th className="num">Διαφορά</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rowsOf(figures, isInternal).map((row) => (
-              <tr key={row.label}>
-                <td data-label="Γραμμή">
-                  {row.strong ? <strong>{row.label}</strong> : row.label}
-                </td>
-                <td className="num" data-label="Εκτίμηση">
-                  {row.estimate}
-                </td>
-                <td className="num g3-actual" data-label="Πραγματικό">
-                  {row.actual}
-                </td>
-                <td className="num" data-label="Διαφορά">
-                  {row.diff}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <G3Box title="Εκτίμηση και πραγματικό" hint={hintOf(figures)}>
+      <table className="ml-table ml-list">
+        <thead>
+          <tr>
+            <th>Γραμμή</th>
+            <th>Εκτίμηση και διαφορά</th>
+            <th>Πραγματικό</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rowsOf(figures, isInternal).map((row) => (
+            <CostLine key={row.label} row={row} />
+          ))}
+        </tbody>
+      </table>
       <p className="note">
         Κόστος ώρας: η εκτίμηση κρατά την τιμή της υπογραφής· το πραγματικό
         παίρνει το Κόστος ώρας του μήνα της Παραγωγής. Όπου λείπουν πραγματικά
@@ -163,6 +176,6 @@ export function G3Table({
           κόστος της εσωτερικής δουλειάς.
         </p>
       )}
-    </Panel>
+    </G3Box>
   );
 }

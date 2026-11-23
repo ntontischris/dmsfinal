@@ -52,7 +52,7 @@ test("ο Ιδιοκτήτης διορθώνει τη λήξη και μετά �
   await page.goto(`${NEW_PATH}?client=${clientId}`);
   // Η φόρμα έρχεται μετά τον σκελετό αναμονής: πρώτα να φανεί, μετά να γραφτεί (όπως στο invoices.spec).
   await expect(
-    page.getByRole("heading", { name: "Βήμα 1: Ανέβασμα PDF" }),
+    page.getByRole("heading", { name: "PDF του Τιμολογίου" }),
   ).toBeVisible();
   await page.locator('input[type="file"]').setInputFiles(PDF_FIXTURE);
   await fieldOf(page, "Αριθμός").fill(number);
@@ -68,12 +68,13 @@ test("ο Ιδιοκτήτης διορθώνει τη λήξη και μετά �
     .getByRole("link", { name: /^Διόρθωση/ })
     .click();
   await expect(page).toHaveURL(/new\?invoice=[0-9a-f-]{36}/);
-  await expect(card(page, `Ίχνος καταχώρισης: ${number}`)).toContainText(
+  await expect(card(page, "Ίχνος καταχώρισης")).toContainText(
     "Καταχωρήθηκε",
   );
 
-  // Η διόρθωση αποθηκεύεται μόνο όταν κάτι άλλαξε.
-  const correction = card(page, "Διόρθωση ή ακύρωση καταχώρισης");
+  // Το hero λέει ποια καταχώριση διορθώνεται. Η διόρθωση αποθηκεύεται μόνο όταν κάτι άλλαξε.
+  await expect(page.getByRole("heading", { name: `Τιμολόγιο ${number}` })).toBeVisible();
+  const correction = card(page, "Διόρθωση στοιχείων");
   const save = correction.getByRole("button", { name: "Αποθήκευση διόρθωσης" });
   await expect(save).toBeDisabled();
   await fieldOf(correction, "Λήξη").fill(NEW_DUE);
@@ -81,17 +82,19 @@ test("ο Ιδιοκτήτης διορθώνει τη λήξη και μετά �
   await expect(
     correction.getByRole("status").filter({ hasText: "Η διόρθωση αποθηκεύτηκε" }),
   ).toBeVisible();
-  await expect(card(page, `Ίχνος καταχώρισης: ${number}`)).toContainText(
+  await expect(card(page, "Ίχνος καταχώρισης")).toContainText(
     "15/01/2099",
   );
   await shot(page, "i3-correct");
 
-  // Η ακύρωση θέλει λόγο: χωρίς αυτόν το κουμπί δεν πατιέται.
-  const voidButton = correction.getByRole("button", {
+  // Η ακύρωση ζει σε κλειστό κουτί και θέλει λόγο: χωρίς αυτόν το κουμπί δεν πατιέται.
+  const voidBox = card(page, "Ακύρωση καταχώρισης");
+  await voidBox.locator("summary").click();
+  const voidButton = voidBox.getByRole("button", {
     name: "Ακύρωση καταχώρισης",
   });
   await expect(voidButton).toBeDisabled();
-  await fieldOf(correction, "Λόγος ακύρωσης (υποχρεωτικός)").fill(VOID_REASON);
+  await fieldOf(voidBox, "Λόγος ακύρωσης (υποχρεωτικός)").fill(VOID_REASON);
   await voidButton.click();
   // Μετά την ακύρωση η φόρμα φεύγει και η σελίδα δείχνει την ακυρωμένη καταχώριση με τον λόγο.
   const voidedNotice = page

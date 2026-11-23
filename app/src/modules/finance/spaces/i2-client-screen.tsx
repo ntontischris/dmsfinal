@@ -10,6 +10,7 @@ import {
 import { getClientInvoices } from "../ledger-queries";
 import { athensToday } from "../money";
 import { clientInvoiceRowOf } from "./i2-client-adapter";
+import { ClientInvoicesHero } from "./i2-client-hero";
 import {
   byMonth,
   invoiceMonthsOf,
@@ -26,9 +27,12 @@ import { InvoiceTable } from "./i2-table";
 
 import "./i245.css";
 import "./i2.css";
+import "./money-lines.css";
+import "./i5-lines.css";
 
-// I2 Τιμολόγια του Χρήστη πελάτη στη νέα εμφάνιση (prototype `screens/I2.tsx`, caps.isClient): μόνο τα δικά του,
-// από την ίδια ανάγνωση με την παλιά (client_invoices_view). Χωρίς σύνολα, στήλη Πελάτη, Πελάτη-φίλτρο, Ίχνος ή ακυρωμένα.
+// I2 Τιμολόγια του Χρήστη πελάτη (Χρήματα restyle): μόνο τα δικά του, από την ίδια ανάγνωση (client_invoices_view).
+// Πάνω τι μένει να πληρώσει και «Πώς πληρώνω»· από κάτω τα φίλτρα και τα Τιμολόγια ως γραμμές με PDF. Χωρίς τα σύνολα
+// της ομάδας, στήλη Πελάτη, Πελάτη-φίλτρο, Ίχνος ή ακυρωμένα.
 export async function SpacesClientInvoices({
   query,
 }: {
@@ -59,6 +63,12 @@ export async function SpacesClientInvoices({
   const unpaidNote = query.filter === "unpaid" ? unpaidNoteOf(all) : null;
   return (
     <div data-spaces>
+      <div className="ml-head i5-head">
+        <p>Τι μένει να πληρώσεις, με το PDF κάθε Τιμολογίου.</p>
+      </div>
+      <div className="i5-gap">
+        <ClientInvoicesHero rows={listed} />
+      </div>
       <FilterBar
         name="i2-filters"
         filters={[
@@ -67,21 +77,21 @@ export async function SpacesClientInvoices({
         ]}
         clearHref={i2ClearHref(current)}
       />
-        {unpaidNote && <p className="note">{unpaidNote}</p>}
-        {rows.length === 0 ? (
-          <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
-            {listed.length === 0
-              ? CLIENT_INVOICES_EMPTY_TEXT
-              : "Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο."}
-          </StateNotice>
-        ) : (
-          <InvoiceTable
-            rows={rows}
-            today={athensToday()}
-            canEdit={false}
-            showClient={false}
-          />
-        )}
+      {unpaidNote && <p className="note">{unpaidNote}</p>}
+      {rows.length === 0 ? (
+        <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
+          {listed.length === 0
+            ? CLIENT_INVOICES_EMPTY_TEXT
+            : "Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο."}
+        </StateNotice>
+      ) : (
+        <InvoiceTable
+          rows={rows}
+          today={athensToday()}
+          canEdit={false}
+          showClient={false}
+        />
+      )}
     </div>
   );
 }
