@@ -1,5 +1,6 @@
 -- Σήμερα: κάρτα «Υπογράφηκε» (agreement_signed). Μία γραμμή ανά υπογραφή Συμφωνίας που καταχωρίστηκε (recorded_at)
--- μετά το previous_seen_at της Σήμερα του Χρήστη· χωρίς previous_seen_at (ή χωρίς γραμμή στο today_seen) τις τελευταίες 3 μέρες.
+-- μετά το «από» της επίσκεψης: όπως το today_mark_seen, αν το seen_at είναι πάνω από 30 λεπτά πριν το p_now, από το seen_at·
+-- αλλιώς από το previous_seen_at. Χωρίς γραμμή στο today_seen, οι τελευταίες 3 μέρες. Το όριο είναι αυστηρό (>).
 -- Ο κανόνας είναι της Απόφασης του Ελεγκτή:
 --  • μετράει και οι δύο τρόποι υπογραφής· οι υπογραφές του ίδιου Χρήστη (recorded_by = p_uid) δεν μετράνε·
 --  • μετρούν μόνο υπογραφές με στιγμή έως p_now (όχι μελλοντικές)· η Πρόταση δεν μπαίνει (δεν έχει υπογραφή).
@@ -14,7 +15,8 @@ language plpgsql stable security definer set search_path = ''
 as $$
 declare
   v_since timestamptz := coalesce(
-    (select s.previous_seen_at from public.today_seen s where s.user_id = p_uid),
+    (select case when s.seen_at <= p_now - interval '30 minutes' then s.seen_at else s.previous_seen_at end
+       from public.today_seen s where s.user_id = p_uid),
     p_now - interval '3 days');
 begin
   return query

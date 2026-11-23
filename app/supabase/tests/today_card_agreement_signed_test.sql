@@ -2,7 +2,7 @@
 -- Σταθερό p_now: 2026-03-10 10:00 UTC. Ο Ιδιοκτήτης έχει previous_seen_at 2026-03-08 10:00· η Πωλήσεις δεν έχει γραμμή
 -- στο today_seen, άρα κοιτάει τις τελευταίες 3 μέρες (από 2026-03-07 10:00). Όλες οι στιγμές μακριά από τα όρια της μέρας.
 begin;
-select plan(26);
+select plan(32);
 
 -- ───────────── Βοηθοί ─────────────
 create function public.t_id(p_last text) returns uuid
@@ -105,9 +105,10 @@ insert into public.agreement_signatures (agreement_id, method, signed_name, sign
 
 reset session_replication_role;
 
--- Ο Ιδιοκτήτης είδε τη Σήμερα για τελευταία φορά στις 2026-03-08 10:00 (previous_seen_at). Η Άννα δεν έχει γραμμή.
+-- Ο Ιδιοκτήτης: seen_at 09:55 (λιγότερο από 30 λεπτά πριν το p_now), άρα το «από» είναι το previous_seen_at 2026-03-08 10:00.
+-- Η Άννα δεν έχει γραμμή.
 insert into public.today_seen (user_id, seen_at, previous_seen_at) values
-  (public.t_id('a1'), timestamptz '2026-03-10 09:00+00', timestamptz '2026-03-08 10:00+00');
+  (public.t_id('a1'), timestamptz '2026-03-10 09:55+00', timestamptz '2026-03-08 10:00+00');
 
 -- ───────────── Θετικό: ο Ιδιοκτήτης, από το previous_seen_at, νεότερα πρώτα ─────────────
 select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00'), 4,
@@ -137,7 +138,8 @@ select set_config('today.rows', '', true);
 
 -- ───────────── Εξαιρέσεις: παράθυρο, μελλοντικές, δική μου καταχώριση ─────────────
 select ok(not (public.t_id('g1')::text = any(public.t_ids('a1'))), 'Ο Ιδιοκτήτης δεν βλέπει την υπογραφή που κατέγραψε ο ίδιος');
-select ok(not (public.t_id('g2')::text = any(public.t_ids('a1'))), 'Υπογραφή πριν από το previous_seen_at δεν μπαίνει');
+update public.agreement_signatures set recorded_at = timestamptz '2026-03-08 10:00+00' where agreement_id = public.t_id('g2');
+select ok(not (public.t_id('g2')::text = any(public.t_ids('a1'))), 'Υπογραφή ακριβώς στο previous_seen_at δεν μπαίνει (αυστηρό όριο)');
 select ok(not (public.t_id('g7')::text = any(public.t_ids('a1'))), 'Δεύτερη υπογραφή πριν από το previous_seen_at δεν μπαίνει');
 select ok(public.t_id('g8')::text = any(public.t_ids('a1')), 'Υπογραφή μετά το previous_seen_at μπαίνει');
 select ok(not (public.t_id('g4')::text = any(public.t_ids('a1'))), 'Υπογραφή με στιγμή μετά το p_now δεν μπαίνει');
@@ -148,7 +150,25 @@ select is(authz.today_count_agreement_signed(public.t_id('a3'), null, timestampt
 select is(public.t_ids('a3'), array[public.t_id('g1')::text, public.t_id('g8')::text],
   'Η Πωλήσεις βλέπει μόνο τις δικές της, νεότερες πρώτα');
 select ok(not (public.t_id('g5')::text = any(public.t_ids('a3'))), 'Η Πωλήσεις δεν βλέπει τη δική της καταχώριση (recorded_by = p_uid)');
-select ok(not (public.t_id('g7')::text = any(public.t_ids('a3'))), 'Χωρίς previous_seen_at: υπογραφή πάνω από 3 μέρες δεν μπαίνει');
+select ok(not (public.t_id('g7')::text = any(public.t_ids('a3'))), 'Χωρίς γραμμή στο today_seen: υπογραφή πάνω από 3 μέρες δεν μπαίνει');
+update public.agreement_signatures set recorded_at = timestamptz '2026-03-07 10:00+00' where agreement_id = public.t_id('g7');
+select ok(not (public.t_id('g7')::text = any(public.t_ids('a3'))), 'Υπογραφή ακριβώς στις 3 μέρες δεν μπαίνει (αυστηρό όριο)');
+
+-- ───────────── Παράθυρο: seen_at πάνω από 30 λεπτά πριν (όχι previous_seen_at) ─────────────
+-- seen_at 08:00 (2 ώρες πριν το p_now): το «από» είναι το seen_at. Η g4 (μελλοντική) γίνεται υπογραφή 08:30 του Χρήστη a2.
+update public.today_seen set seen_at = timestamptz '2026-03-10 08:00+00' where user_id = public.t_id('a1');
+update public.agreement_signatures set recorded_at = timestamptz '2026-03-10 08:30+00', recorded_by = public.t_id('a2')
+ where agreement_id = public.t_id('g4');
+select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00'), 1,
+  'Μετά από 30 λεπτά μετράει από το seen_at: μόνο η υπογραφή μετά από αυτό');
+select ok(public.t_id('g4')::text = any(public.t_ids('a1')), 'Η υπογραφή μετά το seen_at μπαίνει');
+select ok(not (public.t_id('g3')::text = any(public.t_ids('a1'))),
+  'Υπογραφή ανάμεσα στο previous_seen_at και στο seen_at δεν μπαίνει');
+select ok(not (public.t_id('g8')::text = any(public.t_ids('a1'))),
+  'Δεύτερη υπογραφή ανάμεσα στο previous_seen_at και στο seen_at δεν μπαίνει');
+update public.agreement_signatures set recorded_at = timestamptz '2026-03-10 08:00+00' where agreement_id = public.t_id('g4');
+select is(authz.today_count_agreement_signed(public.t_id('a1'), null, timestamptz '2026-03-10 10:00+00'), 0,
+  'Υπογραφή ακριβώς στο seen_at δεν μπαίνει (αυστηρό όριο)');
 
 -- ───────────── Χωρίς Δικαίωμα ή Χρήστης πελάτη: null και 42501 ─────────────
 select is(authz.today_count_agreement_signed(public.t_id('a2'), null, timestamptz '2026-03-10 10:00+00'), null,
