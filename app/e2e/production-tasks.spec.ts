@@ -61,7 +61,7 @@ test("ο Ιδιοκτήτης αναθέτει Εργασία υψηλής πρ�
     await expect(
       producer.getByRole("heading", { level: 1, name: /Οι εργασίες μου/ }),
     ).toBeVisible();
-    const row = producer.locator("li.part-row", { hasText: TASK });
+    const row = producer.locator("li.ml-line", { hasText: TASK });
     await expect(row).toContainText("υψηλή προτεραιότητα");
     await expect(row).toContainText(TITLE);
     await button(row, "Ξεκίνησα").click();
