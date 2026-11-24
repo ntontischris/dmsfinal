@@ -125,6 +125,9 @@
 .ml-new[open] > summary::before { background: var(--color-accent); }
 .ml-new .kit-panel { margin: 0; border: 0; background: transparent; }
 
+/* Το κείμενο της υπενθύμισης (I8) κρατά τις αλλαγές γραμμής του μηνύματος */
+.ml-reminder-body { white-space: pre-line; }
+
 @media (max-width: 40rem) {
   .ml-line { grid-template-columns: auto minmax(0, 1fr); }
   .ml-amount { grid-column: 2; text-align: left; }

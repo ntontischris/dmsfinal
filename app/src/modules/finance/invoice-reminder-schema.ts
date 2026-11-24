@@ -9,6 +9,8 @@ const reminderPreviewSchema = z.object({
   subject: z.string(),
   body: z.string(),
   lastAt: z.string().nullable(),
+  isEnabled: z.boolean(),
+  recentAt: z.string().nullable(),
 });
 
 const reminderSchema = z.object({

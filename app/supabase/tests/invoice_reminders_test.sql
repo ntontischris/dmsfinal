@@ -1,8 +1,9 @@
 -- Τ4: «Στείλε υπενθύμιση» για ληξιπρόθεσμο Τιμολόγιο. Άρνηση ανά ρόλο, προεπισκόπηση, αποστολή μέσω του Αυτοματισμού
--- «Ληξιπρόθεσμο», υπενθυμίσεις στο Ίχνος, όχι για Πιστωτικό, όχι χωρίς επαφή με email.
+-- «Ληξιπρόθεσμο», υπενθυμίσεις στο Ίχνος (μόνο με «Βλέπει το Ίχνος»), μία ανά 24 ώρες, όχι για Πιστωτικό, όχι χωρίς επαφή
+-- με email, όχι με κλειστό Αυτοματισμό.
 -- Φανταστικοί Χρήστες και στοιχεία· όλα ζουν μέσα στη συναλλαγή.
 begin;
-select plan(22);
+select plan(27);
 
 -- ───────────── Χρήστες ─────────────
 -- a1 Ιδιοκτήτης · a3 Πωλήσεις · a5 βλέπει Οικονομικά και ποσά, δεν καταχωρεί Τιμολόγια · b1 Χρήστης πελάτη Α «Πλήρης»
@@ -109,8 +110,8 @@ select throws_ok($$ select public.invoice_reminder_preview(current_setting('t.a1
                  'Όποιος δεν καταχωρεί Τιμολόγια δεν βλέπει την υπενθύμιση');
 select throws_ok($$ select public.invoice_reminder_send(current_setting('t.a1')::uuid) $$, '42501', null,
                  'Όποιος δεν καταχωρεί Τιμολόγια δεν στέλνει υπενθύμιση');
-select is(jsonb_array_length(public.invoice_reminders(current_setting('t.a1')::uuid)), 0,
-          'Όποιος βλέπει ποσά βλέπει τις υπενθυμίσεις (καμία ακόμα)');
+select throws_ok($$ select public.invoice_reminders(current_setting('t.a1')::uuid) $$, '42501', null,
+                 'Όποιος βλέπει ποσά αλλά όχι το Ίχνος δεν βλέπει τις υπενθυμίσεις');
 
 -- ───────────── Προεπισκόπηση ─────────────
 select public.t_as('a1');
@@ -132,6 +133,20 @@ select is((public.invoice_reminders(current_setting('t.a1')::uuid) -> 0) - 'at',
 select ok(public.invoice_reminder_preview(current_setting('t.a1')::uuid) ->> 'lastAt' is not null,
           'Η προεπισκόπηση δείχνει πότε έφυγε η τελευταία');
 
+-- ───────────── Μία ανά 24 ώρες ─────────────
+select throws_like($$ select public.invoice_reminder_send(current_setting('t.a1')::uuid) $$,
+                   'Στάλθηκε υπενθύμιση πριν από λίγο (στις %). Ξαναδοκίμασε αύριο.',
+                   'Δεύτερο πάτημα στο ίδιο δευτερόλεπτο: «στάλθηκε πριν από λίγο», όχι «δεν έχει επαφή»');
+select ok(public.invoice_reminder_preview(current_setting('t.a1')::uuid) ->> 'recentAt' is not null,
+          'Η προεπισκόπηση ξέρει ότι έφυγε υπενθύμιση τις τελευταίες 24 ώρες');
+reset role;
+update public.automation_sends set created_at = created_at - interval '25 hours'
+ where case_key like 'invoice.overdue:' || current_setting('t.a1') || ':manual:%';
+select public.t_as('a1');
+select throws_ok($$ select public.invoice_reminder_send(current_setting('t.a1')::uuid) $$, 'P0001',
+                 'Η υπενθύμιση δεν μπήκε στην ουρά (ίσως έφυγε ήδη). Δες το Ίχνος.',
+                 'Ίδια περίπτωση ήδη στην ουρά: «δεν μπήκε στην ουρά», όχι «δεν έχει επαφή»');
+
 -- ───────────── Όχι για Πιστωτικό, όχι χωρίς επαφή ─────────────
 select throws_ok($$ select public.invoice_reminder_send(current_setting('t.cr')::uuid) $$, 'P0001',
                  'Υπενθύμιση στέλνεται μόνο για ληξιπρόθεσμο Τιμολόγιο', 'Όχι για Πιστωτικό');
@@ -141,6 +156,17 @@ select throws_ok($$ select public.invoice_reminder_send(current_setting('t.b1'):
                  'Ο Πελάτης δεν έχει επαφή με email για τα Οικονομικά', 'Πελάτης χωρίς επαφή: δεν φεύγει τίποτα');
 select is(jsonb_array_length(public.invoice_reminders(current_setting('t.b1')::uuid)), 0,
           'Πελάτης χωρίς επαφή: καμία υπενθύμιση στο Ίχνος');
+
+-- ───────────── Κλειστός Αυτοματισμός ─────────────
+reset role;
+update public.automations set is_enabled = false
+ where event_type = 'invoice.overdue' and channel = 'email' and recipient_kind = 'relative' and recipient_relative = 'client';
+select public.t_as('a1');
+select ok(not (public.invoice_reminder_preview(current_setting('t.b1')::uuid) ->> 'isEnabled')::boolean,
+          'Κλειστός Αυτοματισμός: η προεπισκόπηση το λέει');
+select throws_like($$ select public.invoice_reminder_send(current_setting('t.b1')::uuid) $$,
+                   'Ο Αυτοματισμός «Ληξιπρόθεσμο» είναι κλειστός%',
+                   'Κλειστός Αυτοματισμός: δεν φεύγει υπενθύμιση ούτε με το χέρι');
 
 select * from finish();
 rollback;
