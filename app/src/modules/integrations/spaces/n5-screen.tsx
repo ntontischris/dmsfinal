@@ -12,6 +12,7 @@ import { GoogleSetup } from "./n5-google";
 import { IntegrationsSection } from "./n5-integrations";
 import { SubscriptionsSection } from "./n5-subscriptions";
 
+import "../../finance/spaces/money-lines.css";
 import "./n5.css";
 
 // Τι στάλθηκε, σε ποιον και με τι αποτέλεσμα ζει στο K3· από την κάρτα του email ένας σύνδεσμος εκεί.
@@ -72,7 +73,7 @@ export async function SpacesIntegrations({ open }: { open: string | null }) {
       ) : (
         <ErrorNotice what="η κατάσταση των συνδέσεων" />
       )}
-      <div className="n5-section">
+      <div className="n5-subs">
         {subscriptions.ok ? (
           <SubscriptionsSection view={subscriptions.data} open={open} />
         ) : (

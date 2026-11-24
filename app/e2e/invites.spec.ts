@@ -13,7 +13,6 @@ const NEW_PASSWORD = "e2e-new-password-456";
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
 
-
 // Οι προσκλήσεις σε εκκρεμότητα και οι Χρήστες ομάδας της N1.
 const pendingInvites = (page: Page) =>
   card(page, "Προσκλήσεις σε εκκρεμότητα").last();
@@ -214,13 +213,18 @@ const athensMinute = (time: number): RegExp => {
 };
 
 // Μια γραμμή του Ιστορικού αποστολών (K3).
-const sendRows = (page: Page) => page.locator("li.part-row");
+const sendRows = (page: Page) => page.locator("li.ml-line");
 
 test("ο Ιδιοκτήτης στέλνει δοκιμαστικό email και φαίνεται στο Ιστορικό", async ({
   page,
 }) => {
   await signIn(page, "owner@example.com");
   await page.goto("/app/settings/integrations");
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
   const clickedAt = Date.now();
   await page
     .getByRole("button", { name: "Δοκιμαστικό email στον εαυτό μου" })
