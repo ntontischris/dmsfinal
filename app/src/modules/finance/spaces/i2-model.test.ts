@@ -73,6 +73,10 @@ describe("φίλτρα Τιμολογίων (ίδιοι κανόνες με το
     expect(visibleInvoices(rows, "credit").map((r) => r.id)).toEqual(["d"]);
   });
 
+  test("εξοφλημένα: μόνο ό,τι πληρώθηκε όλο", () => {
+    expect(visibleInvoices(rows, "paid").map((r) => r.id)).toEqual(["c"]);
+  });
+
   test("όλα, νεότερο πρώτο", () => {
     expect(visibleInvoices(rows, "all")[0].id).toBe("b");
   });

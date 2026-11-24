@@ -2,7 +2,8 @@ import { z } from "zod";
 
 // Σχήματα των JSON των RPC των Τιμολογίων (invoices_view, invoice_draft_context). Ό,τι δεν ταιριάζει σπάει εδώ, δυνατά.
 
-export const INVOICE_FILTERS = ["all", "unpaid", "overdue", "credit"] as const;
+// «paid» φιλτράρεται μόνο στη σελίδα (από το «all» της βάσης), όχι στο invoices_view(p_filter).
+export const INVOICE_FILTERS = ["all", "unpaid", "overdue", "paid", "credit"] as const;
 export type InvoiceFilter = (typeof INVOICE_FILTERS)[number];
 
 export const INVOICE_KINDS = ["invoice", "receipt", "credit"] as const;

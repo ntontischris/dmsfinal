@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { clientIdByName, project, signIn } from "./sales-parts";
 
 // Σήμερα Σδ (#183) στη νέα εμφάνιση (Χώροι): ένα ληξιπρόθεσμο Τιμολόγιο φαίνεται στα «Χρήματα» της Σήμερα (οφειλέτης και
-// ποσό), και το «Όλα τα τιμολόγια →» πηγαίνει στην I2 με το φίλτρο. Δικός του Πελάτης ανά project και στιγμή (service role,
+// ποσό), και το «Ποιος μας χρωστάει →» πηγαίνει στην I2 με το φίλτρο, ανά Πελάτη. Δικός του Πελάτης ανά project και στιγμή (service role,
 // μόνο για τα δεδομένα). Σειριακά, χωρίς retries.
 test.describe.configure({ mode: "serial", retries: 0 });
 
@@ -53,7 +53,7 @@ async function seedOverdueInvoice(
   if (error) throw error;
 }
 
-test("ο Ιδιοκτήτης βλέπει το ληξιπρόθεσμο στη Σήμερα και το «Όλα τα τιμολόγια →» τον πάει στα ληξιπρόθεσμα", async ({
+test("ο Ιδιοκτήτης βλέπει το ληξιπρόθεσμο στη Σήμερα και το «Ποιος μας χρωστάει →» τον πάει στους οφειλέτες", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -76,13 +76,17 @@ test("ο Ιδιοκτήτης βλέπει το ληξιπρόθεσμο στη 
   await expect(debtor).toContainText(/έληξε πριν από \d+ ημέρες/);
   await expect(debtor).toContainText(TOTAL_EUROS);
 
-  await money.getByRole("link", { name: "Όλα τα τιμολόγια →" }).click();
+  await money.getByRole("link", { name: "Ποιος μας χρωστάει →" }).click();
   await expect(page).toHaveURL(/\/app\/finance\/invoices\?filter=overdue$/);
   await expect(
     page
       .locator("details.kit-fb-card", { hasText: "Κατάσταση" })
       .locator(".kit-fb-chip"),
   ).toHaveText(/^ληξιπρόθεσμα/);
+  // Τ5: τα ληξιπρόθεσμα ανά Πελάτη· ο Πελάτης ανοίγει τα Τιμολόγιά του.
+  const debtorRow = page.locator("tr", { hasText: clientName });
+  await expect(debtorRow).toContainText("1 ληξιπρόθεσμο");
+  await debtorRow.getByRole("link", { name: clientName }).click();
   await expect(page.locator("tr", { hasText: number })).toContainText(
     "ληξιπρόθεσμο",
   );
