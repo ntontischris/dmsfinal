@@ -26,4 +26,8 @@
 & .k-shortcuts { display: flex; flex-wrap: wrap; gap: .4rem; }
 & .k-shortcuts span { color: var(--color-text-muted); font-size: .82rem; align-self: center; }
 & .page-filters { margin: 0 0 1rem; }
+& .k-wide { grid-column: 1 / -1; display: grid; gap: .6rem; min-width: 0; }
+& .ml-quick.k-left { justify-content: flex-start; }
+& .k-back { justify-content: flex-start; margin: 0 0 .8rem; }
+& .ml-hero .k-hero-forms form { display: grid; gap: .3rem; margin: 0; }
 }

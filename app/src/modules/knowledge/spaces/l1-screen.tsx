@@ -60,9 +60,7 @@ function Shortcuts({
           Όρια του Βοηθού: στις Ρυθμίσεις → Εταιρεία → Βοηθός
         </Link>
       ) : (
-        <span>
-          Όρια του Βοηθού: στις Ρυθμίσεις → Εταιρεία → Βοηθός
-        </span>
+        <span>Όρια του Βοηθού: στις Ρυθμίσεις → Εταιρεία → Βοηθός</span>
       )}
     </div>
   );
@@ -158,7 +156,10 @@ function ItemsTab({ list, status, sectionId }: ItemsTabProps) {
           </ul>
         )}
       </KBox>
-      <KBox title="Μνήμη του Βοηθού" hint="Ξαναφτιάχνεται όταν αλλάξει πολύ η Γνώση">
+      <KBox
+        title="Μνήμη του Βοηθού"
+        hint="Ξαναφτιάχνεται όταν αλλάξει πολύ η Γνώση"
+      >
         <SpacesForm
           action={rebuildMemory}
           submitLabel="Ξαναφτιάξε τη μνήμη του Βοηθού"

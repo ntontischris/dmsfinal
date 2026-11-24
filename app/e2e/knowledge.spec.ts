@@ -96,6 +96,7 @@ test("ο Ιδιοκτήτης δημοσιεύει Άρθρο για τον Ρό
   await button(content, "Αποθήκευση").click();
   await expect(page.getByText("Λείπει η Περίληψη.")).toHaveCount(0);
   await expect(content.getByRole("status")).toContainText("Αποθηκεύτηκε.");
+  await openBox(page, "Κοινό");
   const audience = page.locator("form", {
     has: page.getByRole("group", { name: "Κοινό" }),
   });
