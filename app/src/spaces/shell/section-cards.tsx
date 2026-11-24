@@ -12,6 +12,10 @@ import {
   type SpaceView,
 } from "@/spaces/data/spaces";
 import { NavPending } from "@/spaces/shell/nav-pending";
+import {
+  useCardNumbers,
+  type CardNumber,
+} from "@/spaces/shell/section-numbers";
 
 interface SectionCardsProps {
   model: SpacesModel;
@@ -34,27 +38,63 @@ export function SectionCards({ model }: SectionCardsProps) {
     (card) => card.code === code || card.code === tabOf(code),
   );
   if (cards.length < 2 || !active) return null;
+  return <Deck label={view.label} cards={cards} activeCode={active.code} />;
+}
+
+interface DeckProps {
+  label: string;
+  cards: readonly ScreenLink[];
+  activeCode: string;
+}
+
+function Deck({ label, cards, activeCode }: DeckProps) {
+  const numbers = useCardNumbers();
   return (
-    <nav className="money-deck" aria-label={view.label} data-spaces>
+    <nav className="money-deck" aria-label={label} data-spaces>
       {cards.map((card, index) => (
-        <Link
+        <Card
           key={card.code}
-          href={card.href}
-          className="money-reel"
-          aria-current={card.code === active.code ? "page" : undefined}
-          scroll={false}
-        >
-          <span className="money-reel-vf" aria-hidden />
-          <span className="money-reel-top" aria-hidden>
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <span className="money-reel-count" aria-hidden>
-            {String(index + 1)}
-          </span>
-          <strong className="money-reel-title">{card.label}</strong>
-          <NavPending />
-        </Link>
+          card={card}
+          index={index}
+          number={numbers[card.code]}
+          isActive={card.code === activeCode}
+        />
       ))}
     </nav>
+  );
+}
+
+interface CardProps {
+  card: ScreenLink;
+  index: number;
+  number: CardNumber | undefined;
+  isActive: boolean;
+}
+
+// Χωρίς αριθμό (ακόμα φορτώνει ή δεν τον δικαιούται ο θεατής) η κάρτα δείχνει μια ήσυχη τελεία.
+function Card({ card, index, number, isActive }: CardProps) {
+  return (
+    <Link
+      href={card.href}
+      className="money-reel"
+      data-urgent={number?.isUrgent ? "" : undefined}
+      aria-current={isActive ? "page" : undefined}
+      aria-label={card.label}
+      scroll={false}
+    >
+      <span className="money-reel-vf" aria-hidden />
+      <span className="money-reel-top" aria-hidden>
+        {String(index + 1).padStart(2, "0")}
+        {number?.isUrgent && <i className="money-rec">ΚΑΘΥΣΤΕΡΕΙ</i>}
+      </span>
+      <span className="money-reel-count" aria-hidden>
+        {number?.count ?? "·"}
+      </span>
+      <strong className="money-reel-title">{card.label}</strong>
+      <span className="money-reel-foot">
+        {number && <small>{number.hint}</small>}
+      </span>
+      <NavPending />
+    </Link>
   );
 }

@@ -39,6 +39,8 @@ export { SpacesInvoice } from "./spaces/i8-screen";
 // Χώροι: I4, I5
 export { SpacesReceipts } from "./spaces/i4-screen";
 export { SpacesLedger } from "./spaces/i5-screen";
+// Οι αριθμοί των καρτών των Τιμολογίων.
+export { FinanceNumbers } from "./spaces/finance-numbers";
 // Χώροι: I2, I5 του Χρήστη πελάτη.
 export { SpacesClientInvoices } from "./spaces/i2-client-screen";
 export { SpacesClientLedger } from "./spaces/i5-client-screen";

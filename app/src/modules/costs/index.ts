@@ -8,4 +8,5 @@ export type { ReadResult } from "./read";
 export { SpacesCosts } from "./spaces/g3-screen";
 export { SpacesFinanceSettings } from "./spaces/o6-screen";
 export { SpacesExpenses } from "./spaces/i6-screen";
+export { ExpenseNumbers } from "./spaces/expense-numbers";
 export { SpacesProfitability } from "./spaces/i7-screen";

@@ -6,6 +6,7 @@ import type { SpacesModel } from "@/spaces/data/spaces";
 import { Monogram } from "@/spaces/shell/icons";
 import { PageHead } from "@/spaces/shell/page-head";
 import { SectionCards } from "@/spaces/shell/section-cards";
+import { SectionNumbersProvider } from "@/spaces/shell/section-numbers";
 import { SideMenu } from "@/spaces/shell/side-menu";
 import { BottomBar } from "@/spaces/shell/space-nav";
 import { TopTools } from "@/spaces/shell/top-tools";
@@ -63,44 +64,46 @@ export function SpacesShell({
   children,
 }: SpacesShellProps) {
   return (
-    <div data-look="spaces" className={spacesSans.variable}>
-      <a className="skip-link" href="#main" data-spaces>
-        Μετάβαση στο περιεχόμενο
-      </a>
-      <div className="shell-frame">
-        <aside className="shell-side" data-spaces>
-          <Link className="shell-home" href="/app" aria-label="Αρχική">
-            <HomeMark version={logoVersion} />
-          </Link>
-          <SideMenu model={model} />
-        </aside>
-        <div className="shell-column">
-          <header className="shell-bar" data-spaces>
-            <Link
-              className="shell-home shell-home-mobile"
-              href="/app"
-              aria-label="Αρχική"
-            >
+    <SectionNumbersProvider>
+      <div data-look="spaces" className={spacesSans.variable}>
+        <a className="skip-link" href="#main" data-spaces>
+          Μετάβαση στο περιεχόμενο
+        </a>
+        <div className="shell-frame">
+          <aside className="shell-side" data-spaces>
+            <Link className="shell-home" href="/app" aria-label="Αρχική">
               <HomeMark version={logoVersion} />
             </Link>
-            <TopTools {...tools} />
-          </header>
-          {notice && (
-            <p className="shell-notice" role="status" data-spaces>
-              {notice}
-            </p>
-          )}
-          <main id="main" className="app-main" tabIndex={-1}>
-            <div data-spaces>
-              <SectionCards model={model} />
-              <PageHead model={model} />
-            </div>
-            {children}
-          </main>
+            <SideMenu model={model} />
+          </aside>
+          <div className="shell-column">
+            <header className="shell-bar" data-spaces>
+              <Link
+                className="shell-home shell-home-mobile"
+                href="/app"
+                aria-label="Αρχική"
+              >
+                <HomeMark version={logoVersion} />
+              </Link>
+              <TopTools {...tools} />
+            </header>
+            {notice && (
+              <p className="shell-notice" role="status" data-spaces>
+                {notice}
+              </p>
+            )}
+            <main id="main" className="app-main" tabIndex={-1}>
+              <div data-spaces>
+                <SectionCards model={model} />
+                <PageHead model={model} />
+              </div>
+              {children}
+            </main>
+          </div>
         </div>
+        <BottomBar model={model} />
+        {assistant}
       </div>
-      <BottomBar model={model} />
-      {assistant}
-    </div>
+    </SectionNumbersProvider>
   );
 }
