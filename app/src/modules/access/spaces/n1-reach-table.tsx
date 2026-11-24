@@ -1,66 +1,63 @@
-import { Badge } from "@/spaces/screens/shared";
-
 import type { PermissionDef, RoleSummary } from "../queries";
+import { Box, Line } from "./n-parts";
 import { permissionAreas, reachRow } from "./team-reach";
-
-const CELL = { all: "Όλα", mine: "Μόνο δικά του" } as const;
 
 interface RoleReachTableProps {
   roles: readonly RoleSummary[];
   permissions: readonly PermissionDef[];
 }
 
-// Ρόλοι × περιοχές με μια ματιά (prototype `screens/n1-reach-table.tsx`). Ένας Χρήστης με πολλούς Ρόλους βλέπει την ένωσή τους.
+type Row = ReturnType<typeof reachRow> | null;
+
+// Χωρίς γραμμή Δικαιωμάτων (Ιδιοκτήτης) = όλα σε όλες τις περιοχές.
+const areasWith = (
+  areas: readonly string[],
+  row: Row,
+  scope: "all" | "mine",
+): readonly string[] =>
+  areas.filter((area) => (row ? row[area] === scope : scope === "all"));
+
+const reachSub = (all: readonly string[], mine: readonly string[]): string => {
+  const parts = [
+    all.length > 0 ? `Όλα: ${all.join(", ")}` : null,
+    mine.length > 0 ? `Μόνο δικά του: ${mine.join(", ")}` : null,
+  ].filter((part): part is string => part !== null);
+  return parts.length > 0 ? parts.join(" · ") : "Τίποτα ακόμα";
+};
+
+// Τι βλέπει κάθε Ρόλος ομάδας ανά περιοχή (prototype `screens/n1-reach-table.tsx`), μία γραμμή ανά Ρόλο.
+// Ένας Χρήστης με πολλούς Ρόλους βλέπει την ένωσή τους.
 export function RoleReachTable({ roles, permissions }: RoleReachTableProps) {
   const areas = permissionAreas(permissions, "team");
   const rows = roles
     .filter((def) => def.kind === "team")
-    .map((def) => ({
-      def,
-      row: def.isOwner ? null : reachRow(def.grants, permissions),
-    }));
+    .map((def) => {
+      const row = def.isOwner ? null : reachRow(def.grants, permissions);
+      return {
+        def,
+        all: areasWith(areas, row, "all"),
+        mine: areasWith(areas, row, "mine"),
+      };
+    });
   return (
-    <details className="card n1-section">
-      <summary>
-        <h2 style={{ display: "inline" }}>Ποιος Ρόλος βλέπει τι</h2>
-      </summary>
+    <Box
+      title="Ποιος Ρόλος βλέπει τι"
+      hint={`${rows.length} Ρόλοι ομάδας · ${areas.length} περιοχές`}
+    >
       <p className="muted">
         «Μόνο δικά του»: Πελάτες και Ευκαιρίες όπου είναι Υπεύθυνος, Παραγωγές
         όπου είναι Μέλος. Με δύο ή περισσότερους Ρόλους, ισχύει το ευρύτερο.
       </p>
-      <div className="scroll">
-        <table className="rtable">
-          <thead>
-            <tr>
-              <th>Περιοχή</th>
-              {rows.map(({ def }) => (
-                <th key={def.id}>{def.name}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {areas.map((area) => (
-              <tr key={area}>
-                <td data-label="Περιοχή">{area}</td>
-                {rows.map(({ def, row }) => {
-                  const scope = row ? row[area] : "all";
-                  return (
-                    <td key={def.id} data-label={def.name}>
-                      {scope ? (
-                        <Badge tone={scope === "all" ? "strong" : undefined}>
-                          {CELL[scope]}
-                        </Badge>
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </details>
+      <ul className="ml-list">
+        {rows.map(({ def, all, mine }) => (
+          <Line
+            key={def.id}
+            name={def.name}
+            title={def.name}
+            sub={reachSub(all, mine)}
+          />
+        ))}
+      </ul>
+    </Box>
   );
 }

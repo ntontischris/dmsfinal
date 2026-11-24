@@ -8,7 +8,6 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { Strip } from "@/spaces/shell/strip";
 
 import { listInvitations } from "../invitation-queries";
-import type { RoleOption } from "../role-choices";
 import {
   getDeactivationPreview,
   listPermissions,
@@ -24,12 +23,11 @@ import {
   type PickerViewer,
 } from "./n1-adapter";
 import { UserDetail, type DetailConfirm } from "./n1-detail";
-import { InvitePanel } from "./invite-panel";
-import { inviteOptionsOf } from "./invite-options";
 import { InvitationList } from "./n1-invite";
 import { UserList } from "./n1-list";
 import { listTeamUserDates } from "./n1-load";
 import { RoleReachTable } from "./n1-reach-table";
+import { Box } from "./n-parts";
 import { userReachText } from "./team-reach";
 
 import "./n1.css";
@@ -68,16 +66,11 @@ interface SpacesTeamProps {
   status: string | undefined;
   // Τα Αιτήματα GDPR (μόνο Ιδιοκτήτης), από το module gdpr.
   gdprRequests: ReactNode;
-  // Οι Πελάτες που βλέπει ο Χρήστης, για την πρόσκληση ανθρώπου Πελάτη (από τη σελίδα, module sales).
-  clients: readonly RoleOption[];
 }
 
-// N1 Ομάδα στη νέα εμφάνιση (prototype `screens/N1.tsx`): οι Χρήστες ομάδας, οι Προσκλήσεις, η πρόσκληση, τι βλέπει κάθε Ρόλος.
-export async function SpacesTeam({
-  status,
-  gdprRequests,
-  clients,
-}: SpacesTeamProps) {
+// N1 Ομάδα (prototype `screens/N1.tsx`): οι Χρήστες ομάδας, οι Προσκλήσεις, τι βλέπει κάθε Ρόλος.
+// Η πρόσκληση έχει ένα σπίτι, τη N6 (/app/team/invite)· εδώ μένει το κύριο κουμπί προς τα εκεί.
+export async function SpacesTeam({ status, gdprRequests }: SpacesTeamProps) {
   const viewer = await getViewer();
   if (!can(viewer, "access.team")) return <Denied />;
   const [team, strip] = await Promise.all([
@@ -104,38 +97,31 @@ export async function SpacesTeam({
   return (
     <div data-spaces>
       <Strip stats={strip.stats} now={strip.now} />
-      {isAlone ? (
-        <StateNotice kind="empty" title="Είσαι ακόμα μόνος στην ομάδα">
-          Προσκάλεσε τον πρώτο Χρήστη ομάδας παρακάτω: διαλέγεις Ρόλους και του
-          στέλνεται σύνδεσμος που ισχύει 7 μέρες.
-        </StateNotice>
-      ) : (
-        <UserList users={rows} filter={pickFilter(status)} />
-      )}
-      {invitations.ok ? (
-        <InvitationList invitations={n1InvitationsOf(invitations.data)} />
-      ) : (
-        <ErrorNotice what="οι Προσκλήσεις" />
-      )}
-      <InvitePanel
-        title="Πρόσκληση Χρήστη"
-        {...inviteOptionsOf({
-          canTeam: true,
-          canClient: can(viewer, "access.clientUsers"),
-          me,
-          roles: roles.data,
-          permissions: permissions.data,
-          clients,
-        })}
-      />
-      <RoleReachTable roles={roles.data} permissions={permissions.data} />
-      {me.isOwner && !isAlone && gdprRequests}
-      {me.isOwner && (
-        <p className="note">
-          Τι κάνει κάθε Ρόλος (Δικαιώματα, Εύρος, νέοι Ρόλοι) αλλάζει στη{" "}
-          <Link href={hrefOf("N4")}>Ρόλοι και Δικαιώματα</Link>.
-        </p>
-      )}
+      <div className="n-stack">
+        {isAlone ? (
+          <StateNotice kind="empty" title="Είσαι ακόμα μόνος στην ομάδα">
+            <Link href={hrefOf("N6")}>Προσκάλεσε τον πρώτο Χρήστη ομάδας</Link>:
+            διαλέγεις Ρόλους και του στέλνεται σύνδεσμος που ισχύει 7 μέρες.
+          </StateNotice>
+        ) : (
+          <UserList users={rows} filter={pickFilter(status)} />
+        )}
+        {invitations.ok ? (
+          <InvitationList invitations={n1InvitationsOf(invitations.data)} />
+        ) : (
+          <ErrorNotice what="οι Προσκλήσεις" />
+        )}
+        <RoleReachTable roles={roles.data} permissions={permissions.data} />
+        {me.isOwner && !isAlone && gdprRequests}
+        {me.isOwner && (
+          <Box title="Ρόλοι και Δικαιώματα" hint="Τι κάνει κάθε Ρόλος">
+            <p>
+              Τι κάνει κάθε Ρόλος (Δικαιώματα, Εύρος, νέοι Ρόλοι) αλλάζει στη{" "}
+              <Link href={hrefOf("N4")}>Ρόλοι και Δικαιώματα</Link>.
+            </p>
+          </Box>
+        )}
+      </div>
     </div>
   );
 }

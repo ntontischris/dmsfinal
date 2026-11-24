@@ -1,0 +1,46 @@
+/* Ομάδα, GDPR, Συνάδελφοι: τα κομμάτια του n-parts.tsx πάνω στο λεξιλόγιο του money-lines.css. Μόνο tokens. */
+.n-box-body { display: grid; gap: .8rem; min-width: 0; }
+.n-box-body > p { margin: 0; }
+.n-box-body .ml-list { margin: 0; }
+.ml-box[data-danger] > summary::before { background: var(--brand-yellow); }
+
+/* Τμήμα λίστας: τίτλος αριστερά, γρήγορα κουμπιά δεξιά */
+.n-list-section { display: grid; gap: .6rem; margin: 0; }
+.n-list-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .5rem 1rem; }
+.n-list-head > div { display: grid; gap: .1rem; }
+.n-list-head small { color: var(--color-text-muted); font-size: .8rem; }
+.n-list-section > .ml-list { margin: 0; }
+.n-stack { display: grid; gap: 1.1rem; }
+
+/* Βήμα φόρμας (όπως το .i3-step της I3): ανοιχτό κουτί με αριθμό, τίτλο και υπόδειξη */
+.n-step {
+  margin: 0; padding: .9rem 1rem 1rem; border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 16%, transparent);
+  background: linear-gradient(160deg, color-mix(in oklab, var(--panel-deep) 75%, transparent), color-mix(in oklab, var(--panel-midnight) 75%, transparent));
+}
+.n-step-head { display: flex; align-items: center; gap: .8rem; margin: 0 0 .8rem; }
+.n-step-head > div { display: grid; gap: .1rem; min-width: 0; }
+.n-step-head small { color: var(--color-text-muted); font-size: .8rem; overflow-wrap: anywhere; }
+.n-step-no {
+  flex: none; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%;
+  font-weight: 800; color: color-mix(in oklab, var(--brand-periwinkle) var(--panel-ink-mix), var(--color-text));
+  border: 1.5px solid color-mix(in oklab, var(--brand-periwinkle) 60%, transparent);
+}
+.n-step-body { display: grid; gap: .8rem; min-width: 0; }
+.n-step-body .note, .n-step-body .muted { margin: 0; }
+.n-steps { display: grid; gap: .8rem; }
+
+/* Επικίνδυνη ενέργεια: σιωπηλό περίγραμμα, όχι κόκκινο (το κόκκινο μένει για το κύριο CTA) */
+.ml-quick :is(a, button)[data-danger] { border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent); }
+.n-confirm { display: grid; gap: .8rem; padding: 1rem 1.1rem; border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--brand-yellow) 45%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
+.n-confirm > h2 { margin: 0; }
+.n-confirm > p { margin: 0; }
+
+/* Επιλογή-«κάρτα» (Ποιον προσκαλείς, Θέμα): pills */
+.n-choice { display: flex; flex-wrap: wrap; gap: .4rem; border: 0; margin: 0; padding: 0; min-width: 0; }
+.n-choice legend { margin-bottom: .4rem; font-size: .8rem; color: var(--color-text-muted); }
+.n-choice label { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.4rem; padding: .3rem .9rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent); font-size: .88rem; }
+.n-choice label:has(input:checked) { border-color: var(--brand-periwinkle); background: color-mix(in oklab, var(--brand-periwinkle) 14%, transparent); }
