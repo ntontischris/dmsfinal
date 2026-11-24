@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
 
 const DELAY_MS = 300;
 
 // Η φόρμα αναζήτησης γράφει το ?q= στη διεύθυνση όσο πληκτρολογείς (με μικρή αναμονή), κρατώντας τα κρυφά φίλτρα.
-// Το Enter δουλεύει όπως πριν. Κενό πεδίο = χωρίς ?q=.
+// Το Enter πάει αμέσως (ακυρώνει την αναμονή, μία μόνο μετάβαση). Κενό πεδίο = χωρίς ?q=.
 export function LiveSearchForm(props: {
   action: string;
   className: string;
@@ -30,6 +30,11 @@ export function LiveSearchForm(props: {
         router.replace(hrefOfForm(formRef.current), { scroll: false });
     }, DELAY_MS);
   };
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    window.clearTimeout(timer.current);
+    router.replace(hrefOfForm(event.currentTarget), { scroll: false });
+  };
   return (
     <form
       ref={formRef}
@@ -38,6 +43,7 @@ export function LiveSearchForm(props: {
       action={props.action}
       role="search"
       onInput={handleInput}
+      onSubmit={handleSubmit}
     >
       {props.children}
     </form>
