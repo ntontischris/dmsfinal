@@ -1,6 +1,5 @@
-// B2 Σελίδα Πελάτη (νέα εμφάνιση), «Πέντε ενωμένες καρτέλες»: καθαρές συναρτήσεις για την κορυφή-ενημέρωση (στάδιο,
-// πρόταση-σύνοψη, Επόμενο βήμα, χρήματα ως πρόταση) και για τις καρτέλες, με τις παλιές διευθύνσεις (?tab=) να πέφτουν
-// στη σωστή ενωμένη καρτέλα.
+// B2 Σελίδα Πελάτη: καθαρές συναρτήσεις για την κορυφή-ενημέρωση (στάδιο, πρόταση-σύνοψη, Επόμενο βήμα, χρήματα ως
+// πρόταση) και για τα πέντε κλειστά κουτιά, με τις διευθύνσεις ?tab= να ανοίγουν το σωστό κουτί.
 
 import type { Step } from "@/spaces/kit/steps";
 import { fmtDate, fmtMoney } from "@/spaces/screens/shared";
@@ -8,65 +7,66 @@ import { fmtDate, fmtMoney } from "@/spaces/screens/shared";
 import type { Opportunity } from "../types";
 import type { B2Ledger, B2Tab } from "./b2-adapter";
 
-export type ClientTab =
-  "overview" | "sales" | "productions" | "finance" | "comms" | "users";
+// Τα πέντε κλειστά κουτιά της σελίδας, στη σειρά τους.
+export type ClientBox = "summary" | "people" | "work" | "comms" | "ledger";
 
-// Η σειρά των καρτελών· οι «Χρήστες Πελάτη» δεν είναι στη σειρά, ανοίγουν από την πλαϊνή στήλη.
-export const CLIENT_TAB_LABELS: Readonly<
-  Record<Exclude<ClientTab, "users">, string>
-> = {
-  overview: "Επισκόπηση",
-  sales: "Πωλήσεις",
-  productions: "Παραγωγές",
-  finance: "Οικονομικά",
+export const CLIENT_BOX_LABELS: Readonly<Record<ClientBox, string>> = {
+  summary: "Σύνοψη",
+  people: "Άνθρωποι",
+  work: "Δουλειές",
   comms: "Επικοινωνία",
+  ledger: "Καρτέλα",
 };
 
-// Οι παλιές καρτέλες (και οι σύνδεσμοί τους, π.χ. τα φίλτρα του «Τι στάλθηκε») πέφτουν στη σωστή ενωμένη.
-export const FROM_OLD_TAB: Readonly<Record<B2Tab, ClientTab>> = {
-  details: "overview",
-  opportunities: "sales",
-  agreements: "sales",
-  productions: "productions",
-  ledger: "finance",
+// Οι διευθύνσεις ?tab= (παλιές καρτέλες, οι πέντε ενωμένες και τα ονόματα των κουτιών) ανοίγουν το σωστό κουτί.
+export const BOX_OF_TAB: Readonly<Record<string, ClientBox>> = {
+  details: "summary",
+  overview: "summary",
+  summary: "summary",
+  users: "people",
+  people: "people",
+  opportunities: "work",
+  agreements: "work",
+  productions: "work",
+  sales: "work",
+  work: "work",
   chat: "comms",
   activities: "comms",
   dispatches: "comms",
-  users: "users",
+  comms: "comms",
+  ledger: "ledger",
+  finance: "ledger",
 };
 
-// Ποιες καρτέλες βλέπει ο Χρήστης, από τις ενότητες που δικαιούται. «users» όταν βλέπει Χρήστες Πελάτη ή GDPR.
-export const clientTabsFor = (
+// Ποια κουτιά βλέπει ο Χρήστης, από τις ενότητες που δικαιούται. «Άνθρωποι» όταν βλέπει Χρήστες Πελάτη ή GDPR.
+export const clientBoxesFor = (
   allowed: readonly B2Tab[],
   hasGdpr: boolean,
-): ClientTab[] =>
+): ClientBox[] =>
   (
     [
-      ["overview", true],
-      ["sales", true],
-      ["productions", allowed.includes("productions")],
-      ["finance", allowed.includes("ledger")],
+      ["summary", true],
+      ["people", allowed.includes("users") || hasGdpr],
+      ["work", true],
       [
         "comms",
         ["chat", "activities", "dispatches"].some((tab) =>
           allowed.includes(tab as B2Tab),
         ),
       ],
-      ["users", allowed.includes("users") || hasGdpr],
+      ["ledger", allowed.includes("ledger")],
     ] as const
   )
     .filter(([, isOn]) => isOn)
-    .map(([tab]) => tab);
+    .map(([box]) => box);
 
-export const resolveClientTab = (
+// Το κουτί που ανοίγει από το ?tab=· κανένα όταν δεν υπάρχει ή δεν επιτρέπεται.
+export const openBoxOf = (
   value: string | undefined,
-  tabs: readonly ClientTab[],
-): ClientTab => {
-  const mapped =
-    (FROM_OLD_TAB as Readonly<Record<string, ClientTab | undefined>>)[
-      value ?? ""
-    ] ?? value;
-  return tabs.find((tab) => tab === mapped) ?? "overview";
+  boxes: readonly ClientBox[],
+): ClientBox | null => {
+  const box = value === undefined ? undefined : BOX_OF_TAB[value];
+  return box !== undefined && boxes.includes(box) ? box : null;
 };
 
 // Η «Ανανέωση» φαίνεται μόνο όταν ανάψει (τρέχουσα)· αλλιώς η σχέση δείχνει 3 βήματα.

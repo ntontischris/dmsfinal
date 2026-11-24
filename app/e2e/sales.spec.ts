@@ -15,7 +15,7 @@ import {
   signIn,
   tableRow,
 } from "./sales-parts";
-import { panel } from "./catalogue-parts";
+import { openPanel, panel } from "./catalogue-parts";
 
 // Πελάτες και Ευκαιρίες (B1–B6) και Ρυθμίσεις › Πωλήσεις (O2) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Φανταστικά στοιχεία.
 // Τους Πελάτες και τις Ευκαιρίες που διαβάζονται εδώ τους φτιάχνει το e2e/seed.mjs (βοηθητικά: e2e/sales-parts.ts).
@@ -32,7 +32,7 @@ const boardCard = (page: Page, title: string): Locator =>
 // Ένα ζευγάρι των Πιθανών διπλών (B6): οι δύο πλευρές του έχουν για τίτλο το όνομα του Πελάτη.
 const duplicatePair = (page: Page, name: string): Locator =>
   page
-    .locator("section", { has: page.locator(".compare") })
+    .locator("section", { has: page.locator(".b6-compare") })
     .filter({ has: page.getByRole("heading", { name, exact: true }) });
 
 // Μια γραμμή λίστας των Ρυθμίσεων (O2) με ακριβή τίτλο.
@@ -210,7 +210,7 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   const side = inspector(page);
   await page
     .locator("summary", {
-      has: page.getByRole("heading", { name: "Στοιχεία", exact: true }),
+      has: page.getByRole("heading", { name: "Σύνοψη", exact: true }),
     })
     .click();
   const edit = side.locator("form", { has: page.locator('input[name="afm"]') });
@@ -265,7 +265,7 @@ test("Αίτημα πρόσβασης: ο πωλητής ζητά, η Διαχε
 
   await page.goto(clientUrl);
   await expect(inspector(page)).toContainText("Νίκος Πωλήσεις");
-  // Η παλιά διεύθυνση της καρτέλας Ευκαιρίες ανοίγει τις «Πωλήσεις»· εκεί είναι η Ευκαιρία της έγκρισης.
+  // Η παλιά διεύθυνση της καρτέλας Ευκαιρίες ανοίγει το κουτί «Δουλειές»· εκεί είναι η Ευκαιρία της έγκρισης.
   await page.goto(`${clientUrl}?tab=opportunities`);
   await expect(
     page.getByRole("link", { name: topic, exact: true }).first(),
@@ -349,7 +349,7 @@ test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάν
     .click();
   await expect(page).toHaveURL(/\/app\/settings\/sales$/);
 
-  const sources = panel(page, "Πηγές");
+  const sources = await openPanel(page, "Πηγές");
   const newValue = sources.getByLabel("Νέα τιμή", { exact: true });
   await expect(async () => {
     if (!(await newValue.isVisible()))

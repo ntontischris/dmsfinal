@@ -25,14 +25,15 @@ export function ClientTransfer({
   );
   return (
     <>
-      <button
-        type="button"
-        className="button"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        Μεταβίβαση Πελάτη
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          Μεταβίβαση Πελάτη
+        </button>
+      </span>
       {isOpen &&
         (candidates.length === 0 ? (
           <p className="muted">

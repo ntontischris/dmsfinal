@@ -34,7 +34,7 @@ export function StageSelect({
     (stage) => !stage.isRetired || stage.id === stageId,
   );
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="btn-row">
+    <form ref={formRef} onSubmit={onSubmit} className="ml-quick">
       <input type="hidden" name="opportunityId" value={opportunityId} />
       <select
         className="select"
@@ -125,13 +125,11 @@ export function NextStepEditor({
           Δεν έχει οριστεί (είναι υποχρεωτικό)
         </span>
       )}{" "}
-      <button
-        type="button"
-        className="button"
-        onClick={() => setIsEditing(true)}
-      >
-        {hasStep ? "Αλλαγή" : "Όρισε επόμενο βήμα"}
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsEditing(true)}>
+          {hasStep ? "Αλλαγή" : "Όρισε επόμενο βήμα"}
+        </button>
+      </span>
     </>
   );
 }
@@ -153,25 +151,22 @@ export function SaidYes({
     return (
       <div className="note" role="status">
         <p>{saidYesNotice(hasProposal)}</p>
-        <Link className="button" data-primary="true" href={proposalHref}>
-          {hasProposal
-            ? "Άνοιξε την πρόταση για υπογραφή"
-            : "Άνοιξε τη νέα πρόταση"}
-        </Link>
+        <span className="ml-quick">
+          <Link data-primary="true" href={proposalHref}>
+            {hasProposal
+              ? "Άνοιξε την πρόταση για υπογραφή"
+              : "Άνοιξε τη νέα πρόταση"}
+          </Link>
+        </span>
       </div>
     );
   if (kindId === null) return null;
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="btn-row">
+    <form ref={formRef} onSubmit={onSubmit} className="ml-quick">
       <input type="hidden" name="opportunityId" value={opportunityId} />
       <input type="hidden" name="kindId" value={kindId} />
       <input type="hidden" name="body" value={SAID_YES_TEXT} />
-      <button
-        type="submit"
-        className="button"
-        data-primary="true"
-        disabled={isPending}
-      >
+      <button type="submit" data-primary="true" disabled={isPending}>
         Είπε ναι — ετοίμασε Συμφωνία
       </button>
       {state.error && (
@@ -194,9 +189,11 @@ export function CloseLost({
   const active = reasons.filter((reason) => !reason.isRetired);
   if (!isOpen)
     return (
-      <button type="button" className="button" onClick={() => setIsOpen(true)}>
-        Κλείσιμο ως χαμένη
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsOpen(true)}>
+          Κλείσιμο ως χαμένη
+        </button>
+      </span>
     );
   return (
     <SpacesActionForm
@@ -236,14 +233,15 @@ export function FollowUp({
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        onClick={() => setIsOpen(true)}
-      >
-        Νέα Ευκαιρία από αυτήν
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          data-primary="true"
+          onClick={() => setIsOpen(true)}
+        >
+          Νέα Ευκαιρία από αυτήν
+        </button>
+      </span>
     );
   return (
     <SpacesActionForm
@@ -261,11 +259,7 @@ export function FollowUp({
         />
       </SpacesField>
       <SpacesField label="Επόμενο βήμα">
-        <input
-          className="input"
-          name="nextStep"
-          autoComplete="off"
-        />
+        <input className="input" name="nextStep" autoComplete="off" />
       </SpacesField>
       <SpacesField label="Πότε (υπενθύμιση)">
         <input

@@ -1,3 +1,4 @@
+import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 
 import { getViewer } from "@/modules/access";
@@ -35,7 +36,7 @@ function ClientAgreementCard({ card }: { card: ClientCardView }) {
           {card.status}
         </Badge>
       </div>
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Είδος</dt>
         <dd>{card.kind}</dd>
         {card.amount && (
@@ -52,13 +53,14 @@ function ClientAgreementCard({ card }: { card: ClientCardView }) {
         )}
         <RemainingProvisions current={card.current} />
       </dl>
-      <Link
-        className="button"
-        data-primary={card.isProposal ? "true" : undefined}
-        href={card.href}
-      >
-        {card.cta}
-      </Link>
+      <span className="ml-quick">
+        <Link
+          data-primary={card.isProposal ? "true" : undefined}
+          href={card.href}
+        >
+          {card.cta}
+        </Link>
+      </span>
     </article>
   );
 }

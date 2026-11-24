@@ -30,7 +30,13 @@ import {
   signAsVisitor,
   signOutsideSystem,
 } from "./agreements-flows-parts";
-import { control, openItem, panel, screenHeader } from "./catalogue-parts";
+import {
+  control,
+  openItem,
+  openPanel,
+  panel,
+  screenHeader,
+} from "./catalogue-parts";
 import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
 
 // Συμφωνίες και υπογραφή (D1, D2, D4, D5), Ρυθμίσεις › Συμφωνίες (O3) και η πρόταση της B4 από άκρη σε άκρη. Φανταστικά στοιχεία.
@@ -275,7 +281,7 @@ test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις π
   await changeReelRounds(page);
 
   // Η γραμμή του είδους «reel»: σε χρήση, με τον αριθμό των χρήσεων.
-  const reel = panel(page, "Είδη Παροχής")
+  const reel = (await openPanel(page, "Είδη Παροχής"))
     .locator("li")
     .filter({ has: page.locator(".part-title", { hasText: /^reel$/ }) });
   await expect(

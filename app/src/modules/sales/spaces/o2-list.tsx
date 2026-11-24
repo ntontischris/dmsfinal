@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import {
@@ -27,6 +26,8 @@ import {
 } from "./o2-adapter";
 import { StageProbability } from "./o2-probability";
 import { SpacesActionForm } from "./spaces-form";
+
+import "../../finance/spaces/money-lines.css";
 
 // Λίστα Ρύθμισης Πωλήσεων (prototype `screens/o-shared.tsx` ListEditor), με τις πραγματικές ενέργειες της σημερινής
 // σελίδας: σειρά ↑↓, μετονομασία, Νέα → διαγραφή, Σε χρήση → απόσυρση (Στάδιο: με μεταφορά), αποσυρμένη → επανενεργοποίηση.
@@ -84,7 +85,7 @@ function Rename({ list, item }: { list: ListName; item: ListItem }) {
     <SpacesActionForm
       action={renameListItem}
       submitLabel="Αποθήκευση"
-      className="btn-row o2-rename"
+      className="ml-quick o2-rename"
     >
       <Ref list={list} id={item.id} />
       <input
@@ -212,9 +213,11 @@ function RowAction({
     );
   if (isStageUsed)
     return (
-      <button type="button" className="button" onClick={onAskRetire}>
-        Απόσυρση
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={onAskRetire}>
+          Απόσυρση
+        </button>
+      </span>
     );
   return (
     <RowForm
@@ -281,15 +284,16 @@ function ItemRow({
           {list === "stages" && status !== "Αποσύρθηκε" && (
             <StageProbability item={item} onDone={onDone} />
           )}
-          <button
-            type="button"
-            className="button"
-            aria-expanded={isRenaming}
-            aria-label={`Μετονομασία: ${item.label}`}
-            onClick={() => setIsRenaming((current) => !current)}
-          >
-            Μετονομασία
-          </button>
+          <span className="ml-quick">
+            <button
+              type="button"
+              aria-expanded={isRenaming}
+              aria-label={`Μετονομασία: ${item.label}`}
+              onClick={() => setIsRenaming((current) => !current)}
+            >
+              Μετονομασία
+            </button>
+          </span>
           <RowAction
             list={list}
             item={item}
@@ -308,15 +312,17 @@ function AddItem({ list }: { list: ListName }) {
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button type="button" className="button" onClick={() => setIsOpen(true)}>
-        + Νέα τιμή
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsOpen(true)}>
+          + Νέα τιμή
+        </button>
+      </span>
     );
   return (
     <SpacesActionForm
       action={createListItem}
       submitLabel="Προσθήκη"
-      className="btn-row"
+      className="ml-quick"
       resetOnSuccess
     >
       <input type="hidden" name="list" value={list} />
@@ -344,8 +350,12 @@ export function O2List({
   const visible = showRetired ? items : active;
   const retiredCount = items.length - active.length;
   return (
-    <div className="o-card">
-      <Panel label={title} aside={<Badge>μόνο ελληνικά</Badge>}>
+    <section className="o-card">
+      <details className="ml-box" open={showRetired || undefined}>
+        <summary>
+          <h2 className="ml-box-title">{title}</h2>
+          <small>{`${active.length} ενεργές · μόνο ελληνικά`}</small>
+        </summary>
         {notes.view}
         <RowList>
           {visible.map((item, index) => (
@@ -364,17 +374,17 @@ export function O2List({
             />
           ))}
         </RowList>
-        <div className="btn-row o-list-actions">
+        <div className="ml-quick o-list-actions">
           <AddItem list={list} />
           {(retiredCount > 0 || showRetired) && (
-            <Link className="button" href={toggleRetiredHref}>
+            <Link href={toggleRetiredHref}>
               {showRetired
                 ? "Κρύψε αποσυρμένες"
                 : `Δείξε αποσυρμένες (${retiredCount})`}
             </Link>
           )}
         </div>
-      </Panel>
-    </div>
+      </details>
+    </section>
   );
 }

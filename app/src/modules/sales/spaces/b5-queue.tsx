@@ -45,7 +45,12 @@ function AssignForm({ item, assignable, onDone }: QueueLineProps) {
       onDone={onDone}
     >
       <input type="hidden" name="opportunityId" value={item.id} />
-      <select className="select" name="userId" aria-label="Υπεύθυνος" defaultValue="">
+      <select
+        className="select"
+        name="userId"
+        aria-label="Υπεύθυνος"
+        defaultValue=""
+      >
         <option value="" disabled>
           Διάλεξε Υπεύθυνο
         </option>
@@ -63,7 +68,10 @@ function AssignForm({ item, assignable, onDone }: QueueLineProps) {
 function QueueLine(props: QueueLineProps) {
   const { item } = props;
   return (
-    <li className="b5-item" data-urgent={item.isPossibleDuplicate ? "" : undefined}>
+    <li
+      className="b5-item"
+      data-urgent={item.isPossibleDuplicate ? "" : undefined}
+    >
       <div className="ml-line">
         <span className="ml-thumb" aria-hidden="true">
           {initialsOf(item.clientName)}
@@ -99,10 +107,9 @@ export function UnassignedQueue({
     return (
       <>
         {notes.view}
-        <section className="card notice" role="status">
-          <h2>Η ουρά είναι άδεια</h2>
-          <p className="muted">Όλες οι Ευκαιρίες από τη φόρμα έχουν Υπεύθυνο.</p>
-        </section>
+        <p className="ml-empty" role="status">
+          Η ουρά είναι άδεια: όλες οι Ευκαιρίες από τη φόρμα έχουν Υπεύθυνο.
+        </p>
       </>
     );
   return (

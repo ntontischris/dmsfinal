@@ -33,14 +33,15 @@ export function ClientNewOpportunity({
 
   return (
     <>
-      <button
-        type="button"
-        className="button"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        Νέα Ευκαιρία
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          Νέα Ευκαιρία
+        </button>
+      </span>
       {isOpen && (
         <div ref={formRef} className="new-lead" style={{ flexBasis: "100%" }}>
           <p className="muted">Πελάτης: {clientName}</p>

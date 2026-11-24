@@ -5,11 +5,11 @@ import type { Step } from "@/spaces/kit/steps";
 import type { Opportunity } from "../types";
 import { relationshipSteps } from "./b2-adapter";
 import {
-  clientTabsFor,
+  clientBoxesFor,
   leadSentence,
   moneySentence,
   nextStepOf,
-  resolveClientTab,
+  openBoxOf,
   stageOf,
   shownSteps,
 } from "./b2-page-model";
@@ -203,8 +203,8 @@ describe("shownSteps", () => {
   });
 });
 
-describe("resolveClientTab", () => {
-  const all = clientTabsFor(
+describe("openBoxOf", () => {
+  const all = clientBoxesFor(
     [
       "details",
       "users",
@@ -219,40 +219,43 @@ describe("resolveClientTab", () => {
     false,
   );
 
+  it("should list the five boxes in order", () => {
+    expect(all).toEqual(["summary", "people", "work", "comms", "ledger"]);
+  });
+
   it.each([
-    ["details", "overview"],
-    ["opportunities", "sales"],
-    ["agreements", "sales"],
-    ["productions", "productions"],
-    ["ledger", "finance"],
+    ["details", "summary"],
+    ["overview", "summary"],
+    ["users", "people"],
+    ["opportunities", "work"],
+    ["agreements", "work"],
+    ["productions", "work"],
+    ["sales", "work"],
+    ["finance", "ledger"],
+    ["ledger", "ledger"],
     ["chat", "comms"],
     ["activities", "comms"],
     ["dispatches", "comms"],
-    ["users", "users"],
-  ])("should send the old tab %s to %s", (old, tab) => {
-    expect(resolveClientTab(old, all)).toBe(tab);
+    ["people", "people"],
+  ])("should open the box of ?tab=%s (%s)", (tab, box) => {
+    expect(openBoxOf(tab, all)).toBe(box);
   });
 
-  it("should open the new tabs by their own name", () => {
-    expect(resolveClientTab("finance", all)).toBe("finance");
-    expect(resolveClientTab("comms", all)).toBe("comms");
-  });
-
-  it("should fall back to the overview for unknown or hidden tabs", () => {
-    expect(resolveClientTab(undefined, all)).toBe("overview");
-    expect(resolveClientTab("nope", all)).toBe("overview");
-    const granted = clientTabsFor(
+  it("should open no box for a missing, unknown or hidden tab", () => {
+    expect(openBoxOf(undefined, all)).toBeNull();
+    expect(openBoxOf("nope", all)).toBeNull();
+    const granted = clientBoxesFor(
       ["details", "opportunities", "agreements"],
       false,
     );
-    expect(granted).toEqual(["overview", "sales"]);
-    expect(resolveClientTab("ledger", granted)).toBe("overview");
-    expect(resolveClientTab("agreements", granted)).toBe("sales");
+    expect(granted).toEqual(["summary", "work"]);
+    expect(openBoxOf("ledger", granted)).toBeNull();
+    expect(openBoxOf("agreements", granted)).toBe("work");
   });
 
-  it("should open the users view for GDPR alone", () => {
-    expect(clientTabsFor(["details", "opportunities"], true)).toContain(
-      "users",
+  it("should show the people box for GDPR alone", () => {
+    expect(clientBoxesFor(["details", "opportunities"], true)).toContain(
+      "people",
     );
   });
 });

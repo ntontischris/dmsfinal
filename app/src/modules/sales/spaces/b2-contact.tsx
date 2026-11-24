@@ -100,18 +100,12 @@ export function ClientContact({ client, canEdit }: ClientContactProps) {
             {errors.length === 0 && state.error && <li>{state.error}</li>}
           </ul>
         )}
-        <span className="btn-row">
-          <button
-            type="submit"
-            className="button"
-            data-primary="true"
-            disabled={isPending}
-          >
+        <span className="ml-quick">
+          <button type="submit" data-primary="true" disabled={isPending}>
             Αποθήκευση
           </button>
           <button
             type="button"
-            className="button"
             onClick={() => {
               setDraft(contact);
               setErrors([]);
@@ -144,17 +138,18 @@ export function ClientContact({ client, canEdit }: ClientContactProps) {
       {canEdit && (
         <>
           <br />
-          <button
-            type="button"
-            className="button"
-            onClick={() => {
-              setDraft(contact);
-              setSaved(null);
-              setIsEditing(true);
-            }}
-          >
-            Αλλαγή στοιχείων
-          </button>
+          <span className="ml-quick">
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(contact);
+                setSaved(null);
+                setIsEditing(true);
+              }}
+            >
+              Αλλαγή στοιχείων
+            </button>
+          </span>
         </>
       )}
       {saved && (

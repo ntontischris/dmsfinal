@@ -5,12 +5,12 @@ import { ErrorNotice } from "@/spaces/screens/shared";
 
 import { Line, Lines } from "./b2-box";
 import type { ClientPageCtx } from "./b2-context";
-import { FROM_OLD_TAB, type ClientTab } from "./b2-page-model";
 
 // Ό,τι μένει ορατό κάτω από την κεφαλίδα της Σελίδας Πελάτη: σημειώματα πρόσβασης/διπλού και «Χρειάζεται προσοχή».
 
-export const clientTabHref = (clientId: string, tab: ClientTab): string =>
-  hrefOf("B2", { id: clientId, tab: tab === "overview" ? undefined : tab });
+// Το ?tab= ανοίγει το κουτί που έχει την ενότητα (βλ. openBoxOf).
+export const clientTabHref = (clientId: string, tab: string): string =>
+  hrefOf("B2", { id: clientId, tab });
 
 // Πρόσβαση μέσω Ευκαιρίας, σήμα «Πιθανό διπλό» και ό,τι δεν φόρτωσε.
 export function ClientNotices({ ctx }: { ctx: ClientPageCtx }) {
@@ -52,7 +52,7 @@ export function AttentionPanel({ ctx }: { ctx: ClientPageCtx }) {
           isUrgent
           title={line.text}
           quick={
-            <Link href={clientTabHref(ctx.client.id, FROM_OLD_TAB[line.tab])}>
+            <Link href={clientTabHref(ctx.client.id, line.tab)}>
               Λεπτομέρειες →
             </Link>
           }

@@ -1,3 +1,4 @@
+import "../../finance/spaces/money-lines.css";
 import type { ReactNode } from "react";
 
 import type { ListItem, Opportunity } from "../types";
@@ -43,7 +44,7 @@ export function ControlBox({
 }) {
   return (
     <Box title="Έλεγχος" hint="Μετονομασία · Κλείσιμο ως χαμένη">
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Τίτλος</dt>
         <dd>
           <TitleEditor
@@ -58,7 +59,7 @@ export function ControlBox({
       <p className="muted">
         Η χαμένη Ευκαιρία κλείνει με λόγο απώλειας και δεν αναιρείται.
       </p>
-      <p className="btn-row">
+      <p className="ml-quick">
         <CloseLost opportunityId={opportunity.id} reasons={lossReasons} />
       </p>
     </Box>

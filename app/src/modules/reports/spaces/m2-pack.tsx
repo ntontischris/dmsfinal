@@ -1,3 +1,4 @@
+import "../../finance/spaces/money-lines.css";
 import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Badge } from "@/spaces/screens/shared";
 
@@ -20,7 +21,7 @@ const SHEETS = [
 
 function SheetColumns() {
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       {SHEETS.map((d) => (
         <div key={d.id} className="m2-sheet">
           <dt>Φύλλο «{d.label}»</dt>

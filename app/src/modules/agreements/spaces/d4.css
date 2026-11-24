@@ -1,13 +1,64 @@
 /* D4: λίστες παρεκκλίσεων (prototype `screens/d5.css`, όσα χρειάζεται η ουρά) και η ουρά ως γραμμές των «Χρημάτων». */
-[data-look='spaces'] {
-& .d5-plain { margin: 0; padding-left: var(--space-4); font-size: var(--text-sm); }
-& .d5-plain li { margin-bottom: var(--space-1); }
+[data-look="spaces"] {
+  & .d5-plain {
+    margin: 0;
+    padding-left: var(--space-4);
+    font-size: var(--text-sm);
+  }
+  & .d5-plain li {
+    margin-bottom: var(--space-1);
+  }
 }
-.d4l-queue { gap: .9rem; }
-.d4l-queue > p { margin: 0; }
-.d4-item, .d4-result { display: grid; gap: .45rem; margin: 0; }
-.d4-item > .ml-box { margin-left: 1.2rem; }
-.d4l-form { margin-left: 1.2rem; padding: .9rem 1rem; border-radius: 14px; border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 30%, transparent); background: color-mix(in oklab, var(--brand-deep) 55%, transparent); }
-.ml-quick .d4l-approve { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
-@media (max-width: 40rem) { .d4-item > .ml-box, .d4l-form { margin-left: 0; } }
-.d4l-rights { margin: 0 0 1rem; }
+.d4l-queue {
+  gap: 0.9rem;
+}
+.d4l-queue > p {
+  margin: 0;
+}
+.d4-item,
+.d4-result {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+.d4-item > .ml-box {
+  margin-left: 1.2rem;
+}
+.d4l-form {
+  margin-left: 1.2rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid
+    color-mix(in oklab, var(--brand-periwinkle) 30%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 55%, transparent);
+}
+.ml-quick .d4l-approve {
+  color: var(--brand-midnight);
+  background: var(--brand-periwinkle);
+  border-color: transparent;
+}
+@media (max-width: 40rem) {
+  .d4-item > .ml-box,
+  .d4l-form {
+    margin-left: 0;
+  }
+}
+.d4l-rights {
+  margin: 0 0 1rem;
+}
+.d4-lines {
+  margin: 0.6rem 0 0;
+}
+.d4-lines .ml-line {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.d4-previous {
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent);
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+.d4-previous p {
+  margin: 0 0 0.4rem;
+}

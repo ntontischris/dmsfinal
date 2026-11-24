@@ -6,6 +6,7 @@ import {
   fillNewPackage,
   itemHeader,
   openItem,
+  openPanel,
   panel,
   publishArchiveRestore,
   rowTitled,
@@ -207,7 +208,7 @@ test("Ρυθμίσεις › Συμφωνίες: Είδη Παροχής", async
       .getByRole("link", { name: "Ρυθμίσεις Συμφωνιών", exact: true }),
   ).toHaveAttribute("aria-current", /.+/);
 
-  const kinds = panel(page, "Είδη Παροχής");
+  const kinds = await openPanel(page, "Είδη Παροχής");
   const reel = rowTitled(kinds, "reel");
   await expect(reel.getByText(/\d+ χρήσεις/)).toBeVisible();
   await expect(

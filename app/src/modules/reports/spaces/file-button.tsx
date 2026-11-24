@@ -23,15 +23,16 @@ export function FileButton(props: {
   }, [text]);
   return (
     <>
-      <button
-        type="button"
-        className="button"
-        data-primary={props.isPrimary ? "true" : undefined}
-        disabled={isPending}
-        onClick={() => run(props.task)}
-      >
-        {isPending ? EXPORTING : props.label}
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          data-primary={props.isPrimary ? "true" : undefined}
+          disabled={isPending}
+          onClick={() => run(props.task)}
+        >
+          {isPending ? EXPORTING : props.label}
+        </button>
+      </span>
       <span
         ref={ref}
         className="feedback-msg"

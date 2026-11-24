@@ -68,13 +68,9 @@ function Missing() {
           και σε όσους διαχειρίζονται όλους τους Πελάτες. Ίσως ο σύνδεσμος είναι
           παλιός.
         </p>
-        <p className="btn-row">
-          <Link className="button" href={hrefOf("B3")}>
-            Πίσω στο Pipeline
-          </Link>
-          <Link className="button" href={hrefOf("B1")}>
-            Λίστα Πελατών
-          </Link>
+        <p className="ml-quick">
+          <Link href={hrefOf("B3")}>Πίσω στο Pipeline</Link>
+          <Link href={hrefOf("B1")}>Λίστα Πελατών</Link>
         </p>
       </StateNotice>
     </Frame>

@@ -1,3 +1,4 @@
+import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 
 import { AUDIT_PATH, AUDIT_TITLE } from "@/modules/audit";
@@ -143,7 +144,7 @@ function DatasetLine(props: {
 function ColumnsBox({ items }: { items: readonly DatasetItem[] }) {
   return (
     <Box title="Στήλες κάθε συνόλου" hint="τι θα περιέχει κάθε αρχείο">
-      <dl className="dl">
+      <dl className="ml-kv">
         {items.map(({ dataset }) => (
           <div key={dataset.code} className="m2-sheet">
             <dt>{dataset.title}</dt>

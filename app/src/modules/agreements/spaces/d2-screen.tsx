@@ -59,6 +59,7 @@ function PreviewBox({ extras }: { extras: D2Extras }) {
       <SpacesProposalDocument
         document={extras.preview}
         language={extras.preview.language}
+        isEmbedded
       />
     </D2Box>
   );
@@ -97,9 +98,9 @@ function HeroActions({
         />
       )}
       {agreement.signature !== null && caps.canSeeAmounts && (
-        <a className="button" href={`/app/agreements/${agreement.id}/pdf`}>
-          Λήψη PDF
-        </a>
+        <span className="ml-quick">
+          <a href={`/app/agreements/${agreement.id}/pdf`}>Λήψη PDF</a>
+        </span>
       )}
     </>
   );

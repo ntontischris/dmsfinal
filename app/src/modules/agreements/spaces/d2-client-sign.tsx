@@ -22,14 +22,15 @@ export function ClientSignAction({
   const t = SIGN_LABELS[language];
   if (!isOpen)
     return (
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        onClick={() => setIsOpen(true)}
-      >
-        {t.sign}
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          data-primary="true"
+          onClick={() => setIsOpen(true)}
+        >
+          {t.sign}
+        </button>
+      </span>
     );
   return (
     <D5SignFlow

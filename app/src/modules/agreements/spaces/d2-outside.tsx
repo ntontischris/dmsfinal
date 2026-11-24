@@ -136,14 +136,15 @@ export function OutsideSignatureForm(props: OutsideProps) {
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button
-        type="button"
-        className="button"
-        aria-expanded={false}
-        onClick={() => setIsOpen(true)}
-      >
-        Υπογράφηκε εκτός συστήματος
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          aria-expanded={false}
+          onClick={() => setIsOpen(true)}
+        >
+          Υπογράφηκε εκτός συστήματος
+        </button>
+      </span>
     );
   return (
     <fieldset className="d2-form">
@@ -152,20 +153,11 @@ export function OutsideSignatureForm(props: OutsideProps) {
         {(isPending) => (
           <>
             <Fields {...props} />
-            <span className="btn-row">
-              <button
-                type="submit"
-                className="button"
-                data-primary="true"
-                disabled={isPending}
-              >
+            <span className="ml-quick">
+              <button type="submit" data-primary="true" disabled={isPending}>
                 Καταχώριση υπογραφής
               </button>
-              <button
-                type="button"
-                className="button"
-                onClick={() => setIsOpen(false)}
-              >
+              <button type="button" onClick={() => setIsOpen(false)}>
                 Άκυρο
               </button>
             </span>

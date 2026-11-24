@@ -54,7 +54,7 @@ test("φροντίδα Πελάτη: Διεύθυνση, Χώρος γυρίσμ
   });
   await page
     .locator("summary", {
-      has: page.getByRole("heading", { name: "Στοιχεία", exact: true }),
+      has: page.getByRole("heading", { name: "Σύνοψη", exact: true }),
     })
     .click();
   await clickUntil(button(side, "Πρόσθεσε διεύθυνση"), placeForm);
@@ -76,11 +76,6 @@ test("φροντίδα Πελάτη: Διεύθυνση, Χώρος γυρίσμ
   const addForm = reminders.locator("form", {
     has: page.locator('input[name="note"]'),
   });
-  await page
-    .locator("summary", {
-      has: page.getByRole("heading", { name: "Υπενθυμίσεις μου", exact: true }),
-    })
-    .click();
   await clickUntil(button(reminders, "Υπενθύμισέ με"), addForm);
   await addForm.locator('input[name="remindOn"]').fill(todayInAthens());
   await addForm.locator('input[name="note"]').fill(note);
@@ -101,7 +96,7 @@ test("φροντίδα Πελάτη: Διεύθυνση, Χώρος γυρίσμ
   await page.goto(clientHref);
   await page
     .locator("summary", {
-      has: page.getByRole("heading", { name: "Υπενθυμίσεις μου", exact: true }),
+      has: page.getByRole("heading", { name: "Σύνοψη", exact: true }),
     })
     .click();
   await button(

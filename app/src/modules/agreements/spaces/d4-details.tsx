@@ -16,41 +16,32 @@ interface DetailsProps {
 function LinesTable({ item }: { item: ApprovalItem }) {
   const suffix = item.kind === "monthly" ? " / μήνα" : "";
   return (
-    <table className="rtable">
-      <thead>
-        <tr>
-          <th>Γραμμή</th>
-          <th className="num">Κατάλογος</th>
-          <th className="num">Πρόταση</th>
-        </tr>
-      </thead>
-      <tbody>
-        {item.lines.map((line, index) => (
-          <tr key={`${line.description}-${index}`}>
-            <td data-label="Γραμμή">
+    <ul className="ml-list d4-lines" aria-label="Γραμμές">
+      {item.lines.map((line, index) => (
+        <li key={`${line.description}-${index}`} className="ml-line">
+          <span className="ml-main">
+            {line.isBelow && <span className="ml-tag">κάτω από Κατάλογο</span>}
+            <strong>
               {line.quantity > 1
                 ? `${line.quantity} × ${line.description}`
                 : line.description}
-            </td>
-            <td data-label="Κατάλογος" className="num">
+            </strong>
+            <small>
+              Κατάλογος:{" "}
               {line.isFree || line.catalogPrice === null
                 ? "ελεύθερη γραμμή"
                 : `${formatMoney(line.catalogPrice)}${suffix}`}
-            </td>
-            <td data-label="Πρόταση" className="num">
-              {line.unitPrice === null ? (
-                "—"
-              ) : line.isBelow ? (
-                <strong>{`${formatMoney(line.unitPrice)}${suffix}`}</strong>
-              ) : (
-                `${formatMoney(line.unitPrice)}${suffix}`
-              )}
-              {line.isBelow && " ↓"}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+            </small>
+          </span>
+          <span className="ml-amount">
+            {line.unitPrice === null
+              ? "—"
+              : `${formatMoney(line.unitPrice)}${suffix}${line.isBelow ? " ↓" : ""}`}
+            <small>Πρόταση</small>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -58,7 +49,7 @@ function PreviousApproval({ item, canSeeAmounts }: DetailsProps) {
   const previous = item.previous;
   if (previous === null) return null;
   return (
-    <div className="note">
+    <div className="d4-previous">
       <p>
         Η αναθεώρηση {previous.revision} εγκρίθηκε
         {previous.decidedByName && ` από ${previous.decidedByName}`}

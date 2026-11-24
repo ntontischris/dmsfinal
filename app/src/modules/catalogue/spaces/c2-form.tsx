@@ -81,17 +81,12 @@ export function C2Submit({
   return (
     <div className="row">
       {aside && <span className="muted">{aside}</span>}
-      <span className="btn-row">
+      <span className="ml-quick">
         <C2Message state={state} />
-        {cancelHref && (
-          <Link className="button" href={cancelHref}>
-            Άκυρο
-          </Link>
-        )}
+        {cancelHref && <Link href={cancelHref}>Άκυρο</Link>}
         {isShown && (
           <button
             type="submit"
-            className="button"
             data-primary={(isPrimary && !isDanger) || undefined}
             data-danger={isDanger || undefined}
             disabled={isPending}
@@ -129,4 +124,3 @@ export function Field({ id, label, editable, value, input, hint }: FieldProps) {
 }
 
 export const Dash = () => <span className="muted">—</span>;
-

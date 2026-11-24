@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import { setMoneyTerms, updateTerms } from "../actions-draft";
 import { formatDate } from "../helpers";
 import { AUTO_RENEWAL_NOTE } from "../labels";
@@ -116,7 +117,7 @@ function MonthlyRows({ terms, baseline, isEditing }: RowsProps) {
 function TermsRows(props: RowsProps) {
   const { terms, baseline, isEditing, isMonthly } = props;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="t-pay"
         label="Μέρες πληρωμής"

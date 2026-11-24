@@ -23,11 +23,10 @@ export function ClosedDayChoice({
   return (
     <div className="note" role="status">
       <p>{closedDayText(closedDay)}</p>
-      <span className="btn-row">
+      <span className="ml-quick">
         {nextOpen && (
           <button
             type="submit"
-            className="button"
             data-primary="true"
             disabled={isPending}
             onClick={moveTo}
@@ -37,7 +36,6 @@ export function ClosedDayChoice({
         )}
         <button
           type="submit"
-          className="button"
           name={CONFIRM_CLOSED_DAY}
           value="1"
           disabled={isPending}

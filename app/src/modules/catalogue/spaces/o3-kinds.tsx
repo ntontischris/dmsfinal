@@ -7,7 +7,6 @@ import { INITIAL_FORM_STATE, type FormState } from "@/lib/form-state";
 import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 
 import {
@@ -27,6 +26,7 @@ import {
   type KindStatus,
 } from "./o3-kinds-model";
 
+import "../../finance/spaces/money-lines.css";
 import "./o3-kinds.css";
 
 // Είδη Παροχής της O3 στη νέα εμφάνιση (prototype `screens/o3-types.tsx`), με τις πραγματικές ενέργειες της κλασικής:
@@ -83,15 +83,16 @@ function RowAction({
     <form ref={formRef} onSubmit={onSubmit} style={{ display: "inline" }}>
       <input type="hidden" name="id" value={id} />
       {children}
-      <button
-        type="submit"
-        className="button"
-        data-danger={isDanger ? "true" : undefined}
-        aria-label={ariaLabel}
-        disabled={isPending}
-      >
-        {label}
-      </button>
+      <span className="ml-quick">
+        <button
+          type="submit"
+          data-danger={isDanger ? "true" : undefined}
+          aria-label={ariaLabel}
+          disabled={isPending}
+        >
+          {label}
+        </button>
+      </span>
       <FormNote state={state} />
     </form>
   );
@@ -174,10 +175,9 @@ function KindForm({
     <form ref={formRef} className="stack" onSubmit={onSubmit}>
       {kind && <input type="hidden" name="id" value={kind.id} />}
       <KindFields kind={kind} />
-      <span className="btn-row">
+      <span className="ml-quick">
         <button
           type="submit"
-          className="button"
           data-primary="true"
           disabled={isPending || (kind !== undefined && !isChanged)}
         >
@@ -283,15 +283,16 @@ function KindRow({
         <>
           {status !== "Νέο" && <span className="part-sub">{uses} χρήσεις</span>}
           <Badge tone={TONE[status]}>{status}</Badge>
-          <button
-            type="button"
-            className="button"
-            aria-expanded={isEditing}
-            aria-label={`Επεξεργασία: ${kind.label}`}
-            onClick={() => setIsEditing((current) => !current)}
-          >
-            Επεξεργασία
-          </button>
+          <span className="ml-quick">
+            <button
+              type="button"
+              aria-expanded={isEditing}
+              aria-label={`Επεξεργασία: ${kind.label}`}
+              onClick={() => setIsEditing((current) => !current)}
+            >
+              Επεξεργασία
+            </button>
+          </span>
           <StatusAction kind={kind} status={status} onDone={onDone} />
         </>
       }
@@ -303,9 +304,11 @@ function AddKind() {
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button type="button" className="button" onClick={() => setIsOpen(true)}>
-        + Νέο είδος Παροχής
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsOpen(true)}>
+          + Νέο είδος Παροχής
+        </button>
+      </span>
     );
   return <KindForm action={createKind} submitLabel="Προσθήκη" />;
 }
@@ -327,9 +330,12 @@ export function SpacesProvisionKinds({
   const retiredCount = kinds.filter((kind) => kind.isRetired).length;
   const visible = showRetired ? kinds : kinds.filter((kind) => !kind.isRetired);
   return (
-    <div className="o-card">
-      <Panel label="Είδη Παροχής">
-        <Badge>ελληνικά και αγγλικά</Badge>
+    <section className="o-card">
+      <details className="ml-box" open={showRetired || undefined}>
+        <summary>
+          <h2 className="ml-box-title">Είδη Παροχής</h2>
+          <small>{`${kinds.length - retiredCount} ενεργά · ελληνικά και αγγλικά`}</small>
+        </summary>
         {notices.map((notice, index) => (
           <p key={index} className="note" role="status">
             {notice}
@@ -352,11 +358,10 @@ export function SpacesProvisionKinds({
             ))}
           </RowList>
         )}
-        <div className="btn-row o-list-actions">
+        <div className="ml-quick o-list-actions">
           <AddKind />
           {(retiredCount > 0 || showRetired) && (
             <Link
-              className="button"
               href={showRetired ? SETTINGS_HREF : `${SETTINGS_HREF}?retired=1`}
             >
               {showRetired
@@ -377,7 +382,7 @@ export function SpacesProvisionKinds({
           Την προθεσμία παράδοσης ανά είδος την ορίζεις στα{" "}
           <Link href={DELIVERABLES_HREF}>Παραδοτέα (O5)</Link>.
         </p>
-      </Panel>
-    </div>
+      </details>
+    </section>
   );
 }

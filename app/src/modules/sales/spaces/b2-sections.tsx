@@ -96,8 +96,10 @@ export interface B2ProductionRow {
 // Οι Παραγωγές του Πελάτη. Γυρίσματα και βίντεο ανά Παραγωγή λείπουν: δεν υπάρχει ακόμα συγκεντρωτική ανάγνωση.
 export function ProductionLines({
   rows,
+  clientId,
 }: {
   rows: readonly B2ProductionRow[];
+  clientId: string;
 }) {
   return (
     <>
@@ -123,7 +125,9 @@ export function ProductionLines({
         </Lines>
       )}
       <BoxLinks>
-        <Link href={hrefOf("G1")}>Άνοιγμα στη λίστα Παραγωγών</Link>
+        <Link href={hrefOf("G1", { client: clientId })}>
+          Άνοιγμα στη λίστα Παραγωγών
+        </Link>
       </BoxLinks>
     </>
   );

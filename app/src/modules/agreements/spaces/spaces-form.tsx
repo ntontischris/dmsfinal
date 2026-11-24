@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import type { FormState } from "@/lib/form-state";
 import { useKeptForm } from "@/lib/use-kept-form";
 
+import "../../finance/spaces/money-lines.css";
+
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
 interface SpacesActionFormProps {
@@ -17,7 +19,7 @@ interface SpacesActionFormProps {
 }
 
 // Αντίγραφο του `sales/spaces/spaces-form.tsx` (οι Συμφωνίες δεν εισάγουν τις Πωλήσεις: οι Πωλήσεις εισάγουν τις Συμφωνίες).
-// Οι φόρμες των οθονών του prototype (`.field`, `.note`, `.button`) πάνω σε πραγματική ενέργεια: κρατά ό,τι γράφτηκε αν
+// Οι φόρμες των οθονών του prototype (`.field`, `.note`, κουμπιά σε `.ml-actions`) πάνω σε πραγματική ενέργεια: κρατά ό,τι γράφτηκε αν
 // η βάση πει όχι, δείχνει το λάθος ή την ενημέρωση όπως τα δείχνει το prototype.
 export function SpacesActionForm({
   action,
@@ -43,10 +45,9 @@ export function SpacesActionForm({
           {state.notice}
         </p>
       )}
-      <span className="btn-row">
+      <span className="ml-actions">
         <button
           type="submit"
-          className="button"
           data-primary={isPrimary ? "true" : undefined}
           disabled={isPending}
         >

@@ -1,4 +1,4 @@
-/* Σελίδα Πελάτη, «Πέντε ενωμένες καρτέλες»: τα μικρά κομμάτια (στάδιο, «?», μενού «⋯», Κύριο πρόσωπο, σημείωση).
+/* Σελίδα Πελάτη (κεφαλίδα + πέντε κλειστά κουτιά): τα μικρά κομμάτια (στάδιο, «?», μενού «⋯», Κύριο πρόσωπο, σημείωση).
    Periwinkle παντού, Butter Yellow μόνο για το γύρισμα, REC μόνο ως τελεία. Κεφαλίδα και γραμμές: b2-lines.css. */
 [data-look='spaces'] {
 & .b2 { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
@@ -14,12 +14,16 @@
   border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-raised);
   font-size: var(--text-sm);
 }
-& .b2-relationship .kit-steps { margin: 0; max-width: 40rem; }
-& .b2-relationship .kit-step[data-state='done']::before {
-  background: color-mix(in oklab, var(--brand-periwinkle) 18%, transparent);
-  border-color: var(--brand-periwinkle); color: var(--brand-periwinkle);
+& .b2-steps { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+& .b2-steps > li {
+  padding: var(--space-1) var(--space-3); border-radius: 999px; border: 1px solid var(--color-border-strong);
+  font-size: var(--text-sm); color: var(--color-text-muted);
 }
-& .b2-relationship .kit-step[data-state='done']::after { background: var(--brand-periwinkle); }
+& .b2-steps > li[data-state='done'] { border-color: var(--brand-periwinkle); color: var(--brand-periwinkle); }
+& .b2-steps > li[data-state='current'] {
+  border-color: var(--brand-periwinkle); color: var(--color-text); font-weight: 700;
+  background: color-mix(in oklab, var(--brand-periwinkle) 18%, transparent);
+}
 & .b2-line { margin: 0; font-size: var(--text-sm); overflow-wrap: anywhere; }
 & .b2-num { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
 & .b2-rec { color: var(--color-text-muted); font-weight: 500; font-size: var(--text-sm); }
@@ -29,7 +33,6 @@
 }
 & .b2-filming { margin: 0; padding-left: var(--space-3); border-left: 3px solid var(--brand-yellow); font-size: var(--text-sm); }
 
-& .b2-tabs { margin-bottom: 0; }
 & .b2-note-form {
   flex-basis: 100%; display: grid; gap: var(--space-2); padding: var(--space-3);
   border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface);

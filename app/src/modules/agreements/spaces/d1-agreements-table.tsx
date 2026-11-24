@@ -54,12 +54,15 @@ export function AgreementsTable({
   return (
     <>
       <div className="toolbar d1l-views">
-        <div className="d1-seg" role="group" aria-label="Ποιες Συμφωνίες">
+        <div
+          className="d1-seg ml-quick"
+          role="group"
+          aria-label="Ποιες Συμφωνίες"
+        >
           {VIEWS.map((item) => (
             <button
               key={item}
               type="button"
-              className="button"
               aria-pressed={item === view}
               onClick={() => setView(item)}
             >
@@ -96,9 +99,11 @@ export function AgreementsTable({
       {visible.length === 0 ? (
         <div className="stack">
           <p className="muted">Καμία Συμφωνία δεν ταιριάζει με τα φίλτρα.</p>
-          <button type="button" className="button" onClick={resetFilters}>
-            Δείξε όλες
-          </button>
+          <span className="ml-quick">
+            <button type="button" onClick={resetFilters}>
+              Δείξε όλες
+            </button>
+          </span>
         </div>
       ) : (
         <table className="ml-table ml-list d1l-list">

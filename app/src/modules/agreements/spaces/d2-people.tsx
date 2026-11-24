@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { Avatar } from "@/spaces/kit/parts";
@@ -64,9 +65,11 @@ function AddRecipient({
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <button type="button" className="button" disabled={isFull} onClick={add}>
-        Προσθήκη παραλήπτη
-      </button>
+      <span className="ml-quick">
+        <button type="button" disabled={isFull} onClick={add}>
+          Προσθήκη παραλήπτη
+        </button>
+      </span>
     </div>
   );
 }
@@ -102,7 +105,7 @@ function RecipientsEditor({ agreement }: { agreement: AgreementDetail }) {
     <D2Form action={setRecipients} submitLabel="Αποθήκευση παραληπτών">
       <IdField id={agreement.id} />
       <input type="hidden" name="recipients" value={serialize(rows)} />
-      <dl className="dl">
+      <dl className="ml-kv">
         <Field
           id="d2-signatory"
           label="Υπογράφων"
@@ -155,17 +158,18 @@ function RecipientsEditor({ agreement }: { agreement: AgreementDetail }) {
               </Badge>
               <span className="muted">δεν στάλθηκε ακόμα</span>
               {!row.isSignatory && (
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() =>
-                    setRows((current) =>
-                      current.filter((r) => r.key !== row.key),
-                    )
-                  }
-                >
-                  Αφαίρεση
-                </button>
+                <span className="ml-quick">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRows((current) =>
+                        current.filter((r) => r.key !== row.key),
+                      )
+                    }
+                  >
+                    Αφαίρεση
+                  </button>
+                </span>
               )}
             </>
           ),
@@ -197,13 +201,13 @@ function LinkActions({ link }: { link: LinkInfo }) {
   const field = <input type="hidden" name="linkId" value={link.id} />;
   return (
     <>
-      <D2Form action={revokeLink} submitLabel="Ανάκληση" className="btn-row">
+      <D2Form action={revokeLink} submitLabel="Ανάκληση" className="ml-quick">
         {field}
       </D2Form>
       <D2Form
         action={reissueLink}
         submitLabel="Νέος σύνδεσμος"
-        className="btn-row"
+        className="ml-quick"
       >
         {field}
       </D2Form>
@@ -221,7 +225,7 @@ function RecipientsList({
   const signatory = recipients.find((r) => r.isSignatory);
   return (
     <>
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Υπογράφων</dt>
         <dd>{signatory ? `${signatory.name} · ${signatory.email}` : "—"}</dd>
       </dl>

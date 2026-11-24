@@ -153,15 +153,16 @@ function RowActions({
 }) {
   return (
     <>
-      <button
-        type="button"
-        className="button"
-        aria-expanded={isEditing}
-        aria-label={`Διόρθωση: ${row.text}`}
-        onClick={onToggleEdit}
-      >
-        Διόρθωση
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          aria-expanded={isEditing}
+          aria-label={`Διόρθωση: ${row.text}`}
+          onClick={onToggleEdit}
+        >
+          Διόρθωση
+        </button>
+      </span>
       <RowForm
         action={deleteActivity}
         submitLabel="Διαγραφή"

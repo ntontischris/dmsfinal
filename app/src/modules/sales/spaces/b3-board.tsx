@@ -35,12 +35,15 @@ function FilterPills(props: {
   onPick: (id: BoardFilter) => void;
 }) {
   return (
-    <div className="choice-row" role="group" aria-label="Ποιες Ευκαιρίες">
+    <div
+      className="choice-row ml-quick"
+      role="group"
+      aria-label="Ποιες Ευκαιρίες"
+    >
       {FILTERS.map((item) => (
         <button
           key={item.id}
           type="button"
-          className="button"
           aria-pressed={props.filter === item.id}
           onClick={() => props.onPick(item.id)}
         >

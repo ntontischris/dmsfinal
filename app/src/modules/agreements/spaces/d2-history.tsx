@@ -1,3 +1,4 @@
+import "../../finance/spaces/money-lines.css";
 import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 
 import { formatDate, formatDateTime } from "../helpers";
@@ -158,7 +159,7 @@ export function SignatureSection({
       title="Υπογραφή"
       hint={`${signature.signedName} · ${formatDate(signature.signedOn)}`}
     >
-      <dl className="dl">
+      <dl className="ml-kv">
         {signature.ip && (
           <>
             <dt>IP</dt>
