@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 
 import { applyCrewTemplate, setFilmingCrew } from "../actions-crew";
@@ -13,6 +11,7 @@ import { RESPONSE_WORDS, emptyCrewNote, isOpenState } from "./e3-model";
 import { useRun } from "./e3-run";
 import { responseTone } from "./e3-model";
 import { LastDone, Warning } from "./e3-ui";
+import { Box, Line, Lines } from "./ml-parts";
 
 // Το Συνεργείο του Γυρίσματος (prototype `screens/e3-crew.tsx`). Η βάση ορίζει το Συνεργείο ολόκληρο (filming_crew_set)·
 // «Προσθήκη» και «Αφαίρεση» στέλνουν τη νέα λίστα. Την απάντηση τη γράφει μόνο το ίδιο το μέλος (E6).
@@ -24,6 +23,7 @@ interface E3CrewProps {
   // Όσοι έχουν Κλεισμένο χρόνο που τέμνει το Γύρισμα (μόνο προειδοποίηση).
   blockedIds: readonly string[];
   canApprove: boolean;
+  isOpen?: boolean;
 }
 
 function SlotRow({
@@ -40,28 +40,25 @@ function SlotRow({
   const word = RESPONSE_WORDS[slot.response];
   return (
     <>
-      <ListRow
-        lead={<Avatar name={slot.name} size={36} />}
+      <Line
+        thumb={slot.name}
         title={slot.name}
+        tag={<Badge tone={responseTone(word)}>Απάντηση: {word}</Badge>}
         aside={
-          <>
-            <Badge tone={responseTone(word)}>Απάντηση: {word}</Badge>
-            {isEditable && (
-              <button
-                type="button"
-                className="button"
-                aria-label={`Αφαίρεση: ${slot.name}`}
-                disabled={isPending}
-                onClick={onRemove}
-              >
-                Αφαίρεση
-              </button>
-            )}
-          </>
+          isEditable && (
+            <button
+              type="button"
+              aria-label={`Αφαίρεση: ${slot.name}`}
+              disabled={isPending}
+              onClick={onRemove}
+            >
+              Αφαίρεση
+            </button>
+          )
         }
       />
       {(slot.reason || slot.isBlocked) && (
-        <li className="sx-extra e3-slot">
+        <li className="e3-slot">
           {slot.reason && <span className="muted">Λόγος: {slot.reason}</span>}
           {slot.isBlocked && (
             <Warning>
@@ -81,6 +78,7 @@ export function E3Crew({
   templates,
   blockedIds,
   canApprove,
+  isOpen = false,
 }: E3CrewProps) {
   const [picked, setPicked] = useState("");
   const { run, isPending, result } = useRun();
@@ -93,18 +91,15 @@ export function E3Crew({
   const candidate = picked && !inCrew.has(picked) ? picked : "";
 
   return (
-    <Panel
-      label="Συνεργείο"
-      aside={
-        <span className="muted">
-          {countLabel(card.crew.length, "άτομο", "άτομα")}
-        </span>
-      }
+    <Box
+      title="Συνεργείο"
+      hint={countLabel(card.crew.length, "άτομο", "άτομα")}
+      isOpen={isOpen}
     >
       {card.crew.length === 0 && (
         <p className="muted">{emptyCrewNote(card.state, canApprove)}</p>
       )}
-      <RowList>
+      <Lines label="Συνεργείο">
         {card.crew.map((slot) => (
           <SlotRow
             key={slot.userId}
@@ -114,17 +109,17 @@ export function E3Crew({
             onRemove={() => setCrew(crewIds.filter((id) => id !== slot.userId))}
           />
         ))}
-      </RowList>
+      </Lines>
       {card.vacancies.map((vacancy) => (
         <Warning key={vacancy.userId}>
           Άδειασε θέση: {vacancy.name} απενεργοποιήθηκε. Βάλε κάποιον άλλο.
         </Warning>
       ))}
       {isEditable && (
-        <div className="stack">
-          <div className="e3-inline">
+        <div className="fl-box-body">
+          <div className="ml-quick fl-row e3-inline">
             <select
-              className="select"
+              className="input"
               aria-label="Άτομο"
               value={picked}
               onChange={(event) => setPicked(event.target.value)}
@@ -141,7 +136,6 @@ export function E3Crew({
             </select>
             <button
               type="button"
-              className="button"
               disabled={!candidate || isPending}
               onClick={() => {
                 setCrew([...crewIds, candidate]);
@@ -158,13 +152,12 @@ export function E3Crew({
             </Warning>
           )}
           {templates.length > 0 && (
-            <div className="e3-inline">
+            <div className="ml-quick fl-row e3-inline">
               <span className="muted">Πρότυπο συνεργείου:</span>
               {templates.map((template) => (
                 <button
                   key={template.id}
                   type="button"
-                  className="button"
                   disabled={isPending}
                   onClick={() =>
                     run(applyCrewTemplate, {
@@ -196,6 +189,6 @@ export function E3Crew({
           Το Γύρισμα έκλεισε· το Συνεργείο δεν αλλάζει πια.
         </p>
       )}
-    </Panel>
+    </Box>
   );
 }
