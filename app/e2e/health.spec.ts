@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 
-import { card, project, signIn } from "./sales-parts";
+import { project, signIn } from "./sales-parts";
 
 // Υγεία συστήματος (P2, #215) από άκρη σε άκρη. Οι αποτυχημένες αποστολές και το Γεγονός που κόλλησε μπαίνουν με service
 // role (μόνο προετοιμασία), με το όνομα του project, γιατί τα δύο projects μοιράζονται μία βάση. Οι ενέργειες γίνονται
@@ -128,17 +128,15 @@ test("η κάρτα Υγείας στο Σήμερα ανοίγει την Υγ�
   page,
 }) => {
   await signIn(page, "owner@example.com");
-  await page.waitForLoadState("networkidle");
-  // Με κάτι προς προσοχή η κάρτα στέκεται πάνω-πάνω· αλλιώς η Υγεία είναι μια γραμμή στο «Και άλλα».
-  const alert = card(page, TITLE).getByRole("link", {
-    name: new RegExp(`: ${TITLE}$`),
-  });
+  // Με κάτι προς προσοχή η Υγεία είναι η επείγουσα γραμμή «Κάτι δεν λειτουργεί» της κάρτας «Η εταιρεία δουλεύει»·
+  // όταν όλα λειτουργούν η Σήμερα δεν τη δείχνει καθόλου, και η Υγεία ανοίγει από τη διεύθυνσή της.
+  await page.goto("/app?g=company");
+  await expect(page.getByRole("heading", { level: 1, name: "Σήμερα" })).toBeVisible();
+  const alert = page
+    .getByRole("main")
+    .getByRole("link", { name: "Άνοιξε: Κάτι δεν λειτουργεί", exact: true });
   if ((await alert.count()) > 0) await alert.click();
-  else {
-    const more = page.locator("details.a1-others");
-    await more.locator("summary").click();
-    await more.getByRole("link", { name: TITLE, exact: true }).click();
-  }
+  else await page.goto(PATH);
   await expect(page).toHaveURL(/\/app\/health$/);
   // Οι Χώροι δεν έχουν τίτλο h1 στη σελίδα· η Υγεία φαίνεται από την κάρτα του εξωτερικού ελέγχου, που υπάρχει πάντα.
   await expect(

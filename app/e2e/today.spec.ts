@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { project, signIn } from "./sales-parts";
-import { clickUntil, openFolds } from "./today-parts";
+import { clickUntil } from "./today-parts";
 
 // Σήμερα (A1, #180) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Ο Ιδιοκτήτης και ο Χρήστης πελάτη
 // «client.{project}@example.com» (Πλήρης) έρχονται από το seed. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία
@@ -11,21 +11,25 @@ test.describe.configure({ mode: "serial", retries: 0 });
 
 const HEALTH = "Υγεία συστήματος";
 
-// Η Υγεία φαίνεται πάνω ως κάρτα όταν κάτι χάλασε, αλλιώς ως ήσυχη γραμμή μέσα στο «Και άλλα». Πάντα σε ένα από τα δύο.
-// Το «Και άλλα» είναι κλειστό (και ό,τι κρύβει δεν μετρά στους ρόλους), οπότε ανοίγει πριν από τον έλεγχο.
-async function expectHealth(page: Page, count: number): Promise<void> {
-  await openFolds(page);
-  await expect(health(page)).toHaveCount(count);
+// Η Υγεία φαίνεται στη Σήμερα μόνο όταν κάτι χάλασε: μία επείγουσα γραμμή «Κάτι δεν λειτουργεί» στην κάρτα
+// «Η εταιρεία δουλεύει» (?g=company). Όταν όλα λειτουργούν δεν έχει γραμμή, οπότε το τεστ μετρά πόσες βλέπει στην
+// προεπιλογή (0 ή 1) και ελέγχει ότι το «Κρύψε» τη μηδενίζει και η Επαναφορά τη φέρνει ξανά στο ίδιο.
+const healthAlert = (page: Page) =>
+  page
+    .getByRole("main")
+    .getByRole("link", { name: "Άνοιξε: Κάτι δεν λειτουργεί", exact: true });
+
+async function healthCount(page: Page): Promise<number> {
+  await page.goto("/app?g=company");
+  await expect(todayHeading(page)).toBeVisible();
+  return healthAlert(page).count();
 }
 
-const health = (page: Page) =>
-  page
-    .getByRole("heading", { level: 2, name: HEALTH, exact: true })
-    .or(
-      page
-        .locator("details.a1-others")
-        .getByRole("link", { name: HEALTH, exact: true }),
-    );
+async function expectHealth(page: Page, count: number): Promise<void> {
+  await page.goto("/app?g=company");
+  await expect(todayHeading(page)).toBeVisible();
+  await expect(healthAlert(page)).toHaveCount(count);
+}
 
 const todayHeading = (page: Page) =>
   page.getByRole("heading", { level: 1, name: "Σήμερα" });
@@ -63,7 +67,7 @@ test("ο Ιδιοκτήτης βλέπει την Υγεία, την κρύβε�
   await signIn(page, "owner@example.com");
   await expect(todayHeading(page)).toBeVisible();
   await startFromDefault(page);
-  await expectHealth(page, 1);
+  const shown = await healthCount(page);
 
   await openCustomize(page);
   await clickUntil(
@@ -88,7 +92,7 @@ test("ο Ιδιοκτήτης βλέπει την Υγεία, την κρύβε�
     .click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(customizePanel(page)).toHaveCount(0);
-  await expectHealth(page, 1);
+  await expectHealth(page, shown);
 });
 
 test("ο Χρήστης πελάτη ανοίγει τη Σήμερα χωρίς Υγεία", async ({ page }) => {
