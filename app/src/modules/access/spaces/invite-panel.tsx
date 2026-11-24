@@ -58,6 +58,7 @@ function NameEmail() {
           required
           maxLength={120}
           autoComplete="off"
+          placeholder="π.χ. Χαρά Τσολάκη"
         />
       </label>
       <label className="ml-field">
@@ -68,6 +69,7 @@ function NameEmail() {
           name="email"
           required
           autoComplete="off"
+          placeholder="π.χ. chara@example.com"
         />
       </label>
     </div>
@@ -121,14 +123,14 @@ function TeamInvite({
       <form ref={formRef} onSubmit={onSubmit} className="n-steps">
         <Step no={first} title="Στοιχεία" hint="Όνομα και email του ανθρώπου">
           <NameEmail />
-          <p className="muted">
+          <p className="muted" role="note">
             Αν το email ανήκει σε απενεργοποιημένο Χρήστη ομάδας, δεν στέλνεται
             πρόσκληση: προτείνεται Επανενεργοποίηση.
           </p>
         </Step>
         <Step no={first + 1} title="Ρόλοι" hint="Τι θα βλέπει και τι θα κάνει">
           <RolePicker roles={grantable} idPrefix="n1-inv" selected={[]} />
-          <p className="muted">
+          <p className="muted" role="note">
             Δίνεις μόνο Ρόλους που δεν ξεπερνούν τα δικά σου Δικαιώματα· τον
             Ρόλο Ιδιοκτήτης τον δίνει μόνο ο Ιδιοκτήτης.{" "}
             {isOwner
@@ -158,7 +160,9 @@ function ClientPicker({ clients, presetClientId }: ClientInviteOptions) {
     return (
       <>
         <input type="hidden" name="clientId" value={preset.id} />
-        <p className="muted">Ο Χρήστης μπαίνει στον Πελάτη «{preset.name}».</p>
+        <p className="muted" role="note">
+          Ο Χρήστης μπαίνει στον Πελάτη «{preset.name}».
+        </p>
       </>
     );
   return (
@@ -190,7 +194,7 @@ function ClientInvite(options: ClientInviteOptions & { first: number }) {
       <Step no={options.first} title="Στοιχεία" hint="Πελάτης, όνομα και email">
         <ClientPicker {...options} />
         <NameEmail />
-        <p className="muted">
+        <p className="muted" role="note">
           Αν το email είναι ήδη Χρήστης πελάτη άλλου Πελάτη, δεν φτιάχνεται νέος
           λογαριασμός: προστίθεται εδώ και παίρνει email «προστέθηκες».
         </p>
@@ -232,7 +236,8 @@ function KindChoice(props: {
 }) {
   return (
     <Step no={1} title="Ποιον προσκαλείς" hint="Ομάδα ή Πελάτη">
-      <fieldset className="n-choice" aria-label="Ποιον προσκαλείς">
+      <fieldset className="n-choice">
+        <legend className="n-sr-only">Ποιον προσκαλείς</legend>
         {(Object.keys(KIND_LABELS) as InviteKind[]).map((kind) => (
           <label key={kind}>
             <input
@@ -283,7 +288,11 @@ export function InvitePanel(props: InvitePanelProps) {
       {kind === "client" && props.client && (
         <ClientInvite {...props.client} first={first} />
       )}
-      {props.footnote && <p className="muted">{props.footnote}</p>}
+      {props.footnote && (
+        <p className="muted" role="note">
+          {props.footnote}
+        </p>
+      )}
     </section>
   );
 }
