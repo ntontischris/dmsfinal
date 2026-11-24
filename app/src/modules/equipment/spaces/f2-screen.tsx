@@ -92,7 +92,14 @@ async function loadExtras(viewer: Viewer, canManage: boolean) {
     filmings.canView ? listOpenFilmings() : null,
     filmings.canManageSettings ? getFilmingSettings() : null,
   ]);
-  return { filmings, categories, items, openFilmings, settings, isScoped: isReserveScoped(viewer) };
+  return {
+    filmings,
+    categories,
+    items,
+    openFilmings,
+    settings,
+    isScoped: isReserveScoped(viewer),
+  };
 }
 
 // F2 Αντικείμενο στη νέα εμφάνιση (prototype `screens/F2.tsx`): στοιχεία, Δεσμεύσεις, συγκρούσεις, ιστορικό.
@@ -143,17 +150,19 @@ function ItemBody({
   const canReserve = extras.filmings.canReserve;
   return (
     <Frame>
-      {extras.items.ok ? (
-        <Picker items={items} current={item.id} />
-      ) : (
-        <ErrorNotice what="η λίστα αντικειμένων" />
-      )}
       {canReserve &&
         extras.openFilmings !== null &&
         !extras.openFilmings.ok && (
           <ErrorNotice what="τα ανοιχτά Γυρίσματα για Δέσμευση" />
         )}
       <F2Item
+        picker={
+          extras.items.ok ? (
+            <Picker items={items} current={item.id} />
+          ) : (
+            <ErrorNotice what="η λίστα αντικειμένων" />
+          )
+        }
         item={item}
         canManage={canManage}
         categories={
