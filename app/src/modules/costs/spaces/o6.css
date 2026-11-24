@@ -6,6 +6,6 @@
 & .o6-head small { color: var(--color-text-muted); font-size: .82rem; }
 & .o6-methods .ml-list { margin: 0 0 .8rem; }
 & .ml-line .ml-main form { margin-top: .4rem; }
-& .ml-new form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+& .o6-methods .ml-new form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 & .ml-box .part-row .o5-days { display: grid; gap: .2rem; }
 }
