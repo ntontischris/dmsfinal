@@ -160,7 +160,7 @@ export function E5Booking(props: E5BookingProps) {
       {date && (
         <section ref={refFor(2)}>
           <Step no={2} title="Πόσες ώρες;">
-            <p className="fl-note">Για την {dayLabel(date)}.</p>
+            <small>Για την {dayLabel(date)}.</small>
             <div className="e-times ml-quick">
               {props.durations.map((value) => (
                 <button
@@ -203,7 +203,7 @@ export function E5Booking(props: E5BookingProps) {
                 ))}
               </div>
             )}
-            <p className="fl-note">Ώρα Ελλάδας.</p>
+            <small>Ώρα Ελλάδας.</small>
           </Step>
         </section>
       )}

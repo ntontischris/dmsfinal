@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 
 import { respondToCrew } from "../actions-crew";
@@ -11,6 +9,7 @@ import type { E6Sheet as SheetView } from "./e6-adapter";
 import { useRun } from "./e3-run";
 import { responseTone } from "./e3-model";
 import { LastDone, StatusBadge } from "./e3-ui";
+import { Line, Lines } from "./ml-parts";
 
 // Η όψη του μέλους (prototype `screens/e6-sheet.tsx`): απαντά «επιβεβαιώνω» ή «δεν μπορώ» (με λόγο) στο πραγματικό
 // filming_crew_respond. Το «δεν μπορώ» δεν αλλάζει το Γύρισμα.
@@ -27,15 +26,14 @@ export function E6Sheet({ sheet }: { sheet: SheetView }) {
   const isConfirmed = sheet.myResponse === "επιβεβαιώνω" && !sheet.awaitsAnswer;
 
   return (
-    <Panel
-      label={`${sheet.clientName} · ${sheet.when}`}
-      aside={
+    <section className="fl-sheet">
+      <header className="fl-sheet-head">
+        <h2 className="ml-box-title">{`${sheet.clientName} · ${sheet.when}`}</h2>
         <span className="e1-signals">
           <StatusBadge look={sheet.state} />
           <Badge tone="strong">Δελτίο έκδοση {sheet.version}</Badge>
         </span>
-      }
-    >
+      </header>
       {sheet.awaitsAnswer && (
         <ul className="e6-warnings" aria-label="Προειδοποιήσεις">
           <li>
@@ -44,39 +42,39 @@ export function E6Sheet({ sheet }: { sheet: SheetView }) {
           </li>
         </ul>
       )}
-      <p className="note">
+      <small>
         Έκδοση {sheet.version} ({sheet.sentAt})
         {sheet.change ? `: ${sheet.change}` : ""}.
-      </p>
-      <dl className="dl">
+      </small>
+      <dl className="ml-kv">
         <dt>Πού</dt>
         <dd>{sheet.where}</dd>
         <dt>Πότε</dt>
         <dd>{sheet.when}</dd>
         <dt>Συνεργείο (ποιοι πάμε)</dt>
         <dd>
-          <RowList>
+          <Lines>
             {sheet.crew.map((person) => (
-              <ListRow
+              <Line
                 key={person.name}
-                lead={<Avatar name={person.name} size={32} />}
+                thumb={person.name}
                 title={person.name}
                 aside={person.isMe && <Badge tone="strong">εσύ</Badge>}
-                isHighlighted={person.isMe}
+                isCurrent={person.isMe}
               />
             ))}
-          </RowList>
+          </Lines>
         </dd>
         <dt>Εξοπλισμός</dt>
         <dd>
           {sheet.equipment.length === 0 ? (
             "—"
           ) : (
-            <RowList>
+            <Lines>
               {sheet.equipment.map((name) => (
-                <ListRow key={name} title={name} />
+                <Line key={name} title={name} />
               ))}
-            </RowList>
+            </Lines>
           )}
         </dd>
         <dt>Shot list</dt>
@@ -84,15 +82,15 @@ export function E6Sheet({ sheet }: { sheet: SheetView }) {
           {sheet.shotList.length === 0 ? (
             "—"
           ) : (
-            <RowList>
+            <Lines>
               {sheet.shotList.map((shot, index) => (
-                <ListRow
+                <Line
                   key={`${index}-${shot}`}
                   lead={String(index + 1)}
                   title={shot}
                 />
               ))}
-            </RowList>
+            </Lines>
           )}
         </dd>
         {sheet.crewNote && (
@@ -110,10 +108,9 @@ export function E6Sheet({ sheet }: { sheet: SheetView }) {
           ? ` «${sheet.myReason}»`
           : null}
       </p>
-      <div className="btn-row">
+      <div className="ml-quick fl-row">
         <button
           type="button"
-          className="button"
           data-primary="true"
           onClick={() => respond("confirmed")}
           disabled={isPending || isConfirmed}
@@ -122,7 +119,6 @@ export function E6Sheet({ sheet }: { sheet: SheetView }) {
         </button>
         <button
           type="button"
-          className="button"
           data-danger="true"
           onClick={() => setIsAsking(true)}
         >
@@ -131,9 +127,9 @@ export function E6Sheet({ sheet }: { sheet: SheetView }) {
       </div>
       <LastDone log={result ? [result.text] : []} tone={result?.tone ?? "ok"} />
       {isAsking && (
-        <div className="stack">
-          <label className="stack">
-            Λόγος (υποχρεωτικός)
+        <div className="ml-fields">
+          <label className="ml-field" data-wide>
+            <span>Λόγος (υποχρεωτικός)</span>
             <textarea
               className="input"
               rows={3}
@@ -141,31 +137,26 @@ export function E6Sheet({ sheet }: { sheet: SheetView }) {
               onChange={(e) => setReason(e.target.value)}
             />
           </label>
-          <div className="btn-row">
+          <div className="ml-actions">
             <button
               type="button"
-              className="button"
               data-danger="true"
               disabled={!reason.trim() || isPending}
               onClick={() => respond("declined", reason.trim())}
             >
               Στέλνω «δεν μπορώ»
             </button>
-            <button
-              type="button"
-              className="button"
-              onClick={() => setIsAsking(false)}
-            >
+            <button type="button" onClick={() => setIsAsking(false)}>
               Άκυρο
             </button>
           </div>
         </div>
       )}
-      <p className="note">
+      <p className="fl-note">
         Το «δεν μπορώ» ειδοποιεί την ομάδα, για να βρεθεί αντικαταστάτης.{" "}
         <strong>Δεν αλλάζει το Γύρισμα</strong>: ο πελάτης δεν ενημερώνεται και
         το Γύρισμα μένει προγραμματισμένο.
       </p>
-    </Panel>
+    </section>
   );
 }

@@ -116,3 +116,34 @@
   display: grid;
   gap: 0.8rem;
 }
+.fl-line[data-current] {
+  border-color: color-mix(in oklab, var(--brand-periwinkle) 55%, transparent);
+}
+.fl-date {
+  display: grid;
+  justify-items: center;
+  line-height: 1.1;
+}
+.fl-date small {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+.fl-sheet {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 55%, transparent);
+}
+.fl-sheet > * {
+  margin: 0;
+}
+.fl-sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}

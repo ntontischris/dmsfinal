@@ -1,7 +1,5 @@
 import { getViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { DateLead, ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { filmingCaps } from "../caps";
@@ -14,6 +12,7 @@ import { RESPONSE_WORDS, replyOf } from "./e3-model";
 import { E3Reply } from "./e3-reply";
 import { awaitsAnswer, dayOf, e6SheetOf, mineWhen } from "./e6-adapter";
 import { E6Sheet } from "./e6-sheet";
+import { Box, Line, Lines } from "./ml-parts";
 
 import "./e.css";
 import "./e1.css";
@@ -28,33 +27,39 @@ function MyList({
 }) {
   return (
     <nav aria-label="Τα Γυρίσματά μου">
-      <Panel label="Τα Γυρίσματά μου" aside={entries.length} isFlush>
-        <RowList>
-          {entries.map((entry) => {
-            const [, , day] = dayOf(entry).split("-");
-            return (
-              <ListRow
-                key={entry.id}
-                isHighlighted={entry.id === selectedId}
-                lead={<DateLead weekday={weekdayOf(dayOf(entry))} day={day} />}
-                href={hrefOf("E6", { id: entry.id })}
-                title={entry.client?.name ?? NO_CLIENT_LABEL}
-                sub={`${mineWhen(entry.startsAt, entry.hours)} · ${entry.production.title}`}
-                aside={
-                  <>
-                    {entry.sheetVersion === null && (
-                      <Badge tone="waiting">χωρίς Δελτίο</Badge>
-                    )}
-                    {awaitsAnswer(entry) && (
-                      <Badge tone="attention">⚠ περιμένει απάντηση</Badge>
-                    )}
-                  </>
-                }
-              />
-            );
-          })}
-        </RowList>
-      </Panel>
+      <h2 className="ml-box-title">
+        Τα Γυρίσματά μου <small>{entries.length}</small>
+      </h2>
+      <Lines>
+        {entries.map((entry) => {
+          const [, , day] = dayOf(entry).split("-");
+          return (
+            <Line
+              key={entry.id}
+              isCurrent={entry.id === selectedId}
+              lead={
+                <span className="fl-date">
+                  <small>{weekdayOf(dayOf(entry))}</small>
+                  <strong>{day}</strong>
+                </span>
+              }
+              href={hrefOf("E6", { id: entry.id })}
+              title={entry.client?.name ?? NO_CLIENT_LABEL}
+              sub={`${mineWhen(entry.startsAt, entry.hours)} · ${entry.production.title}`}
+              aside={
+                <>
+                  {entry.sheetVersion === null && (
+                    <Badge tone="waiting">χωρίς Δελτίο</Badge>
+                  )}
+                  {awaitsAnswer(entry) && (
+                    <Badge tone="attention">⚠ περιμένει απάντηση</Badge>
+                  )}
+                </>
+              }
+            />
+          );
+        })}
+      </Lines>
     </nav>
   );
 }
@@ -104,14 +109,14 @@ function NoSheetReply({ entry }: { entry: MineEntry }) {
   );
   if (!reply) return null;
   return (
-    <Panel label="Η απάντησή σου">
+    <Box title="Η απάντησή σου" isOpen>
       <E3Reply
         filmingId={entry.id}
         reply={reply}
         myWord={RESPONSE_WORDS[entry.myResponse]}
       />
-      {entry.myReason && <p className="muted">Λόγος: {entry.myReason}</p>}
-    </Panel>
+      {entry.myReason && <small>Λόγος: {entry.myReason}</small>}
+    </Box>
   );
 }
 
@@ -139,7 +144,7 @@ export async function SpacesMine({ id }: { id: string | undefined }) {
     entries.data.find((entry) => entry.id === id) ?? entries.data[0];
   return (
     <div data-spaces>
-      <div className="e">
+      <div className="e ml-stack">
         {selected ? (
           <>
             <MyList entries={entries.data} selectedId={selected.id} />

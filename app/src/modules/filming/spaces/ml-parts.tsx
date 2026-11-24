@@ -55,6 +55,7 @@ interface LineProps {
   tag?: ReactNode;
   aside?: ReactNode;
   isFaded?: boolean;
+  isCurrent?: boolean;
 }
 
 export function Line({
@@ -66,9 +67,14 @@ export function Line({
   tag,
   aside,
   isFaded,
+  isCurrent,
 }: LineProps) {
   return (
-    <li className="ml-line fl-line" data-faded={isFaded || undefined}>
+    <li
+      className="ml-line fl-line"
+      data-faded={isFaded || undefined}
+      data-current={isCurrent || undefined}
+    >
       {thumb !== undefined ? (
         <span className="ml-thumb" aria-hidden="true">
           {initialsOf(thumb)}
