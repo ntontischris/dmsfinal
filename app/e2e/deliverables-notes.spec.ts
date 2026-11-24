@@ -86,13 +86,13 @@ test("η ουρά Παραδοτέων δείχνει «Μόνο εμένα» ή
   const who = page.getByRole("navigation", { name: "Ποιανού" });
   await expect(who.getByRole("link", { name: /^Όλη η ομάδα/ })).toHaveAttribute(
     "aria-current",
-    "true",
+    "page",
   );
   await who.getByRole("link", { name: /^Μόνο εμένα/ }).click();
   await expect(page).toHaveURL(/[?&]who=me/);
   await expect(who.getByRole("link", { name: /^Μόνο εμένα/ })).toHaveAttribute(
     "aria-current",
-    "true",
+    "page",
   );
   await shot(page, "h1-only-me");
   await who.getByRole("link", { name: /^Όλη η ομάδα/ }).click();
