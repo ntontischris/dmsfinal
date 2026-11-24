@@ -231,3 +231,26 @@
     white-space: pre-wrap;
   }
 }
+/* Τα κουτιά Παραδοτέων και μέσα στη Σελίδα Παραγωγής (όψη πελάτη). */
+[data-look="spaces"] .h2-box-body {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+[data-look="spaces"] .ml-box .h2-box-body > .ml-list {
+  margin: 0;
+}
+/* O5: τα πεδία των Κανόνων μέσα στα κουτιά. */
+[data-look="spaces"] .o5 {
+  & .o5-days {
+    display: grid;
+    gap: 0.2rem;
+  }
+  & .o5-days .input {
+    width: 6rem;
+  }
+  & .ml-field .input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
