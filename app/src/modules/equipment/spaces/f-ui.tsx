@@ -28,9 +28,9 @@ export function ReasonForm({
   const [reason, setReason] = useState("");
   const isValid = isOptional || reason.trim().length > 0;
   return (
-    <div className="stack e3-form">
-      <label>
-        {label}
+    <div className="ml-fields">
+      <label className="ml-field" data-wide>
+        <span>{label}</span>
         <input
           className="input"
           value={reason}
@@ -38,18 +38,17 @@ export function ReasonForm({
           aria-required={!isOptional}
         />
       </label>
-      {!isValid && <span className="muted">Ο λόγος είναι υποχρεωτικός.</span>}
-      <div className="btn-row">
+      {!isValid && <span className="f-note">Ο λόγος είναι υποχρεωτικός.</span>}
+      <div className="ml-actions">
         <button
           type="button"
-          className="button"
-          data-danger={isDanger}
+          data-danger={isDanger || undefined}
           disabled={!isValid || isPending}
           onClick={() => onConfirm(reason.trim())}
         >
           {confirmLabel}
         </button>
-        <button type="button" className="button" onClick={onClose}>
+        <button type="button" onClick={onClose}>
           Άκυρο
         </button>
       </div>
@@ -59,7 +58,7 @@ export function ReasonForm({
 
 export function Warning({ children }: { children: ReactNode }) {
   return (
-    <p className="e3-warn" role="status">
+    <p className="e-warn" role="status">
       {children}
     </p>
   );
