@@ -18,6 +18,18 @@ async function openPanel(page: Page, opener: string, title: string): Promise<Loc
   return panel;
 }
 
+// Τα κουτιά (`details.ml-box`) ξεκινούν κλειστά: ανοίγουν με κλικ στην περίληψή τους, μέχρι να ανοίξουν.
+export async function openBox(page: Page, title: string): Promise<Locator> {
+  const box = card(page, title);
+  const details = box.locator("details.ml-box").first();
+  await expect(async () => {
+    if ((await details.getAttribute("open")) === null)
+      await details.locator("> summary").click();
+    await expect(details).toHaveAttribute("open", "", { timeout: 1_000 });
+  }).toPass();
+  return box;
+}
+
 // Το «Νέο αντικείμενο» της F1 ανοίγει το πάνελ της φόρμας του.
 export const openNewItem = (page: Page): Promise<Locator> =>
   openPanel(page, "Νέο αντικείμενο", "Νέο αντικείμενο");

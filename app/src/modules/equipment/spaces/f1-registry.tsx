@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Entity, ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import { groupEquipmentUnits, groupLabel, matchesItemFilter } from "../helpers";
 import { STATUS_LABELS } from "../labels";
@@ -41,9 +41,9 @@ const rowKey = (row: RegistryRow): string =>
 
 // Το επόμενο Γύρισμα του αντικειμένου· σύνδεσμος μόνο όπου ο Χρήστης βλέπει το Γύρισμα.
 function NextBooking({ view }: { view: NextBookingView | undefined }) {
-  if (!view) return <span className="muted">Κανένα</span>;
+  if (!view) return <>Κανένα</>;
   const text = view.isPending ? `${view.label} (αναμένει έγκριση)` : view.label;
-  return view.href ? <Link href={view.href}>{text}</Link> : <span>{text}</span>;
+  return view.href ? <Link href={view.href}>{text}</Link> : <>{text}</>;
 }
 
 function ItemLine({
@@ -54,25 +54,26 @@ function ItemLine({
   next: NextBookingView | undefined;
 }) {
   return (
-    <tr>
-      <td data-label="Αντικείμενο">
-        <Entity
-          name={item.name}
-          href={hrefOf("F2", { id: item.id })}
-          sub={item.code ?? undefined}
-        />
+    <tr className="ml-line">
+      <td className="ml-thumb" aria-hidden="true">
+        {initialsOf(item.name)}
       </td>
-      <td data-label="Κατηγορία">
-        {item.categoryName}
-        {item.categoryRetired && <span className="muted"> (αποσυρμένη)</span>}
+      <td className="ml-main">
+        <Link href={hrefOf("F2", { id: item.id })}>
+          <strong>{item.name}</strong>
+        </Link>
+        <small>
+          {[item.code, item.categoryName].filter(Boolean).join(" · ")}
+          {item.categoryRetired && " (αποσυρμένη)"}
+        </small>
+        <small>
+          Επόμενο Γύρισμα: <NextBooking view={next} />
+        </small>
       </td>
-      <td data-label="Κατάσταση">
+      <td className="ml-quick">
         <Badge tone={statusTone(item.status)}>
           {STATUS_LABELS[item.status]}
         </Badge>
-      </td>
-      <td data-label="Επόμενο Γύρισμα">
-        <NextBooking view={next} />
       </td>
     </tr>
   );
@@ -87,38 +88,150 @@ function GroupLine({
   next: BookingIndex["next"];
 }) {
   return (
-    <tr>
-      <td colSpan={4} data-label="Μονάδες">
-        <details>
+    <tr className="ml-line">
+      <td className="ml-thumb" aria-hidden="true">
+        {initialsOf(group.baseName)}
+      </td>
+      <td className="ml-main" colSpan={2}>
+        <details className="f-group-units">
           <summary>
             <strong>{groupLabel(group)}</strong>{" "}
-            <span className="muted">{group.categoryName}</span>
+            <small>{group.categoryName}</small>
           </summary>
-          <RowList>
+          <ul className="ml-list">
             {group.shown.map((unit) => (
-              <ListRow
-                key={unit.id}
-                href={hrefOf("F2", { id: unit.id })}
-                title={unit.name}
-                sub={
-                  [
-                    unit.code,
-                    next[unit.id] && `Επόμενο: ${next[unit.id]?.label}`,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ") || undefined
-                }
-                aside={
+              <li key={unit.id} className="ml-line">
+                <span className="ml-thumb" aria-hidden="true">
+                  #
+                </span>
+                <div className="ml-main">
+                  <Link href={hrefOf("F2", { id: unit.id })}>
+                    <strong>{unit.name}</strong>
+                  </Link>
+                  <small>
+                    {[
+                      unit.code,
+                      next[unit.id] && `Επόμενο: ${next[unit.id]?.label}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
+                </div>
+                <span className="ml-quick">
                   <Badge tone={statusTone(unit.status)}>
                     {STATUS_LABELS[unit.status]}
                   </Badge>
-                }
-              />
+                </span>
+              </li>
             ))}
-          </RowList>
+          </ul>
         </details>
       </td>
     </tr>
+  );
+}
+
+interface FiltersProps {
+  categories: readonly EquipmentCategory[];
+  query: string;
+  setQuery: (value: string) => void;
+  category: string;
+  setCategory: (value: string) => void;
+  status: EquipmentStatus | typeof ALL;
+  setStatus: (value: EquipmentStatus | typeof ALL) => void;
+  freeOn: string;
+  setFreeOn: (value: string) => void;
+}
+
+function Filters(props: FiltersProps) {
+  return (
+    <div className="f-filters">
+      <input
+        className="input"
+        type="search"
+        placeholder="Αναζήτηση με όνομα ή κωδικό…"
+        aria-label="Αναζήτηση στον Εξοπλισμό"
+        value={props.query}
+        onChange={(event) => props.setQuery(event.target.value)}
+      />
+      <select
+        className="select"
+        aria-label="Κατηγορία"
+        value={props.category}
+        onChange={(event) => props.setCategory(event.target.value)}
+      >
+        <option value={ALL}>Όλες οι Κατηγορίες</option>
+        {props.categories.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.name}
+          </option>
+        ))}
+      </select>
+      <select
+        className="select"
+        aria-label="Κατάσταση"
+        value={props.status}
+        onChange={(event) => {
+          const value = event.target.value;
+          props.setStatus(isStatus(value) ? value : ALL);
+        }}
+      >
+        <option value={ALL}>Σε χρήση (χωρίς αποσυρμένα)</option>
+        {EQUIPMENT_STATUSES.map((item) => (
+          <option key={item} value={item}>
+            {STATUS_LABELS[item]}
+          </option>
+        ))}
+      </select>
+      <label>
+        <span>Ελεύθερο στις </span>
+        <input
+          className="input"
+          type="date"
+          value={props.freeOn}
+          onChange={(event) => props.setFreeOn(event.target.value)}
+        />
+      </label>
+    </div>
+  );
+}
+
+function Lines({
+  rows,
+  bookings,
+}: {
+  rows: readonly RegistryRow[];
+  bookings: BookingIndex;
+}) {
+  if (rows.length === 0)
+    return <p className="ml-empty">Τίποτα δεν ταιριάζει με τα φίλτρα.</p>;
+  return (
+    <table className="ml-table">
+      <thead>
+        <tr>
+          <th>Σήμα</th>
+          <th>Αντικείμενο</th>
+          <th>Κατάσταση</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) =>
+          row.kind === "item" ? (
+            <ItemLine
+              key={rowKey(row)}
+              item={row.item}
+              next={bookings.next[row.item.id]}
+            />
+          ) : (
+            <GroupLine
+              key={rowKey(row)}
+              group={row.group}
+              next={bookings.next}
+            />
+          ),
+        )}
+      </tbody>
+    </table>
   );
 }
 
@@ -142,20 +255,30 @@ export function F1Registry({
       matchesItemFilter(item, { query, categoryId: category, status }) &&
       (freeOn === "" || isFreeOn(item, bookings.busyDays, freeOn)),
   );
+  const filters = {
+    categories,
+    query,
+    setQuery,
+    category,
+    setCategory,
+    status,
+    setStatus,
+    freeOn,
+    setFreeOn,
+  };
 
   return (
     <>
-      <div className="toolbar">
-        <span className="muted grow">
+      <div className="ml-head">
+        <p>
           {canManage
             ? "Η Δέσμευση γίνεται στη σελίδα του Γυρίσματος ή στη σελίδα του αντικειμένου. Εδώ κρατάς το μητρώο."
             : "Μόνο ανάγνωση: δεσμεύεις στα Γυρίσματά σου, δεν αλλάζεις το μητρώο."}
-        </span>
+        </p>
         {canManage && (
           <button
             type="button"
-            className="button"
-            data-primary="true"
+            className="ml-cta"
             onClick={() => setIsAdding(true)}
           >
             Νέο αντικείμενο
@@ -170,103 +293,22 @@ export function F1Registry({
         />
       )}
       {items.length === 0 ? (
-        <section className="card notice" data-kind="empty" role="status">
-          <h2>Το μητρώο είναι άδειο</h2>
-          <p className="muted">
-            {canManage
-              ? "Πρόσθεσε το πρώτο αντικείμενο με «Νέο αντικείμενο». Μέχρι τότε τα Γυρίσματα γίνονται κανονικά, απλώς χωρίς Δέσμευση εξοπλισμού."
-              : "Δεν έχει καταχωρηθεί ακόμα Εξοπλισμός. Τον προσθέτει η Διαχείριση."}
-          </p>
-        </section>
+        <p className="ml-empty" role="status">
+          <strong>Το μητρώο είναι άδειο.</strong>{" "}
+          {canManage
+            ? "Πρόσθεσε το πρώτο αντικείμενο με «Νέο αντικείμενο». Μέχρι τότε τα Γυρίσματα γίνονται κανονικά, απλώς χωρίς Δέσμευση εξοπλισμού."
+            : "Δεν έχει καταχωρηθεί ακόμα Εξοπλισμός. Τον προσθέτει η Διαχείριση."}
+        </p>
       ) : (
         <>
-          <div className="toolbar">
-            <input
-              className="input grow"
-              type="search"
-              placeholder="Αναζήτηση με όνομα ή κωδικό…"
-              aria-label="Αναζήτηση στον Εξοπλισμό"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <select
-              className="select"
-              aria-label="Κατηγορία"
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-            >
-              <option value={ALL}>Όλες οι Κατηγορίες</option>
-              {categories.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="select"
-              aria-label="Κατάσταση"
-              value={status}
-              onChange={(event) => {
-                const next = event.target.value;
-                setStatus(isStatus(next) ? next : ALL);
-              }}
-            >
-              <option value={ALL}>Σε χρήση (χωρίς αποσυρμένα)</option>
-              {EQUIPMENT_STATUSES.map((item) => (
-                <option key={item} value={item}>
-                  {STATUS_LABELS[item]}
-                </option>
-              ))}
-            </select>
-            <label className="muted">
-              <span>Ελεύθερο στις </span>
-              <input
-                className="input"
-                type="date"
-                value={freeOn}
-                onChange={(event) => setFreeOn(event.target.value)}
-              />
-            </label>
-          </div>
+          <Filters {...filters} />
           {freeOn !== "" && (
-            <p className="muted">
+            <p className="f-note">
               Δείχνει μόνο ό,τι είναι Διαθέσιμο και δεν έχει ανοιχτό Γύρισμα
               εκείνη τη μέρα.
             </p>
           )}
-          {visible.length === 0 ? (
-            <p className="muted">Τίποτα δεν ταιριάζει με τα φίλτρα.</p>
-          ) : (
-            <div className="scroll">
-              <table className="rtable">
-                <thead>
-                  <tr>
-                    <th>Αντικείμενο</th>
-                    <th>Κατηγορία</th>
-                    <th>Κατάσταση</th>
-                    <th>Επόμενο Γύρισμα</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((row) =>
-                    row.kind === "item" ? (
-                      <ItemLine
-                        key={rowKey(row)}
-                        item={row.item}
-                        next={bookings.next[row.item.id]}
-                      />
-                    ) : (
-                      <GroupLine
-                        key={rowKey(row)}
-                        group={row.group}
-                        next={bookings.next}
-                      />
-                    ),
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <Lines rows={visible} bookings={bookings} />
         </>
       )}
       {canManage && <F1Categories categories={categories} />}

@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import {
   createCategory,
@@ -14,6 +12,7 @@ import {
   retireCategory,
 } from "../actions-categories";
 import type { EquipmentCategory } from "../types";
+import { FBox } from "./f-box";
 import { useRunAction } from "./f-run";
 
 interface F1CategoriesProps {
@@ -47,109 +46,104 @@ export function F1Categories({ categories }: F1CategoriesProps) {
     );
   };
 
+  const isRenaming = (category: EquipmentCategory) =>
+    renaming?.id === category.id;
+
   return (
-    <Panel label="Κατηγορίες">
-      <RowList>
-        {categories.map((category) => {
-          const uses = category.itemCount;
-          return (
-            <ListRow
-              key={category.id}
-              isFaded={category.isRetired}
-              title={category.name}
-              sub={
-                renaming?.id === category.id ? (
-                  <span className="e3-inline">
-                    <input
-                      className="input"
-                      aria-label={`Νέο όνομα για ${category.name}`}
-                      value={renaming.name}
-                      onChange={(event) =>
-                        setRenaming({
-                          id: category.id,
-                          name: event.target.value,
-                        })
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="button"
-                      data-primary="true"
-                      disabled={
-                        isPending ||
-                        !renaming.name.trim() ||
-                        renaming.name.trim() === category.name
-                      }
-                      onClick={() => handleRename(category)}
-                    >
-                      Αποθήκευση
-                    </button>
-                    <button
-                      type="button"
-                      className="button"
-                      onClick={() => setRenaming(null)}
-                    >
-                      Άκυρο
-                    </button>
-                  </span>
-                ) : (
-                  `· ${uses} αντικείμενα`
-                )
-              }
-              aside={
-                <>
+    <FBox title="Κατηγορίες" hint={`${categories.length} Κατηγορίες`}>
+      <ul className="ml-list">
+        {categories.map((category) => (
+          <li
+            key={category.id}
+            className="ml-line"
+            data-faded={category.isRetired || undefined}
+          >
+            <span className="ml-thumb" aria-hidden="true">
+              {initialsOf(category.name)}
+            </span>
+            <div className="ml-main">
+              <strong>{category.name}</strong>
+              {renaming && isRenaming(category) ? (
+                <span className="e3-inline ml-quick">
+                  <input
+                    className="input"
+                    aria-label={`Νέο όνομα για ${category.name}`}
+                    value={renaming.name}
+                    onChange={(event) =>
+                      setRenaming({ id: category.id, name: event.target.value })
+                    }
+                  />
                   <button
                     type="button"
-                    className="button"
-                    aria-expanded={renaming?.id === category.id}
-                    disabled={isPending}
-                    onClick={() =>
-                      setRenaming(
-                        renaming?.id === category.id
-                          ? null
-                          : { id: category.id, name: category.name },
-                      )
+                    data-primary
+                    disabled={
+                      isPending ||
+                      !renaming.name.trim() ||
+                      renaming.name.trim() === category.name
                     }
+                    onClick={() => handleRename(category)}
                   >
-                    Μετονομασία
+                    Αποθήκευση
                   </button>
-                  {category.isRetired && <Badge tone="faded">αποσυρμένη</Badge>}
-                  {category.isRetired ? (
-                    <button
-                      type="button"
-                      className="button"
-                      disabled={isPending}
-                      onClick={() => act(restoreCategory, category.id)}
-                    >
-                      Επαναφορά
-                    </button>
-                  ) : uses > 0 ? (
-                    <button
-                      type="button"
-                      className="button"
-                      disabled={isPending}
-                      onClick={() => act(retireCategory, category.id)}
-                    >
-                      Απόσυρση
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="button"
-                      data-danger="true"
-                      disabled={isPending}
-                      onClick={() => act(deleteCategory, category.id)}
-                    >
-                      Διαγραφή
-                    </button>
-                  )}
-                </>
-              }
-            />
-          );
-        })}
-      </RowList>
-      <div className="e3-inline">
+                  <button type="button" onClick={() => setRenaming(null)}>
+                    Άκυρο
+                  </button>
+                </span>
+              ) : (
+                <small>{category.itemCount} αντικείμενα</small>
+              )}
+            </div>
+            {category.isRetired ? (
+              <span className="ml-tag">αποσυρμένη</span>
+            ) : (
+              <span />
+            )}
+            <span className="ml-quick">
+              <button
+                type="button"
+                aria-expanded={isRenaming(category)}
+                disabled={isPending}
+                onClick={() =>
+                  setRenaming(
+                    isRenaming(category)
+                      ? null
+                      : { id: category.id, name: category.name },
+                  )
+                }
+              >
+                Μετονομασία
+              </button>
+              {category.isRetired ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => act(restoreCategory, category.id)}
+                >
+                  Επαναφορά
+                </button>
+              ) : category.itemCount > 0 ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => act(retireCategory, category.id)}
+                >
+                  Απόσυρση
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-danger
+                  disabled={isPending}
+                  onClick={() => act(deleteCategory, category.id)}
+                >
+                  Διαγραφή
+                </button>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="e3-inline ml-actions">
         <input
           className="input"
           aria-label="Νέα Κατηγορία"
@@ -159,23 +153,22 @@ export function F1Categories({ categories }: F1CategoriesProps) {
         />
         <button
           type="button"
-          className="button"
           disabled={!name.trim() || isDuplicate || isPending}
           onClick={handleAdd}
         >
           Προσθήκη
         </button>
       </div>
-      {isDuplicate && <p className="muted">Υπάρχει ήδη αυτή η Κατηγορία.</p>}
+      {isDuplicate && <p className="f-note">Υπάρχει ήδη αυτή η Κατηγορία.</p>}
       {last.error && (
         <p className="e-warn" role="alert">
           {last.error}
         </p>
       )}
-      <p className="note">
+      <p className="f-note">
         Αποσυρμένη Κατηγορία δεν προσφέρεται σε νέο αντικείμενο· όσα την έχουν
         την κρατούν.
       </p>
-    </Panel>
+    </FBox>
   );
 }
