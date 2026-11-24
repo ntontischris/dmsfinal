@@ -247,11 +247,13 @@ function InvoicePage(props: PageProps & { isReminderOpen: boolean }) {
         <ReminderBox invoiceId={props.detail.id} isOpen={props.isReminderOpen} />
       )}
       <Payments money={props.money} />
-      <PaymentRefBox
-        invoiceId={props.detail.id}
-        paymentRef={props.detail.paymentRef ?? null}
-        canEdit={props.caps.canRegisterInvoices && props.detail.can.correct}
-      />
+      {props.detail.kind !== "credit" && (
+        <PaymentRefBox
+          invoiceId={props.detail.id}
+          paymentRef={props.detail.paymentRef ?? null}
+          canEdit={props.caps.canRegisterInvoices && props.detail.can.correct}
+        />
+      )}
       <Related detail={props.detail} money={props.money} />
       <Trail {...props} />
     </div>
