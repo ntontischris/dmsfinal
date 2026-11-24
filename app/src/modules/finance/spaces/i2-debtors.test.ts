@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import type { InvoiceItem } from "../invoices-view-schema";
-import { debtorsOf, matchesSearch } from "./i2-debtors";
+import { debtorsOf, debtorsToCsv, matchesSearch } from "./i2-debtors";
 
 const invoiceOf = (over: Partial<InvoiceItem> = {}): InvoiceItem => ({
   id: "i1",
@@ -52,5 +52,21 @@ describe("matchesSearch", () => {
   test("should keep every row for an empty search and drop the rest", () => {
     expect(matchesSearch(row, "  ")).toBe(true);
     expect(matchesSearch(row, "Κύπρου")).toBe(false);
+  });
+});
+
+describe("debtorsToCsv", () => {
+  test("should export one line per debtor shown, not the invoices", () => {
+    const csv = debtorsToCsv(
+      debtorsOf([
+        invoiceOf({ id: "a", remaining: 100, dueDate: "2026-09-20" }),
+        invoiceOf({ id: "b", remaining: 50, dueDate: "2026-08-10" }),
+      ]),
+    );
+    const lines = csv.replace("﻿", "").split("\r\n");
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toContain("Πελάτης");
+    expect(lines[1]).toMatch(/^Κύπρου;2;/);
+    expect(lines[1]).toContain("10/08/2026");
   });
 });

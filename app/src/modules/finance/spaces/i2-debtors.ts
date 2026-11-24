@@ -1,4 +1,6 @@
+import { csvCell } from "../helpers";
 import type { InvoiceItem } from "../invoices-view-schema";
+import { formatReceiptDate, formatReceiptMoney } from "../money";
 
 // Τ5 «Ποιος μας χρωστάει»: τα ληξιπρόθεσμα ανά Πελάτη. Τ7: αναζήτηση σε αριθμό Τιμολογίου και όνομα Πελάτη.
 
@@ -46,6 +48,22 @@ export const debtorsOf = (rows: readonly InvoiceItem[]): Debtor[] =>
       )
       .values(),
   ].sort((a, b) => b.amount - a.amount);
+
+const DEBTORS_CSV_HEADER = ["Πελάτης", "Ληξιπρόθεσμα Τιμολόγια", "Χρωστάει (με ΦΠΑ)", "Παλαιότερη λήξη"];
+
+// Η εξαγωγή του «Ποιος μας χρωστάει»: οι γραμμές ανά Πελάτη που φαίνονται. Το BOM για τα ελληνικά στο Excel.
+export const debtorsToCsv = (debtors: readonly Debtor[]): string => {
+  const lines = [
+    DEBTORS_CSV_HEADER,
+    ...debtors.map((debtor) => [
+      debtor.clientName,
+      String(debtor.count),
+      formatReceiptMoney(debtor.amount),
+      formatReceiptDate(debtor.oldestDue),
+    ]),
+  ].map((cells) => cells.map(csvCell).join(";"));
+  return `﻿${lines.join("\r\n")}`;
+};
 
 // Πεζά, χωρίς τόνους: «Ηλιάδη» = «ηλιαδη».
 const plain = (text: string): string =>

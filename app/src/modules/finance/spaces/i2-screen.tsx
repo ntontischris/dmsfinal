@@ -266,7 +266,7 @@ export async function SpacesInvoices({
             Καταχώρηση Τιμολογίου
           </Link>
         )}
-        <CsvButton rows={rows} />
+        <CsvButton rows={rows} debtors={debtors} />
       </div>
       {rows.length === 0 ? (
         <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
