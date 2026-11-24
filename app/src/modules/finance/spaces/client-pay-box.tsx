@@ -2,20 +2,37 @@ import { Fragment } from "react";
 
 import type { PaymentInfo } from "../ledger-view-schema";
 import { Box } from "./i5-cards";
-import { contactLinksOf } from "./i8-client-model";
+import {
+  RF_LABEL,
+  contactLinksOf,
+  type ContactLink,
+  type PaymentReference,
+} from "./i8-client-model";
 import { CopyButton } from "./i5-pay";
 
 // «Πώς πληρώνω» του Χρήστη πελάτη (Τ3): ο λογαριασμός της εταιρείας με αντιγραφή και, σε ένα Τιμολόγιο, η αιτιολογία
-// (ο αριθμός του) με αντιγραφή. Χωρίς λογαριασμό: απλό μήνυμα και η επικοινωνία της εταιρείας, αν υπάρχει.
+// (κωδικός πληρωμής RF ή ο αριθμός του) με αντιγραφή. Χωρίς λογαριασμό: απλό μήνυμα και η επικοινωνία της εταιρείας.
 
 interface ClientPayBoxProps {
-  // null όταν δεν φορτώθηκαν οι οδηγίες: ο πελάτης βλέπει πάλι το «Επικοινωνήστε μαζί μας».
+  // null όταν δεν φορτώθηκαν οι οδηγίες: ο πελάτης βλέπει πάλι το «Επικοινώνησε μαζί μας».
   info: PaymentInfo | null;
   // Ο λογαριασμός από άλλη ανάγνωση (π.χ. την Καρτέλα), όταν οι οδηγίες δεν φορτώθηκαν.
   fallbackBank?: PaymentInfo["bank"];
-  // Ο αριθμός του Τιμολογίου που πληρώνει (στη σελίδα ενός Τιμολογίου).
-  reference?: string;
+  // Τι γράφει στην πληρωμή (στη σελίδα ενός Τιμολογίου): ο κωδικός πληρωμής (RF) ή ο αριθμός του.
+  reference?: PaymentReference;
   isOpen?: boolean;
+}
+
+function ReferenceRow({ reference }: { reference: PaymentReference }) {
+  return (
+    <>
+      <dt>{reference.label}</dt>
+      <dd className="i5-pay-line">
+        <span>{reference.value}</span>
+        <CopyButton value={reference.value} what={reference.what} />
+      </dd>
+    </>
+  );
 }
 
 function BankDetails({
@@ -23,7 +40,7 @@ function BankDetails({
   reference,
 }: {
   bank: NonNullable<PaymentInfo["bank"]>;
-  reference?: string;
+  reference?: PaymentReference;
 }) {
   return (
     <dl className="dl">
@@ -36,28 +53,36 @@ function BankDetails({
         <span className="i245-iban">{bank.iban}</span>
         <CopyButton value={bank.iban} what="το IBAN" />
       </dd>
-      <dt>Αιτιολογία</dt>
       {reference ? (
-        <dd className="i5-pay-line">
-          <span>{reference}</span>
-          <CopyButton value={reference} what="η αιτιολογία" />
-        </dd>
+        <ReferenceRow reference={reference} />
       ) : (
-        <dd>ο αριθμός του Τιμολογίου που πληρώνεις</dd>
+        <>
+          <dt>Αιτιολογία</dt>
+          <dd>ο αριθμός του Τιμολογίου που πληρώνεις</dd>
+        </>
       )}
     </dl>
   );
 }
 
-function AskUs({ company }: { company: PaymentInfo["company"] | null }) {
-  const links = company ? contactLinksOf(company) : [];
+// Χωρίς λογαριασμό: μία φορά «Επικοινώνησε μαζί μας», με τηλέφωνο/email της εταιρείας όταν υπάρχουν.
+// Ο κωδικός πληρωμής (RF) φαίνεται κι εδώ, αν έχει γραφτεί.
+function AskUs({
+  links,
+  name,
+  reference,
+}: {
+  links: readonly ContactLink[];
+  name: string;
+  reference?: PaymentReference;
+}) {
+  const hasRef = reference?.label === RF_LABEL;
   return (
     <>
       <p className="muted">
-        Επικοινωνήστε μαζί μας για τον τρόπο πληρωμής
-        {company?.name ? ` (${company.name})` : ""}.
+        Επικοινώνησε μαζί μας για τον τρόπο πληρωμής{name ? ` (${name})` : ""}.
       </p>
-      {links.length > 0 && (
+      {(links.length > 0 || hasRef) && (
         <dl className="dl">
           {links.map((link) => (
             <Fragment key={link.label}>
@@ -67,11 +92,17 @@ function AskUs({ company }: { company: PaymentInfo["company"] | null }) {
               </dd>
             </Fragment>
           ))}
+          {hasRef && reference && <ReferenceRow reference={reference} />}
         </dl>
       )}
     </>
   );
 }
+
+const askUsHint = (links: readonly ContactLink[]): string =>
+  links.length > 0
+    ? links.map((link) => link.value).join(" · ")
+    : "ρώτα την εταιρεία";
 
 export function ClientPayBox({
   info,
@@ -80,19 +111,22 @@ export function ClientPayBox({
   isOpen,
 }: ClientPayBoxProps) {
   const bank = info ? info.bank : fallbackBank;
+  const links = info ? contactLinksOf(info.company) : [];
   return (
     <Box
       id="pay"
       isOpen={isOpen}
       title="Πώς πληρώνω"
-      hint={
-        bank ? `${bank.bank} · IBAN με αντιγραφή` : "Επικοινωνήστε μαζί μας"
-      }
+      hint={bank ? `${bank.bank} · IBAN με αντιγραφή` : askUsHint(links)}
     >
       {bank ? (
         <BankDetails bank={bank} reference={reference} />
       ) : (
-        <AskUs company={info?.company ?? null} />
+        <AskUs
+          links={links}
+          name={info?.company.name ?? ""}
+          reference={reference}
+        />
       )}
     </Box>
   );

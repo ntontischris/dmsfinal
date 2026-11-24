@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { ClientInvoice, PaymentInfo } from "../ledger-view-schema";
-import { contactLinksOf, needsPayment, ownInvoiceOf } from "./i8-client-model";
+import {
+  contactLinksOf,
+  needsPayment,
+  ownInvoiceOf,
+  paymentReferenceOf,
+} from "./i8-client-model";
 
 const invoice = (overrides: Partial<ClientInvoice> = {}): ClientInvoice => ({
   id: "inv-own",
@@ -84,5 +89,29 @@ describe("contactLinksOf", () => {
         href: "tel:+302101234567",
       },
     ]);
+  });
+});
+
+describe("paymentReferenceOf", () => {
+  it("should give the payment code when the team has written one", () => {
+    expect(paymentReferenceOf(invoice({ paymentRef: " RF18 0001 " }))).toEqual({
+      label: "Κωδικός πληρωμής (RF)",
+      value: "RF18 0001",
+      what: "ο κωδικός πληρωμής",
+    });
+  });
+
+  it("should fall back to the invoice number as the payment reason when there is no code", () => {
+    expect(paymentReferenceOf(invoice({ paymentRef: null }))).toEqual({
+      label: "Αιτιολογία",
+      value: "Α-58",
+      what: "η αιτιολογία",
+    });
+  });
+
+  it("should treat a blank code as no code", () => {
+    expect(paymentReferenceOf(invoice({ paymentRef: "  " })).label).toBe(
+      "Αιτιολογία",
+    );
   });
 });

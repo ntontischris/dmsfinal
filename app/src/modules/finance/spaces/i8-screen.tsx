@@ -33,6 +33,7 @@ import {
 import { athensToday } from "../money";
 import type { FinanceCaps } from "../types";
 
+import { PaymentRefBox } from "./i8-payment-ref";
 import { ReminderBox } from "./i8-reminder";
 
 import "./money-lines.css";
@@ -246,6 +247,11 @@ function InvoicePage(props: PageProps & { isReminderOpen: boolean }) {
         <ReminderBox invoiceId={props.detail.id} isOpen={props.isReminderOpen} />
       )}
       <Payments money={props.money} />
+      <PaymentRefBox
+        invoiceId={props.detail.id}
+        paymentRef={props.detail.paymentRef ?? null}
+        canEdit={props.caps.canRegisterInvoices && props.detail.can.correct}
+      />
       <Related detail={props.detail} money={props.money} />
       <Trail {...props} />
     </div>

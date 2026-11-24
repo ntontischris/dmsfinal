@@ -7,6 +7,7 @@ import {
   correctionFormKeys,
   correctionFormSchema,
   correctionPayload,
+  paymentRefFormSchema,
   voidFormSchema,
 } from "./invoice-corrections-schemas";
 
@@ -14,6 +15,7 @@ import {
 
 const CORRECTED_TEXT = "Η διόρθωση αποθηκεύτηκε και γράφτηκε στο Ίχνος.";
 const VOIDED_TEXT = "Η καταχώριση ακυρώθηκε.";
+const PAYMENT_REF_TEXT = "Ο κωδικός πληρωμής αποθηκεύτηκε.";
 
 export async function correctInvoice(
   _: FormState,
@@ -40,4 +42,18 @@ export async function voidInvoice(
     p_reason: parsed.data.reason,
   });
   return finishWith(outcome, VOIDED_TEXT);
+}
+
+// Κωδικός πληρωμής (RF): γράφεται, αλλάζει ή καθαρίζει (κενό). Γράφεται στο Ίχνος όπως η διόρθωση.
+export async function setInvoicePaymentRef(
+  _: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = paymentRefFormSchema.safeParse(pick(form, ["id", "paymentRef"]));
+  if (!parsed.success) return firstIssue(parsed.error);
+  const outcome = await callRpc("invoice_payment_ref_set", {
+    p_id: parsed.data.id,
+    p_ref: parsed.data.paymentRef,
+  });
+  return finishWith(outcome, PAYMENT_REF_TEXT);
 }

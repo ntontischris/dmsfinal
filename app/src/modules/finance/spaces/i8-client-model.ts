@@ -39,3 +39,22 @@ export const contactLinksOf = (
       : []),
   ];
 };
+
+export interface PaymentReference {
+  label: string;
+  value: string;
+  // Για το μήνυμα της αντιγραφής: «Αντιγράφηκε ο κωδικός πληρωμής.»
+  what: string;
+}
+
+export const RF_LABEL = "Κωδικός πληρωμής (RF)";
+
+// Τι γράφει ο πελάτης στην πληρωμή: ο κωδικός πληρωμής (RF) αν υπάρχει, αλλιώς ο αριθμός του Τιμολογίου ως αιτιολογία.
+export const paymentReferenceOf = (
+  invoice: Pick<ClientInvoice, "number" | "paymentRef">,
+): PaymentReference => {
+  const ref = invoice.paymentRef?.trim() ?? "";
+  return ref
+    ? { label: RF_LABEL, value: ref, what: "ο κωδικός πληρωμής" }
+    : { label: "Αιτιολογία", value: invoice.number, what: "η αιτιολογία" };
+};

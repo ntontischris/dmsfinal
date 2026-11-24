@@ -20,7 +20,11 @@ import {
 import { getClientInvoices, getPaymentInfo } from "../ledger-queries";
 import type { ClientInvoice, PaymentInfo } from "../ledger-view-schema";
 import { ClientPayBox } from "./client-pay-box";
-import { needsPayment, ownInvoiceOf } from "./i8-client-model";
+import {
+  needsPayment,
+  ownInvoiceOf,
+  paymentReferenceOf,
+} from "./i8-client-model";
 import { TONES, statusText } from "./i8-screen";
 
 import "./i245.css";
@@ -28,7 +32,7 @@ import "./money-lines.css";
 import "./i5-lines.css";
 
 // I8 του Χρήστη πελάτη (Τ2): ένα δικό του Τιμολόγιο, από την ίδια ανάγνωση με τη λίστα του (client_invoices_view).
-// Πάνω η κατάσταση, το υπόλοιπο, «Πώς πληρώνω» και PDF· από κάτω το «Πώς πληρώνω» με αιτιολογία τον αριθμό του.
+// Πάνω η κατάσταση, το υπόλοιπο, «Πώς πληρώνω» και PDF· από κάτω το «Πώς πληρώνω» με τον κωδικό πληρωμής (RF) ή, χωρίς αυτόν, αιτιολογία τον αριθμό του.
 // Ποτέ σημειώσεις, Ίχνος, Διόρθωση, πληρωμές ή άλλους Πελάτες. Τιμολόγιο άλλου Πελάτη = «δεν βρέθηκε».
 
 const capitalize = (text: string): string =>
@@ -92,7 +96,7 @@ function ClientInvoicePage(props: {
       {invoice.kind !== "credit" && (
         <ClientPayBox
           info={info}
-          reference={invoice.number}
+          reference={paymentReferenceOf(invoice)}
           isOpen={needsPayment(invoice)}
         />
       )}

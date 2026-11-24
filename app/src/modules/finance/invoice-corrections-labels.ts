@@ -16,6 +16,7 @@ export const FIELD_LABELS: Readonly<Record<ChangeField, string>> = {
   vat: "ΦΠΑ (€)",
   total: "Σύνολο (€)",
   mark: "ΜΑΡΚ",
+  paymentRef: "Κωδικός πληρωμής (RF)",
 };
 
 export const TRAIL_ACTION_LABELS: Readonly<Record<TrailAction, string>> = {

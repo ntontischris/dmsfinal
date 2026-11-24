@@ -50,6 +50,8 @@ const clientInvoiceSchema = z.object({
   remaining: z.number(),
   status: z.enum(INVOICE_STATUSES),
   creditForNumber: z.string().nullable(),
+  // Κωδικός πληρωμής (RF), αν τον έγραψε η ομάδα.
+  paymentRef: z.string().nullable().optional(),
 });
 
 const clientInvoicesSchema = z.object({ items: z.array(clientInvoiceSchema) });
