@@ -46,6 +46,15 @@ test("Ρυθμίσεις › Ενσωματώσεις δείχνει ότι λε
   await shot(page, "google-integrations");
 });
 
+// Τα κουτιά Ρυθμίσεων (SettingsCard) είναι κλειστά από προεπιλογή: ανοίγουν πριν γεμίσουν τα πεδία τους.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
+}
+
 // Το κουμπί ενεργοποιείται μόνο μετά από αλλαγή· μια επιλογή πριν ζωντανέψει η σελίδα χάνεται. Στην επανάληψη
 // περνάμε πρώτα από την άλλη τιμή, αλλιώς η ίδια τιμή ξανά δεν μετρά ως αλλαγή.
 async function chooseAndSave(page: Page, value: string) {
@@ -54,6 +63,7 @@ async function chooseAndSave(page: Page, value: string) {
     exact: true,
   });
   const other = value === "none" ? "blocked" : "none";
+  await openBoxes(page);
   await expect(async () => {
     await newEventSelect(page).selectOption(other);
     await newEventSelect(page).selectOption(value);
@@ -65,6 +75,7 @@ async function chooseAndSave(page: Page, value: string) {
 test("οι Κανόνες Google αποθηκεύονται από τα Γυρίσματα", async ({ page }) => {
   await signIn(page, OWNER);
   await page.goto("/app/settings/filming?part=google");
+  await openBoxes(page);
   await expect(newEventSelect(page)).toBeVisible();
   await chooseAndSave(page, "none");
   await expect(rulesCard(page).getByText(RULES_SAVED)).toBeVisible();

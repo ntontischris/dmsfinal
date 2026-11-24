@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { panel as settingsCard } from "./catalogue-parts";
 import { formWith, panel, switchUser } from "./knowledge-parts";
@@ -8,6 +8,15 @@ import { button, project, shot, signIn } from "./sales-parts";
 // πωλητής την ανοίγει από το Pipeline. Τα δύο projects μοιράζονται μία βάση και μία ρύθμιση: ο έλεγχος δεν ζητά
 // συγκεκριμένη Ενότητα, μόνο ότι ο σύνδεσμος ανοίγει μία Ενότητα της Γνώσης.
 test.describe.configure({ retries: 0 });
+
+// Τα κουτιά Ρυθμίσεων (SettingsCard) είναι κλειστά από προεπιλογή: ανοίγουν πριν γεμίσουν τα πεδία τους.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
+}
 
 test("Οδηγός πωλήσεων: ο Ιδιοκτήτης ορίζει Ενότητα και ο πωλητής την ανοίγει από το Pipeline", async ({
   page,
@@ -36,6 +45,7 @@ test("Οδηγός πωλήσεων: ο Ιδιοκτήτης ορίζει Ενό
   );
 
   await page.goto("/app/settings/sales");
+  await openBoxes(page);
   const guide = settingsCard(page, "Οδηγός πωλήσεων");
   await guide.getByLabel("Ενότητα της Γνώσης").selectOption({ label: name });
   await button(guide, "Αποθήκευση").click();

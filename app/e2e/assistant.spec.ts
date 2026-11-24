@@ -67,7 +67,7 @@ test("ο Ιδιοκτήτης αλλάζει το πλαφόν του Βοηθο
   await signIn(page, "owner@example.com");
   await page.goto("/app/settings/company");
   // Το κουτί «Βοηθός» είναι κλειστό εξ ορισμού.
-  await assistantCard(page).locator(":scope > summary").click();
+  await assistantCard(page).locator("details.ml-box > summary").click();
   const card = assistantCard(page);
   await expect(card.getByText(/Τρέχουσα χρήση:/)).toBeVisible();
   // Δύο φόρμες στην κάρτα: όρια widget και πλαφόν (μόνο Ιδιοκτήτης), η καθεμία με δική της αποθήκευση.
@@ -81,7 +81,7 @@ test("ο Ιδιοκτήτης αλλάζει το πλαφόν του Βοηθο
   await page.context().clearCookies();
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/company");
-  await assistantCard(page).locator(":scope > summary").click();
+  await assistantCard(page).locator("details.ml-box > summary").click();
   // Η Διαχείριση βλέπει το πλαφόν κλειδωμένο («Μόνο Ιδιοκτήτης»), χωρίς πεδίο για να το αλλάξει.
   await expect(assistantCard(page).getByLabel(CAP_LABEL)).toHaveCount(0);
   await expect(

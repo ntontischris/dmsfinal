@@ -20,6 +20,15 @@ import { button, listItem, project, signIn } from "./sales-parts";
 test.describe.configure({ mode: "serial", retries: 0 });
 
 
+// Τα κουτιά Ρυθμίσεων (SettingsCard) είναι κλειστά από προεπιλογή: ανοίγουν πριν γεμίσουν τα πεδία τους.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
+}
+
 // Στην ουρά Εγκρίσεων κάθε Γύρισμα είναι δύο γραμμές: η κεφαλή (Πελάτης) και από κάτω οι ενέργειές του.
 const queueRow = (owner: Page, title: string, client: string): Locator =>
   panel(owner, title).locator("li.part-row", { hasText: client });
@@ -35,6 +44,7 @@ test("ο Ιδιοκτήτης ορίζει το Ωράριο και προσθέ
 
   const note = EXCEPTION_NOTE(P);
   await visit(page, HOURS_URL);
+  await openBoxes(page);
   await page.locator("summary", { hasText: "+ Νέα εξαίρεση" }).click();
   const exceptionForm = page.locator("form", {
     has: button(page, "Προσθήκη εξαίρεσης"),

@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import {
   PRODUCER,
@@ -84,9 +84,19 @@ test("η ουρά έγκρισης φαίνεται στον Ιδιοκτήτη 
   });
 });
 
+// Τα κουτιά Ρυθμίσεων (SettingsCard) είναι κλειστά από προεπιλογή: ανοίγουν πριν γεμίσουν τα πεδία τους.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
+}
+
 // Το κουμπί ενεργοποιείται μόνο μετά από αλλαγή· ό,τι γράφεται πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
 async function fillUntilSaveEnables(rules: Locator, value: string) {
   await expect(async () => {
+    await openBoxes(rules.page());
     await rules.getByLabel("Ορίζοντας κρατήσεων (μέρες)").fill(value);
     await expect(button(rules, "Αποθήκευση")).toBeEnabled({ timeout: 1_000 });
   }).toPass();

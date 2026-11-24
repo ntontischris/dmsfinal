@@ -329,6 +329,15 @@ test("τα Πιθανά διπλά: το «Είναι άλλος» κλείνε�
   await expect(duplicatePair(page, `Καφέ Αθήναιον ${P}`)).toHaveCount(0);
 });
 
+// Τα κουτιά Ρυθμίσεων (SettingsCard) είναι κλειστά από προεπιλογή: ανοίγουν πριν γεμίσουν τα πεδία τους.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
+}
+
 test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάνε οι νέες Ευκαιρίες", async ({
   page,
   browser,
@@ -372,6 +381,7 @@ test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάν
   await shot(page, "o2-sales");
 
   // Η ρύθμιση γράφεται στη βάση και δεν πρέπει να μείνει στην ουρά ό,τι κι αν συμβεί (τα άλλα τεστ περιμένουν «Ιδιοκτήτης»).
+  await openBoxes(page);
   const routing = panel(page, "Νέες Ευκαιρίες από τη φόρμα");
   const choice = routing.getByLabel("Νέες Ευκαιρίες από τη φόρμα πάνε σε");
   try {
@@ -383,6 +393,7 @@ test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάν
     // Το «Αποθήκευση» ανάβει μόνο όταν κάτι αλλάξει: επιστροφή μόνο αν η ρύθμιση δεν είναι ήδη «Ιδιοκτήτης».
     if ((await formRouting()) !== "owner") {
       await page.reload();
+      await openBoxes(page);
       await choice.selectOption({ label: "Ιδιοκτήτης" });
       await button(routing, "Αποθήκευση").click();
       await expect.poll(formRouting).toBe("owner");
