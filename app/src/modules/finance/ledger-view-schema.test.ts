@@ -4,6 +4,7 @@ import {
   parseClientInvoices,
   parseLedger,
   parseLedgerClients,
+  parsePaymentInfo,
 } from "./ledger-view-schema";
 
 const entry = (overrides: Record<string, unknown> = {}) => ({
@@ -104,5 +105,25 @@ describe("parseLedgerClients", () => {
     expect(() =>
       parseLedgerClients([{ id: "c1", name: "Καφέ Αθηνά" }]),
     ).toThrow();
+  });
+});
+
+describe("parsePaymentInfo", () => {
+  const company = { name: "Εταιρεία Δοκιμής", phone: "", email: "info@example.com" };
+
+  it("should accept the default bank account with the company contact", () => {
+    const info = parsePaymentInfo({
+      bank: { holder: "Εταιρεία Δοκιμής", bank: "Τράπεζα Δοκιμής", iban: "GR1601101250000000012300695" },
+      company,
+    });
+    expect(info.bank?.iban).toBe("GR1601101250000000012300695");
+  });
+
+  it("should accept no bank account", () => {
+    expect(parsePaymentInfo({ bank: null, company }).bank).toBeNull();
+  });
+
+  it("should reject a reply without the company contact", () => {
+    expect(() => parsePaymentInfo({ bank: null })).toThrow();
   });
 });

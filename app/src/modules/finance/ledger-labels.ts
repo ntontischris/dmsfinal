@@ -10,5 +10,8 @@ export const LEDGER_NOTE =
 
 export const CLIENT_INVOICES_EMPTY_TEXT =
   "Δεν έχει καταχωρηθεί ακόμα Τιμολόγιο για σένα.";
-export const CLIENT_INVOICES_NO_ACCESS_TEXT =
-  "Τα Τιμολόγια τα βλέπουν οι Χρήστες του Πελάτη με «Βλέπει Οικονομικά».";
+// Για τον Χρήστη πελάτη: απλά λόγια, χωρίς ονόματα Δικαιωμάτων.
+export const CLIENT_FINANCE_NO_ACCESS_TEXT =
+  "Δεν έχεις πρόσβαση στα Τιμολόγια. Ζήτησέ την από όποιον διαχειρίζεται τον λογαριασμό σας.";
+export const CLIENT_INVOICE_NOT_FOUND_TEXT =
+  "Δεν βρέθηκε αυτό το Τιμολόγιο στα Τιμολόγιά σου.";

@@ -5,11 +5,15 @@ import { hrefOf } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { financeViewOf } from "../caps";
-import { LEDGER_EMPTY_TEXT, LEDGER_NO_ACCESS_TEXT } from "../ledger-labels";
-import { getLedger } from "../ledger-queries";
-import type { LedgerView } from "../ledger-view-schema";
+import {
+  CLIENT_FINANCE_NO_ACCESS_TEXT,
+  LEDGER_EMPTY_TEXT,
+} from "../ledger-labels";
+import { getLedger, getPaymentInfo } from "../ledger-queries";
+import type { LedgerView, PaymentInfo } from "../ledger-view-schema";
+import { ClientPayBox } from "./client-pay-box";
 import { i5RowsOf, type I5Row } from "./i5-adapter";
-import { MoneyHero, NoteBox, PaymentBox, initialsOf } from "./i5-cards";
+import { MoneyHero, NoteBox, initialsOf } from "./i5-cards";
 import { LedgerLines } from "./i5-ledger";
 import { balanceLabelOf, factsOf } from "./i5-model";
 
@@ -19,21 +23,28 @@ import "./i5-lines.css";
 
 // I5 Καρτέλα του Χρήστη πελάτη (Χρήματα restyle): η δική του Καρτέλα, από την ίδια ανάγνωση (client_ledger_view χωρίς
 // Πελάτη). Χωρίς επιλογή Πελάτη, Υπενθυμίσεις ή «Προς τιμολόγηση». Όταν χρωστά, το «Πώς πληρώνω» είναι ανοιχτό.
+// Το «Πώς πληρώνω» υπάρχει πάντα (Τ3): λογαριασμός με αντιγραφή, ή «Επικοινωνήστε μαζί μας» όταν δεν έχει μπει λογαριασμός.
 
-function ClientActions({ hasPayment, owes }: { hasPayment: boolean; owes: boolean }) {
+function ClientActions({ owes }: { owes: boolean }) {
   return (
     <>
-      {hasPayment && (
-        <a href="#pay" data-primary={owes ? "true" : undefined}>
-          Πώς πληρώνω
-        </a>
-      )}
+      <a href="#pay" data-primary={owes ? "true" : undefined}>
+        Πώς πληρώνω
+      </a>
       <Link href={hrefOf("I2")}>Τιμολόγια</Link>
     </>
   );
 }
 
-function ClientLedger({ data, rows }: { data: LedgerView; rows: readonly I5Row[] }) {
+function ClientLedger({
+  data,
+  rows,
+  info,
+}: {
+  data: LedgerView;
+  rows: readonly I5Row[];
+  info: PaymentInfo | null;
+}) {
   const owes = data.balance > 0;
   return (
     <div className="ml-stack">
@@ -45,11 +56,9 @@ function ClientLedger({ data, rows }: { data: LedgerView; rows: readonly I5Row[]
         isOpen={owes}
         facts={factsOf(rows, data.overdue)}
         hasWarning={data.overdue > 0}
-        actions={<ClientActions hasPayment={data.payment !== null} owes={owes} />}
+        actions={<ClientActions owes={owes} />}
       />
-      {data.payment && (
-        <PaymentBox payment={data.payment} isClient isOpen={owes} />
-      )}
+      <ClientPayBox info={info} isOpen={owes} />
       <NoteBox />
     </div>
   );
@@ -61,11 +70,11 @@ export async function SpacesClientLedger() {
     return (
       <div data-spaces>
         <StateNotice kind="denied" title="Χωρίς δικαίωμα">
-          {LEDGER_NO_ACCESS_TEXT}
+          {CLIENT_FINANCE_NO_ACCESS_TEXT}
         </StateNotice>
       </div>
     );
-  const ledger = await getLedger();
+  const [ledger, info] = await Promise.all([getLedger(), getPaymentInfo()]);
   if (!ledger.ok)
     return (
       <div data-spaces>
@@ -79,7 +88,7 @@ export async function SpacesClientLedger() {
       <div className="ml-head i5-head">
         <p>Τι χρωστάς, πώς πληρώνεις και κάθε κίνηση του λογαριασμού σου.</p>
       </div>
-      <ClientLedger data={data} rows={rows} />
+      <ClientLedger data={data} rows={rows} info={info.ok ? info.data : null} />
       {rows.length === 0 ? (
         <StateNotice kind="empty" title="Καμία κίνηση">
           {LEDGER_EMPTY_TEXT}
