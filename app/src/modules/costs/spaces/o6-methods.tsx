@@ -47,7 +47,12 @@ function RenameForm({ save, method }: { save: Action; method: PaymentMethod }) {
   const [value, setValue] = useState(method.label);
   const isChanged = value.trim() !== "" && value !== method.label;
   return (
-    <form ref={formRef} className="ml-quick o6-form" onSubmit={onSubmit}>
+    <form
+        ref={formRef}
+        className="ml-quick o6-form"
+        data-align="start"
+        onSubmit={onSubmit}
+      >
       <input type="hidden" name="id" value={method.id} />
       <input
         className="input"
@@ -141,7 +146,12 @@ function AddMethod({ save }: { save: Action }) {
           Ένα όνομα, μόνο στα ελληνικά. Φαίνεται αμέσως στη «Νέα είσπραξη».
         </small>
       </summary>
-      <form ref={formRef} className="ml-quick o6-form" onSubmit={onSubmit}>
+      <form
+        ref={formRef}
+        className="ml-quick o6-form"
+        data-align="start"
+        onSubmit={onSubmit}
+      >
         <input type="hidden" name="id" value="" />
         <input
           className="input"

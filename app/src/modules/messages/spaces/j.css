@@ -32,7 +32,6 @@
 & .j-row { justify-content: flex-start; align-items: center; }
 & .j-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-width: 0; font-size: var(--text-sm); }
 & .j-inline .input { flex: 1 1 12rem; min-width: 0; }
-& :is(.ml-quick, .ml-actions) :is(a, button)[data-danger] { color: var(--color-text-muted); }
 & .j-pill {
   display: inline-flex; align-items: center; justify-self: start; gap: 0.3rem; cursor: pointer;
   padding: 0.45rem 0.85rem; border-radius: 999px; font: inherit; font-size: 0.82rem; font-weight: 700; white-space: nowrap; text-decoration: none;

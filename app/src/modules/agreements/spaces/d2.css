@@ -93,9 +93,6 @@
   & .d2-periods .ml-line {
     grid-template-columns: minmax(0, 1fr) auto;
   }
-  & .d2-periods .ml-line[data-current="true"] {
-    border-color: var(--brand-periwinkle);
-  }
   & .d2 .select {
     max-width: 100%;
   }
@@ -143,5 +140,3 @@
 [data-look='spaces'] .d2-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
 [data-look='spaces'] .d2-row .grow { flex: 1 1 12rem; }
 
-/* Απόρριψη, ανάκληση, διαγραφή μέσα σε ml-quick: χαμηλωμένο κείμενο (όχι κόκκινο), για να ξεχωρίζει από το κύριο */
-[data-look='spaces'] .ml-quick :is(a, button)[data-danger]:not([data-danger='false']) { color: var(--color-text-muted); }

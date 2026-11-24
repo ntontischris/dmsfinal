@@ -214,7 +214,7 @@ export function I4Form(props: I4FormProps) {
     });
   return (
     <section aria-labelledby="i4-new-title">
-      <h2 id="i4-new-title" className="i245-vh">
+      <h2 id="i4-new-title" className="sr-only">
         Νέα Είσπραξη
       </h2>
       <form

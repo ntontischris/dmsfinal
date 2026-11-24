@@ -5,7 +5,6 @@
 
 /* Ύφος ταυτότητας: φίλτρο ως χάπια */
 & .d1-seg.ml-quick { justify-content: flex-start; }
-& .d1-seg.ml-quick button[aria-pressed='true'] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
 & .d1-cards .card { display: grid; gap: var(--space-3); align-content: start; }
 & .d1-cards .card-title { margin-bottom: 0; }
 }

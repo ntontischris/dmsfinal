@@ -120,7 +120,7 @@ export function ToInvoiceBox(props: { amount: number; count: number }) {
         Ο πελάτης δεν το βλέπει. Δεν είναι οφειλή· μόνο το Τιμολόγιο δημιουργεί
         οφειλή.
       </p>
-      <div className="ml-quick i5-box-actions">
+      <div className="ml-quick i5-box-actions" data-align="start">
         <Link href={hrefOf("I1")}>Άνοιγμα Τιμολογητέων</Link>
       </div>
     </Box>

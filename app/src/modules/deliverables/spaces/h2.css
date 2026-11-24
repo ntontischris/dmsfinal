@@ -124,9 +124,6 @@
     align-items: center;
     flex-wrap: wrap;
   }
-  & .ml-quick [data-danger] {
-    border-color: color-mix(in oklab, var(--color-text) 30%, transparent);
-  }
   & .h2-form {
     border-color: color-mix(in oklab, var(--color-text) 10%, transparent);
     background: color-mix(in oklab, var(--panel-midnight) 40%, transparent);

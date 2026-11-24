@@ -67,7 +67,7 @@ export function CostMonthsGlance({ months }: { months: readonly CostMonth[] }) {
           ))}
         </ul>
       )}
-      <p className="ml-quick o6-form">
+      <p className="ml-quick o6-form" data-align="start">
         <Link data-primary href={hrefOf("I6")}>
           Έξοδα και Κόστος ώρας
         </Link>

@@ -8,6 +8,5 @@
 }
 & .b1-duplicate:hover { background: color-mix(in oklab, var(--brand-rec, var(--color-danger)) 26%, transparent); } }
 
-/* Διακόπτες (aria-pressed) μέσα σε ml-quick: η ενεργή θέση ως γεμάτο χάπι, στοίχιση αριστερά */
+/* Διακόπτες (aria-pressed) μέσα σε ml-quick: στοίχιση αριστερά (η ενεργή θέση έρχεται από το money-lines.css) */
 [data-look='spaces'] .choice-row.ml-quick { justify-content: flex-start; }
-[data-look='spaces'] .choice-row.ml-quick button[aria-pressed='true'] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }

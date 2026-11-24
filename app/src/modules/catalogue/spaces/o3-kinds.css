@@ -4,5 +4,3 @@
 & .o3k-order .button { min-width: 2rem; padding-inline: var(--space-2); }
 }
 
-/* Απόρριψη, ανάκληση, διαγραφή μέσα σε ml-quick: χαμηλωμένο κείμενο (όχι κόκκινο), για να ξεχωρίζει από το κύριο */
-[data-look='spaces'] .ml-quick :is(a, button)[data-danger]:not([data-danger='false']) { color: var(--color-text-muted); }

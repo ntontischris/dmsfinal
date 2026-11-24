@@ -1,7 +1,6 @@
 /* I2, I4, I5: Τιμολόγια, Εισπράξεις, Καρτέλα Πελάτη. Μόνο ουδέτερα tokens. */
 [data-look='spaces'] {
-& .i245-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-& .i245-actions { margin: 0 0 var(--space-4); justify-content: flex-start; }
+& .i245-actions { margin: 0 0 var(--space-4); }
 & .i245-cell { min-width: 0; overflow-wrap: anywhere; }
 & .i245-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
 & .i245-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }

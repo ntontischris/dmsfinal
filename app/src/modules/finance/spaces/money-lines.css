@@ -7,7 +7,19 @@
    .ml-fields   πλέγμα φόρμας 1–2 στηλών (μέσα σε .ml-box ή .ml-new) με .ml-field (ετικέτα + πεδίο + small υπόδειξη),
                 .ml-field[data-wide] σε όλο το πλάτος, και στο τέλος .ml-actions με ΕΝΑ [data-primary].
    .ml-kv       λίστα «ετικέτα: τιμή» στη θέση του .dl: <dl class="ml-kv"><dt>ΑΦΜ</dt><dd>…</dd></dl> (ή ζεύγη μέσα σε <div>).
-   Τα native select / file / date / time μέσα σε .input ή .ml-fields παίρνουν την ίδια όψη (spaces/styles/screens.css). */
+   Τα native select / file / date / time μέσα σε .input ή .ml-fields παίρνουν την ίδια όψη (spaces/styles/screens.css).
+   Καταστάσεις (μία φορά εδώ, όχι τοπικά αντίγραφα σε κάθε module):
+   [data-danger]                 σε a/button μέσα σε .ml-quick ή .ml-actions: καταστροφική ενέργεια (ακύρωση, διαγραφή,
+                                 απόρριψη). Σιγανό κόκκινο περίγραμμα και κείμενο, ποτέ γεμάτη κόκκινη επιφάνεια·
+                                 data-danger="false" και [data-primary] δεν το παίρνουν.
+   [aria-pressed="true"]         σε κουμπί μέσα σε .ml-quick (διακόπτης / επιλογή όψης), και [aria-current] σε a/button
+                                 μέσα σε .ml-quick (τρέχουσα επιλογή): γεμάτο periwinkle χάπι, όπως το [data-primary].
+   .ml-line[data-current]        η τρέχουσα γραμμή (π.χ. τρέχουσα Περίοδος, τρέχον βήμα)· data-current="false" αγνοείται.
+   .ml-tag[data-tone="warn"]     κίτρινη ετικέτα (περιμένει / θέλει προσοχή), όπως το .ml-meter[data-tone="warn"].
+   .ml-quick[data-align="start"] σειρά κουμπιών στοιχισμένη αριστερά (μέσα σε φόρμες και κουτιά).
+   .ml-notice                    η όψη των κοινών StateNotice / ErrorNotice (spaces/screens/shared.tsx)· ζει στο
+                                 spaces/styles/screens.css, ώστε να φορτώνει σε κάθε οθόνη του κελύφους.
+   Για κείμενο μόνο για αναγνώστες οθόνης: η utility .sr-only του Tailwind (φορτώνει από το app/globals.css). */
 .ml-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .8rem 1.4rem; margin: 0 0 1rem; }
 .ml-head p { margin: 0; max-width: 40rem; color: var(--color-text-muted); font-size: 1.02rem; }
 .ml-cta {
@@ -140,6 +152,21 @@
 /* Κύριο κουμπί σε .ml-quick ως <button> (π.χ. submit), όπως το <a data-primary> */
 .ml-quick button[data-primary] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
 .ml-quick :is(a, button):is(:disabled, [aria-disabled="true"]) { opacity: .45; cursor: not-allowed; }
+
+/* Καταστάσεις: πατημένο / τρέχον, καταστροφικό, τρέχουσα γραμμή, κίτρινη ετικέτα, στοίχιση αριστερά (βλ. την κεφαλίδα) */
+.ml-quick :is(a, button):is([aria-pressed="true"], [aria-current]:not([aria-current="false"])) {
+  color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent;
+}
+:is(.ml-quick, .ml-actions) :is(a, button)[data-danger]:not([data-danger="false"], [data-primary]) {
+  color: color-mix(in oklab, var(--color-danger) 60%, var(--color-text));
+  border-color: color-mix(in oklab, var(--color-danger) 35%, transparent);
+}
+:is(.ml-quick, .ml-actions) :is(a, button)[data-danger]:not([data-danger="false"], [data-primary]):hover {
+  border-color: color-mix(in oklab, var(--color-danger) 60%, transparent);
+}
+.ml-line[data-current]:not([data-current="false"]) { border-color: color-mix(in oklab, var(--brand-periwinkle) 55%, transparent); }
+.ml-tag[data-tone="warn"] { --c: var(--brand-yellow); }
+.ml-quick[data-align="start"] { justify-content: flex-start; }
 
 /* Μετρητής: λεπτή μπάρα με ετικέτα αριστερά και αριθμό δεξιά (όψη του .part-meter, τόνος από --c) */
 .ml-meter { --c: var(--brand-periwinkle); display: grid; grid-template-columns: auto minmax(3rem, 1fr) auto; align-items: center; gap: .6rem; min-width: 9rem; font-size: .78rem; }
