@@ -27,7 +27,7 @@ insert into public.team_user_roles (user_id, role_id)
 select '00000000-0000-4000-8000-0000000000a5'::uuid, r.id from public.roles r where r.name = 'Οικονομικά μόνο ανάγνωση (τεστ RF)';
 
 insert into public.clients (id, name, afm, contact_name, contact_email, manager_id) values
-  ('00000000-0000-4000-8000-0000000000c1', 'Πελάτης Α', '123456789', 'Μαρία Παπαδάκη', 'a@example.com', '00000000-0000-4000-8000-0000000000a3');
+  ('00000000-0000-4000-8000-0000000000c1', 'Πελάτης Α', '123456789', 'Μαρία Παπαδάκη', 'a@example.com', '00000000-0000-4000-8000-0000000000a1');
 insert into public.client_users (client_id, user_id, name, role_id, is_current) values
   ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000b1', 'Κώστας',
    (select r.id from public.roles r where r.name = 'Πλήρης' and r.kind = 'client'), true);
