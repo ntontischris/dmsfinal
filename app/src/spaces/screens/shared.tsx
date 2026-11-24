@@ -17,12 +17,12 @@ interface StateNoticeProps {
 export function StateNotice({ kind, title, children }: StateNoticeProps) {
   return (
     <section
-      className="card notice"
+      className="ml-notice"
       data-kind={kind}
       role={kind === "error" ? "alert" : "status"}
     >
       <h2>{title}</h2>
-      {children && <div className="muted">{children}</div>}
+      {children && <div>{children}</div>}
     </section>
   );
 }
