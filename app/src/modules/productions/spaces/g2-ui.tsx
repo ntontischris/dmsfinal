@@ -80,17 +80,16 @@ export function ReasonForm({
         />
       </label>
       {!isValid && <span className="muted">Ο λόγος είναι υποχρεωτικός.</span>}
-      <div className="btn-row">
+      <div className="ml-quick g2-actions">
         <button
           type="button"
-          className="button"
           data-danger={isDanger}
           disabled={!isValid || isPending}
           onClick={() => onConfirm(reason.trim())}
         >
           {confirmLabel}
         </button>
-        <button type="button" className="button" onClick={onClose}>
+        <button type="button" onClick={onClose}>
           Άκυρο
         </button>
       </div>

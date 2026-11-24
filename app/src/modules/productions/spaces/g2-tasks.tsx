@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar } from "@/spaces/kit/parts";
 import { fmtDate } from "@/spaces/screens/shared";
 
 import { addProductionTask } from "../actions-tasks";
 import { sortTasks } from "../task-order";
 import type { OwnerCandidate, ProductionTask } from "../types";
 import { taskSummary } from "./g2-model";
+import { G2Box, G2Person } from "./g2-box";
 import { RunResult, useRun } from "./g2-ui";
 import {
   TaskPriorityBadge,
@@ -52,7 +51,7 @@ function AddTask({
     );
   return (
     <>
-      <div className="g2-add">
+      <div className="g2-add ml-quick">
         <input
           className="input"
           placeholder="Τίτλος εργασίας (υποχρεωτικός)"
@@ -62,7 +61,7 @@ function AddTask({
           onChange={(event) => setTitle(event.target.value)}
         />
         <select
-          className="select"
+          className="input"
           aria-label="Ανατεθειμένος"
           value={assignee}
           onChange={(event) => setAssignee(event.target.value)}
@@ -83,7 +82,6 @@ function AddTask({
         />
         <button
           type="button"
-          className="button"
           disabled={title.trim() === "" || add.isPending}
           onClick={submit}
         >
@@ -111,13 +109,13 @@ function TaskLine({
     <li className="g2-task" data-done={task.done} data-status={task.status}>
       <span className="g2-check" data-done={task.done} aria-hidden="true" />
       <span className="g2-title">{task.title}</span>
-      <div className="g2-signals">
-        {task.assigneeName && <Avatar name={task.assigneeName} size={24} />}
+      <div className="g2-signals ml-quick">
+        {task.assigneeName && <G2Person name={task.assigneeName} />}
         {task.dueDate && (
           <span className="muted">προθεσμία {fmtDate(task.dueDate)}</span>
         )}
         {task.isLate && (
-          <span className="badge" data-tone="attention">
+          <span className="ml-tag" data-tone="warn">
             εκπρόθεσμη
           </span>
         )}
@@ -137,7 +135,7 @@ function TaskLine({
 export function G2Tasks(props: G2TasksProps) {
   const { tasks, canEdit, isOpen, meId } = props;
   return (
-    <Panel label="Εργασίες" aside={taskSummary(tasks)}>
+    <G2Box title="Εργασίες" hint={taskSummary(tasks)}>
       <p className="muted">
         Απλή εσωτερική υποχρέωση της Παραγωγής: τίτλος, ένας Ανατεθειμένος,
         προαιρετική προθεσμία και προτεραιότητα. Ο υπεύθυνος τη βλέπει στο «Οι
@@ -161,6 +159,6 @@ export function G2Tasks(props: G2TasksProps) {
         ))}
       </ul>
       {canEdit && <AddTask {...props} />}
-    </Panel>
+    </G2Box>
   );
 }

@@ -1,46 +1,9 @@
-import Link from "next/link";
-
-import { Panel } from "@/spaces/kit/panel";
-
 import { formatDateTime, historyLines } from "../helpers";
 import type { ProductionHistoryEntry } from "../types";
+import { G2Box } from "./g2-box";
 
-// Μηνύματα και Ίχνος της Σελίδας Παραγωγής (prototype `screens/g2-notes.tsx`). Τα «Τιμολογητέα της Παραγωγής» του prototype
-// λείπουν: η Παραγωγή της βάσης δεν φέρνει ποσά.
-
-// Η Συνομιλία είναι μία ανά Πελάτη· ο σύνδεσμος ανοίγει με την ετικέτα της Παραγωγής. null = χωρίς «Συνομιλεί με πελάτη».
-export function G2Messages({
-  isInternal,
-  threadHref,
-}: {
-  isInternal: boolean;
-  threadHref: string | null;
-}) {
-  return (
-    <Panel label="Μηνύματα της ετικέτας">
-      {isInternal ? (
-        <p className="muted">
-          Εσωτερική Παραγωγή: δεν έχει Συνομιλία πελάτη· μόνο Εσωτερικά
-          Μηνύματα.
-        </p>
-      ) : (
-        <>
-          <p className="muted">
-            Η Συνομιλία είναι μία ανά Πελάτη. Τα μηνύματα με την ετικέτα αυτής
-            της Παραγωγής ανοίγουν φιλτραρισμένα στη Συνομιλία.
-          </p>
-          {threadHref && (
-            <Link className="button" href={threadHref}>
-              Άνοιγμα Συνομιλίας
-            </Link>
-          )}
-        </>
-      )}
-    </Panel>
-  );
-}
-
-// Το Ίχνος ενεργειών: τα γεγονότα της Παραγωγής, νεότερο πρώτο.
+// Το Ίχνος ενεργειών της Σελίδας Παραγωγής: τα γεγονότα της Παραγωγής, νεότερο πρώτο. Η Συνομιλία ανοίγει από το
+// «Άνοιγμα Συνομιλίας» της κεφαλίδας (g2-screen).
 export function G2Trail({
   history,
 }: {
@@ -48,20 +11,22 @@ export function G2Trail({
 }) {
   const lines = historyLines(history);
   return (
-    <Panel label="Ίχνος ενεργειών">
+    <G2Box title="Ίχνος ενεργειών" hint={`${lines.length} ενέργειες`}>
       {lines.length === 0 && (
-        <p className="muted">Δεν υπάρχουν ακόμα ενέργειες.</p>
+        <p className="ml-empty">Δεν υπάρχουν ακόμα ενέργειες.</p>
       )}
-      <ul className="list">
+      <ul className="ml-list">
         {lines.map((line, index) => (
-          <li key={`${line.at}-${index}`}>
-            <span className="muted">
-              {formatDateTime(line.at)} · {line.actor}
+          <li key={`${line.at}-${index}`} className="ml-line">
+            <span className="ml-main">
+              <strong>{line.text}</strong>
+              <small>
+                {formatDateTime(line.at)} · {line.actor}
+              </small>
             </span>
-            <div>{line.text}</div>
           </li>
         ))}
       </ul>
-    </Panel>
+    </G2Box>
   );
 }

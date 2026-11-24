@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { openBox } from "./agreements-parts";
 import { visit } from "./filming-parts";
 import {
   confirmWithReason,
@@ -12,7 +13,6 @@ import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
 // (Εσωτερική, Υπεύθυνος ο Ιδιοκτήτης). Τα τεστ γράφουν στην ίδια βάση, σειριακά: οι νέες εγγραφές φέρουν το όνομα του project.
 // Σειριακά και χωρίς retries. Η Ρένα είναι ήδη Μέλος του seed, γι' αυτό το τεστ προσθέτει άλλον Χρήστη.
 test.describe.configure({ retries: 0 });
-
 
 const DELIVERY_NOTE = "Drive, φάκελος Οκτωβρίου";
 const REOPEN_REASON = "Ζητήθηκε αλλαγή στο μοντάζ";
@@ -40,8 +40,8 @@ test("ο Ιδιοκτήτης βλέπει την Παραγωγή, προσθέ
 
   await openProduction(page, TITLE);
   const state = card(page, "Κατάσταση");
-  // Η λέξη της κατάστασης είναι το σήμα στην κεφαλίδα του πάνελ (το κείμενο από κάτω αναφέρει κι άλλες καταστάσεις).
-  const stateWord = state.locator(".kit-panel-head");
+  // Η λέξη της κατάστασης είναι το σήμα στην κεφαλίδα του κουτιού (το κείμενο από κάτω αναφέρει κι άλλες καταστάσεις).
+  const stateWord = state.locator("summary");
   await expect(stateWord).toContainText("ανοιχτή");
   await expect(state).toContainText(OWNER_NAME);
   // Εσωτερική χωρίς Συμφωνία και χωρίς Περίοδο: η κεφαλίδα το λέει και δεν υπάρχουν Παροχές Περιόδου.
@@ -50,7 +50,7 @@ test("ο Ιδιοκτήτης βλέπει την Παραγωγή, προσθέ
   await expect(header.getByText("Συμφωνία", { exact: true })).toHaveCount(0);
   await expect(card(page, "Παροχές της Περιόδου")).toHaveCount(0);
 
-  const members = card(page, "Μέλη");
+  const members = await openBox(page, "Μέλη");
   await expect(async () => {
     await members.getByLabel("Νέο Μέλος").selectOption({ label: MEMBER_NAME });
     await expect(button(members, "Προσθήκη Μέλους")).toBeEnabled({
@@ -108,7 +108,7 @@ test("ο Ιδιοκτήτης φτιάχνει Εσωτερική Παραγωγ
     reason: CANCEL_REASON,
   });
   const state = card(page, "Κατάσταση");
-  await expect(state.locator(".kit-panel-head")).toContainText("ακυρωμένη");
+  await expect(state.locator("summary")).toContainText("ακυρωμένη");
   await expect(state).toContainText(`Λόγος: ${CANCEL_REASON}`);
 
   // Οι παλιές διευθύνσεις (?tab=all&internal=1) ανοίγουν την προβολή «Εσωτερικές», με όλες τις καταστάσεις.
