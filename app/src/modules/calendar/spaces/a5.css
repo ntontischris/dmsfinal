@@ -90,9 +90,7 @@
 & .a5-week .a5-day[data-today='true'] .a5-day-head, & .a5-week .a5-day[data-today='true'] .a5-day-head a { color: var(--color-now); }
 & .a5-week .a5-day-head a { text-decoration: none; color: inherit; }
 & .a5-list { display: grid; gap: 0; }
-& .a5-list .part-title { font-weight: 600; }
 & .a5-plain { font-weight: 400; }
-& .a5-side .part-rows { margin-inline: -1.25rem; }
 /* Επόμενα βήματα (Πωλήσεις): όπως οι προθεσμίες, με τελεία έμφασης· το Είδος κλεισμένου χρόνου ως ετικέτα */
 & .a5-item[data-kind='nextStep'] { border: 0; background: transparent; padding-inline: var(--space-2); }
 & .a5-item[data-kind='nextStep'] .a5-title { font-weight: 400; }
@@ -116,18 +114,41 @@
 & .a5-dot[data-kind='blocked'] { background: var(--color-text-muted); }
 & .a5-dot[data-kind='blocked'][data-tone] { background: var(--tone); }
 
-/* Λίστα: η γραμμή παίρνει το ύφος από το εικονίδιο του τίτλου (data-row-*), γιατί η γραμμή είναι κοινό κομμάτι του kit. */
-& .a5-list .part-row:has([data-row-tone='teal']) { --tone: var(--kind-teal); }
-& .a5-list .part-row:has([data-row-tone='green']) { --tone: var(--kind-green); }
-& .a5-list .part-row:has([data-row-tone='amber']) { --tone: var(--kind-amber); }
-& .a5-list .part-row:has([data-row-tone='violet']) { --tone: var(--kind-violet); }
-& .a5-list .part-row:has([data-row-tone='grey']) { --tone: var(--kind-grey); }
-& .a5-list .part-row:has([data-row-tone='blue']) { --tone: var(--kind-blue); }
-& .a5-list .part-row:has([data-row-tone='pink']) { --tone: var(--kind-pink); }
-& .a5-list .part-row:has([data-row-tone='red']) { --tone: var(--kind-red); }
-& .a5-list .part-row:has([data-row-kind='filming']) { --tone: var(--color-accent); }
-& .a5-list .part-row:has([data-row-kind='nextStep']) { --tone: var(--kind-pink); }
-& .a5-list .part-row:has([data-row-kind='deadline']) { --tone: var(--kind-red); }
-& .a5-list .part-row:has(:is([data-row-tone], [data-row-kind='filming'])) { background: color-mix(in srgb, var(--tone) 18%, transparent); }
-& .a5-list .part-row:has(:is([data-row-kind='nextStep'], [data-row-kind='deadline'])) { outline: 1.5px dashed var(--tone); outline-offset: -4px; }
+}
+
+/* Τελική όψη (ml-*): κουμπιά, πλοήγηση, λίστα με γραμμές, πλαϊνά κλειστά κουτιά. Μόνο tokens. */
+[data-look='spaces'] {
+& .a5-acts { justify-content: flex-start; align-items: center; margin-bottom: var(--space-3); }
+& .a5 > .page-filters { margin-bottom: var(--space-3); }
+& .a5-steps { justify-content: flex-start; }
+& .a5-nav .ml-quick a[data-primary] { color: var(--color-text); background: color-mix(in oklab, var(--brand-periwinkle) 22%, transparent); border-color: var(--brand-periwinkle); }
+& .a5-filters { padding: var(--space-2) var(--space-3); border-radius: 14px; border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
+& .a5-filters small, & .a5-filter small, & .a5-today-note { color: var(--color-text-muted); }
+& .a5-list-day { margin: 0 0 var(--space-3); }
+& .a5-list-day > h2 { margin: 0 0 var(--space-2); }
+& .a5-list-day > h2 small { color: var(--color-text-muted); font-weight: 500; }
+& .a5-list .ml-list { margin: 0; }
+& .a5-row { grid-template-columns: auto minmax(0, 1fr) auto; }
+& .a5-lead { min-width: 3.4rem; font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-text-muted); white-space: nowrap; }
+& .a5-lead:empty { min-width: 0; }
+& .a5-row .ml-main strong a { color: inherit; text-decoration: none; }
+& .a5-box-body { display: grid; gap: var(--space-3); min-width: 0; }
+& .a5-box-body > * { margin: 0; }
+& .a5-box-body .ml-list { margin: 0; }
+& .a5-row-acts { justify-content: flex-start; }
+& .a5-url.ml-quick { justify-content: flex-start; }
+& .a5-side { grid-template-columns: 1fr; gap: var(--space-3); }
+& .a5-list .a5-row:has([data-row-tone='teal']) { --tone: var(--kind-teal); }
+& .a5-list .a5-row:has([data-row-tone='green']) { --tone: var(--kind-green); }
+& .a5-list .a5-row:has([data-row-tone='amber']) { --tone: var(--kind-amber); }
+& .a5-list .a5-row:has([data-row-tone='violet']) { --tone: var(--kind-violet); }
+& .a5-list .a5-row:has([data-row-tone='grey']) { --tone: var(--kind-grey); }
+& .a5-list .a5-row:has([data-row-tone='blue']) { --tone: var(--kind-blue); }
+& .a5-list .a5-row:has([data-row-tone='pink']) { --tone: var(--kind-pink); }
+& .a5-list .a5-row:has([data-row-tone='red']) { --tone: var(--kind-red); }
+& .a5-list .a5-row:has([data-row-kind='filming']) { --tone: var(--color-accent); }
+& .a5-list .a5-row:has([data-row-kind='nextStep']) { --tone: var(--kind-pink); }
+& .a5-list .a5-row:has([data-row-kind='deadline']) { --tone: var(--kind-red); }
+& .a5-list .a5-row:has(:is([data-row-tone], [data-row-kind='filming'])) { --c: var(--tone); background: color-mix(in srgb, var(--tone) 14%, transparent); }
+& .a5-list .a5-row:has(:is([data-row-kind='nextStep'], [data-row-kind='deadline'])) { outline: 1.5px dashed var(--tone); outline-offset: -4px; }
 }
