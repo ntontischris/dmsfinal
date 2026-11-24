@@ -18,7 +18,8 @@ import { getClient, getClientCard } from "../queries-clients";
 import type { ClientDetail, ClientRow, SalesCaps } from "../types";
 import { AccessRequest } from "./access-request";
 import { allowedTabs, type B2TabRights } from "./b2-adapter";
-import { AttentionPanel, ClientNotices, clientTabHref } from "./b2-briefing";
+import { AttentionPanel, ClientNotices } from "./b2-briefing";
+import { ClientBoxes } from "./b2-boxes";
 import {
   deriveClientPage,
   type ClientPageCtx,
@@ -26,13 +27,7 @@ import {
 } from "./b2-context";
 import { ClientHero } from "./b2-header";
 import { loadClient } from "./b2-load";
-import {
-  CLIENT_TAB_LABELS,
-  clientTabsFor,
-  resolveClientTab,
-  type ClientTab,
-} from "./b2-page-model";
-import { ClientTabBody } from "./b2-tab-bodies";
+import { clientBoxesFor, openBoxOf } from "./b2-page-model";
 
 import "../../finance/spaces/money-lines.css";
 import "./b2.css";
@@ -96,8 +91,7 @@ function Merged({ client }: { client: ClientDetail }) {
         {client.mergedIntoId && (
           <p>
             <Link
-              className="button"
-              data-primary="true"
+              className="ml-cta"
               href={hrefOf("B2", { id: client.mergedIntoId })}
             >
               Άνοιγμα του ενιαίου Πελάτη
@@ -107,32 +101,6 @@ function Merged({ client }: { client: ClientDetail }) {
         <BackToList />
       </StateNotice>
     </Frame>
-  );
-}
-
-// Οι πέντε καρτέλες στη σειρά· οι «Χρήστες Πελάτη» ανοίγουν από το κουτί «Στοιχεία».
-function ClientTabsNav({
-  ctx,
-  active,
-}: {
-  ctx: ClientPageCtx;
-  active: ClientTab;
-}) {
-  return (
-    <nav className="tabs b2-tabs" aria-label="Ενότητες Πελάτη">
-      {ctx.tabs
-        .filter((tab): tab is Exclude<ClientTab, "users"> => tab !== "users")
-        .map((tab) => (
-          <Link
-            key={tab}
-            className="tab"
-            href={clientTabHref(ctx.client.id, tab)}
-            aria-current={tab === active ? "page" : undefined}
-          >
-            {CLIENT_TAB_LABELS[tab]}
-          </Link>
-        ))}
-    </nav>
   );
 }
 
@@ -168,30 +136,28 @@ async function ClientView(props: ClientViewProps) {
     isReadOnly: !caps.canManage,
     data,
     allowed,
-    tabs: clientTabsFor(allowed, isOwner(viewer)),
+    boxes: clientBoxesFor(allowed, isOwner(viewer)),
     today: athensToday(),
     grantedVia: isGranted
       ? data.opportunities.find((o) => o.managerId === caps.userId)
       : undefined,
   };
   const ctx: ClientPageCtx = { ...input, d: deriveClientPage(input) };
-  const active = resolveClientTab(props.tab, ctx.tabs);
+  const open = openBoxOf(props.tab, ctx.boxes);
   return (
     <Frame>
       <div className="b2">
         <ClientHero ctx={ctx} />
         <ClientNotices ctx={ctx} />
         <AttentionPanel ctx={ctx} />
-        <ClientTabsNav ctx={ctx} active={active} />
-        <ClientTabBody ctx={ctx} tab={active} focus={props.tab} />
+        <ClientBoxes ctx={ctx} open={open} />
       </div>
     </Frame>
   );
 }
 
-// B2 Σελίδα Πελάτη στο ύφος των «Χρημάτων», «Πέντε ενωμένες καρτέλες»: κεφαλίδα με το Επόμενο βήμα, «Χρειάζεται
-// προσοχή» πάντα ορατό, πέντε καρτέλες ανά δουλειά με κλειστά κουτιά (τα «Στοιχεία» στην Επισκόπηση). Η πρόσβαση αποφασίζεται
-// στη βάση, όπως στη σημερινή σελίδα.
+// B2 Σελίδα Πελάτη: κεφαλίδα με το Επόμενο βήμα, «Χρειάζεται προσοχή» πάντα ορατό και πέντε κλειστά κουτιά (Σύνοψη,
+// Άνθρωποι, Δουλειές, Επικοινωνία, Καρτέλα). Η πρόσβαση αποφασίζεται στη βάση, όπως στη σημερινή σελίδα.
 export async function SpacesClient({
   clientId,
   tab,

@@ -142,30 +142,28 @@ test("03 · νέος Πελάτης με Επωνυμία, Πόλη και ΑΦ�
   await expect(side).toContainText(legalName);
   await expect(side).toContainText("Θεσσαλονίκη");
   await expect(side).toContainText(afm);
-  await expect(
-    page.getByRole("heading", { name: "Σχέση με τον Πελάτη", exact: true }),
-  ).toBeVisible();
-  // Η κορυφή-ενημέρωση: μία πρόταση, το Επόμενο βήμα της Ευκαιρίας και πέντε καρτέλες ανά δουλειά.
+  // Η κορυφή-ενημέρωση: μία πρόταση, το Επόμενο βήμα της Ευκαιρίας και πέντε κλειστά κουτιά.
   await expect(
     page.getByText(/^Σε στάδιο «Πρόταση», με 1 ανοιχτή Ευκαιρία/),
   ).toBeVisible();
   await expect(
     page.getByText("Κλήση, 08/01/2099", { exact: true }),
   ).toBeVisible();
-  const tabs = page.getByRole("navigation", { name: "Ενότητες Πελάτη" });
-  for (const label of ["Επισκόπηση", "Πωλήσεις", "Επικοινωνία"])
+  for (const label of ["Σύνοψη", "Δουλειές", "Επικοινωνία"])
     await expect(
-      tabs.getByRole("link", { name: label, exact: true }),
+      page.locator("details:not([open]) > summary", {
+        has: page.getByRole("heading", { name: label, exact: true }),
+      }),
     ).toBeVisible();
-  await expect(
-    tabs.getByRole("link", { name: "Επισκόπηση", exact: true }),
-  ).toHaveAttribute("aria-current", "page");
 
   await page
     .locator("summary", {
-      has: page.getByRole("heading", { name: "Στοιχεία", exact: true }),
+      has: page.getByRole("heading", { name: "Σύνοψη", exact: true }),
     })
     .click();
+  await expect(
+    page.getByRole("heading", { name: "Σχέση με τον Πελάτη", exact: true }),
+  ).toBeVisible();
   const edit = side.locator("form", { has: page.locator('input[name="afm"]') });
   await expect(async () => {
     if (!(await edit.isVisible()))
@@ -256,13 +254,13 @@ test("03 · σημείωση κατευθείαν στον Πελάτη, με π
     name,
     email: `walk-${Date.now()}@simeiosi.example.gr`,
   });
-  // Η παλιά διεύθυνση της καρτέλας Δραστηριότητες ανοίγει την «Επικοινωνία».
+  // Η παλιά διεύθυνση της καρτέλας Δραστηριότητες ανοίγει το κουτί «Επικοινωνία».
   await page.goto(`/app/clients/${clientId}?tab=activities`);
   await expect(
-    page
-      .getByRole("navigation", { name: "Ενότητες Πελάτη" })
-      .getByRole("link", { name: "Επικοινωνία", exact: true }),
-  ).toHaveAttribute("aria-current", "page");
+    page.locator("details[open] > summary", {
+      has: page.getByRole("heading", { name: "Επικοινωνία", exact: true }),
+    }),
+  ).toBeVisible();
   const form = page.locator("form", {
     has: page.getByRole("button", { name: "Καταγραφή", exact: true }),
   });
@@ -318,13 +316,13 @@ test("03 · νέα Ευκαιρία σε υπάρχοντα Πελάτη δεν 
   await expect(page).toHaveURL(/\/app\/pipeline\/[0-9a-f-]+$/);
 
   // Το ίδιο και η «Νέα Ευκαιρία» μέσα στη Σελίδα Πελάτη: ο Πελάτης υπάρχει, άρα καμία Πηγή.
-  // Η παλιά διεύθυνση της καρτέλας Ευκαιρίες ανοίγει τις «Πωλήσεις»· η «Νέα Ευκαιρία» είναι μία, στην κεφαλίδα.
+  // Η παλιά διεύθυνση της καρτέλας Ευκαιρίες ανοίγει το κουτί «Δουλειές»· η «Νέα Ευκαιρία» είναι μία, στην κεφαλίδα.
   await page.goto(`/app/clients/${clientId}?tab=opportunities`);
   await expect(
-    page
-      .getByRole("navigation", { name: "Ενότητες Πελάτη" })
-      .getByRole("link", { name: "Πωλήσεις", exact: true }),
-  ).toHaveAttribute("aria-current", "page");
+    page.locator("details[open] > summary", {
+      has: page.getByRole("heading", { name: "Δουλειές", exact: true }),
+    }),
+  ).toBeVisible();
   const inside = page.locator("form", {
     has: page.locator('input[name="nextStep"]'),
   });
@@ -457,10 +455,10 @@ test("03 · φίλτρα: κάθε Κατάσταση στη λίστα Πελα
   // «Τι στάλθηκε»: Κατάσταση και Κανάλι, χωρίς «Πελάτης» (είναι ένας).
   await page.goto(`/app/clients/${clientId}?tab=dispatches`);
   await expect(
-    page
-      .getByRole("navigation", { name: "Ενότητες Πελάτη" })
-      .getByRole("link", { name: "Επικοινωνία", exact: true }),
-  ).toHaveAttribute("aria-current", "page");
+    page.locator("details[open] > summary", {
+      has: page.getByRole("heading", { name: "Επικοινωνία", exact: true }),
+    }),
+  ).toBeVisible();
   await expect(
     filtersRow(page).locator("summary", { hasText: "Κανάλι" }),
   ).toBeVisible();

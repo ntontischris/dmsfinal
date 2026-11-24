@@ -114,16 +114,11 @@ test("ο Ιδιοκτήτης βλέπει την αποστολή στο K3, φ
     `Καλημέρα από την ομάδα ${P}`,
   );
 
-  // «Τι στάλθηκε στον Πελάτη», στην καρτέλα «Επικοινωνία» του Πελάτη.
+  // «Τι στάλθηκε στον Πελάτη», στο κουτί «Επικοινωνία» του Πελάτη.
   await page.goto(`/app/clients/${clientId}`);
   await page
-    .getByRole("navigation", { name: "Ενότητες Πελάτη" })
-    .getByRole("link", { name: "Επικοινωνία" })
-    .click();
-  await expect(page).toHaveURL(/tab=comms/);
-  await page
     .locator("summary", {
-      has: page.getByRole("heading", { name: "Τι στάλθηκε", exact: true }),
+      has: page.getByRole("heading", { name: "Επικοινωνία", exact: true }),
     })
     .click();
   // Η ενότητα της καρτέλας περιέχει το πάνελ με τον ίδιο τίτλο: παίρνουμε το εσωτερικό.

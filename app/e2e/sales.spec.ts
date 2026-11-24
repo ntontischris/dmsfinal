@@ -210,7 +210,7 @@ test("νέα Ευκαιρία, δουλειά, κλείσιμο ως χαμέν�
   const side = inspector(page);
   await page
     .locator("summary", {
-      has: page.getByRole("heading", { name: "Στοιχεία", exact: true }),
+      has: page.getByRole("heading", { name: "Σύνοψη", exact: true }),
     })
     .click();
   const edit = side.locator("form", { has: page.locator('input[name="afm"]') });
@@ -265,7 +265,7 @@ test("Αίτημα πρόσβασης: ο πωλητής ζητά, η Διαχε
 
   await page.goto(clientUrl);
   await expect(inspector(page)).toContainText("Νίκος Πωλήσεις");
-  // Η παλιά διεύθυνση της καρτέλας Ευκαιρίες ανοίγει τις «Πωλήσεις»· εκεί είναι η Ευκαιρία της έγκρισης.
+  // Η παλιά διεύθυνση της καρτέλας Ευκαιρίες ανοίγει το κουτί «Δουλειές»· εκεί είναι η Ευκαιρία της έγκρισης.
   await page.goto(`${clientUrl}?tab=opportunities`);
   await expect(
     page.getByRole("link", { name: topic, exact: true }).first(),
