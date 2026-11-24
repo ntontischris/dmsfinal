@@ -8,6 +8,12 @@ import {
   type InvoicePayments,
   type VoidedItem,
 } from "./invoice-detail-schema";
+import {
+  parseReminderPreview,
+  parseReminders,
+  type Reminder,
+  type ReminderPreview,
+} from "./invoice-reminder-schema";
 import { signedInvoicePdfUrl } from "./invoice-storage";
 import { read, type ReadResult } from "./read";
 import {
@@ -20,8 +26,9 @@ import {
 
 // Ανάγνωση των Τιμολογίων. Όλα περνούν από RPC: ο πίνακας είναι κλειστός στην εφαρμογή.
 
+// Η βάση φιλτράρει all/unpaid/overdue/credit· τα «εξοφλημένα» βγαίνουν στη σελίδα από το «all».
 export async function getInvoices(
-  filter: InvoiceFilter,
+  filter: Exclude<InvoiceFilter, "paid">,
 ): Promise<ReadResult<InvoicesView>> {
   const supabase = await createSupabase();
   if (!supabase) return { ok: false };
@@ -69,6 +76,32 @@ export async function getInvoicePayments(
     "getInvoicePayments",
     supabase.rpc("invoice_payments", { p_id: invoiceId, p_today: today }),
     parseInvoicePayments,
+  );
+}
+
+// Τ4: το email υπενθύμισης όπως θα φύγει (παραλήπτες, θέμα, κείμενο) και πότε έφυγε η τελευταία.
+export async function getReminderPreview(
+  invoiceId: string,
+): Promise<ReadResult<ReminderPreview>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "getReminderPreview",
+    supabase.rpc("invoice_reminder_preview", { p_id: invoiceId }),
+    parseReminderPreview,
+  );
+}
+
+// Τ4: οι υπενθυμίσεις του Τιμολογίου (αυτόματες και με το χέρι), νεότερη πρώτα.
+export async function getInvoiceReminders(
+  invoiceId: string,
+): Promise<ReadResult<Reminder[]>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read(
+    "getInvoiceReminders",
+    supabase.rpc("invoice_reminders", { p_id: invoiceId }),
+    parseReminders,
   );
 }
 

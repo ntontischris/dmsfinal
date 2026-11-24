@@ -3,7 +3,7 @@ import Link from "next/link";
 import { hrefOf } from "@/spaces/data/screens";
 import { fmtDate, fmtMoney } from "@/spaces/screens/shared";
 
-import { correctHref } from "../invoice-detail-helpers";
+import { correctHref, reminderHref } from "../invoice-detail-helpers";
 import { pdfHref } from "../invoices-helpers";
 import { KIND_LABELS, STATUS_LABELS } from "../invoices-labels";
 import type { InvoiceItem } from "../invoices-view-schema";
@@ -20,6 +20,8 @@ interface InvoiceTableProps {
   // Η ομάδα ανοίγει τη σελίδα του Τιμολογίου (I8) και καταχωρεί Είσπραξη από τη γραμμή (d3, d4).
   canOpen?: boolean;
   canCollect?: boolean;
+  // Τ4: «Υπενθύμιση» στη γραμμή ληξιπρόθεσμου, για όποιον καταχωρεί Τιμολόγια.
+  canRemind?: boolean;
 }
 
 const initialsOf = (name: string): string =>
@@ -95,10 +97,12 @@ function Actions({
   row,
   canEdit,
   canCollect,
+  canRemind,
 }: {
   row: InvoiceItem;
   canEdit: boolean;
   canCollect: boolean;
+  canRemind: boolean;
 }) {
   return (
     <td className="ml-quick">
@@ -109,6 +113,11 @@ function Actions({
           title="Καταχώρηση Είσπραξης για αυτό το Τιμολόγιο"
         >
           Ήρθε πληρωμή
+        </Link>
+      )}
+      {canRemind && row.status === "overdue" && (
+        <Link href={reminderHref(row.id)} title="Στείλε υπενθύμιση στον Πελάτη">
+          Υπενθύμιση
         </Link>
       )}
       <a href={pdfHref(row.id)} target="_blank" rel="noreferrer">
@@ -130,6 +139,7 @@ function InvoiceRow({
   showClient = true,
   canOpen = false,
   canCollect = false,
+  canRemind = false,
 }: InvoiceTableProps & { row: InvoiceItem }) {
   return (
     <tr
@@ -146,7 +156,12 @@ function InvoiceRow({
         canOpen={canOpen}
       />
       <AmountCell row={row} />
-      <Actions row={row} canEdit={canEdit} canCollect={canCollect} />
+      <Actions
+        row={row}
+        canEdit={canEdit}
+        canCollect={canCollect}
+        canRemind={canRemind}
+      />
     </tr>
   );
 }
@@ -160,6 +175,7 @@ export function InvoiceTable({
   showClient = true,
   canOpen = false,
   canCollect = false,
+  canRemind = false,
 }: InvoiceTableProps) {
   return (
     <table className="ml-table ml-list">
@@ -182,6 +198,7 @@ export function InvoiceTable({
             showClient={showClient}
             canOpen={canOpen}
             canCollect={canCollect}
+            canRemind={canRemind}
           />
         ))}
       </tbody>
