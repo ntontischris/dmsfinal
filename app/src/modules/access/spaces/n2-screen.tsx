@@ -35,7 +35,7 @@ export async function SpacesClientUsers({
     listClientRoleChoices(clientId),
   ]);
   return (
-    <div data-spaces>
+    <div data-spaces className="n-stack">
       {users.ok ? (
         <MembersSection
           clientId={clientId}

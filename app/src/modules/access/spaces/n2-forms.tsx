@@ -11,15 +11,15 @@ import { INITIAL_FORM_STATE, type FormState } from "../schemas";
 export function N2Message({ state }: { state: FormState<unknown> }) {
   if (state.error)
     return (
-      <p className="note n2-warn" role="alert">
+      <small className="n2-msg n2-warn" role="alert">
         {state.error}
-      </p>
+      </small>
     );
   if (state.notice)
     return (
-      <p className="note" role="status">
+      <small className="n2-msg" role="status">
         {state.notice}
-      </p>
+      </small>
     );
   return null;
 }
@@ -36,27 +36,20 @@ export function N2InvitationButtons(props: { id: string; canCancel: boolean }) {
   );
   return (
     <>
-      <div className="btn-row n2-actions">
-        <form action={resendAction}>
+      <form action={resendAction}>
+        <input type="hidden" name="id" value={props.id} />
+        <button type="submit" disabled={isResending}>
+          Επαναποστολή
+        </button>
+      </form>
+      {props.canCancel && (
+        <form action={cancelAction}>
           <input type="hidden" name="id" value={props.id} />
-          <button className="button" type="submit" disabled={isResending}>
-            Επαναποστολή
+          <button data-danger="true" type="submit" disabled={isCancelling}>
+            Ακύρωση
           </button>
         </form>
-        {props.canCancel && (
-          <form action={cancelAction}>
-            <input type="hidden" name="id" value={props.id} />
-            <button
-              className="button"
-              data-danger="true"
-              type="submit"
-              disabled={isCancelling}
-            >
-              Ακύρωση
-            </button>
-          </form>
-        )}
-      </div>
+      )}
       <N2Message state={resend.error || resend.notice ? resend : cancel} />
     </>
   );
@@ -82,25 +75,22 @@ export function N2RemoveButton(props: RemoveProps) {
   if (!isConfirming || state.notice)
     return (
       <>
-        <div className="btn-row n2-actions">
-          {!state.notice && (
-            <button
-              className="button"
-              data-danger="true"
-              type="button"
-              onClick={() => setIsConfirming(true)}
-            >
-              Αφαίρεση
-            </button>
-          )}
-        </div>
+        {!state.notice && (
+          <button
+            data-danger="true"
+            type="button"
+            onClick={() => setIsConfirming(true)}
+          >
+            Αφαίρεση
+          </button>
+        )}
         <N2Message state={state} />
       </>
     );
   return (
     <form
       action={action}
-      className="n2-confirm"
+      className="n-confirm n2-confirm"
       role="alertdialog"
       aria-label={`Αφαίρεση ${props.name}`}
     >
@@ -114,23 +104,17 @@ export function N2RemoveButton(props: RemoveProps) {
         πια Συμφωνίες, Παραγωγές, Οικονομικά και Συνομιλία του. Αν δεν ανήκει σε
         άλλον Πελάτη, ο λογαριασμός του κλείνει.
       </p>
-      {props.note && <p className="note">{props.note}</p>}
+      {props.note && <small>{props.note}</small>}
       <N2Message state={state} />
-      <div className="btn-row">
+      <div className="ml-actions">
         <button
-          className="button"
-          data-danger="true"
-          type="submit"
-          disabled={isSaving}
-        >
-          {isSaving ? "Αφαίρεση…" : "Ναι, αφαίρεση"}
-        </button>
-        <button
-          className="button"
           type="button"
           onClick={() => setIsConfirming(false)}
         >
           Άκυρο
+        </button>
+        <button data-danger="true" type="submit" disabled={isSaving}>
+          {isSaving ? "Αφαίρεση…" : "Ναι, αφαίρεση"}
         </button>
       </div>
     </form>
