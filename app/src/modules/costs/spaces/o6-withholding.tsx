@@ -35,7 +35,7 @@ function RateForm(props: {
     resetOnSuccess: props.rate === undefined,
   });
   return (
-    <form ref={formRef} className="btn-row" onSubmit={onSubmit}>
+    <form ref={formRef} className="ml-quick o6-form" onSubmit={onSubmit}>
       <input type="hidden" name="id" value={props.rate?.id ?? ""} />
       <input
         className="input"
@@ -55,12 +55,7 @@ function RateForm(props: {
           props.rate ? String(props.rate.percent).replace(".", ",") : ""
         }
       />
-      <button
-        type="submit"
-        className="button"
-        data-primary="true"
-        disabled={isPending}
-      >
+      <button type="submit" data-primary disabled={isPending}>
         {props.submitLabel}
       </button>
       <FormNote state={state} />
@@ -113,7 +108,7 @@ function AddRate({ save }: { save: Action }) {
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button type="button" className="button" onClick={() => setIsOpen(true)}>
+      <button type="button" onClick={() => setIsOpen(true)}>
         + Νέο ποσοστό
       </button>
     );
@@ -143,7 +138,7 @@ export function WithholdingEditor(props: {
           ))}
         </ul>
       )}
-      <div className="btn-row o-list-actions">
+      <div className="ml-quick o6-form o-list-actions">
         <AddRate save={props.actions.save} />
       </div>
       <p className="muted o-hint">{RATES_NOTE}</p>

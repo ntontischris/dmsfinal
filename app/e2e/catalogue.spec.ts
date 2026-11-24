@@ -297,7 +297,9 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
 
   const range = panel(page, "Εύρος τιμής και Υπέρβαση κόστους");
   await range.locator("summary").first().click();
-  const minimum = rowTitled(range, "Ελάχιστη");
+  const minimum = range.locator("li.ml-line").filter({
+    has: page.locator("strong").getByText("Ελάχιστη", { exact: true }),
+  });
   const saveMin = async (value: string, margin: RegExp) => {
     await control(range, "Πολλαπλασιαστής Ελάχιστη").fill(value);
     await button(range, "Αποθήκευση").click();
