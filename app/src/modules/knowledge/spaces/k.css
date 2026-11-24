@@ -30,4 +30,6 @@
 & .ml-quick.k-left { justify-content: flex-start; }
 & .k-back { justify-content: flex-start; margin: 0 0 .8rem; }
 & .ml-hero .k-hero-forms form { display: grid; gap: .3rem; margin: 0; }
+& .k-confirm { display: grid; gap: .4rem; max-width: 22rem; }
+& .k-confirm p { margin: 0; font-size: .88rem; }
 }

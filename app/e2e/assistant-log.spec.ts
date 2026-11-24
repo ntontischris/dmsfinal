@@ -7,7 +7,6 @@ import { button, project, shot, signIn } from "./sales-parts";
 // Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το project.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-
 const UNANSWERED_PATH = "/app/knowledge/unanswered";
 const CONVERSATIONS_PATH = "/app/knowledge/conversations";
 const CARD_TITLE = "Αναπάντητες ερωτήσεις Βοηθού";
@@ -19,7 +18,7 @@ const questionRow = (page: Page, P: string) =>
 
 // Η γραμμή μιας Συζήτησης στη λίστα L2 (ο σύνδεσμος είναι ο συνομιλητής, η πρώτη ερώτηση από κάτω).
 const conversationRow = (page: Page, P: string) =>
-  page.locator("li.part-row", { hasText: `«${QUESTION(P)}»` });
+  page.locator("li.ml-line", { hasText: `«${QUESTION(P)}»` });
 
 test("ο Ιδιοκτήτης βλέπει την Αναπάντητη στο Σήμερα, την κλείνει με «Καλύφθηκε από…», την ξανανοίγει και διαγράφει τη Συζήτηση", async ({
   page,
