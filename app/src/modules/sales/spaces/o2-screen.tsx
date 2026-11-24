@@ -1,7 +1,6 @@
 import { can, getViewer } from "@/modules/access";
 import {
   SpacesRecentChanges,
-  SpacesSettingsTabs,
   o1ChangesOf,
   recentChanges,
 } from "@/modules/settings";
@@ -115,7 +114,6 @@ export async function SpacesSalesSettings({
     ]);
   return (
     <div data-spaces>
-      <SpacesSettingsTabs code="O2" />
       {!lists.ok || !settings.ok || !usage.ok || !assignable.ok ? (
         <ErrorNotice what="τις Ρυθμίσεις των Πωλήσεων" />
       ) : (
