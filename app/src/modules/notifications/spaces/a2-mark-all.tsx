@@ -13,10 +13,9 @@ export function MarkAllRead({ isDisabled }: { isDisabled: boolean }) {
     INITIAL_FORM_STATE,
   );
   return (
-    <form action={action} className="btn-row">
+    <form action={action} className="ml-quick a2-mark-all">
       <button
         type="submit"
-        className="button"
         disabled={isPending || isDisabled}
       >
         Όλες διαβασμένες
