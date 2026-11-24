@@ -61,7 +61,7 @@ export function TimeField({
         />
       </label>
       {control && (
-        <button type="button" className="button" onClick={takeNow}>
+        <button type="button" onClick={takeNow}>
           Χρόνος τώρα
         </button>
       )}

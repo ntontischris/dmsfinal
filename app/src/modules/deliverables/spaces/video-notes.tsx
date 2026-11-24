@@ -1,18 +1,17 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { FormState } from "@/lib/form-state";
 import { useKeptForm } from "@/lib/use-kept-form";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
 import type { VideoControl } from "@/spaces/kit/video-player";
 import { Badge } from "@/spaces/screens/shared";
 
 import { formatTimecode } from "../timecode";
+import { H2Person } from "./h2-box";
 import { fmtDay } from "./h2-model";
 import { seenLineOf, threadsOf, type NoteLike } from "./notes-model";
 
-import "./h1.css";
 import "./notes.css";
 
 // Οι σημειώσεις πάνω στο βίντεο, ίδιες για ομάδα (H2) και πελάτη (H4): νήματα με τη σειρά του βίντεο,
@@ -69,11 +68,11 @@ function ReplyForm({
           {state.error}
         </span>
       )}
-      <div className="btn-row">
-        <button type="submit" className="button" disabled={isPending}>
+      <div className="ml-quick h2-actions">
+        <button type="submit" disabled={isPending}>
           Στείλε την απάντηση
         </button>
-        <button type="button" className="button" onClick={onDone}>
+        <button type="button" onClick={onDone}>
           Άκυρο
         </button>
       </div>
@@ -88,7 +87,7 @@ function ResolveButton({ note, action }: { note: NoteView; action: Action }) {
     <form ref={formRef} className="vn-inline" onSubmit={onSubmit}>
       <input type="hidden" name="commentId" value={note.id} />
       <input type="hidden" name="resolved" value={isResolved ? "0" : "1"} />
-      <button type="submit" className="button" disabled={isPending}>
+      <button type="submit" disabled={isPending}>
         {isResolved ? "Ξανάνοιξέ το" : "Λύθηκε"}
       </button>
       {state.error && (
@@ -109,14 +108,14 @@ function NoteLead({
   who: string;
   control?: VideoControl;
 }) {
-  if (note.atSeconds === null) return <Avatar name={who} size={32} />;
+  if (note.atSeconds === null) return <H2Person name={who} />;
   const at = note.atSeconds;
   const timecode = formatTimecode(at);
-  if (!control) return <span className="sx-dots">{timecode}</span>;
+  if (!control) return <span className="ml-thumb vn-at">{timecode}</span>;
   return (
     <button
       type="button"
-      className="vn-time sx-dots"
+      className="ml-thumb vn-at vn-time"
       onClick={() => control.seek(at)}
       aria-label={`Πήγαινε το βίντεο στο ${timecode}`}
     >
@@ -177,25 +176,12 @@ function Thread({
   const who = whoOf(note.authorName);
   const isResolved = note.resolvedAt !== null;
   return (
-    <>
-      <ListRow
-        lead={<NoteLead note={note} who={who} control={control} />}
-        title={who}
-        sub={fmtDay(note.createdAt)}
-        isFaded={isResolved}
-        aside={
-          <>
-            {isResolved && (
-              <Badge tone="ok">
-                λύθηκε{note.resolvedByName ? ` · ${note.resolvedByName}` : ""}
-              </Badge>
-            )}
-            {note.isInternal && <Badge tone="attention">εσωτερικό</Badge>}
-          </>
-        }
-      />
-      <li className="sx-extra">
-        <p>{note.body}</p>
+    <li className="ml-line" data-faded={isResolved ? "" : undefined}>
+      <NoteLead note={note} who={who} control={control} />
+      <span className="ml-main">
+        <strong>{who}</strong>
+        <small>{fmtDay(note.createdAt)}</small>
+        <span className="h2-text">{note.body}</span>
         <SeenLine seenBy={note.seenBy} />
         <Replies replies={replies} whoOf={whoOf} />
         {actions && isReplying && (
@@ -206,19 +192,23 @@ function Thread({
           />
         )}
         {actions && !isReplying && (
-          <div className="btn-row">
-            <button
-              type="button"
-              className="button"
-              onClick={() => setIsReplying(true)}
-            >
+          <div className="ml-quick h2-actions">
+            <button type="button" onClick={() => setIsReplying(true)}>
               Απάντηση
             </button>
             <ResolveButton note={note} action={actions.resolve} />
           </div>
         )}
-      </li>
-    </>
+      </span>
+      <span className="ml-quick">
+        {isResolved && (
+          <Badge tone="ok">
+            λύθηκε{note.resolvedByName ? ` · ${note.resolvedByName}` : ""}
+          </Badge>
+        )}
+        {note.isInternal && <Badge tone="attention">εσωτερικό</Badge>}
+      </span>
+    </li>
   );
 }
 
@@ -230,21 +220,20 @@ export function VideoNotes({
 }: VideoNotesProps) {
   const threads = threadsOf(notes);
   if (threads.length === 0)
-    return <p className="muted">Καμία σημείωση σε αυτή την Έκδοση.</p>;
+    return <p className="ml-empty">Καμία σημείωση σε αυτή την Έκδοση.</p>;
   const whoOf = (name: string | null) => name ?? unnamed;
   return (
-    <RowList>
+    <ul className="ml-list vn-list" aria-label="Σημειώσεις">
       {threads.map((thread) => (
-        <Fragment key={thread.note.id}>
-          <Thread
-            note={thread.note}
-            replies={thread.replies}
-            control={control}
-            actions={actions}
-            whoOf={whoOf}
-          />
-        </Fragment>
+        <Thread
+          key={thread.note.id}
+          note={thread.note}
+          replies={thread.replies}
+          control={control}
+          actions={actions}
+          whoOf={whoOf}
+        />
       ))}
-    </RowList>
+    </ul>
   );
 }

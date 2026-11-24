@@ -13,12 +13,13 @@ import { textQuery, type RawQuery } from "./h1-model";
 import { H2Actions } from "./h2-actions";
 import { H2Cancel, H2FinalFiles, H2Trail } from "./h2-after";
 import { H2ClientAsks } from "./h2-asks";
-import { H2Header } from "./h2-header";
+import { H2Facts, H2Hero } from "./h2-header";
 import { H2Charge, H2Requests } from "./h2-money";
 import { goesToReviewOf, type H2Context } from "./h2-model";
 import { H2RoundCharges } from "./h2-round-charges";
 import { H2Versions } from "./h2-versions";
 
+import "../../finance/spaces/money-lines.css";
 import "./h2.css";
 
 interface SpacesDeliverableProps {
@@ -102,20 +103,15 @@ export async function SpacesDeliverable({
     client: query.client,
     late: query.late,
   });
-  // Ο τίτλος όπως στο prototype: το Παραδοτέο ως τίτλος σελίδας (η κεφαλίδα του κελύφους γράφει μόνο τον Χώρο).
+  // Το Παραδοτέο είναι ο τίτλος της σελίδας (το μοναδικό h1, στην κεφαλίδα)· από κάτω τα κουτιά, ένα ανά δουλειά.
   return wrap(
-    <>
-      <header className="page-head">
-        <h1>
-          {detail.data.title}
-          <span className="page-head-dot">.</span>
-        </h1>
-      </header>
+    <div className="h2">
       <nav aria-label="Διαδρομή" className="h2-back">
         <Link href={backHref}>‹ Παραδοτέα</Link>
       </nav>
-      <div className="h2">
-        <H2Header {...panel} />
+      <H2Hero {...panel} />
+      <div className="ml-stack">
+        <H2Facts {...panel} />
         <H2ClientAsks detail={detail.data} />
         {/* Οι ενέργειες (π.χ. «Νέα Έκδοση») πριν από το ιστορικό των Εκδόσεων, για να μη χρειάζεται κύλιση. */}
         <H2Actions {...panel} />
@@ -127,6 +123,6 @@ export async function SpacesDeliverable({
         <H2Cancel {...panel} />
         <H2Trail detail={detail.data} />
       </div>
-    </>,
+    </div>,
   );
 }

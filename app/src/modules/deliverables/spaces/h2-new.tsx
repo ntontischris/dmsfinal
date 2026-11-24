@@ -115,7 +115,7 @@ export function SpacesNewDeliverable({
       <label>
         Είδος Παροχής
         <select
-          className="select"
+          className="input"
           name="kindId"
           value={kindId}
           onChange={(event) => setKindId(event.target.value)}
@@ -131,7 +131,7 @@ export function SpacesNewDeliverable({
       {isShort && <ExtraChoice key={kindId} />}
       <label>
         Ανατεθειμένος
-        <select className="select" name="assigneeId" defaultValue="">
+        <select className="input" name="assigneeId" defaultValue="">
           <option value="">{NO_ASSIGNEE_LABEL}</option>
           {candidates.assignees.map((person) => (
             <option key={person.id} value={person.id}>
@@ -142,7 +142,7 @@ export function SpacesNewDeliverable({
       </label>
       <label>
         Γύρισμα (προαιρετικό)
-        <select className="select" name="filmingId" defaultValue="">
+        <select className="input" name="filmingId" defaultValue="">
           <option value="">{NO_FILMING_LABEL}</option>
           {candidates.filmings.map((filming) => (
             <option key={filming.id} value={filming.id}>
