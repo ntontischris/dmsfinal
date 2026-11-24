@@ -13,7 +13,7 @@ import "../../finance/spaces/money-lines.css";
 import "./h34.css";
 
 // O5 «Ρυθμίσεις: Παραδοτέα» στη νέα εμφάνιση (prototype `screens/O5.tsx`, `o5-rules.tsx`), πάνω στο πραγματικό
-// `saveDeliverableRules`: μία φόρμα για όλους τους Κανόνες, δύο ανοιχτά κουτιά (.ml-box) με ένα κουμπί το καθένα.
+// `saveDeliverableRules`: μία φόρμα για όλους τους Κανόνες, δύο κλειστά κουτιά (.ml-box) με ένα κουμπί το καθένα.
 // Ο τίτλος (h1) είναι της κάρτας «Παραδοτέα» των Ρυθμίσεων: τον γράφει το κέλυφος.
 // Η βάση δεν έχει εξαιρέσεις ελέγχου ανά είδος, αγγλικό όνομα ούτε πλήθος ανοιχτών Παραδοτέων ανά είδος: λείπουν.
 
@@ -26,7 +26,6 @@ function ReviewCard({ rules }: { rules: DeliverableRules }) {
     <H2Box
       title="Εσωτερικός έλεγχος και αλλαγές"
       hint={rules.internalReview ? "με έλεγχο" : "χωρίς έλεγχο"}
-      isOpen
     >
       <div className="ml-fields">
         <span className="ml-field">
@@ -114,7 +113,6 @@ function DeadlinesCard({
     <H2Box
       title="Προθεσμία ανά είδος Παροχής"
       hint={`${rules.kinds.length} είδη`}
-      isOpen
     >
       <p className="muted">
         Σε εργάσιμες μέρες, από το δεμένο Γύρισμα όταν γίνει, αλλιώς από τη
