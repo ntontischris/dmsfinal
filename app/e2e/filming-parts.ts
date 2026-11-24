@@ -185,7 +185,7 @@ export async function bookFilmingFromScreen(
 
 // Η γραμμή ενός Γυρίσματος στη λίστα E1 (ο τίτλος της είναι ο Πελάτης).
 export const filmingRow = (page: Page, P: string): Locator =>
-  page.locator("li.part-row", {
+  page.locator("li.ml-line", {
     has: page.getByRole("link", { name: clientName(P), exact: true }),
   });
 

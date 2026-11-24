@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { explainStatus } from "@/spaces/data/glossary";
 import { hrefOf } from "@/spaces/data/screens";
-import { DateLead, Due, ListRow, RowList, TimeLead } from "@/spaces/kit/parts";
 import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 import { StatusHelp } from "@/spaces/screens/status-help";
 
@@ -18,6 +17,7 @@ import {
 } from "./e1-groups";
 import { weekdayOf } from "./e1-format";
 
+import "../../finance/spaces/money-lines.css";
 import "./e1.css";
 
 // Η λίστα Γυρισμάτων της νέας εμφάνισης (prototype `screens/e1-table.tsx`). Ο πελάτης βλέπει την Παραγωγή ως τίτλο,
@@ -35,18 +35,18 @@ const TONE_OF: Readonly<Record<StatusLook["tone"], BadgeTone | undefined>> = {
 // Συνεργείο: πόσοι επιβεβαίωσαν. Η λίστα της βάσης δίνει πλήθος, όχι ονόματα· null = ο Χρήστης δεν βλέπει Συνεργείο.
 function Crew({ filming }: { filming: E1Filming }) {
   if (filming.state === "pending")
-    return <span className="part-sub">ορίζεται μετά την έγκριση</span>;
+    return <span className="e1-sub">ορίζεται μετά την έγκριση</span>;
   if (filming.crew === null) return null;
   if (filming.crew.total === 0)
     return (
-      <span className="part-sub">
+      <span className="e1-sub">
         {filming.state === "scheduled" ? "χωρίς Συνεργείο" : "—"}
       </span>
     );
   return (
     <span className="e1-crew">
       {filming.state === "scheduled" && (
-        <span className="part-sub">
+        <span className="e1-sub">
           {filming.crew.confirmed}/{filming.crew.total} επιβεβαίωσαν
         </span>
       )}
@@ -112,26 +112,18 @@ function ClientSignals({ filming }: { filming: E1Filming }) {
   );
 }
 
-function FilmingLead({
-  filming,
-  isLate,
-  today,
-}: {
-  filming: E1Filming;
-  isLate: boolean;
-  today: string;
-}) {
+function FilmingLead({ filming }: { filming: E1Filming }) {
   const [, , day] = filming.date.split("-");
   return (
-    <span className="e1-lead">
-      <DateLead weekday={weekdayOf(filming.date)} day={day} />
-      <span>
-        <TimeLead start={filming.start} end={filming.end} />
-        {isLate && <Due isLate>{daysLateLabel(filming, today)}</Due>}
-      </span>
+    <span className="ml-thumb e1-date" aria-hidden="true">
+      <small>{weekdayOf(filming.date)}</small>
+      <strong>{day}</strong>
     </span>
   );
 }
+
+const whenOf = (filming: E1Filming): string =>
+  filming.end ? `${filming.start}–${filming.end}` : filming.start;
 
 interface E1TableProps {
   filmings: readonly E1Filming[];
@@ -141,8 +133,10 @@ interface E1TableProps {
   nextId?: string;
   isLate?: boolean;
   isClient?: boolean;
+  label: string;
 }
 
+// Κάθε Γύρισμα μία γραμμή ml-line: μέρα, Πελάτης (σύνδεσμος στην καρτέλα), ώρα και Παραγωγή, σήματα δεξιά.
 export function E1Table({
   filmings,
   nowMs,
@@ -150,45 +144,50 @@ export function E1Table({
   nextId,
   isLate = false,
   isClient = false,
+  label,
 }: E1TableProps) {
   return (
-    <RowList>
+    <ul className="ml-list e1-list" aria-label={label}>
       {filmings.map((filming) => {
         const look = isClient
           ? clientStatusLook(filming)
           : statusLook(filming, nowMs);
+        const title = isClient
+          ? filming.productionTitle
+          : (filming.clientName ?? NO_CLIENT_LABEL);
         return (
-          <ListRow
+          <li
             key={filming.id}
-            isHighlighted={filming.id === nextId}
-            isFaded={look.tone === "muted"}
-            lead={
-              <FilmingLead filming={filming} isLate={isLate} today={today} />
-            }
-            href={hrefOf("E3", { id: filming.id })}
-            title={
-              isClient
-                ? filming.productionTitle
-                : (filming.clientName ?? NO_CLIENT_LABEL)
-            }
-            sub={isClient ? undefined : filming.productionTitle}
-            aside={
-              <>
-                {filming.id === nextId && <Badge tone="strong">Επόμενο</Badge>}
-                <Badge tone={TONE_OF[look.tone]}>{look.label}</Badge>
-                {isClient ? (
-                  <ClientSignals filming={filming} />
-                ) : (
-                  <>
-                    <Crew filming={filming} />
-                    <Signals filming={filming} nowMs={nowMs} />
-                  </>
-                )}
-              </>
-            }
-          />
+            className="ml-line e1-line"
+            data-next={filming.id === nextId || undefined}
+            data-faded={look.tone === "muted" || undefined}
+          >
+            <FilmingLead filming={filming} />
+            <span className="ml-main">
+              <strong>
+                <Link href={hrefOf("E3", { id: filming.id })}>{title}</Link>
+              </strong>
+              <small>
+                {whenOf(filming)}
+                {isClient ? "" : ` · ${filming.productionTitle}`}
+                {isLate ? ` · ${daysLateLabel(filming, today)}` : ""}
+              </small>
+            </span>
+            <span className="e1-signals">
+              {filming.id === nextId && <Badge tone="strong">Επόμενο</Badge>}
+              <Badge tone={TONE_OF[look.tone]}>{look.label}</Badge>
+              {isClient ? (
+                <ClientSignals filming={filming} />
+              ) : (
+                <>
+                  <Crew filming={filming} />
+                  <Signals filming={filming} nowMs={nowMs} />
+                </>
+              )}
+            </span>
+          </li>
         );
       })}
-    </RowList>
+    </ul>
   );
 }

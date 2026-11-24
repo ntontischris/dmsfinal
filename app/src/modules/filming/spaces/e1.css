@@ -8,9 +8,6 @@
 & .e2-item[data-done='true'] { opacity: 0.8; }
 & .e2-item .stack { margin-top: var(--space-3); }
 /* Ομάδες της λίστας και σήματα ανά σημασία (όχι μόνο χρώμα: και εικονίδιο). */
-& .e1-group { margin-top: var(--space-4); }
-& .e1-group-title { font-size: var(--text-md, 1rem); margin: 0 0 var(--space-2); }
-& .e1-group[data-attention='true'] { padding: var(--space-3); border: 1px solid var(--color-accent); border-radius: var(--radius-lg); }
 & .e1-when .badge { margin-left: var(--space-2); }
 & .e1-late { display: block; font-size: var(--text-sm); color: var(--color-accent); font-weight: 600; }
 & .e1-pill::before { display: none; }
@@ -19,13 +16,19 @@
 & .e1-pill[data-look='action'] { border-color: color-mix(in oklab, var(--color-accent) 60%, transparent); color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 10%, transparent); font-weight: 600; }
 & .e1-pill[data-look='ok'] { border-color: color-mix(in oklab, var(--color-ok) 55%, transparent); color: var(--color-ok); background: color-mix(in oklab, var(--color-ok) 10%, transparent); }
 & .e1-pill[data-look='muted'] { opacity: 0.75; }
-& .rtable tr[data-next='true'] td { background: color-mix(in oklab, var(--color-accent) 6%, transparent); }
 /* Ύφος ταυτότητας */
-& .e1-group-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); }
-& .e1-group[data-attention='true'] { border-color: color-mix(in oklab, var(--color-accent) 45%, transparent); }
 & .e1-pill { border-radius: 999px; }
-& .e1-group[data-attention='true'] { padding: 0; border: 0; }
-& .e1-group[data-attention='true'] .kit-panel { border-color: color-mix(in oklab, var(--color-accent) 45%, transparent); }
-& .e1-lead { display: flex; align-items: center; gap: var(--space-3); }
 & .e1-crew { display: inline-flex; align-items: center; gap: var(--space-2); }
 }
+/* Τελική όψη: γραμμές ml-line, ταινία ομάδας, πλακίδιο μέρας. */
+.e1-list { margin: 0; }
+.e1-line { grid-template-columns: auto minmax(0, 1fr) auto; }
+.e1-line[data-next] { border-color: color-mix(in oklab, var(--brand-periwinkle) 55%, transparent); }
+.e1-date { display: grid; place-items: center; align-content: center; gap: 0; line-height: 1; }
+.e1-date small { font-size: .62rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--color-text-muted); }
+.e1-date strong { font-size: 1.05rem; }
+.e1-sub { color: var(--color-text-muted); font-size: .8rem; }
+.e1-group { display: grid; gap: .55rem; margin-top: 1rem; }
+.e1-group-title { display: flex; align-items: baseline; gap: .5rem; margin: 0; }
+.e1-group-title small { color: var(--color-text-muted); font-weight: 500; }
+.e1-group[data-attention='true'] .e1-line { border-color: color-mix(in oklab, var(--brand-yellow) 45%, transparent); }
