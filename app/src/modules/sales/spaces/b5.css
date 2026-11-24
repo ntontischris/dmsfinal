@@ -15,3 +15,6 @@
 }
 [data-look='spaces'] .b5-box { margin-bottom: var(--space-4); }
 [data-look='spaces'] .b5-box > .note { margin: 0; padding: 0 1rem .9rem 1.3rem; }
+
+/* Απόρριψη, ανάκληση, διαγραφή μέσα σε ml-quick: χαμηλωμένο κείμενο (όχι κόκκινο), για να ξεχωρίζει από το κύριο */
+[data-look='spaces'] .ml-quick :is(a, button)[data-danger]:not([data-danger='false']) { color: var(--color-text-muted); }

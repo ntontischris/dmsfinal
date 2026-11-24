@@ -23,7 +23,7 @@ export function FileButton(props: {
   }, [text]);
   return (
     <>
-      <span className="ml-quick">
+      <span className="ml-quick" style={{ display: "inline-flex" }}>
         <button
           type="button"
           data-primary={props.isPrimary ? "true" : undefined}

@@ -52,10 +52,6 @@
 }
 /* Η Διαγραφή: τελευταία, ως απλό κείμενο (όχι κόκκινο κουμπί)· η επιβεβαίωση μένει ίδια */
 & .b2-delete { padding-top: var(--space-2); border-top: 1px solid var(--color-border); }
-& .b2-delete > .button[data-danger] {
-  padding: 0; min-height: 0; border: 0; background: none; color: var(--color-text-muted);
-  font-weight: 500; text-decoration: underline; text-underline-offset: 2px;
-}
 
 /* Κύριο πρόσωπο: email και τηλέφωνο χωρίς αναδίπλωση, «Αλλαγή στοιχείων» ως εικονίδιο μολυβιού */
 & .b2-contact { display: block; min-width: 0; }

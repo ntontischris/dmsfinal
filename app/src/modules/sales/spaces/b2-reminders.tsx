@@ -18,7 +18,7 @@ function DoneButton({ reminderId }: { reminderId: string }) {
   return (
     <form onSubmit={onSubmit} style={{ display: "inline" }}>
       <input type="hidden" name="reminderId" value={reminderId} />
-      <span className="ml-quick">
+      <span className="ml-quick" style={{ display: "inline-flex" }}>
         <button type="submit" disabled={isPending}>
           Έγινε
         </button>
@@ -62,7 +62,7 @@ function AddForm({
           {state.error}
         </p>
       )}
-      <span className="ml-quick">
+      <span className="ml-quick" style={{ display: "inline-flex" }}>
         <button type="submit" data-primary="true" disabled={isPending}>
           Αποθήκευση
         </button>
@@ -96,7 +96,7 @@ export function ClientReminders({ clientId, reminders }: ClientRemindersProps) {
       {isAdding ? (
         <AddForm clientId={clientId} onClose={() => setIsAdding(false)} />
       ) : (
-        <span className="ml-quick">
+        <span className="ml-quick" style={{ display: "inline-flex" }}>
           <button type="button" onClick={() => setIsAdding(true)}>
             Υπενθύμισέ με
           </button>
