@@ -5,6 +5,7 @@ import { equipmentCaps } from "../caps";
 import { listItems, listTemplates } from "../queries";
 import { F3Templates } from "./f3-templates";
 
+import "../../finance/spaces/money-lines.css";
 import "./f.css";
 
 // F3 Πρότυπα εξοπλισμού στη νέα εμφάνιση (prototype `screens/F3.tsx`). Κοινά για όλη την ομάδα· τα αποσυρμένα
@@ -14,7 +15,7 @@ export async function SpacesEquipmentTemplates() {
   if (!caps.canView)
     return (
       <div data-spaces>
-        <div className="e">
+        <div className="e f">
           <StateNotice kind="denied" title="Χωρίς δικαίωμα">
             <p>Τα Πρότυπα εξοπλισμού τα βλέπει όποιος «Βλέπει Εξοπλισμό».</p>
           </StateNotice>
@@ -27,7 +28,7 @@ export async function SpacesEquipmentTemplates() {
   ]);
   return (
     <div data-spaces>
-      <div className="e">
+      <div className="e f">
         {templates.ok && items.ok ? (
           <F3Templates
             templates={templates.data}
