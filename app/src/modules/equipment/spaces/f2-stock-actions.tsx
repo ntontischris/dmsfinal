@@ -112,7 +112,7 @@ export function StockActions(props: StockActionsProps) {
           </span>
           <button
             type="button"
-           
+
             data-danger
             disabled={isPending}
             onClick={() => run(deleteItem, { itemId: item.id })}
@@ -129,16 +129,13 @@ export function StockActions(props: StockActionsProps) {
   return (
     <>
       <div className="ml-quick">
-        <button
-          type="button"
-          onClick={() => setPending("edit")}
-        >
+        <button type="button" onClick={() => setPending("edit")}>
           Αλλαγή στοιχείων
         </button>
         {item.status === "available" && (
           <button
             type="button"
-           
+
             onClick={() => setPending("repair")}
           >
             Σε επισκευή
@@ -147,7 +144,7 @@ export function StockActions(props: StockActionsProps) {
         {item.status !== "available" && (
           <button
             type="button"
-           
+
             disabled={isPending}
             onClick={() => setStatus("available", "")}
           >
@@ -158,7 +155,7 @@ export function StockActions(props: StockActionsProps) {
           (canDelete ? (
             <button
               type="button"
-             
+
               data-danger
               onClick={() => setPending("delete")}
             >
@@ -167,7 +164,7 @@ export function StockActions(props: StockActionsProps) {
           ) : (
             <button
               type="button"
-             
+
               data-danger
               onClick={() => setPending("retire")}
             >
@@ -249,6 +246,9 @@ function EditForm({
         ίδιο αντικείμενο.
       </p>
       <div className="ml-actions">
+        <button type="button" onClick={onCancel}>
+          Άκυρο
+        </button>
         <button
           type="button"
           data-primary
@@ -263,9 +263,6 @@ function EditForm({
           }
         >
           Αποθήκευση
-        </button>
-        <button type="button" onClick={onCancel}>
-          Άκυρο
         </button>
       </div>
     </div>

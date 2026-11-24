@@ -81,15 +81,9 @@ export async function SpacesConversation({ id }: { id: string | null }) {
     viewer.status === "signed-in" && id !== null
       ? await getConversation(id)
       : null;
-  const back = (
-    <p className="ml-quick k-back">
-      <Link href={hrefOf("L2")}>← Όλες οι Συζητήσεις</Link>
-    </p>
-  );
   if (result?.ok === false)
     return (
       <div data-spaces className="k">
-        {back}
         <ErrorNotice what="η Συζήτηση του Βοηθού" />
       </div>
     );
@@ -97,7 +91,6 @@ export async function SpacesConversation({ id }: { id: string | null }) {
   if (!conversation)
     return (
       <div data-spaces className="k">
-        {back}
         <StateNotice kind="denied" title="Χωρίς δικαίωμα">
           {viewer.status === "signed-in"
             ? `${L2_DENIED} ${CONVERSATION_GONE_TEXT}`
@@ -113,25 +106,24 @@ export async function SpacesConversation({ id }: { id: string | null }) {
   const turns = turnsOf(conversation.messages);
   return (
     <div data-spaces className="k">
-      {back}
       <section>
         <header className="ml-hero">
           <span className="ml-hero-mono" aria-hidden="true">
             {initialsOf(who)}
           </span>
           <div>
-            <Badge>{AUDIENCE_LABEL[conversation.audience]}</Badge>{" "}
-            <Badge>{conversation.language}</Badge>
+            <span className="k-badges">
+              <Badge>{AUDIENCE_LABEL[conversation.audience]}</Badge>
+              <Badge>{conversation.language}</Badge>
+            </span>
             <h1 data-page-title>{who}</h1>
             <p>
               Ξεκίνησε {fmtWhen(conversation.startedAt)} · τελευταίο μήνυμα{" "}
               {fmtWhen(conversation.lastMessageAt)}
             </p>
           </div>
-          <div className="k-hero-forms">
-            <DeleteConversation id={conversation.id} />
-          </div>
         </header>
+        <DeleteConversation id={conversation.id} />
       </section>
       <div className="ml-stack">
         <KBox title="Μηνύματα" hint={`${turns.length} γύροι`} isOpen>

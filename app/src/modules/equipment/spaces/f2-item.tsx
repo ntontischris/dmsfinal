@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Badge } from "@/spaces/screens/shared";
 import { initialsOf } from "@/spaces/shell/avatar";
 
@@ -19,9 +21,10 @@ export interface F2ItemProps {
   candidates: readonly CandidateView[];
   history: readonly HistoryRow[];
   access: ReservationsAccess;
+  picker: ReactNode; // η αναζήτηση άλλου αντικειμένου, κάτω από την κεφαλή
 }
 
-// Η κεφαλή: όνομα (h1), Κατάσταση και οι ενέργειες αποθέματος. Είναι `section`, ώστε να βρίσκεται από το όνομα.
+// Η κεφαλή: όνομα (h1) και Κατάσταση· από κάτω οι ενέργειες αποθέματος (οι φόρμες τους ανοίγουν εκεί, όχι στην κεφαλή). Είναι `section`, ώστε να βρίσκεται από το όνομα.
 function Hero(props: F2ItemProps) {
   const { item, reservations } = props;
   const upcoming = reservations.filter((view) => view.isUpcoming);
@@ -39,26 +42,24 @@ function Hero(props: F2ItemProps) {
           <p>{[item.categoryName, item.code].filter(Boolean).join(" · ")}</p>
           {item.statusNote && <p>Λόγος κατάστασης: {item.statusNote}</p>}
         </div>
-        <div className="f-hero-actions">
-          {props.canManage ? (
-            <StockActions
-              item={item}
-              categories={props.categories}
-              holdLabels={upcoming.map((view) => view.label)}
-              replacements={props.replacements}
-              canDelete={
-                item.templates.length === 0 && reservations.length === 0
-              }
-            />
-          ) : (
-            <p className="f-note">
-              Χάλασε κάτι; Πες το σε όποιον «Διαχειρίζεται απόθεμα»: αυτός το
-              βάζει «σε επισκευή», ώστε να μην το πάρει κανείς σε Γύρισμα. Το
-              μητρώο το αλλάζει μόνο εκείνος.
-            </p>
-          )}
-        </div>
       </header>
+      <div className="f-hero-actions">
+        {props.canManage ? (
+          <StockActions
+            item={item}
+            categories={props.categories}
+            holdLabels={upcoming.map((view) => view.label)}
+            replacements={props.replacements}
+            canDelete={item.templates.length === 0 && reservations.length === 0}
+          />
+        ) : (
+          <p className="f-note">
+            Χάλασε κάτι; Πες το σε όποιον «Διαχειρίζεται απόθεμα»: αυτός το
+            βάζει «σε επισκευή», ώστε να μην το πάρει κανείς σε Γύρισμα. Το
+            μητρώο το αλλάζει μόνο εκείνος.
+          </p>
+        )}
+      </div>
     </section>
   );
 }
@@ -89,7 +90,9 @@ function History({ history }: { history: readonly HistoryRow[] }) {
             </span>
             <div className="ml-main">
               <strong>{event.text}</strong>
-              <small>{[event.when, event.by].filter(Boolean).join(" · ")}</small>
+              <small>
+                {[event.when, event.by].filter(Boolean).join(" · ")}
+              </small>
             </div>
           </li>
         ))}
@@ -105,6 +108,7 @@ export function F2Item(props: F2ItemProps) {
   return (
     <div className="ml-stack">
       <Hero {...props} />
+      {props.picker}
       <F2Reservations
         itemId={item.id}
         status={item.status}

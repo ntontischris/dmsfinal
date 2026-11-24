@@ -143,9 +143,15 @@ function IdField({ id }: { id: string }) {
   return <input type="hidden" name="id" value={id} />;
 }
 
-export function PublishedActions({ item }: { item: EditableItem }) {
-  return (
-    <>
+const blockersOf = (item: EditableItem): readonly string[] =>
+  item.status === "draft"
+    ? publishBlockers({ ...item, hasFile: item.file !== null })
+    : [];
+
+// Η μία ενέργεια της κεφαλής: «Δημοσίευση» (πρόχειρο) ή «Απόσυρση».
+export function PublishQuick({ item }: { item: EditableItem }) {
+  if (item.status !== "draft")
+    return (
       <SpacesForm
         action={unpublishItem}
         submitLabel="Απόσυρση"
@@ -154,30 +160,37 @@ export function PublishedActions({ item }: { item: EditableItem }) {
       >
         <IdField id={item.id} />
       </SpacesForm>
-      <p className="k-note">Γυρίζει σε πρόχειρο· ο Βοηθός το ξεχνά αμέσως.</p>
-    </>
+    );
+  return (
+    <SpacesForm
+      action={publishItem}
+      submitLabel="Δημοσίευση"
+      pendingLabel="Δημοσίευση…"
+      isDisabled={blockersOf(item).length > 0}
+    >
+      <IdField id={item.id} />
+    </SpacesForm>
   );
 }
 
-export function DraftActions({ item }: { item: EditableItem }) {
-  const blockers = publishBlockers({ ...item, hasFile: item.file !== null });
+// Μέσα στο κουτί «Δημοσίευση»: τι λείπει, η οριστική διαγραφή (μόνο πρόχειρο) και οι σημειώσεις.
+export function PublishDetails({ item }: { item: EditableItem }) {
+  if (item.status !== "draft")
+    return (
+      <p className="k-note">
+        Η «Απόσυρση» το γυρίζει σε πρόχειρο· ο Βοηθός το ξεχνά αμέσως.
+      </p>
+    );
+  const blockers = blockersOf(item);
   return (
     <>
-      <SpacesForm
-        action={publishItem}
-        submitLabel="Δημοσίευση"
-        pendingLabel="Δημοσίευση…"
-        isDisabled={blockers.length > 0}
-      >
-        <IdField id={item.id} />
-        {blockers.length > 0 && (
-          <ul className="k-blockers" aria-label="Τι λείπει για τη δημοσίευση">
-            {blockers.map((blocker) => (
-              <li key={blocker}>{blocker}</li>
-            ))}
-          </ul>
-        )}
-      </SpacesForm>
+      {blockers.length > 0 && (
+        <ul className="k-blockers" aria-label="Τι λείπει για τη δημοσίευση">
+          {blockers.map((blocker) => (
+            <li key={blocker}>{blocker}</li>
+          ))}
+        </ul>
+      )}
       <SpacesForm
         action={deleteItem}
         submitLabel="Διαγραφή"

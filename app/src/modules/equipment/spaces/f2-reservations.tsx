@@ -82,7 +82,6 @@ export function F2Reservations({
       <FBox
         title="Μελλοντικές Δεσμεύσεις"
         hint={`${reservations.length} Δεσμεύσεις`}
-        isOpen
       >
         {!isAvailable && reservations.length > 0 && (
           <Warning>
@@ -159,7 +158,7 @@ export function F2Reservations({
                 </select>
                 <button
                   type="button"
-                 
+                  data-primary
                   disabled={!pickedFilming || isPickedBlocked || isPending}
                   onClick={() => {
                     if (!pickedFilming) return;

@@ -60,11 +60,7 @@ function Conversations({ row }: { row: L3Row }) {
 
 function Status({ item, row }: { item: UnansweredRow; row: L3Row }) {
   if (row.isOpen)
-    return (
-      <Link data-primary="true" href={closeHref({ close: item.id })}>
-        Κλείσε
-      </Link>
-    );
+    return <Link href={closeHref({ close: item.id })}>Κλείσε</Link>;
   const closed = closedOf(item);
   return (
     <>

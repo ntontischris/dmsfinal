@@ -87,8 +87,9 @@ test("ο Ιδιοκτήτης δημοσιεύει Άρθρο για τον Ρό
     has: page.getByRole("button", { name: "Δημοσίευση", exact: true }),
   });
   await expect(button(publish, "Δημοσίευση")).toBeDisabled();
+  const publishBox = await openBox(page, "Δημοσίευση");
   await expect(
-    publish.getByRole("list", { name: "Τι λείπει για τη δημοσίευση" }),
+    publishBox.getByRole("list", { name: "Τι λείπει για τη δημοσίευση" }),
   ).toContainText("Λείπει η Περίληψη.");
 
   // 3. Περίληψη, Κοινό «Πλήρης» (Ρόλος πελάτη), δημοσίευση.

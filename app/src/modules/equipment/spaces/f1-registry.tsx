@@ -209,9 +209,9 @@ function Lines({
     <table className="ml-table">
       <thead>
         <tr>
-          <th>Σήμα</th>
-          <th>Αντικείμενο</th>
-          <th>Κατάσταση</th>
+          <th scope="col">Σήμα</th>
+          <th scope="col">Αντικείμενο</th>
+          <th scope="col">Κατάσταση</th>
         </tr>
       </thead>
       <tbody>

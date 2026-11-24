@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-
 import { createItem } from "../actions-items";
 import type { EquipmentCategory, EquipmentItemRow } from "../types";
 import { nameErrorOf } from "./f-model";

@@ -13,7 +13,6 @@
 & .ml-line .ml-quick { position: relative; z-index: 1; }
 & .k-filters { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 1rem; }
 & .k-filters select { width: auto; min-width: 12rem; }
-& :is(.ml-quick, .ml-actions) :is(a, button)[data-danger] { border-color: color-mix(in oklab, var(--color-danger) 45%, transparent); color: var(--color-danger); }
 & .ml-hero .k-hero-forms { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
 & .k-blockers { margin: .2rem 0 0; padding-left: 1.1rem; color: var(--color-text-muted); font-size: .88rem; }
 & .k-checks { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; border: 0; padding: 0; margin: 0; min-width: 0; }
@@ -28,7 +27,8 @@
 & .page-filters { margin: 0 0 1rem; }
 & .k-wide { grid-column: 1 / -1; display: grid; gap: .6rem; min-width: 0; }
 & .ml-quick.k-left { justify-content: flex-start; }
-& .k-back { justify-content: flex-start; margin: 0 0 .8rem; }
+& .ml-hero ~ :is(.ml-quick, .k-confirm) { margin-top: .8rem; }
+& .k-badges { display: flex; flex-wrap: wrap; gap: .4rem; justify-self: start; }
 & .ml-hero .k-hero-forms form { display: grid; gap: .3rem; margin: 0; }
 & .k-confirm { display: grid; gap: .4rem; max-width: 22rem; }
 & .k-confirm p { margin: 0; font-size: .88rem; }

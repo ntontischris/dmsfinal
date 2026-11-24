@@ -43,6 +43,7 @@ export function ReasonForm({
         <button
           type="button"
           data-danger={isDanger || undefined}
+          data-primary={isDanger ? undefined : true}
           disabled={!isValid || isPending}
           onClick={() => onConfirm(reason.trim())}
         >
