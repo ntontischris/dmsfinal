@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { useKeptForm } from "@/lib/use-kept-form";
-import { Panel } from "@/spaces/kit/panel";
 import { fmtDate } from "@/spaces/screens/shared";
 
 import { bookFilming, bookInternalFilming } from "../actions-book";
@@ -12,6 +11,7 @@ import type { NewFilmingPrefill } from "../blocked-prefill";
 import type { FilmingFromRequest } from "../request-prefill";
 import type { BookingAgreement, NamedRef } from "../types";
 import { Availability, DurationField, SlotNotice } from "./e4-parts";
+import { Step } from "./ml-parts";
 import {
   dayWithWeekday,
   durationChoiceOf,
@@ -70,7 +70,9 @@ export function E4Form({
   // Δύο φόρμες-actions, μία ενεργή κάθε φορά (το action του useActionState δεν αλλάζει στη μέση).
   const clientForm = useKeptForm(bookFilming);
   const internalForm = useKeptForm(bookInternalFilming);
-  const { state, isPending, onSubmit, formRef } = isInternal ? internalForm : clientForm;
+  const { state, isPending, onSubmit, formRef } = isInternal
+    ? internalForm
+    : clientForm;
   const hours = hoursOf(duration, freeHours);
 
   const resetKind = (next: BookingAgreement | undefined) => {
@@ -105,8 +107,16 @@ export function E4Form({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate>
-      <Panel label={prefill ? "Μετατροπή από Κλεισμένο χρόνο" : "Στοιχεία"}>
-        <div className="e-form">
+      <div className="fl-steps">
+        <Step
+          no={1}
+          title="Για ποιον"
+          hint={
+            prefill
+              ? "Μετατροπή από Κλεισμένο χρόνο"
+              : "Πελάτης, Συμφωνία και Παροχή"
+          }
+        >
           {prefill && (
             <p className="e-info">
               Από Κλεισμένο χρόνο ({fmtDate(prefill.date)} {prefill.time}). Η
@@ -132,14 +142,14 @@ export function E4Form({
             </p>
           )}
           {canInternal && (
-            <div className="e-field">
-              Για
-              <div className="btn-row">
+            <div className="ml-field">
+              <span>Για</span>
+              <div className="ml-quick fl-row">
                 {(["client", "internal"] as const).map((value) => (
                   <button
                     key={value}
                     type="button"
-                    className="button e-pick"
+                    className="e-pick"
                     aria-pressed={mode === value}
                     onClick={() => setMode(value)}
                   >
@@ -150,8 +160,8 @@ export function E4Form({
             </div>
           )}
           {isInternal ? (
-            <label>
-              Εσωτερική Παραγωγή
+            <label className="ml-field">
+              <span>Εσωτερική Παραγωγή</span>
               <select
                 className="input"
                 name="productionId"
@@ -170,8 +180,8 @@ export function E4Form({
             </label>
           ) : (
             <>
-              <label>
-                Πελάτης
+              <label className="ml-field">
+                <span>Πελάτης</span>
                 <select
                   className="input"
                   value={clientId}
@@ -185,8 +195,8 @@ export function E4Form({
                 </select>
               </label>
               {agreements.length > 1 ? (
-                <label>
-                  Συμφωνία
+                <label className="ml-field">
+                  <span>Συμφωνία</span>
                   <select
                     className="input"
                     name="agreementId"
@@ -208,8 +218,8 @@ export function E4Form({
                 />
               )}
               {agreement && agreement.kinds.length > 1 ? (
-                <label>
-                  Παροχή
+                <label className="ml-field">
+                  <span>Παροχή</span>
                   <select
                     className="input"
                     name="kindId"
@@ -228,62 +238,70 @@ export function E4Form({
               )}
             </>
           )}
-          <label>
-            Ημερομηνία
+        </Step>
+        <Step no={2} title="Πότε και πού" hint="Μέρα, ώρα, διάρκεια, χώρος">
+          <div className="ml-fields">
+            <label className="ml-field">
+              <span>Ημερομηνία</span>
+              <input
+                className="input"
+                type="date"
+                name="date"
+                min={today}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+              {isIsoDay(date) && <small>{dayWithWeekday(date)}</small>}
+            </label>
+            <label className="ml-field">
+              <span>Ώρα έναρξης</span>
+              <input
+                className="input"
+                type="time"
+                name="time"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+              />
+            </label>
+            <DurationField
+              duration={duration}
+              freeHours={freeHours}
+              onDuration={setDuration}
+              onFreeHours={setFreeHours}
+            />
             <input
-              className="input"
-              type="date"
-              name="date"
-              min={today}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              type="hidden"
+              name="hours"
+              value={Number.isFinite(hours) ? String(hours) : ""}
             />
-            {isIsoDay(date) && (
-              <span className="muted">{dayWithWeekday(date)}</span>
-            )}
-          </label>
-          <label>
-            Ώρα έναρξης
-            <input
-              className="input"
-              type="time"
-              name="time"
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-            />
-          </label>
-          <DurationField
-            duration={duration}
-            freeHours={freeHours}
-            onDuration={setDuration}
-            onFreeHours={setFreeHours}
-          />
-          <input
-            type="hidden"
-            name="hours"
-            value={Number.isFinite(hours) ? String(hours) : ""}
-          />
-          <label>
-            Πού
-            <input
-              className="input"
-              name="location"
-              maxLength={200}
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-          </label>
-          <label>
-            Σημείωση για το Συνεργείο
-            <textarea
-              className="input"
-              name="note"
-              rows={3}
-              maxLength={500}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </label>
+            <label className="ml-field">
+              <span>Πού</span>
+              <input
+                className="input"
+                name="location"
+                maxLength={200}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+            </label>
+            <label className="ml-field" data-wide>
+              <span>Σημείωση για το Συνεργείο</span>
+              <textarea
+                className="input"
+                name="note"
+                rows={3}
+                maxLength={500}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </label>
+          </div>
+        </Step>
+        <Step
+          no={3}
+          title="Έλεγχος και δημιουργία"
+          hint="Παροχή, διαθεσιμότητα, προειδοποιήσεις"
+        >
           {!isInternal && agreement && (
             <Availability agreement={agreement} kind={kind} hours={hours} />
           )}
@@ -306,13 +324,8 @@ export function E4Form({
             Το Συνεργείο ορίζεται μετά, στη σελίδα του Γυρίσματος. Ξεκινά
             «προγραμματισμένο» (δεν περνά από έγκριση).
           </p>
-          <div className="btn-row">
-            <button
-              type="submit"
-              className="button"
-              data-primary="true"
-              disabled={isPending}
-            >
+          <div className="ml-actions">
+            <button type="submit" data-primary="true" disabled={isPending}>
               {isPending
                 ? "Αποθήκευση…"
                 : prefill
@@ -320,8 +333,8 @@ export function E4Form({
                   : "Δημιουργία Γυρίσματος"}
             </button>
           </div>
-        </div>
-      </Panel>
+        </Step>
+      </div>
     </form>
   );
 }

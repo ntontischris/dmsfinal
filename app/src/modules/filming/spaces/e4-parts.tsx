@@ -23,14 +23,14 @@ export function DurationField({
   onFreeHours,
 }: DurationProps) {
   return (
-    <div className="e-field">
-      Διάρκεια
-      <div className="btn-row">
+    <div className="ml-field" data-wide>
+      <span>Διάρκεια</span>
+      <div className="ml-quick fl-row">
         {[...DURATION_PRESETS.map(String), FREE].map((value) => (
           <button
             key={value}
             type="button"
-            className="button e-pick"
+            className="e-pick"
             aria-pressed={duration === value}
             onClick={() => onDuration(value)}
           >
@@ -51,10 +51,10 @@ export function DurationField({
           onChange={(e) => onFreeHours(e.target.value)}
         />
       )}
-      <span className="muted">
+      <small>
         Η ομάδα δεν περιορίζεται στις επιτρεπτές διάρκειες του πελάτη: από 0,5
         έως 12 ώρες ανά μισή ώρα.
-      </span>
+      </small>
     </div>
   );
 }
@@ -74,7 +74,7 @@ export function Availability({
     <>
       <div className="e-info">
         <strong>Σε ποια Παραγωγή μπαίνει:</strong> της Περιόδου της μέρας.
-        <dl className="dl">
+        <dl className="ml-kv">
           <dt>Περίοδος</dt>
           <dd>{period ?? "Καμία ανοιχτή Περίοδος σήμερα"}</dd>
           {kind && (
