@@ -153,6 +153,7 @@ export function F1Categories({ categories }: F1CategoriesProps) {
         />
         <button
           type="button"
+          data-primary
           disabled={!name.trim() || isDuplicate || isPending}
           onClick={handleAdd}
         >
