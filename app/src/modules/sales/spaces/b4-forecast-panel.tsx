@@ -1,3 +1,4 @@
+import "../../finance/spaces/money-lines.css";
 import { ErrorNotice } from "@/spaces/screens/shared";
 
 import { NO_MANAGER_LABEL } from "../labels";
@@ -39,7 +40,7 @@ function ForecastFacts(props: {
 }) {
   const { row, hasAmounts } = props;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       {hasAmounts && (
         <>
           <dt>Αξία</dt>

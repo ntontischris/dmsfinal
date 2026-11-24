@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import { formatDateTime } from "../helpers";
 import type { CatalogueItem } from "../types";
 
@@ -26,7 +27,7 @@ export function C2Usage({
 }) {
   return (
     <C2Box title="Χρήση και ιστορικό" hint={usageHint(item)}>
-      <dl className="dl">
+      <dl className="ml-kv">
         {item.uses !== null && (
           <>
             <dt>Σε χρήση</dt>

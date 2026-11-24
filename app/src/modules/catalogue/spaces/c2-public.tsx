@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { setPublic } from "../actions-items";
@@ -89,7 +90,7 @@ function PublicFields(props: PublicFieldsProps) {
   const { item, editable, isPublic, showsPrice, onPublic, onShowsPrice } =
     props;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="c2-is-public"
         label="Δημόσιο"

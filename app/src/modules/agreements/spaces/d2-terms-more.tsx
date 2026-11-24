@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { Badge } from "@/spaces/screens/shared";
@@ -34,7 +35,7 @@ export function RevisionLimitTerms({
   const text = limits.map((l) => `${l.label}: ${rounds(l.rounds)}`).join(" · ");
   if (!can.edit)
     return (
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Όριο αλλαγών</dt>
         <dd>{text || "—"}</dd>
       </dl>
@@ -43,7 +44,7 @@ export function RevisionLimitTerms({
     <D2Form action={setRevisionLimits} submitLabel="Αποθήκευση ορίων">
       <IdField id={agreement.id} />
       <input type="hidden" name="limits" value={serializeLimits(values)} />
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Όριο αλλαγών</dt>
         <dd>
           <span className="stack">

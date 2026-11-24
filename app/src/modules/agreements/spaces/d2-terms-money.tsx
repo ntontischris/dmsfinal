@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import { formatMoney, formatNumber } from "../helpers";
 import type { AgreementDetail } from "../types";
 import { Field, NumberInput, decimalInput, moneyInput } from "./d2-ui";
@@ -34,7 +35,7 @@ export function MoneyRows({
       ? undefined
       : `προεπιλογή: ${formatMoney(baseline.dissolutionFee)}`;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="t-disc"
         label="Έκπτωση πρώτων μηνών"

@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { Avatar } from "@/spaces/kit/parts";
@@ -104,7 +105,7 @@ function RecipientsEditor({ agreement }: { agreement: AgreementDetail }) {
     <D2Form action={setRecipients} submitLabel="Αποθήκευση παραληπτών">
       <IdField id={agreement.id} />
       <input type="hidden" name="recipients" value={serialize(rows)} />
-      <dl className="dl">
+      <dl className="ml-kv">
         <Field
           id="d2-signatory"
           label="Υπογράφων"
@@ -224,7 +225,7 @@ function RecipientsList({
   const signatory = recipients.find((r) => r.isSignatory);
   return (
     <>
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Υπογράφων</dt>
         <dd>{signatory ? `${signatory.name} · ${signatory.email}` : "—"}</dd>
       </dl>

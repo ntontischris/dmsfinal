@@ -48,7 +48,7 @@
   border: 1.5px solid color-mix(in oklab, var(--brand-periwinkle) 60%, transparent);
 }
 .c2-step-body { display: grid; gap: .8rem; min-width: 0; }
-.c2-step-body > .dl, .c2-step-body > p, .c2-step-body > .note { margin: 0; }
+.c2-step-body > .ml-kv, .c2-step-body > p, .c2-step-body > .note { margin: 0; }
 
 /* Το ένα κύριο κουμπί της νέας σελίδας (κόκκινο) */
 .c2-go button[type="submit"] {

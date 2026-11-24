@@ -1,3 +1,4 @@
+import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 
 import { Badge } from "@/spaces/screens/shared";
@@ -62,7 +63,7 @@ export function CostSection({ agreement }: { agreement: AgreementDetail }) {
         )
       }
     >
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Εκτιμώμενο κόστος</dt>
         <dd>
           <strong>{estimated === null ? "—" : formatMoney(estimated)}</strong>

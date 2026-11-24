@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -60,7 +61,7 @@ function ScheduleRows({ agreement }: { agreement: AgreementDetail }) {
     LANGUAGES.find((l) => l.value === agreement.language)?.label ??
     agreement.language;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="d2-title"
         label="Τίτλος"

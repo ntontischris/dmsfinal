@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
@@ -51,7 +52,7 @@ function BasicsFields({
   onType: (type: NewItemType) => void;
 }) {
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="c2-name"
         label="Όνομα"
@@ -127,7 +128,7 @@ function PriceFields({
   return (
     <>
       {canEditPrice ? (
-        <dl className="dl">
+        <dl className="ml-kv">
           <Field
             id="c2-price"
             label="Τιμή χωρίς ΦΠΑ"

@@ -1,5 +1,6 @@
 "use client";
 
+import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 
 import { hrefOf } from "@/spaces/data/screens";
@@ -103,7 +104,7 @@ function ActualRow({ actual }: { actual: ActualHours | null }) {
 function CostFields({ item, caps, actual }: CostProps) {
   const hoursEditable = caps.canManageCost;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="c2-hours-shoot"
         label="Ώρες γυρίσματος"
@@ -198,7 +199,7 @@ function CostSummary({ item, hint }: Pick<CostProps, "item" | "hint">) {
   const { min, target, max } = hint.multipliers;
   return (
     <>
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Κόστος ώρας</dt>
         <dd>
           {formatMoney(cost.hourCost)}
