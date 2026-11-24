@@ -101,15 +101,6 @@
   }
 
   @media (max-width: 40rem) {
-    & .d2 .rtable td {
-      flex-wrap: wrap;
-    }
-    & .d2 .rtable td > * {
-      max-width: 100%;
-    }
-    & .d2 .rtable .stack {
-      align-items: flex-end;
-    }
     & .d2-wide {
       min-width: 0;
     }
@@ -147,3 +138,10 @@
     white-space: pre-wrap;
   }
 }
+
+/* Σειρά φίλτρων/πεδίων (αντί του αποσυρμένου .toolbar) */
+[data-look='spaces'] .d2-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
+[data-look='spaces'] .d2-row .grow { flex: 1 1 12rem; }
+
+/* Απόρριψη, ανάκληση, διαγραφή μέσα σε ml-quick: χαμηλωμένο κείμενο (όχι κόκκινο), για να ξεχωρίζει από το κύριο */
+[data-look='spaces'] .ml-quick :is(a, button)[data-danger]:not([data-danger='false']) { color: var(--color-text-muted); }

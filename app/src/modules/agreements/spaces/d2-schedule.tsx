@@ -1,6 +1,5 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -17,6 +16,8 @@ import type {
 import { D2Box } from "./d2-box";
 import { endText } from "./d2-model";
 import { D2Form, Field, IdField, NumberInput } from "./d2-ui";
+
+import "../../finance/spaces/money-lines.css";
 
 // «Έναρξη και διάρκεια» και «Περίοδοι» (prototype `screens/d2-schedule.tsx`, `d2-history.tsx`). Τίτλος, γλώσσα και Ισχύς
 // αποθηκεύονται με το ίδιο action (`updateBasics`) με την Έναρξη και τη Διάρκεια, γι' αυτό είναι στην ίδια φόρμα.
@@ -192,51 +193,40 @@ const STATE_TEXT: Readonly<Record<PeriodState, string>> = {
 
 function PeriodLine({
   period,
-  hasAmount,
   showProduction,
 }: {
   period: PeriodRow;
-  hasAmount: boolean;
   showProduction: boolean;
 }) {
   const isCurrent = period.state === "current";
-  const label = periodLabel(period);
   return (
-    <tr data-current={isCurrent}>
-      <td data-label="Περίοδος">
-        {isCurrent ? <strong>{label}</strong> : label}
-      </td>
-      <td data-label="Ημερομηνίες">
-        {formatDate(period.starts)} – {formatDate(period.ends)}
-        {period.isPartial && (
-          <>
-            {" "}
-            <Badge tone="attention">σπασμένη</Badge>
-          </>
-        )}
-      </td>
-      {hasAmount && (
-        <td className="num" data-label="Ποσό">
-          {period.amount === null ? "—" : formatMoney(period.amount)}
-          {period.isDiscounted && <div className="muted">με έκπτωση</div>}
-        </td>
+    <li className="ml-line" data-current={isCurrent}>
+      <span className="ml-main">
+        <span className="ml-tag">{STATE_TEXT[period.state]}</span>
+        <strong>{periodLabel(period)}</strong>
+        <small>
+          {formatDate(period.starts)} – {formatDate(period.ends)}
+          {period.isPartial && (
+            <>
+              {" "}
+              <Badge tone="attention">σπασμένη</Badge>
+            </>
+          )}
+        </small>
+        <small>
+          Παροχές: {period.givesProvisions ? "ολόκληρες" : "χωρίς νέες Παροχές"}
+        </small>
+      </span>
+      <span className="ml-amount">
+        {period.amount === null ? "—" : formatMoney(period.amount)}
+        {period.isDiscounted && <small>με έκπτωση</small>}
+      </span>
+      {showProduction && period.productionId && (
+        <span className="ml-quick">
+          <Link href={`/app/productions/${period.productionId}`}>Παραγωγή</Link>
+        </span>
       )}
-      <td data-label="Κατάσταση">
-        <Badge tone={isCurrent ? "strong" : undefined}>
-          {STATE_TEXT[period.state]}
-        </Badge>
-      </td>
-      <td data-label="Παροχές">
-        {period.givesProvisions ? "ολόκληρες" : "χωρίς νέες Παροχές"}
-        {showProduction && period.productionId && (
-          <div>
-            <Link href={`/app/productions/${period.productionId}`}>
-              Παραγωγή
-            </Link>
-          </div>
-        )}
-      </td>
-    </tr>
+    </li>
   );
 }
 
@@ -250,7 +240,6 @@ export function PeriodsSection({
 }) {
   const { periods } = agreement;
   if (agreement.kind !== "monthly" || periods.length === 0) return null;
-  const hasAmount = periods.some((p) => p.amount !== null);
   const showProduction =
     canSeeProductions && periods.some((p) => p.productionId !== null);
   return (
@@ -263,29 +252,15 @@ export function PeriodsSection({
         τελευταία δεν δίνει νέες· ο μήνας που δεν είναι ολόκληρος («σπασμένη»)
         χρεώνεται αναλογικά με τις μέρες.
       </p>
-      <div className="scroll">
-        <table className="rtable d2-periods">
-          <thead>
-            <tr>
-              <th>Περίοδος</th>
-              <th>Ημερομηνίες</th>
-              {hasAmount && <th className="num">Ποσό</th>}
-              <th>Κατάσταση</th>
-              <th>Παροχές</th>
-            </tr>
-          </thead>
-          <tbody>
-            {periods.map((period) => (
-              <PeriodLine
-                key={period.n}
-                period={period}
-                hasAmount={hasAmount}
-                showProduction={showProduction}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ul className="ml-list d2-periods" aria-label="Περίοδοι">
+        {periods.map((period) => (
+          <PeriodLine
+            key={period.n}
+            period={period}
+            showProduction={showProduction}
+          />
+        ))}
+      </ul>
     </D2Box>
   );
 }
