@@ -17,7 +17,7 @@ export async function ExpenseNumbers() {
       numbers={{
         I6: saved
           ? { count: "✓", hint: `${fmtMoney(saved.expensesTotal)} τον μήνα` }
-          : { count: "!", hint: "δεν γράφτηκαν ακόμα τον μήνα" },
+          : { count: "!", hint: "δεν γράφτηκαν ακόμα" },
       }}
     />
   );
