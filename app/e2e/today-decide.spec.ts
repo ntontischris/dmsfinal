@@ -4,25 +4,25 @@ import { inSpacesContext } from "./messages-parts";
 import { clientIdByName, project, signIn } from "./sales-parts";
 import { clickUntil } from "./today-parts";
 
-// Σήμερα Σβ (#181) στη νέα εμφάνιση (Χώροι): οι κάρτες «περιμένει απόφαση» μαζεύονται στο «Μόνο εσύ μπορείς». Ο πωλητής
-// κάνει ένα Αίτημα πρόσβασης· ο Ιδιοκτήτης το βλέπει να μετρά στις αποφάσεις, και ο σύνδεσμος της ουράς «Χωρίς υπεύθυνο»
-// τον πάει εκεί, όπου το απορρίπτει (ώστε να μη μείνει τίποτα πίσω). Σειριακά, χωρίς retries· τα δύο projects μοιράζονται
+// Σήμερα Σβ (#181) στην τελική όψη: η κάρτα «Χωρίς υπεύθυνο» ανήκει στην ομάδα «Περιμένω από εξωτερικούς» της Σήμερα.
+// Ο πωλητής κάνει ένα Αίτημα πρόσβασης· ο Ιδιοκτήτης το βλέπει να μετρά στην ομάδα, και ο σύνδεσμος της ουράς
+// «Χωρίς υπεύθυνο» τον πάει εκεί, όπου το απορρίπτει (ώστε να μη μείνει τίποτα πίσω). Σειριακά, χωρίς retries· τα δύο projects μοιράζονται
 // μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
+const GROUP_HREF = "/app?g=externals";
+const groupCount = (page: Page) =>
+  page.locator(`a.money-reel[href="${GROUP_HREF}"] .money-reel-count`);
 
-const decisions = (page: Page) => page.locator("[data-part='decisions']");
-
-// Το πλήθος των αποφάσεων, όταν φορτώσει· 0 αν δεν υπάρχει καμία (το πάνελ μένει χωρίς αριθμό).
+// Το πλήθος της ομάδας «Περιμένω από εξωτερικούς» στη σειρά καρτών της Σήμερα· 0 αν η ομάδα είναι άδεια (δεν φαίνεται).
 async function decisionsCount(page: Page): Promise<number> {
-  await page.goto("/app");
+  await page.goto(GROUP_HREF);
   await expect(
     page.getByRole("heading", { level: 1, name: "Σήμερα" }),
   ).toBeVisible();
-  await expect(decisions(page)).toBeVisible();
-  const total = decisions(page).locator(".kit-panel-head > span.kit-label");
-  if ((await total.count()) === 0) return 0;
-  return Number.parseInt((await total.textContent()) ?? "0", 10);
+  await expect(page.locator("nav.today-deck")).toBeVisible();
+  if ((await groupCount(page).count()) === 0) return 0;
+  return Number.parseInt((await groupCount(page).textContent()) ?? "0", 10);
 }
 
 test("ένα Αίτημα πρόσβασης μετρά στις αποφάσεις της Σήμερα και ο σύνδεσμος πάει στην ουρά «Χωρίς υπεύθυνο»", async ({
@@ -54,10 +54,13 @@ test("ένα Αίτημα πρόσβασης μετρά στις αποφάσε�
   });
 
   await page.reload();
-  await expect(
-    decisions(page).locator(".kit-panel-head > span.kit-label"),
-  ).toHaveText(String(before + 1));
-  await decisions(page).locator('a[href^="/app/unassigned"]').first().click();
+  await expect(groupCount(page)).toHaveText(String(before + 1));
+  await page
+    .locator(
+      "section.a1-zone[data-zone='externals'] a[href^='/app/unassigned']",
+    )
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/app\/unassigned$/);
 
   const request = page.getByRole("listitem").filter({ hasText: topic });

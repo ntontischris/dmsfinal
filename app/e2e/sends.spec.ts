@@ -122,7 +122,7 @@ test("ο Ιδιοκτήτης βλέπει την αποστολή στο K3, φ
   const panel = card(page, "Τι στάλθηκε στον Πελάτη").last();
   await expect(panel).toBeVisible();
   await expect(
-    panel.locator("li.part-row").filter({ hasText: RECIPIENT }).first(),
+    panel.locator("li.ml-line").filter({ hasText: RECIPIENT }).first(),
   ).toContainText("Νέο Μήνυμα");
 });
 
