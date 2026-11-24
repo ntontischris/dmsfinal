@@ -150,13 +150,13 @@ const freeNumberOf = (number: string, taken: ReadonlySet<string>): string => {
   return next !== "" && taken.has(next) ? freeNumberOf(next, taken) : next;
 };
 
-// Η πρόταση αριθμού ανά είδος, από τα Τιμολόγια της εταιρείας (το πρώτο ανά είδος είναι το πιο πρόσφατο), χωρίς τους
-// αριθμούς των ακυρωμένων καταχωρίσεων (taken).
+// Η πρόταση αριθμού ανά είδος, από τα Τιμολόγια της εταιρείας (το πρώτο ανά είδος είναι το πιο πρόσφατο), χωρίς
+// αριθμούς που υπάρχουν ήδη ή ανήκουν σε ακυρωμένες καταχωρίσεις (taken).
 export const numberSuggestionsOf = (
   latestFirst: readonly { kind: InvoiceKind; number: string }[],
   taken: readonly string[] = [],
 ): NumberSuggestions => {
-  const takenSet = new Set(taken);
+  const takenSet = new Set([...taken, ...latestFirst.map((item) => item.number.trim())]);
   return latestFirst.reduce<NumberSuggestions>((acc, item) => {
     if (acc[item.kind] !== undefined) return acc;
     const next = freeNumberOf(item.number, takenSet);

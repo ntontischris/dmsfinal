@@ -319,6 +319,14 @@ describe("numberSuggestionsOf", () => {
     });
   });
 
+  it("should skip a number already registered when the latest by date is not the highest", () => {
+    const latestFirst = [
+      { kind: "invoice" as const, number: "DEMO-016" },
+      { kind: "invoice" as const, number: "DEMO-017" },
+    ];
+    expect(numberSuggestionsOf(latestFirst)).toEqual({ invoice: "DEMO-018" });
+  });
+
   it("should skip kinds whose latest number has no digits", () => {
     expect(numberSuggestionsOf([{ kind: "receipt", number: "ΧΩΡΙΣ" }])).toEqual(
       {},
