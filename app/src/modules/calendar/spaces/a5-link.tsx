@@ -3,14 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-
 import {
   renewCalendarLink,
   revokeCalendarLink,
   type LinkState,
 } from "../actions-link";
+
+import "../../finance/spaces/money-lines.css";
+import "./a5-link.css";
 
 // «Στο κινητό σου» από το prototype (`screens/a5-link.tsx`), με τον πραγματικό σύνδεσμο: το token φαίνεται μία φορά,
 // μετά τη δημιουργία ή την ανανέωση, και μόνο στη μνήμη της σελίδας (μένει το hash στη βάση).
@@ -19,6 +19,8 @@ interface CalendarLinkCardProps {
   exists: boolean;
   createdLabel: string | null;
   isClient: boolean;
+  // Στο Προφίλ (A3) κλειστό κουτί όπως τα υπόλοιπα· στο Ημερολόγιο (A5) ανοιχτό.
+  isOpen?: boolean;
 }
 
 type Confirming = "renew" | "revoke" | null;
@@ -39,16 +41,16 @@ const CLIENT_CONTENT = [
 
 function Instructions() {
   return (
-    <details>
+    <details className="a5-link-how">
       <summary>Πώς το βάζω στο κινητό</summary>
       <h4>iPhone</h4>
-      <ol className="a3-steps">
+      <ol className="a5-link-steps">
         <li>Ρυθμίσεις › Ημερολόγιο › Λογαριασμοί › Προσθήκη λογαριασμού</li>
         <li>Άλλο › «Προσθήκη ημερολογίου συνδρομής»</li>
         <li>Επικόλλησε τον σύνδεσμο.</li>
       </ol>
       <h4>Google</h4>
-      <ol className="a3-steps">
+      <ol className="a5-link-steps">
         <li>
           Στον υπολογιστή: calendar.google.com › «Άλλα ημερολόγια» › «+» › «Από
           URL» › επικόλλησε τον σύνδεσμο.
@@ -58,9 +60,9 @@ function Instructions() {
           «Συγχρονισμός».
         </li>
       </ol>
-      <p className="note">
+      <small className="a5-link-note">
         Το Google ενημερώνεται κάθε λίγες ώρες, όχι αμέσως.
-      </p>
+      </small>
     </details>
   );
 }
@@ -77,11 +79,13 @@ function Address({ url }: { url: string }) {
   };
   return (
     <>
-      <div className="a5-url">
+      <div className="a5-link-url">
         <code>{url}</code>
-        <button type="button" className="button" onClick={handleCopy}>
-          {isCopied ? "Αντιγράφηκε" : "Αντιγραφή"}
-        </button>
+        <span className="ml-quick">
+          <button type="button" onClick={handleCopy}>
+            {isCopied ? "Αντιγράφηκε" : "Αντιγραφή"}
+          </button>
+        </span>
       </div>
       <p className="muted">
         Ο σύνδεσμος φαίνεται μόνο τώρα. Αν τον χάσεις, ανανέωσέ τον.
@@ -100,24 +104,23 @@ interface ConfirmProps {
 function Confirm({ confirming, isPending, onConfirm, onCancel }: ConfirmProps) {
   const isRenew = confirming === "renew";
   return (
-    <div className="stack" role="alert">
-      <p className="note">
+    <div className="a5-link-confirm" role="alert">
+      <small className="a5-link-note" data-warn="true">
         {isRenew
           ? "Ο παλιός σύνδεσμος σταματά αμέσως. Θα χρειαστεί να τον ξαναπροσθέσεις στο κινητό."
           : "Ο σύνδεσμος σταματά αμέσως."}
-      </p>
-      <div className="btn-row">
+      </small>
+      <div className="ml-actions">
+        <button type="button" onClick={onCancel}>
+          Άκυρο
+        </button>
         <button
           type="button"
-          className="button"
           data-danger="true"
           disabled={isPending}
           onClick={onConfirm}
         >
           {isRenew ? "Ανανέωση τώρα" : "Κατάργηση τώρα"}
-        </button>
-        <button type="button" className="button" onClick={onCancel}>
-          Άκυρο
         </button>
       </div>
     </div>
@@ -134,29 +137,24 @@ interface ActionsProps {
 function Actions({ exists, isPending, onCreate, onAsk }: ActionsProps) {
   if (!exists)
     return (
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        disabled={isPending}
-        onClick={onCreate}
-      >
-        {isPending ? "Δημιουργία…" : "Δημιουργία συνδέσμου"}
-      </button>
+      <div className="ml-actions">
+        <button
+          type="button"
+          data-primary="true"
+          disabled={isPending}
+          onClick={onCreate}
+        >
+          {isPending ? "Δημιουργία…" : "Δημιουργία συνδέσμου"}
+        </button>
+      </div>
     );
   return (
-    <div className="btn-row">
-      <button
-        type="button"
-        className="button"
-        disabled={isPending}
-        onClick={() => onAsk("renew")}
-      >
+    <div className="ml-actions">
+      <button type="button" disabled={isPending} onClick={() => onAsk("renew")}>
         Ανανέωση συνδέσμου
       </button>
       <button
         type="button"
-        className="button"
         data-danger="true"
         disabled={isPending}
         onClick={() => onAsk("revoke")}
@@ -171,6 +169,7 @@ export function CalendarLinkCard({
   exists,
   createdLabel,
   isClient,
+  isOpen = true,
 }: CalendarLinkCardProps) {
   const router = useRouter();
   const [url, setUrl] = useState<string | null>(null);
@@ -196,50 +195,55 @@ export function CalendarLinkCard({
     });
 
   return (
-    <Panel label="Στο κινητό σου">
-      <p className="muted">Σύνδεσμος ημερολογίου (μόνο για εσένα)</p>
-      {url ? (
-        <Address url={url} />
-      ) : (
-        <p className="muted">
-          {exists
-            ? `Δημιουργήθηκε στις ${createdLabel ?? "—"}.`
-            : "Δεν έχεις σύνδεσμο ακόμα."}
-        </p>
-      )}
-      {confirming ? (
-        <Confirm
-          confirming={confirming}
-          isPending={isPending}
-          onConfirm={confirming === "renew" ? handleRenew : handleRevoke}
-          onCancel={() => setConfirming(null)}
-        />
-      ) : (
-        <Actions
-          exists={exists}
-          isPending={isPending}
-          onCreate={handleRenew}
-          onAsk={setConfirming}
-        />
-      )}
-      {error && (
-        <p className="a6-error" role="alert">
-          {error}
-        </p>
-      )}
-      <h3>Τι περιέχει</h3>
-      <RowList>
-        {(isClient ? CLIENT_CONTENT : TEAM_CONTENT).map((text) => (
-          <ListRow
-            key={text}
-            title={<span className="a5-plain">{text}</span>}
-          />
-        ))}
-      </RowList>
-      <Instructions />
-      <p className="note">
-        Μόνο ανάγνωση. Παύει να λειτουργεί αν απενεργοποιηθεί ο λογαριασμός σου.
-      </p>
-    </Panel>
+    <section>
+      <details className="ml-box" open={isOpen}>
+        <summary>
+          <h2 className="ml-box-title">Στο κινητό σου</h2>
+          <small>Σύνδεσμος ημερολογίου (μόνο για εσένα)</small>
+        </summary>
+        <div className="a5-link-body">
+          {url ? (
+            <Address url={url} />
+          ) : (
+            <p className="muted">
+              {exists
+                ? `Δημιουργήθηκε στις ${createdLabel ?? "—"}.`
+                : "Δεν έχεις σύνδεσμο ακόμα."}
+            </p>
+          )}
+          {confirming ? (
+            <Confirm
+              confirming={confirming}
+              isPending={isPending}
+              onConfirm={confirming === "renew" ? handleRenew : handleRevoke}
+              onCancel={() => setConfirming(null)}
+            />
+          ) : (
+            <Actions
+              exists={exists}
+              isPending={isPending}
+              onCreate={handleRenew}
+              onAsk={setConfirming}
+            />
+          )}
+          {error && (
+            <small className="a5-link-note" data-warn="true" role="alert">
+              {error}
+            </small>
+          )}
+          <h3>Τι περιέχει</h3>
+          <ul className="a5-link-list">
+            {(isClient ? CLIENT_CONTENT : TEAM_CONTENT).map((text) => (
+              <li key={text}>{text}</li>
+            ))}
+          </ul>
+          <Instructions />
+          <small className="a5-link-note">
+            Μόνο ανάγνωση. Παύει να λειτουργεί αν απενεργοποιηθεί ο λογαριασμός
+            σου.
+          </small>
+        </div>
+      </details>
+    </section>
   );
 }
