@@ -1,20 +1,23 @@
 "use client";
 
 import { useKeptForm } from "@/lib/use-kept-form";
-import { Panel } from "@/spaces/kit/panel";
 
 import { saveRoleFirstSteps } from "../first-steps-actions";
 import { InviteMessage } from "./n1-invite";
+import { Box } from "./n-parts";
 
 // a3: ο Ιδιοκτήτης γράφει τι βλέπει στην κάρτα «Πρώτα βήματα» όποιος έχει αυτόν τον Ρόλο.
 export function RoleFirstStepsForm(props: { roleId: string; body: string }) {
   const { state, isPending, onSubmit } = useKeptForm(saveRoleFirstSteps);
   return (
     <div id="role-first-steps">
-      <Panel label="Πρώτα βήματα">
-        <form onSubmit={onSubmit} className="n1-form">
+      <Box
+        title="Πρώτα βήματα"
+        hint={props.body ? "Η κάρτα της πρώτης εισόδου" : "Καμία κάρτα ακόμα"}
+      >
+        <form onSubmit={onSubmit} className="ml-fields">
           <input type="hidden" name="roleId" value={props.roleId} />
-          <label className="n1-field">
+          <label className="ml-field">
             <span>Κείμενο κάρτας</span>
             <textarea
               className="input"
@@ -23,19 +26,19 @@ export function RoleFirstStepsForm(props: { roleId: string; body: string }) {
               maxLength={2000}
               defaultValue={props.body}
             />
+            <small>
+              Φαίνεται στη Σήμερα, στην πρώτη είσοδο, μέχρι ο Χρήστης να πατήσει
+              «Κατάλαβα». Κενό = καμία κάρτα για αυτόν τον Ρόλο.
+            </small>
           </label>
-          <p className="muted">
-            Φαίνεται στη Σήμερα, στην πρώτη είσοδο, μέχρι ο Χρήστης να πατήσει
-            «Κατάλαβα». Κενό = καμία κάρτα για αυτόν τον Ρόλο.
-          </p>
-          <div className="btn-row">
-            <button type="submit" className="button" disabled={isPending}>
+          <div className="ml-actions">
+            <InviteMessage state={state} />
+            <button type="submit" disabled={isPending}>
               {isPending ? "Αποθήκευση…" : "Αποθήκευση κειμένου"}
             </button>
-            <InviteMessage state={state} />
           </div>
         </form>
-      </Panel>
+      </Box>
     </div>
   );
 }

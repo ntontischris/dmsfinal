@@ -37,10 +37,11 @@ export function DeleteRoleConfirm({
   return (
     <form
       action={action}
-      className="n4-confirm"
+      className="n-confirm"
       role="alertdialog"
       aria-label="Επιβεβαίωση"
     >
+      <h2 className="ml-box-title">Διαγραφή: {role.name}</h2>
       <input type="hidden" name="id" value={role.id} />
       {move ? (
         <>
@@ -49,19 +50,21 @@ export function DeleteRoleConfirm({
             άλλον Ρόλο, και μετά ο «{role.name}» διαγράφεται. Γράφεται στο
             Ίχνος.
           </p>
-          <label className="n4-role-name">
-            <span>{move.label}</span>
-            <select className="select" name="moveTo" required defaultValue="">
-              <option value="" disabled>
-                Διάλεξε Ρόλο
-              </option>
-              {move.targets.map((target) => (
-                <option key={target.id} value={target.id}>
-                  {target.name}
+          <div className="ml-fields">
+            <label className="ml-field">
+              <span>{move.label}</span>
+              <select className="input" name="moveTo" required defaultValue="">
+                <option value="" disabled>
+                  Διάλεξε Ρόλο
                 </option>
-              ))}
-            </select>
-          </label>
+                {move.targets.map((target) => (
+                  <option key={target.id} value={target.id}>
+                    {target.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </>
       ) : (
         <p>
@@ -69,23 +72,16 @@ export function DeleteRoleConfirm({
           γράφεται στο Ίχνος.
         </p>
       )}
-      {state.error && (
-        <p className="note" role="alert">
-          {state.error}
-        </p>
-      )}
-      <div className="btn-row n4-actions">
-        <button
-          type="submit"
-          className="button"
-          data-danger="true"
-          disabled={isDeleting}
-        >
+      <div className="ml-actions">
+        {state.error && (
+          <p className="note" role="alert">
+            {state.error}
+          </p>
+        )}
+        <Link href={backHref}>Άκυρο</Link>
+        <button type="submit" data-danger="true" disabled={isDeleting}>
           {isDeleting ? "Διαγραφή…" : submitLabel}
         </button>
-        <Link className="button" href={backHref}>
-          Άκυρο
-        </Link>
       </div>
     </form>
   );

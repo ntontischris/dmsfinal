@@ -14,7 +14,6 @@ import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
 
-
 const PASSWORD = "e2e-password-123";
 const GDPR = "/app/team/gdpr";
 
@@ -96,9 +95,17 @@ const panelOf = (page: Page, title: string) =>
     .locator("xpath=ancestor::section[1]");
 
 const gdprPanel = (page: Page) => panelOf(page, "GDPR (μόνο Ιδιοκτήτης)");
+// Το κουτί GDPR είναι κλειστό: ανοίγει με κλικ στον τίτλο του.
+const openGdprPanel = async (page: Page) => {
+  await page
+    .getByRole("heading", { name: "GDPR (μόνο Ιδιοκτήτης)", exact: true })
+    .click();
+  return gdprPanel(page);
+};
 
 // Το GDPR του Πελάτη είναι στην καρτέλα «users» της Σελίδας Πελάτη (με τους Χρήστες πελάτη).
-const clientUsersTab = (clientId: string) => `/app/clients/${clientId}?tab=users`;
+const clientUsersTab = (clientId: string) =>
+  `/app/clients/${clientId}?tab=users`;
 
 test("ο Ιδιοκτήτης καταγράφει αίτημα, βλέπει την προθεσμία και στο Σήμερα, και το κλείνει", async ({
   page,
@@ -153,7 +160,7 @@ test("η εξαγωγή Πελάτη κατεβάζει ZIP με JSON και CSV
 
   await signIn(page, "owner@example.com");
   await page.goto(clientUsersTab(clientId));
-  const panel = gdprPanel(page);
+  const panel = await openGdprPanel(page);
   await expect(
     panel.getByRole("button", { name: "Εξαγωγή δεδομένων Πελάτη" }),
   ).toBeVisible();
@@ -197,7 +204,7 @@ test("η ανωνυμοποίηση θέλει το όνομα γραμμένο 
 
   await signIn(page, "owner@example.com");
   await page.goto(`/app/team/${userId}`);
-  const panel = gdprPanel(page);
+  const panel = await openGdprPanel(page);
   await panel.getByRole("link", { name: "Ανωνυμοποίηση", exact: true }).click();
   await expect(page).toHaveURL(/\?confirm=anonymize$/);
   const dialog = panelOf(page, `Ανωνυμοποίηση: ${name}`);

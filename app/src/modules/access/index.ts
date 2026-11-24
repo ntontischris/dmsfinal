@@ -49,7 +49,9 @@ export { SpacesTeam, SpacesTeamUser } from "./spaces/n1-screen";
 export { SpacesInvite } from "./spaces/invite-screen";
 // a3 «Πρώτα βήματα» στη Σήμερα.
 export { SpacesFirstSteps } from "./spaces/first-steps-card";
-export { SpacesNewRole, SpacesRole, SpacesRoles } from "./spaces/n4-screen";
+export { SpacesRoles } from "./spaces/n4-screen";
+export { SpacesRole } from "./spaces/n4-role";
+export { SpacesNewRole } from "./spaces/n4-new";
 // Νέα εμφάνιση των δημόσιων σελίδων (R9 Είσοδος, R10 Επαναφορά/Νέος κωδικός, R13 Ο σύνδεσμος δεν ισχύει πια).
 export { AuthPage } from "./spaces/r-frame";
 export { SpacesLoginForm } from "./spaces/r9-login-form";

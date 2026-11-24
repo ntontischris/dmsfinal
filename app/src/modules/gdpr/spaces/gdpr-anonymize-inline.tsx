@@ -20,12 +20,7 @@ export function AnonymizeInline({
   const [isConfirming, setIsConfirming] = useState(false);
   if (!isConfirming)
     return (
-      <button
-        type="button"
-        className="button"
-        data-danger
-        onClick={() => setIsConfirming(true)}
-      >
+      <button type="button" data-danger onClick={() => setIsConfirming(true)}>
         Ανωνυμοποίηση
       </button>
     );

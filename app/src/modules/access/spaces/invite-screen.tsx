@@ -59,6 +59,7 @@ export async function SpacesInvite({
     <div data-spaces>
       <InvitePanel
         title="Πρόσκληση Χρήστη"
+        isPage
         {...options}
         initialKind={pickInviteKind(kind)}
       />

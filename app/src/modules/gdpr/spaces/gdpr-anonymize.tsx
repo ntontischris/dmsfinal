@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { useKeptForm } from "@/lib/use-kept-form";
-import { Panel } from "@/spaces/kit/panel";
 
 import { anonymizeSubject } from "../actions";
 import { ERASED_TEXT, KEPT_TEXT } from "../labels";
 import type { PersonKind } from "../schemas";
+import { GdprConfirmCard } from "./gdpr-parts";
 
 interface AnonymizeConfirmProps {
   subjectKind: PersonKind;
@@ -28,15 +28,10 @@ function BackControl({
   onCancel?: () => void;
   label: string;
 }) {
-  if (backHref)
-    return (
-      <Link className="button" href={backHref}>
-        {label}
-      </Link>
-    );
+  if (backHref) return <Link href={backHref}>{label}</Link>;
   if (!onCancel) return null;
   return (
-    <button type="button" className="button" onClick={onCancel}>
+    <button type="button" onClick={onCancel}>
       {label}
     </button>
   );
@@ -55,63 +50,54 @@ export function AnonymizeConfirm({
   const [typed, setTyped] = useState("");
   if (state.notice)
     return (
-      <div className="n1-danger" role="status">
-        <Panel label={`Ανωνυμοποίηση: ${name}`}>
-          <p>{state.notice}</p>
-          {backHref && (
-            <Link className="button" href={backHref}>
-              Πίσω στον Χρήστη
-            </Link>
-          )}
-        </Panel>
-      </div>
+      <GdprConfirmCard title={`Ανωνυμοποίηση: ${name}`} role="status">
+        <p>{state.notice}</p>
+        {backHref && (
+          <div className="ml-actions">
+            <Link href={backHref}>Πίσω στον Χρήστη</Link>
+          </div>
+        )}
+      </GdprConfirmCard>
     );
   return (
-    <div className="n1-danger">
-      <Panel label={`Ανωνυμοποίηση: ${name}`}>
-        <form ref={formRef} onSubmit={onSubmit}>
-          <input type="hidden" name="subjectKind" value={subjectKind} />
-          <input type="hidden" name="subjectId" value={subjectId} />
-          <p>
-            <strong>Μη αναστρέψιμη.</strong> Σβήνονται: {ERASED_TEXT}
+    <GdprConfirmCard title={`Ανωνυμοποίηση: ${name}`}>
+      <form ref={formRef} onSubmit={onSubmit}>
+        <input type="hidden" name="subjectKind" value={subjectKind} />
+        <input type="hidden" name="subjectId" value={subjectId} />
+        <p>
+          <strong>Μη αναστρέψιμη.</strong> Σβήνονται: {ERASED_TEXT}
+        </p>
+        <p className="muted">Μένουν: {KEPT_TEXT}</p>
+        <div className="ml-field">
+          <label htmlFor="n1-anon-name">Γράψε «{name}» για επιβεβαίωση</label>
+          <input
+            id="n1-anon-name"
+            className="input"
+            name="typedName"
+            autoComplete="off"
+            value={typed}
+            onChange={(event) => setTyped(event.target.value)}
+          />
+        </div>
+        {state.error && (
+          <p className="g-warn" role="alert">
+            {state.error}
           </p>
-          <p className="muted">Μένουν: {KEPT_TEXT}</p>
-          <div className="n1-field">
-            <label htmlFor="n1-anon-name">Γράψε «{name}» για επιβεβαίωση</label>
-            <input
-              id="n1-anon-name"
-              className="input"
-              name="typedName"
-              autoComplete="off"
-              value={typed}
-              onChange={(event) => setTyped(event.target.value)}
-            />
-          </div>
-          {state.error && (
-            <p className="note" role="alert">
-              {state.error}
-            </p>
-          )}
-          <div className="btn-row n1-section">
-            <button
-              type="submit"
-              className="button"
-              data-danger
-              disabled={isPending || typed.trim() !== name.trim()}
-            >
-              {isPending ? "Ανωνυμοποίηση…" : "Ανωνυμοποίηση οριστικά"}
-            </button>
-            <BackControl
-              backHref={backHref}
-              onCancel={onCancel}
-              label="Άκυρο"
-            />
-          </div>
-          <p className="note">
-            Το κουμπί ενεργοποιείται όταν το όνομα ταιριάζει ακριβώς.
-          </p>
-        </form>
-      </Panel>
-    </div>
+        )}
+        <div className="ml-actions">
+          <BackControl backHref={backHref} onCancel={onCancel} label="Άκυρο" />
+          <button
+            type="submit"
+            data-danger
+            disabled={isPending || typed.trim() !== name.trim()}
+          >
+            {isPending ? "Ανωνυμοποίηση…" : "Ανωνυμοποίηση οριστικά"}
+          </button>
+        </div>
+        <p className="g-note">
+          Το κουμπί ενεργοποιείται όταν το όνομα ταιριάζει ακριβώς.
+        </p>
+      </form>
+    </GdprConfirmCard>
   );
 }

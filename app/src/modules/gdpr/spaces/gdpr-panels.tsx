@@ -1,8 +1,6 @@
 import Link from "next/link";
 
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge, fmtDate } from "@/spaces/screens/shared";
+import { fmtDate } from "@/spaces/screens/shared";
 
 import {
   BLOCK_TEXT,
@@ -19,8 +17,10 @@ import type { GdprRequest } from "../schemas";
 import { AnonymizeConfirm } from "./gdpr-anonymize";
 import { CompleteForm } from "./gdpr-complete";
 import { ExportButton } from "./gdpr-export";
+import { GdprBox, GdprConfirmCard, GdprLine } from "./gdpr-parts";
 
-// Τα τμήματα GDPR της N1 στη νέα εμφάνιση (prototype `screens/n1-gdpr.tsx`). Μόνο για τον Ιδιοκτήτη· η βάση αρνείται σε άλλους.
+// Τα τμήματα GDPR (prototype `screens/n1-gdpr.tsx`) στο ύφος των κλειστών κουτιών. Μόνο για τον Ιδιοκτήτη· η βάση
+// αρνείται σε άλλους. Το κεντρικό σπίτι είναι τα Αιτήματα GDPR (/app/team/gdpr)· η Ομάδα και η σελίδα Χρήστη δείχνουν εκεί.
 
 // Πού ζει το υποκείμενο: Χρήστης ομάδας στη N1, Επαφή και Πελάτης στη B2. Ο Χρήστης πελάτη δεν έχει δική του σελίδα.
 export const subjectHref = (request: GdprRequest): string | undefined => {
@@ -30,10 +30,8 @@ export const subjectHref = (request: GdprRequest): string | undefined => {
   return `/app/clients/${request.subjectId}`;
 };
 
-function DeadlineBadge({ request }: { request: GdprRequest }) {
-  const badge = deadlineBadge(request);
-  return <Badge tone={badge.tone}>{badge.text}</Badge>;
-}
+const PANEL_LABEL = "GDPR (μόνο Ιδιοκτήτης)";
+const LOAD_FAILED = "Δεν φόρτωσε το GDPR. Δοκίμασε ξανά σε λίγο.";
 
 export function GdprRequestRows({
   requests,
@@ -44,28 +42,36 @@ export function GdprRequestRows({
   canComplete?: boolean;
 }) {
   return (
-    <div className="n1-bleed">
-      <RowList>
-        {requests.map((r) => (
-          <ListRow
+    <ul className="ml-list">
+      {requests.map((r) => {
+        const title = `${KIND_LABEL[r.kind]}: ${r.subjectLabel}`;
+        return (
+          <GdprLine
             key={r.id}
+            name={r.subjectLabel}
             href={subjectHref(r)}
-            title={`${KIND_LABEL[r.kind]}: ${r.subjectLabel}`}
+            title={title}
+            tag={deadlineBadge(r).text}
+            isFaded={Boolean(r.completedOn)}
             sub={`${SUBJECT_KIND_LABEL[r.subjectKind]} · Λήψη ${fmtDate(r.receivedOn)} · προθεσμία ${fmtDate(r.deadline)}${r.note ? ` · ${r.note}` : ""}`}
-            aside={
-              <>
-                <DeadlineBadge request={r} />
-                {canComplete && !r.completedOn && (
-                  <CompleteForm
-                    id={r.id}
-                    label={`${KIND_LABEL[r.kind]}: ${r.subjectLabel}`}
-                  />
-                )}
-              </>
+            quick={
+              canComplete && !r.completedOn ? (
+                <CompleteForm id={r.id} label={title} />
+              ) : undefined
             }
           />
-        ))}
-      </RowList>
+        );
+      })}
+    </ul>
+  );
+}
+
+function GoToRequests({ label }: { label: string }) {
+  return (
+    <div className="ml-actions">
+      <Link data-primary href={GDPR_PATH}>
+        {label}
+      </Link>
     </div>
   );
 }
@@ -73,27 +79,26 @@ export function GdprRequestRows({
 // Το μητρώο με μια ματιά, στη σελίδα της Ομάδας. Η καταγραφή και το κλείσιμο γίνονται στα Αιτήματα GDPR.
 export async function GdprRequests() {
   const register = await getGdprRegister();
+  const open = register.ok
+    ? register.data.requests.filter((r) => !r.completedOn).length
+    : 0;
   return (
-    <Panel
-      label="Αιτήματα GDPR"
-      aside={<Link href={GDPR_PATH}>Όλα τα αιτήματα</Link>}
-    >
+    <GdprBox title={GDPR_TITLE} hint={`Μόνο ο Ιδιοκτήτης · ${open} ανοιχτά`}>
       {!register.ok ? (
         <p className="muted">
           Δεν φόρτωσαν τα Αιτήματα GDPR. Δοκίμασε ξανά σε λίγο.
         </p>
       ) : register.data.requests.length === 0 ? (
-        <p className="muted">{GDPR_EMPTY}</p>
+        <p className="ml-empty">{GDPR_EMPTY}</p>
       ) : (
         <GdprRequestRows requests={register.data.requests} />
       )}
-      <p className="note">
-        Μόνο ο Ιδιοκτήτης. Προθεσμία 1 μήνας από τη λήψη. Η εξαγωγή για πρόσωπο
-        γίνεται από τη σελίδα του Χρήστη· για Πελάτη ολόκληρο, από τη σελίδα του
-        Πελάτη. Νέο αίτημα καταγράφεις στα{" "}
-        <Link href={GDPR_PATH}>{GDPR_TITLE}</Link>.
+      <p className="g-note">
+        Προθεσμία 1 μήνας από τη λήψη. Η εξαγωγή για πρόσωπο γίνεται από τη
+        σελίδα του Χρήστη· για Πελάτη ολόκληρο, από τη σελίδα του Πελάτη.
       </p>
-    </Panel>
+      <GoToRequests label="Όλα τα αιτήματα" />
+    </GdprBox>
   );
 }
 
@@ -111,15 +116,22 @@ export async function GdprUserSection({
   const subjects = await getGdprSubjects();
   if (!subjects.ok)
     return (
-      <Panel label="GDPR (μόνο Ιδιοκτήτης)">
-        <p className="muted">Δεν φόρτωσε το GDPR. Δοκίμασε ξανά σε λίγο.</p>
-      </Panel>
+      <GdprBox title={PANEL_LABEL} hint="Εξαγωγή και Ανωνυμοποίηση">
+        <p className="muted">{LOAD_FAILED}</p>
+      </GdprBox>
     );
   const user = subjects.data.teamUsers.find((row) => row.id === userId);
   if (!user) return null;
   return (
-    <Panel label="GDPR (μόνο Ιδιοκτήτης)">
-      <div className="btn-row">
+    <GdprBox
+      title={PANEL_LABEL}
+      hint={user.block ? BLOCK_TEXT[user.block] : "Εξαγωγή και Ανωνυμοποίηση"}
+    >
+      <p className="g-note">
+        {ZIP_NOTE}
+        {user.block && ` ${BLOCK_TEXT[user.block]}`}
+      </p>
+      <div className="ml-actions">
         {user.block !== "anonymized" && (
           <ExportButton
             subjectKind="team_user"
@@ -128,30 +140,34 @@ export async function GdprUserSection({
           />
         )}
         {user.block === null ? (
-          <Link className="button" data-danger href={anonymizeHref}>
+          <Link data-danger href={anonymizeHref}>
             Ανωνυμοποίηση
           </Link>
         ) : (
-          <button type="button" className="button" disabled>
+          <button type="button" disabled>
             Ανωνυμοποίηση
           </button>
         )}
       </div>
-      <p className="note">
-        {ZIP_NOTE}
-        {user.block && ` ${BLOCK_TEXT[user.block]}`}
+      <p className="g-note">
+        Κάθε αίτημα καταγράφεται στα Αιτήματα GDPR, με προθεσμία 1 μήνα.
       </p>
-      <p className="note">
-        Κάθε αίτημα καταγράφεται στα <Link href={GDPR_PATH}>{GDPR_TITLE}</Link>,
-        με προθεσμία 1 μήνα.
-      </p>
-    </Panel>
+      <GoToRequests label={GDPR_TITLE} />
+    </GdprBox>
   );
 }
 
 interface GdprAnonymizeProps {
   userId: string;
   backHref: string;
+}
+
+function BackToUser({ href }: { href: string }) {
+  return (
+    <div className="ml-actions">
+      <Link href={href}>Πίσω στον Χρήστη</Link>
+    </div>
+  );
 }
 
 // Η επιβεβαίωση, ή γιατί δεν γίνεται (prototype: AnonymizeConfirm).
@@ -163,29 +179,17 @@ export async function GdprAnonymize({ userId, backHref }: GdprAnonymizeProps) {
   // Μετά την ανωνυμοποίηση η σελίδα ξαναφορτώνει: εδώ λέμε ότι έγινε, όχι ότι «δεν γίνεται».
   if (user?.block === "anonymized")
     return (
-      <div className="n1-danger" role="status">
-        <Panel label="Ανωνυμοποίηση">
-          <p>{BLOCK_TEXT.anonymized}</p>
-          <Link className="button" href={backHref}>
-            Πίσω στον Χρήστη
-          </Link>
-        </Panel>
-      </div>
+      <GdprConfirmCard title="Ανωνυμοποίηση" role="status">
+        <p>{BLOCK_TEXT.anonymized}</p>
+        <BackToUser href={backHref} />
+      </GdprConfirmCard>
     );
   if (!user || user.block !== null)
     return (
-      <div className="n1-danger" role="alert">
-        <Panel label="Δεν γίνεται η Ανωνυμοποίηση">
-          <p>
-            {user?.block
-              ? BLOCK_TEXT[user.block]
-              : "Δεν φόρτωσε το GDPR. Δοκίμασε ξανά σε λίγο."}
-          </p>
-          <Link className="button" href={backHref}>
-            Πίσω στον Χρήστη
-          </Link>
-        </Panel>
-      </div>
+      <GdprConfirmCard title="Δεν γίνεται η Ανωνυμοποίηση" role="alert">
+        <p>{user?.block ? BLOCK_TEXT[user.block] : LOAD_FAILED}</p>
+        <BackToUser href={backHref} />
+      </GdprConfirmCard>
     );
   return (
     <AnonymizeConfirm

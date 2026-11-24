@@ -105,13 +105,15 @@ async function inviteTeamMember(
   email: string,
   name: string,
 ): Promise<void> {
-  await page.goto("/app/team");
+  // Η πρόσκληση ζει στη N6· οι εκκρεμείς Προσκλήσεις και οι Χρήστες φαίνονται στη N1.
+  await page.goto("/app/team/invite");
   const form = page.locator("#n1-invite");
   await form.getByLabel("Ονοματεπώνυμο", { exact: true }).fill(name);
   await form.getByLabel("Email", { exact: true }).fill(email);
   await form.getByLabel("Ρόλος Πωλήσεις", { exact: true }).check();
   await form.getByRole("button", { name: "Αποστολή πρόσκλησης" }).click();
   await expect(form.getByRole("status")).toContainText("Η πρόσκληση στάλθηκε");
+  await page.goto("/app/team");
 }
 
 test("ο Ιδιοκτήτης προσκαλεί Χρήστη ομάδας, ο προσκεκλημένος μπαίνει και η πρόσκληση γίνεται Αποδεκτή", async ({

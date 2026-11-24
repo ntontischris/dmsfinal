@@ -1,8 +1,6 @@
 import Link from "next/link";
 
 import { isOwner, type Viewer } from "@/modules/access";
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
 import { hrefOf } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
@@ -12,15 +10,15 @@ import {
   GDPR_NO_ACCESS,
   GDPR_NOTE,
   GDPR_PATH,
+  GDPR_TITLE,
 } from "../labels";
 import { getGdprRegister, getGdprSubjects } from "../queries";
 import type { GdprSubjects } from "../schemas";
 import { AnonymizeConfirm } from "./gdpr-anonymize";
 import { ExportButton } from "./gdpr-export";
 import { GdprRequestRows } from "./gdpr-panels";
+import { GdprConfirmCard, GdprLine, GdprSection } from "./gdpr-parts";
 import { RequestForm } from "./gdpr-request";
-
-import "./gdpr.css";
 
 // Οι Χρήστες πελάτη που δεν ανήκουν πια σε κανέναν Πελάτη: δεν έχουν άλλη σελίδα, άρα η Εξαγωγή και η Ανωνυμοποίησή τους ζουν εδώ.
 function DetachedClientUsers({ subjects }: { subjects: GdprSubjects }) {
@@ -28,46 +26,47 @@ function DetachedClientUsers({ subjects }: { subjects: GdprSubjects }) {
     (user) => user.clientIds.length === 0,
   );
   return (
-    <Panel label={`Χρήστες πελάτη χωρίς Πελάτη (${users.length})`}>
+    <GdprSection
+      title={`Χρήστες πελάτη χωρίς Πελάτη (${users.length})`}
+      hint="Δεν έχουν άλλη σελίδα: Εξαγωγή και Ανωνυμοποίηση γίνονται εδώ"
+    >
       {users.length === 0 ? (
-        <p className="muted">
+        <p className="ml-empty">
           Κανένας. Όποιος αφαιρεθεί από κάθε Πελάτη εμφανίζεται εδώ.
         </p>
       ) : (
-        <div className="n1-bleed">
-          <RowList>
-            {users.map((user) => (
-              <ListRow
-                key={user.id}
-                lead={<Avatar name={user.name} size={36} />}
-                title={user.name}
-                sub={user.block ? BLOCK_TEXT[user.block] : undefined}
-                aside={
-                  <>
-                    {user.block !== "anonymized" && (
-                      <ExportButton
-                        subjectKind="client_user"
-                        subjectId={user.id}
-                        label="Εξαγωγή δεδομένων"
-                      />
-                    )}
-                    {user.block === null && (
-                      <Link
-                        className="button"
-                        data-danger
-                        href={`${GDPR_PATH}?anonymize=${encodeURIComponent(user.id)}`}
-                      >
-                        Ανωνυμοποίηση
-                      </Link>
-                    )}
-                  </>
-                }
-              />
-            ))}
-          </RowList>
-        </div>
+        <ul className="ml-list">
+          {users.map((user) => (
+            <GdprLine
+              key={user.id}
+              name={user.name}
+              title={user.name}
+              sub={user.block ? BLOCK_TEXT[user.block] : undefined}
+              isFaded={user.block === "anonymized"}
+              quick={
+                <>
+                  {user.block !== "anonymized" && (
+                    <ExportButton
+                      subjectKind="client_user"
+                      subjectId={user.id}
+                      label="Εξαγωγή δεδομένων"
+                    />
+                  )}
+                  {user.block === null && (
+                    <Link
+                      data-danger
+                      href={`${GDPR_PATH}?anonymize=${encodeURIComponent(user.id)}`}
+                    >
+                      Ανωνυμοποίηση
+                    </Link>
+                  )}
+                </>
+              }
+            />
+          ))}
+        </ul>
       )}
-    </Panel>
+    </GdprSection>
   );
 }
 
@@ -83,16 +82,14 @@ function Confirm({
   );
   if (!user || user.block !== null)
     return (
-      <div className="n1-danger" role="alert">
-        <Panel label="Δεν γίνεται η Ανωνυμοποίηση">
-          <p>
-            {user?.block ? BLOCK_TEXT[user.block] : "Το πρόσωπο δεν βρέθηκε."}
-          </p>
-          <Link className="button" href={GDPR_PATH}>
-            Πίσω στα Αιτήματα
-          </Link>
-        </Panel>
-      </div>
+      <GdprConfirmCard title="Δεν γίνεται η Ανωνυμοποίηση" role="alert">
+        <p>
+          {user?.block ? BLOCK_TEXT[user.block] : "Το πρόσωπο δεν βρέθηκε."}
+        </p>
+        <div className="ml-actions">
+          <Link href={GDPR_PATH}>Πίσω στα Αιτήματα</Link>
+        </div>
+      </GdprConfirmCard>
     );
   return (
     <AnonymizeConfirm
@@ -132,22 +129,37 @@ export async function SpacesGdpr({ viewer, anonymize }: SpacesGdprProps) {
     );
   const open = register.data.requests.filter((r) => !r.completedOn).length;
   return (
-    <div data-spaces>
+    <div data-spaces className="g-stack">
       <p>
         <Link href={hrefOf("N1")}>← Ομάδα</Link>
       </p>
+      <header className="ml-hero">
+        <span className="ml-hero-mono" aria-hidden="true">
+          G
+        </span>
+        <div>
+          <span className="ml-tag">{`μόνο ο Ιδιοκτήτης · ${open} ανοιχτά`}</span>
+          <h1 data-page-title>{GDPR_TITLE}</h1>
+          <p>{GDPR_NOTE}</p>
+        </div>
+      </header>
       {anonymize && <Confirm subjects={subjects.data} userId={anonymize} />}
-      <Panel label="Αιτήματα GDPR" aside={`${open} ανοιχτά`}>
+      <GdprSection
+        title="Όλα τα αιτήματα"
+        hint={`${register.data.requests.length} συνολικά · ${open} ανοιχτά`}
+      >
         {register.data.requests.length === 0 ? (
-          <p className="muted">{GDPR_EMPTY}</p>
+          <p className="ml-empty">{GDPR_EMPTY}</p>
         ) : (
           <GdprRequestRows requests={register.data.requests} canComplete />
         )}
-        <p className="note">Μόνο ο Ιδιοκτήτης. {GDPR_NOTE}</p>
-      </Panel>
-      <Panel label="Νέο αίτημα">
+      </GdprSection>
+      <GdprSection
+        title="Νέο αίτημα"
+        hint="Η προθεσμία υπολογίζεται από την ημερομηνία λήψης"
+      >
         <RequestForm subjects={subjects.data} />
-      </Panel>
+      </GdprSection>
       <DetachedClientUsers subjects={subjects.data} />
     </div>
   );

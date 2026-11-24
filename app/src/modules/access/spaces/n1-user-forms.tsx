@@ -13,7 +13,7 @@ import { RolePicker } from "./n1-roles";
 function Message({ state }: { state: FormState<unknown> }) {
   if (!state.error && !state.notice) return null;
   return (
-    <p className="note" role={state.error ? "alert" : "status"}>
+    <p className="muted" role={state.error ? "alert" : "status"}>
       {state.error ?? state.notice}
     </p>
   );
@@ -36,16 +36,11 @@ export function ChangeRolesForm({
     <form ref={formRef} onSubmit={onSubmit} className="n1-form">
       <input type="hidden" name="userId" value={userId} />
       <RolePicker roles={roles} idPrefix="n1-edit" selected={selected} />
-      <div className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-primary
-          disabled={isPending}
-        >
+      <div className="ml-actions">
+        <Message state={state} />
+        <button type="submit" data-primary disabled={isPending}>
           {isPending ? "Αποθήκευση…" : "Αποθήκευση Ρόλων"}
         </button>
-        <Message state={state} />
       </div>
     </form>
   );
@@ -67,16 +62,11 @@ export function ReactivateButton({ userId }: ActiveFormProps) {
     <form action={action}>
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="active" value="true" />
-      <div className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-primary
-          disabled={isSaving}
-        >
+      <div className="ml-actions">
+        <Message state={state} />
+        <button type="submit" data-primary disabled={isSaving}>
           {isSaving ? "Αποθήκευση…" : "Επανενεργοποίηση"}
         </button>
-        <Message state={state} />
       </div>
     </form>
   );
@@ -93,20 +83,15 @@ export function DeactivateButtons({ userId, backHref = "" }: ActiveFormProps) {
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="active" value="false" />
       <Message state={state} />
-      <div className="btn-row">
+      <div className="ml-actions">
+        <Link href={backHref}>
+          {state.notice ? "Πίσω στον Χρήστη" : "Άκυρο"}
+        </Link>
         {!state.notice && (
-          <button
-            type="submit"
-            className="button"
-            data-danger
-            disabled={isSaving}
-          >
+          <button type="submit" data-danger disabled={isSaving}>
             {isSaving ? "Αποθήκευση…" : "Ναι, απενεργοποίηση"}
           </button>
         )}
-        <Link className="button" href={backHref}>
-          {state.notice ? "Πίσω στον Χρήστη" : "Άκυρο"}
-        </Link>
       </div>
     </form>
   );
