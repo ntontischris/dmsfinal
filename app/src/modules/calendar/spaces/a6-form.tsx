@@ -37,10 +37,10 @@ function KindField({
 }) {
   const shown = kinds.filter((kind) => !kind.retired || kind.id === value);
   return (
-    <label className="a6-field">
-      Είδος
+    <label className="ml-field">
+      <span>Είδος</span>
       <select
-        className="select"
+        className="input"
         name="kindId"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -71,11 +71,11 @@ function PersonField({
 }) {
   if (!canPick && !personName) return null;
   return (
-    <label className="a6-field">
-      Άτομο
+    <label className="ml-field">
+      <span>Άτομο</span>
       {canPick ? (
         <select
-          className="select"
+          className="input"
           value={draft.personId}
           onChange={(e) => onChange(e.target.value)}
         >
@@ -101,7 +101,7 @@ function WhenFields({
 }) {
   return (
     <>
-      <fieldset className="a6-kind">
+      <fieldset className="a6-kind ml-field">
         <legend>Πόσο διαρκεί;</legend>
         <label className="a6-check">
           <input
@@ -122,9 +122,9 @@ function WhenFields({
           Μερικές ώρες (π.χ. γιατρός)
         </label>
       </fieldset>
-      <div className="a6-times">
-        <label className="a6-field">
-          {draft.allDay ? "Από μέρα" : "Μέρα"}
+      <div className="a6-times ml-fields">
+        <label className="ml-field">
+          <span>{draft.allDay ? "Από μέρα" : "Μέρα"}</span>
           <input
             className="input"
             type="date"
@@ -133,8 +133,8 @@ function WhenFields({
           />
         </label>
         {draft.allDay ? (
-          <label className="a6-field">
-            Έως μέρα (κενό αν είναι μία)
+          <label className="ml-field">
+            <span>Έως μέρα (κενό αν είναι μία)</span>
             <input
               className="input"
               type="date"
@@ -144,8 +144,8 @@ function WhenFields({
           </label>
         ) : (
           <>
-            <label className="a6-field">
-              Από
+            <label className="ml-field">
+              <span>Από</span>
               <input
                 className="input"
                 type="time"
@@ -153,8 +153,8 @@ function WhenFields({
                 onChange={(e) => update({ from: e.target.value })}
               />
             </label>
-            <label className="a6-field">
-              Έως
+            <label className="ml-field">
+              <span>Έως</span>
               <input
                 className="input"
                 type="time"
@@ -190,26 +190,15 @@ export function A6Form(props: A6FormProps) {
   const error = problem ?? state.error ?? null;
 
   return (
-    <form
-      ref={formRef}
-      className="card a6-form"
-      onSubmit={handleSubmit}
-      noValidate
-    >
+    <form ref={formRef} className="a6-form" onSubmit={handleSubmit} noValidate>
       {id && <input type="hidden" name="id" value={id} />}
       {Object.entries(formFieldsOf(draft, canPickPerson)).map(
         ([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
         ),
       )}
-      <h2 className="card-title">
-        {id
-          ? "Αλλαγή ρεπό / άδειας"
-          : canPickPerson
-            ? "Ρεπό / Άδεια / Μη διαθέσιμος"
-            : "Ρεπό / Άδεια / Δεν είμαι διαθέσιμος"}
-      </h2>
-      <p className="muted a6-intro">
+      {id && <h2 className="ml-box-title">Αλλαγή ρεπό / άδειας</h2>}
+      <p className="a6-intro">
         Ρεπό, άδεια, γιατρός ή ραντεβού: ό,τι σε κρατά μακριά από τη δουλειά.
         Όποιος φτιάχνει Συνεργείο βλέπει ότι το άτομο δεν είναι διαθέσιμο. Για
         υπενθύμιση σε πελάτη, βάλε Επόμενο βήμα στην Ευκαιρία του.
@@ -227,21 +216,21 @@ export function A6Form(props: A6FormProps) {
         onChange={(kindId) => update({ kindId })}
       />
       <WhenFields draft={draft} update={update} />
-      <label className="a6-field">
-        Τίτλος
+      <label className="ml-field">
+        <span>Τίτλος</span>
         <input
           className="input"
           maxLength={120}
           value={draft.label}
           onChange={(e) => update({ label: e.target.value })}
         />
-        <span className="muted">
+        <small>
           Ο τίτλος και το Είδος φαίνονται μόνο σε εσένα και σε όσους κλείνουν
-          χρόνο άλλων. Οι υπόλοιποι βλέπουν «Απασχολημένος». Μη γράφεις κάτι ευαίσθητο, π.χ. γράψε
-          «Προσωπικό».
-        </span>
+          χρόνο άλλων. Οι υπόλοιποι βλέπουν «Απασχολημένος». Μη γράφεις κάτι
+          ευαίσθητο, π.χ. γράψε «Προσωπικό».
+        </small>
       </label>
-      <p className="note">
+      <p className="a6-intro">
         Κάθε ρεπό ή άδεια μπαίνει μία φορά· δεν επαναλαμβάνεται μόνο του.
       </p>
       <ConflictWarning
@@ -254,18 +243,11 @@ export function A6Form(props: A6FormProps) {
           {error}
         </p>
       )}
-      <div className="a6-actions">
-        <button
-          className="button"
-          type="submit"
-          data-primary="true"
-          disabled={isPending}
-        >
+      <div className="ml-actions">
+        <button type="submit" data-primary="true" disabled={isPending}>
           {isPending ? "Αποθήκευση…" : "Αποθήκευση"}
         </button>
-        <Link className="button" href={props.cancelHref}>
-          Άκυρο
-        </Link>
+        <Link href={props.cancelHref}>Άκυρο</Link>
       </div>
     </form>
   );
