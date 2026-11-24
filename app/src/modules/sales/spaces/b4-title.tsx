@@ -37,7 +37,7 @@ export function TitleEditor({
     <SpacesActionForm
       action={updateOpportunity}
       submitLabel="Αποθήκευση"
-      className="toolbar"
+      className="b4-row"
     >
       <input type="hidden" name="opportunityId" value={opportunityId} />
       <input type="hidden" name="stageId" value={stageId} />

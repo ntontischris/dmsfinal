@@ -34,7 +34,12 @@ export function StageSelect({
     (stage) => !stage.isRetired || stage.id === stageId,
   );
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="ml-quick">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="ml-quick"
+      style={{ justifyContent: "flex-start", alignItems: "center" }}
+    >
       <input type="hidden" name="opportunityId" value={opportunityId} />
       <select
         className="select"
@@ -86,7 +91,7 @@ export function NextStepEditor({
       <SpacesActionForm
         action={updateOpportunity}
         submitLabel="Αποθήκευση"
-        className="toolbar"
+        className="b4-row"
       >
         <input type="hidden" name="opportunityId" value={opportunityId} />
         <input type="hidden" name="title" value={title} />
@@ -162,7 +167,12 @@ export function SaidYes({
     );
   if (kindId === null) return null;
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="ml-quick">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="ml-quick"
+      style={{ justifyContent: "flex-start", alignItems: "center" }}
+    >
       <input type="hidden" name="opportunityId" value={opportunityId} />
       <input type="hidden" name="kindId" value={kindId} />
       <input type="hidden" name="body" value={SAID_YES_TEXT} />
