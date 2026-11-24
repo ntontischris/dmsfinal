@@ -36,6 +36,7 @@ import { G1BoardSection, G1ModeSwitch, G1WorkloadSection } from "./g1-modes";
 import { G1Team } from "./g1-team";
 
 import "../../finance/spaces/money-lines.css";
+import "./boxes.css";
 import "./g1.css";
 
 // Η διεύθυνση όπως τη δίνει η σελίδα· μετρούν μόνο οι απλές τιμές.
@@ -203,7 +204,9 @@ async function ClientProductions({
         clientId={undefined}
       />
       {shown.length === 0 ? (
-        <p className="ml-empty">{EMPTY_CLIENT}</p>
+        <p className="ml-empty" role="status">
+          <strong>Καμία Παραγωγή εδώ.</strong> {EMPTY_CLIENT}
+        </p>
       ) : (
         <G1ClientCards
           cards={shown}

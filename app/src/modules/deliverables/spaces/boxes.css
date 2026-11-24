@@ -1,0 +1,21 @@
+/* Τα κουτιά (H2Box) και η κίτρινη ετικέτα των οθονών Παραδοτέων, μία φορά για όλο το module. */
+[data-look="spaces"] .h2-box-body {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  & > p,
+  & > dl,
+  & > .ml-list {
+    margin: 0;
+  }
+}
+[data-look="spaces"] :is(.h1-page, .h2, .h34) .ml-tag[data-tone="warn"] {
+  --c: var(--brand-yellow);
+}
+/* Η επιλεγμένη ματιά / Έκδοση: πατημένο κουμπί, όχι κύρια ενέργεια. */
+[data-look="spaces"] .ml-quick button[aria-pressed="true"] {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}

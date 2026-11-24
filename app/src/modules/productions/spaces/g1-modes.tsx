@@ -84,8 +84,8 @@ export async function G1WorkloadSection() {
     <table className="ml-table ml-list" aria-label="Φόρτος ανά άτομο">
       <thead>
         <tr>
-          <th>Άτομο</th>
-          <th>Ανοιχτά</th>
+          <th>Αρχικά</th>
+          <th>Άτομο · Ανοιχτά</th>
           <th>Γυρίσματα 7 ημερών</th>
         </tr>
       </thead>

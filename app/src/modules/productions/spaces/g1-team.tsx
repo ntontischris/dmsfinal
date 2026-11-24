@@ -43,7 +43,11 @@ function NewInternalForm({
         </label>
         <label className="ml-field">
           <span>Υπεύθυνος</span>
-          <select className="input" name="ownerId" defaultValue={defaultOwnerId}>
+          <select
+            className="input"
+            name="ownerId"
+            defaultValue={defaultOwnerId}
+          >
             <option value="">Χωρίς υπεύθυνο</option>
             {people.map((person) => (
               <option key={person.id} value={person.id}>
@@ -104,7 +108,7 @@ export function G1Team(props: G1TeamProps) {
       )}
       {rows.length === 0 ? (
         <p className="ml-empty" role="status">
-          {props.emptyText}
+          <strong>Καμία Παραγωγή εδώ.</strong> {props.emptyText}
         </p>
       ) : (
         <G1Table rows={rows} />

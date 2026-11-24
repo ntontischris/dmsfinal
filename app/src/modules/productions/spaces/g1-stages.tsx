@@ -33,44 +33,44 @@ function StageLine({
         onChange={(event) => setLabel(event.target.value)}
       />
       <span className="ml-quick">
-      {label.trim() !== stage.label && (
+        {label.trim() !== stage.label && (
+          <button
+            type="button"
+            disabled={save.isPending || label.trim() === ""}
+            onClick={() => save.run({ stageId: stage.id, label })}
+          >
+            Αποθήκευση
+          </button>
+        )}
+        {stage.isActive && (
+          <>
+            <button
+              type="button"
+              aria-label={`Πιο πάνω: ${stage.label}`}
+              disabled={isFirst || move.isPending}
+              onClick={() => move.run({ stageId: stage.id, step: "-1" })}
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              aria-label={`Πιο κάτω: ${stage.label}`}
+              disabled={isLast || move.isPending}
+              onClick={() => move.run({ stageId: stage.id, step: "1" })}
+            >
+              ↓
+            </button>
+          </>
+        )}
         <button
           type="button"
-            disabled={save.isPending || label.trim() === ""}
-          onClick={() => save.run({ stageId: stage.id, label })}
+          disabled={active.isPending}
+          onClick={() =>
+            active.run({ stageId: stage.id, active: String(!stage.isActive) })
+          }
         >
-          Αποθήκευση
+          {stage.isActive ? "Απόσυρση" : "Επαναφορά"}
         </button>
-      )}
-      {stage.isActive && (
-        <>
-          <button
-            type="button"
-                aria-label={`Πιο πάνω: ${stage.label}`}
-            disabled={isFirst || move.isPending}
-            onClick={() => move.run({ stageId: stage.id, step: "-1" })}
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-                aria-label={`Πιο κάτω: ${stage.label}`}
-            disabled={isLast || move.isPending}
-            onClick={() => move.run({ stageId: stage.id, step: "1" })}
-          >
-            ↓
-          </button>
-        </>
-      )}
-      <button
-        type="button"
-        disabled={active.isPending}
-        onClick={() =>
-          active.run({ stageId: stage.id, active: String(!stage.isActive) })
-        }
-      >
-        {stage.isActive ? "Απόσυρση" : "Επαναφορά"}
-      </button>
       </span>
       {result && <RunResult result={result} />}
     </li>
@@ -90,17 +90,17 @@ function AddStage() {
         onChange={(event) => setLabel(event.target.value)}
       />
       <span className="ml-quick">
-      <button
-        type="button"
-        disabled={add.isPending || label.trim() === ""}
-        onClick={() =>
-          add.run({ stageId: "", label }, (state) => {
-            if (!state.error) setLabel("");
-          })
-        }
-      >
-        Προσθήκη Σταδίου
-      </button>
+        <button
+          type="button"
+          disabled={add.isPending || label.trim() === ""}
+          onClick={() =>
+            add.run({ stageId: "", label }, (state) => {
+              if (!state.error) setLabel("");
+            })
+          }
+        >
+          Προσθήκη Σταδίου
+        </button>
       </span>
       <RunResult result={add.result} />
     </div>

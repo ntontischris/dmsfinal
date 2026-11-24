@@ -25,6 +25,7 @@ import { ReviewTable } from "./h1-review";
 import { ClientQueueTable, ForMeTable, type ListQuery } from "./h1-rows";
 
 import "../../finance/spaces/money-lines.css";
+import "./boxes.css";
 import "./h1.css";
 
 // «Με αφορά»: ο Χρήστης δουλεύει Παραδοτέα μόνο στις Παραγωγές όπου είναι Μέλος (το Εύρος το κρίνει η βάση).
@@ -230,9 +231,7 @@ function QueueFilters(props: {
           </option>
         ))}
       </select>
-      <button type="submit">
-        Φίλτρο
-      </button>
+      <button type="submit">Φίλτρο</button>
       {props.hasLate && (
         <Link
           data-primary={props.filter.isLateOnly ? "true" : undefined}

@@ -82,9 +82,10 @@ export async function SpacesClientDeliverables({ viewer }: { viewer: Viewer }) {
         </header>
       )}
       {groups.length === 0 ? (
-        <StateNotice kind="empty" title="Δεν υπάρχουν ακόμα Παραδοτέα">
-          <p>Θα εμφανιστούν εδώ μόλις η ομάδα σου στείλει το πρώτο.</p>
-        </StateNotice>
+        <p className="ml-empty" role="status">
+          <strong>Δεν υπάρχουν ακόμα Παραδοτέα.</strong> Θα εμφανιστούν εδώ
+          μόλις η ομάδα σου στείλει το πρώτο.
+        </p>
       ) : (
         <div className="ml-stack">
           <WaitingCard waiting={waiting} />

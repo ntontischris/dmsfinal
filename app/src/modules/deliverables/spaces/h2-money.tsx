@@ -150,7 +150,7 @@ export function H2Requests({ detail, ctx }: PanelProps) {
         {detail.requests.map((r) => (
           <li key={r.id} className="ml-line">
             <H2Person name={whoOf(r.createdByName)} />
-            <span className="ml-main">
+            <div className="ml-main">
               <strong>{whoOf(r.createdByName)}</strong>
               <small>{fmtDay(r.createdAt)}</small>
               <span className="h2-text">{r.body}</span>
@@ -159,7 +159,7 @@ export function H2Requests({ detail, ctx }: PanelProps) {
               ) : (
                 <RequestChoices id={r.id} canSeeAmounts={ctx.canSeeAmounts} />
               )}
-            </span>
+            </div>
             {r.decision && (
               <span className="ml-quick">
                 <Badge tone="ok">{DECISION_WORDS[r.decision]}</Badge>

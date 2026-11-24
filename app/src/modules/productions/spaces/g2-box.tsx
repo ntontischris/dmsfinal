@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 import { initialsOf } from "@/spaces/shell/avatar";
 
+import "./boxes.css";
+
 // Ένα κουτί της Σελίδας Παραγωγής (μορφή της I8): κλειστό εκτός αν ζητηθεί, ο τίτλος (h2, τον βρίσκουν τα τεστ)
 // και μια υπόδειξη για ό,τι έχει μέσα.
 export function G2Box(props: {

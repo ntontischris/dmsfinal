@@ -184,7 +184,6 @@ function ViewChoice({
       <button
         type="button"
         aria-pressed={view === "team"}
-        data-primary={view === "team" || undefined}
         onClick={() => onChange("team")}
       >
         Όπως η ομάδα
@@ -192,7 +191,6 @@ function ViewChoice({
       <button
         type="button"
         aria-pressed={view === "client"}
-        data-primary={view === "client" || undefined}
         onClick={() => onChange("client")}
       >
         Δες το όπως ο πελάτης
@@ -243,7 +241,6 @@ export function H2Versions({ detail, ctx }: PanelProps) {
                 key={v.number}
                 type="button"
                 aria-pressed={v.number === version.number}
-                data-primary={v.number === version.number || undefined}
                 onClick={() => setPicked(v.number)}
               >
                 v{v.number} · {VERSION_WORDS[v.state]}
