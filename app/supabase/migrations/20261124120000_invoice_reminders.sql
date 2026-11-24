@@ -47,9 +47,10 @@ $$;
 
 -- [{ at, manual, byName, recipients }], νεότερη πρώτα: μία γραμμή ανά αποστολή (όσοι παραλήπτες κι αν είχε).
 create function authz.invoice_reminder_list(p_id uuid) returns jsonb
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select coalesce(jsonb_agg(jsonb_build_object(
+begin
+  return (select coalesce(jsonb_agg(jsonb_build_object(
            'at', x.at, 'manual', x.manual, 'byName', u.name, 'recipients', x.recipients) order by x.at desc), '[]'::jsonb)
     from (
       select min(s.created_at) as at, s.case_key like '%:manual:%' as manual,
@@ -62,16 +63,19 @@ as $$
          and s.case_key like 'invoice.overdue:' || p_id || ':%'
        group by s.case_key
     ) x
-    left join public.team_users u on u.user_id::text = x.by_id;
+    left join public.team_users u on u.user_id::text = x.by_id);
+end;
 $$;
 
 -- Πότε έφυγε η τελευταία υπενθύμιση με το χέρι μέσα στις τελευταίες 24 ώρες· null = καμία.
 create function authz.invoice_reminder_recent(p_id uuid, p_now timestamptz) returns timestamptz
-language sql stable security definer set search_path = ''
+language plpgsql stable security definer set search_path = ''
 as $$
-  select max(s.created_at) from public.automation_sends s
-   where s.case_key like 'invoice.overdue:' || p_id || ':manual:%'
-     and s.created_at > p_now - interval '24 hours';
+begin
+  return (select max(s.created_at) from public.automation_sends s
+           where s.case_key like 'invoice.overdue:' || p_id || ':manual:%'
+             and s.created_at > p_now - interval '24 hours');
+end;
 $$;
 
 -- Ο Αυτοματισμός, αφού ελέγξει ότι υπάρχει, είναι ανοιχτός και δεν έφυγε υπενθύμιση με το χέρι τις τελευταίες 24 ώρες.
