@@ -92,13 +92,17 @@ export function Catalogue({ catalog, group, only }: FiltersProps) {
       </StateNotice>
     );
   }
+  const shown = catalog.groups.filter((g) =>
+    events.some((e) => e.group === g.code),
+  );
+  // Κλειστές ομάδες· μόνο όταν το φίλτρο αφήνει μία, ανοίγει.
+  const isSingle = shown.length === 1;
   return (
     <div className="ml-stack">
-      {catalog.groups.map((g) => {
+      {shown.map((g) => {
         const rows = events.filter((e) => e.group === g.code);
-        if (rows.length === 0) return null;
         return (
-          <details key={g.code} className="ml-box" open>
+          <details key={g.code} className="ml-box" open={isSingle || undefined}>
             <summary>
               <h2 className="ml-box-title">{groupTitle(g)}</h2>
               <small>{`${rows.length} Γεγονότα`}</small>

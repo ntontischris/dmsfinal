@@ -144,7 +144,8 @@ function Variables({ message }: { message: SystemMessage }) {
 
 // Η σελίδα ενός Μηνύματος: το όνομά του είναι το h1 (`data-page-title`), με πότε φεύγει και τα σήματα.
 function MessageHero({ message }: { message: SystemMessage }) {
-  if (!isSystemMessageCode(message.code)) return null;
+  if (!isSystemMessageCode(message.code))
+    return <h1 data-page-title>Μηνύματα συστήματος</h1>;
   const defaults = SYSTEM_DEFAULTS[message.code];
   return (
     <header className="ml-hero k2-hero">

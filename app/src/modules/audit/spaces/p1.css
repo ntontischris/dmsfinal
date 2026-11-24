@@ -9,6 +9,11 @@
     margin: var(--space-3) 0;
     align-items: center;
   }
+  & .p1-lead {
+    align-self: center;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
   & .p1-hidden {
     color: var(--color-text-muted);
   }

@@ -13,7 +13,24 @@
   }
   & .n5-warning {
     border-left: 1px solid var(--color-border);
-    background: color-mix(in oklab, var(--brand-rec) 8%, var(--color-surface));
+  }
+  /* Η κατάσταση φαίνεται και κλειστή: τελεία μπροστά στο κείμενο (REC μόνο όταν είναι εκτός). */
+  & .n5-card[data-tone] .n5-status::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    border-radius: 50%;
+    background: var(--color-ok);
+  }
+  & .n5-card[data-tone="attention"] .n5-status {
+    color: var(--color-text);
+    font-weight: 700;
+  }
+  & .n5-card[data-tone="attention"] .n5-status::before {
+    background: var(--brand-rec);
   }
   & .n5-warning > :first-child::before {
     content: "";

@@ -325,12 +325,19 @@ test("ο Έλεγχος ετοιμότητας βλέπει έτοιμους Κ�
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/readiness");
-  const list = panel(page, "Τι πρέπει να είναι έτοιμο");
+  const list = page.locator("details.ml-box").filter({
+    has: page.getByRole("heading", {
+      name: "Τι πρέπει να είναι έτοιμο",
+      exact: true,
+    }),
+  });
   for (const title of [
     "Κατάλογος: Πακέτα, Υπηρεσίες, τιμές",
     "Έξοδα και ώρες: ο πρώτος μήνας Κόστους ώρας",
   ]) {
-    const item = rowTitled(list, title);
+    const item = list.locator("li.ml-line").filter({
+      has: page.locator(".ml-main strong").getByText(title, { exact: true }),
+    });
     await expect(
       item.getByText("έτοιμο", { exact: true }).first(),
     ).toBeVisible();

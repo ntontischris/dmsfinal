@@ -38,10 +38,13 @@ export function AuditFilterBar({ filters, options, subject }: Props) {
   return (
     <>
       <nav className="page-filters" aria-label="Περίοδος">
+        <span className="p1-lead" aria-hidden="true">
+          Περίοδος:
+        </span>
         {AUDIT_PERIODS.map((period) => (
           <Link
             key={period}
-            aria-current={period === filters.period ? "true" : undefined}
+            aria-current={period === filters.period ? "page" : undefined}
             href={auditHref({ ...filters, period })}
           >
             {PERIOD_LABELS[period]}

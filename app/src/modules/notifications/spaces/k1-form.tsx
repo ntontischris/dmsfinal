@@ -99,7 +99,7 @@ function RecipientFields({
       )}
       {kind === "users" && (
         <fieldset className="k1-meta" style={{ border: 0, padding: 0 }}>
-          <legend className="kit-label">Χρήστες</legend>
+          <legend className="k1-legend">Χρήστες</legend>
           {users.map((user) => (
             <label key={user.id} className="k1-switch">
               <input

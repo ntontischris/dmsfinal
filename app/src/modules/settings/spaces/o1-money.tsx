@@ -90,7 +90,8 @@ export function BankCard({
                 <strong>{a.bank}</strong>
                 <small>{`${a.iban} · ${a.holder}`}</small>
               </span>
-              <span />
+              {/* κενή στήλη του πλέγματος ml-line (θέση του ml-tag) */}
+              <span aria-hidden="true" />
               {!a.isDefault && isOwner && (
                 <span className="ml-quick">
                   <ActionButton

@@ -17,14 +17,16 @@ import "./k1.css";
 export function AutomationCard({
   page,
   automation,
+  isOpen,
 }: {
   page: EventPage;
   automation: Automation;
+  isOpen: boolean;
 }) {
   const title = automationTitle(automation);
   return (
     <div role="region" aria-label={`${title}: ${automation.bodyEl}`}>
-      <details className="ml-box" open>
+      <details className="ml-box" open={isOpen || undefined}>
         <summary>
           <h2 className="ml-box-title">{title}</h2>
           <small>{timingText(automation)}</small>
