@@ -42,19 +42,18 @@ export function SpacesForm({
     <form ref={formRef} className={className} onSubmit={onSubmit}>
       {children}
       {state.error && (
-        <p className="note" role="alert">
+        <p className="k-note" role="alert">
           {state.error}
         </p>
       )}
       {state.notice && (
-        <p className="note" role="status">
+        <p className="k-note" role="status">
           {state.notice}
         </p>
       )}
-      <div className="btn-row">
+      <div className="ml-actions">
         <button
           type="submit"
-          className="button"
           data-primary={tone === "primary" ? "true" : undefined}
           data-danger={tone === "danger" ? "true" : undefined}
           disabled={isPending || isDisabled}
