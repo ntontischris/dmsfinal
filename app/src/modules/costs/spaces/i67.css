@@ -15,18 +15,13 @@
 & .i67-undo { position: sticky; bottom: var(--space-3); z-index: 2; background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); backdrop-filter: blur(8px); box-shadow: 0 -6px 16px color-mix(in oklab, var(--color-text) 12%, transparent); }
 
 /* screens2 */
-& .i67-glass, & .i67-flat { margin: 0; }
-& .i67-glass { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); backdrop-filter: blur(4px); }
-& .i67-glass .rtable { margin: 0; }
-& .i67-money { font-weight: 700; font-variant-numeric: tabular-nums; }
-& .i67-glass .part-tile { width: 2.2rem; height: 2.2rem; font-size: 0.8rem; }
 & .i67-big { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 & .i67-cat-sum { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 & .i67-cat-body .i67-total { padding-bottom: var(--space-2); }
 }
 
 /* Εμφάνιση «Χρημάτων» (money-lines.css): η κεφαλίδα της I6, οι κατηγορίες ως γραμμές, το κέρδος της I7 κατά πρόσημο */
-.i6-hero h2 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: -.02em; }
+.i67-hero-title { margin: 0; font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: -.02em; }
 .i6-facts { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.2rem; }
 .i6-facts strong { color: var(--color-text); font-variant-numeric: tabular-nums; }
 .ml-hero > .i6-save { flex-direction: column; align-items: flex-end; max-width: 18rem; }

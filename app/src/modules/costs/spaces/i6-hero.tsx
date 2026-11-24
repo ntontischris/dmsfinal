@@ -25,7 +25,7 @@ export function I6HeroShell({ notes, children, actions }: ShellProps) {
         €/h
       </span>
       <div>
-        <h2>Έξοδα και Κόστος ώρας</h2>
+        <h2 className="i67-hero-title">Έξοδα και Κόστος ώρας</h2>
         <p>{I6_INTRO}</p>
         {children}
         {notes}
