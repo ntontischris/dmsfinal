@@ -30,7 +30,13 @@ import {
   signAsVisitor,
   signOutsideSystem,
 } from "./agreements-flows-parts";
-import { control, openItem, panel, screenHeader } from "./catalogue-parts";
+import {
+  control,
+  openItem,
+  openPanel,
+  panel,
+  screenHeader,
+} from "./catalogue-parts";
 import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
 
 // Συμφωνίες και υπογραφή (D1, D2, D4, D5), Ρυθμίσεις › Συμφωνίες (O3) και η πρόταση της B4 από άκρη σε άκρη. Φανταστικά στοιχεία.
@@ -258,8 +264,8 @@ test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις π
   await page.goto("/app/settings/agreements");
   await expect(
     page
-      .getByRole("navigation", { name: "Ενότητες Ρυθμίσεων" })
-      .getByRole("link", { name: "Συμφωνίες", exact: true }),
+      .getByRole("navigation", { name: "Ρυθμίσεις", exact: true })
+      .getByRole("link", { name: "Ρυθμίσεις Συμφωνιών", exact: true }),
   ).toHaveAttribute("aria-current", /.+/);
   for (const title of [
     "Όροι Συμφωνίας",
@@ -275,7 +281,7 @@ test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις π
   await changeReelRounds(page);
 
   // Η γραμμή του είδους «reel»: σε χρήση, με τον αριθμό των χρήσεων.
-  const reel = panel(page, "Είδη Παροχής")
+  const reel = (await openPanel(page, "Είδη Παροχής"))
     .locator("li")
     .filter({ has: page.locator(".part-title", { hasText: /^reel$/ }) });
   await expect(
@@ -298,9 +304,14 @@ test("ο Έλεγχος ετοιμότητας μένει στις 12 γραμμ
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/readiness");
-  const list = card(page, "Τι πρέπει να είναι έτοιμο");
-  await expect(list.locator("li.part-row")).toHaveCount(12);
+  const list = page.locator("details.ml-box").filter({
+    has: page.getByRole("heading", {
+      name: "Τι πρέπει να είναι έτοιμο",
+      exact: true,
+    }),
+  });
+  await expect(list.locator("li.ml-line")).toHaveCount(12);
   await expect(
-    list.locator("li.part-row").filter({ hasText: /Συμφωνί/ }),
+    list.locator("li.ml-line").filter({ hasText: /Συμφωνί/ }),
   ).toHaveCount(0);
 });

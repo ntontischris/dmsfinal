@@ -1,13 +1,10 @@
-/* A7: Επιβεβαίωση διαγραφής από το Google (prototype screens/a7.css). */
+/* A7: Επιβεβαίωση διαγραφής από το Google στην τελική όψη (ml-line). Μόνο tokens. */
 [data-look='spaces'] {
-/* A7: Επιβεβαίωση διαγραφής από το Google. Μόνο ουδέτερα tokens. */
 & .a7-item[data-done='true'] { opacity: 0.8; }
-& .a7-item .stack { margin-top: var(--space-3); }
-& .a7-item, .a7-recent { min-width: 0; overflow-wrap: anywhere; }
-& .a7-recent { display: grid; gap: var(--space-1); }
-& .a7-item .dl { grid-template-columns: minmax(0, max-content) minmax(0, 1fr); }
+& .a7-item { min-width: 0; overflow-wrap: anywhere; }
 & .a7-item .badge { white-space: normal; }
-@media (max-width: 40rem) { .a7-item .dl { grid-template-columns: minmax(0, 1fr); } }
-& .a7-res { display: block; color: var(--color-text); }
-& .a7-item .part-rows { margin-inline: -1.25rem; }
+& .a7-more { grid-column: 1 / -1; }
+& .a7-wide { grid-column: 1 / -1; color: var(--color-text-muted); }
+& .a7-lead { margin: 0; color: var(--color-text-muted); }
+& .a7 > section > h2 { margin: 0 0 var(--space-3); }
 }

@@ -2,9 +2,8 @@ import Link from "next/link";
 
 import { can, getViewer } from "@/modules/access";
 import { getHealth } from "@/modules/health";
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import {
   CONVERSATIONS_PATH,
@@ -18,9 +17,11 @@ import type {
   ConversationAudience,
   ConversationList,
 } from "../assistant-view-schema";
+import { KBox } from "./k-box";
 import { l2RowOf, l2Tabs, usageOf, type L2Usage } from "./l2-adapter";
 
-import "./l1.css";
+import "../../finance/spaces/money-lines.css";
+import "./k.css";
 import "./l2.css";
 
 export const L2_DENIED =
@@ -30,19 +31,22 @@ export const L2_DENIED =
 // η εφαρμογή δεν μετρά χωριστά το δημόσιο μέρος, άρα φαίνεται μόνο το όριό του.
 function Usage({ usage, month }: { usage: L2Usage; month: string }) {
   return (
-    <Panel label={`Κατανάλωση ${month}`}>
+    <KBox
+      title={`Κατανάλωση ${month}`}
+      hint={`${Math.round(usage.spentPercent)}% του πλαφόν`}
+    >
       <p>{usage.text}</p>
       <div className="l2-bar" aria-hidden="true">
         <span className="pub" style={{ width: `${usage.spentPercent}%` }} />
         <i style={{ left: `${usage.ceilingPercent}%` }} />
       </div>
-      <p className="note">
+      <p className="k-note">
         Στο όριο σταματά ο Βοηθός της Ιστοσελίδας, στο 100% και ο Βοηθός μέσα
         στο σύστημα· ειδοποιούνται όσοι «Βλέπουν Υγεία συστήματος» (Γεγονός 57).
         Τα όρια αλλάζουν στις Ρυθμίσεις → Εταιρεία → Βοηθός· το πλαφόν μόνο ο
         Ιδιοκτήτης.
       </p>
-    </Panel>
+    </KBox>
   );
 }
 
@@ -66,19 +70,13 @@ function Pager({
   const hrefOf = (page: number) =>
     listHref(CONVERSATIONS_PATH, { tab: audience, page });
   return (
-    <nav className="toolbar l1-pad" aria-label="Σελίδες">
-      {list.page > 1 && (
-        <Link className="button" href={hrefOf(list.page - 1)}>
-          ← Νεότερες
-        </Link>
-      )}
-      <span className="muted">
+    <nav className="ml-quick k-pager" aria-label="Σελίδες">
+      {list.page > 1 && <Link href={hrefOf(list.page - 1)}>← Νεότερες</Link>}
+      <span className="k-note">
         Σελίδα {list.page} από {pages}
       </span>
       {list.page < pages && (
-        <Link className="button" href={hrefOf(list.page + 1)}>
-          Παλαιότερες →
-        </Link>
+        <Link href={hrefOf(list.page + 1)}>Παλαιότερες →</Link>
       )}
     </nav>
   );
@@ -92,29 +90,30 @@ function Rows({
   audience: ConversationAudience | null;
 }) {
   return (
-    <Panel label="Συζητήσεις" aside={list.total} isFlush>
-      <RowList>
+    <KBox title="Συζητήσεις" hint={`${list.total} Συζητήσεις`} isOpen>
+      <ul className="ml-list">
         {list.items.map(l2RowOf).map((row) => (
-          <ListRow
-            key={row.id}
-            lead={<Avatar name={row.who} size={40} />}
-            href={row.href}
-            title={row.who}
-            sub={
-              <>
-                {row.firstQuestion && (
-                  <span className="part-sub">«{row.firstQuestion}»</span>
-                )}
-                <span className="part-sub">{row.when}</span>
-                <span className="part-sub">{row.counts}</span>
-              </>
-            }
-            aside={<Badge>{row.kind}</Badge>}
-          />
+          <li key={row.id} className="ml-line">
+            <span className="ml-thumb" aria-hidden="true">
+              {initialsOf(row.who)}
+            </span>
+            <div className="ml-main">
+              <Link className="k-link" href={row.href}>
+                <strong>{row.who}</strong>
+              </Link>
+              {row.firstQuestion && <small>«{row.firstQuestion}»</small>}
+              <small>
+                {row.when} · {row.counts}
+              </small>
+            </div>
+            <span className="ml-quick">
+              <Badge>{row.kind}</Badge>
+            </span>
+          </li>
         ))}
-      </RowList>
+      </ul>
       <Pager list={list} audience={audience} />
-    </Panel>
+    </KBox>
   );
 }
 
@@ -151,18 +150,28 @@ export async function SpacesConversations({
       </div>
     );
   return (
-    <div data-spaces>
+    <div data-spaces className="k">
+      <section>
+        <header className="ml-hero">
+          <span className="ml-hero-mono" aria-hidden="true">
+            Σ
+          </span>
+          <div>
+            <Badge>Μόνο ανάγνωση</Badge>
+            <h1>Συζητήσεις Βοηθού</h1>
+            <p>{READ_ONLY_NOTE}</p>
+          </div>
+        </header>
+      </section>
       {done && (
-        <p className="note" role="status">
+        <p className="k-note" role="status">
           {DONE_TEXT[done]}
         </p>
       )}
-      <UsageSlot />
-      <nav className="tabs" aria-label="Είδος Συζήτησης">
+      <nav className="page-filters" aria-label="Είδος Συζήτησης">
         {l2Tabs(list, audience).map((tab) => (
           <Link
             key={tab.label}
-            className="tab"
             aria-current={tab.isCurrent ? "page" : undefined}
             href={tab.href}
           >
@@ -170,14 +179,17 @@ export async function SpacesConversations({
           </Link>
         ))}
       </nav>
-      {list.items.length > 0 ? (
-        <Rows list={list} audience={audience} />
-      ) : (
-        <StateNotice kind="empty" title="Καμία Συζήτηση ακόμα">
-          Όταν κάποιος ρωτήσει τον Βοηθό, η Συζήτηση θα εμφανιστεί εδώ.
-        </StateNotice>
-      )}
-      <p className="note">{READ_ONLY_NOTE}</p>
+      <div className="ml-stack">
+        {list.items.length > 0 ? (
+          <Rows list={list} audience={audience} />
+        ) : (
+          <p className="ml-empty" role="status">
+            <strong>Καμία Συζήτηση ακόμα.</strong> Όταν κάποιος ρωτήσει τον
+            Βοηθό, η Συζήτηση θα εμφανιστεί εδώ.
+          </p>
+        )}
+        <UsageSlot />
+      </div>
     </div>
   );
 }

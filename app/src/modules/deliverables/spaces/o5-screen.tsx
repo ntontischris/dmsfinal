@@ -1,21 +1,20 @@
 import Link from "next/link";
 
 import { can, getViewer } from "@/modules/access";
-import {
-  SaveRow,
-  SettingsCard,
-  SettingsForm,
-  SpacesSettingsTabs,
-} from "@/modules/settings";
-import { ListRow, RowList } from "@/spaces/kit/parts";
+import { SaveRow, SettingsForm } from "@/modules/settings";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { saveDeliverableRules } from "../actions-rules";
 import { getDeliverableRules } from "../queries-rules";
 import type { DeliverableRules } from "../rules-types";
+import { H2Box } from "./h2-box";
+
+import "../../finance/spaces/money-lines.css";
+import "./h34.css";
 
 // O5 «Ρυθμίσεις: Παραδοτέα» στη νέα εμφάνιση (prototype `screens/O5.tsx`, `o5-rules.tsx`), πάνω στο πραγματικό
-// `saveDeliverableRules`: μία φόρμα για όλους τους Κανόνες, με ένα κουμπί σε κάθε κάρτα όπως στο prototype.
+// `saveDeliverableRules`: μία φόρμα για όλους τους Κανόνες, δύο κλειστά κουτιά (.ml-box) με ένα κουμπί το καθένα.
+// Ο τίτλος (h1) είναι της κάρτας «Παραδοτέα» των Ρυθμίσεων: τον γράφει το κέλυφος.
 // Η βάση δεν έχει εξαιρέσεις ελέγχου ανά είδος, αγγλικό όνομα ούτε πλήθος ανοιχτών Παραδοτέων ανά είδος: λείπουν.
 
 const AGREEMENTS_SETTINGS = "/app/settings/agreements";
@@ -24,25 +23,28 @@ const CLIENT_WAITING_AUTOMATION =
 
 function ReviewCard({ rules }: { rules: DeliverableRules }) {
   return (
-    <SettingsCard title="Εσωτερικός έλεγχος και αλλαγές">
-      <div className="o-fields">
-        <span className="stack o-field">
+    <H2Box
+      title="Εσωτερικός έλεγχος και αλλαγές"
+      hint={rules.internalReview ? "με έλεγχο" : "χωρίς έλεγχο"}
+    >
+      <div className="ml-fields">
+        <span className="ml-field">
           <label htmlFor="o5-review">Εσωτερικός έλεγχος πριν τον πελάτη</label>
           <select
             id="o5-review"
-            className="select"
+            className="input"
             name="internalReview"
             defaultValue={rules.internalReview ? "on" : "off"}
           >
             <option value="on">ναι</option>
             <option value="off">όχι</option>
           </select>
-          <span className="muted o-hint">
+          <span className="muted">
             Όταν είναι κλειστός, η Έκδοση μιας Παραγωγής πελάτη πάει κατευθείαν
             στον πελάτη. Η Εσωτερική Παραγωγή περνά πάντα από έλεγχο.
           </span>
         </span>
-        <span className="stack o-field">
+        <span className="ml-field">
           <label htmlFor="o5-rework">
             Νέα προθεσμία μετά από «χρειάζεται αλλαγές» (εργάσιμες)
           </label>
@@ -59,32 +61,29 @@ function ReviewCard({ rules }: { rules: DeliverableRules }) {
         </span>
       </div>
       <SaveRow card="review" />
-    </SettingsCard>
+    </H2Box>
   );
 }
 
 function KindRows({ rules }: { rules: DeliverableRules }) {
   return (
-    <RowList>
+    <ul className="ml-list">
       {rules.kinds.map((kind) => (
-        <ListRow
-          key={kind.id}
-          title={
-            <>
+        <li key={kind.id} className="ml-line">
+          <span className="ml-main">
+            <strong>
               <input type="hidden" name="kindId" value={kind.id} />
               {kind.label}
-            </>
-          }
-          sub={
-            <>
+            </strong>
+            <small>
               Όριο αλλαγών: {kind.revisionLimit ?? "—"}{" "}
               <Badge>μόνο ανάγνωση</Badge>{" "}
               <Link href={AGREEMENTS_SETTINGS}>αλλάζει στις Συμφωνίες</Link>
-            </>
-          }
-          aside={
+            </small>
+          </span>
+          <span className="ml-quick">
             <label className="o5-days">
-              <span className="part-sub">Προθεσμία (εργάσιμες)</span>
+              <small>Προθεσμία (εργάσιμες)</small>
               <input
                 className="input"
                 aria-label={`Προθεσμία ${kind.label}`}
@@ -96,10 +95,10 @@ function KindRows({ rules }: { rules: DeliverableRules }) {
                 defaultValue={kind.deadlineDays}
               />
             </label>
-          }
-        />
+          </span>
+        </li>
       ))}
-    </RowList>
+    </ul>
   );
 }
 
@@ -111,20 +110,23 @@ function DeadlinesCard({
   canManageAutomations: boolean;
 }) {
   return (
-    <SettingsCard title="Προθεσμία ανά είδος Παροχής">
-      <p className="muted o-hint">
+    <H2Box
+      title="Προθεσμία ανά είδος Παροχής"
+      hint={`${rules.kinds.length} είδη`}
+    >
+      <p className="muted">
         Σε εργάσιμες μέρες, από το δεμένο Γύρισμα όταν γίνει, αλλιώς από τη
         δημιουργία. Οι αργίες δεν μετρούν ως εργάσιμες.
       </p>
       {rules.kinds.length === 0 ? (
-        <p className="muted">
+        <p className="ml-empty">
           Δεν υπάρχουν είδη Παροχής ακόμα. Ορίζονται στις{" "}
           <Link href={AGREEMENTS_SETTINGS}>Συμφωνίες</Link>.
         </p>
       ) : (
         <KindRows rules={rules} />
       )}
-      <p className="muted o-hint">
+      <p className="muted">
         Οι υπενθυμίσεις στον πελάτη για Έκδοση που περιμένει είναι Αυτοματισμοί:
         ρυθμίζονται στους{" "}
         {canManageAutomations ? (
@@ -135,7 +137,7 @@ function DeadlinesCard({
         .
       </p>
       <SaveRow card="deadlines" />
-    </SettingsCard>
+    </H2Box>
   );
 }
 
@@ -145,11 +147,13 @@ async function O5Body() {
   if (!rules.ok) return <ErrorNotice what="τις ρυθμίσεις των Παραδοτέων" />;
   return (
     <SettingsForm action={saveDeliverableRules}>
-      <ReviewCard rules={rules.data} />
-      <DeadlinesCard
-        rules={rules.data}
-        canManageAutomations={can(viewer, "automations.manage")}
-      />
+      <div className="ml-stack o5">
+        <ReviewCard rules={rules.data} />
+        <DeadlinesCard
+          rules={rules.data}
+          canManageAutomations={can(viewer, "automations.manage")}
+        />
+      </div>
     </SettingsForm>
   );
 }
@@ -159,7 +163,6 @@ export async function SpacesDeliverableSettings() {
   const viewer = await getViewer();
   return (
     <div data-spaces>
-      <SpacesSettingsTabs code="O5" />
       {can(viewer, "settings.manage") ? (
         <O5Body />
       ) : (

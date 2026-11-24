@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-import { visit } from "./filming-parts";
+import { openBox } from "./agreements-parts";
+import { openBoxes, visit } from "./filming-parts";
 import { createInternal, PRODUCTION_URL } from "./productions-parts";
 import { button, card, project, shot, signIn } from "./sales-parts";
 
@@ -8,7 +9,6 @@ import { button, card, project, shot, signIn } from "./sales-parts";
 // εδώ, με όνομα του project, ώστε να μη μπλέκει με τα άλλα τεστ που παραδίδουν την «Showreel» του seed.
 // Σειριακά και χωρίς retries, όπως τα άλλα e2e (η βάση μοιράζεται).
 test.describe.configure({ retries: 0 });
-
 
 const OWNER_NAME = "Γιώργος Ιδιοκτήτης";
 const TASK = "Στείλε το μενού στον πελάτη";
@@ -25,7 +25,7 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   await createInternal(page, TITLE, OWNER_NAME);
   const productionUrl = page.url();
 
-  const tasks = card(page, "Εργασίες");
+  const tasks = await openBox(page, "Εργασίες");
   const taskTitle = tasks.getByLabel("Τίτλος εργασίας", { exact: true });
   // Οι τιμές ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
   await expect(async () => {
@@ -44,7 +44,7 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   await expect(button(task, "Ξανάνοιγμα")).toBeVisible();
   await shot(page, "g2-tasks-done");
 
-  const deliverables = card(page, "Παραδοτέα");
+  const deliverables = await openBox(page, "Παραδοτέα");
   const create = deliverables.locator("form", {
     has: page.getByRole("button", {
       name: "Δημιουργία Παραδοτέου",
@@ -69,7 +69,9 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   const addVersion = page.locator("form", {
     has: page.getByRole("button", { name: "Προσθήκη Έκδοσης", exact: true }),
   });
+  // Τα κουτιά του H2 είναι κλειστά στην αρχή· το «Νέα Έκδοση» και το «Εγκρίνω» είναι στο κουτί «Ενέργειες».
   await expect(async () => {
+    await openBoxes(page);
     if (!(await addVersion.isVisible()))
       await button(page, "Νέα Έκδοση").click();
     await expect(addVersion).toBeVisible({ timeout: 1_000 });
@@ -77,6 +79,7 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   await addVersion.locator('input[name="url"]').fill(LINK);
   await button(addVersion, "Προσθήκη Έκδοσης").click();
   // Με την επιτυχία η φόρμα κλείνει και η v1 περιμένει έγκριση.
+  await openBoxes(page);
   await button(page, "Εγκρίνω (οριστικό)").click();
   await expect(button(page, "Εγκρίνω (οριστικό)")).toHaveCount(0);
   await expect(
@@ -89,7 +92,7 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   await expect(page).toHaveURL(PRODUCTION_URL);
   expect(page.url()).toBe(productionUrl);
   const state = card(page, "Κατάσταση");
-  await expect(state.locator(".kit-panel-head")).toContainText("παραδομένη");
+  await expect(state.locator("summary")).toContainText("παραδομένη");
   // Αυτόματη παράδοση: την έκανε το σύστημα, όχι κάποιος Χρήστης.
   await expect(state).toContainText("από το σύστημα");
   const doneTask = card(page, "Εργασίες").locator("li.g2-task", {

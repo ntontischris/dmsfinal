@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-
 import { cancelDeliverable } from "../actions-deliverable";
 import { setFinalFiles } from "../actions-requests";
 import { historyLines } from "../history";
 import type { DeliverableDetail } from "../types";
+import { H2Box } from "./h2-box";
 import { H2Form } from "./h2-form";
 import { CANCEL_WORDS, fmtDay, type PanelProps } from "./h2-model";
 
@@ -20,13 +18,9 @@ export function H2FinalFiles({ detail }: PanelProps) {
   const approved = detail.versions.find((v) => v.state === "approved");
   const link = detail.finalFilesUrl ?? approved?.url;
   return (
-    <Panel
-      label="Τελικά αρχεία"
-      aside={
-        detail.approvedAt && (
-          <span className="muted">εγκρίθηκε {fmtDay(detail.approvedAt)}</span>
-        )
-      }
+    <H2Box
+      title="Τελικά αρχεία"
+      hint={detail.approvedAt && `εγκρίθηκε ${fmtDay(detail.approvedAt)}`}
     >
       {link ? (
         <p>
@@ -35,7 +29,7 @@ export function H2FinalFiles({ detail }: PanelProps) {
           </a>
         </p>
       ) : (
-        <p className="muted">Δεν υπάρχει link.</p>
+        <p className="ml-empty">Δεν υπάρχει link.</p>
       )}
       <p className="muted">
         {detail.finalFilesUrl
@@ -43,13 +37,11 @@ export function H2FinalFiles({ detail }: PanelProps) {
           : "Προεπιλογή: το link της εγκεκριμένης Έκδοσης."}
       </p>
       {detail.can.edit && !isEditing && (
-        <button
-          type="button"
-          className="button"
-          onClick={() => setIsEditing(true)}
-        >
-          Ορισμός άλλου link
-        </button>
+        <div className="ml-quick h2-actions">
+          <button type="button" onClick={() => setIsEditing(true)}>
+            Ορισμός άλλου link
+          </button>
+        </div>
       )}
       {isEditing && (
         <H2Form
@@ -77,19 +69,19 @@ export function H2FinalFiles({ detail }: PanelProps) {
           </span>
         </H2Form>
       )}
-    </Panel>
+    </H2Box>
   );
 }
 
 function Cancelled({ detail }: { detail: DeliverableDetail }) {
   return (
-    <Panel label="Ακύρωση">
+    <H2Box title="Ακύρωση" hint="ακυρώθηκε">
       <p>
         Ακυρώθηκε. Λόγος: {detail.cancelReason ?? "—"}.
         {detail.cancelOutcome &&
           ` Η Παροχή ${CANCEL_WORDS[detail.cancelOutcome]}.`}
       </p>
-    </Panel>
+    </H2Box>
   );
 }
 
@@ -98,16 +90,13 @@ export function H2Cancel({ detail }: PanelProps) {
   if (detail.state === "cancelled") return <Cancelled detail={detail} />;
   if (!detail.can.cancel) return null;
   return (
-    <Panel label="Ακύρωση Παραδοτέου">
+    <H2Box title="Ακύρωση Παραδοτέου">
       {!isOpen ? (
-        <button
-          type="button"
-          className="button"
-          data-danger
-          onClick={() => setIsOpen(true)}
-        >
-          Ακύρωση Παραδοτέου
-        </button>
+        <div className="ml-quick h2-actions">
+          <button type="button" data-danger onClick={() => setIsOpen(true)}>
+            Ακύρωση Παραδοτέου
+          </button>
+        </div>
       ) : (
         <H2Form
           action={cancelDeliverable}
@@ -123,7 +112,7 @@ export function H2Cancel({ detail }: PanelProps) {
           </label>
           <label>
             Η Παροχή
-            <select className="select" name="outcome" defaultValue="returned">
+            <select className="input" name="outcome" defaultValue="returned">
               <option value="consumed">καταναλώθηκε</option>
               <option value="returned">επιστρέφει στην επόμενη Περίοδο</option>
             </select>
@@ -131,7 +120,7 @@ export function H2Cancel({ detail }: PanelProps) {
         </H2Form>
       )}
       <p className="muted">Δεν ακυρώνεται εγκεκριμένο Παραδοτέο.</p>
-    </Panel>
+    </H2Box>
   );
 }
 
@@ -139,20 +128,23 @@ export function H2Cancel({ detail }: PanelProps) {
 export function H2Trail({ detail }: Pick<PanelProps, "detail">) {
   const lines = historyLines(detail.history);
   return (
-    <Panel label="Ίχνος ενεργειών">
+    <H2Box title="Ίχνος ενεργειών" hint={`${lines.length} ενέργειες`}>
       {lines.length === 0 ? (
-        <p className="muted">Δεν υπάρχουν ακόμα ενέργειες.</p>
+        <p className="ml-empty">Δεν υπάρχουν ακόμα ενέργειες.</p>
       ) : (
-        <RowList>
+        <ul className="ml-list">
           {lines.map((line, index) => (
-            <ListRow
-              key={`${index}-${line.at}`}
-              lead={fmtDay(line.at)}
-              title={`${line.actor}: ${line.text}`}
-            />
+            <li key={`${index}-${line.at}`} className="ml-line">
+              <span className="ml-main">
+                <strong>{line.text}</strong>
+                <small>
+                  {fmtDay(line.at)} · {line.actor}
+                </small>
+              </span>
+            </li>
           ))}
-        </RowList>
+        </ul>
       )}
-    </Panel>
+    </H2Box>
   );
 }

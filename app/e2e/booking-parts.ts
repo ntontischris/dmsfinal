@@ -74,13 +74,13 @@ export async function bookFirstFreeSlot(
 ): Promise<void> {
   await page.locator("button.e-day:enabled").first().click();
   await expect(page).toHaveURL(/day=/);
-  const durations = page.locator("section.kit-panel", {
-    has: page.getByRole("heading", { name: "2. Πόσες ώρες;" }),
+  const durations = page.locator("section.fl-step", {
+    has: page.getByRole("heading", { name: "Πόσες ώρες;" }),
   });
   await durations.getByRole("button", { name: "2 ώρες", exact: true }).click();
   await expect(page).toHaveURL(/hours=2/);
-  const times = page.locator("section.kit-panel", {
-    has: page.getByRole("heading", { name: "3. Τι ώρα ξεκινάμε;" }),
+  const times = page.locator("section.fl-step", {
+    has: page.getByRole("heading", { name: "Τι ώρα ξεκινάμε;" }),
   });
   await times.locator(".e-times button:enabled").first().click();
   await expect(page).toHaveURL(/time=/);
@@ -92,8 +92,18 @@ export async function bookFirstFreeSlot(
 
 // Ο Ιδιοκτήτης ορίζει το Ωράριο 08:00–20:00 για όλες τις μέρες, Χωρητικότητα 2, διάρκειες 2 και 3, βήμα 60.
 // Τα πεδία της φόρμας εδώ, όχι σε όλη τη σελίδα: η φόρμα των εξαιρέσεων έχει δικό της πεδίο «Χωρητικότητα».
+// Τα κουτιά Ρυθμίσεων (SettingsCard) είναι κλειστά από προεπιλογή: ανοίγουν πριν γεμίσουν τα πεδία τους.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
+}
+
 export async function setOpeningHours(page: Page): Promise<void> {
   await page.goto(HOURS_URL, { waitUntil: "networkidle" });
+  await openBoxes(page);
   const hoursForm = page.locator("form", {
     has: page.locator('select[name="open-1"]'),
   });

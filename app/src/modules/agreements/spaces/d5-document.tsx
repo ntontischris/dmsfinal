@@ -1,12 +1,10 @@
 import type { ReactNode } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { DOC_LABELS } from "../labels-public";
 import type { Language, ProposalDocument } from "../types";
 import { documentOf, type D5Pair } from "./d5-adapter";
-import { ItemRows } from "./lane-rows";
 
+import "../../finance/spaces/money-lines.css";
 import "./d5.css";
 
 // Το καθαρό έγγραφο που βλέπει ο πελάτης στον Σύνδεσμο πρότασης (prototype `screens/d5-document.tsx` + `d5-sections.tsx`).
@@ -25,7 +23,7 @@ function PlainList({ items }: { items: readonly string[] }) {
 
 function Pairs({ pairs }: { pairs: readonly D5Pair[] }) {
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       {pairs.map((pair) => (
         <PairRow key={pair.label} pair={pair} />
       ))}
@@ -42,75 +40,103 @@ function PairRow({ pair }: { pair: D5Pair }) {
   );
 }
 
+// Μία ενότητα του εγγράφου: ανοιχτό κουτί (το έγγραφο διαβάζεται ολόκληρο και τυπώνεται), τίτλος h2 ή h3 μέσα σε άλλη σελίδα.
+function Part({
+  title,
+  isEmbedded,
+  children,
+}: {
+  title: string;
+  isEmbedded: boolean;
+  children: ReactNode;
+}) {
+  const Title = isEmbedded ? "h3" : "h2";
+  return (
+    <section className="ml-box d5-part">
+      <Title className="ml-box-title">{title}</Title>
+      {children}
+    </section>
+  );
+}
+
 interface ProposalDocumentProps {
   document: ProposalDocument;
   language: Language;
   // Το υποσέλιδο με τις ενέργειες (ή τίποτα, π.χ. στην εκτύπωση).
   footer?: ReactNode;
+  // Μέσα σε άλλη σελίδα (Σελίδα Συμφωνίας): ο τίτλος δεν είναι h1, γιατί η σελίδα έχει ήδη το δικό της.
+  isEmbedded?: boolean;
 }
 
 export function SpacesProposalDocument({
   document,
   language,
   footer,
+  isEmbedded = false,
 }: ProposalDocumentProps) {
   const t = DOC_LABELS[language];
   const doc = documentOf(document, language);
+  const DocTitle = isEmbedded ? "p" : "h1";
+  const SubTitle = isEmbedded ? "h4" : "h3";
+  const part = { isEmbedded };
   return (
     <article className="d5-doc" lang={language}>
-      <header className="card d5-head">
-        <div className="d5-brand">{doc.brand}</div>
-        <div className="muted">{doc.proposalFor}</div>
-        <h1 className="d5-title">{doc.title}</h1>
-        <div className="muted">{doc.meta}</div>
+      <header className="ml-hero d5-head">
+        <div>
+          <span className="d5-brand">{doc.brand}</span>
+          <p>{doc.proposalFor}</p>
+          <DocTitle className="d5-title">{doc.title}</DocTitle>
+          <p>{doc.meta}</p>
+        </div>
       </header>
 
-      <Panel label={t.linesTitle}>
-        <ItemRows
-          items={doc.lines.map((line) => ({
-            id: line.id,
-            title: line.title,
-            sub: line.sub,
-            aside: (
-              <>
-                <span className="part-sub">{line.quantity}</span>
-                <strong className="num">{line.amount}</strong>
-              </>
-            ),
-          }))}
-        />
-      </Panel>
+      <Part title={t.linesTitle} {...part}>
+        <ul className="ml-list d5-lines">
+          {doc.lines.map((line) => (
+            <li key={line.id} className="ml-line">
+              <span className="ml-main">
+                <strong>{line.title}</strong>
+                {line.sub && <small>{line.sub}</small>}
+              </span>
+              <span className="ml-amount">
+                {line.amount}
+                <small>{line.quantity}</small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Part>
 
       {doc.included && (
-        <Panel label={doc.included.title}>
+        <Part title={doc.included.title} {...part}>
           <PlainList items={doc.included.items} />
-        </Panel>
+        </Part>
       )}
 
-      <Panel label={t.priceTitle}>
+      <Part title={t.priceTitle} {...part}>
         <Pairs pairs={doc.price} />
         {doc.priceNotes.length > 0 && <PlainList items={doc.priceNotes} />}
         {doc.instalments.length > 0 && (
           <>
-            <h3>{t.instalments}</h3>
+            <SubTitle>{t.instalments}</SubTitle>
             <PlainList items={doc.instalments} />
           </>
         )}
-      </Panel>
+      </Part>
 
-      <Panel label={t.termsTitle}>
+      <Part title={t.termsTitle} {...part}>
         <PlainList items={doc.terms} />
-        <h3>{t.filmingTitle}</h3>
+        <SubTitle>{t.filmingTitle}</SubTitle>
         <PlainList items={doc.filming} />
         {doc.revisionLimits.length > 0 && (
           <>
-            <h3>{t.revisionTitle}</h3>
+            <SubTitle>{t.revisionTitle}</SubTitle>
             <PlainList items={doc.revisionLimits} />
           </>
         )}
-      </Panel>
+      </Part>
 
-      <footer className="card d5-section stack">
+      <footer className="ml-box d5-section stack">
         {footer}
         <div className="d5-legal muted">
           {doc.legal.map((line) => (

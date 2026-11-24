@@ -1,0 +1,11 @@
+/* Τα κουτιά (H2Box) των οθονών Παραδοτέων, μία φορά για όλο το module. */
+[data-look="spaces"] .h2-box-body {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  & > p,
+  & > dl,
+  & > .ml-list {
+    margin: 0;
+  }
+}

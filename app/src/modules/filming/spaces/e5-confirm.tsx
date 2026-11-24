@@ -83,13 +83,8 @@ export function E5Confirm(props: E5ConfirmProps) {
           {state.error}
         </p>
       )}
-      <div className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-primary="true"
-          disabled={isPending}
-        >
+      <div className="ml-actions">
+        <button type="submit" data-primary="true" disabled={isPending}>
           {isPending
             ? "Αποστολή…"
             : rescheduleId

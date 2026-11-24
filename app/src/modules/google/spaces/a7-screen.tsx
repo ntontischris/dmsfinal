@@ -8,6 +8,7 @@ import { getGoogleDeletions } from "../queries";
 import { deletionItemOf } from "./a7-model";
 import { A7Queue } from "./a7-queue";
 
+import "../../finance/spaces/money-lines.css";
 import "./a7.css";
 
 // A7 Διαγραφές από το Google στη νέα εμφάνιση (prototype `screens/A7.tsx`). Η λίστα «Πρόσφατα» του prototype λείπει:
@@ -41,8 +42,8 @@ export async function SpacesGoogleDeletions() {
   );
   return (
     <div data-spaces>
-      <div className="a7">
-        <p className="note">
+      <div className="a7 ml-stack">
+        <p className="a7-lead">
           Η διαγραφή στο Google δεν ακυρώνει Γύρισμα. Αν δεν απαντήσει κανείς ως
           την προθεσμία, το γεγονός ξαναμπαίνει στο Google μόνο του.
         </p>

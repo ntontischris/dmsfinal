@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { listItem, signIn } from "./sales-parts";
 import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
+import { openFolds } from "./today-parts";
 
 // Ομάδα Νβ (#208): Αιτήματα GDPR. Καταγραφή, προθεσμία και κλείσιμο, εξαγωγή Πελάτη (περιεχόμενα του ZIP),
 // ανωνυμοποίηση με πληκτρολόγηση ονόματος, άρνηση για τη Διαχείριση. Φανταστικά στοιχεία· τα δεδομένα στήνονται με το
@@ -13,7 +14,6 @@ import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
 
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
-
 
 const PASSWORD = "e2e-password-123";
 const GDPR = "/app/team/gdpr";
@@ -96,9 +96,17 @@ const panelOf = (page: Page, title: string) =>
     .locator("xpath=ancestor::section[1]");
 
 const gdprPanel = (page: Page) => panelOf(page, "GDPR (μόνο Ιδιοκτήτης)");
+// Το κουτί GDPR είναι κλειστό: ανοίγει με κλικ στον τίτλο του.
+const openGdprPanel = async (page: Page) => {
+  await page
+    .getByRole("heading", { name: "GDPR (μόνο Ιδιοκτήτης)", exact: true })
+    .click();
+  return gdprPanel(page);
+};
 
 // Το GDPR του Πελάτη είναι στην καρτέλα «users» της Σελίδας Πελάτη (με τους Χρήστες πελάτη).
-const clientUsersTab = (clientId: string) => `/app/clients/${clientId}?tab=users`;
+const clientUsersTab = (clientId: string) =>
+  `/app/clients/${clientId}?tab=users`;
 
 test("ο Ιδιοκτήτης καταγράφει αίτημα, βλέπει την προθεσμία και στο Σήμερα, και το κλείνει", async ({
   page,
@@ -124,15 +132,15 @@ test("ο Ιδιοκτήτης καταγράφει αίτημα, βλέπει τ
   const row = listItem(page, `Εξαγωγή: ${clientName}`);
   await expect(row).toContainText(/λήγει σε (28|29|30|31) μέρες/);
 
-  // Στη Σήμερα οι προθεσμίες GDPR είναι αποφάσεις του «Μόνο εσύ μπορείς». Φαίνονται οι 5 σημαντικότερες· όταν το
-  // αίτημα δεν χωρά σε αυτές, μετρά στο «Και N ακόμα».
-  await page.goto("/app");
-  const decisions = page.locator("[data-part='decisions']");
-  const open = decisions.getByRole("link", {
+  // Στη Σήμερα οι προθεσμίες GDPR ανήκουν στην «Η εταιρεία δουλεύει»: γραμμή της κάρτας (ή «Και N ακόμα») όταν η
+  // κάρτα φαίνεται, αλλιώς μέσα στο κλειστό «Η εταιρεία: N σε αναμονή». Όλα πηγαίνουν στο GDPR.
+  await page.goto("/app?g=company");
+  await openFolds(page);
+  const main = page.getByRole("main");
+  const open = main.getByRole("link", {
     name: `Άνοιξε: Εξαγωγή: ${clientName}`,
   });
-  const more = decisions.getByRole("link", { name: /^Και \d+ ακόμα/ });
-  await expect(open.or(more).first()).toBeVisible();
+  await expect(main.locator(`a[href='${GDPR}']`).first()).toBeVisible();
   if ((await open.count()) > 0)
     await expect(open).toHaveAttribute("href", GDPR);
 
@@ -153,7 +161,7 @@ test("η εξαγωγή Πελάτη κατεβάζει ZIP με JSON και CSV
 
   await signIn(page, "owner@example.com");
   await page.goto(clientUsersTab(clientId));
-  const panel = gdprPanel(page);
+  const panel = await openGdprPanel(page);
   await expect(
     panel.getByRole("button", { name: "Εξαγωγή δεδομένων Πελάτη" }),
   ).toBeVisible();
@@ -197,7 +205,7 @@ test("η ανωνυμοποίηση θέλει το όνομα γραμμένο 
 
   await signIn(page, "owner@example.com");
   await page.goto(`/app/team/${userId}`);
-  const panel = gdprPanel(page);
+  const panel = await openGdprPanel(page);
   await panel.getByRole("link", { name: "Ανωνυμοποίηση", exact: true }).click();
   await expect(page).toHaveURL(/\?confirm=anonymize$/);
   const dialog = panelOf(page, `Ανωνυμοποίηση: ${name}`);

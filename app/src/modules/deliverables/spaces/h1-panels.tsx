@@ -1,62 +1,78 @@
+import Link from "next/link";
+
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 import { initialsOf } from "@/spaces/shell/avatar";
 
 import type { DeliverableRules } from "../rules-types";
 import type { DeliverableCard } from "../types";
 import { productionLabel } from "./h1-model";
 
+import "../../finance/spaces/money-lines.css";
 import "./h1.css";
 
-// Οι κάρτες του H1 (prototype `screens/h1-panels.tsx`): αποφάσεις χρέωσης και Κανόνες Παραδοτέων.
+// Τα κουτιά του H1: αποφάσεις χρέωσης (ανοιχτό, θέλει απόφαση) και Κανόνες Παραδοτέων (κλειστό).
 
 export function ChargesCard({ items }: { items: readonly DeliverableCard[] }) {
   if (items.length === 0) return null;
   return (
-    <Panel label="Αποφάσεις χρέωσης" aside={items.length} isFlush>
-      <p className="note sx-pad">
-        Η Παροχή δεν έφτανε ή ένας γύρος αλλαγών πέρασε το όριο: η δουλειά
-        συνεχίζει, η χρέωση περιμένει απόφαση.
-      </p>
-      <RowList>
-        {items.map((d) => (
-          <ListRow
-            key={d.id}
-            lead={
-              <span className="part-tile" aria-hidden="true">
+    <section className="h1-box">
+      <details className="ml-box" open>
+        <summary>
+          <h2 className="ml-box-title">Αποφάσεις χρέωσης</h2>
+          <small>{items.length} περιμένουν απόφαση</small>
+        </summary>
+        <p className="note">
+          Η Παροχή δεν έφτανε ή ένας γύρος αλλαγών πέρασε το όριο: η δουλειά
+          συνεχίζει, η χρέωση περιμένει απόφαση.
+        </p>
+        <ul className="ml-list">
+          {items.map((d) => (
+            <li key={d.id} className="ml-line">
+              <span className="ml-thumb" aria-hidden="true">
                 {initialsOf(d.title)}
               </span>
-            }
-            href={hrefOf("H2", { id: d.id })}
-            title={d.title}
-            sub={`(${productionLabel(d)})`}
-          />
-        ))}
-      </RowList>
-    </Panel>
+              <span className="ml-main">
+                <strong>
+                  <Link href={hrefOf("H2", { id: d.id })}>{d.title}</Link>
+                </strong>
+                <small>{productionLabel(d)}</small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
   );
 }
 
 export function RulesCard({ rules }: { rules: DeliverableRules }) {
+  const review = rules.internalReview ? "ενεργός" : "ανενεργός";
   return (
-    <Panel label="⚙ Κανόνες Παραδοτέων">
-      <dl className="dl">
-        <div className="row">
-          <dt>Εσωτερικός έλεγχος</dt>
-          <dd>{rules.internalReview ? "ενεργός" : "ανενεργός"}</dd>
-        </div>
-        <div className="row">
-          <dt>Εργάσιμες μετά από αλλαγές</dt>
-          <dd>{rules.changesDays}</dd>
-        </div>
-        <div className="row">
-          <dt>Προθεσμίες ανά είδος (εργάσιμες)</dt>
-          <dd>
-            {rules.kinds.map((k) => `${k.label} ${k.deadlineDays}`).join(" · ")}
-          </dd>
-        </div>
-      </dl>
-    </Panel>
+    <section className="h1-box">
+      <details className="ml-box">
+        <summary>
+          <h2 className="ml-box-title">Κανόνες Παραδοτέων</h2>
+          <small>Εσωτερικός έλεγχος {review}</small>
+        </summary>
+        <dl className="ml-kv">
+          <div>
+            <dt>Εσωτερικός έλεγχος</dt>
+            <dd>{review}</dd>
+          </div>
+          <div>
+            <dt>Εργάσιμες μετά από αλλαγές</dt>
+            <dd>{rules.changesDays}</dd>
+          </div>
+          <div>
+            <dt>Προθεσμίες ανά είδος (εργάσιμες)</dt>
+            <dd>
+              {rules.kinds
+                .map((k) => `${k.label} ${k.deadlineDays}`)
+                .join(" · ")}
+            </dd>
+          </div>
+        </dl>
+      </details>
+    </section>
   );
 }

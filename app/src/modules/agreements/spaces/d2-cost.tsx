@@ -15,6 +15,8 @@ import type { AgreementDetail, CostBlock } from "../types";
 import { D2Box } from "./d2-box";
 import { approvedRevisionOf } from "./d2-model";
 
+import "../../finance/spaces/money-lines.css";
+
 // Κόστος και περιθώριο, Παρεκκλίσεις (prototype `screens/d2-cost.tsx`) με τα πραγματικά νούμερα της βάσης.
 
 const marginText = (price: number, cost: CostBlock, estimated: number) => {
@@ -62,7 +64,7 @@ export function CostSection({ agreement }: { agreement: AgreementDetail }) {
         )
       }
     >
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Εκτιμώμενο κόστος</dt>
         <dd>
           <strong>{estimated === null ? "—" : formatMoney(estimated)}</strong>

@@ -73,13 +73,3 @@ export function zonesOf<T extends BuiltCard>(items: readonly T[]): Zones<T> {
     more: pick("more"),
   };
 }
-
-// Πάνω φαίνονται έως 3 επείγοντα, για να ξεχωρίζει το σημαντικό· τα υπόλοιπα σε κλειστή ενότητα.
-export const URGENT_SHOWN = 3;
-
-export const splitUrgent = <T>(
-  urgent: readonly T[],
-): { shown: readonly T[]; rest: readonly T[] } => ({
-  shown: urgent.slice(0, URGENT_SHOWN),
-  rest: urgent.slice(URGENT_SHOWN),
-});

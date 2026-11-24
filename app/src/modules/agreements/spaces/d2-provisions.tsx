@@ -77,7 +77,7 @@ export function ProvisionsCell({
         const unit = unitOf(kinds, row.kindId);
         return (
           <span key={row.kindId} className="stack">
-            <span className="btn-row">
+            <span className="ml-quick">
               <NumberInput
                 label={`Ποσότητα ${unit}`}
                 value={row.quantity}
@@ -88,7 +88,6 @@ export function ProvisionsCell({
               />
               <button
                 type="button"
-                className="button"
                 aria-label={`Αφαίρεση ${unit}`}
                 onClick={() => remove(row.kindId)}
               >
@@ -118,8 +117,8 @@ export function ProvisionsCell({
           ))}
         </select>
       )}
-      <span className="btn-row">
-        <button type="submit" className="button" form={formId}>
+      <span className="ml-quick">
+        <button type="submit" form={formId}>
           Αποθήκευση Παροχών
         </button>
       </span>

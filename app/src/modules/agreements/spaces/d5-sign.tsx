@@ -124,16 +124,15 @@ function NameStep(props: NameStepProps) {
         />{" "}
         {t.accept}
       </label>
-      <div className="btn-row">
+      <div className="ml-quick">
         <button
           type="submit"
-          className="button"
           data-primary="true"
           disabled={isPending || name.trim() === "" || !isAccepted}
         >
           {t.continue}
         </button>
-        <button type="button" className="button" onClick={onCancel}>
+        <button type="button" onClick={onCancel}>
           {t.cancel}
         </button>
       </div>
@@ -177,21 +176,20 @@ function CodeStep(props: CodeStepProps) {
         />
       </label>
       {/\D/.test(stripped) && <p className="muted">{t.codeInvalid}</p>}
-      <div className="btn-row">
+      <div className="ml-quick">
         <button
           type="submit"
-          className="button"
           data-primary="true"
           disabled={isPending || !isValid}
         >
           {t.confirm}
         </button>
         {newCodeLabel ? (
-          <button type="button" className="button" onClick={props.onNewCode}>
+          <button type="button" onClick={props.onNewCode}>
             {newCodeLabel}
           </button>
         ) : (
-          <button type="button" className="button" onClick={props.onCancel}>
+          <button type="button" onClick={props.onCancel}>
             {t.cancel}
           </button>
         )}

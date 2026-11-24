@@ -5,9 +5,7 @@ import { SYSTEM_DEFAULTS } from "@/lib/email/system-defaults";
 import { isSystemMessageCode } from "@/lib/email/system-texts";
 import { can, getViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { SYSTEM_MESSAGES_PATH } from "../automation-labels";
 import type { SystemMessage } from "../automation-view-schema";
@@ -16,11 +14,18 @@ import { KSubnav } from "./k-subnav";
 import { SystemMessageEditor } from "./k2-editor";
 import { whenEdited } from "./k2-model";
 
+import "../../finance/spaces/money-lines.css";
 import "./k2.css";
 
-function Frame({ children }: { children: ReactNode }) {
+interface FrameProps {
+  hero: ReactNode;
+  children: ReactNode;
+}
+
+function Frame({ hero, children }: FrameProps) {
   return (
     <div data-spaces>
+      {hero}
       <KSubnav current="system" />
       {children}
       <p className="note">
@@ -53,49 +58,59 @@ function Failed() {
 const messageHref = (code: string): string =>
   `${SYSTEM_MESSAGES_PATH}/${encodeURIComponent(code)}`;
 
-function MessageBadges({ message }: { message: SystemMessage }) {
+function MessageTags({ message }: { message: SystemMessage }) {
   return (
     <>
-      <Badge>πάντα ενεργό</Badge>
-      {message.isEdited && <Badge tone="strong">αλλαγμένο κείμενο</Badge>}
+      <span className="ml-tag">πάντα ενεργό</span>
+      {message.isEdited && <span className="ml-tag">αλλαγμένο κείμενο</span>}
     </>
   );
 }
 
-function MessageList({ messages }: { messages: readonly SystemMessage[] }) {
-  const known = messages.flatMap((message) =>
+// Η λίστα είναι οθόνη λεπτομέρειας (DETAIL_SCREENS): το h1 το γράφει η ίδια.
+function ListHero({ count }: { count: number }) {
+  return (
+    <header className="ml-hero k2-hero">
+      <div>
+        <h1>Μηνύματα συστήματος</h1>
+        <p>{`${count} μηνύματα · πάντα ενεργά, αλλάζει μόνο το κείμενο`}</p>
+      </div>
+    </header>
+  );
+}
+
+const knownOf = (messages: readonly SystemMessage[]) =>
+  messages.flatMap((message) =>
     isSystemMessageCode(message.code)
       ? [{ message, defaults: SYSTEM_DEFAULTS[message.code] }]
       : [],
   );
+
+function MessageList({ messages }: { messages: readonly SystemMessage[] }) {
   return (
-    <Panel
-      label="Μηνύματα συστήματος"
-      aside={`${known.length} μηνύματα`}
-      isFlush
-    >
-      <RowList>
-        {known.map(({ message, defaults }) => (
-          <ListRow
-            key={message.code}
-            title={defaults.title}
-            sub={
-              message.isEdited
+    <ul className="ml-list k2-list">
+      {knownOf(messages).map(({ message, defaults }) => (
+        <li key={message.code} className="ml-line k2-item">
+          <span className="ml-thumb" aria-hidden="true">
+            @
+          </span>
+          <span className="ml-main">
+            <strong>{defaults.title}</strong>
+            <small>
+              {message.isEdited
                 ? `${defaults.when} · Τελευταία αλλαγή: ${whenEdited(message)}`
-                : defaults.when
-            }
-            aside={
-              <>
-                <MessageBadges message={message} />
-                <Link className="button" href={messageHref(message.code)}>
-                  Επεξεργασία
-                </Link>
-              </>
-            }
-          />
-        ))}
-      </RowList>
-    </Panel>
+                : defaults.when}
+            </small>
+          </span>
+          <span className="k2-meta">
+            <MessageTags message={message} />
+          </span>
+          <span className="ml-quick">
+            <Link href={messageHref(message.code)}>Επεξεργασία</Link>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -105,7 +120,7 @@ export async function SpacesSystemMessages() {
   const messages = await getSystemMessages();
   if (!messages.ok || !messages.data) return <Failed />;
   return (
-    <Frame>
+    <Frame hero={<ListHero count={knownOf(messages.data).length} />}>
       <MessageList messages={messages.data} />
     </Frame>
   );
@@ -127,30 +142,43 @@ function Variables({ message }: { message: SystemMessage }) {
   );
 }
 
+// Η σελίδα ενός Μηνύματος: το όνομά του είναι το h1 (`data-page-title`), με πότε φεύγει και τα σήματα.
+function MessageHero({ message }: { message: SystemMessage }) {
+  if (!isSystemMessageCode(message.code))
+    return <h1 data-page-title>Μηνύματα συστήματος</h1>;
+  const defaults = SYSTEM_DEFAULTS[message.code];
+  return (
+    <header className="ml-hero k2-hero">
+      <span className="ml-hero-mono" aria-hidden="true">
+        @
+      </span>
+      <div>
+        <span className="k2-meta">
+          <MessageTags message={message} />
+        </span>
+        <h1 data-page-title>{defaults.title}</h1>
+        <p>{defaults.when}</p>
+        {message.isEdited && <p>Αλλαγή από: {whenEdited(message)}</p>}
+      </div>
+      <div className="ml-quick">
+        <Link href={SYSTEM_MESSAGES_PATH}>Όλα τα Μηνύματα συστήματος</Link>
+      </div>
+    </header>
+  );
+}
+
 function Editor({ message }: { message: SystemMessage }) {
   if (!isSystemMessageCode(message.code)) return null;
   const defaults = SYSTEM_DEFAULTS[message.code];
   const required = message.required.map((v) => `{${v}}`).join(", ");
   return (
-    <>
-      <p>
-        <Link href={SYSTEM_MESSAGES_PATH}>← Όλα τα Μηνύματα συστήματος</Link>
-      </p>
+    <div className="ml-stack">
       <SystemMessageEditor
         key={message.isEdited ? "edited" : message.updatedAt}
         message={message}
         defaults={defaults}
-        aside={
-          <span className="k2-meta">
-            <MessageBadges message={message} />
-          </span>
-        }
       >
-        <p className="muted">{defaults.when}</p>
-        <p className="muted">{defaults.note}</p>
-        {message.isEdited && (
-          <p className="muted">Αλλαγή από: {whenEdited(message)}</p>
-        )}
+        <p className="note">{defaults.note}</p>
         <p className="note">
           Δεν υπάρχει διακόπτης: αυτό το μήνυμα χρειάζεται για να δουλέψει το
           σύστημα. Αλλάζεις μόνο το κείμενο· το κουμπί και ο κωδικός μπαίνουν
@@ -168,7 +196,7 @@ function Editor({ message }: { message: SystemMessage }) {
       <p className="note">
         Κάθε αλλαγή γράφεται στο Ίχνος ενεργειών (ποιος, πότε, τι).
       </p>
-    </>
+    </div>
   );
 }
 
@@ -179,7 +207,15 @@ export async function SpacesSystemMessage({ code }: { code: string }) {
   if (messages?.ok === false) return <Failed />;
   const message = messages?.data?.find((item) => item.code === code);
   return (
-    <Frame>
+    <Frame
+      hero={
+        message ? (
+          <MessageHero message={message} />
+        ) : (
+          <h1 data-page-title>Μηνύματα συστήματος</h1>
+        )
+      }
+    >
       {message ? (
         <Editor message={message} />
       ) : (

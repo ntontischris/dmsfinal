@@ -6,6 +6,7 @@ import {
   fillNewPackage,
   itemHeader,
   openItem,
+  openPanel,
   panel,
   publishArchiveRestore,
   rowTitled,
@@ -203,11 +204,11 @@ test("Ρυθμίσεις › Συμφωνίες: Είδη Παροχής", async
   await page.goto("/app/settings/agreements");
   await expect(
     page
-      .getByRole("navigation", { name: "Ενότητες Ρυθμίσεων" })
-      .getByRole("link", { name: "Συμφωνίες", exact: true }),
+      .getByRole("navigation", { name: "Ρυθμίσεις", exact: true })
+      .getByRole("link", { name: "Ρυθμίσεις Συμφωνιών", exact: true }),
   ).toHaveAttribute("aria-current", /.+/);
 
-  const kinds = panel(page, "Είδη Παροχής");
+  const kinds = await openPanel(page, "Είδη Παροχής");
   const reel = rowTitled(kinds, "reel");
   await expect(reel.getByText(/\d+ χρήσεις/)).toBeVisible();
   await expect(
@@ -260,7 +261,11 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
 
   // Ο επόμενος μήνας στην I6: μία γραμμή 9.900 € και 220 ώρες → 45,00 € την ώρα. Αν τον έγραψε ήδη το άλλο project,
   // αλλάζει η ίδια γραμμή (η αποθήκευση αντικαθιστά όλη την ανάλυση), άρα το αποτέλεσμα είναι πάντα το ίδιο.
-  await page.locator("nav.tabs a.tab").last().click();
+  await page
+    .locator("details.kit-fb-card", { hasText: "Μήνας" })
+    .locator("summary")
+    .click();
+  await page.locator(".kit-fb-pop a").last().click();
   await expect(page).toHaveURL(/\?month=\d{4}-\d{2}$/);
   if ((await page.getByLabel("Ποσό γραμμής").count()) === 0) {
     await page.getByText("+ Νέα κατηγορία", { exact: true }).click();
@@ -275,6 +280,7 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
       .click();
   }
   await page.getByLabel("Ποσό γραμμής").first().fill("9900");
+  await page.locator("summary", { hasText: "Παραγωγικές ώρες" }).click();
   await page.getByLabel("Παραγωγικές ώρες").fill("220");
   await page.getByRole("button", { name: "Αποθήκευση", exact: true }).click();
   await expect(
@@ -292,7 +298,9 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
 
   const range = panel(page, "Εύρος τιμής και Υπέρβαση κόστους");
   await range.locator("summary").first().click();
-  const minimum = rowTitled(range, "Ελάχιστη");
+  const minimum = range.locator("li.ml-line").filter({
+    has: page.locator("strong").getByText("Ελάχιστη", { exact: true }),
+  });
   const saveMin = async (value: string, margin: RegExp) => {
     await control(range, "Πολλαπλασιαστής Ελάχιστη").fill(value);
     await button(range, "Αποθήκευση").click();
@@ -317,12 +325,19 @@ test("ο Έλεγχος ετοιμότητας βλέπει έτοιμους Κ�
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/readiness");
-  const list = panel(page, "Τι πρέπει να είναι έτοιμο");
+  const list = page.locator("details.ml-box").filter({
+    has: page.getByRole("heading", {
+      name: "Τι πρέπει να είναι έτοιμο",
+      exact: true,
+    }),
+  });
   for (const title of [
     "Κατάλογος: Πακέτα, Υπηρεσίες, τιμές",
     "Έξοδα και ώρες: ο πρώτος μήνας Κόστους ώρας",
   ]) {
-    const item = rowTitled(list, title);
+    const item = list.locator("li.ml-line").filter({
+      has: page.locator(".ml-main strong").getByText(title, { exact: true }),
+    });
     await expect(
       item.getByText("έτοιμο", { exact: true }).first(),
     ).toBeVisible();

@@ -45,7 +45,7 @@ function LineTags({
   const deviations = lineDeviationsOf(agreement.deviations, line.id);
   if (line.kind !== "free" && deviations.length === 0) return null;
   return (
-    <span className="btn-row">
+    <span className="ml-quick">
       {line.kind === "free" && <span className="ml-tag">Ελεύθερη γραμμή</span>}
       {deviations.map((d) => (
         <Badge

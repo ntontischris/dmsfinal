@@ -47,10 +47,18 @@ interface DeckProps {
   activeCode: string;
 }
 
+// Πάνω από έξι κάρτες (π.χ. Ρυθμίσεις) δεν χωρούν σε μία σειρά κάδρων: η τράπουλα γίνεται πυκνό πλέγμα.
+const MANY_CARDS = 6;
+
 function Deck({ label, cards, activeCode }: DeckProps) {
   const numbers = useCardNumbers();
   return (
-    <nav className="money-deck" aria-label={label} data-spaces>
+    <nav
+      className="money-deck"
+      aria-label={label}
+      data-spaces
+      data-many={cards.length > MANY_CARDS ? "" : undefined}
+    >
       {cards.map((card, index) => (
         <Card
           key={card.code}

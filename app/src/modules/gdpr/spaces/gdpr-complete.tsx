@@ -13,7 +13,7 @@ export function CompleteForm({ id, label }: { id: string; label: string }) {
       ref={formRef}
       onSubmit={onSubmit}
       aria-label={`Ολοκλήρωση: ${label}`}
-      className="btn-row"
+      className="g-inline"
     >
       <input type="hidden" name="id" value={id} />
       <input
@@ -29,11 +29,11 @@ export function CompleteForm({ id, label }: { id: string; label: string }) {
         placeholder="Σημείωση"
         maxLength={1000}
       />
-      <button type="submit" className="button" disabled={isPending}>
+      <button type="submit" disabled={isPending}>
         {isPending ? "Αποθήκευση…" : "Ολοκλήρωση"}
       </button>
       {(state.error || state.notice) && (
-        <span className="note" role={state.error ? "alert" : "status"}>
+        <span className="g-note" role={state.error ? "alert" : "status"}>
           {state.error ?? state.notice}
         </span>
       )}

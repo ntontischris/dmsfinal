@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { visibleNav } from "@/components/shell/nav";
-import { codeOfPath, hrefOf } from "@/spaces/data/screens";
+import { codeOfPath } from "@/spaces/data/screens";
 import {
   landingOf,
   mobileBar,
@@ -23,10 +23,7 @@ const teamWith =
   (requirement: string) =>
     requirement === "team" || permissions.includes(requirement);
 
-// Οι Ρυθμίσεις έχουν δικές τους καρτέλες μέσα στη σελίδα (SettingsTabs): οι υποσελίδες τους φτάνονται από εκεί.
-const SUBPAGES_OF_O1 = ["O2", "O3", "O6", "O7", "K3"];
-
-// Πού φαίνεται κάθε διαδρομή: καρτέλα, ουρά, «Περισσότερα», εργαλείο, προφίλ, ή υποσελίδα ορατής καρτέλας.
+// Πού φαίνεται κάθε διαδρομή: καρτέλα, ουρά, «Περισσότερα», εργαλείο ή προφίλ.
 // Μετριέται η διαδρομή (όπως στο #220): το J3 του πελάτη και το J1 της ομάδας είναι η ίδια σελίδα.
 const placedHrefs = (model: SpacesModel): string[] => {
   const tabs = model.spaces.flatMap((space) => space.tabs);
@@ -37,8 +34,7 @@ const placedHrefs = (model: SpacesModel): string[] => {
     ...model.tools,
     ...model.profile,
   ]
-    .map((link) => link.href)
-    .concat(tabs.some((tab) => tab.code === "O1") ? SUBPAGES_OF_O1.map((code) => hrefOf(code)) : []);
+    .map((link) => link.href);
 };
 
 const navItems = (allows: (requirement: string) => boolean) => visibleNav(allows).flatMap((section) => section.items);
@@ -172,9 +168,9 @@ describe("ποιο θέμα ανάβει", () => {
     expect(spaceOf(screenCodeOf("/app/messages", client), client)?.id).toBe("c-messages");
   });
 
-  it("ουρά και υποσελίδα ανάβουν τη λίστα-γονιό τους", () => {
+  it("η ουρά ανάβει τη λίστα-γονιό της, οι υποσελίδες Ρυθμίσεων είναι δικές τους κάρτες", () => {
     expect(tabOf("B6")).toBe("B1");
-    expect(tabOf("O2")).toBe("O1");
+    expect(tabOf("O2")).toBe("O2");
     expect(tabOf("B1")).toBe("B1");
   });
 });
@@ -184,9 +180,16 @@ describe("θέμα χωρίς τίποτα χρήσιμο", () => {
     expect(space(spacesModel(teamWith("filming.view")), "settings")).toBeUndefined();
   });
 
-  it("ο Ιδιοκτήτης τις βλέπει, με το Kit μέσα", () => {
+  it("ο Ιδιοκτήτης τις βλέπει χωρίς το Kit (ανοίγει μόνο με τη διεύθυνση)", () => {
     const owner = (requirement: string) => requirement === "team" || requirement === "owner";
-    expect(space(spacesModel(owner), "settings")?.codes).toContain("KIT");
+    const settings = space(spacesModel(owner), "settings");
+    expect(settings?.tabs.map((tab) => tab.code)).toEqual(["O8"]);
+    expect(settings?.codes).not.toContain("KIT");
+  });
+
+  it("οι Ρυθμίσεις Γυρισμάτων, Παραδοτέων και Μηνυμάτων είναι κάρτες του θέματος", () => {
+    const settings = space(spacesModel(teamWith("settings.manage")), "settings");
+    expect(settings?.tabs.map((tab) => tab.code)).toEqual(expect.arrayContaining(["O1", "O2", "O3", "O4", "O5", "O9", "O7"]));
   });
 });
 

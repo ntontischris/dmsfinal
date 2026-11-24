@@ -19,6 +19,18 @@ export const control = (scope: Page | Locator, label: string): Locator =>
 export const panel = (scope: Page, title: string): Locator =>
   card(scope, title).last();
 
+// Ανοίγει το κλειστό κουτί (details.ml-box) του Panel, αν δεν είναι ήδη ανοιχτό.
+export const openPanel = async (
+  scope: Page,
+  title: string,
+): Promise<Locator> => {
+  const found = panel(scope, title);
+  const box = found.locator("details").first();
+  if ((await box.getAttribute("open")) === null)
+    await box.locator("summary").first().click();
+  return found;
+};
+
 // Η κεφαλίδα της οθόνης (αυτή με το h1): εκεί μπαίνουν τα σήματα «Δημόσιο», «Αρχειοθετημένο», «Μόνο ανάγνωση».
 export const screenHeader = (page: Page): Locator =>
   page.locator("header", { has: page.getByRole("heading", { level: 1 }) });

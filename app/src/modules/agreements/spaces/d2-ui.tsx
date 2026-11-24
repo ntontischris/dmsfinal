@@ -88,10 +88,9 @@ export function D2Form({
       {typeof children === "function" ? children(isPending) : children}
       {report ? null : <Confirmation state={state} />}
       {!hideSubmit && (
-        <span className="btn-row">
+        <span className="ml-quick">
           <button
             type="submit"
-            className="button"
             data-primary={isPrimary ? "true" : undefined}
             data-danger={isDanger ? "true" : undefined}
             aria-label={submitAriaLabel}

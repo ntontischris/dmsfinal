@@ -4,7 +4,6 @@ import {
   SettingsCard,
   SettingsForm,
 } from "@/modules/settings";
-import { DateLead, ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, fmtDate } from "@/spaces/screens/shared";
 
 import {
@@ -16,15 +15,16 @@ import { BOOKING_DAY_LABELS, STEP_LABELS } from "../booking-labels";
 import type { BookingException, BookingHoursView } from "../booking-types";
 import { formatHours } from "../helpers-time";
 import { BOOKING_DURATION_CHOICES, STEP_CHOICES } from "../schemas-booking";
+import { Line, Lines } from "./ml-parts";
 import { PROPOSAL_WEEK, exceptionState } from "./o4-model";
 
 const WEEKDAY = new Intl.DateTimeFormat("el-GR", { weekday: "short" });
 // Η μέρα ως «Πεμ 25» στην αρχή της γραμμής (και στις Αργίες).
 export const dateLeadOf = (day: string) => (
-  <DateLead
-    weekday={WEEKDAY.format(new Date(`${day}T12:00:00`))}
-    day={day.slice(8, 10)}
-  />
+  <span className="o4-date">
+    <small>{WEEKDAY.format(new Date(`${day}T12:00:00`))}</small>
+    <strong>{day.slice(8, 10)}</strong>
+  </span>
 );
 
 // Ωράριο κρατήσεων, Χωρητικότητα, διάρκειες και βήμα (prototype `screens/o4-hours.tsx`), με το πραγματικό saveBookingHours.
@@ -41,9 +41,9 @@ function HoursForm({ view }: { view: BookingHoursView }) {
             μέχρι να το αποθηκεύσεις.
           </p>
         )}
-        <RowList>
+        <Lines>
           {week.map((day) => (
-            <ListRow
+            <Line
               key={day.dow}
               title={BOOKING_DAY_LABELS[day.dow]}
               aside={
@@ -75,7 +75,7 @@ function HoursForm({ view }: { view: BookingHoursView }) {
               }
             />
           ))}
-        </RowList>
+        </Lines>
         <div className="o-fields">
           <span className="stack o-field">
             <label htmlFor="o4-capacity">Χωρητικότητα</label>
@@ -100,7 +100,7 @@ function HoursForm({ view }: { view: BookingHoursView }) {
         <div className="o-fields">
           <fieldset className="stack o-field">
             <legend>Επιτρεπτές διάρκειες</legend>
-            <span className="btn-row">
+            <span className="o4-checks">
               {BOOKING_DURATION_CHOICES.map((hours) => (
                 <label key={hours}>
                   <input
@@ -143,7 +143,7 @@ function HoursForm({ view }: { view: BookingHoursView }) {
 function NewException() {
   return (
     <details>
-      <summary className="button">+ Νέα εξαίρεση</summary>
+      <summary>+ Νέα εξαίρεση</summary>
       <SettingsForm action={saveBookingException} resetOnSuccess>
         <div className="o-fields">
           <span className="stack o-field">
@@ -216,9 +216,9 @@ function Exceptions({
           Οι εξαιρέσεις ημερών (κλειστές ή με άλλες ώρες) εμφανίζονται εδώ.
         </p>
       ) : (
-        <RowList>
+        <Lines>
           {exceptions.map((ex) => (
-            <ListRow
+            <Line
               key={ex.day}
               lead={dateLeadOf(ex.day)}
               title={ex.note ? `«${ex.note}»` : fmtDate(ex.day)}
@@ -236,9 +236,9 @@ function Exceptions({
               }
             />
           ))}
-        </RowList>
+        </Lines>
       )}
-      <div className="btn-row o-list-actions">
+      <div className="ml-quick o-list-actions">
         <NewException />
       </div>
     </SettingsCard>
@@ -253,4 +253,3 @@ export function O4Hours({ view }: { view: BookingHoursView }) {
     </>
   );
 }
-

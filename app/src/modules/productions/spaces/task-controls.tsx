@@ -48,7 +48,6 @@ export function TaskStatusButtons({
         <button
           key={next.status}
           type="button"
-          className="button"
           disabled={move.isPending}
           onClick={() => move.run({ taskId, status: next.status })}
         >
@@ -72,7 +71,7 @@ export function TaskPrioritySelect({
   return (
     <>
       <select
-        className="select"
+        className="input"
         aria-label="Προτεραιότητα"
         value={priority}
         disabled={save.isPending}

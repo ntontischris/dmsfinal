@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import type { FormState } from "@/lib/form-state";
 import { useKeptForm } from "@/lib/use-kept-form";
 
-// Οι φόρμες της N5 στη μορφή του prototype (`.button`, `.note`), με τα πραγματικά actions της Ενσωμάτωσης.
+// Οι φόρμες της N5 στη μορφή του prototype (`.ml-actions`, `.note`), με τα πραγματικά actions της Ενσωμάτωσης.
 
 interface N5FormProps {
   action: (state: FormState, form: FormData) => Promise<FormState>;
@@ -47,10 +47,9 @@ export function N5Form({
           {state.notice}
         </p>
       )}
-      <div className="btn-row">
+      <div className="ml-actions">
         <button
           type="submit"
-          className="button"
           data-primary={isPrimary ? "true" : undefined}
           data-danger={isDanger ? "true" : undefined}
           disabled={isPending}

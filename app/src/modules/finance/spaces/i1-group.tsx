@@ -25,23 +25,21 @@ const agreementsOf = (items: readonly BillableItem[]): readonly string[] => [
 
 function BillableRow({ row }: { row: BillableItem }) {
   return (
-    <tr>
-      <td data-label="Ημερομηνία">{fmtDate(row.billableOn)}</td>
-      <td data-label="Συμφωνία" className="i13-cell">
-        <strong>{row.agreementTitle || "—"}</strong>
-      </td>
-      <td data-label="Λόγος" className="i13-cell">
-        {reasonText(row.reason)}
-        <span className="i13-sub">{row.label}</span>
-      </td>
-      <td data-label="Ποσό" className="num i13-money">
-        {fmtMoney(row.net)}
-        {row.open < row.net && (
-          <span className="i13-sub">ανοιχτό {fmtMoney(row.open)}</span>
-        )}
-      </td>
-      <td data-label="Μέρες ανοιχτό" className="num">
+    <tr className="ml-line">
+      <td className="ml-thumb" aria-hidden>
         {row.daysOpen}
+      </td>
+      <td className="ml-main i13-cell">
+        <span className="ml-tag">{reasonText(row.reason)}</span>
+        <strong>{row.agreementTitle || "—"}</strong>
+        <small>
+          {fmtDate(row.billableOn)}
+          {row.label ? ` · ${row.label}` : ""} · {daysText(row.daysOpen)}
+        </small>
+      </td>
+      <td className="ml-amount">
+        {fmtMoney(row.net)}
+        {row.open < row.net && <small>ανοιχτό {fmtMoney(row.open)}</small>}
       </td>
     </tr>
   );
@@ -49,14 +47,13 @@ function BillableRow({ row }: { row: BillableItem }) {
 
 function BillableTable({ items }: { items: readonly BillableItem[] }) {
   return (
-    <table className="rtable">
+    <table className="ml-table ml-list">
+      <caption className="sr-only">Τιμολογητέα</caption>
       <thead>
         <tr>
-          <th>Ημερομηνία</th>
-          <th>Συμφωνία</th>
-          <th>Λόγος</th>
-          <th className="num">Ποσό (καθαρό)</th>
-          <th className="num">Μέρες ανοιχτό</th>
+          <td aria-hidden="true" />
+          <th scope="col">Τιμολογητέο</th>
+          <th scope="col">Ποσό (καθαρό)</th>
         </tr>
       </thead>
       <tbody>

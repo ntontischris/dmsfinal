@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import "../../finance/spaces/money-lines.css";
 import "./j1.css";
 
 export interface NewMessageOption {
@@ -11,7 +12,7 @@ export interface NewMessageOption {
   href: string;
 }
 
-// «Νέο Μήνυμα προς» του prototype (`screens/j1-new.tsx`): οι Πελάτες στους οποίους μπορεί να γράψει ο Χρήστης.
+// «Νέο Μήνυμα προς»: οι Πελάτες στους οποίους μπορεί να γράψει ο Χρήστης, με ένα κύριο κουμπί.
 export function NewMessage({
   options,
 }: {
@@ -21,7 +22,7 @@ export function NewMessage({
   const target = options.find((o) => o.id === picked) ?? options[0];
   if (!target) return null;
   return (
-    <div className="toolbar j1-new">
+    <div className="j1-new">
       <label htmlFor="j1-new-client">Νέο Μήνυμα προς</label>
       <select
         id="j1-new-client"
@@ -35,9 +36,11 @@ export function NewMessage({
           </option>
         ))}
       </select>
-      <Link className="button" data-primary href={target.href}>
-        Νέο Μήνυμα
-      </Link>
+      <span className="ml-quick">
+        <Link data-primary href={target.href}>
+          Νέο Μήνυμα
+        </Link>
+      </span>
     </div>
   );
 }

@@ -10,12 +10,19 @@ const PAGE = "/app/settings/integrations";
 
 test.describe.configure({ retries: 0 });
 
-
-// Ένα πάνελ της οθόνης (κάρτα σύνδεσης, Συνδρομές, φόρμα συνδρομής), από τον τίτλο του.
+// Ένα κουτί της οθόνης (κάρτα σύνδεσης, Συνδρομές, φόρμα συνδρομής), από τον τίτλο του.
 const card = (scope: Page | Locator, title: string) =>
   scope
-    .locator("section.kit-panel")
+    .locator("details.ml-box")
     .filter({ has: scope.getByRole("heading", { name: title, exact: true }) });
+
+// Τα κουτιά είναι κλειστά από προεπιλογή: τα ανοίγουμε όλα μετά από κάθε φόρτωση.
+const openBoxes = (page: Page) =>
+  page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
 
 // Η φόρμα μιας κάρτας που έχει το κουμπί ή το πεδίο: το μήνυμά της, όχι μια προειδοποίηση της κάρτας.
 // Το `inner` ψάχνεται μέσα στη φόρμα, άρα ξεκινά από το `page` και όχι από την κάρτα.
@@ -67,6 +74,7 @@ test("ο Ιδιοκτήτης βλέπει τις έξι κάρτες και κ�
   await clearCheck(isDesktop ? "email" : "ai");
   await signIn(page, "owner@example.com");
   await page.goto(PAGE);
+  await openBoxes(page);
   await expect(
     page.getByRole("heading", { name: "Ενσωματώσεις", exact: true }),
   ).toBeVisible();
@@ -118,6 +126,7 @@ test("ο Ιδιοκτήτης αλλάζει GA4 και Meta Pixel με έλεγ
 }) => {
   await signIn(page, "owner@example.com");
   await page.goto(PAGE);
+  await openBoxes(page);
   const analytics = card(page, "Στατιστικά και διαφήμιση");
   const ga4 = analytics.getByLabel("Google Analytics, Measurement ID");
   const pixel = analytics.getByLabel("Meta Pixel ID");
@@ -140,6 +149,7 @@ test("ο Ιδιοκτήτης αλλάζει GA4 και Meta Pixel με έλεγ
   await save.click();
   await expect(ids.getByRole("status")).toContainText("αποθηκεύτηκαν");
   await page.reload();
+  await openBoxes(page);
   await expect(
     card(page, "Στατιστικά και διαφήμιση").getByLabel(
       "Google Analytics, Measurement ID",
@@ -158,6 +168,7 @@ async function addSubscription(
     .getByRole("link", { name: "Νέα συνδρομή" })
     .click();
   await expect(page).toHaveURL(/\?sub=new/);
+  await openBoxes(page);
   const form = card(page, "Νέα συνδρομή");
   await form.getByLabel("Πάροχος").fill(values.provider);
   await form.getByLabel("Πλάνο").fill("Pro");
@@ -175,6 +186,7 @@ test("ο Ιδιοκτήτης κρατά το μητρώο συνδρομών μ
   const P = project();
   await signIn(page, "owner@example.com");
   await page.goto(PAGE);
+  await openBoxes(page);
   await expect(
     card(page, "Συνδρομές").getByText("Δεν έχει καταγραφεί καμία συνδρομή"),
   ).toBeVisible();
@@ -225,6 +237,7 @@ test("η Διαχείριση δεν βλέπει τις Ενσωματώσει�
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto(PAGE);
+  await openBoxes(page);
   await expect(
     page.getByText(
       "Τις συνδρομές και τις ενσωματώσεις τις βλέπει και τις αλλάζει μόνο ο Ιδιοκτήτης.",

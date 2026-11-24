@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { ListRow, TimeLead } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 
 import { PENDING_STATUS, type A5Item as Item } from "./a5-model";
@@ -83,30 +82,33 @@ export function A5Item({ item, compact = false }: A5ItemProps) {
 
 const RANGE_TONE_FADED = new Set(["busy", "closed"]);
 
-// Μία γραμμή της λίστας (screens2): ώρα μπροστά, τίτλος + λεπτομέρεια, κατάσταση δεξιά.
+// Μία γραμμή της λίστας (ml-line): ώρα μπροστά, τίτλος + λεπτομέρεια, κατάσταση δεξιά.
 export function A5Row({ item }: { item: Item }) {
   const hasRange = !UNTIMED.has(item.kind);
   const sub = [markOf(item), item.detail].filter(Boolean).join(" · ");
-  const lead =
-    hasRange && item.from ? (
-      <TimeLead start={item.from} end={item.to ?? undefined} />
-    ) : hasRange ? (
-      <span className="part-sub">{timeLabel(item)}</span>
-    ) : undefined;
+  const lead = hasRange ? timeLabel(item) : null;
+  const title = (
+    <>
+      <Icon item={item} />
+      {item.title}
+    </>
+  );
   return (
-    <ListRow
-      lead={lead}
-      title={
-        <>
-          <Icon item={item} />
-          {item.title}
-        </>
-      }
-      href={item.href ?? undefined}
-      sub={sub || undefined}
-      aside={<StatusBadge item={item} />}
-      isHighlighted={item.status === PENDING_STATUS}
-      isFaded={RANGE_TONE_FADED.has(item.kind)}
-    />
+    <li
+      className="ml-line a5-row"
+      data-urgent={item.status === PENDING_STATUS || undefined}
+      data-faded={RANGE_TONE_FADED.has(item.kind) || undefined}
+    >
+      <span className="a5-lead">{lead}</span>
+      <span className="ml-main">
+        <strong>
+          {item.href ? <Link href={item.href}>{title}</Link> : title}
+        </strong>
+        {sub && <small>{sub}</small>}
+      </span>
+      <span className="ml-quick">
+        <StatusBadge item={item} />
+      </span>
+    </li>
   );
 }

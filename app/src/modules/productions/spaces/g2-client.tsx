@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   G2ClientDeliverables,
   clientCardsOf,
@@ -7,8 +9,6 @@ import {
 import { messagesViewOf } from "@/modules/messages";
 import type { Viewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { Segments } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice } from "@/spaces/screens/shared";
 import { Strip } from "@/spaces/shell/strip";
 
@@ -22,7 +22,9 @@ import {
   clientProvisionSub,
 } from "./g2-client-model";
 import { athensDay } from "./g2-model";
-import { G2Messages } from "./g2-notes";
+import { ProvisionMeter } from "./g2-sections";
+import { G2Box } from "./g2-box";
+import { G2Hero } from "./g2-hero";
 import { G2Filmings } from "./g2-sections";
 
 // G2 Παραγωγή στην όψη πελάτη (prototype `screens/G2.tsx` με isClient): ό,τι δείχνει η παλιά G2 πελάτη, στη μορφή του
@@ -33,26 +35,13 @@ const EMPTY_PROGRESS = { total: 0, approved: 0, waitingClient: 0, inWork: 0 };
 const REOPEN_NOTE =
   "Αν ζητήσεις αλλαγή που ξανανοίγει ένα Παραδοτέο, η Παραγωγή ξανανοίγει μέχρι να παραδοθεί ξανά. Ένα νέο Παραδοτέο μπαίνει στην Παραγωγή του τρέχοντος μήνα.";
 
-function ClientHeader({ production }: { production: ProductionDetail }) {
+const clientMetaOf = (production: ProductionDetail): string => {
   const { client, agreement, period } = production;
-  return (
-    <header className="g2-header">
-      <dl className="dl">
-        <dt>Πελάτης</dt>
-        <dd>{client?.name ?? "—"}</dd>
-        {agreement && (
-          <>
-            <dt>Συμφωνία</dt>
-            <dd>
-              {agreement.title} ·{" "}
-              {period ? periodLabel(period.starts) : "εφάπαξ"}
-            </dd>
-          </>
-        )}
-      </dl>
-    </header>
-  );
-}
+  const parts = [client?.name ?? "—"];
+  if (agreement)
+    parts.push(agreement.title, period ? periodLabel(period.starts) : "εφάπαξ");
+  return parts.join(" · ");
+};
 
 function ClientStateBlock({
   production,
@@ -98,22 +87,22 @@ function ClientState({
   blockers: readonly string[];
 }) {
   return (
-    <Panel
-      label="Κατάσταση"
-      aside={
+    <G2Box
+      title="Κατάσταση"
+      hint={
         <Badge tone={production.state === "cancelled" ? "faded" : "strong"}>
           {STATE_WORDS[production.state]}
         </Badge>
       }
     >
       {production.owner && (
-        <dl className="dl">
+        <dl className="ml-kv">
           <dt>Υπεύθυνος</dt>
           <dd>{`${production.owner.name} (η επαφή σου)`}</dd>
         </dl>
       )}
       <ClientStateBlock production={production} blockers={blockers} />
-    </Panel>
+    </G2Box>
   );
 }
 
@@ -122,27 +111,31 @@ function ClientProvisions({ production }: { production: ProductionDetail }) {
   if (production.isInternal) return null;
   const rows = clientProvisionRowsOf(production.balances);
   return (
-    <Panel
-      label="Τι σου αναλογεί"
-      aside={
+    <G2Box
+      title="Τι σου αναλογεί"
+      hint={
         production.period ? periodLabel(production.period.starts) : "εφάπαξ"
       }
     >
       {!production.period && (
-        <p className="muted">Εφάπαξ Παραγωγή: καμία Περίοδος Παροχών.</p>
+        <p className="ml-empty">Εφάπαξ Παραγωγή: καμία Περίοδος Παροχών.</p>
       )}
       {production.period && rows.length === 0 && (
-        <p className="muted">Δεν περιλαμβάνεται κάτι ακόμα.</p>
+        <p className="ml-empty">Δεν περιλαμβάνεται κάτι ακόμα.</p>
       )}
       <ul className="g2-provisions">
         {rows.map((row) => (
           <li key={row.kindId}>
-            <Segments label={row.label} used={row.used} total={row.total} />
-            <span className="part-sub">{clientProvisionSub(row)}</span>
+            <ProvisionMeter
+              label={row.label}
+              used={row.used}
+              total={row.total}
+            />
+            <small className="g2-sub">{clientProvisionSub(row)}</small>
           </li>
         ))}
       </ul>
-    </Panel>
+    </G2Box>
   );
 }
 
@@ -162,31 +155,38 @@ export async function G2ClientPage({
   const canChat = messagesViewOf(viewer) === "client";
   return (
     <div className="g2">
-      <header className="page-head">
-        <h1>
-          {production.title}
-          <span className="page-head-dot">.</span>
-        </h1>
-      </header>
+      <G2Hero
+        title={production.title}
+        stateWord={STATE_WORDS[production.state]}
+        meta={clientMetaOf(production)}
+        actions={
+          canChat &&
+          !production.isInternal && (
+            <Link
+              href={hrefOf("J3")}
+              title="Η Συνομιλία είναι μία ανά Πελάτη, για όλες τις Παραγωγές σου."
+            >
+              Άνοιγμα Συνομιλίας
+            </Link>
+          )
+        }
+      />
       <Strip
         stats={clientProductionStats(progress, production.filmings)}
         now={null}
       />
-      <ClientHeader production={production} />
-      <ClientState
-        production={production}
-        blockers={clientBlockers(progress, production.filmings)}
-      />
-      <ClientProvisions production={production} />
-      <G2Filmings filmings={production.filmings} isClient />
-      <G2ClientDeliverables
-        awaiting={cards.awaiting}
-        deliverables={cards.all}
-      />
-      <G2Messages
-        isInternal={production.isInternal}
-        threadHref={canChat ? hrefOf("J3") : null}
-      />
+      <div className="ml-stack">
+        <ClientState
+          production={production}
+          blockers={clientBlockers(progress, production.filmings)}
+        />
+        <ClientProvisions production={production} />
+        <G2Filmings filmings={production.filmings} isClient />
+        <G2ClientDeliverables
+          awaiting={cards.awaiting}
+          deliverables={cards.all}
+        />
+      </div>
     </div>
   );
 }

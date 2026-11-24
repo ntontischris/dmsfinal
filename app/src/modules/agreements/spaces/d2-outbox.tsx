@@ -35,7 +35,7 @@ function MarkForm({
   status?: "manual" | "cancelled";
 }) {
   return (
-    <D2Form action={markOutbox} submitLabel={label} className="btn-row">
+    <D2Form action={markOutbox} submitLabel={label} className="ml-quick">
       <input type="hidden" name="outboxId" value={item.id} />
       <input type="hidden" name="status" value={status} />
     </D2Form>
@@ -53,9 +53,11 @@ function CopyButton({ value }: { value: string }) {
     }
   };
   return (
-    <button type="button" className="button" onClick={handleCopy}>
-      {isCopied ? "Αντιγράφηκε" : "Αντιγραφή"}
-    </button>
+    <span className="ml-quick">
+      <button type="button" onClick={handleCopy}>
+        {isCopied ? "Αντιγράφηκε" : "Αντιγραφή"}
+      </button>
+    </span>
   );
 }
 
@@ -84,7 +86,7 @@ function LinkBody({ item, origin }: { item: OutboxItem; origin: string }) {
           onFocus={(e) => e.currentTarget.select()}
         />
       </label>
-      <span className="btn-row">
+      <span className="ml-quick">
         <CopyButton value={url} />
         <MarkForm item={item} label="Το έστειλα" />
       </span>

@@ -21,7 +21,7 @@ import {
   nextStepOf,
   stageOf,
   shownSteps,
-  type ClientTab,
+  type ClientBox,
   type NextStep,
 } from "./b2-page-model";
 
@@ -36,7 +36,7 @@ export interface ClientPageInput {
   isReadOnly: boolean;
   data: Loaded;
   allowed: readonly B2Tab[];
-  tabs: readonly ClientTab[];
+  boxes: readonly ClientBox[];
   today: string;
   sendsFilter: ClientSendsFilter;
   // Πρόσβαση μέσω δικής του Ευκαιρίας σε Πελάτη άλλου πωλητή.

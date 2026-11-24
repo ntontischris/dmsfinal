@@ -4,18 +4,36 @@ import type { RequiredField } from "./o1-adapter";
 import { SaveRow, SettingsForm } from "./o-form";
 import { LockedField, Pending, SettingsCard, TextField } from "./o-shared";
 
-// O1 κάρτες Στοιχεία, Υπογράφων, Φορολογικά, ΦΠΑ (prototype `screens/o1-company.tsx` + `o1-money.tsx`).
-// Τα Στοιχεία και ο Υπογράφων αποθηκεύονται με ένα action (όλα τα πεδία μαζί), το ίδιο τα Φορολογικά και ο ΦΠΑ:
-// γι' αυτό κάθε ζεύγος καρτών είναι μία φόρμα, με κουμπί σε κάθε κάρτα.
+// O1 κουτιά «Στοιχεία» (με τον Υπογράφοντα) και «Φορολογικά» (με τον ΦΠΑ). Κάθε κουτί είναι μία φόρμα με μία
+// αποθήκευση, γιατί το action αποθηκεύει όλα τα πεδία του μαζί.
 
 export interface O1CardProps {
   company: CompanySettings;
   pending: ReadonlySet<RequiredField>;
 }
 
-function CompanyCard({ company, pending }: O1CardProps) {
+const pendingHint = (count: number, ready: string): string =>
+  count > 0 ? `εκκρεμούν ${count}` : ready;
+
+const COMPANY_FIELDS: readonly RequiredField[] = [
+  "legal_name",
+  "address",
+  "phone",
+  "email",
+  "signatory_name",
+  "signatory_title",
+];
+
+const TAX_FIELDS: readonly RequiredField[] = ["tax_id", "tax_office", "gemi"];
+
+const countPending = (
+  pending: ReadonlySet<RequiredField>,
+  fields: readonly RequiredField[],
+): number => fields.filter((field) => pending.has(field)).length;
+
+function CompanyFields({ company, pending }: O1CardProps) {
   return (
-    <SettingsCard title="Στοιχεία">
+    <>
       <div className="o-fields">
         <TextField
           id="o1-name"
@@ -62,14 +80,7 @@ function CompanyCard({ company, pending }: O1CardProps) {
           hint="Προεπιλογή: το email της εταιρείας. Ισχύει για όλα τα emails (Αυτοματισμούς και απαραίτητα)."
         />
       </div>
-      <SaveRow card="company" />
-    </SettingsCard>
-  );
-}
-
-function SignerCard({ company, pending }: O1CardProps) {
-  return (
-    <SettingsCard title="Υπογράφων εταιρείας">
+      <h3>Υπογράφων εταιρείας</h3>
       <div className="o-fields">
         <TextField
           id="o1-signer"
@@ -86,20 +97,26 @@ function SignerCard({ company, pending }: O1CardProps) {
           isPending={pending.has("signatory_title")}
         />
       </div>
-      <SaveRow card="signer" />
-    </SettingsCard>
+    </>
   );
 }
 
+// Στοιχεία και Υπογράφων: ένα κουτί, μία φόρμα, μία αποθήκευση (το action αποθηκεύει όλα τα πεδία μαζί).
 export function CompanyAndSigner(props: O1CardProps) {
+  const hint = pendingHint(
+    countPending(props.pending, COMPANY_FIELDS),
+    props.company.legal_name || "επωνυμία, επικοινωνία, υπογράφων",
+  );
   return (
-    <SettingsForm
-      action={saveCompanyDetails}
-      version={props.company.updated_at}
-    >
-      <CompanyCard {...props} />
-      <SignerCard {...props} />
-    </SettingsForm>
+    <SettingsCard title="Στοιχεία" hint={hint} isOpen={false}>
+      <SettingsForm
+        action={saveCompanyDetails}
+        version={props.company.updated_at}
+      >
+        <CompanyFields {...props} />
+        <SaveRow card="company" />
+      </SettingsForm>
+    </SettingsCard>
   );
 }
 
@@ -113,10 +130,17 @@ const fmtVat = (rate: number): string =>
   `${rate.toLocaleString("el-GR", { maximumFractionDigits: 2 })}%`;
 
 // Φορολογικά και ΦΠΑ για τον Ιδιοκτήτη: δύο κάρτες, μία φόρμα (το action αποθηκεύει και τα τέσσερα πεδία).
-function OwnerTaxAndVat({ company, pending }: O1CardProps) {
+const taxHint = ({ company, pending }: O1CardProps): string =>
+  pendingHint(
+    countPending(pending, TAX_FIELDS),
+    `ΑΦΜ ${company.tax_id} · ΦΠΑ ${fmtVat(company.vat_rate)}`,
+  );
+
+function OwnerTaxAndVat(props: O1CardProps) {
+  const { company, pending } = props;
   return (
-    <SettingsForm action={saveTaxDetails} version={company.updated_at}>
-      <SettingsCard title="Φορολογικά">
+    <SettingsCard title="Φορολογικά" hint={taxHint(props)} isOpen={false}>
+      <SettingsForm action={saveTaxDetails} version={company.updated_at}>
         <div className="o-fields">
           {TAX_ROWS.map((r) => (
             <TextField
@@ -131,9 +155,7 @@ function OwnerTaxAndVat({ company, pending }: O1CardProps) {
             />
           ))}
         </div>
-        <SaveRow card="tax" />
-      </SettingsCard>
-      <SettingsCard title="ΦΠΑ">
+        <h3>ΦΠΑ</h3>
         <div className="o-fields">
           <TextField
             id="o1-vat"
@@ -147,31 +169,29 @@ function OwnerTaxAndVat({ company, pending }: O1CardProps) {
             hint="Αλλάζει ανά γραμμή Συμφωνίας."
           />
         </div>
-        <SaveRow card="vat" />
-      </SettingsCard>
-    </SettingsForm>
+        <SaveRow card="tax" />
+      </SettingsForm>
+    </SettingsCard>
   );
 }
 
-function LockedTaxAndVat({ company, pending }: O1CardProps) {
+function LockedTaxAndVat(props: O1CardProps) {
+  const { company, pending } = props;
   return (
-    <>
-      <SettingsCard title="Φορολογικά">
-        {TAX_ROWS.map((r) => (
-          <LockedField
-            key={r.id}
-            label={r.label}
-            value={pending.has(r.name) ? <Pending /> : company[r.name]}
-          />
-        ))}
-      </SettingsCard>
-      <SettingsCard title="ΦΠΑ">
+    <SettingsCard title="Φορολογικά" hint={taxHint(props)} isOpen={false}>
+      {TAX_ROWS.map((r) => (
         <LockedField
-          label="Γενικός συντελεστής"
-          value={fmtVat(company.vat_rate)}
+          key={r.id}
+          label={r.label}
+          value={pending.has(r.name) ? <Pending /> : company[r.name]}
         />
-      </SettingsCard>
-    </>
+      ))}
+      <h3>ΦΠΑ</h3>
+      <LockedField
+        label="Γενικός συντελεστής"
+        value={fmtVat(company.vat_rate)}
+      />
+    </SettingsCard>
   );
 }
 

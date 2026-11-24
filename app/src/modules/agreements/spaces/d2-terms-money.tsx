@@ -4,6 +4,8 @@ import { formatMoney, formatNumber } from "../helpers";
 import type { AgreementDetail } from "../types";
 import { Field, NumberInput, decimalInput, moneyInput } from "./d2-ui";
 
+import "../../finance/spaces/money-lines.css";
+
 // Έκπτωση πρώτων μηνών και ρήτρα λύσης (μηνιαία): όρος τιμής, γι' αυτό πεδία μόνο για όποιον «Βλέπει ποσά».
 
 type Baseline = AgreementDetail["baseline"];
@@ -34,7 +36,7 @@ export function MoneyRows({
       ? undefined
       : `προεπιλογή: ${formatMoney(baseline.dissolutionFee)}`;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="t-disc"
         label="Έκπτωση πρώτων μηνών"
@@ -42,7 +44,7 @@ export function MoneyRows({
         value={discountText(money)}
         hint={isEditing ? standard : undefined}
         input={
-          <span className="btn-row">
+          <span className="ml-quick">
             <NumberInput
               id="t-disc"
               name="discountPercent"

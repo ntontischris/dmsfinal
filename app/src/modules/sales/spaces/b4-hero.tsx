@@ -143,10 +143,8 @@ function HeroFacts({ opportunity, lists, caps, canWork, today }: HeroProps) {
 function HeroActions({ opportunity, lists, proposal }: HeroProps) {
   return (
     <nav className="ml-quick" aria-label="Ενέργειες Ευκαιρίας">
-      <a className="button" href="#b4-activities">
-        Σημείωση ή κλήση
-      </a>
-      <a className="button" href="#b4-proposal">
+      <a href="#b4-activities">Σημείωση ή κλήση</a>
+      <a href="#b4-proposal">
         {proposal.hasProposal
           ? "Πρόταση: αποστολή, Παράταση, κλείσιμο"
           : "Νέα πρόταση"}

@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 
 import { resolveGoogleDeletion } from "../actions";
@@ -36,9 +34,9 @@ function ConfirmForm({
 }) {
   const [reason, setReason] = useState("");
   return (
-    <div className="stack">
-      <label className="stack">
-        Λόγος (υποχρεωτικός)
+    <div className="ml-fields a7-more">
+      <label className="ml-field" data-wide>
+        <span>Λόγος (υποχρεωτικός)</span>
         <textarea
           className="input"
           rows={3}
@@ -46,22 +44,21 @@ function ConfirmForm({
           onChange={(e) => setReason(e.target.value)}
         />
       </label>
-      <p className="note">
+      <small className="a7-wide">
         {item.isAwaitingApproval
           ? "Ο πελάτης παίρνει email με τον λόγο."
           : "Η Παροχή επιστρέφει πάντα (ακύρωση από την ομάδα)."}
-      </p>
-      <div className="btn-row">
+      </small>
+      <div className="ml-actions">
         <button
           type="button"
-          className="button"
           data-danger="true"
           disabled={!reason.trim() || isPending}
           onClick={() => onConfirm(reason.trim())}
         >
           {confirmLabelOf(item)}
         </button>
-        <button type="button" className="button" onClick={onCancel}>
+        <button type="button" onClick={onCancel}>
           Άκυρο
         </button>
       </div>
@@ -89,63 +86,63 @@ function PendingCard({
   onConfirm: (reason: string) => void;
 }) {
   return (
-    <div className="a7-item" data-done={!!resolution}>
-      <Panel label={item.title} aside={<Badge>{item.stateLabel}</Badge>}>
-        <RowList>
-          <ListRow
-            title="Σβήστηκε στο Google"
-            sub={`εντοπίστηκε ${item.detectedAtLabel}`}
-            aside={<Link href={item.filmingHref}>{item.whenLabel}</Link>}
-          />
-          <ListRow
-            title="Προθεσμία"
-            sub={
-              item.isDeadlineFilmingStart
-                ? "(η έναρξη του Γυρίσματος έρχεται πρώτη)"
-                : undefined
-            }
-            aside={
-              <Badge tone={item.hoursLeft < 6 ? "attention" : undefined}>
-                {item.deadlineLabel}
-              </Badge>
-            }
-          />
-        </RowList>
-        {resolution ? (
-          <div role="status">
-            <Badge tone={resolution.tone}>{resolution.label}</Badge>
-            <p className="muted">{resolution.text}</p>
-          </div>
-        ) : isConfirming ? (
-          <ConfirmForm
-            item={item}
-            isPending={isPending}
-            onCancel={onCancelConfirm}
-            onConfirm={onConfirm}
-          />
-        ) : (
-          <div className="btn-row">
-            <button
-              type="button"
-              className="button"
-              data-primary="true"
-              disabled={isPending}
-              onClick={onRestore}
-            >
-              Επαναφορά στο Google
-            </button>
-            <button
-              type="button"
-              className="button"
-              data-danger="true"
-              onClick={onStartConfirm}
-            >
-              {confirmLabelOf(item)}
-            </button>
-          </div>
-        )}
-      </Panel>
-    </div>
+    <li
+      className="ml-line a7-item"
+      data-done={!!resolution}
+      data-urgent={(!resolution && item.hoursLeft < 6) || undefined}
+    >
+      <span className="ml-thumb" aria-hidden="true">
+        G
+      </span>
+      <span className="ml-main">
+        <span className="ml-tag">{item.stateLabel}</span>
+        <strong>
+          <Link href={item.filmingHref}>{item.title}</Link>
+        </strong>
+        <small>
+          {item.whenLabel} · σβήστηκε στο Google, εντοπίστηκε{" "}
+          {item.detectedAtLabel}
+        </small>
+        <small>
+          Προθεσμία:{" "}
+          <Badge tone={item.hoursLeft < 6 ? "attention" : undefined}>
+            {item.deadlineLabel}
+          </Badge>
+          {item.isDeadlineFilmingStart &&
+            " (η έναρξη του Γυρίσματος έρχεται πρώτη)"}
+        </small>
+      </span>
+      {resolution ? (
+        <span className="ml-quick" role="status">
+          <Badge tone={resolution.tone}>{resolution.label}</Badge>
+        </span>
+      ) : isConfirming ? null : (
+        <span className="ml-quick">
+          <button
+            type="button"
+            data-primary="true"
+            disabled={isPending}
+            onClick={onRestore}
+          >
+            Επαναφορά στο Google
+          </button>
+          <button type="button" data-danger="true" onClick={onStartConfirm}>
+            {confirmLabelOf(item)}
+          </button>
+        </span>
+      )}
+      {resolution && resolution.text && (
+        <small className="a7-more">{resolution.text}</small>
+      )}
+      {!resolution && isConfirming && (
+        <ConfirmForm
+          item={item}
+          isPending={isPending}
+          onCancel={onCancelConfirm}
+          onConfirm={onConfirm}
+        />
+      )}
+    </li>
   );
 }
 
@@ -174,39 +171,43 @@ export function A7Queue({ pending }: { pending: readonly DeletionItem[] }) {
     });
 
   return (
-    <>
-      <h2>Περιμένουν επιβεβαίωση ({pending.length})</h2>
-      {pending.map((item) => (
-        <PendingCard
-          key={item.id}
-          item={item}
-          resolution={resolutions[item.id]}
-          isConfirming={confirmingId === item.id}
-          isPending={isPending}
-          onStartConfirm={() => setConfirmingId(item.id)}
-          onCancelConfirm={() => setConfirmingId(null)}
-          onRestore={() =>
-            resolve(
-              item,
-              { restore: true, reason: "" },
-              {
-                label: "επανήλθε",
-                tone: "strong",
-              },
-            )
-          }
-          onConfirm={(reason) =>
-            resolve(
-              item,
-              { restore: false, reason },
-              {
-                label: item.isAwaitingApproval ? "απορρίφθηκε" : "ακυρώθηκε",
-                tone: "attention",
-              },
-            )
-          }
-        />
-      ))}
-    </>
+    <section>
+      <h2 className="ml-box-title">
+        Περιμένουν επιβεβαίωση ({pending.length})
+      </h2>
+      <ul className="ml-list">
+        {pending.map((item) => (
+          <PendingCard
+            key={item.id}
+            item={item}
+            resolution={resolutions[item.id]}
+            isConfirming={confirmingId === item.id}
+            isPending={isPending}
+            onStartConfirm={() => setConfirmingId(item.id)}
+            onCancelConfirm={() => setConfirmingId(null)}
+            onRestore={() =>
+              resolve(
+                item,
+                { restore: true, reason: "" },
+                {
+                  label: "επανήλθε",
+                  tone: "strong",
+                },
+              )
+            }
+            onConfirm={(reason) =>
+              resolve(
+                item,
+                { restore: false, reason },
+                {
+                  label: item.isAwaitingApproval ? "απορρίφθηκε" : "ακυρώθηκε",
+                  tone: "attention",
+                },
+              )
+            }
+          />
+        ))}
+      </ul>
+    </section>
   );
 }

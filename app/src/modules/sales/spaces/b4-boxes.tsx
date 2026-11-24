@@ -5,6 +5,8 @@ import { ActivityLog, type B2ActivityRow } from "./b2-activity-log";
 import { CloseLost } from "./b4-controls";
 import { TitleEditor } from "./b4-title";
 
+import "../../finance/spaces/money-lines.css";
+
 // Ένα κλειστό κουτί της Σελίδας Ευκαιρίας: τίτλος και υπόδειξη στο summary, το σώμα μόνο όταν το ανοίξεις.
 // Το `id` μπαίνει στο σώμα· ο σύνδεσμος #id από την κεφαλίδα ανοίγει έτσι το κουτί.
 function Box({
@@ -43,7 +45,7 @@ export function ControlBox({
 }) {
   return (
     <Box title="Έλεγχος" hint="Μετονομασία · Κλείσιμο ως χαμένη">
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Τίτλος</dt>
         <dd>
           <TitleEditor
@@ -58,7 +60,7 @@ export function ControlBox({
       <p className="muted">
         Η χαμένη Ευκαιρία κλείνει με λόγο απώλειας και δεν αναιρείται.
       </p>
-      <p className="btn-row">
+      <p className="ml-quick">
         <CloseLost opportunityId={opportunity.id} reasons={lossReasons} />
       </p>
     </Box>

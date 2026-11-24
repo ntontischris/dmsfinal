@@ -1,13 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { can, getViewer } from "@/modules/access";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge, type BadgeTone } from "@/spaces/screens/shared";
+import { Badge } from "@/spaces/screens/shared";
 
 import type { O1Change } from "./o1-adapter";
 
+import "../../finance/spaces/money-lines.css";
 import "./o.css";
 
 // Κοινά της σελίδας Ρυθμίσεων στη νέα εμφάνιση (prototype `screens/o-shared.tsx`): καρτέλες, κλειδωμένο πεδίο, λίστες,
@@ -37,32 +35,11 @@ export const SETTINGS_TABS: readonly {
 
 export const READINESS_HREF = "/app/settings/readiness";
 
-export async function SettingsTabs({ code }: { code: string }) {
-  const viewer = await getViewer();
-  const tabs = SETTINGS_TABS.filter(
-    (tab) => !tab.needs || can(viewer, tab.needs),
-  );
-  return (
-    <nav className="tabs" aria-label="Ενότητες Ρυθμίσεων">
-      {tabs.map((tab) => (
-        <Link
-          key={tab.code}
-          className="tab"
-          href={tab.href}
-          aria-current={tab.code === code ? "page" : undefined}
-        >
-          {tab.label}
-        </Link>
-      ))}
-      <Link
-        className="tab"
-        href={READINESS_HREF}
-        aria-current={code === "O7" ? "page" : undefined}
-      >
-        Έλεγχος ετοιμότητας
-      </Link>
-    </nav>
-  );
+// Οι υποσελίδες των Ρυθμίσεων πλοηγούνται πλέον μόνο από τις κάρτες του θέματος (spaces/data/spaces.ts): οι καρτέλες
+// μέσα στη σελίδα δεν δείχνουν τίποτα. Οι κλήσεις τους φεύγουν σε επόμενο βήμα.
+export function SettingsTabs(props: { code: string }): null {
+  void props;
+  return null;
 }
 
 export function LockedField({
@@ -82,20 +59,35 @@ export function LockedField({
 }
 
 export function Pending() {
-  return <Badge tone="attention">εκκρεμεί</Badge>;
+  return <span className="ml-tag">εκκρεμεί</span>;
+}
+
+interface SettingsCardProps {
+  title: string;
+  // Μία φράση κάτω από τον τίτλο του κουτιού (τι έχει μέσα).
+  hint?: string;
+  // Κουτί Ρυθμίσεων (`details.ml-box`), κλειστό εξ ορισμού· μόνο μια σελίδα με ένα κουτί περνά isOpen.
+  isOpen?: boolean;
+  children: ReactNode;
 }
 
 export function SettingsCard({
   title,
+  hint,
+  isOpen = false,
   children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+}: SettingsCardProps) {
+  // Το `section` κρατά την κάρτα με τον τίτλο της ως περιοχή, όπως πριν το ml-box.
   return (
-    <div className="o-card">
-      <Panel label={title}>{children}</Panel>
-    </div>
+    <section className="o-card">
+      <details className="ml-box" open={isOpen || undefined}>
+        <summary>
+          <h2 className="ml-box-title">{title}</h2>
+          {hint && <small>{hint}</small>}
+        </summary>
+        <div className="o-card-body">{children}</div>
+      </details>
+    </section>
   );
 }
 
@@ -125,7 +117,7 @@ export function TextField({
   ...input
 }: TextFieldProps) {
   return (
-    <span className="stack o-field">
+    <span className="ml-field o-field">
       <label htmlFor={id}>
         {label} {isPending && <Pending />}
       </label>
@@ -136,16 +128,10 @@ export function TextField({
         placeholder={isPending ? "εκκρεμεί" : undefined}
         {...input}
       />
-      {hint && <span className="muted o-hint">{hint}</span>}
+      {hint && <small>{hint}</small>}
     </span>
   );
 }
-
-const STATUS_TONE: Readonly<Record<string, BadgeTone>> = {
-  Νέα: "waiting",
-  "Σε χρήση": "ok",
-  Αποσύρθηκε: "faded",
-};
 
 export type ListItemStatus = "Νέα" | "Σε χρήση" | "Αποσύρθηκε";
 
@@ -186,74 +172,58 @@ export function ListEditor({
   );
   const retiredCount = items.length - visible.length;
   return (
-    <div className="o-card">
-      <Panel
-        label={title}
-        aside={
-          <>
-            <Badge>
-              {isBilingual ? "ελληνικά και αγγλικά" : "μόνο ελληνικά"}
-            </Badge>
-          </>
-        }
-      >
-        {notice && (
-          <div className="note" role="status">
-            {notice}
-          </div>
-        )}
-        <RowList>
-          {visible.map((item, index) => (
-            <ListRow
-              key={item.id}
-              isFaded={item.status === "Αποσύρθηκε"}
-              lead={
-                <span>
-                  {index + 1}{" "}
-                  <span className="muted" aria-hidden="true">
-                    ↑↓
-                  </span>
-                </span>
-              }
-              title={item.label}
-              sub={
-                isBilingual
-                  ? (item.labelEn ?? <Badge tone="attention">λείπει</Badge>)
-                  : undefined
-              }
-              aside={
-                <>
-                  <span className="part-sub">
-                    {item.status !== "Νέα" && `${item.uses} χρήσεις`}
-                  </span>
-                  <Badge tone={STATUS_TONE[item.status]}>{item.status}</Badge>
-                  {item.actions}
-                  {item.status === "Αποσύρθηκε" && (
-                    <span className="muted">ξαναμπαίνει με το χέρι</span>
-                  )}
-                </>
-              }
-            />
-          ))}
-        </RowList>
-        <div className="btn-row o-list-actions">
-          {addSlot}
-          {(retiredCount > 0 || showRetired) && (
-            <Link className="button" href={toggleRetiredHref}>
-              {showRetired
-                ? "Κρύψε αποσυρμένες"
-                : `Δείξε αποσυρμένες (${retiredCount})`}
-            </Link>
-          )}
+    <details className="ml-box o-card" open>
+      <summary>
+        <h2 className="ml-box-title">{title}</h2>
+        <small>{isBilingual ? "ελληνικά και αγγλικά" : "μόνο ελληνικά"}</small>
+      </summary>
+      {notice && (
+        <div className="note" role="status">
+          {notice}
         </div>
-        {isBilingual && (
-          <p className="muted o-hint">
-            Τη βλέπει πελάτης ή Επισκέπτης, οπότε η αποθήκευση θέλει και τις δύο
-            γλώσσες.
-          </p>
+      )}
+      <ul className="ml-list">
+        {visible.map((item, index) => (
+          <li
+            key={item.id}
+            className="ml-line"
+            data-faded={item.status === "Αποσύρθηκε" || undefined}
+          >
+            <span className="ml-thumb" aria-hidden="true">
+              {index + 1}
+            </span>
+            <span className="ml-main">
+              <strong>{item.label}</strong>
+              {isBilingual && (
+                <small>{item.labelEn ?? "λείπει η αγγλική ετικέτα"}</small>
+              )}
+              {item.status !== "Νέα" && <small>{`${item.uses} χρήσεις`}</small>}
+              {item.status === "Αποσύρθηκε" && (
+                <small>ξαναμπαίνει με το χέρι</small>
+              )}
+            </span>
+            <span className="ml-tag">{item.status}</span>
+            {item.actions && <span className="ml-quick">{item.actions}</span>}
+          </li>
+        ))}
+      </ul>
+      <div className="ml-actions o-list-actions">
+        {addSlot}
+        {(retiredCount > 0 || showRetired) && (
+          <Link href={toggleRetiredHref}>
+            {showRetired
+              ? "Κρύψε αποσυρμένες"
+              : `Δείξε αποσυρμένες (${retiredCount})`}
+          </Link>
         )}
-      </Panel>
-    </div>
+      </div>
+      {isBilingual && (
+        <p className="muted o-hint">
+          Τη βλέπει πελάτης ή Επισκέπτης, οπότε η αποθήκευση θέλει και τις δύο
+          γλώσσες.
+        </p>
+      )}
+    </details>
   );
 }
 
@@ -271,35 +241,40 @@ export function RecentChanges({
   areaLabel,
 }: RecentChangesProps) {
   return (
-    <div className="o-recent">
-      <Panel
-        label="Τελευταίες αλλαγές"
-        aside={
-          auditHref && (
+    <details className="ml-box o-recent">
+      <summary>
+        <h2 className="ml-box-title">Τελευταίες αλλαγές</h2>
+        <small>
+          {changes.length === 0
+            ? "καμία ακόμα"
+            : `${changes.length} πιο πρόσφατες · ${changes[0]?.at ?? ""}`}
+        </small>
+      </summary>
+      <div className="o-card-body">
+        {changes.length === 0 ? (
+          <p className="ml-empty">Καμία αλλαγή ακόμα σε αυτή την ενότητα.</p>
+        ) : (
+          <ul className="ml-list">
+            {changes.map((entry) => (
+              <li key={entry.id} className="ml-line o-line">
+                <span className="ml-main">
+                  <strong>{`${entry.actor} · ${entry.subject}`}</strong>
+                  <small>
+                    {[entry.at, entry.fields].filter(Boolean).join(" · ")}
+                  </small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {auditHref && (
+          <div className="ml-quick o-left">
             <Link href={auditHref}>
               Όλες οι αλλαγές στο Ίχνος ({areaLabel})
             </Link>
-          )
-        }
-        isFlush
-      >
-        {changes.length === 0 ? (
-          <p className="muted o-recent-empty">
-            Καμία αλλαγή ακόμα σε αυτή την ενότητα.
-          </p>
-        ) : (
-          <RowList>
-            {changes.map((entry) => (
-              <ListRow
-                key={entry.id}
-                lead={<span className="part-sub">{entry.at}</span>}
-                title={`${entry.actor} · ${entry.subject}`}
-                sub={entry.fields}
-              />
-            ))}
-          </RowList>
+          </div>
         )}
-      </Panel>
-    </div>
+      </div>
+    </details>
   );
 }

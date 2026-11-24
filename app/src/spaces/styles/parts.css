@@ -78,7 +78,7 @@
 & .part-band[data-today='true'] { color: var(--color-now); }
 
 & .part-due { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-& .part-due[data-late='true'] { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--color-danger); }
+& .part-due[data-late='true'] { display: inline-flex; align-items: center; gap: 0.4rem; color: color-mix(in oklab, var(--brand-yellow) var(--panel-ink-mix), var(--color-text)); }
 & .part-due[data-late='true']::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-rec, var(--color-danger)); }
 & .part-row-lead { font-weight: 800; color: var(--color-accent); font-variant-numeric: tabular-nums; }
 & .part-row-lead :is(.part-time, .part-date) { color: var(--color-text); font-weight: 400; } }

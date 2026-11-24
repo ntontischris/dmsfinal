@@ -5,6 +5,8 @@ import { useState, type ReactNode } from "react";
 import type { FormState } from "@/lib/form-state";
 import { useKeptForm } from "@/lib/use-kept-form";
 
+import "../../finance/spaces/money-lines.css";
+
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
 // Φόρμα μιας γραμμής ουράς: η γραμμή φεύγει από τη λίστα μόλις πετύχει η ενέργεια (η σελίδα ξαναφορτώνει), οπότε το
@@ -15,7 +17,7 @@ export function RowForm({
   isPrimary = false,
   isDanger = false,
   isDisabled = false,
-  className = "btn-row",
+  className = "ml-quick",
   ariaLabel,
   onDone,
   children,
@@ -42,7 +44,6 @@ export function RowForm({
       {children}
       <button
         type="submit"
-        className="button"
         data-primary={isPrimary ? "true" : undefined}
         data-danger={isDanger ? "true" : undefined}
         disabled={isPending || isDisabled}

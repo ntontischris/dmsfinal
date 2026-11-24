@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import {
   addVersion,
   approveDeliverableInternally,
@@ -11,6 +9,7 @@ import {
   returnVersion,
   sendVersion,
 } from "../actions-versions";
+import { H2Box } from "./h2-box";
 import { ButtonForm, H2Form } from "./h2-form";
 import { latestOf, type H2Context, type PanelProps } from "./h2-model";
 
@@ -56,7 +55,7 @@ function ReviewButtons({
     );
   const hidden = { deliverableId: detail.id };
   return (
-    <div className="btn-row">
+    <div className="ml-quick h2-actions">
       {can.approveInternal && (
         <ButtonForm
           action={approveDeliverableInternally}
@@ -74,7 +73,7 @@ function ReviewButtons({
         />
       )}
       {can.return && (
-        <button type="button" className="button" onClick={() => open("return")}>
+        <button type="button" onClick={() => open("return")}>
           Επιστρέφω
         </button>
       )}
@@ -169,25 +168,16 @@ export function H2Actions(props: PanelProps) {
   const canFix = detail.can.edit && detail.versionCount > 0;
   const ruleNote = ruleNoteOf(detail.client === null, props.ctx.internalReview);
   return (
-    <Panel label="Ενέργειες">
+    <H2Box title="Ενέργειες">
       {(detail.can.addVersion || canFix) && (
-        <div className="btn-row">
+        <div className="ml-quick h2-actions">
           {detail.can.addVersion && (
-            <button
-              type="button"
-              className="button"
-              data-primary
-              onClick={() => setDialog("new")}
-            >
+            <button type="button" data-primary onClick={() => setDialog("new")}>
               Νέα Έκδοση
             </button>
           )}
           {canFix && (
-            <button
-              type="button"
-              className="button"
-              onClick={() => setDialog("fix")}
-            >
+            <button type="button" onClick={() => setDialog("fix")}>
               Διόρθωση link
             </button>
           )}
@@ -196,6 +186,6 @@ export function H2Actions(props: PanelProps) {
       <ReviewButtons {...props} open={setDialog} />
       <Forms {...props} dialog={dialog} close={() => setDialog(null)} />
       {ruleNote && <p className="muted">{ruleNote}</p>}
-    </Panel>
+    </H2Box>
   );
 }

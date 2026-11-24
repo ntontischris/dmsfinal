@@ -18,14 +18,17 @@ import {
   ClientSignature,
   ClientSummary,
 } from "./d2-client-parts";
+import { D2Box } from "./d2-box";
 import { ClientSignAction } from "./d2-client-sign";
 import { SpacesProposalDocument } from "./d5-document";
 
+import "../../finance/spaces/money-lines.css";
 import "./d2.css";
+import "./d2-lines.css";
 
 const Frame = ({ children }: { children: ReactNode }) => (
   <div data-spaces>
-    <div className="d2">{children}</div>
+    <div className="d2 ml-stack">{children}</div>
   </div>
 );
 
@@ -48,16 +51,19 @@ function Document({
   document,
   isProposal,
   signAgreementId = null,
+  isEmbedded = false,
 }: {
   document: ProposalDocument;
   isProposal: boolean;
   signAgreementId?: string | null;
+  isEmbedded?: boolean;
 }) {
   const t = SIGN_LABELS[document.language];
   return (
     <SpacesProposalDocument
       document={document}
       language={document.language}
+      isEmbedded={isEmbedded}
       footer={
         <div className="stack">
           {signAgreementId && (
@@ -72,7 +78,7 @@ function Document({
               στάλθηκε με email.
             </p>
           )}
-          <div className="btn-row">
+          <div className="ml-quick">
             <PrintButton label={t.print} />
           </div>
         </div>
@@ -104,7 +110,11 @@ function Body({
     <>
       <ClientHeader agreement={agreement} />
       {document && <ClientSummary agreement={agreement} document={document} />}
-      {document && <Document document={document} isProposal={false} />}
+      {document && (
+        <D2Box title="Το έγγραφο" hint="για ανάγνωση ή εκτύπωση">
+          <Document document={document} isProposal={false} isEmbedded />
+        </D2Box>
+      )}
       <ClientPeriods agreement={agreement} />
       <ClientSignature agreement={agreement} />
     </>

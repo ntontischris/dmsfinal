@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { can, getViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { fileHref } from "../helpers";
@@ -10,10 +9,12 @@ import { KIND_LABEL } from "../labels";
 import { getItem } from "../queries";
 import { formatSize } from "../upload-rules";
 import type { ItemView } from "../view-schema";
-import { athensDate } from "./a8-adapter";
+import { athensDate, kindLetter } from "./a8-adapter";
 import { ArticleBody } from "./a8-markdown";
 
+import "../../finance/spaces/money-lines.css";
 import "./a8.css";
+import "./k.css";
 
 function ItemContent({
   item,
@@ -24,26 +25,51 @@ function ItemContent({
 }) {
   if (item.kind === "article")
     return (
-      <ArticleBody source={item.body ?? ""} />
+      <section className="ml-page">
+        <ArticleBody source={item.body ?? ""} />
+      </section>
     );
   if (!item.file) return null;
   return (
-    <>
-      <dl className="dl">
+    <section className="ml-page">
+      <dl className="ml-kv">
         <dt>Αρχείο</dt>
         <dd>{item.file.name}</dd>
         <dt>Μέγεθος</dt>
         <dd>{formatSize(item.file.size)}</dd>
       </dl>
-      <a className="button" href={fileHref(item.id)}>
-        Λήψη
-      </a>
       {canManage && item.textStatus === "image_only" && (
-        <p className="note">
+        <p className="k-note">
           Ο Βοηθός διαβάζει μόνο την Περίληψη αυτού του Αρχείου (είναι εικόνα).
         </p>
       )}
-    </>
+    </section>
+  );
+}
+
+// Η κεφαλή του στοιχείου: ο τίτλος του είναι το h1 της σελίδας (όχι «Γνώση»)· το κέλυφος δείχνει «← Γνώση» για επιστροφή.
+function Hero({ item }: { item: ItemView }) {
+  return (
+    <header className="ml-hero">
+      <span className="ml-hero-mono" aria-hidden="true">
+        {kindLetter(item.kind)}
+      </span>
+      <div>
+        <Badge>{KIND_LABEL[item.kind]}</Badge>
+        <h1 data-page-title>{item.title}</h1>
+        <p>
+          Ενότητα: {item.sectionName} · Ενημερώθηκε {athensDate(item.updatedAt)}
+        </p>
+        <p>Περίληψη: {item.summary}</p>
+      </div>
+      {item.kind === "file" && item.file && (
+        <div className="ml-quick">
+          <a href={fileHref(item.id)} data-primary>
+            Λήψη
+          </a>
+        </div>
+      )}
+    </header>
   );
 }
 
@@ -76,15 +102,11 @@ export async function SpacesKnowledgeItem({ id }: { id: string | null }) {
       </div>
     );
   return (
-    <div data-spaces>
-      {back}
-      <Panel label={item.title} aside={<Badge>{KIND_LABEL[item.kind]}</Badge>}>
-        <div className="a8-meta">
-          Ενότητα: {item.sectionName} · Ενημερώθηκε {athensDate(item.updatedAt)}
-        </div>
-        <p className="muted">Περίληψη: {item.summary}</p>
+    <div data-spaces className="k">
+      <div className="ml-stack">
+        <Hero item={item} />
         <ItemContent item={item} canManage={can(viewer, "knowledge.manage")} />
-      </Panel>
+      </div>
     </div>
   );
 }

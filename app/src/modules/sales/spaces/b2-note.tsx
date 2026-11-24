@@ -22,7 +22,6 @@ export function NoteToggle({
     <>
       <button
         type="button"
-        className="button"
         aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
       >

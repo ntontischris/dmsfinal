@@ -20,3 +20,12 @@
 & .a6 .a6-kind legend { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
 & .a6 .part-row-aside { max-width: 100%; }
 & .a6 .a6-confirm { max-width: 26rem; } }
+
+/* Τελική όψη (ml-*): κάρτα φόρμας και διαγραφής με τα χρώματα του ml-box. Μόνο tokens. */
+[data-look='spaces'] {
+& .a6-card { display: grid; gap: var(--space-3); padding: 1rem 1.1rem; border-radius: 14px; border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
+& .a6-card > * { margin: 0; }
+& .a6 .a6-intro { color: var(--color-text-muted); }
+& .a6 .a6-row { justify-content: flex-start; }
+& .a6 .a6-times { margin: 0; }
+}

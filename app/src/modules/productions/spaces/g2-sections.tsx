@@ -1,13 +1,12 @@
-import type { ReactNode } from "react";
+import Link from "next/link";
+import type { CSSProperties, ReactNode } from "react";
 
 import { athensDate, athensTime } from "@/modules/filming";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { DateLead, ListRow, RowList, Segments } from "@/spaces/kit/parts";
 import { Badge, fmtDate } from "@/spaces/screens/shared";
 
-import { periodLabel } from "../helpers";
 import type { ProductionDetail, ProductionFilming } from "../types";
+import { G2Box } from "./g2-box";
 import {
   deliverableLineOf,
   filmingWord,
@@ -16,27 +15,58 @@ import {
 } from "./g2-model";
 import { DeliverablesPanel } from "./g2-new-deliverable";
 
-// Τα πάνελ περιεχομένου της Σελίδας Παραγωγής (prototype `screens/g2-sections.tsx`), όψη ομάδας.
+// Τα κουτιά περιεχομένου της Σελίδας Παραγωγής, όψη ομάδας (και τα Γυρίσματα στην όψη πελάτη).
 
-// Οι Παροχές της Περιόδου. Η εφάπαξ δεν έχει Περίοδο και η βάση δεν δίνει εδώ τις Παροχές της Συμφωνίας: το πάνελ λείπει.
-export function G2Provisions({ production }: { production: ProductionDetail }) {
-  if (production.isInternal || !production.period) return null;
+const percentOf = (part: number, total: number): string =>
+  `${total === 0 ? 0 : Math.round((part / total) * 100)}%`;
+
+// Μία Παροχή ως μετρητής (.ml-meter): πόσα χρησιμοποιήθηκαν από το σύνολο.
+export function ProvisionMeter(props: {
+  label: string;
+  used: number;
+  total: number;
+}) {
+  return (
+    <span
+      className="ml-meter"
+      role="meter"
+      aria-label={`${props.label}: ${props.used} από ${props.total}`}
+      aria-valuenow={props.used}
+      aria-valuemin={0}
+      aria-valuemax={props.total}
+      style={{ "--v": percentOf(props.used, props.total) } as CSSProperties}
+    >
+      <span>{props.label}</span>
+      <i>
+        <b />
+      </i>
+      <strong>
+        {props.used}/{props.total}
+      </strong>
+    </span>
+  );
+}
+
+// Οι Παροχές της Περιόδου ως μετρητές (μέσα στο κουτί «Παροχές και τιμή»). Η εφάπαξ δεν έχει Περίοδο: τίποτα.
+export function ProvisionRows({ production }: { production: ProductionDetail }) {
+  if (!production.period) return null;
   const rows = provisionRowsOf(production.balances);
   return (
-    <Panel
-      label="Παροχές της Περιόδου"
-      aside={periodLabel(production.period.starts)}
-    >
-      {rows.length === 0 && <p className="muted">Δεν υπάρχουν Παροχές.</p>}
+    <>
+      {rows.length === 0 && <p className="ml-empty">Δεν υπάρχουν Παροχές.</p>}
       <ul className="g2-provisions">
         {rows.map((row) => (
           <li key={row.kindId}>
-            <Segments label={row.label} used={row.used} total={row.total} />
-            <span className="part-sub">{provisionSub(row)}</span>
+            <ProvisionMeter
+              label={row.label}
+              used={row.used}
+              total={row.total}
+            />
+            <small className="g2-sub">{provisionSub(row)}</small>
           </li>
         ))}
       </ul>
-    </Panel>
+    </>
   );
 }
 
@@ -65,19 +95,27 @@ function FilmingLine({
 }) {
   const day = athensDate(filming.startsAt);
   const word = filmingWord(filming);
+  const sub = [filming.kind, filming.isExtra && "έξτρα"]
+    .filter(Boolean)
+    .join(" · ");
   return (
-    <ListRow
-      lead={<DateLead weekday={weekdayOf(day)} day={dayOf(day)} />}
-      title={`${fmtDate(day)} · ${athensTime(filming.startsAt)}–${endOf(filming)}`}
-      href={hrefOf("E3", { id: filming.id })}
-      sub={
-        !isClient &&
-        [filming.kind, filming.isExtra && "έξτρα"].filter(Boolean).join(" · ")
-      }
-      aside={
+    <li className="ml-line">
+      <span className="ml-thumb g2-date" aria-hidden="true">
+        <small>{weekdayOf(day)}</small>
+        {dayOf(day)}
+      </span>
+      <span className="ml-main">
+        <strong>
+          <Link href={hrefOf("E3", { id: filming.id })}>
+            {`${fmtDate(day)} · ${athensTime(filming.startsAt)}–${endOf(filming)}`}
+          </Link>
+        </strong>
+        {!isClient && sub && <small>{sub}</small>}
+      </span>
+      <span className="ml-quick">
         <Badge tone={word === "έγινε" ? "strong" : undefined}>{word}</Badge>
-      }
-    />
+      </span>
+    </li>
   );
 }
 
@@ -91,20 +129,16 @@ export function G2Filmings({
   isClient?: boolean;
 }) {
   return (
-    <Panel label="Γυρίσματα" aside={filmings.length} isFlush>
+    <G2Box title="Γυρίσματα" hint={`${filmings.length} Γυρίσματα`}>
       {filmings.length === 0 && (
-        <p className="muted g2-pad">Η Παραγωγή δεν έχει ακόμα Γυρίσματα.</p>
+        <p className="ml-empty">Η Παραγωγή δεν έχει ακόμα Γυρίσματα.</p>
       )}
-      <RowList>
+      <ul className="ml-list">
         {filmings.map((filming) => (
-          <FilmingLine
-            key={filming.id}
-            filming={filming}
-            isClient={isClient}
-          />
+          <FilmingLine key={filming.id} filming={filming} isClient={isClient} />
         ))}
-      </RowList>
-    </Panel>
+      </ul>
+    </G2Box>
   );
 }
 
@@ -120,46 +154,47 @@ export function G2Deliverables({
     deliverableLineOf(card, production.isInternal),
   );
   return (
-    <DeliverablesPanel newForm={newForm}>
-      <div className="g2-pad">
-        {newForm && (
-          <p className="muted">
-            Η δημιουργία δεσμεύει Παροχή· στήνεται στο module Παραδοτέα.
-          </p>
-        )}
-        {production.isInternal && (
-          <p className="note">
-            Εσωτερική: χωρίς Παροχή και χωρίς πελάτη· την έγκριση τη δίνει
-            όποιος «Ελέγχει Παραδοτέα» (στον έναν άνθρωπο, ο Ιδιοκτήτης). Χωρίς
-            όριο αλλαγών.
-          </p>
-        )}
-        {lines.length === 0 && (
-          <p className="muted">Η Παραγωγή δεν έχει ακόμα Παραδοτέα.</p>
-        )}
-      </div>
-      <RowList>
+    <DeliverablesPanel newForm={newForm} hint={`${lines.length} Παραδοτέα`}>
+      {newForm && (
+        <p className="muted">
+          Η δημιουργία δεσμεύει Παροχή· στήνεται στο module Παραδοτέα.
+        </p>
+      )}
+      {production.isInternal && (
+        <p className="note">
+          Εσωτερική: χωρίς Παροχή και χωρίς πελάτη· την έγκριση τη δίνει όποιος
+          «Ελέγχει Παραδοτέα» (στον έναν άνθρωπο, ο Ιδιοκτήτης). Χωρίς όριο
+          αλλαγών.
+        </p>
+      )}
+      {lines.length === 0 && (
+        <p className="ml-empty">Η Παραγωγή δεν έχει ακόμα Παραδοτέα.</p>
+      )}
+      <ul className="ml-list">
         {lines.map((line) => (
-          <ListRow
+          <li
             key={line.id}
-            lead={<span className="part-sub">{line.lead}</span>}
-            title={line.title}
-            href={hrefOf("H2", { id: line.id })}
-            sub={line.sub}
-            isFaded={line.isFaded}
-            aside={
-              <>
-                {line.badges.map((badge) => (
-                  <Badge key={badge.text} tone={badge.tone}>
-                    {badge.text}
-                  </Badge>
-                ))}
-                <Badge tone={line.tone}>{line.state}</Badge>
-              </>
-            }
-          />
+            className="ml-line"
+            data-faded={line.isFaded ? "" : undefined}
+          >
+            <span className="ml-thumb">{line.lead}</span>
+            <span className="ml-main">
+              <strong>
+                <Link href={hrefOf("H2", { id: line.id })}>{line.title}</Link>
+              </strong>
+              {line.sub && <small>{line.sub}</small>}
+            </span>
+            <span className="ml-quick">
+              {line.badges.map((badge) => (
+                <Badge key={badge.text} tone={badge.tone}>
+                  {badge.text}
+                </Badge>
+              ))}
+              <Badge tone={line.tone}>{line.state}</Badge>
+            </span>
+          </li>
         ))}
-      </RowList>
+      </ul>
     </DeliverablesPanel>
   );
 }

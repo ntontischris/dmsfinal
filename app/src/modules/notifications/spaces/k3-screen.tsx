@@ -121,9 +121,8 @@ function Log({
         </StateNotice>
       )}
       {page.hasMore && last && (
-        <p className="btn-row">
+        <p className="ml-actions">
           <Link
-            className="button"
             href={sendsHref({
               ...query,
               cursor: { at: last.at, id: last.id },

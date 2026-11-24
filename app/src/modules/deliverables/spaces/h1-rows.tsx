@@ -1,6 +1,7 @@
+import Link from "next/link";
+
 import { hrefOf } from "@/spaces/data/screens";
-import { Due, Entity, Person } from "@/spaces/kit/parts";
-import { Badge } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import { NO_ASSIGNEE_LABEL } from "../labels";
 import type { DeliverableCard } from "../types";
@@ -11,9 +12,11 @@ import {
   waitingOn,
 } from "./h1-model";
 
+import "../../finance/spaces/money-lines.css";
 import "./h1.css";
 
-// Οι πίνακες «για μένα» και «στον πελάτη» του H1 (prototype `screens/h1-rows.tsx`).
+// Οι λίστες «για μένα» και «στον πελάτη» του H1, σε γραμμές-κάρτες (ml-line). Μένουν <table>, γιατί τα e2e
+// βρίσκουν τη γραμμή ως `tr`.
 
 // Τα φίλτρα της λίστας, για να γυρίσει το H2 πίσω στην ίδια προβολή.
 export type ListQuery = Readonly<Record<string, string | undefined>>;
@@ -23,57 +26,68 @@ interface RowsProps {
   back?: ListQuery;
 }
 
-// Ο τίτλος ανοίγει το ίδιο το Παραδοτέο· η Παραγωγή φαίνεται ως κείμενο, για να μην πατιέται κατά λάθος.
-function TitleCell({ d, back }: { d: DeliverableCard; back?: ListQuery }) {
+export function Thumb({ title }: { title: string }) {
   return (
-    <td data-label="Παραδοτέο" className="h1-cell">
-      <Entity
-        name={d.title}
-        href={hrefOf("H2", { ...back, id: d.id })}
-        sub={productionLabel(d)}
-      />
+    <td className="ml-thumb" aria-hidden="true">
+      {initialsOf(title)}
     </td>
+  );
+}
+
+// Ο τίτλος ανοίγει το ίδιο το Παραδοτέο· η Παραγωγή φαίνεται ως κείμενο, για να μην πατιέται κατά λάθος.
+export function MainCell(props: {
+  d: DeliverableCard;
+  href?: string;
+  tag: string;
+  meta: readonly string[];
+}) {
+  return (
+    <td className="ml-main h1-cell">
+      <span className="ml-tag">{props.tag}</span>
+      <strong>
+        {props.href ? (
+          <Link href={props.href}>{props.d.title}</Link>
+        ) : (
+          props.d.title
+        )}
+      </strong>
+      <small>{[productionLabel(props.d), ...props.meta].join(" · ")}</small>
+    </td>
+  );
+}
+
+function WarnTag({ children }: { children: string }) {
+  return (
+    <span className="ml-tag" data-tone="warn">
+      {children}
+    </span>
   );
 }
 
 export function ForMeTable({ items, back }: RowsProps) {
   return (
-    <table className="rtable">
-      <thead>
-        <tr>
-          <th>Παραδοτέο</th>
-          <th>Είδος</th>
-          <th>Ανατεθειμένος</th>
-          <th>Τι περιμένει</th>
-          <th>Προθεσμία</th>
-          <th>Σήματα</th>
-        </tr>
-      </thead>
+    <table className="ml-table ml-list" aria-label="Παραδοτέα για μένα">
       <tbody>
         {items.map((d) => (
-          <tr key={d.id}>
-            <TitleCell d={d} back={back} />
-            <td data-label="Είδος">{d.kind}</td>
-            <td data-label="Ανατεθειμένος">
-              <Person name={d.assigneeName ?? NO_ASSIGNEE_LABEL} />
+          <tr
+            key={d.id}
+            className="ml-line"
+            data-urgent={d.isLate ? "" : undefined}
+          >
+            <Thumb title={d.title} />
+            <MainCell
+              d={d}
+              href={hrefOf("H2", { ...back, id: d.id })}
+              tag={d.kind}
+              meta={[d.assigneeName ?? NO_ASSIGNEE_LABEL, waitingOn(d)]}
+            />
+            <td className="ml-amount">
+              {deadlineLabel(d)}
+              <small>Προθεσμία</small>
             </td>
-            <td data-label="Τι περιμένει" className="h1-cell">
-              {waitingOn(d)}
-            </td>
-            <td data-label="Προθεσμία" className="h1-cell">
-              {d.isLate ? (
-                <Due isLate>{deadlineLabel(d)}</Due>
-              ) : (
-                deadlineLabel(d)
-              )}
-            </td>
-            <td data-label="Σήματα">
-              <span className="h1-signals">
-                {d.isLate && <Badge tone="attention">καθυστερεί</Badge>}
-                {d.overLimit && (
-                  <Badge tone="attention">πάνω από το όριο γύρων αλλαγών</Badge>
-                )}
-              </span>
+            <td className="ml-quick h1-signals">
+              {d.isLate && <WarnTag>καθυστερεί</WarnTag>}
+              {d.overLimit && <WarnTag>πάνω από το όριο γύρων αλλαγών</WarnTag>}
             </td>
           </tr>
         ))}
@@ -84,31 +98,23 @@ export function ForMeTable({ items, back }: RowsProps) {
 
 export function ClientQueueTable({ items, back }: RowsProps) {
   return (
-    <table className="rtable">
-      <thead>
-        <tr>
-          <th>Παραδοτέο</th>
-          <th>Έκδοση</th>
-          <th>Αναμονή</th>
-          <th>Σήματα</th>
-        </tr>
-      </thead>
+    <table className="ml-table ml-list" aria-label="Παραδοτέα στον πελάτη">
       <tbody>
         {items.map((d) => (
-          <tr key={d.id}>
-            <TitleCell d={d} back={back} />
-            <td data-label="Έκδοση">
-              {d.versionCount > 0 ? (
-                <strong>{`v${d.versionCount}`}</strong>
-              ) : (
-                "—"
-              )}
+          <tr key={d.id} className="ml-line">
+            <Thumb title={d.title} />
+            <MainCell
+              d={d}
+              href={hrefOf("H2", { ...back, id: d.id })}
+              tag={d.versionCount > 0 ? `v${d.versionCount}` : "χωρίς Έκδοση"}
+              meta={[]}
+            />
+            <td className="ml-amount">
+              {waitLabel(d.daysWaiting)}
+              <small>Αναμονή</small>
             </td>
-            <td data-label="Αναμονή">{waitLabel(d.daysWaiting)}</td>
-            <td data-label="Σήματα">
-              {d.linkBroken && (
-                <Badge tone="attention">δεν ανοίγει το link</Badge>
-              )}
+            <td className="ml-quick h1-signals">
+              {d.linkBroken && <WarnTag>δεν ανοίγει το link</WarnTag>}
             </td>
           </tr>
         ))}

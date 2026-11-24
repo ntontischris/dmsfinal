@@ -123,7 +123,7 @@ function EditRow({
       action={editActivity}
       submitLabel="Αποθήκευση"
       isPrimary
-      className="toolbar"
+      className="ml-row"
       onDone={onDone}
     >
       <input type="hidden" name="activityId" value={row.id} />
@@ -153,15 +153,16 @@ function RowActions({
 }) {
   return (
     <>
-      <button
-        type="button"
-        className="button"
-        aria-expanded={isEditing}
-        aria-label={`Διόρθωση: ${row.text}`}
-        onClick={onToggleEdit}
-      >
-        Διόρθωση
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          aria-expanded={isEditing}
+          aria-label={`Διόρθωση: ${row.text}`}
+          onClick={onToggleEdit}
+        >
+          Διόρθωση
+        </button>
+      </span>
       <RowForm
         action={deleteActivity}
         submitLabel="Διαγραφή"
@@ -201,7 +202,7 @@ export function ActivityLog({
         <SpacesActionForm
           action={logActivity}
           submitLabel="Καταγραφή"
-          className="toolbar"
+          className="ml-row"
           isPrimary={false}
           resetOnSuccess
         >

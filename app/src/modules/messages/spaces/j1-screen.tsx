@@ -46,10 +46,12 @@ import {
   j1RequestsOf,
   tabLabelOf,
 } from "./j1-adapter";
+import { JEmpty } from "./j-empty";
 import { ConversationList, MentionList } from "./j1-lists";
 import { NewMessage } from "./j1-new";
 import { RequestList, ViewLinks } from "./j1-requests";
 
+import "../../finance/spaces/money-lines.css";
 import "./j.css";
 import "./j1.css";
 
@@ -79,13 +81,13 @@ function Tabs({
     mentions: tabLabelOf("Με ανέφεραν", inbox.mentionsUnread),
   };
   return (
-    <nav className="tabs" aria-label="Εισερχόμενα">
+    <nav className="page-filters j1-filters" aria-label="Εισερχόμενα">
       {(Object.keys(labels) as InboxTab[]).map((t) => (
         <Link
           key={t}
-          className="tab"
           aria-current={t === tab ? "page" : undefined}
           href={TAB_HREF[t]}
+          scroll={false}
         >
           {labels[t]}
         </Link>
@@ -117,9 +119,9 @@ async function ConversationsTab({
       {rows.length > 0 ? (
         <ConversationList rows={rows} />
       ) : (
-        <StateNotice kind="empty" title={CONVERSATIONS_EMPTY_TITLE}>
+        <JEmpty title={CONVERSATIONS_EMPTY_TITLE}>
           {CONVERSATIONS_EMPTY_TEXT}
-        </StateNotice>
+        </JEmpty>
       )}
       <p className="note">{UNREAD_NOTE}</p>
       <p className="note">{SCOPE_NOTE}</p>
@@ -147,7 +149,7 @@ function RequestsTab({
       {items.length > 0 ? (
         <RequestList items={items} />
       ) : (
-        <StateNotice kind="empty" title={REQUESTS_EMPTY[view]} />
+        <JEmpty title={REQUESTS_EMPTY[view]} />
       )}
       <p className="note">{ASSIGNMENT_NOTE}</p>
     </>
@@ -163,9 +165,7 @@ async function MentionsTab() {
       {items.length > 0 ? (
         <MentionList items={items} />
       ) : (
-        <StateNotice kind="empty" title={MENTIONS_EMPTY_TITLE}>
-          {MENTIONS_EMPTY_TEXT}
-        </StateNotice>
+        <JEmpty title={MENTIONS_EMPTY_TITLE}>{MENTIONS_EMPTY_TEXT}</JEmpty>
       )}
       <p className="note">{MENTIONS_NOTE}</p>
     </>

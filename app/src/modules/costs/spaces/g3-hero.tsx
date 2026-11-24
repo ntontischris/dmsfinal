@@ -60,7 +60,7 @@ export function G3Hero(props: G3HeroProps) {
       </span>
       <div>
         <StateBadge figures={figures} />
-        <h1>{props.title}</h1>
+        <h1 data-page-title>{props.title}</h1>
         <p>{factsOf(props)}</p>
         <p className="ml-hero-amount">
           {cost === null ? "—" : fmtMoney(cost)}

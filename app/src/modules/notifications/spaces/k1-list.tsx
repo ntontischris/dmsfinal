@@ -1,7 +1,7 @@
+import Link from "next/link";
+
 import { FilterBar } from "@/spaces/kit/filter-bar";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge, StateNotice } from "@/spaces/screens/shared";
+import { StateNotice } from "@/spaces/screens/shared";
 
 import { eventHref } from "../automation-helpers";
 import { KIND_LABELS, WIRED_LATER } from "../automation-labels";
@@ -64,19 +64,20 @@ export function K1Filters({ catalog, group, only }: FiltersProps) {
 
 function EventRow({ event }: { event: CatalogEvent }) {
   return (
-    <ListRow
-      lead={<span className="k1-num">{event.number}</span>}
-      href={eventHref(event.code)}
-      title={event.label}
-      sub={`${KIND_LABELS[event.kind]} · ${event.activeCount} ενεργοί από ${event.totalCount}`}
-      aside={
-        <>
-          {event.isClientFacing && <Badge>προς πελάτη</Badge>}
-          {event.isCostOnly && <Badge>κόστος</Badge>}
-          {!event.isWired && <Badge tone="waiting">{WIRED_LATER}</Badge>}
-        </>
-      }
-    />
+    <li className="ml-line" data-faded={event.isWired ? undefined : "true"}>
+      <span className="ml-thumb k1-num" aria-hidden="true">
+        {event.number}
+      </span>
+      <Link className="ml-main k1-event" href={eventHref(event.code)}>
+        <strong>{event.label}</strong>
+        <small>{`${KIND_LABELS[event.kind]} · ${event.activeCount} ενεργοί από ${event.totalCount}`}</small>
+      </Link>
+      <span className="k1-meta">
+        {event.isClientFacing && <span className="ml-tag">προς πελάτη</span>}
+        {event.isCostOnly && <span className="ml-tag">κόστος</span>}
+        {!event.isWired && <span className="ml-tag">{WIRED_LATER}</span>}
+      </span>
+    </li>
   );
 }
 
@@ -91,26 +92,29 @@ export function Catalogue({ catalog, group, only }: FiltersProps) {
       </StateNotice>
     );
   }
+  const shown = catalog.groups.filter((g) =>
+    events.some((e) => e.group === g.code),
+  );
+  // Κλειστές ομάδες· μόνο όταν το φίλτρο αφήνει μία, ανοίγει.
+  const isSingle = shown.length === 1;
   return (
-    <>
-      {catalog.groups.map((g) => {
+    <div className="ml-stack">
+      {shown.map((g) => {
         const rows = events.filter((e) => e.group === g.code);
-        if (rows.length === 0) return null;
         return (
-          <Panel
-            key={g.code}
-            label={groupTitle(g)}
-            aside={`${rows.length} Γεγονότα`}
-            isFlush
-          >
-            <RowList>
+          <details key={g.code} className="ml-box" open={isSingle || undefined}>
+            <summary>
+              <h2 className="ml-box-title">{groupTitle(g)}</h2>
+              <small>{`${rows.length} Γεγονότα`}</small>
+            </summary>
+            <ul className="ml-list">
               {rows.map((e) => (
                 <EventRow key={e.code} event={e} />
               ))}
-            </RowList>
-          </Panel>
+            </ul>
+          </details>
         );
       })}
-    </>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { visit } from "./filming-parts";
+import { openBoxes, visit } from "./filming-parts";
 import { button } from "./sales-parts";
 
 // Βοηθητικά των e2e των Παραδοτέων (H1–H4, ενότητα της G2), στη νέα εμφάνιση (Χώροι).
@@ -18,7 +18,7 @@ export const pageTitle = (page: Page, title: string): Locator =>
     name: new RegExp(`^${escapeRegex(title)}\\.?$`),
   });
 
-// Η καρτέλα μιας Έκδοσης στο H2: «v1 · αναμένει πελάτη».
+// Το κουμπί μιας Έκδοσης στο H2: «v1 · αναμένει πελάτη».
 export const versionTab = (
   page: Page,
   version: number,
@@ -56,9 +56,9 @@ export async function createInternalProduction(
   await expect(pageTitle(page, title)).toBeVisible();
 }
 
-// Το πάνελ «Παραδοτέα» της G2 (ο τίτλος του πάνελ είναι h2).
+// Το κουτί «Παραδοτέα» της G2 (ο τίτλος του κουτιού είναι h2).
 export const deliverablesPanel = (page: Page): Locator =>
-  page.locator("section.kit-panel").filter({
+  page.locator("section").filter({
     has: page.getByRole("heading", { name: "Παραδοτέα", exact: true }),
   });
 
@@ -68,6 +68,10 @@ export async function createDeliverable(
   title: string,
 ): Promise<void> {
   const panel = deliverablesPanel(page);
+  // Το κουτί είναι κλειστό στην αρχή (details.ml-box).
+  const box = panel.locator("details.ml-box").first();
+  if ((await box.getAttribute("open")) === null)
+    await box.locator("> summary").click();
   const form = panel.locator("form", {
     has: page.getByRole("button", {
       name: "Δημιουργία Παραδοτέου",
@@ -94,7 +98,9 @@ export async function addVersion(
   const form = page.locator("form", {
     has: page.getByRole("button", { name: "Προσθήκη Έκδοσης", exact: true }),
   });
+  // Τα κουτιά του H2 είναι κλειστά στην αρχή (details.ml-box)· το «Νέα Έκδοση» είναι στο κουτί «Ενέργειες».
   await expect(async () => {
+    await openBoxes(page);
     if (!(await form.isVisible())) await button(page, "Νέα Έκδοση").click();
     await expect(form).toBeVisible({ timeout: 1_000 });
   }).toPass();
@@ -107,9 +113,9 @@ export async function addVersion(
   ).toBeVisible();
 }
 
-// Το πάνελ «Εκδόσεις» του H2: η επιλεγμένη Έκδοση με τα σχόλιά της και τη φόρμα σχολίου.
+// Το κουτί «Εκδόσεις» του H2 (κλειστό στην αρχή, το ανοίγει το openBoxes): η επιλεγμένη Έκδοση με τα σχόλιά της και τη φόρμα σχολίου.
 export const versionsPanel = (page: Page): Locator =>
-  page.locator("section.kit-panel").filter({
+  page.locator("section").filter({
     has: page.getByRole("heading", { name: "Εκδόσεις", exact: true }),
   });
 
@@ -118,6 +124,7 @@ export async function addTeamComment(
   page: Page,
   comment: { body: string; timecode?: string; isInternal?: boolean },
 ): Promise<void> {
+  await openBoxes(page);
   const versions = versionsPanel(page);
   const form = versions.locator("form", {
     has: page.getByRole("button", { name: "Προσθήκη σχολίου", exact: true }),

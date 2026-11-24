@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { formWith, panel, switchUser } from "./knowledge-parts";
+import { formWith, openBox, panel, switchUser } from "./knowledge-parts";
 import { button, project, shot, signIn } from "./sales-parts";
 
 // Γνώση (A8) και Διαχείριση Γνώσης (L1) από άκρη σε άκρη (#190). Ο Χρήστης πελάτη «know.{project}@example.com» (Πλήρης)
@@ -87,8 +87,9 @@ test("ο Ιδιοκτήτης δημοσιεύει Άρθρο για τον Ρό
     has: page.getByRole("button", { name: "Δημοσίευση", exact: true }),
   });
   await expect(button(publish, "Δημοσίευση")).toBeDisabled();
+  const publishBox = await openBox(page, "Δημοσίευση");
   await expect(
-    publish.getByRole("list", { name: "Τι λείπει για τη δημοσίευση" }),
+    publishBox.getByRole("list", { name: "Τι λείπει για τη δημοσίευση" }),
   ).toContainText("Λείπει η Περίληψη.");
 
   // 3. Περίληψη, Κοινό «Πλήρης» (Ρόλος πελάτη), δημοσίευση.
@@ -96,6 +97,7 @@ test("ο Ιδιοκτήτης δημοσιεύει Άρθρο για τον Ρό
   await button(content, "Αποθήκευση").click();
   await expect(page.getByText("Λείπει η Περίληψη.")).toHaveCount(0);
   await expect(content.getByRole("status")).toContainText("Αποθηκεύτηκε.");
+  await openBox(page, "Κοινό");
   const audience = page.locator("form", {
     has: page.getByRole("group", { name: "Κοινό" }),
   });
@@ -163,7 +165,7 @@ test("ο Ιδιοκτήτης ξαναφτιάχνει τη μνήμη του Β
   const P = project();
   await signIn(page, "owner@example.com");
   await page.goto(MANAGE_PATH);
-  const memory = panel(page, "Μνήμη του Βοηθού");
+  const memory = await openBox(page, "Μνήμη του Βοηθού");
   await button(memory, "Ξαναφτιάξε τη μνήμη του Βοηθού").click();
   await expect(memory.getByRole("status")).toContainText(
     "Ο Βοηθός ξαναμαθαίνει",

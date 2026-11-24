@@ -1,16 +1,7 @@
-[data-look='spaces'] {& .a1-hello { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: end; justify-content: space-between; margin-block: var(--space-4); min-width: 0; }
+[data-look='spaces'] {
+& .a1-hello { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: end; justify-content: space-between; margin-block: var(--space-4); min-width: 0; }
 & .a1-hello .eyebrow { margin: 0; }
-& .a1-grid { display: grid; gap: 0 var(--space-4); align-items: start; }
-& .a1-card { min-width: 0; }
-& .a1-card .kit-panel { margin-bottom: var(--space-4); }
-& .a1-card .kit-panel-body { display: flex; flex-direction: column; gap: var(--space-2); }
-& .a1-card[data-urgent='true'] .kit-panel, & .a1-card[data-kind='error'] .kit-panel, & .a1-card[data-kind='status'][data-empty='false'] .kit-panel { border-left: 3px solid var(--color-danger); }
-& .a1-card[data-kind='status'][data-empty='true'] .kit-panel { border-left: 3px solid var(--color-ok); }
-& .a1-card[data-urgent='true'] .kit-panel-head .num { color: var(--color-danger); }
-& .a1-summary, & .a1-empty { margin: 0; font-size: var(--text-sm); }
-& .a1-rows { margin: 0 -1.25rem; }
-& .a1-card-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; margin-top: var(--space-1); font-size: var(--text-sm); }
-& .a1-card-foot > a:last-child { margin-left: auto; }
+& .a1-summary { margin: 0; font-size: var(--text-sm); }
 & .a1-quiet { margin-top: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); overflow-wrap: anywhere; }
 & .a1-quiet-mark { color: var(--color-accent); }
 & .a1-customize { margin-bottom: var(--space-4); }
@@ -18,59 +9,20 @@
 & .a1-custom-list li { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; min-width: 0; }
 & .a1-custom-list li[data-shown='false'] .a1-custom-title { color: var(--color-text-muted); text-decoration: line-through; }
 & .a1-custom-title { min-width: 0; overflow-wrap: anywhere; }
-& .a1-customize.card { margin-bottom: var(--space-4); }
-& .a1-customize .a1-card-head { display: flex; gap: var(--space-2); align-items: center; justify-content: space-between; }
-& .a1-customize .a1-card-head h2 { margin: 0; font-size: var(--text-base); }
 
 & .a1-hello p { margin: 0; font-size: var(--text-lg); font-weight: 600; }
 & .a1-hello p .muted { font-size: var(--text-sm); font-weight: 400; }
-& .a1-grid { grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 48rem) { & .a1-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 75rem) { & .a1-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-& .a1-states { margin-top: var(--space-6); }
-& .a1-states summary { cursor: pointer; }
 
 /* Ζώνες της Σήμερα: επείγοντα, σε αναμονή, για ενημέρωση, και τα τεχνικά κλειστά. */
 & .a1-zone { margin-top: var(--space-4); min-width: 0; }
 & .a1-zone-title { margin: 0 0 var(--space-2); font-size: var(--text-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
-& .a1-zone[data-zone='urgent'] .a1-zone-title { color: var(--color-danger); }
-& .a1-more > summary { cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 600; overflow-wrap: anywhere; }
-& .a1-more[open] > summary { margin-bottom: var(--space-3); }
-/* Οι ζώνες «Σε αναμονή» και «Για ενημέρωση» κλείνουν, για να μένει η Σήμερα σύντομη. */
-& .a1-fold > summary { cursor: pointer; overflow-wrap: anywhere; }
-& .a1-fold[open] > summary { margin-bottom: var(--space-3); }
-& .a1-fold > summary .muted { font-weight: 400; }
 
-/* Το σημάδι της επείγουσας γραμμής: σχήμα, όχι μόνο χρώμα, και χωρίς λέξη σε κάθε γραμμή. */
-& .a1-urgent-mark { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--color-danger); color: var(--color-bg); font-size: var(--text-xs); font-weight: 700; flex: none; }
-/* Τα χρήματα του μήνα πρώτα και στο κινητό (το Τώρα μετά). */
-& .a1-strip[data-money-first='true'] .strip .now-tile { order: 0; }
-& .a1-now-extra { margin: calc(var(--space-4) * -1) 0 var(--space-4); display: flex; justify-content: flex-end; }
-
-/* Ύφος ταυτότητας (screens2): ήρεμες κάρτες, REC τελεία για το επείγον, χωρίς υπογραμμίσεις */
-& .a1-card[data-urgent='true'] .kit-panel, & .a1-card[data-kind='error'] .kit-panel, & .a1-card[data-kind='status'] .kit-panel { border-left: 1px solid var(--color-border); }
-& .a1-card .kit-panel { margin-bottom: var(--space-4); }
-& .a1-card .kit-panel-body { gap: var(--space-2); }
-/* Επείγουσα κάρτα: REC τελεία μπροστά από τον τίτλο και κόκκινος αριθμός (σχήμα + χρώμα) */
-& .a1-card:is([data-urgent='true'], [data-kind='error'], [data-kind='status'][data-empty='false']) .kit-panel-head h2::before, & .a1-card[data-kind='status'][data-empty='true'] .kit-panel-head h2::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-rec); flex: none; }
-& .a1-card[data-kind='status'][data-empty='true'] .kit-panel-head h2::before { background: var(--color-ok); }
-& .a1-card .kit-panel-head .num { font: 700 0.8rem var(--font-sans); letter-spacing: 0; }
-& .a1-rows { margin: 0 -1.25rem; }
-& .a1-urgent-mark { background: color-mix(in oklab, var(--brand-rec) 22%, transparent); color: var(--color-danger); }
-& .a1-card-foot a:not(.button) { padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border-strong); font-weight: 600; text-decoration: none; color: var(--color-text); }
-& .a1-card-foot a:not(.button):hover { background: color-mix(in oklab, var(--color-text) 8%, transparent); }
 & .a1-hello p { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
-& .a1-hello a:not(.button) { text-decoration: none; color: var(--color-accent); }
 & .a1-zone { margin-top: var(--space-6); }
 & .a1-zone-title { display: inline-flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; }
-& .a1-zone[data-zone='urgent'] > .a1-zone-title { color: var(--color-text); }
-& .a1-zone[data-zone='urgent'] > .a1-zone-title::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-rec); }
 /* Η Σήμερα της ομάδας ως ενημέρωση (#241): μία πρόταση πάνω από τη γραμμή κορυφής και τη λίστα. */
 & .a1-lead { margin: 0 0 var(--space-4); max-width: 62ch; font-size: 1.1rem; line-height: 1.45; color: var(--color-text); }
 /* Γραμμή κορυφής (κλειστή): «Μένουν N · Υ € να μπουν»· τα πάνελ (Δείκτες, Πρόγραμμα, Χρήματα, Ομάδα) μέσα, κλειστά. */
-& .a1-topline { margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
-& .a1-topline > summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
-& .a1-topline[open] > summary { margin-bottom: var(--space-3); }
 & .a1-topline-body { display: grid; gap: var(--space-3); min-width: 0; }
 & .a1-company { margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
 & .a1-company > summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
@@ -79,10 +31,6 @@
 & .a1-company-list li { display: flex; gap: var(--space-2); align-items: baseline; justify-content: space-between; min-width: 0; }
 & .a1-company-list a { text-decoration: none; color: var(--color-text); overflow-wrap: anywhere; }
 & .a1-company-count { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--color-text-muted); flex: none; }
-& .a1-brief-panel { min-width: 0; }
-& .a1-brief-panel .kit-panel-body { display: flex; flex-direction: column; gap: var(--space-2); }
-& .a1-time, & .a1-amount { font-family: var(--font-kit-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
-& .a1-amount { color: var(--color-text); font-weight: 600; }
 & .a1-day { margin: 0; font-size: var(--text-sm); font-weight: 600; }
 /* Κομμάτι 2 (#241): Χρήματα και Η ομάδα δίπλα-δίπλα, οι μπάρες των οφειλετών και ο ρυθμός του μήνα. */
 & .a1-pair { display: grid; gap: 0 var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
@@ -94,40 +42,56 @@
 & .a1-pace { position: relative; display: block; height: 8px; border-radius: 999px; background: color-mix(in oklab, var(--color-text) 10%, transparent); }
 & .a1-pace-fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-accent); }
 & .a1-pace-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--color-text); }
-/* «Αίθουσα προβολής» (#241, μόνο εμφάνιση): κάθε πάνελ φωτίζεται απαλά στο χρώμα της ταυτότητας του —
-   Periwinkle για αποφάσεις, χρήματα, ομάδα· Butter Yellow μόνο για το πρόγραμμα (= τώρα). REC Red μόνο ως τελεία. */
-:root & .a1-brief-panel { --a1-hue: var(--brand-periwinkle); --a1-tint: 9%; --a1-edge: 20%; }
-:root & .a1-brief-panel[data-part='programme'] { --a1-hue: var(--brand-yellow); }
-:root[data-theme='light'] & .a1-brief-panel { --a1-tint: 14%; --a1-edge: 32%; }
-:root[data-theme='light'] & .a1-brief-panel[data-part='programme'] { --a1-tint: 22%; --a1-edge: 50%; }
-:root & .a1-brief-panel .kit-panel {
-  border-color: color-mix(in oklab, var(--a1-hue) var(--a1-edge), transparent);
-  background: radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, var(--a1-hue) var(--a1-tint), transparent), transparent 70%), var(--color-surface);
-}
-/* «πίσω»: μικρή REC τελεία μπροστά, κείμενο στο κανονικό χρώμα· η «ουρά» ήρεμη, όχι κίτρινη */
-:root & .a1-brief-panel[data-part='team'] .badge:is([data-tone='attention'], [data-tone='waiting']) { border-color: var(--color-border-strong); background: none; color: var(--color-text); }
-:root & .a1-brief-panel[data-part='team'] .badge[data-tone='waiting'] { color: var(--color-text-muted); }
-:root & .a1-brief-panel[data-part='team'] .badge[data-tone='attention']::before { display: block; content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-rec); opacity: 1; box-shadow: none; flex: none; }
-/* Οι μπάρες των οφειλετών σε Periwinkle, όχι κόκκινες */
-:root & .a1-brief-panel[data-part='money'] .a1-bar > span { background: var(--brand-periwinkle); }
-/* Κάθε πάνελ ξεχωρίζει από τον τίτλο του: κεφαλίδα στο χρώμα του, εικονίδιο σε κύκλο, τίτλος στο χρώμα του (ίδιο μέγεθος) */
-:root & .a1-brief-panel { --a1-ink: var(--a1-hue); }
-:root[data-theme='light'] & .a1-brief-panel { --a1-ink: var(--brand-midnight); }
-:root & .a1-brief-panel .kit-panel-head { background: color-mix(in oklab, var(--a1-hue) 12%, var(--color-surface-raised)); border-bottom-color: color-mix(in oklab, var(--a1-hue) 24%, transparent); }
-:root & .a1-brief-panel .kit-panel-head h2 { position: relative; display: flex; align-items: center; min-height: 1.75rem; padding-left: 2.25rem; color: var(--a1-ink); font-weight: 800; }
-:root & .a1-brief-panel .kit-panel-head h2::before { content: ''; position: absolute; left: 0; top: 50%; width: 1.75rem; height: 1.75rem; margin-top: -0.875rem; border-radius: 50%; background: color-mix(in oklab, var(--a1-hue) 22%, transparent); }
-:root & .a1-brief-panel .kit-panel-head h2::after { content: ''; position: absolute; left: 0.375rem; top: 50%; width: 1rem; height: 1rem; margin-top: -0.5rem; background: var(--a1-ink); -webkit-mask: var(--a1-icon) center / contain no-repeat; mask: var(--a1-icon) center / contain no-repeat; }
-:root & .a1-brief-panel[data-part='programme'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7h3l2-3h8l2 3h3v12H3z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E"); }
-:root & .a1-brief-panel[data-part='money'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6.5A7 7 0 1018 17.5'/%3E%3Cpath d='M4 10h10M4 14h10'/%3E%3C/svg%3E"); }
-:root & .a1-brief-panel[data-part='team'] { --a1-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5'/%3E%3Cpath d='M16 4.5a3.5 3.5 0 010 7M18 14.8c1.9.8 3.1 2.6 3.5 5.2'/%3E%3C/svg%3E"); }
 /* Κομμάτι 3 (#241 Σ8): «νέο» (ετικέτα Periwinkle όπως του kit), το σήμα δίπλα στην ημερομηνία, το ήσυχο «Αργότερα»
    δίπλα στο «Άνοιξε» και η Αναίρεση ως σύνδεσμος μέσα στην ήσυχη γραμμή. */
 & .a1-new { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-accent); white-space: nowrap; }
 & .a1-new-chip { display: inline-block; margin-left: var(--space-2); padding: 0.1rem 0.6rem; border: 1px solid color-mix(in oklab, var(--color-accent) 40%, transparent); border-radius: 999px; background: color-mix(in oklab, var(--color-accent) 10%, transparent); color: var(--color-accent); font-size: 0.75rem; font-weight: 600; vertical-align: middle; white-space: nowrap; }
 & .a1-later-form { display: inline-flex; gap: var(--space-2); align-items: center; }
-:root & .button[data-ghost='true'] { border-color: transparent; color: var(--color-text-muted); font-weight: 500; }
-:root & .button[data-ghost='true']:hover { color: var(--color-text); background: color-mix(in oklab, var(--color-text) 8%, transparent); }
 & .a1-later-line { margin-top: var(--space-2); }
 & .a1-link-button { padding: 0; border: 0; background: none; font: inherit; color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 & .a1-link-button:disabled { opacity: 0.6; cursor: default; }
+
+/* Τελική όψη (inner lane 1): κουτιά ml-box με τίτλο και γραμμές ml-line, αντί για kit-panel. */
+& .a1-box { padding-top: 0.9rem; min-width: 0; margin-bottom: var(--space-4); }
+& .a1-box-head { display: flex; gap: var(--space-2); align-items: center; justify-content: space-between; min-width: 0; }
+& .a1-box-head .ml-box-title { overflow-wrap: anywhere; }
+& .a1-box-count { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+& .a1-box-count[data-urgent]::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.4rem; border-radius: 50%; background: var(--brand-rec); vertical-align: middle; }
+& .a1-box .ml-list { margin-bottom: 0; }
+& .a1-box-foot { justify-content: flex-start; }
+& .a1-box-foot > a:last-child:not(:first-child) { margin-left: auto; }
+& .a1-summary[data-muted] { color: var(--color-text-muted); }
+& .a1-boxes { display: grid; gap: 0 var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: start; margin-top: var(--space-4); }
+@media (min-width: 60rem) { & .a1-boxes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+& .a1-boxes > .ml-list { margin-bottom: var(--space-4); }
+& .a1-more { margin-top: var(--space-2); }
+& .a1-notice { margin-bottom: var(--space-4); }
+& .a1-notice h2 { margin: 0 0 0.3rem; font-size: 1rem; font-weight: 800; color: var(--color-text); }
+& .a1-notice[data-kind='error'] { border-style: solid; border-color: var(--color-border-strong); }
+& .a1-shelf { margin-top: var(--space-4); }
+/* Οι Δείκτες: πλακίδια με σιγανή ετικέτα, μεγάλο αριθμό και μικρή εξήγηση. */
+& .a1-kpis { display: grid; gap: var(--space-3); min-width: 0; }
+& .a1-kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
+& .a1-kpi > :is(a, div) { position: relative; display: grid; gap: 0.15rem; height: 100%; padding: 0.8rem 1rem; border-radius: 14px; text-decoration: none; color: var(--color-text); border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
+& .a1-kpi > a:hover { border-color: var(--brand-periwinkle); }
+& .a1-kpi-label { font-family: var(--font-kit-mono), ui-monospace, monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-muted); }
+& .a1-kpi-value { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.15; }
+& .a1-kpi small { color: var(--color-text-muted); font-size: 0.78rem; }
+& .a1-kpi[data-tone='attention'] .a1-kpi-label::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.4rem; border-radius: 50%; background: var(--brand-rec); vertical-align: middle; }
+& .a1-kpi-go { position: absolute; top: 0.7rem; right: 0.9rem; color: var(--color-text-muted); }
+/* Το ήσυχο «Αργότερα» μέσα στο ml-quick της γραμμής. */
+& .ml-quick button[data-ghost='true'] { border-color: transparent; background: none; color: var(--color-text-muted); font-weight: 500; }
+& .ml-quick button[data-ghost='true']:hover { color: var(--color-text); }
+/* Οι μπάρες των οφειλετών σε Periwinkle. */
+& [data-part='money'] .a1-bar > span { background: var(--brand-periwinkle); }
+& .a1-customize form > * + * { margin-top: var(--space-3); }
+/* Η κλειστή κάρτα του Πελάτη: τίτλος + μία φράση αριστερά, αριθμός δεξιά. */
+& .a1-fold { min-width: 0; margin-bottom: var(--space-4); }
+& .a1-fold > .ml-box > summary { display: flex; gap: var(--space-2); align-items: center; justify-content: space-between; }
+& .a1-fold-title { display: grid; gap: 0.1rem; min-width: 0; overflow-wrap: anywhere; }
+& .a1-boxes > .a1-fold { margin-bottom: var(--space-4); }
+/* «ουρά» σιγανή, ώστε να ξεχωρίζει από το «πίσω». */
+& .ml-tag[data-tone='waiting'] { color: var(--color-text-muted); background: none; border-color: color-mix(in oklab, var(--color-text) 18%, transparent); }
+/* Απόσταση κάτω από τη γραμμή κορυφής. */
+& .a1-topline { margin-bottom: var(--space-4); }
 }

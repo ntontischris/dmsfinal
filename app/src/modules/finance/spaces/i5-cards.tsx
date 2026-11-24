@@ -21,6 +21,8 @@ export const initialsOf = (name: string): string =>
 interface MoneyHeroProps {
   mono: string;
   title: string;
+  // Σελίδα ενός Πελάτη (Καρτέλα): ο τίτλος είναι το h1 της σελίδας· αλλιώς h2 κάτω από το h1 της λίστας.
+  isRecord?: boolean;
   // Η ετικέτα του μεγάλου αριθμού· μένει επικεφαλίδα (τη ζητούν τα e2e).
   label: string;
   amount: number;
@@ -38,7 +40,11 @@ export function MoneyHero(props: MoneyHeroProps) {
       </span>
       <div>
         {props.hasWarning && <Badge tone="attention">ληξιπρόθεσμο</Badge>}
-        <h1>{props.title}</h1>
+        {props.isRecord ? (
+          <h1 data-page-title>{props.title}</h1>
+        ) : (
+          <h2 className="i5-hero-title">{props.title}</h2>
+        )}
         <h2 className="i5-hero-label">{props.label}</h2>
         <p className="ml-hero-amount" data-open={props.isOpen}>
           <span>{fmtMoney(props.amount)}</span>
@@ -81,7 +87,7 @@ export function PaymentBox(props: {
       title="Οδηγίες πληρωμής που βλέπει ο πελάτης"
       hint={`${payment.bank} · IBAN με αντιγραφή`}
     >
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Δικαιούχος</dt>
         <dd>{payment.holder}</dd>
         <dt>Τράπεζα</dt>
@@ -114,7 +120,7 @@ export function ToInvoiceBox(props: { amount: number; count: number }) {
         Ο πελάτης δεν το βλέπει. Δεν είναι οφειλή· μόνο το Τιμολόγιο δημιουργεί
         οφειλή.
       </p>
-      <div className="ml-quick i5-box-actions">
+      <div className="ml-quick i5-box-actions" data-align="start">
         <Link href={hrefOf("I1")}>Άνοιγμα Τιμολογητέων</Link>
       </div>
     </Box>

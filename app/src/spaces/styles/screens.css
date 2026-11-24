@@ -4,8 +4,6 @@
 
 & .sw { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
 & .sw a[aria-current='true'] { font-weight: 600; color: var(--color-text); }
-& .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
-& .toolbar .grow { flex: 1 1 12rem; }
 
 /* Πεδίο */
 & .input {
@@ -15,6 +13,39 @@
 }
 & .input:hover { border-color: var(--color-border-strong); }
 & .input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--tint-accent-20); }
+
+/* Γυμνά πεδία μέσα σε φόρμα .ml-fields: ίδια όψη με το .input, χωρίς να χρειάζονται την κλάση */
+:root & .ml-fields :is(input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='range']), select, textarea) {
+  font: inherit; font-size: var(--text-sm); color: var(--color-text); line-height: 1.4; min-width: 0; max-width: 100%;
+  padding: 0.35rem var(--space-3); border: 1px solid var(--color-border); border-radius: 12px;
+  background-color: color-mix(in oklab, var(--panel-midnight) 60%, transparent);
+}
+:root[data-theme='light'] & .ml-fields :is(input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='range']), select, textarea) { background-color: var(--panel-deep); }
+:root & .ml-fields :is(input, select, textarea):hover { border-color: var(--color-border-strong); }
+:root & .ml-fields :is(input, select, textarea):focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--tint-accent-20); }
+
+/* Native select: χωρίς το κουτί του browser, με δικό του βελάκι (currentColor, άρα σωστό και στα δύο θέματα).
+   Το :root[data-theme='light'] ξαναγράφει το background του .input, γι' αυτό το βελάκι δηλώνεται και εκεί. */
+:root & :is(select.input, .ml-fields select),
+:root[data-theme='light'] & :is(select.input, .ml-fields select) {
+  appearance: none; cursor: pointer; padding-right: 2.2rem;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 1.05rem center, right 0.75rem center; background-size: 0.32rem 0.32rem; background-repeat: no-repeat;
+}
+& :is(select.input, .ml-fields select) option { color: var(--color-text); background-color: var(--color-surface-raised); }
+
+/* Native αρχείο: το κουμπί του browser γίνεται χάπι όπως τα .ml-quick, το «δεν επιλέχθηκε» μένει σιγανό */
+:root & :is(input[type='file'].input, .ml-fields input[type='file']) { padding: 0.3rem; cursor: pointer; color: var(--color-text-muted); }
+& :is(input[type='file'].input, .ml-fields input[type='file'])::file-selector-button {
+  font: inherit; font-size: 0.82rem; font-weight: 700; margin-right: 0.75rem; padding: 0.4rem 0.85rem; cursor: pointer;
+  color: var(--color-text); background: transparent; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent);
+}
+& :is(input[type='file'].input, .ml-fields input[type='file'])::file-selector-button:hover { border-color: var(--brand-periwinkle); }
+
+/* Native ημερομηνία / ώρα: ψηφία ίσου πλάτους, το εικονίδιο του ημερολογίου ακολουθεί το θέμα (color-scheme) */
+& :is(.input, .ml-fields input):is([type='date'], [type='time'], [type='datetime-local'], [type='month']) { font-variant-numeric: tabular-nums; min-height: 2.25rem; }
+& :is(.input, .ml-fields input)::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.7; }
+& :is(.input, .ml-fields input)::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
 /* Κουμπιά: κύριο = γεμάτο χρώμα έμφασης (ένα ανά περιοχή), κίνδυνος = κόκκινο περίγραμμα */
 & .button[data-primary='true'] { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); font-weight: 600; }
@@ -33,7 +64,7 @@
   color: var(--color-text-muted); background: var(--color-surface);
 }
 & .badge::before { content: ''; width: 0.45em; height: 0.45em; border-radius: 50%; background: currentColor; opacity: 0.7; flex: none; }
-& .badge[data-tone='attention'], & .badge[data-tone='danger'] { border-color: var(--tint-danger-55); color: var(--color-danger); background: var(--tint-danger-10); }
+& .badge[data-tone='attention'], & .badge[data-tone='danger'] { border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent); color: color-mix(in oklab, var(--brand-yellow) var(--panel-ink-mix), var(--color-text)); background: color-mix(in oklab, var(--brand-yellow) 14%, transparent); }
 & .badge[data-tone='strong'] { border-color: var(--tint-accent-60); color: var(--color-accent); background: var(--tint-accent-10); font-weight: 600; }
 & .badge[data-tone='ok'] { border-color: var(--tint-ok-55); color: var(--color-ok); background: var(--tint-ok-10); }
 & .badge[data-tone='attention']::before, & .badge[data-tone='danger']::before { opacity: 1; box-shadow: 0 0 6px currentColor; }
@@ -114,9 +145,20 @@
 & .kcard[data-forgotten='true'] { border-left: 3px solid var(--color-danger); }
 & .kcard p { margin: var(--space-1) 0; }
 
-/* Άδεια κατάσταση και σφάλμα */
-& .notice { border-style: dashed; text-align: center; padding: var(--space-6) var(--space-4); }
-& .notice[data-kind='error'] { border-style: solid; border-color: var(--tint-danger-60); }
+/* StateNotice / ErrorNotice: μαλακή κάρτα όπως το .ml-empty· άρνηση και σφάλμα με κίτρινο (warn) τόνο, ποτέ κόκκινο */
+& .ml-notice {
+  margin: 0 0 var(--space-4); padding: 1rem 1.2rem; border-radius: 18px; color: var(--color-text-muted); font-size: .95rem;
+  border: 1px dashed color-mix(in oklab, var(--color-text) 16%, transparent); background: color-mix(in oklab, var(--panel-deep) 45%, transparent);
+}
+& .ml-notice h2 { margin: 0 0 .3rem; font-size: 1rem; font-weight: 800; color: var(--color-text); }
+& .ml-notice > div > :first-child { margin-top: 0; }
+& .ml-notice > div > :last-child { margin-bottom: 0; }
+& .ml-notice:is([data-kind='error'], [data-kind='denied']) {
+  border-style: solid; border-color: color-mix(in oklab, var(--brand-yellow) 40%, transparent);
+  background:
+    radial-gradient(80% 140% at 0% 50%, color-mix(in oklab, var(--brand-yellow) 10%, transparent), transparent 60%),
+    color-mix(in oklab, var(--panel-deep) 55%, transparent);
+}
 & .compare { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 @media (max-width: 40rem) { & .compare { grid-template-columns: 1fr; } }
 & .note { font-size: var(--text-sm); color: var(--color-text-muted); border-left: 2px solid var(--color-border-strong); padding-left: var(--space-3); margin: var(--space-3) 0; }
@@ -134,7 +176,6 @@
 & .new-lead ul.note { margin: 0; padding-left: var(--space-6); }
 & .new-lead .button { justify-self: start; }
 & .choice-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
-& .choice-row .button[aria-pressed='true'] { background: var(--color-accent); color: var(--color-on-accent); border-color: transparent; }
 
 /* Επιβεβαίωση ενέργειας: δίπλα στο κουμπί (στην ίδια γραμμή όσο χωρά), μεγάλη και χρωματιστή, ώστε να μη χάνεται.
    Η περιοχή υπάρχει κενή από πριν, για να ανακοινώνεται κάθε αλλαγή. */
@@ -172,7 +213,7 @@
 & .a1-card-foot a:not(.button) { display: inline-flex; align-items: center; min-height: 1.75rem; padding-inline: var(--space-2); }
 & input[type='checkbox'], & input[type='radio'] { width: 1.15rem; height: 1.15rem; accent-color: var(--color-accent); flex: none; }
 @media (max-width: 48rem) {
-  & .button, & .select, & .input { min-height: 2.75rem; }
+  & .button, & .select, & .input, & .ml-fields :is(input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='range']), select) { min-height: 2.75rem; }
   & .tab, & .kit-seg a { display: inline-flex; align-items: center; min-height: 2.75rem; }
   & .a1-card-foot a:not(.button) { min-height: 2.75rem; }
   & input[type='checkbox'], & input[type='radio'] { width: 1.5rem; height: 1.5rem; }

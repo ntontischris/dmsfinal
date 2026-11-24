@@ -99,6 +99,8 @@ test("η Διαχείριση δίνει Ρόλους χωρίς κλιμάκω�
 
   await page.goto("/app/team");
   await page.getByRole("link", { name: "Άννα Πωλήσεις" }).click();
+  // Οι Ρόλοι ζουν σε κλειστό κουτί της σελίδας του Χρήστη: πρώτα το ανοίγουμε.
+  await page.getByRole("heading", { name: "Ρόλοι", exact: true }).click();
   await expect(
     page.getByText(
       "Δεν γίνεται: τον Ρόλο Ιδιοκτήτης τον δίνει μόνο Ιδιοκτήτης.",

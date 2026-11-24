@@ -13,7 +13,6 @@ const NEW_PASSWORD = "e2e-new-password-456";
 // Τα τεστ γράφουν στην ίδια βάση· μια επανάληψη θα έβρισκε μισοαλλαγμένα δεδομένα.
 test.describe.configure({ retries: 0 });
 
-
 // Οι προσκλήσεις σε εκκρεμότητα και οι Χρήστες ομάδας της N1.
 const pendingInvites = (page: Page) =>
   card(page, "Προσκλήσεις σε εκκρεμότητα").last();
@@ -105,13 +104,15 @@ async function inviteTeamMember(
   email: string,
   name: string,
 ): Promise<void> {
-  await page.goto("/app/team");
+  // Η πρόσκληση ζει στη N6· οι εκκρεμείς Προσκλήσεις και οι Χρήστες φαίνονται στη N1.
+  await page.goto("/app/team/invite");
   const form = page.locator("#n1-invite");
   await form.getByLabel("Ονοματεπώνυμο", { exact: true }).fill(name);
   await form.getByLabel("Email", { exact: true }).fill(email);
   await form.getByLabel("Ρόλος Πωλήσεις", { exact: true }).check();
   await form.getByRole("button", { name: "Αποστολή πρόσκλησης" }).click();
   await expect(form.getByRole("status")).toContainText("Η πρόσκληση στάλθηκε");
+  await page.goto("/app/team");
 }
 
 test("ο Ιδιοκτήτης προσκαλεί Χρήστη ομάδας, ο προσκεκλημένος μπαίνει και η πρόσκληση γίνεται Αποδεκτή", async ({
@@ -214,13 +215,18 @@ const athensMinute = (time: number): RegExp => {
 };
 
 // Μια γραμμή του Ιστορικού αποστολών (K3).
-const sendRows = (page: Page) => page.locator("li.part-row");
+const sendRows = (page: Page) => page.locator("li.ml-line");
 
 test("ο Ιδιοκτήτης στέλνει δοκιμαστικό email και φαίνεται στο Ιστορικό", async ({
   page,
 }) => {
   await signIn(page, "owner@example.com");
   await page.goto("/app/settings/integrations");
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
   const clickedAt = Date.now();
   await page
     .getByRole("button", { name: "Δοκιμαστικό email στον εαυτό μου" })

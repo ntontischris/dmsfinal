@@ -7,7 +7,7 @@ import { useKeptForm } from "@/lib/use-kept-form";
 
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
-// Οι φόρμες του H4 (`.h34-form`, `.btn-row` του prototype) πάνω στις πραγματικές ενέργειες του πελάτη.
+// Οι φόρμες του H4 (`.h34-form` με `.ml-quick`) πάνω στις πραγματικές ενέργειες του πελάτη.
 // Κρατά ό,τι γράφτηκε αν η βάση πει όχι και δείχνει το λάθος της· με επιτυχία η σελίδα φρεσκάρεται από τη βάση.
 
 interface H34FormProps {
@@ -55,10 +55,9 @@ export function H34Form({
           {state.error}
         </span>
       )}
-      <div className="btn-row">
+      <div className="ml-quick h34-actions">
         <button
           type="submit"
-          className="button"
           data-primary={isPrimary ? "true" : undefined}
           name={submitField?.name}
           value={submitField?.value}
@@ -67,7 +66,7 @@ export function H34Form({
           {submitLabel}
         </button>
         {onClose && (
-          <button type="button" className="button" onClick={onClose}>
+          <button type="button" onClick={onClose}>
             Άκυρο
           </button>
         )}

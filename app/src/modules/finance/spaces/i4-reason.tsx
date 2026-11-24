@@ -148,18 +148,18 @@ export function ReasonBox(props: {
         value={reason}
         onChange={(e) => setReason(e.target.value)}
       />
-      <div className="btn-row">
+      <div className="ml-actions">
+        <button type="button" onClick={props.onCancel}>
+          Άκυρο
+        </button>
         <button
           type="button"
-          className="button"
-          data-danger={isDelete}
+          data-primary={isDelete ? undefined : true}
+          data-danger={isDelete || undefined}
           disabled={reason.trim() === "" || isPending}
           onClick={handleConfirm}
         >
           {isPending ? "Αποθήκευση…" : "Επιβεβαίωση"}
-        </button>
-        <button type="button" className="button" onClick={props.onCancel}>
-          Άκυρο
         </button>
       </div>
       <span

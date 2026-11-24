@@ -59,7 +59,6 @@ function RequestButtons({
       </RowForm>
       <button
         type="button"
-        className="button"
         aria-expanded={mode === "reject"}
         onClick={() => onMode("reject")}
       >
@@ -68,7 +67,6 @@ function RequestButtons({
       {canTransfer && (
         <button
           type="button"
-          className="button"
           aria-expanded={mode === "transfer"}
           onClick={() => onMode("transfer")}
         >

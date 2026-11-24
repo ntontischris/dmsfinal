@@ -44,6 +44,4 @@
 & .i2-money { font-weight: 700; font-variant-numeric: tabular-nums; }
 & .i2-code { font-family: inherit; font-size: 1.02rem; font-weight: 700; }
 & .i2-table .part-tile { width: 2.2rem; height: 2.2rem; font-size: 0.8rem; }
-& .i2-voided-panel { padding-bottom: var(--space-3); }
-& .i2-voided-panel > summary { cursor: pointer; padding: 1rem 1.25rem; }
-& .i2-voided-panel > :not(summary) { margin-inline: 1.25rem; } }
+}

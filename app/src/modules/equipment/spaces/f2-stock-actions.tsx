@@ -106,20 +106,20 @@ export function StockActions(props: StockActionsProps) {
   if (pending === "delete")
     return (
       <>
-        <div className="btn-row">
-          <span className="muted">
+        <div className="ml-quick">
+          <span className="f-note">
             Δεν δεσμεύτηκε ποτέ, οπότε σβήνεται εντελώς.
           </span>
           <button
             type="button"
-            className="button"
-            data-danger="true"
+
+            data-danger
             disabled={isPending}
             onClick={() => run(deleteItem, { itemId: item.id })}
           >
             Ναι, διαγραφή
           </button>
-          <button type="button" className="button" onClick={close}>
+          <button type="button" onClick={close}>
             Άκυρο
           </button>
         </div>
@@ -128,18 +128,14 @@ export function StockActions(props: StockActionsProps) {
     );
   return (
     <>
-      <div className="btn-row">
-        <button
-          type="button"
-          className="button"
-          onClick={() => setPending("edit")}
-        >
+      <div className="ml-quick">
+        <button type="button" onClick={() => setPending("edit")}>
           Αλλαγή στοιχείων
         </button>
         {item.status === "available" && (
           <button
             type="button"
-            className="button"
+
             onClick={() => setPending("repair")}
           >
             Σε επισκευή
@@ -148,7 +144,7 @@ export function StockActions(props: StockActionsProps) {
         {item.status !== "available" && (
           <button
             type="button"
-            className="button"
+
             disabled={isPending}
             onClick={() => setStatus("available", "")}
           >
@@ -159,8 +155,8 @@ export function StockActions(props: StockActionsProps) {
           (canDelete ? (
             <button
               type="button"
-              className="button"
-              data-danger="true"
+
+              data-danger
               onClick={() => setPending("delete")}
             >
               Διαγραφή
@@ -168,8 +164,8 @@ export function StockActions(props: StockActionsProps) {
           ) : (
             <button
               type="button"
-              className="button"
-              data-danger="true"
+
+              data-danger
               onClick={() => setPending("retire")}
             >
               Απόσυρση
@@ -206,17 +202,17 @@ function EditForm({
   const [code, setCode] = useState(item.code ?? "");
   const [note, setNote] = useState(item.note ?? "");
   return (
-    <div className="e-form">
-      <label>
-        Όνομα (υποχρεωτικό)
+    <div className="ml-fields">
+      <label className="ml-field">
+        <span>Όνομα (υποχρεωτικό)</span>
         <input
           className="input"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
       </label>
-      <label>
-        Κατηγορία
+      <label className="ml-field">
+        <span>Κατηγορία</span>
         <select
           className="select"
           value={categoryId}
@@ -229,31 +225,33 @@ function EditForm({
           ))}
         </select>
       </label>
-      <label>
-        Κωδικός ή σειριακός
+      <label className="ml-field">
+        <span>Κωδικός ή σειριακός</span>
         <input
           className="input"
           value={code}
           onChange={(e) => setCode(e.target.value)}
         />
       </label>
-      <label>
-        Σημείωση
+      <label className="ml-field">
+        <span>Σημείωση</span>
         <input
           className="input"
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
       </label>
-      <p className="muted">
+      <p className="f-note ml-field" data-wide>
         Η αλλαγή ονόματος φαίνεται παντού, και στα παλιά Γυρίσματα: είναι το
         ίδιο αντικείμενο.
       </p>
-      <div className="btn-row">
+      <div className="ml-actions">
+        <button type="button" onClick={onCancel}>
+          Άκυρο
+        </button>
         <button
           type="button"
-          className="button"
-          data-primary="true"
+          data-primary
           disabled={!name.trim() || isPending}
           onClick={() =>
             onSave({
@@ -265,9 +263,6 @@ function EditForm({
           }
         >
           Αποθήκευση
-        </button>
-        <button type="button" className="button" onClick={onCancel}>
-          Άκυρο
         </button>
       </div>
     </div>

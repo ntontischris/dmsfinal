@@ -69,7 +69,7 @@ export function HeroWarnings({
   return (
     <>
       {hint && <p className="muted">{hint}</p>}
-      <span className="btn-row">
+      <span className="ml-quick">
         {expiresInDays !== null && (
           <Badge tone="attention">
             {expiresInDays === 0

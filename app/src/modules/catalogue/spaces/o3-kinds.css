@@ -3,3 +3,4 @@
 & .o3k-order { display: inline-flex; gap: var(--space-1); align-items: center; font-variant-numeric: tabular-nums; }
 & .o3k-order .button { min-width: 2rem; padding-inline: var(--space-2); }
 }
+

@@ -11,6 +11,7 @@ import type { FilmingFromRequest } from "../request-prefill";
 import type { NamedRef } from "../types";
 import { E4Form } from "./e4-form";
 
+import "../../finance/spaces/money-lines.css";
 import "./e.css";
 
 // Από το module Παραγωγές, μέσω της σελίδας (οι Παραγωγές εισάγουν ήδη τα Γυρίσματα· έτσι δεν κάνουμε κύκλο).
@@ -18,8 +19,17 @@ export type E4InternalSource = () => Promise<
   { ok: true; data: readonly { id: string; title: string }[] } | { ok: false }
 >;
 
-const wrap = (body: ReactNode) => (
-  <div data-spaces>
+const wrap = (body: ReactNode, title = "Νέο Γύρισμα") => (
+  <div data-spaces className="ml-stack">
+    <header className="ml-hero">
+      <span className="ml-hero-mono" aria-hidden="true">
+        Γ
+      </span>
+      <div>
+        <h1>{title}</h1>
+        <p>Τρία βήματα: για ποιον, πότε και πού, έλεγχος.</p>
+      </div>
+    </header>
     <div className="e">{body}</div>
   </div>
 );
@@ -68,5 +78,6 @@ export async function SpacesNewFilming({
       prefill={prefill}
       fromRequest={fromRequest}
     />,
+    prefill ? "Μετατροπή από Κλεισμένο χρόνο" : "Νέο Γύρισμα",
   );
 }

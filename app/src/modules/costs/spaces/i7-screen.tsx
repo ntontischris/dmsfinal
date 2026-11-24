@@ -8,7 +8,13 @@ import { costsCaps } from "../caps";
 import { listProfitability } from "../queries-expenses";
 import { firstMonthOf } from "./i7-adapter";
 import { ProductionLines } from "./i7-lines";
-import { allRows, byClient, byMonth, marginText, type ProductionRow } from "./i7-model";
+import {
+  allRows,
+  byClient,
+  byMonth,
+  marginText,
+  type ProductionRow,
+} from "./i7-model";
 import { GroupTable, ProductionTable } from "./i7-tables";
 import { signOf, totalsOf } from "./i7-totals";
 
@@ -57,7 +63,7 @@ function Hero({ rows }: { rows: readonly ProductionRow[] }) {
         %
       </span>
       <div>
-        <h1>Κέρδος ανά Παραγωγή</h1>
+        <h2 className="i67-hero-title">Κέρδος ανά Παραγωγή</h2>
         <p>
           Τι έμεινε από κάθε δουλειά: η τιμή της Παραγωγής μείον το πραγματικό
           κόστος, τους τελευταίους {MONTHS_BACK} μήνες.
@@ -71,7 +77,8 @@ function Hero({ rows }: { rows: readonly ProductionRow[] }) {
         </p>
         <p>
           Μετρούν {countText(t.counted)} Πελατών
-          {t.missing > 0 && ` · ${t.missing} χωρίς πραγματικές ώρες δεν μετρούν`}
+          {t.missing > 0 &&
+            ` · ${t.missing} χωρίς πραγματικές ώρες δεν μετρούν`}
           {t.internalCost > 0 &&
             ` · εσωτερική δουλειά ${fmtMoney(t.internalCost)}`}
         </p>
@@ -84,7 +91,13 @@ function Hero({ rows }: { rows: readonly ProductionRow[] }) {
   );
 }
 
-function Tables({ rows, open }: { rows: readonly ProductionRow[]; open: View | null }) {
+function Tables({
+  rows,
+  open,
+}: {
+  rows: readonly ProductionRow[];
+  open: View | null;
+}) {
   const clients = byClient(rows);
   const months = byMonth(rows);
   return (

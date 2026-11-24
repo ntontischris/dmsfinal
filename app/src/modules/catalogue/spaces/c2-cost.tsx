@@ -28,6 +28,8 @@ import type {
 import { C2Box } from "./c2-box";
 import { C2Form, C2Submit, Field } from "./c2-form";
 
+import "../../finance/spaces/money-lines.css";
+
 interface CostProps {
   item: CatalogueItem;
   hint: CostHint | null;
@@ -103,7 +105,7 @@ function ActualRow({ actual }: { actual: ActualHours | null }) {
 function CostFields({ item, caps, actual }: CostProps) {
   const hoursEditable = caps.canManageCost;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="c2-hours-shoot"
         label="Ώρες γυρίσματος"
@@ -139,7 +141,7 @@ function CostFields({ item, caps, actual }: CostProps) {
         value={directCostText(item)}
         hint="Ό,τι δεν είναι ώρες της ομάδας: drone, freelancer, μετακίνηση."
         input={
-          <span className="btn-row">
+          <span className="ml-quick">
             <input
               id="c2-direct-cost"
               name="directCost"
@@ -198,7 +200,7 @@ function CostSummary({ item, hint }: Pick<CostProps, "item" | "hint">) {
   const { min, target, max } = hint.multipliers;
   return (
     <>
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Κόστος ώρας</dt>
         <dd>
           {formatMoney(cost.hourCost)}

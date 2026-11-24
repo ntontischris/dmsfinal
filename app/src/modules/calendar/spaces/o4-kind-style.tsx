@@ -132,10 +132,9 @@ export function KindStyleForm({ kind }: { kind: BlockedKind }) {
           (δείχνει «Μετατροπή σε Γύρισμα» στον κλεισμένο χρόνο)
         </span>
       </label>
-      <div className="btn-row">
+      <div className="ml-quick o4k-row">
         <button
           type="submit"
-          className="button"
           data-primary="true"
           disabled={isPending || !isChanged}
         >

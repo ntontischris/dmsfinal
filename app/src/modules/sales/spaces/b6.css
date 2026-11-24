@@ -5,7 +5,9 @@
 & .b6-quick form { display: contents; }
 & .b6-quick button[data-primary] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
 & .b6-survivor { display: flex; align-items: center; gap: .4rem; font-size: .82rem; }
-& .b6-sides .compare { padding: 0 1rem 1rem; }
+& .b6-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; padding: 0 1rem 1rem; }
+& .b6-side { display: grid; gap: .4rem; min-width: 0; }
+& .b6-side-title { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0; font-size: .95rem; }
 }
 @media (max-width: 40rem) {
   [data-look='spaces'] .b6-quick { grid-column: 1 / -1; }

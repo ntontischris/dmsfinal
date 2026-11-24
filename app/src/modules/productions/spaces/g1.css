@@ -36,3 +36,17 @@
 & .g1-stage { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 & .g1-stage[data-active='false'] .input { color: var(--color-text-muted); }
 }
+/* Η όψη των εσωτερικών οθονών (money-lines.css): ετικέτα προειδοποίησης κίτρινη, φόρμα νέας Εσωτερικής, ομάδες Περιόδων πελάτη. */
+[data-look='spaces'] .g1-page {
+& .page-filters { margin: 0 0 var(--space-3); }
+& .g1-signals { align-content: center; }
+& .g1-client-filter { justify-content: flex-start; margin: 0 0 var(--space-3); }
+& .g1-new { display: grid; gap: var(--space-3); padding-top: var(--space-3); margin: 0 0 var(--space-4); }
+& .g1-new .note { grid-column: 1 / -1; }
+& .g1-group { display: grid; gap: var(--space-2); margin: 0 0 var(--space-4); }
+& .g1-group .ml-list { margin: 0; }
+& .g1-group .ml-meter { margin-top: var(--space-1); max-width: 18rem; }
+& .g1-stages { margin-top: var(--space-4); }
+& .g1-stage .ml-quick { justify-content: flex-start; }
+& .g1-board-card { border-radius: 14px; border-color: color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
+}

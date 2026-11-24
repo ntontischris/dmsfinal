@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useState, useTransition, type ReactNode } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 
 import { decideRescheduleRequest } from "../actions-booking";
@@ -16,6 +14,7 @@ import {
 import type { CancelItem, PendingItem, RescheduleItem } from "./e2-adapter";
 import { countLabel, waitingLabel } from "./e1-format";
 import type { FormAction } from "./e3-run";
+import { Line, Lines } from "./ml-parts";
 
 // Η ουρά «Αναμένουν έγκριση» (prototype `screens/e2-queue.tsx`): κάθε κουμπί καλεί το πραγματικό action· το αποτέλεσμα
 // μένει δίπλα στην κάρτα μέχρι να φρεσκάρει η λίστα.
@@ -28,7 +27,7 @@ function Result({ outcome }: { outcome: Outcome }) {
   return (
     <div role="status">
       <Badge tone={outcome.tone}>{outcome.label}</Badge>
-      <p className="muted">{outcome.text}</p>
+      {outcome.text && <small>{outcome.text}</small>}
     </div>
   );
 }
@@ -48,9 +47,9 @@ function ReasonBox({
 }) {
   const [reason, setReason] = useState("");
   return (
-    <div className="stack">
-      <label className="stack">
-        {label}
+    <div className="ml-fields">
+      <label className="ml-field" data-wide>
+        <span>{label}</span>
         <textarea
           className="input"
           rows={3}
@@ -58,17 +57,16 @@ function ReasonBox({
           onChange={(e) => setReason(e.target.value)}
         />
       </label>
-      <div className="btn-row">
+      <div className="ml-actions">
         <button
           type="button"
-          className="button"
           data-danger="true"
           disabled={!reason.trim() || isPending}
           onClick={() => onConfirm(reason.trim())}
         >
           {confirmLabel}
         </button>
-        <button type="button" className="button" onClick={onCancel}>
+        <button type="button" onClick={onCancel}>
           Άκυρο
         </button>
       </div>
@@ -86,10 +84,9 @@ function Actions({
   isPending: boolean;
 }) {
   return (
-    <span className="sx-actions">
+    <span className="ml-quick fl-row">
       <button
         type="button"
-        className="button"
         data-primary="true"
         disabled={isPending}
         onClick={yes.onClick}
@@ -98,7 +95,6 @@ function Actions({
       </button>
       <button
         type="button"
-        className="button"
         data-danger={no.isDanger}
         disabled={isPending}
         onClick={no.onClick}
@@ -133,7 +129,12 @@ interface E2QueueProps {
   empty: ReactNode;
 }
 
-export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) {
+export function E2Queue({
+  pending,
+  cancels,
+  reschedules,
+  empty,
+}: E2QueueProps) {
   const [outcomes, setOutcomes] = useState<Outcomes>({});
   // Η τελευταία απόφαση μένει ορατή κι όταν η γραμμή της φύγει από τη λίστα (και όταν η ουρά αδειάσει).
   const [last, setLast] = useState<Outcome | null>(null);
@@ -169,11 +170,15 @@ export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) 
   return (
     <>
       {last && <Result outcome={last} />}
-      <Panel label="Αναμένουν έγκριση" aside={pending.length} isFlush>
+      <section>
+        <header className="fl-group-head">
+          <h2 className="ml-box-title">Αναμένουν έγκριση</h2>
+          <small>{pending.length}</small>
+        </header>
         {pending.length === 0 && (
-          <p className="muted sx-pad">Κανένα Γύρισμα δεν περιμένει έγκριση.</p>
+          <p className="ml-empty">Κανένα Γύρισμα δεν περιμένει έγκριση.</p>
         )}
-        <RowList>
+        <Lines>
           {pending.map((item) => {
             const outcome = outcomes[item.id];
             const isRejecting = open?.id === item.id && open.kind === "reject";
@@ -224,17 +229,17 @@ export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) 
               </PendingRow>
             );
           })}
-        </RowList>
-      </Panel>
-      <Panel
-        label="Αιτήματα ακύρωσης μετά το Όριο"
-        aside={cancels.length}
-        isFlush
-      >
+        </Lines>
+      </section>
+      <section>
+        <header className="fl-group-head">
+          <h2 className="ml-box-title">Αιτήματα ακύρωσης μετά το Όριο</h2>
+          <small>{cancels.length}</small>
+        </header>
         {cancels.length === 0 && (
-          <p className="muted sx-pad">Κανένα αίτημα ακύρωσης δεν περιμένει.</p>
+          <p className="ml-empty">Κανένα αίτημα ακύρωσης δεν περιμένει.</p>
         )}
-        <RowList>
+        <Lines>
           {cancels.map((item) => {
             const outcome = outcomes[item.id];
             return (
@@ -272,11 +277,15 @@ export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) 
               </CancelRow>
             );
           })}
-        </RowList>
-      </Panel>
+        </Lines>
+      </section>
       {reschedules.length > 0 && (
-        <Panel label="Αιτήματα μετάθεσης" aside={reschedules.length} isFlush>
-          <RowList>
+        <section>
+          <header className="fl-group-head">
+            <h2 className="ml-box-title">Αιτήματα μετάθεσης</h2>
+            <small>{reschedules.length}</small>
+          </header>
+          <Lines>
             {reschedules.map((item) => {
               const outcome = outcomes[item.id];
               const isRefusing =
@@ -325,8 +334,8 @@ export function E2Queue({ pending, cancels, reschedules, empty }: E2QueueProps) 
                 </RescheduleRow>
               );
             })}
-          </RowList>
-        </Panel>
+          </Lines>
+        </section>
       )}
     </>
   );
@@ -342,42 +351,39 @@ function PendingRow({
   children: ReactNode;
 }) {
   return (
-    <>
-      <ListRow
-        isFaded={!!outcome}
-        lead={<Avatar name={item.clientName} size={40} />}
-        title={
-          <Title
-            name={item.clientName}
-            href={item.filmingHref}
-            production={item.production}
-          />
-        }
-        sub={`${item.when} (${item.hours} ώρες)`}
-        aside={
-          <Badge tone={item.isWaitingLong ? "attention" : "waiting"}>
-            περιμένει {waitingLabel(item.waitingHours)}
-          </Badge>
-        }
-      />
-      <li className="sx-extra" data-done={!!outcome}>
-        <dl className="dl">
-          <dt>Πότε</dt>
-          <dd>
-            {item.when} ({item.hours} ώρες)
-          </dd>
-          <dt>Παροχή</dt>
-          <dd>{item.balance ?? "—"}</dd>
-        </dl>
-        {children}
-        {outcome && <Result outcome={outcome} />}
-        {!outcome && (
-          <p className="note">
-            Η Έγκριση δεν χρειάζεται Συνεργείο· ορίζεται μετά, στο Γύρισμα.
-          </p>
-        )}
-      </li>
-    </>
+    <Line
+      isFaded={!!outcome}
+      thumb={item.clientName}
+      title={
+        <Title
+          name={item.clientName}
+          href={item.filmingHref}
+          production={item.production}
+        />
+      }
+      sub={`${item.when} (${item.hours} ώρες)`}
+      aside={
+        <Badge tone={item.isWaitingLong ? "attention" : "waiting"}>
+          περιμένει {waitingLabel(item.waitingHours)}
+        </Badge>
+      }
+    >
+      <dl className="ml-kv">
+        <dt>Πότε</dt>
+        <dd>
+          {item.when} ({item.hours} ώρες)
+        </dd>
+        <dt>Παροχή</dt>
+        <dd>{item.balance ?? "—"}</dd>
+      </dl>
+      {children}
+      {outcome && <Result outcome={outcome} />}
+      {!outcome && (
+        <p className="fl-note">
+          Η Έγκριση δεν χρειάζεται Συνεργείο· ορίζεται μετά, στο Γύρισμα.
+        </p>
+      )}
+    </Line>
   );
 }
 
@@ -391,43 +397,40 @@ function CancelRow({
   children: ReactNode;
 }) {
   return (
-    <>
-      <ListRow
-        isFaded={!!outcome}
-        lead={<Avatar name={item.clientName} size={40} />}
-        title={
-          <Title
-            name={item.clientName}
-            href={item.filmingHref}
-            production={item.production}
-          />
-        }
-        sub={item.when}
-        aside={
-          <Badge tone="attention">
-            σε {countLabel(item.hoursLeft, "ώρα", "ώρες")}
-          </Badge>
-        }
-      />
-      <li className="sx-extra" data-done={!!outcome}>
-        <dl className="dl">
-          <dt>Πότε</dt>
-          <dd>{item.when}</dd>
-          <dt>Ζητήθηκε</dt>
-          <dd>{item.requestedAt}</dd>
-          <dt>Λόγος</dt>
-          <dd>«{item.reason}»</dd>
-          <dt>Αν δεχτείς</dt>
-          <dd>
-            {item.burns
-              ? "Το Γύρισμα ακυρώνεται και η Παροχή καίγεται (η Συμφωνία το ορίζει)."
-              : "Το Γύρισμα ακυρώνεται και η Παροχή επιστρέφει."}
-          </dd>
-        </dl>
-        {children}
-        {outcome && <Result outcome={outcome} />}
-      </li>
-    </>
+    <Line
+      isFaded={!!outcome}
+      thumb={item.clientName}
+      title={
+        <Title
+          name={item.clientName}
+          href={item.filmingHref}
+          production={item.production}
+        />
+      }
+      sub={item.when}
+      aside={
+        <Badge tone="attention">
+          σε {countLabel(item.hoursLeft, "ώρα", "ώρες")}
+        </Badge>
+      }
+    >
+      <dl className="ml-kv">
+        <dt>Πότε</dt>
+        <dd>{item.when}</dd>
+        <dt>Ζητήθηκε</dt>
+        <dd>{item.requestedAt}</dd>
+        <dt>Λόγος</dt>
+        <dd>«{item.reason}»</dd>
+        <dt>Αν δεχτείς</dt>
+        <dd>
+          {item.burns
+            ? "Το Γύρισμα ακυρώνεται και η Παροχή καίγεται (η Συμφωνία το ορίζει)."
+            : "Το Γύρισμα ακυρώνεται και η Παροχή επιστρέφει."}
+        </dd>
+      </dl>
+      {children}
+      {outcome && <Result outcome={outcome} />}
+    </Line>
   );
 }
 
@@ -441,34 +444,31 @@ function RescheduleRow({
   children: ReactNode;
 }) {
   return (
-    <>
-      <ListRow
-        isFaded={!!outcome}
-        lead={<Avatar name={item.clientName} size={40} />}
-        title={
-          <Title
-            name={item.clientName}
-            href={item.filmingHref}
-            production={item.production}
-          />
-        }
-        sub={`${item.when} → ${item.newWhen}`}
-        aside={
-          item.slotProblem && <Badge tone="attention">{item.slotProblem}</Badge>
-        }
-      />
-      <li className="sx-extra" data-done={!!outcome}>
-        <dl className="dl">
-          <dt>Τώρα</dt>
-          <dd>{item.when}</dd>
-          <dt>Ζητά</dt>
-          <dd>{item.newWhen}</dd>
-          <dt>Ζητήθηκε</dt>
-          <dd>{item.requestedAt}</dd>
-        </dl>
-        {children}
-        {outcome && <Result outcome={outcome} />}
-      </li>
-    </>
+    <Line
+      isFaded={!!outcome}
+      thumb={item.clientName}
+      title={
+        <Title
+          name={item.clientName}
+          href={item.filmingHref}
+          production={item.production}
+        />
+      }
+      sub={`${item.when} → ${item.newWhen}`}
+      aside={
+        item.slotProblem && <Badge tone="attention">{item.slotProblem}</Badge>
+      }
+    >
+      <dl className="ml-kv">
+        <dt>Τώρα</dt>
+        <dd>{item.when}</dd>
+        <dt>Ζητά</dt>
+        <dd>{item.newWhen}</dd>
+        <dt>Ζητήθηκε</dt>
+        <dd>{item.requestedAt}</dd>
+      </dl>
+      {children}
+      {outcome && <Result outcome={outcome} />}
+    </Line>
   );
 }

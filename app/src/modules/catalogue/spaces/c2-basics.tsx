@@ -10,6 +10,8 @@ import { vatHint } from "./c2-adapter";
 import { C2Box, C2Sub } from "./c2-box";
 import { C2Form, C2Submit, Dash, Field } from "./c2-form";
 
+import "../../finance/spaces/money-lines.css";
+
 interface BasicsProps {
   item: CatalogueItem;
   caps: CatalogueCaps;
@@ -24,7 +26,7 @@ const PRICE_NOTE =
 function BasicsSection({ item, caps }: BasicsProps) {
   const editable = caps.canManage;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="c2-name"
         label="Όνομα"
@@ -90,7 +92,7 @@ function PriceSection({ item, caps, vatRate }: BasicsProps) {
   const hint = vatHint(item.price, vatRate);
   return (
     <C2Sub title="Τιμή">
-      <dl className="dl">
+      <dl className="ml-kv">
         <Field
           id="c2-price"
           label="Τιμή χωρίς ΦΠΑ"
@@ -102,7 +104,7 @@ function PriceSection({ item, caps, vatRate }: BasicsProps) {
             )
           }
           input={
-            <span className="btn-row">
+            <span className="ml-quick">
               <input
                 id="c2-price"
                 name="price"

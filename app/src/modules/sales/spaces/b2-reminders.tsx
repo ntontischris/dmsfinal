@@ -18,9 +18,11 @@ function DoneButton({ reminderId }: { reminderId: string }) {
   return (
     <form onSubmit={onSubmit} style={{ display: "inline" }}>
       <input type="hidden" name="reminderId" value={reminderId} />
-      <button type="submit" className="button" disabled={isPending}>
-        Έγινε
-      </button>
+      <span className="ml-quick" style={{ display: "inline-flex" }}>
+        <button type="submit" disabled={isPending}>
+          Έγινε
+        </button>
+      </span>
       {state.error && (
         <span className="note" role="alert">
           {state.error}
@@ -60,16 +62,11 @@ function AddForm({
           {state.error}
         </p>
       )}
-      <span className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-primary="true"
-          disabled={isPending}
-        >
+      <span className="ml-quick" style={{ display: "inline-flex" }}>
+        <button type="submit" data-primary="true" disabled={isPending}>
           Αποθήκευση
         </button>
-        <button type="button" className="button" onClick={onClose}>
+        <button type="button" onClick={onClose}>
           Άκυρο
         </button>
       </span>
@@ -99,13 +96,11 @@ export function ClientReminders({ clientId, reminders }: ClientRemindersProps) {
       {isAdding ? (
         <AddForm clientId={clientId} onClose={() => setIsAdding(false)} />
       ) : (
-        <button
-          type="button"
-          className="button"
-          onClick={() => setIsAdding(true)}
-        >
-          Υπενθύμισέ με
-        </button>
+        <span className="ml-quick" style={{ display: "inline-flex" }}>
+          <button type="button" onClick={() => setIsAdding(true)}>
+            Υπενθύμισέ με
+          </button>
+        </span>
       )}
     </>
   );

@@ -20,6 +20,7 @@ import { P1_CLEAR_HREF, p1RowOf } from "./p1-adapter";
 import { AuditFilterBar } from "./p1-filters";
 import { AuditTable } from "./p1-table";
 
+import "../../finance/spaces/money-lines.css";
 import "./p1.css";
 
 interface SpacesAuditProps {
@@ -33,21 +34,18 @@ function Pager({ page, query }: { page: AuditPage; query: AuditQuery }) {
   const last = page.items.at(-1);
   if (!query.cursor && !(page.hasMore && last)) return null;
   return (
-    <div className="btn-row">
+    <p className="ml-actions">
       {query.cursor && (
-        <Link className="button" href={auditHref(query.filters)}>
-          {AUDIT_FIRST_PAGE}
-        </Link>
+        <Link href={auditHref(query.filters)}>{AUDIT_FIRST_PAGE}</Link>
       )}
       {page.hasMore && last && (
         <Link
-          className="button"
           href={auditHref(query.filters, { at: last.at, id: String(last.id) })}
         >
           {AUDIT_OLDER}
         </Link>
       )}
-    </div>
+    </p>
   );
 }
 
@@ -97,7 +95,7 @@ export async function SpacesAudit({
       </div>
     );
   return (
-    <div data-spaces>
+    <div data-spaces className="ml-stack">
       <p className="note">{AUDIT_NOTE}</p>
       <AuditFilterBar
         filters={query.filters}

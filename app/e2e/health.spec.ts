@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 
-import { card, project, signIn } from "./sales-parts";
+import { project, signIn } from "./sales-parts";
 
 // Υγεία συστήματος (P2, #215) από άκρη σε άκρη. Οι αποτυχημένες αποστολές και το Γεγονός που κόλλησε μπαίνουν με service
 // role (μόνο προετοιμασία), με το όνομα του project, γιατί τα δύο projects μοιράζονται μία βάση. Οι ενέργειες γίνονται
@@ -10,7 +10,6 @@ test.describe.configure({ mode: "serial", retries: 0 });
 
 const PATH = "/app/health";
 const TITLE = "Υγεία συστήματος";
-
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -63,7 +62,7 @@ async function stuckEvent(P: string): Promise<string> {
 
 // Η γραμμή μιας αποστολής ή ενός Γεγονότος, από το κείμενό της (όνομα παραλήπτη ή λόγος με το όνομα του project).
 async function confirm(page: Page, text: string, label: string) {
-  const item = page.locator("li.part-row", { hasText: text });
+  const item = page.locator("li.ml-line", { hasText: text });
   await item.getByRole("button", { name: label, exact: true }).click();
   await item.getByRole("button", { name: `Ναι: ${label}` }).click();
   await expect(item).toHaveCount(0);
@@ -93,7 +92,11 @@ test("ο Ιδιοκτήτης βλέπει τη μπάρα, αγνοεί, ξαν
   ).toContainText(/θέλ(ει|ουν) προσοχή/);
   await expect(page.getByTestId("external-not-set-up")).toBeVisible();
   await expect(
-    card(page, "Αποστολές που απέτυχαν").getByText("θέλει προσοχή").first(),
+    page
+      .locator("details.ml-box")
+      .filter({ hasText: "Αποστολές που απέτυχαν" })
+      .getByText("θέλει προσοχή")
+      .first(),
   ).toBeVisible();
 
   await confirm(page, ignored, "Αγνόησε");
@@ -103,7 +106,7 @@ test("ο Ιδιοκτήτης βλέπει τη μπάρα, αγνοεί, ξαν
   // Η αγνοημένη αποστολή μένει στο Ιστορικό αποστολών.
   await page.goto("/app/settings/sends?channel=email");
   await expect(
-    page.locator("li.part-row", { hasText: ignored }).first(),
+    page.locator("li.ml-line", { hasText: ignored }).first(),
   ).toContainText("αγνοήθηκε");
 });
 
@@ -125,17 +128,15 @@ test("η κάρτα Υγείας στο Σήμερα ανοίγει την Υγ�
   page,
 }) => {
   await signIn(page, "owner@example.com");
-  await page.waitForLoadState("networkidle");
-  // Με κάτι προς προσοχή η κάρτα στέκεται πάνω-πάνω· αλλιώς η Υγεία είναι μια γραμμή στο «Και άλλα».
-  const alert = card(page, TITLE).getByRole("link", {
-    name: new RegExp(`: ${TITLE}$`),
-  });
+  // Με κάτι προς προσοχή η Υγεία είναι η επείγουσα γραμμή «Κάτι δεν λειτουργεί» της κάρτας «Η εταιρεία δουλεύει»·
+  // όταν όλα λειτουργούν η Σήμερα δεν τη δείχνει καθόλου, και η Υγεία ανοίγει από τη διεύθυνσή της.
+  await page.goto("/app?g=company");
+  await expect(page.getByRole("heading", { level: 1, name: "Σήμερα" })).toBeVisible();
+  const alert = page
+    .getByRole("main")
+    .getByRole("link", { name: "Άνοιξε: Κάτι δεν λειτουργεί", exact: true });
   if ((await alert.count()) > 0) await alert.click();
-  else {
-    const more = page.locator("details.a1-others");
-    await more.locator("summary").click();
-    await more.getByRole("link", { name: TITLE, exact: true }).click();
-  }
+  else await page.goto(PATH);
   await expect(page).toHaveURL(/\/app\/health$/);
   // Οι Χώροι δεν έχουν τίτλο h1 στη σελίδα· η Υγεία φαίνεται από την κάρτα του εξωτερικού ελέγχου, που υπάρχει πάντα.
   await expect(

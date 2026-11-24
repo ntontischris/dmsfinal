@@ -7,6 +7,8 @@ import { usesText } from "./c2-adapter";
 import { RETIRE_NOTE, RETIRED_NOTE } from "./c2-archive";
 import { C2Box } from "./c2-box";
 
+import "../../finance/spaces/money-lines.css";
+
 const usageHint = (item: CatalogueItem): string =>
   [
     item.uses === null ? null : `σε ${item.uses} Συμφωνίες`,
@@ -26,7 +28,7 @@ export function C2Usage({
 }) {
   return (
     <C2Box title="Χρήση και ιστορικό" hint={usageHint(item)}>
-      <dl className="dl">
+      <dl className="ml-kv">
         {item.uses !== null && (
           <>
             <dt>Σε χρήση</dt>

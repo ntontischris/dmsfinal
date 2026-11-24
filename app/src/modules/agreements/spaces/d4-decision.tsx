@@ -54,17 +54,16 @@ export function DecisionForm({
           <li>{state.error}</li>
         </ul>
       )}
-      <div className="btn-row">
+      <div className="ml-quick">
         <button
           type="submit"
-          className="button"
           data-primary={!isReject}
           data-danger={isReject}
           disabled={isPending || (isReject && !comment.trim())}
         >
           {isReject ? "Απορρίπτω" : "Εγκρίνω"}
         </button>
-        <button type="button" className="button" onClick={onCancel}>
+        <button type="button" onClick={onCancel}>
           Άκυρο
         </button>
       </div>

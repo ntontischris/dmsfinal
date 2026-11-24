@@ -2,9 +2,7 @@ import Link from "next/link";
 
 import { can, getViewer, isClientViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { KNOWLEDGE_PATH } from "../helpers";
 import { CLIENT_HELP_NOTE, PRICES_NOTE } from "../labels";
@@ -18,16 +16,23 @@ import {
   type A8Row,
 } from "./a8-adapter";
 
+import "../../finance/spaces/money-lines.css";
 import "./a8.css";
+import "./k.css";
 
 // Ο Βοηθός της εφαρμογής είναι το πλωτό κουμπί (δεν έχει σελίδα A9): η σημείωση δεν έχει σύνδεσμο.
-function AskAssistant() {
-  return <p className="note">Δοκίμασε να ρωτήσεις τον Βοηθό.</p>;
+function Empty({ q }: { q: string }) {
+  return (
+    <p className="ml-empty">
+      {q ? `Τίποτα για «${q}».` : "Δεν υπάρχει ακόμα Γνώση για σένα."} Δοκίμασε
+      να ρωτήσεις τον Βοηθό.
+    </p>
+  );
 }
 
 function SearchForm({ q }: { q: string }) {
   return (
-    <form className="a8-search" method="get" role="search">
+    <form className="k-search ml-actions" method="get" role="search">
       <input
         className="input"
         type="search"
@@ -37,53 +42,47 @@ function SearchForm({ q }: { q: string }) {
         aria-label="Αναζήτηση"
         maxLength={200}
       />
-      <button className="button" type="submit">
+      <button type="submit" data-primary>
         Αναζήτηση
       </button>
     </form>
   );
 }
 
-function ItemRow({ row }: { row: A8Row }) {
+function ItemLine({ row }: { row: A8Row }) {
   return (
-    <ListRow
-      lead={
-        <span className="a8-kind" aria-hidden="true">
-          {row.letter}
-        </span>
-      }
-      href={row.href}
-      title={row.title}
-      sub={
-        <>
-          <span className="part-sub">Περίληψη: {row.summary}</span>
-          <span className="part-sub">{row.extra}</span>
-        </>
-      }
-      aside={<Badge>{row.kindLabel}</Badge>}
-    />
+    <li className="ml-line">
+      <span className="ml-thumb" aria-hidden="true">
+        {row.letter}
+      </span>
+      <div className="ml-main">
+        <Link className="k-link" href={row.href}>
+          <strong>{row.title}</strong>
+        </Link>
+        <small>Περίληψη: {row.summary}</small>
+        <small>{row.extra}</small>
+      </div>
+      <span className="ml-tag">{row.kindLabel}</span>
+    </li>
   );
 }
 
 function Groups({ groups, q }: { groups: readonly A8Group[]; q: string }) {
-  if (groups.length === 0)
-    return (
-      <StateNotice
-        kind="empty"
-        title={q ? `Τίποτα για «${q}»` : "Δεν υπάρχει ακόμα Γνώση για σένα"}
-      >
-        <AskAssistant />
-      </StateNotice>
-    );
+  if (groups.length === 0) return <Empty q={q} />;
   return groups.map((group) => (
-    <Panel key={group.id} label={group.title} aside={group.rows.length} isFlush>
-      {group.blurb && <p className="muted a8-blurb">{group.blurb}</p>}
-      <RowList>
+    <section key={group.id}>
+      <header className="k-group">
+        <h2>
+          {group.title} · {group.rows.length}
+        </h2>
+        {group.blurb && <p>{group.blurb}</p>}
+      </header>
+      <ul className="ml-list">
         {group.rows.map((row) => (
-          <ItemRow key={row.id} row={row} />
+          <ItemLine key={row.id} row={row} />
         ))}
-      </RowList>
-    </Panel>
+      </ul>
+    </section>
   ));
 }
 
@@ -103,9 +102,7 @@ async function groupsOf(
     return found.ok ? searchGroups(q, found.data) : null;
   }
   const library = await getLibrary();
-  return library.ok
-    ? onlySection(libraryGroups(library.data), section)
-    : null;
+  return library.ok ? onlySection(libraryGroups(library.data), section) : null;
 }
 
 // A8 Γνώση στη νέα εμφάνιση (prototype `screens/A8.tsx`): οι Ενότητες με τα δημοσιευμένα στοιχεία του Κοινού μου.
@@ -122,24 +119,19 @@ export async function SpacesKnowledge({ q, section }: KnowledgeView) {
   const isClient = isClientViewer(viewer);
   const isOneSection = section !== null && !q;
   const groups = await groupsOf({ q, section }, isClient);
+  // Ο πελάτης δεν έχει Κατάλογο· η σημείωση τον στέλνει στη Συνομιλία με την ομάδα.
   return (
-    <div data-spaces>
-      <div className="toolbar">
-        {isOneSection && (
-          <Link className="button" href={KNOWLEDGE_PATH}>
-            ← Όλη η Γνώση
-          </Link>
-        )}
-        <span className="grow" />
-        {can(viewer, "knowledge.manage") && (
-          <Link className="button" href={hrefOf("L1")}>
-            Διαχείριση Γνώσης →
-          </Link>
-        )}
+    <div data-spaces className="k">
+      <div className="ml-head">
+        <p>{isClient ? CLIENT_HELP_NOTE : PRICES_NOTE}</p>
+        <div className="ml-quick">
+          {isOneSection && <Link href={KNOWLEDGE_PATH}>← Όλη η Γνώση</Link>}
+          {can(viewer, "knowledge.manage") && (
+            <Link href={hrefOf("L1")}>Διαχείριση Γνώσης →</Link>
+          )}
+        </div>
       </div>
       <SearchForm q={q} />
-      {/* Ο πελάτης δεν έχει Κατάλογο· τον στέλνουμε στη Συνομιλία με την ομάδα. */}
-      <p className="note">{isClient ? CLIENT_HELP_NOTE : PRICES_NOTE}</p>
       {groups === null ? (
         <ErrorNotice what="η Γνώση" />
       ) : (

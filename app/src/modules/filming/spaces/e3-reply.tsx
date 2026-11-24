@@ -29,7 +29,7 @@ export function E3Reply({
       setIsAsking(false),
     );
   return (
-    <div className="stack">
+    <div className="fl-box-body">
       <p>
         <Badge tone={reply.isAnswered ? responseTone(myWord) : "attention"}>
           {reply.isAnswered ? myWord : "Περιμένει απάντηση"}
@@ -38,11 +38,10 @@ export function E3Reply({
           <span className="muted">Έκδοση {reply.version}</span>
         )}
       </p>
-      <div className="btn-row">
+      <div className="ml-quick fl-row">
         {reply.canConfirm && (
           <button
             type="button"
-            className="button"
             data-primary="true"
             onClick={() => respond("confirmed")}
             disabled={isPending}
@@ -53,7 +52,6 @@ export function E3Reply({
         {reply.canDecline && (
           <button
             type="button"
-            className="button"
             data-danger="true"
             onClick={() => setIsAsking(true)}
           >
@@ -63,32 +61,26 @@ export function E3Reply({
       </div>
       <LastDone log={result ? [result.text] : []} tone={result?.tone ?? "ok"} />
       {isAsking && (
-        <div className="stack">
-          <label className="stack">
-            Λόγος (υποχρεωτικός)
+        <div className="ml-fields">
+          <label className="ml-field" data-wide>
+            <span>Λόγος (υποχρεωτικός)</span>
             <textarea
-              className="input"
               rows={3}
               maxLength={500}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
           </label>
-          <div className="btn-row">
+          <div className="ml-actions">
             <button
               type="button"
-              className="button"
-              data-danger="true"
+              data-primary="true"
               disabled={!reason.trim() || isPending}
               onClick={() => respond("declined", reason.trim())}
             >
               Στέλνω «δεν μπορώ»
             </button>
-            <button
-              type="button"
-              className="button"
-              onClick={() => setIsAsking(false)}
-            >
+            <button type="button" onClick={() => setIsAsking(false)}>
               Άκυρο
             </button>
           </div>

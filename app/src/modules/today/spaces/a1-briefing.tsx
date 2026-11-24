@@ -1,8 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { StateNotice } from "@/spaces/screens/shared";
-
 import { receivedFor } from "../finance-facts";
 import { getMonthReceived, getToInvoiceTotal } from "../finance-reads";
 import { arrangeToday } from "../layout";
@@ -25,6 +23,7 @@ import { athensStamp, type Built } from "./a1-adapter";
 import { briefOf } from "./a1-brief";
 import { rankDecisions } from "./a1-decisions";
 import { isNewSince, newChipOf, withoutLater } from "./a1-later";
+import { TodayNotice } from "./a1-lines";
 import { leadOf } from "./a1-lead";
 import { listOf, remainingOf } from "./a1-list";
 import { TodayList, TopLine } from "./a1-list-view";
@@ -204,10 +203,10 @@ export async function TeamBriefing({
       {layout.isAllHidden ? (
         <>
           <TopLine topline={topline} panels={panels} />
-          <StateNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
+          <TodayNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
             Πάτα «Προσαρμογή» για να εμφανίσεις όσες θέλεις, ή{" "}
             <Link href={CUSTOMIZE_PATH}>γύρνα στην προεπιλογή</Link>.
-          </StateNotice>
+          </TodayNotice>
         </>
       ) : (
         <TodayList

@@ -1,10 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 import { hrefOf } from "@/spaces/data/screens";
-import { Badge } from "@/spaces/screens/shared";
 
 import { EXTERNAL, redNote } from "../labels";
 import type { P2Job } from "./p2-adapter";
@@ -12,28 +9,27 @@ import type { P2Job } from "./p2-adapter";
 interface CardProps {
   title: string;
   red?: boolean;
-  badge?: ReactNode;
+  // Η κατάσταση στη γραμμή του κουτιού· αλλιώς «θέλει προσοχή» / «εντάξει».
+  status?: string;
+  // Ανοιχτό από την αρχή· αλλιώς ανοίγει μόνο όταν κάτι θέλει προσοχή.
+  open?: boolean;
   children: ReactNode;
 }
 
-export function HealthCard({ title, red, badge, children }: CardProps) {
+// Μία ενότητα της Υγείας: κλειστό κουτί που ανοίγει μόνο του όταν κάτι θέλει προσοχή (τελεία REC).
+export function HealthCard({ title, red, status, open, children }: CardProps) {
   return (
-    <div className="p2-card" data-red={red ? "true" : undefined}>
-      <Panel
-        label={title}
-        aside={
-          <>
-            {badge ?? (
-              <Badge tone={red ? "attention" : "strong"}>
-                {red ? "θέλει προσοχή" : "εντάξει"}
-              </Badge>
-            )}
-          </>
-        }
-      >
-        {children}
-      </Panel>
-    </div>
+    <details
+      className="ml-box p2-card"
+      data-red={red ? "true" : undefined}
+      open={open || red || undefined}
+    >
+      <summary>
+        <h2 className="ml-box-title">{title}</h2>
+        <small>{status ?? (red ? "θέλει προσοχή" : "εντάξει")}</small>
+      </summary>
+      {children}
+    </details>
   );
 }
 
@@ -52,13 +48,8 @@ export function ExternalCheckCard({
   return (
     <HealthCard
       title={EXTERNAL.title}
-      badge={
-        monitorUrl ? (
-          <Badge tone="ok">στημένος</Badge>
-        ) : (
-          <Badge tone="strong">δεν έχει στηθεί</Badge>
-        )
-      }
+      status={monitorUrl ? "στημένος" : "δεν έχει στηθεί"}
+      open={!monitorUrl}
     >
       {monitorUrl ? (
         <p className="muted">
@@ -72,9 +63,9 @@ export function ExternalCheckCard({
           {EXTERNAL.notSetUp}
         </p>
       )}
-      <Link href={hrefOf("P2", { view: "down" })} className="button">
-        {EXTERNAL.downTitle}
-      </Link>
+      <p className="ml-actions">
+        <Link href={hrefOf("P2", { view: "down" })}>{EXTERNAL.downTitle}</Link>
+      </p>
     </HealthCard>
   );
 }
@@ -88,14 +79,12 @@ export function JobsCard({
 }) {
   return (
     <HealthCard title="Προγραμματισμένες εργασίες" red={isRed}>
-      <RowList>
+      <ul className="ml-list">
         {jobs.map((j) => (
-          <ListRow
-            key={j.id}
-            isHighlighted={j.isLate}
-            title={j.name}
-            sub={
-              <>
+          <li key={j.id} className="ml-line">
+            <span className="ml-main">
+              <strong>{j.name}</strong>
+              <small>
                 {j.sub}
                 {j.error && (
                   <>
@@ -103,12 +92,19 @@ export function JobsCard({
                     Τελευταίο σφάλμα: {j.error}
                   </>
                 )}
-              </>
-            }
-            aside={<Badge tone={j.badge.tone}>{j.badge.label}</Badge>}
-          />
+              </small>
+            </span>
+            <span
+              className="ml-tag"
+              data-attention={
+                j.isLate || j.badge.tone === "attention" || undefined
+              }
+            >
+              {j.badge.label}
+            </span>
+          </li>
         ))}
-      </RowList>
+      </ul>
       {isRed && <RedNote event={50} />}
     </HealthCard>
   );

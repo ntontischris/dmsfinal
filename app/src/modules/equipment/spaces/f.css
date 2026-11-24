@@ -25,3 +25,18 @@
 & .e-checks label { flex-direction: row; align-items: center; gap: var(--space-2); }
 & .e3-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 }
+/* Ο Εξοπλισμός (F1–F3) στη μορφή των «Χρημάτων» (money-lines.css). Μόνο tokens. */
+[data-look='spaces'] .f {
+& .f-box-body { display: grid; gap: .8rem; min-width: 0; overflow-wrap: anywhere; }
+& .f-note { margin: 0; color: var(--color-text-muted); font-size: .85rem; }
+& .f-filters { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 1rem; }
+& .f-filters .input[type='search'] { flex: 1 1 14rem; }
+& .f-filters label { display: inline-flex; align-items: center; gap: .3rem; font-size: .88rem; color: var(--color-text-muted); }
+& .f-group-units > summary { cursor: pointer; list-style: none; }
+& .f-group-units > summary small { color: var(--color-text-muted); }
+& .f-group-units .ml-list { margin-top: .6rem; }
+& .ml-line .ml-main > a:first-child { color: inherit; text-decoration: none; }
+& .ml-line .ml-main > a:first-child:hover strong { color: var(--color-accent); }
+& .ml-line[data-faded] { opacity: .6; }
+& .f-hero-actions { display: grid; gap: .6rem; min-width: 0; margin-top: .8rem; }
+}

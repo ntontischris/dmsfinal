@@ -12,7 +12,6 @@ import {
   textParagraphs,
 } from "@/lib/email/system-texts";
 import { useKeptForm } from "@/lib/use-kept-form";
-import { Panel } from "@/spaces/kit/panel";
 
 import {
   resetSystemMessage,
@@ -56,7 +55,11 @@ function Preview({
   defaults: SystemDefault;
 }) {
   return (
-    <Panel label="Προεπισκόπηση" aside="με φανταστικές τιμές">
+    <details className="ml-box" open>
+      <summary>
+        <h2 className="ml-box-title">Προεπισκόπηση</h2>
+        <small>με φανταστικές τιμές</small>
+      </summary>
       <div className="compare">
         <PreviewSide
           title="Ελληνικά"
@@ -69,7 +72,7 @@ function Preview({
           body={orDefault(values.bodyEn, defaults.body.en)}
         />
       </div>
-    </Panel>
+    </details>
   );
 }
 
@@ -87,16 +90,14 @@ function ResetForm({ id, code }: { id: string; code: string }) {
 interface EditorProps {
   message: SystemMessage;
   defaults: SystemDefault;
-  aside: ReactNode;
   // Τα στοιχεία του Μηνύματος (πότε φεύγει, μεταβλητές) πάνω από τα πεδία, από τον server.
   children: ReactNode;
 }
 
-// Ο editor ζει σε ένα client component ώστε η προεπισκόπηση (έξω από το Panel, όπως στο prototype) να ακολουθεί τα πεδία.
+// Ο editor ζει σε ένα client component ώστε η προεπισκόπηση (σε δικό της κουτί, όπως στο prototype) να ακολουθεί τα πεδία.
 export function SystemMessageEditor({
   message,
   defaults,
-  aside,
   children,
 }: EditorProps) {
   const [values, setValues] = useState<TextValues>(() =>
@@ -105,38 +106,37 @@ export function SystemMessageEditor({
   const resetId = `k2-reset-${message.code}`;
   return (
     <>
-      <Panel label={defaults.title} aside={aside}>
+      <details className="ml-box" open>
+        <summary>
+          <h2 className="ml-box-title">Κείμενο</h2>
+          <small>θέμα και σώμα, ελληνικά και αγγλικά</small>
+        </summary>
         {children}
         <KForm
-        action={saveSystemMessage}
-        submitLabel="Αποθήκευση"
-        className="k2-form"
-        onlyWhenChanged
-        extraButtons={
-          message.isEdited && (
-            <button
-              type="submit"
-              form={resetId}
-              className="button"
-              data-danger="true"
-            >
-              Επαναφορά αρχικού κειμένου
-            </button>
-          )
-        }
-      >
-        <input type="hidden" name="code" value={message.code} />
-        <KTextFields
-          idPrefix={message.code}
-          layout="k2"
-          hasSubject
-          values={values}
-          variables={message.variables}
-          required={message.required}
-          subjectExcluded={SUBJECT_FORBIDDEN}
-          onChange={setValues}
-        />
-      </KForm>
+          action={saveSystemMessage}
+          submitLabel="Αποθήκευση"
+          className="k2-form"
+          onlyWhenChanged
+          extraButtons={
+            message.isEdited && (
+              <button type="submit" form={resetId} data-danger="true">
+                Επαναφορά αρχικού κειμένου
+              </button>
+            )
+          }
+        >
+          <input type="hidden" name="code" value={message.code} />
+          <KTextFields
+            idPrefix={message.code}
+            layout="k2"
+            hasSubject
+            values={values}
+            variables={message.variables}
+            required={message.required}
+            subjectExcluded={SUBJECT_FORBIDDEN}
+            onChange={setValues}
+          />
+        </KForm>
         {message.isEdited && (
           <ResetForm key={message.updatedAt} id={resetId} code={message.code} />
         )}
@@ -145,7 +145,7 @@ export function SystemMessageEditor({
           παίρνουν το νέο κείμενο σε έως 5′. Ένα κενό πεδίο κρατά το αρχικό
           κείμενο.
         </p>
-      </Panel>
+      </details>
       <Preview values={values} defaults={defaults} />
     </>
   );

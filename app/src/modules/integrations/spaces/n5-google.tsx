@@ -6,11 +6,10 @@ import {
   runGoogleSyncNow,
   type GoogleView,
 } from "@/modules/google";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 
 import { N5Form } from "./n5-forms";
 
-// Η ρύθμιση του Google ημερολογίου μέσα στην κάρτα «Google ημερολόγιο» της N5, στη μορφή της κάρτας (`.button`, `.note`).
+// Η ρύθμιση του Google ημερολογίου μέσα στην κάρτα «Google ημερολόγιο» της N5, στη μορφή του κουτιού (`.ml-actions`, `.note`).
 // Ίδιες ενέργειες με την κλασική κάρτα (createGoogleCalendar, runGoogleSyncNow, resyncGoogle).
 
 interface GoogleSetupProps {
@@ -26,13 +25,13 @@ function CreateCalendar({ ownerEmail }: { ownerEmail: string }) {
       submitLabel="Δημιουργία ημερολογίου"
       pendingLabel="Δημιουργία…"
       isPrimary
-      className="stack n5-fields"
+      className="ml-fields"
     >
-      <p className="muted">
+      <p className="muted ml-field" data-wide>
         Φτιάχνει ξεχωριστό ημερολόγιο «Devre Media · Γυρίσματα» και το μοιράζει
         σε αυτό το email (με δικαίωμα επεξεργασίας).
       </p>
-      <span className="stack">
+      <span className="ml-field">
         <label htmlFor="n5-google-shared">Email για κοινοποίηση</label>
         <input
           id="n5-google-shared"
@@ -51,22 +50,14 @@ function CreateCalendar({ ownerEmail }: { ownerEmail: string }) {
 function Connected({ view }: { view: GoogleView }) {
   return (
     <>
-      <div className="n5-bleed">
-        <RowList>
-          <ListRow
-            title="Μοιρασμένο με"
-            aside={<strong>{view.sharedWith ?? "—"}</strong>}
-          />
-          <ListRow
-            title="Τελευταίος συγχρονισμός"
-            aside={<strong>{ageLabel(view.lastSyncAt)}</strong>}
-          />
-          <ListRow
-            title="Ουρά"
-            aside={<strong>{pendingLabel(view.pendingWrites)}</strong>}
-          />
-        </RowList>
-      </div>
+      <dl className="ml-kv">
+        <dt>Μοιρασμένο με</dt>
+        <dd>{view.sharedWith ?? "—"}</dd>
+        <dt>Τελευταίος συγχρονισμός</dt>
+        <dd>{ageLabel(view.lastSyncAt)}</dd>
+        <dt>Ουρά</dt>
+        <dd>{pendingLabel(view.pendingWrites)}</dd>
+      </dl>
       {view.lastError && (
         <p className="note n5-warning" role="alert">
           Τελευταίο σφάλμα: {view.lastError}

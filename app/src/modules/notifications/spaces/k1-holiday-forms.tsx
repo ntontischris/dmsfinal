@@ -49,10 +49,9 @@ export function HolidaySwitch({
 export function HolidayRemove({ id, label }: { id: string; label: string }) {
   const { state, isPending, onSubmit, formRef } = useKeptForm(removeHoliday);
   return (
-    <form ref={formRef} onSubmit={onSubmit}>
+    <form ref={formRef} onSubmit={onSubmit} className="ml-quick">
       <input type="hidden" name="id" value={id} />
       <button
-        className="button"
         data-danger="true"
         type="submit"
         disabled={isPending}
@@ -77,9 +76,11 @@ export function HolidayAdd() {
   });
   if (!isOpen)
     return (
-      <button className="button" type="button" onClick={() => setIsOpen(true)}>
-        Προσθήκη αργίας
-      </button>
+      <div className="ml-quick k1-left">
+        <button type="button" onClick={() => setIsOpen(true)}>
+          Προσθήκη αργίας
+        </button>
+      </div>
     );
   return (
     <form
@@ -107,20 +108,11 @@ export function HolidayAdd() {
         <input type="checkbox" name="yearly" defaultChecked />
         Κάθε χρόνο
       </label>
-      <span className="btn-row">
-        <button
-          className="button"
-          data-primary="true"
-          type="submit"
-          disabled={isPending}
-        >
+      <span className="ml-quick">
+        <button data-primary="true" type="submit" disabled={isPending}>
           Προσθήκη αργίας
         </button>
-        <button
-          className="button"
-          type="button"
-          onClick={() => setIsOpen(false)}
-        >
+        <button type="button" onClick={() => setIsOpen(false)}>
           Ακύρωση
         </button>
       </span>

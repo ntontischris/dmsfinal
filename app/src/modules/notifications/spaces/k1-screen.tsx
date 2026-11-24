@@ -10,6 +10,7 @@ import { KSubnav } from "./k-subnav";
 import { Catalogue, K1Filters } from "./k1-list";
 import { parseGroup, parseOnly } from "./k1-model";
 
+import "../../finance/spaces/money-lines.css";
 import "./k1.css";
 
 export function K1Denied() {
@@ -34,9 +35,15 @@ export function K1Note() {
   );
 }
 
-export function K1Frame({ children }: { children: ReactNode }) {
+interface K1FrameProps {
+  hero?: ReactNode;
+  children: ReactNode;
+}
+
+export function K1Frame({ hero, children }: K1FrameProps) {
   return (
     <div data-spaces>
+      {hero}
       <KSubnav current="automations" />
       {children}
       <K1Note />

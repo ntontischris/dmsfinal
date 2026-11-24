@@ -26,20 +26,18 @@ export function TitleEditor({
     return (
       <>
         {title}{" "}
-        <button
-          type="button"
-          className="button"
-          onClick={() => setIsEditing(true)}
-        >
-          Μετονομασία
-        </button>
+        <span className="ml-quick">
+          <button type="button" onClick={() => setIsEditing(true)}>
+            Μετονομασία
+          </button>
+        </span>
       </>
     );
   return (
     <SpacesActionForm
       action={updateOpportunity}
       submitLabel="Αποθήκευση"
-      className="toolbar"
+      className="ml-row"
     >
       <input type="hidden" name="opportunityId" value={opportunityId} />
       <input type="hidden" name="stageId" value={stageId} />

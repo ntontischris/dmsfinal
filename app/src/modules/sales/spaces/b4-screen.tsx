@@ -33,12 +33,14 @@ import { ActivitiesBox, ControlBox } from "./b4-boxes";
 import { FollowUp } from "./b4-controls";
 import { ForecastBox } from "./b4-forecast-panel";
 import { OpportunityHero } from "./b4-hero";
+import { OpenOnHash } from "./b4-open-on-hash";
 
 import "../../finance/spaces/money-lines.css";
 import "./b4-lines.css";
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
   <div data-spaces className="ml-stack b4-page">
+    <OpenOnHash />
     {children}
   </div>
 );
@@ -68,13 +70,9 @@ function Missing() {
           και σε όσους διαχειρίζονται όλους τους Πελάτες. Ίσως ο σύνδεσμος είναι
           παλιός.
         </p>
-        <p className="btn-row">
-          <Link className="button" href={hrefOf("B3")}>
-            Πίσω στο Pipeline
-          </Link>
-          <Link className="button" href={hrefOf("B1")}>
-            Λίστα Πελατών
-          </Link>
+        <p className="ml-quick">
+          <Link href={hrefOf("B3")}>Πίσω στο Pipeline</Link>
+          <Link href={hrefOf("B1")}>Λίστα Πελατών</Link>
         </p>
       </StateNotice>
     </Frame>

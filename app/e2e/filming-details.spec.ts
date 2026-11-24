@@ -13,8 +13,9 @@ import { button, project, shot, signIn } from "./sales-parts";
 test.describe.configure({ mode: "serial", retries: 0 });
 test.setTimeout(90_000);
 
+// Τα Στοιχεία χώρου είναι μέρος του κουτιού «Στοιχεία»: το εσωτερικό section, όχι το κουτί γύρω του.
 const detailsPanel = (page: Page) =>
-  page.locator("section", {
+  page.locator("section.fl-box-body", {
     has: page.getByRole("heading", { name: "Στοιχεία χώρου", exact: true }),
   });
 

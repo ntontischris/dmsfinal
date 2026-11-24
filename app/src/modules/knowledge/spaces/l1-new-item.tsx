@@ -21,13 +21,14 @@ export function NewItem({ sections }: NewItemProps) {
   const [kind, setKind] = useState<ItemKind | null>(null);
   return (
     <>
-      <div className="btn-row l1-pad">
+      <div className="ml-quick">
         {(["article", "file"] as const).map((option) => (
           <button
             key={option}
-            className="button"
             type="button"
-            data-primary={option === "article" ? "true" : undefined}
+            data-primary={
+              kind === null && option === "article" ? "true" : undefined
+            }
             aria-pressed={kind === option}
             onClick={() => setKind(kind === option ? null : option)}
           >
@@ -41,11 +42,11 @@ export function NewItem({ sections }: NewItemProps) {
           action={createItem}
           submitLabel="Δημιουργία"
           pendingLabel="Δημιουργία…"
-          className="l1-form l1-pad"
+          className="ml-fields"
         >
           <input type="hidden" name="kind" value={kind} />
-          <label>
-            Ενότητα
+          <label className="ml-field">
+            <span>Ενότητα</span>
             <select
               className="input"
               name="sectionId"
@@ -58,8 +59,8 @@ export function NewItem({ sections }: NewItemProps) {
               ))}
             </select>
           </label>
-          <label>
-            Τίτλος
+          <label className="ml-field">
+            <span>Τίτλος</span>
             <input className="input" name="title" maxLength={160} required />
           </label>
         </SpacesForm>

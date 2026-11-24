@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useDeferredValue, useState, useTransition } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 import { fmtMoney } from "@/spaces/screens/shared";
 
 import { registerReceipt } from "../actions";
@@ -214,7 +213,10 @@ export function I4Form(props: I4FormProps) {
       setDone(recorded);
     });
   return (
-    <Panel label="Νέα Είσπραξη">
+    <section aria-labelledby="i4-new-title">
+      <h2 id="i4-new-title" className="sr-only">
+        Νέα Είσπραξη
+      </h2>
       <form
         className="i245-form"
         onSubmit={(e) => {
@@ -246,6 +248,6 @@ export function I4Form(props: I4FormProps) {
         <ErrorMessage text={error} />
         {done && <DoneNote done={done} />}
       </form>
-    </Panel>
+    </section>
   );
 }

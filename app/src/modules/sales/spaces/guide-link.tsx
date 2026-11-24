@@ -10,8 +10,10 @@ export async function GuideLink() {
   const settings = await getSalesSettings();
   if (!settings.ok || settings.data.guideSectionId === null) return null;
   return (
-    <Link className="button" href={sectionHref(settings.data.guideSectionId)}>
-      Οδηγός πωλήσεων →
-    </Link>
+    <span className="ml-quick">
+      <Link href={sectionHref(settings.data.guideSectionId)}>
+        Οδηγός πωλήσεων →
+      </Link>
+    </span>
   );
 }

@@ -1,7 +1,5 @@
 import Link from "next/link";
 
-import { Badge } from "@/spaces/screens/shared";
-
 import type { CandidatesByProduction } from "../deliverable-candidates";
 import {
   CREATE_DELIVERABLE_NEEDS_TAG,
@@ -68,13 +66,16 @@ export function RequestBox({
   const request = message.request;
   if (request === null) return null;
   return (
-    <div className="j2-req" role="region" aria-label={request.title}>
+    <div
+      className="j2-req"
+      role="region"
+      aria-label={request.title}
+      data-faded={!request.isOpen || undefined}
+    >
       <div className="j2-req-head">
         <strong>{request.title}</strong>
-        <Badge tone={request.isOpen ? "strong" : undefined}>
-          {request.state}
-        </Badge>
-        {request.isStale && <Badge tone="attention">χρειάζεται προσοχή</Badge>}
+        <span className="ml-tag">{request.state}</span>
+        {request.isStale && <span className="ml-tag">χρειάζεται προσοχή</span>}
       </div>
       <p>{request.assignee}</p>
       {request.daysOpen && <p className="muted">{request.daysOpen}</p>}
@@ -108,12 +109,10 @@ export function ChangeBubble({ change }: { change: J2Change }) {
       <div className="j2-req">
         <div className="j2-req-head">
           <strong>Αίτημα: Αλλαγή μετά την έγκριση</strong>
-          <Badge tone={change.isOpen ? "strong" : undefined}>
-            {change.state}
-          </Badge>
+          <span className="ml-tag">{change.state}</span>
         </div>
         <p className="note">{change.isOpen ? CHANGE_NOTE : CHANGE_DECIDED}</p>
-        <Link className="button" href={change.deliverableHref}>
+        <Link className="j-pill" href={change.deliverableHref}>
           Άνοιγμα Παραδοτέου
         </Link>
       </div>

@@ -1,0 +1,158 @@
+/* Τελική όψη στα Γυρίσματα: μικρές προσαρμογές πάνω στα ml-* (money-lines.css), μόνο με tokens. */
+.fl-box-body {
+  display: grid;
+  gap: 0.7rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.fl-box-body > * {
+  margin: 0;
+}
+.fl-lines {
+  margin: 0;
+}
+.fl-line {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+.fl-lead {
+  display: grid;
+  place-items: center;
+  min-width: 3.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+.ml-quick.fl-row {
+  justify-content: flex-start;
+}
+.fl-acts {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 55%, transparent);
+}
+.fl-acts > * {
+  margin: 0;
+}
+.fl-acts:has(> .e3-status:only-child[data-shown="false"]) {
+  display: none;
+}
+.fl-note {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  color: var(--color-text);
+  background: color-mix(in oklab, var(--brand-yellow) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--brand-yellow) 30%, transparent);
+}
+.fl-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+.fl-wide {
+  grid-column: 1 / -1;
+}
+/* Βήμα δουλειάς (όψη I3) */
+.fl-step {
+  margin: 0;
+  padding: 0.9rem 1rem 1rem;
+  border-radius: 16px;
+  border: 1px solid
+    color-mix(in oklab, var(--brand-periwinkle) 16%, transparent);
+  background: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--panel-deep) 75%, transparent),
+    color-mix(in oklab, var(--panel-midnight) 75%, transparent)
+  );
+}
+.fl-step-head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0 0 0.8rem;
+}
+.fl-step-head > div {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.fl-step-head small {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.fl-step-no {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  font-weight: 800;
+  color: color-mix(
+    in oklab,
+    var(--brand-periwinkle) var(--panel-ink-mix),
+    var(--color-text)
+  );
+  border: 1.5px solid
+    color-mix(in oklab, var(--brand-periwinkle) 60%, transparent);
+}
+.fl-steps {
+  display: grid;
+  gap: 0.8rem;
+}
+.fl-date {
+  display: grid;
+  justify-items: center;
+  line-height: 1.1;
+}
+.fl-date small {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+.fl-sheet {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 55%, transparent);
+}
+.fl-sheet > * {
+  margin: 0;
+}
+.fl-sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+.fl-more {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.fl-more > * {
+  margin: 0;
+}
+.fl-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.6rem;
+}
+.fl-group-head small {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}

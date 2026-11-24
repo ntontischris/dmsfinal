@@ -6,18 +6,24 @@ import { openNotification } from "../actions";
 export function OpenButton({
   id,
   className,
+  isPrimary,
   onSubmit,
   children,
 }: {
   id: string;
   className?: string;
+  isPrimary?: boolean;
   onSubmit?: () => void;
   children: ReactNode;
 }) {
   return (
     <form action={openNotification} onSubmit={onSubmit} className="contents">
       <input type="hidden" name="id" value={id} />
-      <button type="submit" className={className}>
+      <button
+        type="submit"
+        className={className}
+        data-primary={isPrimary || undefined}
+      >
         {children}
       </button>
     </form>

@@ -3,9 +3,6 @@
 import { Fragment, useState } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { initialsOf } from "@/spaces/shell/avatar";
 
 import {
   applyEquipmentTemplate,
@@ -16,6 +13,7 @@ import type { EquipmentCandidate, FilmingCard, NamedRef } from "../types";
 import { emptyEquipmentNote, isOpenState } from "./e3-model";
 import { useRun } from "./e3-run";
 import { LastDone, ReasonForm, Warning } from "./e3-ui";
+import { Box, Line, Lines } from "./ml-parts";
 
 // Δέσμευση εξοπλισμού στο Γύρισμα (prototype `screens/e3-equipment.tsx`), από το μητρώο ή από Πρότυπο. Η βάση ορίζει
 // τη λίστα ολόκληρη (filming_equipment_set) και αποφασίζει σύγκρουση/διαθεσιμότητα· το μήνυμά της φαίνεται κάτω.
@@ -50,53 +48,56 @@ export function E3Equipment({
   const free = candidates.filter((item) => !itemIds.includes(item.id));
 
   return (
-    <Panel label="Εξοπλισμός">
+    <Box
+      title="Εξοπλισμός"
+      hint={
+        card.equipment.length === 0
+          ? "Τίποτα δεσμευμένο"
+          : `${card.equipment.length} δεσμευμένα`
+      }
+    >
       {card.equipment.length === 0 && (
         <p className="muted">{emptyEquipmentNote(card.state)}</p>
       )}
-      <RowList>
+      <Lines label="Εξοπλισμός">
         {card.equipment.map((line) => (
           <Fragment key={line.itemId}>
-            <ListRow
-              lead={
-                <span className="part-tile" aria-hidden="true">
-                  {initialsOf(line.name)}
-                </span>
-              }
+            <Line
+              thumb={line.name}
               href={hrefOf("F2", { id: line.itemId })}
               title={line.name}
               sub={statusOf(line.status)}
               aside={
-                <>
-                  {canReportDamage && line.status === AVAILABLE && (
-                    <button
-                      type="button"
-                      className="button"
-                      aria-label={`Βλάβη: ${line.name}`}
-                      disabled={isPending}
-                      onClick={() => setDamageFor(line.itemId)}
-                    >
-                      Βλάβη
-                    </button>
-                  )}
-                  {isEditable && (
-                    <button
-                      type="button"
-                      className="button"
-                      aria-label={`Αποδέσμευση: ${line.name}`}
-                      disabled={isPending}
-                      onClick={() =>
-                        setItems(itemIds.filter((id) => id !== line.itemId))
-                      }
-                    >
-                      Αποδέσμευση
-                    </button>
-                  )}
-                </>
+                (canReportDamage && line.status === AVAILABLE) || isEditable ? (
+                  <>
+                    {canReportDamage && line.status === AVAILABLE && (
+                      <button
+                        type="button"
+                        aria-label={`Βλάβη: ${line.name}`}
+                        disabled={isPending}
+                        onClick={() => setDamageFor(line.itemId)}
+                      >
+                        Βλάβη
+                      </button>
+                    )}
+                    {isEditable && (
+                      <button
+                        type="button"
+                        aria-label={`Αποδέσμευση: ${line.name}`}
+                        disabled={isPending}
+                        onClick={() =>
+                          setItems(itemIds.filter((id) => id !== line.itemId))
+                        }
+                      >
+                        Αποδέσμευση
+                      </button>
+                    )}
+                  </>
+                ) : undefined
               }
             />
             {damageFor === line.itemId && (
-              <li className="sx-extra">
+              <li className="e3-slot">
                 <ReasonForm
                   label={`Τι έπαθε: ${line.name};`}
                   confirmLabel="Σε επισκευή"
@@ -114,11 +115,11 @@ export function E3Equipment({
               </li>
             )}
             {(line.status !== AVAILABLE || line.conflict) && (
-              <li className="sx-extra">
+              <li className="e3-slot">
                 {line.status !== AVAILABLE && (
                   <Warning>
-                    Το αντικείμενο είναι «{statusOf(line.status)}». Αποφάσισε αν θα είναι
-                    έτοιμο εγκαίρως.
+                    Το αντικείμενο είναι «{statusOf(line.status)}». Αποφάσισε αν
+                    θα είναι έτοιμο εγκαίρως.
                   </Warning>
                 )}
                 {line.conflict && (
@@ -130,12 +131,12 @@ export function E3Equipment({
             )}
           </Fragment>
         ))}
-      </RowList>
+      </Lines>
       {isEditable && (
-        <div className="stack">
-          <div className="e3-inline">
+        <div className="fl-box-body">
+          <div className="ml-quick fl-row e3-inline">
             <select
-              className="select"
+              className="input"
               aria-label="Εξοπλισμός"
               value={picked}
               onChange={(event) => setPicked(event.target.value)}
@@ -150,7 +151,6 @@ export function E3Equipment({
             </select>
             <button
               type="button"
-              className="button"
               disabled={!picked || isPending}
               onClick={() => {
                 setItems([...itemIds, picked]);
@@ -161,9 +161,9 @@ export function E3Equipment({
             </button>
           </div>
           {templates.length > 0 && (
-            <div className="e3-inline">
+            <div className="ml-quick fl-row e3-inline">
               <select
-                className="select"
+                className="input"
                 aria-label="Πρότυπο εξοπλισμού"
                 value={templateId}
                 onChange={(event) => setTemplateId(event.target.value)}
@@ -177,7 +177,6 @@ export function E3Equipment({
               </select>
               <button
                 type="button"
-                className="button"
                 disabled={!templateId || isPending}
                 onClick={() => {
                   run(applyEquipmentTemplate, {
@@ -199,6 +198,6 @@ export function E3Equipment({
           Μόνο ανάγνωση: δεσμεύεις σε ανοιχτά Γυρίσματα που σε αφορούν.
         </p>
       )}
-    </Panel>
+    </Box>
   );
 }

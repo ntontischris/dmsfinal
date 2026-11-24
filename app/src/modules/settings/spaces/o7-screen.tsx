@@ -5,7 +5,6 @@ import { getOpenedAt, getReadiness } from "../queries";
 import { linesOf, pendingOf } from "./o7-adapter";
 import { RequiredLines } from "./o7-lines";
 import { OpenButton, OpenConfirm, OpenedNotice, WaitingCard } from "./o7-open";
-import { SettingsTabs } from "./o-shared";
 
 import "./o7.css";
 
@@ -29,7 +28,6 @@ export async function SpacesReadiness({
   if (!rows.ok || !openedAt.ok)
     return (
       <div data-spaces>
-        <SettingsTabs code="O7" />
         <ErrorNotice what="τον έλεγχο ετοιμότητας" />
       </div>
     );
@@ -40,23 +38,28 @@ export async function SpacesReadiness({
   const showConfirm = isConfirming && owner && pending === 0 && !opened;
   return (
     <div data-spaces>
-      <SettingsTabs code="O7" />
       {opened ? (
         <OpenedNotice openedAt={opened} />
       ) : (
-        <p>
+        <p className="o7-summary">
           <strong>
             {lines.length - pending} από {lines.length} έτοιμα
           </strong>{" "}
           · {pending} εκκρεμούν
         </p>
       )}
-      <RequiredLines lines={lines} isOwner={owner} isLocked={opened !== null} />
-      {!opened && <WaitingCard />}
-      {showConfirm && <OpenConfirm />}
-      {!opened && !showConfirm && (
-        <OpenButton isOwner={owner} pending={pending} />
-      )}
+      <div className="ml-stack">
+        <RequiredLines
+          lines={lines}
+          isOwner={owner}
+          isLocked={opened !== null}
+        />
+        {!opened && <WaitingCard />}
+        {showConfirm && <OpenConfirm />}
+        {!opened && !showConfirm && (
+          <OpenButton isOwner={owner} pending={pending} />
+        )}
+      </div>
     </div>
   );
 }

@@ -6,7 +6,7 @@
 & .b3-facts { display: flex; flex-wrap: wrap; gap: .5rem; margin: .7rem 0 0; }
 & .b3-facts > div {
   display: grid; gap: .05rem; padding: .45rem .75rem; border-radius: 12px;
-  background: color-mix(in oklab, var(--brand-midnight) 70%, transparent);
+  background: color-mix(in oklab, var(--panel-midnight) 70%, transparent);
   border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 14%, transparent);
 }
 & .b3-facts dt { color: var(--color-text-muted); font-size: .72rem; font-weight: 700; }
@@ -21,19 +21,19 @@
 
 /* Στήλες: πιο ήρεμο φόντο, η κάρτα είναι γραμμή-κάρτα (πλακίδιο, ετικέτα, τίτλος, ποσό) */
 /* Οι Στήλες μοιράζονται το πλάτος: όλες φαίνονται χωρίς οριζόντια κύλιση στην οθόνη υπολογιστή */
-& .kanban.b3-kanban { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(12.5rem, 1fr); align-items: start; }
+& .b3-kanban { display: grid; gap: var(--space-3); overflow-x: auto; padding-bottom: var(--space-2); grid-auto-flow: column; grid-auto-columns: minmax(12.5rem, 1fr); align-items: start; }
 & .b3-kanban .kcol { min-width: 0; transition: border-color .2s, background-color .2s; }
 & .b3-kanban .kcol[data-drop-over] { border-color: var(--brand-periwinkle); background: color-mix(in oklab, var(--brand-periwinkle) 12%, transparent); }
 & .b3-kanban .kcard[data-draggable] { cursor: grab; user-select: none; touch-action: pan-y; }
 & .b3-kanban .kcard[data-dragging] { position: relative; z-index: 20; cursor: grabbing; box-shadow: 0 24px 50px -20px var(--brand-periwinkle); }
-& .b3-kanban .kcol { border-radius: 18px; border-color: color-mix(in oklab, var(--color-text) 8%, transparent); background: color-mix(in oklab, var(--brand-deep) 45%, transparent); }
+& .b3-kanban .kcol { border-radius: 18px; border-color: color-mix(in oklab, var(--color-text) 8%, transparent); background: color-mix(in oklab, var(--panel-deep) 45%, transparent); }
 & :is(.b3-kanban, .b3-closed) .kcard.b3-card.ml-line {
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: .3rem .65rem;
   margin-bottom: .55rem; padding: .7rem .75rem; border-radius: 18px; font-size: var(--text-sm);
   border: 1px solid color-mix(in oklab, var(--c) 14%, transparent);
   background:
     radial-gradient(80% 140% at 0% 50%, color-mix(in oklab, var(--c) 10%, transparent), transparent 60%),
-    linear-gradient(100deg, color-mix(in oklab, var(--brand-deep) 85%, transparent), color-mix(in oklab, var(--brand-midnight) 85%, transparent));
+    linear-gradient(100deg, color-mix(in oklab, var(--panel-deep) 85%, transparent), color-mix(in oklab, var(--panel-midnight) 85%, transparent));
 }
 & :is(.b3-kanban, .b3-closed) .kcard.b3-card.ml-line[data-forgotten='true'] { border-color: color-mix(in oklab, var(--brand-rec) 40%, transparent); }
 & .kcard.b3-card.ml-line[data-forgotten='true']::before { display: none; }
@@ -52,6 +52,9 @@
 & .b3-calls { display: grid; gap: .6rem; }
 & .b3-calls .ml-main a { color: var(--color-text); }
 @media (max-width: 40rem) {
-  & .kanban.b3-kanban { grid-auto-flow: row; grid-auto-columns: auto; }
+  & .b3-kanban { grid-auto-flow: row; overflow-x: visible; grid-auto-columns: auto; }
 }
 }
+
+/* Διακόπτες (aria-pressed) μέσα σε ml-quick: στοίχιση αριστερά (η ενεργή θέση έρχεται από το money-lines.css) */
+[data-look='spaces'] .choice-row.ml-quick { justify-content: flex-start; }

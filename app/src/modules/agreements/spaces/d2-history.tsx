@@ -10,6 +10,8 @@ import type {
 import { D2Box } from "./d2-box";
 import { ItemRows } from "./lane-rows";
 
+import "../../finance/spaces/money-lines.css";
+
 // Αιτήματα αλλαγών, Αναθεωρήσεις και Υπογραφή (prototype `screens/d2-history.tsx`), από την πραγματική Συμφωνία.
 
 const APPROVAL_TEXT: Readonly<Record<ApprovalState, string>> = {
@@ -158,7 +160,7 @@ export function SignatureSection({
       title="Υπογραφή"
       hint={`${signature.signedName} · ${formatDate(signature.signedOn)}`}
     >
-      <dl className="dl">
+      <dl className="ml-kv">
         {signature.ip && (
           <>
             <dt>IP</dt>

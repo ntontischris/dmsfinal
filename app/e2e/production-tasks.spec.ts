@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { openBox } from "./agreements-parts";
 import { PRODUCER, visit } from "./filming-parts";
 import { createInternal } from "./productions-parts";
 import {
@@ -35,7 +36,7 @@ test("ο Ιδιοκτήτης αναθέτει Εργασία υψηλής πρ�
   await signIn(page, "owner@example.com");
   await createInternal(page, TITLE, OWNER_NAME);
 
-  const tasks = card(page, "Εργασίες");
+  const tasks = await openBox(page, "Εργασίες");
   const taskTitle = tasks.getByLabel("Τίτλος εργασίας", { exact: true });
   // Οι τιμές ζουν στο React· ό,τι γραφτεί πριν ζωντανέψει η σελίδα χάνεται, οπότε ξαναγράφεται.
   await expect(async () => {
@@ -60,7 +61,7 @@ test("ο Ιδιοκτήτης αναθέτει Εργασία υψηλής πρ�
     await expect(
       producer.getByRole("heading", { level: 1, name: /Οι εργασίες μου/ }),
     ).toBeVisible();
-    const row = producer.locator("li.part-row", { hasText: TASK });
+    const row = producer.locator("li.ml-line", { hasText: TASK });
     await expect(row).toContainText("υψηλή προτεραιότητα");
     await expect(row).toContainText(TITLE);
     await button(row, "Ξεκίνησα").click();

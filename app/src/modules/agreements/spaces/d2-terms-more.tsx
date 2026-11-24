@@ -10,6 +10,8 @@ import { MILESTONE_LABELS } from "../labels";
 import type { AgreementDetail, MilestoneTrigger } from "../types";
 import { D2Form, IdField, NumberInput } from "./d2-ui";
 
+import "../../finance/spaces/money-lines.css";
+
 // Όριο αλλαγών και Δόσεις σε ορόσημα (prototype `screens/d2-terms-more.tsx`), με τα πραγματικά actions και τα ίδια
 // κρυφά πεδία JSON (`limits`, `milestones`) με τη σημερινή σελίδα.
 
@@ -34,7 +36,7 @@ export function RevisionLimitTerms({
   const text = limits.map((l) => `${l.label}: ${rounds(l.rounds)}`).join(" · ");
   if (!can.edit)
     return (
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Όριο αλλαγών</dt>
         <dd>{text || "—"}</dd>
       </dl>
@@ -43,7 +45,7 @@ export function RevisionLimitTerms({
     <D2Form action={setRevisionLimits} submitLabel="Αποθήκευση ορίων">
       <IdField id={agreement.id} />
       <input type="hidden" name="limits" value={serializeLimits(values)} />
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Όριο αλλαγών</dt>
         <dd>
           <span className="stack">
@@ -128,7 +130,7 @@ function MilestoneRow({
   canRemove: boolean;
 }) {
   return (
-    <li className="btn-row">
+    <li className="ml-quick">
       <NumberInput
         label="Ποσοστό δόσης (%)"
         inputMode="decimal"
@@ -163,7 +165,6 @@ function MilestoneRow({
       )}
       <button
         type="button"
-        className="button"
         aria-label="Αφαίρεση δόσης"
         disabled={!canRemove}
         onClick={onRemove}
@@ -227,13 +228,8 @@ function MilestonesEditor({ agreement }: { agreement: AgreementDetail }) {
           />
         ))}
       </ul>
-      <span className="btn-row">
-        <button
-          type="button"
-          className="button"
-          disabled={rows.length >= MAX_ROWS}
-          onClick={add}
-        >
+      <span className="ml-quick">
+        <button type="button" disabled={rows.length >= MAX_ROWS} onClick={add}>
           + Δόση
         </button>
       </span>

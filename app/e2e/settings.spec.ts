@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-
 // Ρυθμίσεις › Εταιρεία (O1) και Έλεγχος ετοιμότητας (O7) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Φανταστικά στοιχεία.
 const PASSWORD = "e2e-password-123";
 
@@ -10,7 +9,6 @@ const IBAN: Readonly<Record<string, string>> = {
   mobile: "GR2301720000000000000000002",
 };
 
-
 async function signIn(page: Page, email: string) {
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(email);
@@ -19,11 +17,19 @@ async function signIn(page: Page, email: string) {
   await expect(page).toHaveURL(/\/app$/);
 }
 
-// Μια κάρτα (πάνελ) της οθόνης, από τον τίτλο της.
+// Ένα κουτί (`details.ml-box`) της οθόνης, από τον τίτλο του ή τον υπότιτλο μέσα του.
 const card = (page: Page, title: string) =>
   page
-    .locator("section.kit-panel")
+    .locator("details.ml-box")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
+
+// Τα κουτιά είναι κλειστά εξ ορισμού: τα ανοίγει όλα, για να φαίνονται τα πεδία.
+const openBoxes = (page: Page) =>
+  page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
 
 const save = (scope: ReturnType<typeof card>) =>
   scope.getByRole("button", { name: "Αποθήκευση", exact: true });
@@ -38,7 +44,9 @@ test("οι Πωλήσεις δεν βλέπουν τις Ρυθμίσεις", as
   await signIn(page, "sales@example.com");
   await expect(page.locator('a[href^="/app/settings/company"]')).toHaveCount(0);
   await page.goto("/app/settings/company");
-  await expect(page.getByRole("heading", { name: "Χωρίς δικαίωμα" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Χωρίς δικαίωμα" }),
+  ).toBeVisible();
 });
 
 test("η Διαχείριση συμπληρώνει τα στοιχεία, αλλά όχι τα φορολογικά και τους λογαριασμούς", async ({
@@ -46,6 +54,7 @@ test("η Διαχείριση συμπληρώνει τα στοιχεία, αλ
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/company");
+  await openBoxes(page);
   const details = card(page, "Στοιχεία");
   await details.locator("#o1-name").fill("Δοκιμαστικές Παραγωγές Ι.Κ.Ε.");
   await details.locator("#o1-trade").fill(`Δοκιμή ${test.info().project.name}`);
@@ -63,7 +72,9 @@ test("η Διαχείριση συμπληρώνει τα στοιχεία, αλ
   await expect(tax.getByLabel("ΑΦΜ")).toHaveCount(0);
   await expect(tax.getByText("🔒 Μόνο Ιδιοκτήτης").first()).toBeVisible();
   const banks = card(page, "Λογαριασμοί τραπέζης");
-  await expect(banks.getByRole("link", { name: "+ Λογαριασμός" })).toHaveCount(0);
+  await expect(banks.getByRole("link", { name: "+ Λογαριασμός" })).toHaveCount(
+    0,
+  );
   await expect(banks.getByText("Τους αλλάζει ο Ιδιοκτήτης")).toBeVisible();
   await shot(page, "o1-admin");
 });
@@ -73,6 +84,7 @@ test("ο Ιδιοκτήτης συμπληρώνει φορολογικά και
 }) => {
   await signIn(page, "owner@example.com");
   await page.goto("/app/settings/company");
+  await openBoxes(page);
 
   const tax = card(page, "Φορολογικά");
   await tax.locator("#o1-afm").fill("123456789");
@@ -87,6 +99,7 @@ test("ο Ιδιοκτήτης συμπληρώνει φορολογικά και
   const banks = card(page, "Λογαριασμοί τραπέζης");
   await banks.getByRole("link", { name: "+ Λογαριασμός" }).click();
   await expect(page).toHaveURL(/\?bank=new$/);
+  await openBoxes(page);
   await banks.locator("#o1-bank-name").fill("Δοκιμαστική Τράπεζα");
   await banks.locator("#o1-bank-holder").fill("Δοκιμαστικές Παραγωγές Ι.Κ.Ε.");
   await banks.locator("#o1-bank-iban").fill("GR1601101250000000012300696");
@@ -112,6 +125,7 @@ test("ο Έλεγχος ετοιμότητας δείχνει τι μένει κ
 }) => {
   await signIn(page, "owner@example.com");
   await page.goto("/app/settings/readiness");
+  await openBoxes(page);
   const list = card(page, "Τι πρέπει να είναι έτοιμο");
   const line = (text: string) =>
     list.getByRole("listitem").filter({ hasText: text });
@@ -137,29 +151,44 @@ test("ο Έλεγχος ετοιμότητας δείχνει τι μένει κ
 
 // e1: το λογότυπο ανεβαίνει από τη Διαχείριση, φαίνεται στη μπάρα και στο /company-logo (για τα email),
 // κάνει «έτοιμη» τη γραμμή του Ελέγχου ετοιμότητας και, με την αφαίρεση, γυρίζει το προεπιλεγμένο.
-test("η Διαχείριση ανεβάζει και αφαιρεί το λογότυπο της εταιρείας", async ({ page }) => {
+test("η Διαχείριση ανεβάζει και αφαιρεί το λογότυπο της εταιρείας", async ({
+  page,
+}) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/company");
+  await openBoxes(page);
   const logo = card(page, "Λογότυπο");
   await logo.getByLabel(/λογότυπο/i).setInputFiles("e2e/fixtures/logo.png");
   await logo.getByRole("button", { name: "Ανέβασμα", exact: true }).click();
-  await expect(logo.getByRole("status")).toContainText("Το λογότυπο αποθηκεύτηκε");
-  await expect(logo.getByRole("img", { name: "Το τρέχον λογότυπο" })).toBeVisible();
-  await expect(page.locator('.shell-home img[src^="/company-logo?v="]')).toHaveCount(1);
+  await expect(logo.getByRole("status")).toContainText(
+    "Το λογότυπο αποθηκεύτηκε",
+  );
+  await expect(
+    logo.getByRole("img", { name: "Το τρέχον λογότυπο" }),
+  ).toBeVisible();
+  await expect(
+    page.locator('.shell-home img[src^="/company-logo?v="]'),
+  ).toHaveCount(1);
   const served = await page.request.get("/company-logo");
   expect(served.status()).toBe(200);
   expect(served.headers()["content-type"]).toBe("image/png");
   await shot(page, "o1-logo");
 
   await page.goto("/app/settings/readiness");
+  await openBoxes(page);
   const line = card(page, "Τι πρέπει να είναι έτοιμο")
     .getByRole("listitem")
     .filter({ hasText: "Λογότυπο" });
   await expect(line.getByText("έτοιμο", { exact: true })).toBeVisible();
 
   await page.goto("/app/settings/company");
-  await card(page, "Λογότυπο").getByRole("button", { name: "Αφαίρεση λογότυπου" }).click();
-  await expect(card(page, "Λογότυπο").getByText(/Δεν έχει ανέβει λογότυπο/)).toBeVisible();
+  await openBoxes(page);
+  await card(page, "Λογότυπο")
+    .getByRole("button", { name: "Αφαίρεση λογότυπου" })
+    .click();
+  await expect(
+    card(page, "Λογότυπο").getByText(/Δεν έχει ανέβει λογότυπο/),
+  ).toBeVisible();
   await expect(page.locator(".shell-home img")).toHaveCount(0);
   const fallback = await page.request.get("/company-logo", { maxRedirects: 0 });
   expect(fallback.status()).toBe(307);

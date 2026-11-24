@@ -23,7 +23,7 @@
 .c2-hero .c2-tags { display: flex; flex-wrap: wrap; gap: .35rem; }
 .c2-hero .c2-lead { max-width: 40rem; font-size: .9rem; }
 .c2-hero .ml-quick .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .4rem; margin: 0; }
-.c2-hero .ml-quick button { background: color-mix(in oklab, var(--brand-midnight) 85%, transparent); }
+.c2-hero .ml-quick button { background: color-mix(in oklab, var(--panel-midnight) 85%, transparent); }
 
 /* C2: σώμα κουτιού και κουμπί μέσα στο κουτί */
 .c2-box-body { display: grid; gap: .8rem; min-width: 0; }
@@ -37,7 +37,7 @@
 .c2-step {
   margin: 0; padding: .9rem 1rem 1rem; border-radius: 16px;
   border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 16%, transparent);
-  background: linear-gradient(160deg, color-mix(in oklab, var(--brand-deep) 75%, transparent), color-mix(in oklab, var(--brand-midnight) 75%, transparent));
+  background: linear-gradient(160deg, color-mix(in oklab, var(--panel-deep) 75%, transparent), color-mix(in oklab, var(--panel-midnight) 75%, transparent));
 }
 .c2-step-head { display: flex; align-items: center; gap: .8rem; margin: 0 0 .8rem; }
 .c2-step-head > div { display: grid; gap: .1rem; min-width: 0; }
@@ -48,7 +48,7 @@
   border: 1.5px solid color-mix(in oklab, var(--brand-periwinkle) 60%, transparent);
 }
 .c2-step-body { display: grid; gap: .8rem; min-width: 0; }
-.c2-step-body > .dl, .c2-step-body > p, .c2-step-body > .note { margin: 0; }
+.c2-step-body > .ml-kv, .c2-step-body > p, .c2-step-body > .note { margin: 0; }
 
 /* Το ένα κύριο κουμπί της νέας σελίδας (κόκκινο) */
 .c2-go button[type="submit"] {
@@ -57,3 +57,4 @@
   box-shadow: 0 14px 34px -14px var(--brand-rec);
 }
 .c2-go button[type="submit"]:disabled { cursor: not-allowed; opacity: .45; box-shadow: none; }
+

@@ -1,67 +1,73 @@
+import Link from "next/link";
+
 import { hrefOf } from "@/spaces/data/screens";
-import { Entity, Person } from "@/spaces/kit/parts";
-import { Badge, type BadgeTone } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import type { G1Row } from "./g1-rows";
 
+import "../../finance/spaces/money-lines.css";
 import "./g1.css";
 
-const STATE_TONE: Readonly<Record<string, BadgeTone>> = {
-  ανοιχτή: "strong",
-  παραδομένη: "ok",
-  ακυρωμένη: "faded",
-};
-
+// Τα σήματα της γραμμής ως ετικέτες· χωρίς σήμα, τίποτα.
 function Signals({ row }: { row: G1Row }) {
-  const hasAny = row.inReview > 0 || row.needsHours || row.overrun;
   return (
-    <span className="g1-signals">
-      {row.inReview > 0 && <Badge>{row.inReview} προς έλεγχο</Badge>}
-      {row.needsHours && <Badge tone="attention">χωρίς πραγματικές ώρες</Badge>}
-      {row.overrun && <Badge tone="attention">Υπέρβαση κόστους</Badge>}
-      {!hasAny && "—"}
-    </span>
+    <>
+      {row.inReview > 0 && (
+        <span className="ml-tag">{row.inReview} προς έλεγχο</span>
+      )}
+      {row.needsHours && (
+        <span className="ml-tag" data-tone="warn">
+          χωρίς πραγματικές ώρες
+        </span>
+      )}
+      {row.overrun && (
+        <span className="ml-tag" data-tone="warn">
+          Υπέρβαση κόστους
+        </span>
+      )}
+    </>
   );
 }
 
-// Ο πίνακας Παραγωγών του prototype (`screens/g1-table.tsx`). Η στήλη «Παραδοτέα» (πρόοδος εγκρίσεων) λείπει:
-// η λίστα της βάσης δεν φέρνει τα Παραδοτέα κάθε Παραγωγής.
+const metaOf = (row: G1Row): string =>
+  [row.client, row.period, row.owner].join(" · ");
+
+// Η λίστα Παραγωγών (μορφή της I2): μία γραμμή-κάρτα ανά Παραγωγή με κατάσταση, Πελάτη, Περίοδο, Υπεύθυνο,
+// επόμενο Γύρισμα και σήματα. Μένει <table> (τα e2e βρίσκουν τη γραμμή ως `tr`), αλλά κάθε <tr> είναι .ml-line.
 export function G1Table({ rows }: { rows: readonly G1Row[] }) {
   return (
-    <table className="rtable">
+    <table className="ml-table ml-list">
       <thead>
         <tr>
+          <th>Αρχικά</th>
           <th>Παραγωγή</th>
-          <th>Πελάτης</th>
-          <th>Περίοδος/είδος</th>
-          <th>Υπεύθυνος</th>
           <th>Επόμενο Γύρισμα</th>
-          <th>Κατάσταση</th>
           <th>Σήματα</th>
         </tr>
       </thead>
       <tbody>
         {rows.map((row) => (
-          <tr key={row.id}>
-            <td data-label="Παραγωγή">
-              <Entity
-                name={row.title}
-                href={hrefOf("G2", { id: row.id })}
-                sub={row.client}
-              />
+          <tr
+            key={row.id}
+            className="ml-line"
+            data-urgent={row.overrun ? "" : undefined}
+            data-faded={row.state === "ακυρωμένη" ? "" : undefined}
+          >
+            <td className="ml-thumb" aria-hidden="true">
+              {initialsOf(row.title)}
             </td>
-            <td data-label="Πελάτης">{row.client}</td>
-            <td data-label="Περίοδος/είδος">{row.period}</td>
-            <td data-label="Υπεύθυνος">
-              <Person name={row.owner} />
+            <td className="ml-main">
+              <span className="ml-tag">{row.state}</span>
+              <strong>
+                <Link href={hrefOf("G2", { id: row.id })}>{row.title}</Link>
+              </strong>
+              <small>{metaOf(row)}</small>
             </td>
-            <td data-label="Επόμενο Γύρισμα" className="g1-when">
+            <td className="ml-amount g1-when">
               {row.nextFilming}
+              <small>επόμενο Γύρισμα</small>
             </td>
-            <td data-label="Κατάσταση">
-              <Badge tone={STATE_TONE[row.state]}>{row.state}</Badge>
-            </td>
-            <td data-label="Σήματα">
+            <td className="ml-quick g1-signals">
               <Signals row={row} />
             </td>
           </tr>

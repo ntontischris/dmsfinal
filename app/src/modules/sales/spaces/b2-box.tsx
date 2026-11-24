@@ -32,6 +32,20 @@ export function Box(props: {
   );
 }
 
+// Ενότητα μέσα σε κουτί (π.χ. «Ευκαιρίες» μέσα στις «Δουλειές»), με δικό της τίτλο και άγκυρα.
+export function Sub(props: {
+  id?: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section id={props.id} className="b2-sub">
+      <h3 className="b2-sub-title">{props.title}</h3>
+      {props.children}
+    </section>
+  );
+}
+
 export interface LineProps {
   mark: string;
   tag?: ReactNode;

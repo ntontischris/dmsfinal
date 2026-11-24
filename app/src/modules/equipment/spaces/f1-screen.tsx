@@ -6,6 +6,7 @@ import { listBookings, listCategories, listItems } from "../queries";
 import { bookingIndexOf } from "./f1-bookings";
 import { F1Registry } from "./f1-registry";
 
+import "../../finance/spaces/money-lines.css";
 import "./f.css";
 
 // F1 Εξοπλισμός στη νέα εμφάνιση (prototype `screens/F1.tsx`): το μητρώο, με τα αποσυρμένα κρυμμένα αν δεν ζητηθούν.

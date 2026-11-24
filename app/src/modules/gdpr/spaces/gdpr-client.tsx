@@ -1,26 +1,22 @@
 import Link from "next/link";
 
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-
-import { BLOCK_TEXT, GDPR_PATH, ZIP_NOTE } from "../labels";
+import { BLOCK_TEXT, GDPR_PATH, GDPR_TITLE, ZIP_NOTE } from "../labels";
 import { getGdprSubjects } from "../queries";
 import { AnonymizeInline } from "./gdpr-anonymize-inline";
 import { ExportButton } from "./gdpr-export";
-
-import "./gdpr.css";
+import { GdprBox, GdprLine, GdprSection } from "./gdpr-parts";
 
 const PANEL_LABEL = "GDPR (μόνο Ιδιοκτήτης)";
 
-// Το GDPR της σελίδας Πελάτη (B2) στη νέα εμφάνιση, με τις ίδιες ενέργειες με την κλασική: εξαγωγή Πελάτη,
-// εξαγωγή/ανωνυμοποίηση της Επαφής, εξαγωγή των Χρηστών πελάτη. Μόνο για τον Ιδιοκτήτη· η βάση αρνείται σε άλλους.
+// Το GDPR της σελίδας Πελάτη (B2) στο ίδιο ύφος με την Ομάδα και τη σελίδα Χρήστη, με τις ίδιες ενέργειες: εξαγωγή
+// Πελάτη, εξαγωγή/ανωνυμοποίηση της Επαφής, εξαγωγή των Χρηστών πελάτη. Μόνο για τον Ιδιοκτήτη· η βάση αρνείται σε άλλους.
 export async function GdprClientSection({ clientId }: { clientId: string }) {
   const subjects = await getGdprSubjects();
   if (!subjects.ok)
     return (
-      <Panel label={PANEL_LABEL}>
+      <GdprBox title={PANEL_LABEL} hint="Εξαγωγή και Ανωνυμοποίηση">
         <p className="muted">Δεν φόρτωσε το GDPR. Δοκίμασε ξανά σε λίγο.</p>
-      </Panel>
+      </GdprBox>
     );
   const client = subjects.data.clients.find((row) => row.id === clientId);
   if (!client) return null;
@@ -28,23 +24,27 @@ export async function GdprClientSection({ clientId }: { clientId: string }) {
     user.clientIds.includes(clientId),
   );
   return (
-    <Panel label={PANEL_LABEL}>
-      <p className="muted">
+    <GdprBox
+      title={PANEL_LABEL}
+      hint="Εξαγωγή Πελάτη, Επαφής και Χρηστών"
+      isDanger
+    >
+      <p className="g-note">
         Στοιχεία, Χρήστες, Συμφωνίες, Τιμολόγια σε PDF, Εισπράξεις, Γυρίσματα,
         Παραδοτέα με links και Συνομιλία. {ZIP_NOTE}
       </p>
-      <div className="btn-row">
+      <div className="ml-actions">
         <ExportButton
           subjectKind="client"
           subjectId={client.id}
           label="Εξαγωγή δεδομένων Πελάτη"
         />
       </div>
-      <div className="n1-section">
-        <p>
-          <strong>Επαφή: {client.contactName}</strong>
-        </p>
-        <div className="btn-row">
+      <GdprSection
+        title={`Επαφή: ${client.contactName}`}
+        hint={client.contactBlock ? BLOCK_TEXT[client.contactBlock] : undefined}
+      >
+        <div className="ml-actions">
           {client.contactBlock !== "anonymized" && (
             <ExportButton
               subjectKind="contact"
@@ -60,43 +60,42 @@ export async function GdprClientSection({ clientId }: { clientId: string }) {
             />
           )}
         </div>
-        {client.contactBlock && (
-          <p className="note">{BLOCK_TEXT[client.contactBlock]}</p>
-        )}
-      </div>
+      </GdprSection>
       {users.length > 0 && (
-        <div className="n1-section">
-          <p>
-            <strong>Χρήστες πελάτη</strong>
+        <GdprSection
+          title="Χρήστες πελάτη"
+          hint="Μόνο Εξαγωγή όσο ανήκουν σε Πελάτη"
+        >
+          <ul className="ml-list">
+            {users.map((user) => (
+              <GdprLine
+                key={user.id}
+                name={user.name}
+                title={user.name}
+                quick={
+                  <ExportButton
+                    subjectKind="client_user"
+                    subjectId={user.id}
+                    label={`Εξαγωγή: ${user.name}`}
+                  />
+                }
+              />
+            ))}
+          </ul>
+          <p className="g-note">
+            Ανωνυμοποίηση γίνεται αφού αφαιρεθούν από κάθε Πελάτη, από τα
+            Αιτήματα GDPR.
           </p>
-          <div className="n1-bleed">
-            <RowList>
-              {users.map((user) => (
-                <ListRow
-                  key={user.id}
-                  title={user.name}
-                  aside={
-                    <ExportButton
-                      subjectKind="client_user"
-                      subjectId={user.id}
-                      label={`Εξαγωγή: ${user.name}`}
-                    />
-                  }
-                />
-              ))}
-            </RowList>
-          </div>
-          <p className="note">
-            Στους ενεργούς Χρήστες πελάτη υπάρχει μόνο Εξαγωγή. Ανωνυμοποίηση
-            γίνεται αφού αφαιρεθούν από κάθε Πελάτη, από τα{" "}
-            <Link href={GDPR_PATH}>Αιτήματα GDPR</Link>.
-          </p>
-        </div>
+        </GdprSection>
       )}
-      <p className="note">
-        Κάθε αίτημα καταγράφεται στα <Link href={GDPR_PATH}>Αιτήματα GDPR</Link>
-        , με προθεσμία 1 μήνα.
+      <p className="g-note">
+        Κάθε αίτημα καταγράφεται στα Αιτήματα GDPR, με προθεσμία 1 μήνα.
       </p>
-    </Panel>
+      <div className="ml-actions">
+        <Link data-primary href={GDPR_PATH}>
+          {GDPR_TITLE}
+        </Link>
+      </div>
+    </GdprBox>
   );
 }

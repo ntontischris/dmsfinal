@@ -47,7 +47,12 @@ function RenameForm({ save, method }: { save: Action; method: PaymentMethod }) {
   const [value, setValue] = useState(method.label);
   const isChanged = value.trim() !== "" && value !== method.label;
   return (
-    <form ref={formRef} className="btn-row" onSubmit={onSubmit}>
+    <form
+        ref={formRef}
+        className="ml-quick o6-form"
+        data-align="start"
+        onSubmit={onSubmit}
+      >
       <input type="hidden" name="id" value={method.id} />
       <input
         className="input"
@@ -57,12 +62,7 @@ function RenameForm({ save, method }: { save: Action; method: PaymentMethod }) {
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
-      <button
-        type="submit"
-        className="button"
-        data-primary="true"
-        disabled={isPending || !isChanged}
-      >
+      <button type="submit" data-primary disabled={isPending || !isChanged}>
         Αποθήκευση
       </button>
       <FormNote state={state} />
@@ -83,7 +83,7 @@ export function RowAction({
   return (
     <form ref={formRef} onSubmit={onSubmit} style={{ display: "inline" }}>
       <input type="hidden" name="id" value={id} />
-      <button type="submit" className="button" disabled={isPending}>
+      <button type="submit" disabled={isPending}>
         {isPending ? "Περιμένε…" : label}
       </button>
       <FormNote state={state} />
@@ -146,7 +146,12 @@ function AddMethod({ save }: { save: Action }) {
           Ένα όνομα, μόνο στα ελληνικά. Φαίνεται αμέσως στη «Νέα είσπραξη».
         </small>
       </summary>
-      <form ref={formRef} className="btn-row" onSubmit={onSubmit}>
+      <form
+        ref={formRef}
+        className="ml-quick o6-form"
+        data-align="start"
+        onSubmit={onSubmit}
+      >
         <input type="hidden" name="id" value="" />
         <input
           className="input"
@@ -155,12 +160,7 @@ function AddMethod({ save }: { save: Action }) {
           aria-label="Νέος τρόπος"
           placeholder="Νέος τρόπος"
         />
-        <button
-          type="submit"
-          className="button"
-          data-primary="true"
-          disabled={isPending}
-        >
+        <button type="submit" data-primary disabled={isPending}>
           Προσθήκη τρόπου
         </button>
         <FormNote state={state} />

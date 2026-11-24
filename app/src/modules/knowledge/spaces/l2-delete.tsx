@@ -15,10 +15,9 @@ export function DeleteConversation({ id }: { id: string }) {
   const [isConfirming, setIsConfirming] = useState(false);
   if (!isConfirming)
     return (
-      <div className="btn-row">
+      <div className="ml-quick">
         <button
           type="button"
-          className="button"
           data-danger="true"
           onClick={() => setIsConfirming(true)}
         >
@@ -27,31 +26,27 @@ export function DeleteConversation({ id }: { id: string }) {
       </div>
     );
   return (
-    <form action={action} role="alertdialog" aria-label="Επιβεβαίωση διαγραφής">
+    <form
+      className="k-confirm"
+      action={action}
+      role="alertdialog"
+      aria-label="Επιβεβαίωση διαγραφής"
+    >
       <input type="hidden" name="id" value={id} />
       <p>
         Η Συζήτηση θα διαγραφεί οριστικά, μαζί με τις Αναπάντητες ερωτήσεις που
         ήρθαν μόνο από αυτήν.
       </p>
       {state.error && (
-        <p className="note" role="alert">
+        <p className="k-note" role="alert">
           {state.error}
         </p>
       )}
-      <div className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-danger="true"
-          disabled={isDeleting}
-        >
+      <div className="ml-quick">
+        <button type="submit" data-danger="true" disabled={isDeleting}>
           {isDeleting ? "Διαγραφή…" : "Ναι, διαγραφή"}
         </button>
-        <button
-          type="button"
-          className="button"
-          onClick={() => setIsConfirming(false)}
-        >
+        <button type="button" onClick={() => setIsConfirming(false)}>
           Άκυρο
         </button>
       </div>

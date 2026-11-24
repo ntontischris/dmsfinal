@@ -1,9 +1,7 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
-import { ListRow, Meter, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge, fmtPercent } from "@/spaces/screens/shared";
+import { fmtPercent } from "@/spaces/screens/shared";
 
 import { checkConnectionNow, saveAnalyticsIds } from "../actions";
 import type { ConnectionId, ConnectionStatus } from "../connections";
@@ -11,25 +9,32 @@ import type { AnalyticsIds } from "../schemas";
 import { lastOkOf, n5CardOf, type N5Usage } from "./n5-adapter";
 import { N5Form } from "./n5-forms";
 
-// Μία κάρτα ανά σύνδεση (prototype `screens/n5-integrations.tsx`): κατάσταση, σκοπός, χρήση έναντι ορίου, «Έλεγχος τώρα»,
-// ό,τι αλλάζει ο Ιδιοκτήτης (GA4/Pixel). Όλα από την πραγματική κατάσταση (integrations_view + περιβάλλον).
+// Ένα κουτί ανά σύνδεση (prototype `screens/n5-integrations.tsx`): κλειστό, με την κατάσταση στην περίληψη· ανοίγει
+// μόνο του όταν η σύνδεση δεν λειτουργεί. Μέσα: σκοπός, χρήση έναντι ορίου, «Έλεγχος τώρα», ό,τι αλλάζει ο Ιδιοκτήτης.
 
 const HEALTH_HREF = "/app/health";
 
 function UsageBar({ usage }: { usage: N5Usage }) {
+  const percent = Math.round(Math.min(usage.ratio, 1) * 100);
   return (
     <div className="n5-usage">
-      <div className="row">
-        <span className="muted">{usage.label}</span>
-        <span>
-          {usage.text} · <strong>{fmtPercent(usage.ratio)}</strong>
-        </span>
+      <div
+        className="ml-meter"
+        role="meter"
+        aria-label={usage.label}
+        aria-valuemin={0}
+        aria-valuemax={usage.limit}
+        aria-valuenow={usage.used}
+        data-tone={usage.ratio >= 0.7 ? "warn" : undefined}
+        style={{ "--v": `${percent}%` } as CSSProperties}
+      >
+        <span>{usage.label}</span>
+        <i>
+          <b />
+        </i>
+        <strong>{fmtPercent(usage.ratio)}</strong>
       </div>
-      <Meter
-        used={usage.used}
-        total={usage.limit}
-        tone={usage.ratio >= 0.7 ? "attention" : undefined}
-      />
+      <small>{usage.text}</small>
     </div>
   );
 }
@@ -42,36 +47,36 @@ function OwnerFields({ ids }: { ids: AnalyticsIds }) {
       submitLabel="Αποθήκευση"
       pendingLabel="Αποθήκευση…"
       isPrimary
-      className="stack n5-fields"
+      className="ml-fields"
     >
-        <span className="stack">
-          <label htmlFor="n5-analytics-ga4">
-            Google Analytics, Measurement ID
-          </label>
-          <input
-            id="n5-analytics-ga4"
-            name="ga4"
-            className="input"
-            defaultValue={ids.ga4}
-            placeholder="δεν έχει οριστεί"
-            autoComplete="off"
-          />
-        </span>
-        <span className="stack">
-          <label htmlFor="n5-analytics-pixel">Meta Pixel ID</label>
-          <input
-            id="n5-analytics-pixel"
-            name="pixel"
-            className="input"
-            defaultValue={ids.pixel}
-            placeholder="δεν έχει οριστεί"
-            inputMode="numeric"
-            autoComplete="off"
-          />
-        </span>
-        <p className="muted">
-          Δημόσια αναγνωριστικά, όχι κλειδιά: τα αλλάζεις εσύ.
-        </p>
+      <span className="ml-field">
+        <label htmlFor="n5-analytics-ga4">
+          Google Analytics, Measurement ID
+        </label>
+        <input
+          id="n5-analytics-ga4"
+          name="ga4"
+          className="input"
+          defaultValue={ids.ga4}
+          placeholder="δεν έχει οριστεί"
+          autoComplete="off"
+        />
+      </span>
+      <span className="ml-field">
+        <label htmlFor="n5-analytics-pixel">Meta Pixel ID</label>
+        <input
+          id="n5-analytics-pixel"
+          name="pixel"
+          className="input"
+          defaultValue={ids.pixel}
+          placeholder="δεν έχει οριστεί"
+          inputMode="numeric"
+          autoComplete="off"
+        />
+      </span>
+      <small className="ml-field" data-wide>
+        Δημόσια αναγνωριστικά, όχι κλειδιά: τα αλλάζεις εσύ.
+      </small>
     </N5Form>
   );
 }
@@ -86,26 +91,26 @@ interface CardProps {
 function IntegrationCard({ item, analytics, extra }: CardProps) {
   const card = n5CardOf(item);
   return (
-    <Panel
-      label={card.name}
-      aside={<Badge tone={card.tone}>{card.status}</Badge>}
+    <details
+      className="ml-box n5-card"
+      data-tone={card.tone}
+      open={card.isDown || undefined}
     >
+      <summary>
+        <h2 className="ml-box-title">{card.name}</h2>
+        <small className="n5-status">{card.status}</small>
+      </summary>
       <p className="muted">{card.purpose}</p>
-      <div className="n5-bleed">
-        <RowList>
-          <ListRow
-            title="Τελευταία επιτυχία"
-            aside={<strong>{lastOkOf(item)}</strong>}
-          />
-          {card.facts.map((fact) => (
-            <ListRow
-              key={fact.label}
-              title={fact.label}
-              aside={<strong>{fact.value}</strong>}
-            />
-          ))}
-        </RowList>
-      </div>
+      <dl className="ml-kv">
+        <dt>Τελευταία επιτυχία</dt>
+        <dd>{lastOkOf(item)}</dd>
+        {card.facts.map((fact) => (
+          <div key={fact.label}>
+            <dt>{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
       {card.usage && <UsageBar usage={card.usage} />}
       {card.warning && (
         <p className="note n5-warning" role="status">
@@ -141,7 +146,7 @@ function IntegrationCard({ item, analytics, extra }: CardProps) {
         </N5Form>
       )}
       <p className="muted n5-dev">Αλλάζει ο developer: {card.developerOnly}</p>
-    </Panel>
+    </details>
   );
 }
 
@@ -157,24 +162,21 @@ export function IntegrationsSection({
   extras = {},
 }: IntegrationsProps) {
   return (
-    <section className="n5-section" aria-label="Ενσωματώσεις">
-      <h2 className="kit-label">Ενσωματώσεις</h2>
+    <section className="ml-stack" aria-label="Ενσωματώσεις">
       <p className="note">
         Οι συνδέσεις στήνονται από τον developer, χωρίς κλειδιά εδώ. Εσύ βλέπεις
         κατάσταση και χρήση και τις ελέγχεις. Όταν μια σύνδεση πάει στο «δεν
         λειτουργεί», ειδοποιεί η{" "}
         <Link href={HEALTH_HREF}>Υγεία συστήματος</Link>.
       </p>
-      <div className="grid2">
-        {items.map((item) => (
-          <IntegrationCard
-            key={item.id}
-            item={item}
-            analytics={analytics}
-            extra={extras[item.id]}
-          />
-        ))}
-      </div>
+      {items.map((item) => (
+        <IntegrationCard
+          key={item.id}
+          item={item}
+          analytics={analytics}
+          extra={extras[item.id]}
+        />
+      ))}
     </section>
   );
 }

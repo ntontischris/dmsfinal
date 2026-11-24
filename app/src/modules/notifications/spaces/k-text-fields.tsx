@@ -9,7 +9,6 @@ import type { TextValues } from "./k2-model";
 // γράφει «{μεταβλητή}» στη θέση του δρομέα του πεδίου που είχε τελευταίο την εστίαση (αρχικά το ελληνικό κείμενο).
 // Όσο η εστίαση είναι σε θέμα, οι μεταβλητές συνδέσμου ή κωδικού δεν προσφέρονται.
 
-
 type TextElement = HTMLInputElement | HTMLTextAreaElement;
 
 interface KTextFieldsProps {
@@ -108,12 +107,15 @@ export function KTextFields({
   const bodies = fields.filter((field) => field.isArea);
   return (
     <>
-      <div className="k1-vars" role="group" aria-label="Εισαγωγή μεταβλητής">
+      <div
+        className="ml-quick k1-vars"
+        role="group"
+        aria-label="Εισαγωγή μεταβλητής"
+      >
         {variables.map((name) => (
           <button
             key={name}
             type="button"
-            className="button"
             disabled={isSubject && subjectExcluded.includes(name)}
             onClick={() => {
               const target = lastRef.current ?? bodyElRef.current;

@@ -11,6 +11,8 @@ import { Box } from "./m1-box";
 import { PackButton } from "./m2-buttons";
 import { m2Href, packButtonLabel, packMonthLabel } from "./m2-model";
 
+import "../../finance/spaces/money-lines.css";
+
 // Οι στήλες των φύλλων του Excel: ίδιες με την «Άλλη εξαγωγή». Τα «Έξοδα» μόνο για όποιον τα βλέπει (d10).
 const SHEETS = [
   { id: "invoices", label: "Τιμολόγια", columns: INVOICE_COLUMNS },
@@ -20,7 +22,7 @@ const SHEETS = [
 
 function SheetColumns() {
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       {SHEETS.map((d) => (
         <div key={d.id} className="m2-sheet">
           <dt>Φύλλο «{d.label}»</dt>

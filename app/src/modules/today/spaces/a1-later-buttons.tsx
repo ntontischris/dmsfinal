@@ -25,7 +25,6 @@ export function LaterButton({
       <input type="hidden" name="key" value={itemKey} />
       <button
         type="submit"
-        className="button"
         data-ghost="true"
         disabled={isPending}
         aria-label={`Αργότερα: ${label}`}

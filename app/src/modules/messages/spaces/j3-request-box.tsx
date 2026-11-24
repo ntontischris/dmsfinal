@@ -1,7 +1,5 @@
 import Link from "next/link";
 
-import { Badge } from "@/spaces/screens/shared";
-
 import type { J3Link, J3Request } from "./j3-adapter";
 
 import "./j3.css";
@@ -23,9 +21,7 @@ export function RequestBox({ request }: { request: J3Request }) {
     <div className="j3-req" role="region" aria-label={request.title}>
       <div className="j3-req-head">
         <strong>{request.title}</strong>
-        <Badge tone={request.isOpen ? "attention" : undefined}>
-          {request.state}
-        </Badge>
+        <span className="ml-tag">{request.state}</span>
         {request.closedWhen && (
           <span className="muted">{request.closedWhen}</span>
         )}

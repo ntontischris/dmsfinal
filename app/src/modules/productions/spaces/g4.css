@@ -1,5 +1,8 @@
-/* G4 Οι εργασίες μου */
-[data-look='spaces'] {
-/* Μόνο ουδέτερα tokens. */
-& .g4-aside { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; justify-content: flex-end; }
+/* G4 Οι εργασίες μου: ομάδες ως ανοιχτά κουτιά (.ml-box) με γραμμές (.ml-line). Μόνο ουδέτερα tokens. */
+[data-look="spaces"] .g4 {
+  & .g4-aside {
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+  }
 }

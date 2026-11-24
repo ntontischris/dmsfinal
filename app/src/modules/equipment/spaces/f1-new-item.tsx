@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { createItem } from "../actions-items";
 import type { EquipmentCategory, EquipmentItemRow } from "../types";
 import { nameErrorOf } from "./f-model";
@@ -37,19 +35,26 @@ export function F1NewItem({ items, categories, onDone }: F1NewItemProps) {
   };
 
   return (
-    <div>
-      <Panel label="Νέο αντικείμενο">
-        <div className="e-form">
-          <label>
-            Όνομα (υποχρεωτικό)
+    <section>
+      <details className="ml-box ml-new" open>
+        <summary>
+          <h2 className="ml-box-title">Νέο αντικείμενο</h2>
+          <small>
+            Ένα αντικείμενο είναι ό,τι δεσμεύεται ολόκληρο. Ένα σετ (π.χ. δύο
+            ασύρματα μικρόφωνα σε μία θήκη) είναι ένα αντικείμενο.
+          </small>
+        </summary>
+        <div className="ml-fields">
+          <label className="ml-field">
+            <span>Όνομα (υποχρεωτικό)</span>
             <input
               className="input"
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
           </label>
-          <label>
-            Κατηγορία (υποχρεωτική)
+          <label className="ml-field">
+            <span>Κατηγορία (υποχρεωτική)</span>
             <select
               className="select"
               value={categoryId}
@@ -62,8 +67,8 @@ export function F1NewItem({ items, categories, onDone }: F1NewItemProps) {
               ))}
             </select>
           </label>
-          <label>
-            Ποσότητα
+          <label className="ml-field">
+            <span>Ποσότητα</span>
             <input
               className="input"
               type="number"
@@ -73,57 +78,52 @@ export function F1NewItem({ items, categories, onDone }: F1NewItemProps) {
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
             />
-            <span className="muted">
+            <small>
               Πάνω από 1: κάθε μονάδα παίρνει αρίθμηση #1, #2… και το δικό της
               κωδικό.
-            </span>
+            </small>
           </label>
-          <label>
-            Κωδικός ή σειριακός
+          <label className="ml-field">
+            <span>Κωδικός ή σειριακός</span>
             <input
               className="input"
               value={code}
               onChange={(event) => setCode(event.target.value)}
             />
           </label>
-          <label>
-            Σημείωση (τι περιέχει, πού φυλάγεται)
+          <label className="ml-field" data-wide>
+            <span>Σημείωση (τι περιέχει, πού φυλάγεται)</span>
             <input
               className="input"
               value={note}
               onChange={(event) => setNote(event.target.value)}
             />
           </label>
-          <p className="muted">
-            Ένα αντικείμενο είναι ό,τι δεσμεύεται ολόκληρο. Ένα σετ (π.χ. δύο
-            ασύρματα μικρόφωνα σε μία θήκη) είναι ένα αντικείμενο.
-          </p>
           {tried && (nameError || categoryError) && (
-            <p className="e-warn" role="alert">
+            <p className="e-warn ml-field" data-wide role="alert">
               {nameError} {categoryError}
             </p>
           )}
           {last.error && (
-            <p className="e-warn" role="alert">
+            <p className="e-warn ml-field" data-wide role="alert">
               {last.error}
             </p>
           )}
-          <div className="btn-row">
+          <div className="ml-actions">
+            <button type="button" onClick={onDone}>
+              Άκυρο
+            </button>
             <button
               type="button"
-              className="button"
-              data-primary="true"
+              data-primary
               disabled={isPending}
               onClick={handleSave}
             >
               Αποθήκευση
             </button>
-            <button type="button" className="button" onClick={onDone}>
-              Άκυρο
-            </button>
           </div>
         </div>
-      </Panel>
-    </div>
+      </details>
+    </section>
   );
 }

@@ -35,7 +35,6 @@ export function ClientNewOpportunity({
     <>
       <button
         type="button"
-        className="button"
         aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
       >

@@ -62,7 +62,7 @@ export function D2Header(props: HeaderProps) {
           caps={caps}
           expiresInDays={props.expiresInDays}
         />
-        <span className="btn-row">{historyLink}</span>
+        <span className="ml-quick">{historyLink}</span>
         <Steps
           steps={proposalSteps(agreement.path)}
           label="Πορεία της πρότασης"

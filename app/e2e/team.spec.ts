@@ -20,7 +20,7 @@ import {
 test.describe.configure({ retries: 0 });
 
 
-// Η φόρμα «Πρόσκληση Χρήστη» της Ομάδας (N1): οι ετικέτες δείχνουν τα πεδία με htmlFor.
+// Η φόρμα «Πρόσκληση Χρήστη» (N6, /app/team/invite): οι ετικέτες δείχνουν τα πεδία με htmlFor.
 const inviteForm = (page: Page) => page.locator("#n1-invite");
 
 test("η απενεργοποίηση δείχνει ονομαστικά τι επιστρέφει και μετά το επιστρέφει", async ({
@@ -93,7 +93,7 @@ test("email απενεργοποιημένου Χρήστη στην πρόσκ�
   });
 
   await signIn(page, "owner@example.com");
-  await page.goto("/app/team");
+  await page.goto("/app/team/invite");
   const form = inviteForm(page);
   await form.getByLabel("Ονοματεπώνυμο", { exact: true }).fill(name);
   await form.getByLabel("Email", { exact: true }).fill(email);
@@ -109,6 +109,7 @@ test("email απενεργοποιημένου Χρήστη στην πρόσκ�
   );
   expect(await isTeamUserActive(userId)).toBe(true);
   // Δεν φτιάχτηκε πρόσκληση: το email δεν είναι στις Προσκλήσεις (ο Χρήστης φαίνεται στη λίστα των Χρηστών).
+  await page.goto("/app/team");
   await expect(
     listItem(card(page, "Προσκλήσεις σε εκκρεμότητα").last(), email),
   ).toHaveCount(0);

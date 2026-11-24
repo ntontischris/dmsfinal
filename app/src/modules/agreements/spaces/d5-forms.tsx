@@ -102,17 +102,16 @@ function TextStep(props: TextStepProps) {
           onChange={(e) => props.onChange(e.target.value)}
         />
       </label>
-      <div className="btn-row">
+      <div className="ml-quick">
         <button
           type="submit"
-          className="button"
           data-primary={isDanger ? undefined : "true"}
           data-danger={isDanger ? "true" : undefined}
           disabled={props.isPending || (isRequired && value.trim() === "")}
         >
           {props.submitLabel}
         </button>
-        <button type="button" className="button" onClick={props.onCancel}>
+        <button type="button" onClick={props.onCancel}>
           {props.cancelLabel}
         </button>
       </div>

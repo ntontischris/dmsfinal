@@ -50,6 +50,10 @@ async function addBlockedTime(
 // Ζητά σύνδεσμο (ή ανανέωση, με επιβεβαίωση αν υπάρχει ήδη) και γυρίζει τη διεύθυνση που φάνηκε.
 async function issueLink(page: Page): Promise<string> {
   const panel = linkPanel(page);
+  // Η κάρτα είναι κλειστό κουτί (details.ml-box)· ανοίγει πριν από τα κουμπιά.
+  await panel.locator("details.ml-box").evaluate((box) => {
+    (box as HTMLDetailsElement).open = true;
+  });
   const address = panel.locator("code");
   const renew = button(panel, "Ανανέωση συνδέσμου");
   const create = button(panel, "Δημιουργία συνδέσμου");

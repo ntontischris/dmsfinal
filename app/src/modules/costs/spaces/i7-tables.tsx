@@ -1,6 +1,8 @@
+import Link from "next/link";
+
 import { hrefOf } from "@/spaces/data/screens";
-import { Entity } from "@/spaces/kit/parts";
 import { Badge, fmtMoney } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import { fmtMonth } from "./i6-model";
 import {
@@ -9,8 +11,10 @@ import {
   type GroupRow,
   type ProductionRow,
 } from "./i7-model";
+import { signOf } from "./i7-totals";
 
-// Οι πίνακες της Κερδοφορίας (prototype `screens/i7-tables.tsx`, αυτούσιο· η Παραγωγή ανοίγει τη G3 της).
+// Οι πίνακες της Κερδοφορίας ως ml-table (γραμμές των «Χρημάτων»): ό,τι ήταν στήλη μπαίνει στη γραμμή, η Παραγωγή
+// ανοίγει τη G3 της και το περιθώριο είναι το ποσό με χρώμα κατά πρόσημο.
 
 const money = (value: number | null): string =>
   value === null ? "—" : fmtMoney(value);
@@ -18,6 +22,7 @@ const money = (value: number | null): string =>
 function Signals({ row }: { row: ProductionRow }) {
   return (
     <span className="i67-signals">
+      <span className="ml-tag">{row.clientName}</span>
       {row.overrun && <Badge tone="attention">Υπέρβαση κόστους</Badge>}
       {row.missingHours && <Badge>χωρίς πραγματικές ώρες</Badge>}
       {row.internal && <Badge>εσωτερική</Badge>}
@@ -25,52 +30,53 @@ function Signals({ row }: { row: ProductionRow }) {
   );
 }
 
+function Margin({ margin, small }: { margin: number | null; small: string }) {
+  return (
+    <td className="ml-amount" data-label="Περιθώριο" data-sign={signOf(margin)}>
+      {money(margin)}
+      <small>{small}</small>
+    </td>
+  );
+}
+
 function ProductionLine({ row }: { row: ProductionRow }) {
   const { production: p } = row;
-  const margin =
+  const marginSmall =
     row.margin !== null && row.price !== null && row.actualCost !== null
-      ? `${fmtMoney(row.margin)} · ${marginText(row.price, row.actualCost)}`
-      : "—";
+      ? `περιθώριο ${marginText(row.price, row.actualCost)}`
+      : null;
   return (
-    <tr>
-      <td data-label="Παραγωγή" className="i67-cell">
-        <Entity
-          name={p.title}
-          href={hrefOf("G3", { production: p.id })}
-          sub={row.clientName}
-        />
+    <tr className="ml-line">
+      <td className="ml-thumb" aria-hidden="true">
+        {initialsOf(p.title) || "—"}
       </td>
-      <td data-label="Τιμή" className="num i67-money">
-        {money(row.price)}
-      </td>
-      <td data-label="Εκτιμώμενο κόστος" className="num">
-        {money(row.estimateCost)}
-      </td>
-      <td data-label="Πραγματικό κόστος" className="num">
-        {money(row.actualCost)}
-      </td>
-      <td data-label="Περιθώριο" className="num i67-money">
-        {margin}
-      </td>
-      <td data-label="Σήματα">
+      <td className="ml-main i67-cell" data-label="Παραγωγή">
         <Signals row={row} />
+        <strong>
+          <Link href={hrefOf("G3", { production: p.id })}>{p.title}</Link>
+        </strong>
+        <small>
+          Τιμή {money(row.price)} · Εκτιμώμενο κόστος {money(row.estimateCost)}{" "}
+          · Πραγματικό κόστος {money(row.actualCost)}
+        </small>
       </td>
+      <Margin
+        margin={marginSmall === null ? null : row.margin}
+        small={marginSmall ?? "χωρίς κέρδος ακόμα"}
+      />
     </tr>
   );
 }
 
 export function ProductionTable(props: { rows: readonly ProductionRow[] }) {
   return (
-    <div className="scroll i67-glass">
-    <table className="rtable">
+    <table className="ml-table ml-list">
+      <caption className="sr-only">Περιθώριο ανά Παραγωγή</caption>
       <thead>
         <tr>
-          <th>Παραγωγή</th>
-          <th className="num">Τιμή</th>
-          <th className="num">Εκτιμώμενο κόστος</th>
-          <th className="num">Πραγματικό κόστος</th>
-          <th className="num">Περιθώριο</th>
-          <th>Σήματα</th>
+          <td aria-hidden="true" />
+          <th scope="col">Παραγωγή</th>
+          <th scope="col">Περιθώριο</th>
         </tr>
       </thead>
       <tbody>
@@ -79,39 +85,41 @@ export function ProductionTable(props: { rows: readonly ProductionRow[] }) {
         ))}
       </tbody>
     </table>
-    </div>
   );
 }
 
+const countedText = (count: number): string =>
+  count === 1 ? "1 Παραγωγή μετρά" : `${count} Παραγωγές μετρούν`;
+
 function GroupLine({ group, isMonth }: { group: GroupRow; isMonth: boolean }) {
   const label = isMonth ? fmtMonth(group.label) : group.label;
-  const margin = group.price - group.cost;
+  const facts = [
+    countedText(group.counted),
+    group.isInternal ? null : `Τιμή ${fmtMoney(group.price)}`,
+    `Πραγματικό κόστος ${fmtMoney(group.cost)}`,
+    group.missing > 0 ? `${group.missing} χωρίς πραγματικές ώρες` : null,
+  ].filter(Boolean);
   return (
-    <tr>
-      <td data-label={isMonth ? "Μήνας" : "Πελάτης"} className="i67-cell">
-        <Entity
-          name={group.isInternal ? `Εσωτερική δουλειά · ${label}` : label}
-          sub={
-            group.missing > 0
-              ? `${group.missing} χωρίς πραγματικές ώρες`
-              : undefined
-          }
-        />
-      </td>
-      <td data-label="Παραγωγές που μετρούν" className="num">
+    <tr className="ml-line">
+      <td className="ml-thumb" aria-hidden="true">
         {group.counted}
       </td>
-      <td data-label="Τιμή" className="num i67-money">
-        {group.isInternal ? "—" : fmtMoney(group.price)}
+      <td
+        className="ml-main i67-cell"
+        data-label={isMonth ? "Μήνας" : "Πελάτης"}
+      >
+        {group.isInternal && <span className="ml-tag">Εσωτερική δουλειά</span>}
+        <strong>{label}</strong>
+        <small>{facts.join(" · ")}</small>
       </td>
-      <td data-label="Πραγματικό κόστος" className="num">
-        {fmtMoney(group.cost)}
-      </td>
-      <td data-label="Περιθώριο" className="num i67-money">
-        {group.isInternal
-          ? "κόστος εσωτερικής δουλειάς"
-          : `${fmtMoney(margin)} · ${marginText(group.price, group.cost)}`}
-      </td>
+      {group.isInternal ? (
+        <Margin margin={null} small="κόστος εσωτερικής δουλειάς" />
+      ) : (
+        <Margin
+          margin={group.price - group.cost}
+          small={`περιθώριο ${marginText(group.price, group.cost)}`}
+        />
+      )}
     </tr>
   );
 }
@@ -128,15 +136,15 @@ export function GroupTable(props: {
           {missing} Παραγωγές χωρίς πραγματικές ώρες δεν μετρούν.
         </p>
       )}
-      <div className="scroll i67-glass">
-      <table className="rtable">
+      <table className="ml-table ml-list">
+        <caption className="sr-only">
+          Περιθώριο ανά {props.isMonth ? "Μήνα" : "Πελάτη"}
+        </caption>
         <thead>
           <tr>
-            <th>{props.isMonth ? "Μήνας" : "Πελάτης"}</th>
-            <th className="num">Παραγωγές που μετρούν</th>
-            <th className="num">Τιμή</th>
-            <th className="num">Πραγματικό κόστος</th>
-            <th className="num">Περιθώριο</th>
+            <td aria-hidden="true" />
+            <th scope="col">{props.isMonth ? "Μήνας" : "Πελάτης"}</th>
+            <th scope="col">Περιθώριο</th>
           </tr>
         </thead>
         <tbody>
@@ -145,7 +153,6 @@ export function GroupTable(props: {
           ))}
         </tbody>
       </table>
-      </div>
     </>
   );
 }

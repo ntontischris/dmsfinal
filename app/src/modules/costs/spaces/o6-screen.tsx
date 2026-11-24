@@ -19,7 +19,7 @@ import {
   saveWithholdingRate,
   type PaymentMethod,
 } from "@/modules/finance";
-import { SpacesSettingsTabs, recentChanges } from "@/modules/settings";
+import { recentChanges } from "@/modules/settings";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import {
@@ -160,7 +160,6 @@ export async function SpacesFinanceSettings() {
   const caps = catalogueCaps(await getViewer());
   return (
     <div data-spaces>
-      <SpacesSettingsTabs code="O6" />
       {caps.canSeeCost ? (
         <O6Body canManageCost={caps.canManageCost} />
       ) : (

@@ -7,6 +7,7 @@ import { agreementCaps } from "../helpers";
 import { listClientAgreements } from "../queries-client";
 import { clientCardOf, type ClientCardView } from "./client-adapter";
 
+import "../../finance/spaces/money-lines.css";
 import "./d1.css";
 
 // Τρέχων μήνας και ό,τι απομένει, ίδιο με τη Σήμερα και τη Συμφωνία (το κλεισμένο Γύρισμα κρατά).
@@ -35,7 +36,7 @@ function ClientAgreementCard({ card }: { card: ClientCardView }) {
           {card.status}
         </Badge>
       </div>
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Είδος</dt>
         <dd>{card.kind}</dd>
         {card.amount && (
@@ -52,13 +53,14 @@ function ClientAgreementCard({ card }: { card: ClientCardView }) {
         )}
         <RemainingProvisions current={card.current} />
       </dl>
-      <Link
-        className="button"
-        data-primary={card.isProposal ? "true" : undefined}
-        href={card.href}
-      >
-        {card.cta}
-      </Link>
+      <span className="ml-quick">
+        <Link
+          data-primary={card.isProposal ? "true" : undefined}
+          href={card.href}
+        >
+          {card.cta}
+        </Link>
+      </span>
     </article>
   );
 }

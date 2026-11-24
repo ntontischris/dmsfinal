@@ -1,13 +1,81 @@
-/* Αιτήματα GDPR: οι κανόνες της N1 (prototype `screens/n1.css`) που χρησιμοποιεί η σελίδα, αυτούσιοι */
-[data-look='spaces'] {
-& .n1-section { margin-top: var(--space-4); }
-& .n1-form { display: grid; gap: var(--space-3); max-width: 36rem; }
-& .n1-field { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
-& .n1-field .input { width: 100%; }
-& .n1-help { font-size: var(--text-sm); color: var(--color-attention); margin: 0; }
-& .n1-danger { border-color: var(--color-attention); }
-& .n1-help::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.4rem; vertical-align: middle; border-radius: 50%; background: var(--brand-rec); }
-& .n1-danger { border-radius: var(--radius-lg); }
-& .n1-bleed .part-rows { margin-inline: -1.25rem; }
-& .n1-danger .kit-panel { border-color: var(--brand-rec, var(--color-attention)); }
+/* Αιτήματα GDPR: τα κομμάτια του gdpr-parts.tsx πάνω στο λεξιλόγιο του money-lines.css (ίδια όψη με την Ομάδα). Μόνο tokens. */
+.g-stack {
+  display: grid;
+  gap: 1.1rem;
+}
+.g-body {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+.g-body > p,
+.g-section > p {
+  margin: 0;
+}
+.g-body .ml-list,
+.g-section > .ml-list {
+  margin: 0;
+}
+.g-section {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+}
+.g-section > header {
+  display: grid;
+  gap: 0.1rem;
+}
+.g-section > header small {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+.g-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.g-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.g-inline .input {
+  min-width: 0;
+  max-width: 11rem;
+}
+
+/* Επιβεβαίωση επικίνδυνης ενέργειας: κίτρινο περίγραμμα, όχι κόκκινο */
+.g-confirm {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--brand-yellow) 45%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 55%, transparent);
+}
+.g-confirm > h2,
+.g-confirm p,
+.g-confirm form {
+  margin: 0;
+}
+.g-confirm form {
+  display: grid;
+  gap: 0.8rem;
+}
+/* Υπόδειξη προσοχής: κίτρινη τελεία, όχι κόκκινη */
+.g-warn {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-text);
+}
+.g-warn::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--brand-yellow);
 }

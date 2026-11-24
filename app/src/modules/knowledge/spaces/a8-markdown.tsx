@@ -41,7 +41,7 @@ const COMPONENTS: Components = {
       <figure className="a8-video">
         <VideoPlayer link={video.link} title={video.title} />
         {video.title !== "Βίντεο" && (
-          <figcaption className="muted">{video.title}</figcaption>
+          <figcaption className="k-note">{video.title}</figcaption>
         )}
       </figure>
     );

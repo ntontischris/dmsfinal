@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { decideRescheduleRequest } from "../actions-booking";
 import {
   approveFilming,
@@ -55,11 +53,10 @@ function DoneForm({ card, isPending, onSend, onClose }: FormProps) {
   const isValid = Number.isFinite(actual) && actual > 0;
   const extra = isValid ? actual - card.hours : 0;
   return (
-    <div className="stack e3-form">
-      <label>
-        Πόσο κράτησε στην πράξη (ώρες)
+    <div className="ml-fields e3-form">
+      <label className="ml-field">
+        <span>Πόσο κράτησε στην πράξη (ώρες)</span>
         <input
-          className="input"
           inputMode="decimal"
           value={hours}
           onChange={(event) => setHours(event.target.value)}
@@ -70,13 +67,12 @@ function DoneForm({ card, isPending, onSend, onClose }: FormProps) {
         πραγματικές ώρες: η επιπλέον ώρα μετρά στο κόστος της Παραγωγής.
       </p>
       {extra > 0 && (
-        <p className="note">Επιπλέον χρόνος: {hoursLabel(extra)}.</p>
+        <p className="fl-note">Επιπλέον χρόνος: {hoursLabel(extra)}.</p>
       )}
       <Notes lines={outcomeNotes(card, "done")} />
-      <div className="btn-row">
+      <div className="ml-actions">
         <button
           type="button"
-          className="button"
           data-primary="true"
           disabled={!isValid || isPending}
           onClick={() =>
@@ -85,7 +81,7 @@ function DoneForm({ card, isPending, onSend, onClose }: FormProps) {
         >
           Επιβεβαίωση «έγινε»
         </button>
-        <button type="button" className="button" onClick={onClose}>
+        <button type="button" onClick={onClose}>
           Άκυρο
         </button>
       </div>
@@ -99,42 +95,38 @@ function MoveForm({ card, isPending, onSend, onClose }: FormProps) {
   const [time, setTime] = useState(athensTime(card.startsAt));
   const [hours, setHours] = useState(String(card.hours).replace(".", ","));
   return (
-    <div className="stack e3-form">
+    <div className="ml-fields e3-form">
       <p className="muted">
         Η Παροχή μένει μία. Αν είχε σταλεί Δελτίο, στείλε νέα έκδοση για να
         ενημερωθεί το Συνεργείο.
       </p>
-      <label>
-        Μέρα
+      <label className="ml-field">
+        <span>Μέρα</span>
         <input
-          className="input"
           type="date"
           value={date}
           onChange={(event) => setDate(event.target.value)}
         />
       </label>
-      <label>
-        Ώρα έναρξης
+      <label className="ml-field">
+        <span>Ώρα έναρξης</span>
         <input
-          className="input"
           type="time"
           value={time}
           onChange={(event) => setTime(event.target.value)}
         />
       </label>
-      <label>
-        Διάρκεια (ώρες)
+      <label className="ml-field">
+        <span>Διάρκεια (ώρες)</span>
         <input
-          className="input"
           inputMode="decimal"
           value={hours}
           onChange={(event) => setHours(event.target.value)}
         />
       </label>
-      <div className="btn-row">
+      <div className="ml-actions">
         <button
           type="button"
-          className="button"
           data-primary="true"
           disabled={isPending}
           onClick={() =>
@@ -143,7 +135,7 @@ function MoveForm({ card, isPending, onSend, onClose }: FormProps) {
         >
           Μετάθεση Γυρίσματος
         </button>
-        <button type="button" className="button" onClick={onClose}>
+        <button type="button" onClick={onClose}>
           Άκυρο
         </button>
       </div>
@@ -153,9 +145,12 @@ function MoveForm({ card, isPending, onSend, onClose }: FormProps) {
 
 function Notes({ lines }: { lines: readonly string[] }) {
   return (
-    <ul className="stack e3-outcome" aria-label="Τι γίνεται με την Παροχή και τη χρέωση">
+    <ul
+      className="ml-list e3-outcome"
+      aria-label="Τι γίνεται με την Παροχή και τη χρέωση"
+    >
       {lines.map((line) => (
-        <li key={line} className="note">
+        <li key={line} className="fl-note">
           {line}
         </li>
       ))}
@@ -177,12 +172,11 @@ function DecisionRow({
   isPending: boolean;
 }) {
   return (
-    <div className="stack">
-      <p className="note">{note}</p>
-      <div className="btn-row">
+    <div className="fl-box-body">
+      <p className="fl-note">{note}</p>
+      <div className="ml-quick fl-row">
         <button
           type="button"
-          className="button"
           data-primary={isDanger ? undefined : "true"}
           data-danger={isDanger}
           disabled={isPending}
@@ -190,12 +184,7 @@ function DecisionRow({
         >
           {yes.label}
         </button>
-        <button
-          type="button"
-          className="button"
-          disabled={isPending}
-          onClick={no.onClick}
-        >
+        <button type="button" disabled={isPending} onClick={no.onClick}>
           {no.label}
         </button>
       </div>
@@ -217,15 +206,11 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
   const cancelHours = card.agreement?.filmingCancelHours;
 
   return (
-    <Panel label="Ενέργειες">
+    <section className="fl-acts" aria-label="Ενέργειες">
       <LastDone log={result ? [result.text] : []} tone={result?.tone ?? "ok"} />
       {isOpen && can.reschedule && form === null && (
-        <div className="btn-row">
-          <button
-            type="button"
-            className="button"
-            onClick={() => setForm("move")}
-          >
+        <div className="ml-quick fl-row">
+          <button type="button" onClick={() => setForm("move")}>
             Αλλαγή μέρας/ώρας
           </button>
         </div>
@@ -233,10 +218,9 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
       {form === "move" && <MoveForm {...formProps} />}
 
       {card.state === "pending" && can.approve && form === null && (
-        <div className="btn-row">
+        <div className="ml-quick fl-row">
           <button
             type="button"
-            className="button"
             data-primary="true"
             disabled={isPending}
             onClick={() => send(approveFilming, id)}
@@ -246,7 +230,6 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
           {can.reject && (
             <button
               type="button"
-              className="button"
               data-danger="true"
               onClick={() => setForm("reject")}
             >
@@ -272,11 +255,10 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
       {card.state === "scheduled" &&
         form === null &&
         (can.markDone || can.markNoShow) && (
-          <div className="btn-row">
+          <div className="ml-quick fl-row">
             {can.markDone && (
               <button
                 type="button"
-                className="button"
                 data-primary="true"
                 onClick={() => setForm("done")}
               >
@@ -284,11 +266,7 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
               </button>
             )}
             {can.markNoShow && (
-              <button
-                type="button"
-                className="button"
-                onClick={() => setForm("noshow")}
-              >
+              <button type="button" onClick={() => setForm("noshow")}>
                 Δεν έγινε
               </button>
             )}
@@ -359,10 +337,9 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
       )}
 
       {isOpen && can.cancel && form === null && (
-        <div className="btn-row">
+        <div className="ml-quick fl-row">
           <button
             type="button"
-            className="button"
             data-danger="true"
             onClick={() => setForm("cancel")}
           >
@@ -384,14 +361,12 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
       {(card.state === "done" || card.state === "no_show") &&
         can.undo &&
         form !== "undo" && (
-          <div className="stack">
-            <button
-              type="button"
-              className="button"
-              onClick={() => setForm("undo")}
-            >
-              Αναίρεση
-            </button>
+          <div className="fl-box-body">
+            <div className="ml-quick fl-row">
+              <button type="button" onClick={() => setForm("undo")}>
+                Αναίρεση
+              </button>
+            </div>
             <p className="muted">
               Για «έγινε» ή «δεν έγινε» που μπήκε κατά λάθος.
             </p>
@@ -410,6 +385,6 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
       {(card.state === "cancelled" || card.state === "rejected") && (
         <p className="muted">Το Γύρισμα είναι τελικό.</p>
       )}
-    </Panel>
+    </section>
   );
 }

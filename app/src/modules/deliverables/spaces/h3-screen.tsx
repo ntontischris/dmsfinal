@@ -3,16 +3,16 @@ import type { ReactNode } from "react";
 
 import { can, canSeeClientWork, type Viewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { initialsOf } from "@/spaces/shell/avatar";
 
 import { listClientDeliverables } from "../client-queries";
 import type { ClientDeliverableCard } from "../client-types";
+import { H2Box } from "./h2-box";
 import { groupsOf, waitingOf } from "./h3-adapter";
 import { ClientStatusBadge, PeriodCard } from "./h3-group";
 
+import "../../finance/spaces/money-lines.css";
 import "./h34.css";
 
 const wrap = (children: ReactNode) => <div data-spaces>{children}</div>;
@@ -23,43 +23,33 @@ function WaitingCard({
   waiting: readonly ClientDeliverableCard[];
 }) {
   return (
-    <Panel
-      label="Περιμένουν εσένα"
-      aside={<span className="muted">{waiting.length}</span>}
-    >
+    <H2Box title="Περιμένουν εσένα" hint={`${waiting.length} Παραδοτέα`} isOpen>
       {waiting.length === 0 ? (
-        <p className="muted">Τίποτα δεν περιμένει εσένα.</p>
+        <p className="ml-empty">Τίποτα δεν περιμένει εσένα.</p>
       ) : (
-        <RowList>
+        <ul className="ml-list">
           {waiting.map((d) => (
-            <ListRow
-              key={d.id}
-              isHighlighted
-              lead={
-                <span className="part-tile" aria-hidden="true">
-                  {initialsOf(d.title)}
-                </span>
-              }
-              href={hrefOf("H2", { id: d.id })}
-              title={d.title}
-              sub={d.kind}
-              aside={
-                <>
-                  <ClientStatusBadge state="περιμένει εσένα" />
-                  <Link
-                    className="button"
-                    data-primary="true"
-                    href={hrefOf("H2", { id: d.id })}
-                  >
-                    Δες και ενέκρινε
-                  </Link>
-                </>
-              }
-            />
+            <li key={d.id} className="ml-line" data-urgent="">
+              <span className="ml-thumb" aria-hidden="true">
+                {initialsOf(d.title)}
+              </span>
+              <span className="ml-main">
+                <strong>
+                  <Link href={hrefOf("H2", { id: d.id })}>{d.title}</Link>
+                </strong>
+                <small>{d.kind}</small>
+              </span>
+              <span className="ml-quick">
+                <ClientStatusBadge state="περιμένει εσένα" />
+                <Link data-primary="true" href={hrefOf("H2", { id: d.id })}>
+                  Δες και ενέκρινε
+                </Link>
+              </span>
+            </li>
           ))}
-        </RowList>
+        </ul>
       )}
-    </Panel>
+    </H2Box>
   );
 }
 
@@ -84,7 +74,7 @@ export async function SpacesClientDeliverables({ viewer }: { viewer: Viewer }) {
     <div className="h34">
       {/* Μόνο με «Βλέπει Συνομιλία»: χωρίς αυτό η Συνομιλία (J3) δεν ανοίγει. */}
       {can(viewer, "c.chatRead") && (
-        <header className="h34-header">
+        <header className="h34-ask">
           <p className="note">
             Θέλεις κάτι καινούργιο;{" "}
             <Link href={hrefOf("J3")}>Ζήτα το από την ομάδα</Link>.
@@ -92,16 +82,17 @@ export async function SpacesClientDeliverables({ viewer }: { viewer: Viewer }) {
         </header>
       )}
       {groups.length === 0 ? (
-        <StateNotice kind="empty" title="Δεν υπάρχουν ακόμα Παραδοτέα">
-          <p>Θα εμφανιστούν εδώ μόλις η ομάδα σου στείλει το πρώτο.</p>
-        </StateNotice>
+        <p className="ml-empty" role="status">
+          <strong>Δεν υπάρχουν ακόμα Παραδοτέα.</strong> Θα εμφανιστούν εδώ
+          μόλις η ομάδα σου στείλει το πρώτο.
+        </p>
       ) : (
-        <>
+        <div className="ml-stack">
           <WaitingCard waiting={waiting} />
-          {groups.map((group) => (
-            <PeriodCard key={group.key} group={group} />
+          {groups.map((group, index) => (
+            <PeriodCard key={group.key} group={group} isOpen={index === 0} />
           ))}
-        </>
+        </div>
       )}
     </div>,
   );

@@ -10,6 +10,8 @@ import { MilestoneTerms, RevisionLimitTerms } from "./d2-terms-more";
 import { D2Box } from "./d2-box";
 import { D2Form, Field, IdField, NumberInput } from "./d2-ui";
 
+import "../../finance/spaces/money-lines.css";
+
 // Οι Όροι της Συμφωνίας (prototype `screens/d2-terms.tsx`): πεδίο για όποιον γράφει την πρόταση, κείμενο για τους άλλους,
 // και η προεπιλογή δίπλα όταν άλλαξε. Κάθε ομάδα πεδίων αποθηκεύεται με το δικό της πραγματικό action.
 
@@ -116,7 +118,7 @@ function MonthlyRows({ terms, baseline, isEditing }: RowsProps) {
 function TermsRows(props: RowsProps) {
   const { terms, baseline, isEditing, isMonthly } = props;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="t-pay"
         label="Μέρες πληρωμής"

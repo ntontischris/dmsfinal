@@ -35,12 +35,15 @@ function FilterPills(props: {
   onPick: (id: BoardFilter) => void;
 }) {
   return (
-    <div className="choice-row" role="group" aria-label="Ποιες Ευκαιρίες">
+    <div
+      className="choice-row ml-quick"
+      role="group"
+      aria-label="Ποιες Ευκαιρίες"
+    >
       {FILTERS.map((item) => (
         <button
           key={item.id}
           type="button"
-          className="button"
           aria-pressed={props.filter === item.id}
           onClick={() => props.onPick(item.id)}
         >
@@ -60,7 +63,7 @@ function StageColumns(props: {
   drag: ReturnType<typeof useStageDrag>;
 }) {
   return (
-    <div className="kanban b3-kanban">
+    <div className="b3-kanban">
       {props.columns.map((stage) => {
         const inStage = props.open.filter(
           (card) => props.drag.stageOf(card) === stage.id,

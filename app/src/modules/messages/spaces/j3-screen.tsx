@@ -1,9 +1,6 @@
 import Link from "next/link";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Segmented } from "@/spaces/kit/segmented";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { ErrorNotice } from "@/spaces/screens/shared";
 
 import { AutoRefresh } from "../components/auto-refresh";
 import { chatTopicOf } from "../components/refresh-mode";
@@ -26,6 +23,7 @@ import {
   changeAbout,
 } from "../request-labels";
 import type { ChangeRequest, ClientContext, Thread } from "../view-schema";
+import { JCount, JEmpty } from "./j-empty";
 import { MessageBubble } from "./j-message";
 import { ReadAtScope } from "./j2-read-at";
 import { ClientMessageActions } from "./j3-actions";
@@ -41,6 +39,7 @@ import {
 import { J3Composer } from "./j3-composer";
 import { J3LinkView, RequestBox } from "./j3-request-box";
 
+import "../../finance/spaces/money-lines.css";
 import "./j.css";
 import "./j3.css";
 
@@ -52,16 +51,14 @@ function Tabs({
   openCount: number | null;
 }) {
   return (
-    <nav className="tabs" aria-label="Μηνύματα">
+    <nav className="page-filters" aria-label="Μηνύματα">
       <Link
-        className="tab"
         href={MESSAGES_PATH}
         aria-current={tab === "conversation" ? "page" : undefined}
       >
         Συνομιλία
       </Link>
       <Link
-        className="tab"
         href={`${MESSAGES_PATH}?tab=requests`}
         aria-current={tab === "requests" ? "page" : undefined}
       >
@@ -71,42 +68,48 @@ function Tabs({
   );
 }
 
+function RequestLine({ row }: { row: J3RequestRow }) {
+  return (
+    <li className="ml-line" data-faded={row.isFaded || undefined}>
+      <span className="ml-thumb" aria-hidden="true">
+        {Array.from(row.title)[0] ?? "•"}
+      </span>
+      <div className="ml-main">
+        <strong>{row.title}</strong>
+        <small>
+          {row.when}
+          {row.about && ` · ${row.about}`}
+        </small>
+        {row.text && <span className="j3-req-text">{row.text}</span>}
+        <RequestBox request={row.box} />
+      </div>
+      <span aria-hidden="true" />
+      {(row.chatHref || row.deliverable) && (
+        <span className="ml-quick">
+          {row.chatHref && <Link href={row.chatHref}>Δες στη Συνομιλία</Link>}
+          {row.deliverable && <J3LinkView link={row.deliverable} />}
+        </span>
+      )}
+    </li>
+  );
+}
+
 function RequestsTab({ rows }: { rows: readonly J3RequestRow[] }) {
   if (rows.length === 0)
     return (
-      <StateNotice kind="empty" title="Δεν έχεις στείλει Αίτημα">
+      <JEmpty title="Δεν έχεις στείλει Αίτημα">
         <p>Όταν ζητήσεις κάτι από τη Συνομιλία, θα το βρεις εδώ.</p>
-      </StateNotice>
+      </JEmpty>
     );
   return (
-    <Panel label="Αιτήματα" aside={rows.length} isFlush>
-      <RowList>
+    <>
+      <JCount n={rows.length} one="Αίτημα" many="Αιτήματα" />
+      <ul className="ml-list" aria-label="Αιτήματα">
         {rows.map((row) => (
-          <ListRow
-            key={row.key}
-            title={row.title}
-            isFaded={row.isFaded}
-            sub={
-              <>
-                <span className="part-sub">{row.when}</span>
-                {row.about && <span className="part-sub">{row.about}</span>}
-                {row.text && <span className="j3-req-text">{row.text}</span>}
-                <RequestBox request={row.box} />
-                {row.chatHref && (
-                  <Link href={row.chatHref}>Δες στη Συνομιλία</Link>
-                )}
-                {row.deliverable && <J3LinkView link={row.deliverable} />}
-              </>
-            }
-            aside={
-              <Badge tone={row.box.isOpen ? "attention" : undefined}>
-                {row.box.state}
-              </Badge>
-            }
-          />
+          <RequestLine key={row.key} row={row} />
         ))}
-      </RowList>
-    </Panel>
+      </ul>
+    </>
   );
 }
 
@@ -118,9 +121,9 @@ function ChangeBubble({ change }: { change: ChangeRequest }) {
       <div className="j3-req">
         <div className="j3-req-head">
           <strong>{CHANGE_TITLE}</strong>
-          <Badge tone={isOpen ? "attention" : undefined}>
+          <span className="ml-tag">
             {REQUEST_STATE_LABELS[isOpen ? "open" : "done"]}
-          </Badge>
+          </span>
         </div>
         <p className="muted">{changeAbout(change.deliverableTitle)}</p>
         <p className="j3-req-text">{change.body}</p>
@@ -189,14 +192,18 @@ function Writer({
 
 function OrderToggle({ order }: { order: J3Order }) {
   return (
-    <Segmented
-      label="Σειρά Μηνυμάτων"
-      options={(["new", "old"] as const).map((option) => ({
-        label: option === "new" ? "Νεότερα πρώτα" : "Παλαιότερα πρώτα",
-        href: j3OrderHrefOf(option, MESSAGES_PATH),
-        isCurrent: option === order,
-      }))}
-    />
+    <nav className="page-filters" aria-label="Σειρά Μηνυμάτων">
+      {(["new", "old"] as const).map((option) => (
+        <Link
+          key={option}
+          href={j3OrderHrefOf(option, MESSAGES_PATH)}
+          scroll={false}
+          aria-current={option === order ? "page" : undefined}
+        >
+          {option === "new" ? "Νεότερα πρώτα" : "Παλαιότερα πρώτα"}
+        </Link>
+      ))}
+    </nav>
   );
 }
 
@@ -216,9 +223,9 @@ function ConversationTab({
   return (
     <div className="j3-thread">
       {isEmpty && (
-        <StateNotice kind="empty" title="Καμία συζήτηση ακόμα">
+        <JEmpty title="Καμία συζήτηση ακόμα">
           {thread?.canWrite && <p>Γράψε το πρώτο σου Μήνυμα στην ομάδα</p>}
-        </StateNotice>
+        </JEmpty>
       )}
       {!isEmpty && <OrderToggle order={order} />}
       {order === "new" && writer}
@@ -233,14 +240,18 @@ function ConversationTab({
 
 function Notes({ digestMinutes }: { digestMinutes: number | null }) {
   return (
-    <Panel label="Ειδοποιήσεις">
+    <details className="ml-box">
+      <summary>
+        <span className="ml-box-title">Πώς λειτουργούν τα Μηνύματα</span>
+        <small>ειδοποιήσεις, πολλοί Πελάτες, βίντεο</small>
+      </summary>
       <p className="muted">{clientDigestNote(digestMinutes)}</p>
       <p className="muted">
         Αν ανήκεις σε περισσότερους Πελάτες, βλέπεις τη Συνομιλία του Πελάτη που
         έχεις επιλέξει.
       </p>
       <p className="muted">{CLIENT_VIDEO_NOTE}</p>
-    </Panel>
+    </details>
   );
 }
 

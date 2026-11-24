@@ -1,8 +1,5 @@
 import Link from "next/link";
 
-import { Panel } from "@/spaces/kit/panel";
-import { RowList } from "@/spaces/kit/parts";
-
 import {
   dayNumber,
   isSameMonth,
@@ -130,13 +127,16 @@ export function A5List({ items }: { items: readonly Item[] }) {
   return (
     <div className="a5-list">
       {groupByDate(items).map(([date, dayItems]) => (
-        <Panel key={date} label={fmtLong(date)} aside={dayItems.length} isFlush>
-          <RowList>
+        <section key={date} className="a5-list-day">
+          <h2 className="ml-box-title">
+            {fmtLong(date)} <small>{dayItems.length}</small>
+          </h2>
+          <ul className="ml-list">
             {dayItems.map((item) => (
               <A5Row key={item.id} item={item} />
             ))}
-          </RowList>
-        </Panel>
+          </ul>
+        </section>
       ))}
     </div>
   );

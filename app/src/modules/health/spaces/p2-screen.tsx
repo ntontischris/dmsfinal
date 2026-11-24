@@ -1,5 +1,4 @@
-import { Panel } from "@/spaces/kit/panel";
-import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import {
   BANNER_NOTE,
@@ -19,6 +18,7 @@ import {
 } from "./p2-more";
 import { ExternalCheckCard, JobsCard } from "./p2-parts";
 
+import "../../finance/spaces/money-lines.css";
 import "./p2.css";
 
 interface SpacesHealthProps {
@@ -37,16 +37,9 @@ function Banner({ count }: { count: number }) {
       role="status"
       aria-label="Σύνοψη Υγείας"
     >
-      <Panel
-        label={p2BannerTitle(count)}
-        aside={
-          <Badge tone={count > 0 ? "attention" : "strong"}>
-            {count > 0 ? "θέλει προσοχή" : "εντάξει"}
-          </Badge>
-        }
-      >
-        <p className="muted">{BANNER_NOTE}</p>
-      </Panel>
+      <strong>{p2BannerTitle(count)}</strong>
+      <small>{count > 0 ? "θέλει προσοχή" : "εντάξει"}</small>
+      <p className="muted">{BANNER_NOTE}</p>
     </div>
   );
 }
@@ -86,12 +79,14 @@ export async function SpacesHealth({
         <StateNotice kind="empty" title={HEALTH_FRESH_TITLE}>
           {HEALTH_FRESH_TEXT}
         </StateNotice>
-        <ExternalCheckCard monitorUrl={monitorUrl} />
+        <div className="ml-stack">
+          <ExternalCheckCard monitorUrl={monitorUrl} />
+        </div>
       </div>
     );
   const model = p2ModelOf(health.data);
   return (
-    <div data-spaces>
+    <div data-spaces className="ml-stack">
       <Banner count={model.attention} />
       <ExternalCheckCard monitorUrl={monitorUrl} />
       <JobsCard jobs={model.jobs} isRed={model.isJobsRed} />

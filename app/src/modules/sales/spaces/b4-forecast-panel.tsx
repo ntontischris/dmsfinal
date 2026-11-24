@@ -18,6 +18,8 @@ import {
   weightedText,
 } from "./forecast-adapter";
 
+import "../../finance/spaces/money-lines.css";
+
 // Η υπόδειξη του κουτιού: η Πιθανότητα και η σταθμισμένη (με «Βλέπει ποσά»)· για τον Υπεύθυνο και η αλλαγή.
 const hintOf = (
   row: ForecastRow | null,
@@ -39,7 +41,7 @@ function ForecastFacts(props: {
 }) {
   const { row, hasAmounts } = props;
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       {hasAmounts && (
         <>
           <dt>Αξία</dt>

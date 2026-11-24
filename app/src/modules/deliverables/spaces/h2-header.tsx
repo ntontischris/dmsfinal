@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Person } from "@/spaces/kit/parts";
-import { Badge, fmtDate } from "@/spaces/screens/shared";
+import { fmtDate } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import { updateDeliverable } from "../actions-deliverable";
 import { NO_ASSIGNEE_LABEL } from "../labels";
 import type { AssigneeCandidate, DeliverableDetail } from "../types";
 import { clientAndTitle } from "./h1-model";
+import { H2Box, H2Person } from "./h2-box";
 import { AutoSaveForm, submitOnChange } from "./h2-form";
 import {
   STATE_WORDS,
@@ -20,7 +20,7 @@ import {
   type PanelProps,
 } from "./h2-model";
 
-// Η κεφαλίδα του H2 (prototype `screens/h2-header.tsx`). Ανατεθειμένος και Προθεσμία αλλάζουν με το deliverable_update,
+// Κεφαλίδα και «Στοιχεία» του H2. Ανατεθειμένος και Προθεσμία αλλάζουν με το deliverable_update,
 // που θέλει όλα τα στοιχεία· τα υπόλοιπα πάνε όπως είναι.
 const keepOf = (detail: DeliverableDetail) => ({
   deliverableId: detail.id,
@@ -49,20 +49,28 @@ const optionsOf = (
 function AssigneeField({ detail, ctx }: PanelProps) {
   const [isEditing, setIsEditing] = useState(false);
   const name = detail.assigneeName ?? NO_ASSIGNEE_LABEL;
-  if (!detail.can.edit || ctx.assignees === null) return <Person name={name} />;
+  if (!detail.can.edit || ctx.assignees === null)
+    return (
+      <span className="h2-inline">
+        <H2Person name={name} />
+        {name}
+      </span>
+    );
   // Φαίνεται ένα όνομα· η λίστα ανοίγει μόνο με «Αλλαγή».
   if (!isEditing)
     return (
       <span className="h2-inline">
-        <Person name={name} />
-        <button
-          type="button"
-          className="button"
-          aria-label={`Αλλαγή Ανατεθειμένου (τώρα: ${name})`}
-          onClick={() => setIsEditing(true)}
-        >
-          Αλλαγή
-        </button>
+        <H2Person name={name} />
+        {name}
+        <span className="ml-quick">
+          <button
+            type="button"
+            aria-label={`Αλλαγή Ανατεθειμένου (τώρα: ${name})`}
+            onClick={() => setIsEditing(true)}
+          >
+            Αλλαγή
+          </button>
+        </span>
       </span>
     );
   return (
@@ -71,7 +79,7 @@ function AssigneeField({ detail, ctx }: PanelProps) {
       hidden={withoutKey(keepOf(detail), "assigneeId")}
     >
       <select
-        className="select"
+        className="input"
         name="assigneeId"
         aria-label="Ανατεθειμένος"
         defaultValue={detail.assigneeId ?? ""}
@@ -88,16 +96,32 @@ function AssigneeField({ detail, ctx }: PanelProps) {
   );
 }
 
+// Η προθεσμία φαίνεται μία φορά: ως κείμενο, και ως πεδίο ημερομηνίας μόνο αφού πατηθεί «Αλλαγή».
 function DeadlineField({ detail }: PanelProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const text = detail.deadline
     ? fmtDate(detail.deadline)
     : detail.filmingId
       ? "μετά το Γύρισμα"
       : "χωρίς ημερομηνία";
   if (!detail.can.edit) return <span>{text}</span>;
+  if (!isEditing)
+    return (
+      <span className="h2-inline">
+        <span>{text}</span>
+        <span className="ml-quick">
+          <button
+            type="button"
+            aria-label={`Αλλαγή Προθεσμίας (τώρα: ${text})`}
+            onClick={() => setIsEditing(true)}
+          >
+            Αλλαγή
+          </button>
+        </span>
+      </span>
+    );
   return (
     <span className="h2-inline">
-      <span>{text}</span>
       <AutoSaveForm
         action={updateDeliverable}
         hidden={withoutKey(keepOf(detail), "deadline")}
@@ -118,57 +142,88 @@ function DeadlineField({ detail }: PanelProps) {
 function Signals({ detail }: { detail: DeliverableDetail }) {
   const extra = extraOf(detail.charge);
   return (
-    <span className="h2-signals">
-      <Badge tone="strong">{STATE_WORDS[detail.state]}</Badge>
-      {detail.isLate && <Badge tone="attention">καθυστερεί (εσωτερικά)</Badge>}
-      {isReopened(detail) && (
-        <Badge tone="attention">ξανάνοιξε μετά την έγκριση</Badge>
+    <>
+      {detail.isLate && (
+        <span className="ml-tag" data-tone="warn">
+          καθυστερεί (εσωτερικά)
+        </span>
       )}
-      {detail.client === null && <Badge>Εσωτερική</Badge>}
-      {extra && <Badge>έξτρα {extra}</Badge>}
-    </span>
+      {isReopened(detail) && (
+        <span className="ml-tag" data-tone="warn">
+          ξανάνοιξε μετά την έγκριση
+        </span>
+      )}
+      {detail.client === null && <span className="ml-tag">Εσωτερική</span>}
+      {extra && <span className="ml-tag">έξτρα {extra}</span>}
+    </>
   );
 }
 
-export function H2Header(props: PanelProps) {
+// Η κεφαλίδα της Σελίδας Παραδοτέου (μορφή της I8): κατάσταση και σήματα, ο τίτλος (το μοναδικό h1), Πελάτης — Παραγωγή.
+export function H2Hero({ detail, ctx }: PanelProps) {
+  return (
+    <header className="ml-hero h2-header">
+      <span className="ml-hero-mono" aria-hidden="true">
+        {initialsOf(detail.title)}
+      </span>
+      <div>
+        <span className="h2-signals">
+          <span className="ml-tag">{STATE_WORDS[detail.state]}</span>
+          <Signals detail={detail} />
+        </span>
+        <h1>{detail.title}</h1>
+        <p>
+          <Link href={ctx.productionHref}>
+            {clientAndTitle(detail.client, detail.production)}
+          </Link>
+          {` · ${detail.kind}`}
+        </p>
+      </div>
+    </header>
+  );
+}
+
+// Τα στοιχεία του Παραδοτέου: Ανατεθειμένος και Προθεσμία αλλάζουν επί τόπου.
+export function H2Facts(props: PanelProps) {
   const { detail, ctx } = props;
   return (
-    <header className="h2-header">
-      <Panel label={detail.kind} aside={<Signals detail={detail} />}>
-        <dl className="dl">
-          <dt>Πελάτης — Παραγωγή</dt>
-          <dd>
-            <Link href={ctx.productionHref}>
-              {clientAndTitle(detail.client, detail.production)}
-            </Link>
-          </dd>
-          {ctx.filmingHref && (
-            <>
-              <dt>Από Γύρισμα</dt>
-              <dd>
-                <Link href={ctx.filmingHref}>Άνοιγμα του Γυρίσματος</Link>
-              </dd>
-            </>
-          )}
-          <dt>Είδος</dt>
-          <dd>{detail.kind}</dd>
-          <dt>Ανατεθειμένος</dt>
-          <dd>
-            <AssigneeField {...props} />
-          </dd>
-          <dt>Προθεσμία</dt>
-          <dd>
-            <DeadlineField {...props} />
-          </dd>
-          <dt>Γύροι αλλαγών</dt>
-          <dd>{roundsLabel(detail.roundsUsed, detail.roundsLimit)}</dd>
-        </dl>
-        <p className="muted">
-          Η προθεσμία μετρά σε εργασίμες από το Γύρισμα που έγινε (ή από τη
-          δημιουργία). Η καθυστέρηση δεν τρέχει όσο αναμένει πελάτη ή όσο η
-          Έκδοση είναι σε έλεγχο.
-        </p>
-      </Panel>
-    </header>
+    <H2Box
+      title="Στοιχεία"
+      hint={roundsLabel(detail.roundsUsed, detail.roundsLimit)}
+    >
+      <dl className="ml-kv">
+        <dt>Πελάτης — Παραγωγή</dt>
+        <dd>
+          <Link href={ctx.productionHref}>
+            {clientAndTitle(detail.client, detail.production)}
+          </Link>
+        </dd>
+        {ctx.filmingHref && (
+          <>
+            <dt>Από Γύρισμα</dt>
+            <dd>
+              <Link href={ctx.filmingHref}>Άνοιγμα του Γυρίσματος</Link>
+            </dd>
+          </>
+        )}
+        <dt>Είδος</dt>
+        <dd>{detail.kind}</dd>
+        <dt>Ανατεθειμένος</dt>
+        <dd>
+          <AssigneeField {...props} />
+        </dd>
+        <dt>Προθεσμία</dt>
+        <dd>
+          <DeadlineField {...props} />
+        </dd>
+        <dt>Γύροι αλλαγών</dt>
+        <dd>{roundsLabel(detail.roundsUsed, detail.roundsLimit)}</dd>
+      </dl>
+      <p className="muted">
+        Η προθεσμία μετρά σε εργασίμες από το Γύρισμα που έγινε (ή από τη
+        δημιουργία). Η καθυστέρηση δεν τρέχει όσο αναμένει πελάτη ή όσο η Έκδοση
+        είναι σε έλεγχο.
+      </p>
+    </H2Box>
   );
 }

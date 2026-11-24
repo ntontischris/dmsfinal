@@ -31,7 +31,7 @@ test("ο Ιδιοκτήτης στέλνει Μήνυμα και Εσωτερι�
   await signIn(page, "owner@example.com");
   await page.goto(INBOX_PATH);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Επικοινωνία" }),
+    page.getByRole("heading", { level: 1, name: "Εισερχόμενα" }),
   ).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Εισερχόμενα" }),

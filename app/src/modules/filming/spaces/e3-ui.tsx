@@ -6,6 +6,7 @@ import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 
 import type { StatusLook } from "./e1-groups";
 
+import "../../finance/spaces/money-lines.css";
 import "./e3.css";
 
 // Κοινά κομμάτια της σελίδας Γυρίσματος (prototype `screens/e3-ui.tsx`), που τα μοιράζονται και τα E6 και F2.
@@ -47,29 +48,28 @@ export function ReasonForm({
   const [reason, setReason] = useState("");
   const isValid = isOptional || reason.trim().length > 0;
   return (
-    <div className="stack e3-form">
-      <label>
-        {label}
+    <div className="ml-fields e3-form">
+      <label className="ml-field" data-wide>
+        <span>{label}</span>
         <input
-          className="input"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
           aria-required={!isOptional}
         />
+        {!isValid && <small>Ο λόγος είναι υποχρεωτικός.</small>}
       </label>
-      {!isValid && <span className="muted">Ο λόγος είναι υποχρεωτικός.</span>}
-      <div className="btn-row">
+      <div className="ml-actions">
+        <button type="button" onClick={onClose}>
+          Άκυρο
+        </button>
         <button
           type="button"
-          className="button"
+          data-primary="true"
           data-danger={isDanger}
           disabled={!isValid || isPending}
           onClick={() => onConfirm(reason.trim())}
         >
           {confirmLabel}
-        </button>
-        <button type="button" className="button" onClick={onClose}>
-          Άκυρο
         </button>
       </div>
     </div>

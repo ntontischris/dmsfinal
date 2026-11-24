@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar } from "@/spaces/kit/parts";
-
 import { addProductionMember, removeProductionMember } from "../actions-team";
 import type { OwnerCandidate } from "../types";
 import { countLabel, type MemberRow } from "./g2-model";
+import { G2Box, G2Person } from "./g2-box";
 import { RunResult, useRun } from "./g2-ui";
 
 interface G2MembersProps {
@@ -34,7 +32,7 @@ function MemberLine({
     <li className="g2-member">
       <div className="g2-member-line">
         <span className="g2-member-who">
-          <Avatar name={member.name} size={32} />
+          <G2Person name={member.name} />
           <span className="g2-member-text">
             <strong>{member.name}</strong>
             <span className="part-sub">
@@ -42,12 +40,11 @@ function MemberLine({
             </span>
           </span>
         </span>
-        <span className="g2-signals">
-          <span className="badge">{member.reason}</span>
+        <span className="g2-signals ml-quick">
+          <span className="ml-tag">{member.reason}</span>
           {canManage && !member.isOwner && (
             <button
               type="button"
-              className="button"
               disabled={remove.isPending}
               onClick={() =>
                 member.open > 0 ? setIsAsking(true) : handleRemove()
@@ -71,21 +68,16 @@ function MemberLine({
               : `Οι ${member.open} ανοιχτές αναθέσεις του πάνε`}{" "}
             στον Υπεύθυνο ({ownerName}).
           </p>
-          <div className="btn-row">
+          <div className="ml-quick g2-actions">
             <button
               type="button"
-              className="button"
               data-danger
               disabled={remove.isPending}
               onClick={handleRemove}
             >
               Αφαίρεση και μεταφορά
             </button>
-            <button
-              type="button"
-              className="button"
-              onClick={() => setIsAsking(false)}
-            >
+            <button type="button" onClick={() => setIsAsking(false)}>
               Άκυρο
             </button>
           </div>
@@ -106,9 +98,9 @@ function AddMember({
   const chosen = choices.some((person) => person.id === picked) ? picked : "";
   return (
     <>
-      <div className="g2-add">
+      <div className="g2-add ml-quick">
         <select
-          className="select"
+          className="input"
           aria-label="Νέο Μέλος"
           value={chosen}
           onChange={(event) => setPicked(event.target.value)}
@@ -122,7 +114,6 @@ function AddMember({
         </select>
         <button
           type="button"
-          className="button"
           disabled={!chosen || add.isPending}
           onClick={() =>
             add.run({ productionId, userId: chosen }, (state) => {
@@ -143,7 +134,7 @@ function AddMember({
 export function G2Members(props: G2MembersProps) {
   const { members, canManage } = props;
   return (
-    <Panel label="Μέλη" aside={countLabel(members.length, "άτομο", "άτομα")}>
+    <G2Box title="Μέλη" hint={countLabel(members.length, "άτομο", "άτομα")}>
       <p className="muted">
         Όποιος αφαιρείται χάνει αμέσως την πρόσβαση στην Παραγωγή.
       </p>
@@ -153,6 +144,6 @@ export function G2Members(props: G2MembersProps) {
         ))}
       </ul>
       {canManage && <AddMember {...props} />}
-    </Panel>
+    </G2Box>
   );
 }

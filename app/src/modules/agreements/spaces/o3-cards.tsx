@@ -195,11 +195,10 @@ export function TermsCard({
   return (
     <SettingsForm key={set} action={saveTerms}>
       <SettingsCard title="Όροι Συμφωνίας">
-        <div className="o3-switch" aria-label="Σετ Όρων">
+        <div className="o3-switch ml-quick" aria-label="Σετ Όρων">
           {SET_LABELS.map((item) => (
             <Link
               key={item.set}
-              className="button"
               data-primary={item.set === set ? "true" : undefined}
               aria-current={item.set === set ? "true" : undefined}
               href={termsHref(item.set)}

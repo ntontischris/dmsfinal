@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 import { visit } from "./filming-parts";
@@ -9,9 +9,17 @@ import { project, signIn } from "./sales-parts";
 // βάση, γι' αυτό ό,τι αλλάζει επανέρχεται στο finally.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-
 const CLIENT_EMAIL = (P: string): string => `notify.${P}@example.com`;
 const MARKER = (P: string): string => `Δοκιμή K1 ${P}`;
+
+// Οι Προτιμήσεις των Ειδοποιήσεων: ένα κλειστό κουτί ανά Γεγονός, ανοίγει από τον τίτλο του.
+async function openPrefGroup(page: Page, label: string): Promise<void> {
+  const box = page
+    .locator("details.ml-box")
+    .filter({ has: page.locator("summary").getByText(label, { exact: true }) });
+  if ((await box.getAttribute("open")) === null)
+    await box.locator("summary").click();
+}
 
 // Το service role χρησιμεύει μόνο για να επανέλθει η βάση αν το τεστ σταματήσει στη μέση.
 function serviceClient() {
@@ -22,6 +30,15 @@ function serviceClient() {
       "Λείπει το NEXT_PUBLIC_SUPABASE_URL ή το SUPABASE_SERVICE_ROLE_KEY",
     );
   return createClient(url, key, { auth: { persistSession: false } });
+}
+
+// Τα κουτιά (ομάδες, κάρτες Αυτοματισμών) είναι κλειστά από προεπιλογή.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
 }
 
 async function restoreOwnerChanges(P: string): Promise<void> {
@@ -66,6 +83,7 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
 
     // K1: κατάλογος → Γεγονός «Νέο Μήνυμα».
     await visit(page, "/app/settings/automations");
+    await openBoxes(page);
     await page
       .getByRole("main")
       .getByRole("link", { name: /Νέο Μήνυμα/ })
@@ -78,7 +96,7 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
 
     // Δεύτερος Αυτοματισμός Ειδοποίησης προς συγκεκριμένο Χρήστη.
     await page.getByRole("button", { name: "Προσθήκη Αυτοματισμού" }).click();
-    const form = page.locator("section.kit-panel").filter({
+    const form = page.locator("details.ml-new").filter({
       has: page.getByRole("heading", {
         name: "Νέος Αυτοματισμός",
         exact: true,
@@ -95,6 +113,7 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
 
     const card = page.getByRole("region", { name: new RegExp(MARKER(P)) });
     await expect(card).toBeVisible();
+    await openBoxes(page);
     await expect(
       card.getByRole("heading", {
         name: "Ειδοποίηση · προστέθηκε από τη Διαχείριση",
@@ -120,8 +139,8 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
       .click();
     await expect(page).toHaveURL(/\/app\/settings\/system-messages$/);
     await page
-      .locator("li.part-row")
-      .filter({ has: page.locator(".part-title", { hasText: /^Πρόσκληση$/ }) })
+      .locator("li.ml-line")
+      .filter({ has: page.locator("strong", { hasText: /^Πρόσκληση$/ }) })
       .getByRole("link", { name: "Επεξεργασία" })
       .click();
     await expect(page).toHaveURL(/\/app\/settings\/system-messages\/invite$/);
@@ -156,6 +175,9 @@ test("ο πελάτης βλέπει κλειδωμένο το απαραίτη�
     await visit(page, "/app/notifications");
     await page.getByRole("link", { name: "Προτιμήσεις", exact: true }).click();
     await expect(page).toHaveURL(/tab=prefs/);
+    // Κάθε Γεγονός είναι κλειστό κουτί: ανοίγουμε όσα χρειαζόμαστε.
+    await openPrefGroup(page, "Αίτημα ολοκληρώθηκε ή απορρίφθηκε");
+    await openPrefGroup(page, "Νέο Μήνυμα");
 
     const locked = page.getByRole("checkbox", {
       name: "Λαμβάνω: Αίτημα ολοκληρώθηκε ή απορρίφθηκε · Ειδοποίηση",
@@ -178,6 +200,7 @@ test("ο πελάτης βλέπει κλειδωμένο το απαραίτη�
     await saved;
     await expect(message).toBeEnabled();
     await page.reload();
+    await openPrefGroup(page, "Νέο Μήνυμα");
     await expect(
       page.getByRole("checkbox", { name: "Λαμβάνω: Νέο Μήνυμα · Ειδοποίηση" }),
     ).not.toBeChecked();

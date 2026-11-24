@@ -28,7 +28,7 @@ import { STATE_WORDS } from "./g1-rows";
 import { G2ClientPage } from "./g2-client";
 import { G2State } from "./g2-live";
 import { G2Members } from "./g2-members";
-import { G2Money } from "./g2-money";
+import { G2Agreement } from "./g2-money";
 import {
   cancellationOf,
   deliveryBlockers,
@@ -36,10 +36,12 @@ import {
   memberRowsOf,
   productionStats,
 } from "./g2-model";
-import { G2Messages, G2Trail } from "./g2-notes";
-import { G2Deliverables, G2Filmings, G2Provisions } from "./g2-sections";
+import { G2Hero } from "./g2-hero";
+import { G2Trail } from "./g2-notes";
+import { G2Deliverables, G2Filmings } from "./g2-sections";
 import { G2Tasks } from "./g2-tasks";
 
+import "../../finance/spaces/money-lines.css";
 import "./g2.css";
 
 function Missing() {
@@ -54,6 +56,10 @@ function Missing() {
   );
 }
 
+// Η Συνομιλία είναι μία ανά Πελάτη· ο σύνδεσμος την ανοίγει φιλτραρισμένη στην ετικέτα της Παραγωγής.
+const CHAT_HINT =
+  "Η Συνομιλία είναι μία ανά Πελάτη· τα μηνύματα αυτής της Παραγωγής ανοίγουν φιλτραρισμένα.";
+
 function Header({
   production,
   viewer,
@@ -64,48 +70,56 @@ function Header({
   const { client, agreement, period } = production;
   const canOpenClient = salesCaps(viewer).canViewClients;
   const canOpenAgreement = agreementCaps(viewer).canView;
+  const threadHref = messagesHrefOf(viewer, production);
   return (
-    <header className="g2-header">
-      <dl className="dl">
-        <dt>Πελάτης</dt>
-        <dd>
+    <G2Hero
+      title={production.title}
+      stateWord={STATE_WORDS[production.state]}
+      meta={
+        <>
           {client === null ? (
-            "Εσωτερική Παραγωγή"
+            "Εσωτερική Παραγωγή · μόνο Εσωτερικά Μηνύματα"
           ) : canOpenClient ? (
             <Link href={hrefOf("B2", { id: client.id })}>{client.name}</Link>
           ) : (
             client.name
           )}
-        </dd>
-        {agreement && (
-          <>
-            <dt>Συμφωνία</dt>
-            <dd>
+          {agreement && (
+            <>
+              {" · "}
               {canOpenAgreement ? (
                 <Link href={hrefOf("D2", { id: agreement.id })}>
                   {agreement.title}
                 </Link>
               ) : (
                 agreement.title
-              )}{" "}
-              · {period ? periodLabel(period.starts) : "εφάπαξ"}
-            </dd>
-          </>
-        )}
-      </dl>
-      <span className="g2-inline">
-        {costsCaps(viewer).canView && (
-          <Link href={`/app/productions/${production.id}/costs`}>
-            Κόστος και ώρες
-          </Link>
-        )}
-        <SpacesHistoryLink
-          viewer={viewer}
-          entity="productions"
-          id={production.id}
-        />
-      </span>
-    </header>
+              )}
+              {" · "}
+              {period ? periodLabel(period.starts) : "εφάπαξ"}
+            </>
+          )}
+        </>
+      }
+      actions={
+        <>
+          {threadHref && (
+            <Link href={threadHref} title={CHAT_HINT}>
+              Άνοιγμα Συνομιλίας
+            </Link>
+          )}
+          {costsCaps(viewer).canView && (
+            <Link href={`/app/productions/${production.id}/costs`}>
+              Κόστος και ώρες
+            </Link>
+          )}
+          <SpacesHistoryLink
+            viewer={viewer}
+            entity="productions"
+            id={production.id}
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -195,66 +209,61 @@ function G2Page({
   const meId = viewer.status === "signed-in" ? viewer.userId : "";
   return (
     <div className="g2">
-      <header className="page-head">
-        <h1>
-          {production.title}
-          <span className="page-head-dot">.</span>
-        </h1>
-      </header>
-      <Strip stats={productionStats(production)} now={null} />
       <Header production={production} viewer={viewer} />
-      <G2State
-        productionId={production.id}
-        state={production.state}
-        stateWord={STATE_WORDS[production.state]}
-        owner={production.owner}
-        ownerChoices={ownerChoices(candidates.owners, ownerId)}
-        can={viewerCan}
-        blockers={deliveryBlockers(production)}
-        delivery={deliveryOf(production)}
-        cancellation={cancellationOf(production)}
-      />
-      <G2Provisions production={production} />
-      {!production.isInternal && <G2Money productionId={production.id} />}
-      <G2Filmings filmings={production.filmings} />
-      <G2Deliverables
-        production={production}
-        newForm={
-          candidates.deliverables && (
-            <SpacesNewDeliverable
-              productionId={production.id}
-              defaultTitle={
-                production.client
-                  ? `${production.client.name} — ${production.title}`
-                  : production.title
-              }
-              isInternal={production.isInternal}
-              candidates={candidates.deliverables}
-            />
-          )
-        }
-      />
-      <G2Tasks
-        productionId={production.id}
-        tasks={production.tasks}
-        people={candidates.people}
-        memberIds={members.map((member) => member.userId)}
-        meId={meId}
-        canEdit={viewerCan.members && production.state === "open"}
-        isOpen={production.state === "open"}
-      />
-      <G2Members
-        productionId={production.id}
-        members={members}
-        ownerName={production.owner?.name ?? "Χωρίς υπεύθυνο"}
-        choices={memberChoices(candidates.people, ownerId, production.members)}
-        canManage={viewerCan.members}
-      />
-      <G2Messages
-        isInternal={production.isInternal}
-        threadHref={messagesHrefOf(viewer, production)}
-      />
-      {viewerCan.members && <G2Trail history={production.history} />}
+      <Strip stats={productionStats(production)} now={null} />
+      <div className="ml-stack">
+        <G2State
+          productionId={production.id}
+          state={production.state}
+          stateWord={STATE_WORDS[production.state]}
+          owner={production.owner}
+          ownerChoices={ownerChoices(candidates.owners, ownerId)}
+          can={viewerCan}
+          blockers={deliveryBlockers(production)}
+          delivery={deliveryOf(production)}
+          cancellation={cancellationOf(production)}
+        />
+        <G2Agreement production={production} />
+        <G2Filmings filmings={production.filmings} />
+        <G2Deliverables
+          production={production}
+          newForm={
+            candidates.deliverables && (
+              <SpacesNewDeliverable
+                productionId={production.id}
+                defaultTitle={
+                  production.client
+                    ? `${production.client.name} — ${production.title}`
+                    : production.title
+                }
+                isInternal={production.isInternal}
+                candidates={candidates.deliverables}
+              />
+            )
+          }
+        />
+        <G2Tasks
+          productionId={production.id}
+          tasks={production.tasks}
+          people={candidates.people}
+          memberIds={members.map((member) => member.userId)}
+          meId={meId}
+          canEdit={viewerCan.members && production.state === "open"}
+          isOpen={production.state === "open"}
+        />
+        <G2Members
+          productionId={production.id}
+          members={members}
+          ownerName={production.owner?.name ?? "Χωρίς υπεύθυνο"}
+          choices={memberChoices(
+            candidates.people,
+            ownerId,
+            production.members,
+          )}
+          canManage={viewerCan.members}
+        />
+        {viewerCan.members && <G2Trail history={production.history} />}
+      </div>
     </div>
   );
 }

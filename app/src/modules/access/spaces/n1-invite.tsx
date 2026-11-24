@@ -2,9 +2,7 @@
 
 import { useActionState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge, fmtDate } from "@/spaces/screens/shared";
+import { fmtDate } from "@/spaces/screens/shared";
 
 import {
   cancelInvitation,
@@ -14,19 +12,20 @@ import type { DeactivatedTeamUser } from "../invitation-schemas";
 import { INITIAL_FORM_STATE, type FormState } from "../schemas";
 import { setUserActive } from "../team-actions";
 import type { N1Invitation } from "./n1-adapter";
+import { Line, ListSection } from "./n-parts";
 
 export function InviteMessage({ state }: { state: FormState<unknown> }) {
   if (state.error)
     return (
-      <p className="note" role="alert">
+      <small className="n-msg n-warn" role="alert">
         {state.error}
-      </p>
+      </small>
     );
   if (state.notice)
     return (
-      <p className="note" role="status">
+      <small className="n-msg" role="status">
         {state.notice}
-      </p>
+      </small>
     );
   return null;
 }
@@ -48,13 +47,8 @@ export function ReactivateOffer({ user }: { user: DeactivatedTeamUser }) {
       </p>
       <InviteMessage state={state} />
       {!state.notice && (
-        <div className="btn-row">
-          <button
-            type="submit"
-            className="button"
-            data-primary
-            disabled={isSaving}
-          >
+        <div className="ml-actions">
+          <button type="submit" data-primary disabled={isSaving}>
             {isSaving ? "Αποθήκευση…" : "Επανενεργοποίηση"}
           </button>
         </div>
@@ -77,19 +71,14 @@ function InvitationButtons({ invitation }: { invitation: N1Invitation }) {
     <>
       <form action={resendAction}>
         <input type="hidden" name="id" value={invitation.id} />
-        <button type="submit" className="button" disabled={isResending}>
+        <button type="submit" disabled={isResending}>
           Επαναποστολή
         </button>
       </form>
       {invitation.state === "εκκρεμεί" && (
         <form action={cancelAction}>
           <input type="hidden" name="id" value={invitation.id} />
-          <button
-            type="submit"
-            className="button"
-            data-danger
-            disabled={isCancelling}
-          >
+          <button type="submit" data-danger disabled={isCancelling}>
             Ακύρωση
           </button>
         </form>
@@ -105,42 +94,34 @@ export function InvitationList({
   invitations: readonly N1Invitation[];
 }) {
   return (
-    <Panel label="Προσκλήσεις σε εκκρεμότητα">
+    <ListSection
+      title="Προσκλήσεις σε εκκρεμότητα"
+      hint="Επαναποστολή = νέος σύνδεσμος 7 ημερών, ο παλιός ακυρώνεται. Μια ληγμένη πρόσκληση μένει εδώ 30 μέρες."
+    >
       {invitations.length === 0 ? (
-        <p className="muted">Καμία πρόσκληση σε εκκρεμότητα.</p>
+        <p className="ml-empty">Καμία πρόσκληση σε εκκρεμότητα.</p>
       ) : (
-        <div className="n1-bleed">
-          <RowList>
-            {invitations.map((inv) => (
-              <ListRow
-                key={inv.id}
-                lead={<Avatar name={inv.name} size={36} />}
-                title={
-                  <>
-                    {inv.name}{" "}
-                    <span className="n1-email muted">{inv.email}</span>
-                  </>
-                }
-                sub={`${inv.roles} · από ${inv.invitedBy} · στάλθηκε ${fmtDate(inv.sentAt)} · ${inv.state === "έληξε" ? "έληξε" : "λήγει"} ${fmtDate(inv.expiresAt)}`}
-                aside={
-                  <>
-                    <Badge
-                      tone={inv.state === "έληξε" ? "attention" : "waiting"}
-                    >
-                      {inv.state}
-                    </Badge>
-                    <InvitationButtons invitation={inv} />
-                  </>
-                }
-              />
-            ))}
-          </RowList>
-        </div>
+        <ul className="ml-list">
+          {invitations.map((inv) => (
+            <Line
+              key={inv.id}
+              name={inv.name}
+              tag={inv.state}
+              title={inv.name}
+              sub={
+                <span className="n1-email">
+                  {inv.email} · {inv.roles} · από {inv.invitedBy} · στάλθηκε{" "}
+                  {fmtDate(inv.sentAt)} ·{" "}
+                  {inv.state === "έληξε" ? "έληξε" : "λήγει"}{" "}
+                  {fmtDate(inv.expiresAt)}
+                </span>
+              }
+              isUrgent={inv.state === "έληξε"}
+              quick={<InvitationButtons invitation={inv} />}
+            />
+          ))}
+        </ul>
       )}
-      <p className="note">
-        Επαναποστολή = νέος σύνδεσμος 7 ημερών, ο παλιός ακυρώνεται. Μια ληγμένη
-        πρόσκληση μένει εδώ 30 μέρες.
-      </p>
-    </Panel>
+    </ListSection>
   );
 }

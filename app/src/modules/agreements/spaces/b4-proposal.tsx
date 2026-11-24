@@ -37,7 +37,7 @@ function Summary({ summary }: { summary: ProposalSummary }) {
     summary.canDraft && summary.path === "draft" && summary.hasLines;
   return (
     <div className="stack">
-      <p className="btn-row">
+      <p className="ml-quick">
         <Badge>{KIND_LABELS[summary.kind]}</Badge>
         <Badge tone="strong">{statusLabel(summary)}</Badge>
         <Badge>αναθεώρηση {summary.revision}</Badge>
@@ -72,12 +72,8 @@ function Summary({ summary }: { summary: ProposalSummary }) {
           Η πρόταση έληξε: Παράταση ή κλείσιμο ως χαμένη γίνονται στη Συμφωνία.
         </p>
       )}
-      <span className="btn-row">
-        <Link
-          className="button"
-          data-primary={isDraft ? "true" : undefined}
-          href={href}
-        >
+      <span className="ml-quick">
+        <Link data-primary={isDraft ? "true" : undefined} href={href}>
           {isDraft ? "Σύνταξη" : "Άνοιγμα Συμφωνίας"}
         </Link>
         {canQuick && (

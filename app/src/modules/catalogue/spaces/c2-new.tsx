@@ -13,6 +13,8 @@ import { C2Step } from "./c2-box";
 import { C2Form, C2Submit, Field } from "./c2-form";
 import { ProvisionsEditor, ProvisionsNote } from "./c2-provisions";
 
+import "../../finance/spaces/money-lines.css";
+
 interface C2NewProps {
   kinds: readonly ProvisionKind[];
   canEditPrice: boolean;
@@ -51,7 +53,7 @@ function BasicsFields({
   onType: (type: NewItemType) => void;
 }) {
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <Field
         id="c2-name"
         label="Όνομα"
@@ -127,14 +129,14 @@ function PriceFields({
   return (
     <>
       {canEditPrice ? (
-        <dl className="dl">
+        <dl className="ml-kv">
           <Field
             id="c2-price"
             label="Τιμή χωρίς ΦΠΑ"
             editable
             value={null}
             input={
-              <span className="btn-row">
+              <span className="ml-quick">
                 <input
                   id="c2-price"
                   name="price"

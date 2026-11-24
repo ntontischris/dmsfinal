@@ -2,9 +2,9 @@ import Link from "next/link";
 
 import { getViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
 import { Avatar } from "@/spaces/kit/parts";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import { AUDIENCE_LABEL, whoText } from "../assistant-helpers";
 import {
@@ -15,8 +15,11 @@ import {
 import { getConversation } from "../assistant-queries";
 import { fmtWhen, turnsOf, type L2Source, type L2Turn } from "./l2-adapter";
 import { DeleteConversation } from "./l2-delete";
+import { KBox } from "./k-box";
 import { L2_DENIED } from "./l2-screen";
 
+import "../../finance/spaces/money-lines.css";
+import "./k.css";
 import "./l2.css";
 
 // Οι απαντήσεις έχουν παραγράφους: οι αλλαγές γραμμής μένουν.
@@ -78,19 +81,16 @@ export async function SpacesConversation({ id }: { id: string | null }) {
     viewer.status === "signed-in" && id !== null
       ? await getConversation(id)
       : null;
-  const back = <Link href={hrefOf("L2")}>← Όλες οι Συζητήσεις</Link>;
   if (result?.ok === false)
     return (
-      <div data-spaces>
-        <p>{back}</p>
+      <div data-spaces className="k">
         <ErrorNotice what="η Συζήτηση του Βοηθού" />
       </div>
     );
   const conversation = result?.data;
   if (!conversation)
     return (
-      <div data-spaces>
-        <p>{back}</p>
+      <div data-spaces className="k">
         <StateNotice kind="denied" title="Χωρίς δικαίωμα">
           {viewer.status === "signed-in"
             ? `${L2_DENIED} ${CONVERSATION_GONE_TEXT}`
@@ -98,34 +98,42 @@ export async function SpacesConversation({ id }: { id: string | null }) {
         </StateNotice>
       </div>
     );
+  const who = whoText(
+    conversation.audience,
+    conversation.who,
+    conversation.clientName,
+  );
+  const turns = turnsOf(conversation.messages);
   return (
-    <div data-spaces>
-      <Panel
-        label={whoText(
-          conversation.audience,
-          conversation.who,
-          conversation.clientName,
-        )}
-        aside={back}
-      >
-        <p>
-          <Badge>{AUDIENCE_LABEL[conversation.audience]}</Badge>{" "}
-          <Badge>{conversation.language}</Badge>
-          <span className="muted">
-            {" "}
-            Ξεκίνησε {fmtWhen(conversation.startedAt)} · τελευταίο μήνυμα{" "}
-            {fmtWhen(conversation.lastMessageAt)}
+    <div data-spaces className="k">
+      <section>
+        <header className="ml-hero">
+          <span className="ml-hero-mono" aria-hidden="true">
+            {initialsOf(who)}
           </span>
-        </p>
-        <div>
-          {turnsOf(conversation.messages).map((turn) => (
+          <div>
+            <span className="k-badges">
+              <Badge>{AUDIENCE_LABEL[conversation.audience]}</Badge>
+              <Badge>{conversation.language}</Badge>
+            </span>
+            <h1 data-page-title>{who}</h1>
+            <p>
+              Ξεκίνησε {fmtWhen(conversation.startedAt)} · τελευταίο μήνυμα{" "}
+              {fmtWhen(conversation.lastMessageAt)}
+            </p>
+          </div>
+        </header>
+        <DeleteConversation id={conversation.id} />
+      </section>
+      <div className="ml-stack">
+        <KBox title="Μηνύματα" hint={`${turns.length} γύροι`} isOpen>
+          {turns.map((turn) => (
             <TurnView key={turn.key} turn={turn} />
           ))}
-        </div>
-        <DeleteConversation id={conversation.id} />
-        <p className="note">{DELETE_NOTE}</p>
-        <p className="note">{READ_ONLY_NOTE}</p>
-      </Panel>
+        </KBox>
+      </div>
+      <p className="k-note">{DELETE_NOTE}</p>
+      <p className="k-note">{READ_ONLY_NOTE}</p>
     </div>
   );
 }

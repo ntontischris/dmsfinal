@@ -1,0 +1,24 @@
+/* Τα κουτιά (G2Box) των οθονών Παραγωγών, μία φορά για όλο το module. */
+[data-look="spaces"] .g2-box-body {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  & > p,
+  & > .ml-list {
+    margin: 0;
+  }
+  /* Ένα κουτί με δύο μέρη (π.χ. «Παροχές και τιμή»): κάθε μέρος με τον υπότιτλό του (h3). */
+  & > section {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  & > section > .ml-list,
+  & > section > p {
+    margin: 0;
+  }
+}
+/* Χωρίς καμία ενέργεια για τον θεατή, η σειρά της κεφαλίδας δεν αφήνει κενό. */
+[data-look="spaces"] .g2-header > .ml-quick:empty {
+  display: none;
+}

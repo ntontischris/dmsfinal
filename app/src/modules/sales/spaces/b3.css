@@ -1,15 +1,14 @@
 [data-look='spaces'] {
 /* Pipeline στο κινητό: τα Στάδια το ένα κάτω από το άλλο, χωρίς οριζόντια κύλιση */
 @media (max-width: 40rem) {
-  & .kanban { flex-direction: column; align-items: stretch; overflow-x: visible; }
-  & .kanban .kcol { flex: 1 1 auto; }
+  & .b3-kanban .kcol { flex: 1 1 auto; }
 }
 
 /* Κάρτα Ευκαιρίας (screens2): τίτλος + ποσό, Πελάτης από κάτω, υποσέλιδο με Υπεύθυνο και προθεσμία */
 & .kcol { background: color-mix(in oklab, var(--color-text) 3%, transparent); }
 & .kcol h3 { color: var(--color-text); font-weight: 700; }
 & .kcol h3 .muted { font-weight: 700; }
-& .kanban .kcard.b3-card, & .grid2 .kcard.b3-card {
+& .b3-kanban .kcard.b3-card, & .grid2 .kcard.b3-card {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 0.75rem; align-content: start;
 }
 & .b3-card > * { min-width: 0; }

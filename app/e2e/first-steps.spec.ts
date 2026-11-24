@@ -23,6 +23,10 @@ test("ο Ιδιοκτήτης γράφει τα «Πρώτα βήματα» κα
   await signIn(owner, "owner@example.com");
   await owner.goto(`/app/team/roles/${roleId}`);
   const form = owner.locator("#role-first-steps");
+  // Το κείμενο ζει σε κλειστό κουτί της σελίδας του Ρόλου: πρώτα το ανοίγουμε.
+  await form
+    .getByRole("heading", { name: "Πρώτα βήματα", exact: true })
+    .click();
   await form.getByRole("textbox").fill(text);
   await form.getByRole("button", { name: "Αποθήκευση κειμένου" }).click();
   await expect(form.getByRole("status")).toContainText("Αποθηκεύτηκε");

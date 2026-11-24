@@ -1,4 +1,5 @@
 // Η πλοήγηση της εφαρμογής: ενότητες με τα modules τους. Κάθε module προσθέτει εδώ τις οθόνες του όταν χτιστεί.
+// Το Kit (/app/kit, κατάλογος components) δεν είναι στο μενού: ανοίγει μόνο με τη διεύθυνσή του.
 // Ο κωδικός είναι αυτός του Blueprint (κεφ. 8), για να αντιστοιχίζεται με το prototype.
 // `requires`: ένα Δικαίωμα (ή περισσότερα, αρκεί ένα)· «owner» για ό,τι κάνει μόνο ο Ιδιοκτήτης· «team» για Χρήστη ομάδας· «client» για Χρήστη πελάτη.
 
@@ -349,6 +350,24 @@ export const NAV: readonly NavSection[] = [
         requires: "settings.manage",
       },
       {
+        code: "O4",
+        label: "Ρυθμίσεις Γυρισμάτων",
+        href: "/app/settings/filming",
+        requires: "settings.manage",
+      },
+      {
+        code: "O5",
+        label: "Ρυθμίσεις Παραδοτέων",
+        href: "/app/settings/deliverables",
+        requires: "settings.manage",
+      },
+      {
+        code: "O9",
+        label: "Ρυθμίσεις Μηνυμάτων",
+        href: "/app/settings/messages",
+        requires: "settings.manage",
+      },
+      {
         code: "O6",
         label: "Ρυθμίσεις Οικονομικών",
         href: "/app/settings/finance",
@@ -396,12 +415,6 @@ export const NAV: readonly NavSection[] = [
         requires: "health.view",
       },
     ],
-  },
-  {
-    title: "Σύστημα",
-    // Το Kit είναι κατάλογος components για όποιον στήνει οθόνες: μόνο ο Ιδιοκτήτης. Αλλιώς ο Χώρος «Εταιρεία»
-    // φαινόταν σε κάθε Χρήστη ομάδας μόνο με το Kit, ένα αδιέξοδο.
-    items: [{ code: "KIT", label: "Kit", href: "/app/kit", requires: "owner" }],
   },
 ];
 

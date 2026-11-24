@@ -66,13 +66,11 @@ function CloseLost({
     useKeptForm(closeOpportunityLost);
   if (!isClosing)
     return (
-      <button
-        type="button"
-        className="button"
-        onClick={() => setIsClosing(true)}
-      >
-        Κλείσιμο ως χαμένη
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsClosing(true)}>
+          Κλείσιμο ως χαμένη
+        </button>
+      </span>
     );
   return (
     <form ref={formRef} onSubmit={onSubmit} style={{ display: "contents" }}>

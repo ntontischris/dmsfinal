@@ -73,13 +73,22 @@ export async function createInternal(
   await expect(productionTitle(page, title)).toBeVisible();
 }
 
+// Το κουτί «Κατάσταση» της G2 είναι κλειστό στην αρχή (details.ml-box): ανοίγει πριν από τα κουμπιά του.
+export async function openState(page: Page): Promise<Locator> {
+  const state = card(page, "Κατάσταση");
+  const details = state.locator("details.ml-box").first();
+  if ((await details.getAttribute("open")) === null)
+    await details.locator("> summary").click();
+  return state;
+}
+
 // Η φόρμα με υποχρεωτικό λόγο του πάνελ «Κατάσταση» (Παράδοση, Επανάνοιγμα, Ακύρωση): ανοίγει από το κουμπί της,
 // γράφεται ο λόγος και επιβεβαιώνεται με το κουμπί της φόρμας (που μπορεί να έχει το ίδιο όνομα με το κουμπί που την ανοίγει).
 export async function confirmWithReason(
   page: Page,
   step: { open: string; label: string; confirm: string; reason: string },
 ): Promise<void> {
-  const state = card(page, "Κατάσταση");
+  const state = await openState(page);
   const form = state.locator(".g2-form", { has: page.getByLabel(step.label) });
   await expect(async () => {
     if (!(await form.isVisible()))

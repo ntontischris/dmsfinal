@@ -24,9 +24,9 @@ function VideoLinkField({ onAdd }: { onAdd: (markdown: string) => void }) {
     setLink("");
   };
   return (
-    <div className="stack">
-      <label>
-        Link βίντεο (YouTube, Vimeo ή Google Drive)
+    <div className="k-wide">
+      <label className="ml-field">
+        <span>Link βίντεο (YouTube, Vimeo ή Google Drive)</span>
         <input
           className="input"
           value={link}
@@ -36,17 +36,12 @@ function VideoLinkField({ onAdd }: { onAdd: (markdown: string) => void }) {
         />
       </label>
       {isBad && (
-        <span className="muted">
+        <span className="k-note">
           Δεν είναι link βίντεο YouTube, Vimeo ή αρχείου Drive.
         </span>
       )}
-      <div className="btn-row">
-        <button
-          className="button"
-          type="button"
-          disabled={!isVideoLink(link)}
-          onClick={handleAdd}
-        >
+      <div className="ml-quick k-left">
+        <button type="button" disabled={!isVideoLink(link)} onClick={handleAdd}>
           Πρόσθεσε το βίντεο
         </button>
       </div>
@@ -92,17 +87,12 @@ export function BodyField({ item }: { item: EditableItem }) {
   };
 
   return (
-    <>
-      <div className="btn-row">
-        <button
-          className="button"
-          type="button"
-          onClick={() => imageRef.current?.click()}
-        >
+    <div className="k-wide">
+      <div className="ml-quick k-left">
+        <button type="button" onClick={() => imageRef.current?.click()}>
           Εικόνα
         </button>
         <button
-          className="button"
           type="button"
           aria-expanded={isAddingVideo}
           onClick={() => setIsAddingVideo(!isAddingVideo)}
@@ -110,7 +100,6 @@ export function BodyField({ item }: { item: EditableItem }) {
           Βίντεο
         </button>
         <button
-          className="button"
           type="button"
           aria-pressed={isPreview}
           onClick={() => setIsPreview(!isPreview)}
@@ -127,9 +116,12 @@ export function BodyField({ item }: { item: EditableItem }) {
         onChange={handleImage}
       />
       {isAddingVideo && <VideoLinkField onAdd={insertBlock} />}
-      {uploadState && <p className="muted">{uploadState}</p>}
-      <label style={isPreview ? { display: "none" } : undefined}>
-        Κείμενο (Markdown)
+      {uploadState && <p className="k-note">{uploadState}</p>}
+      <label
+        className="ml-field"
+        style={isPreview ? { display: "none" } : undefined}
+      >
+        <span>Κείμενο (Markdown)</span>
         <textarea
           ref={textareaRef}
           className="input"
@@ -140,11 +132,11 @@ export function BodyField({ item }: { item: EditableItem }) {
         />
       </label>
       {isPreview && <ArticleBody source={body} />}
-      <p className="muted">
+      <p className="k-note">
         **έντονα**, - λίστα, [σύνδεσμος](https://…). Σύνδεσμοι μόνο https:// ή
         /app/….
       </p>
-    </>
+    </div>
   );
 }
 
@@ -182,7 +174,7 @@ export function FileField({ item }: { item: EditableItem }) {
   };
 
   return (
-    <div className="note">
+    <div className="k-wide k-note">
       {item.file ? (
         <>
           Αρχείο: <a href={fileHref(item.id)}>{item.file.name}</a> (
@@ -192,9 +184,8 @@ export function FileField({ item }: { item: EditableItem }) {
         <>Δεν έχει ανέβει ακόμα Αρχείο. PDF, DOCX, PPTX ή εικόνα, έως 25 MB. </>
       )}
       {item.textStatus && TEXT_STATUS_LABEL[item.textStatus]}
-      <div className="btn-row">
+      <div className="ml-quick k-left">
         <button
-          className="button"
           type="button"
           disabled={isBusy}
           onClick={() => inputRef.current?.click()}

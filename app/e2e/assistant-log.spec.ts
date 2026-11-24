@@ -1,12 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { button, project, shot, signIn } from "./sales-parts";
+import { openFolds } from "./today-parts";
 
 // Συζητήσεις Βοηθού (L2) και Αναπάντητες (L3) από άκρη σε άκρη (#192). Το seed γράφει, μέσα από τα RPC του server του Βοηθού,
 // μία Συζήτηση Επισκέπτη ανά project με την ίδια ερώτηση δύο φορές («ρωτήθηκε 2 φορές») και ένα δημοσιευμένο στοιχείο Γνώσης.
 // Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση, γι' αυτό κάθε όνομα έχει το project.
 test.describe.configure({ mode: "serial", retries: 0 });
-
 
 const UNANSWERED_PATH = "/app/knowledge/unanswered";
 const CONVERSATIONS_PATH = "/app/knowledge/conversations";
@@ -19,7 +19,7 @@ const questionRow = (page: Page, P: string) =>
 
 // Η γραμμή μιας Συζήτησης στη λίστα L2 (ο σύνδεσμος είναι ο συνομιλητής, η πρώτη ερώτηση από κάτω).
 const conversationRow = (page: Page, P: string) =>
-  page.locator("li.part-row", { hasText: `«${QUESTION(P)}»` });
+  page.locator("li.ml-line", { hasText: `«${QUESTION(P)}»` });
 
 test("ο Ιδιοκτήτης βλέπει την Αναπάντητη στο Σήμερα, την κλείνει με «Καλύφθηκε από…», την ξανανοίγει και διαγράφει τη Συζήτηση", async ({
   page,
@@ -27,15 +27,20 @@ test("ο Ιδιοκτήτης βλέπει την Αναπάντητη στο Σ
   test.setTimeout(120_000);
   const P = project();
 
-  // 1. Η Σήμερα (ενημέρωση) έχει την κάρτα στο «Και άλλα», με πλήθος, και οδηγεί στο L3.
+  // 1. Η Σήμερα έχει την Αναπάντητη στην εταιρεία: γραμμή της κάρτας «Η εταιρεία δουλεύει» όταν η κάρτα φαίνεται,
+  // αλλιώς μέσα στο κλειστό «Η εταιρεία: N σε αναμονή», με πλήθος. Και τα δύο οδηγούν στο L3.
   await signIn(page, "owner@example.com");
-  const others = page.locator("details.a1-others");
-  await others.locator("summary").click();
-  const today = others.getByRole("listitem").filter({
+  await page.goto("/app?g=company");
+  await openFolds(page);
+  const main = page.getByRole("main");
+  const waiting = main.getByRole("listitem").filter({
     has: page.getByRole("link", { name: CARD_TITLE, exact: true }),
   });
-  await expect(today.locator(".a1-other-count")).toHaveText(/^[1-9]\d*$/);
-  await today.getByRole("link", { name: CARD_TITLE, exact: true }).click();
+  if ((await waiting.count()) > 0)
+    await expect(waiting.getByText(/^[1-9]\d*$/)).toBeVisible();
+  const toL3 = main.locator("a[href='/app/knowledge/unanswered']").first();
+  await expect(toL3).toBeVisible();
+  await toL3.click();
   await expect(page).toHaveURL(/\/app\/knowledge\/unanswered$/);
 
   // 2. «ρωτήθηκε 2 φορές» και κλείσιμο με «Καλύφθηκε από…» δημόσιο στοιχείο.
