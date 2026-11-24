@@ -1,4 +1,13 @@
-/* Γραμμές, ράφι και σελίδα μέσα των «Χρημάτων» (prototype `dms/pelates/pelates.css`, με τα tokens της εφαρμογής). */
+/* Γραμμές, ράφι και σελίδα μέσα των «Χρημάτων» (prototype `dms/pelates/pelates.css`, με τα tokens της εφαρμογής).
+   Κοινό λεξιλόγιο όλων των εσωτερικών οθονών. Οδηγός: docs/ui/inner-screens-look.md. Οι νεότερες κλάσεις:
+   .ml-meter    λεπτή μπάρα προόδου με ετικέτα και αριθμό· πλάτος από --v (π.χ. style={{ "--v": "62%" }}), --c για τόνο,
+                data-tone="warn" κίτρινο. <div class="ml-meter" style="--v:62%"><span>Πληρώθηκε</span><i><b></b></i><strong>62%</strong></div>
+   .ml-avatars  στοίβα από αρχικά που επικαλύπτονται (όψη .money-faces). <span class="ml-avatars"><span>ΜΚ</span><span>ΓΠ</span></span>
+   .ml-empty    κενή κατάσταση: μία πρόταση σε μαλακή κάρτα. <p class="ml-empty">Δεν υπάρχουν εισπράξεις ακόμα.</p>
+   .ml-fields   πλέγμα φόρμας 1–2 στηλών (μέσα σε .ml-box ή .ml-new) με .ml-field (ετικέτα + πεδίο + small υπόδειξη),
+                .ml-field[data-wide] σε όλο το πλάτος, και στο τέλος .ml-actions με ΕΝΑ [data-primary].
+   .ml-kv       λίστα «ετικέτα: τιμή» στη θέση του .dl: <dl class="ml-kv"><dt>ΑΦΜ</dt><dd>…</dd></dl> (ή ζεύγη μέσα σε <div>).
+   Τα native select / file / date / time μέσα σε .input ή .ml-fields παίρνουν την ίδια όψη (spaces/styles/screens.css). */
 .ml-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .8rem 1.4rem; margin: 0 0 1rem; }
 .ml-head p { margin: 0; max-width: 40rem; color: var(--color-text-muted); font-size: 1.02rem; }
 .ml-cta {
@@ -128,10 +137,66 @@
 /* Το κείμενο της υπενθύμισης (I8) κρατά τις αλλαγές γραμμής του μηνύματος */
 .ml-reminder-body { white-space: pre-line; }
 
+/* Κύριο κουμπί σε .ml-quick ως <button> (π.χ. submit), όπως το <a data-primary> */
+.ml-quick button[data-primary] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
+.ml-quick :is(a, button):is(:disabled, [aria-disabled="true"]) { opacity: .45; cursor: not-allowed; }
+
+/* Μετρητής: λεπτή μπάρα με ετικέτα αριστερά και αριθμό δεξιά (όψη του .part-meter, τόνος από --c) */
+.ml-meter { --c: var(--brand-periwinkle); display: grid; grid-template-columns: auto minmax(3rem, 1fr) auto; align-items: center; gap: .6rem; min-width: 9rem; font-size: .78rem; }
+.ml-meter:not(:has(> span)) { grid-template-columns: minmax(3rem, 1fr) auto; }
+.ml-meter[data-tone="warn"] { --c: var(--brand-yellow); }
+.ml-meter > span { color: var(--color-text-muted); white-space: nowrap; }
+.ml-meter > i { display: block; height: 6px; border-radius: 999px; overflow: hidden; background: color-mix(in oklab, var(--color-text) 10%, transparent); }
+.ml-meter > i > b { display: block; width: var(--v, 0%); max-width: 100%; height: 100%; border-radius: 999px; background: color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)); }
+.ml-meter > strong { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Πρόσωπα: αρχικά σε κύκλους που επικαλύπτονται (όψη του .money-faces), ο τόνος εναλλάσσεται */
+.ml-avatars { display: inline-flex; flex: none; vertical-align: middle; }
+.ml-avatars > * {
+  --c: var(--brand-periwinkle);
+  display: grid; place-items: center; width: 1.7rem; height: 1.7rem; margin-left: -.45rem; border-radius: 50%;
+  font-size: .62rem; font-weight: 800; color: var(--brand-midnight);
+  background: color-mix(in oklab, var(--c) 82%, var(--color-text)); border: 2px solid var(--panel-midnight);
+}
+.ml-avatars > :nth-child(2n) { --c: var(--brand-yellow); }
+.ml-avatars > :first-child { margin-left: 0; }
+
+/* Κενή κατάσταση: μία πρόταση σε μαλακή κάρτα, χωρίς εικόνα */
+.ml-empty {
+  margin: 0; padding: 1rem 1.2rem; border-radius: 18px; color: var(--color-text-muted); font-size: .95rem;
+  border: 1px dashed color-mix(in oklab, var(--color-text) 16%, transparent); background: color-mix(in oklab, var(--panel-deep) 45%, transparent);
+}
+
+/* Φόρμα: πλέγμα 2 στηλών (1 στο κινητό), ετικέτα πάνω από το πεδίο, ενέργειες στο τέλος με ένα κύριο */
+.ml-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem 1rem; margin: 0; }
+.ml-field { display: grid; gap: .3rem; align-content: start; min-width: 0; margin: 0; }
+.ml-field[data-wide], .ml-fields > fieldset, .ml-fields > .ml-actions { grid-column: 1 / -1; }
+.ml-field > :first-child:not(input, select, textarea) { font-size: .8rem; font-weight: 700; color: var(--color-text-muted); }
+.ml-field :is(input:not([type="checkbox"], [type="radio"]), select, textarea) { width: 100%; }
+.ml-field small { color: var(--color-text-muted); font-size: .75rem; }
+.ml-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; margin: 0; padding-top: .3rem; }
+.ml-actions :is(a, button) {
+  font: inherit; cursor: pointer; background: transparent; text-decoration: none; white-space: nowrap;
+  padding: .55rem 1.05rem; border-radius: 999px; font-size: .88rem; font-weight: 700;
+  color: var(--color-text); border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent);
+}
+.ml-actions :is(a, button):hover { border-color: var(--brand-periwinkle); }
+.ml-actions :is(a, button)[data-primary] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
+.ml-actions :is(a, button):is(:disabled, [aria-disabled="true"]) { opacity: .45; cursor: not-allowed; }
+
+/* Ετικέτα: τιμή (στη θέση του .dl). Ετικέτα σιγανή, μικρή, mono· τιμή κανονική */
+.ml-kv { display: grid; grid-template-columns: minmax(6rem, max-content) minmax(0, 1fr); gap: .45rem 1.1rem; margin: 0; font-size: .92rem; }
+.ml-kv > div { display: contents; }
+.ml-kv dt { color: var(--color-text-muted); font: 500 .72rem/1.9 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; }
+.ml-kv dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+
 @media (max-width: 40rem) {
   .ml-line { grid-template-columns: auto minmax(0, 1fr); }
   .ml-amount { grid-column: 2; text-align: left; }
   .ml-quick { grid-column: 1 / -1; justify-content: flex-start; }
   .ml-hero-mono { font-size: 5rem; }
   .ml-hero .ml-quick { flex-wrap: wrap; }
+  .ml-fields { grid-template-columns: minmax(0, 1fr); }
+  .ml-kv { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
+  .ml-kv dd + dt { margin-top: .45rem; }
 }
