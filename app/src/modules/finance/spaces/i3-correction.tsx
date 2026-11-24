@@ -2,6 +2,7 @@
 import { ErrorNotice, StateNotice, fmtDate, fmtMoney } from "@/spaces/screens/shared";
 
 import type { InvoiceDetail } from "../invoice-detail-schema";
+import type { TrailRow } from "../invoice-trail";
 import { KIND_LABELS } from "../invoices-labels";
 import type { ReadResult } from "../read";
 import { I3Correct } from "./i3-correct";
@@ -37,7 +38,13 @@ function CorrectionHero({ invoice }: { invoice: InvoiceDetail }) {
 }
 
 // Διόρθωση (?invoice=): hero με την καταχώριση, μετά η διόρθωση (βήμα), η ακύρωση και το Ίχνος (κλειστά κουτιά).
-export function CorrectionPage({ detail }: { detail: ReadResult<InvoiceDetail> }) {
+export function CorrectionPage({
+  detail,
+  trailRows,
+}: {
+  detail: ReadResult<InvoiceDetail>;
+  trailRows: readonly TrailRow[];
+}) {
   if (!detail.ok) return <ErrorNotice what="η καταχώριση" />;
   const invoice = detail.data;
   return (
@@ -49,7 +56,7 @@ export function CorrectionPage({ detail }: { detail: ReadResult<InvoiceDetail> }
         </StateNotice>
       )}
       {invoice.voided === null && invoice.can.correct && <I3Correct key={invoice.id} invoice={invoice} />}
-      <InvoiceTrail trail={invoice.trail} />
+      <InvoiceTrail rows={trailRows} />
     </div>
   );
 }

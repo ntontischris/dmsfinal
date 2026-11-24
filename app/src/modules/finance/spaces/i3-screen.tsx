@@ -9,12 +9,16 @@ import { financeCaps } from "../caps";
 import {
   getInvoiceContext,
   getInvoiceDetail,
+  getInvoicePayments,
+  getInvoiceReminders,
   getInvoices,
   getVoidedInvoices,
 } from "../invoices-queries";
+import { trailRowsOf, type TrailRow } from "../invoice-trail";
 import { numberSuggestionsOf } from "../invoices-model";
 import { athensToday } from "../money";
 import { listClientOptions } from "../queries";
+import type { InvoiceDetail } from "../invoice-detail-schema";
 import type { ClientOption } from "../types";
 import { CorrectionPage } from "./i3-correction";
 import { I3Hero, Step } from "./i3-parts";
@@ -30,7 +34,7 @@ export interface SpacesNewInvoiceQuery {
   invoiceId?: string;
 }
 
-// Βήμα 1: ο Πελάτης στη διεύθυνση (?client=). Λίστα με αναζήτηση· ίδια ονόματα ξεχωρίζουν με αχνή λέξη (πόλη).
+// Βήμα 1: ο Πελάτης στη διεύθυνση (?client=). Λίστα με αναζήτηση· ίδια ονόματα ξεχωρίζουν με αχνή λέξη (ΑΦΜ, πόλη, email).
 function ClientStep({
   clients,
   clientId,
@@ -110,6 +114,19 @@ function NoClient({ clientStep }: { clientStep: ReactNode }) {
 
 const wrap = (body: ReactNode) => <div data-spaces>{body}</div>;
 
+// Το Ίχνος της Διόρθωσης με τις ίδιες γραμμές με τη σελίδα Τιμολογίου (I8): ενέργειες, πληρωμές, υπενθυμίσεις.
+async function correctionTrailOf(id: string, trail: InvoiceDetail["trail"]): Promise<TrailRow[]> {
+  const [money, reminders] = await Promise.all([
+    getInvoicePayments(id, athensToday()),
+    getInvoiceReminders(id),
+  ]);
+  return trailRowsOf(
+    trail,
+    money.ok ? money.data.payments : [],
+    reminders.ok ? reminders.data : [],
+  );
+}
+
 // I3 Καταχώρηση Τιμολογίου: hero με το σύνολο και τα βήματα Πελάτης → PDF → Στοιχεία → Έλεγχος και καταχώρηση.
 // Με ?invoice= η σελίδα της διόρθωσης: Διόρθωση, Ακύρωση, Ίχνος. Όλα πάνω στις πραγματικές ενέργειες.
 export async function SpacesNewInvoice({
@@ -127,7 +144,13 @@ export async function SpacesNewInvoice({
   const detail = query.invoiceId
     ? await getInvoiceDetail(query.invoiceId)
     : null;
-  if (detail?.ok) return wrap(<CorrectionPage detail={detail} />);
+  if (detail?.ok)
+    return wrap(
+      <CorrectionPage
+        detail={detail}
+        trailRows={await correctionTrailOf(detail.data.id, detail.data.trail)}
+      />,
+    );
   const clients = await listClientOptions();
   if (!clients.ok)
     return wrap(<ErrorNotice what="την Καταχώρηση Τιμολογίου" />);
@@ -136,7 +159,7 @@ export async function SpacesNewInvoice({
   );
   return wrap(
     <>
-      {detail !== null && <CorrectionPage detail={detail} />}
+      {detail !== null && <CorrectionPage detail={detail} trailRows={[]} />}
       {query.clientId === undefined ? (
         <NoClient clientStep={clientStep} />
       ) : (
