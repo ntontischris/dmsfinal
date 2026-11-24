@@ -1,8 +1,6 @@
 import Link from "next/link";
 
 import { initialsOf } from "@/spaces/shell/avatar";
-import { GroupBand, ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 
 import { deleteSubscription, saveSubscription } from "../actions";
 import type { Subscription, SubscriptionsView } from "../schemas";
@@ -52,96 +50,89 @@ const fieldsOf = (sub: Subscription | null): readonly Field[] => [
 
 function SubscriptionForm({ sub }: { sub: Subscription | null }) {
   return (
-    <div className="n5-form">
-      <Panel label={sub ? `Επεξεργασία: ${sub.provider}` : "Νέα συνδρομή"}>
-        <N5Form
-          action={saveSubscription}
-          submitLabel="Αποθήκευση"
-          pendingLabel="Αποθήκευση…"
-          isPrimary
-          resetOnSuccess={!sub}
-          after={
-            <Link className="button" href={n5Href()}>
-              Άκυρο
-            </Link>
-          }
-        >
-          {sub && <input type="hidden" name="id" value={sub.id} />}
-          <div className="stack">
-            {fieldsOf(sub).map((field) => (
-              <span key={field.id} className="stack n5-field">
-                <label htmlFor={`n5-sub-${field.id}`}>{field.label}</label>
-                <input
-                  id={`n5-sub-${field.id}`}
-                  name={field.id}
-                  className="input"
-                  type={field.type}
-                  inputMode={field.inputMode}
-                  defaultValue={field.value}
-                />
-              </span>
-            ))}
-            <label htmlFor="n5-sub-currency">Νόμισμα</label>
+    <details className="ml-new ml-box" open>
+      <summary>
+        <h2 className="ml-box-title">
+          {sub ? `Επεξεργασία: ${sub.provider}` : "Νέα συνδρομή"}
+        </h2>
+        <small>Εδώ μόνο καταγράφεται· το πλάνο το αλλάζεις στον πάροχο.</small>
+      </summary>
+      <N5Form
+        action={saveSubscription}
+        submitLabel="Αποθήκευση"
+        pendingLabel="Αποθήκευση…"
+        isPrimary
+        resetOnSuccess={!sub}
+        className="ml-fields"
+        after={<Link href={n5Href()}>Άκυρο</Link>}
+      >
+        {sub && <input type="hidden" name="id" value={sub.id} />}
+        {fieldsOf(sub).map((field) => (
+          <span key={field.id} className="ml-field">
+            <label htmlFor={`n5-sub-${field.id}`}>{field.label}</label>
             <input
-              id="n5-sub-currency"
-              name="currency"
+              id={`n5-sub-${field.id}`}
+              name={field.id}
               className="input"
-              list="n5-sub-currencies"
-              maxLength={3}
-              defaultValue={sub?.currency ?? "EUR"}
+              type={field.type}
+              inputMode={field.inputMode}
+              defaultValue={field.value}
             />
-            <datalist id="n5-sub-currencies">
-              <option value="EUR" />
-              <option value="USD" />
-              <option value="GBP" />
-            </datalist>
-          </div>
-          <p className="note">
-            Εδώ μόνο καταγράφεται· το πλάνο το αλλάζεις στον πάροχο.
-          </p>
+          </span>
+        ))}
+        <span className="ml-field">
+          <label htmlFor="n5-sub-currency">Νόμισμα</label>
+          <input
+            id="n5-sub-currency"
+            name="currency"
+            className="input"
+            list="n5-sub-currencies"
+            maxLength={3}
+            defaultValue={sub?.currency ?? "EUR"}
+          />
+          <datalist id="n5-sub-currencies">
+            <option value="EUR" />
+            <option value="USD" />
+            <option value="GBP" />
+          </datalist>
+        </span>
+      </N5Form>
+      {sub && (
+        <N5Form
+          action={deleteSubscription}
+          submitLabel="Διαγραφή συνδρομής"
+          isDanger
+        >
+          <input type="hidden" name="id" value={sub.id} />
         </N5Form>
-        {sub && (
-          <N5Form
-            action={deleteSubscription}
-            submitLabel="Διαγραφή συνδρομής"
-            isDanger
-          >
-            <input type="hidden" name="id" value={sub.id} />
-          </N5Form>
-        )}
-      </Panel>
-    </div>
+      )}
+    </details>
   );
 }
 
 function SubscriptionRow({ sub }: { sub: Subscription }) {
   const row = n5SubRowOf(sub);
   return (
-    <ListRow
-      lead={
-        <span className="part-tile" aria-hidden="true">
-          {initialsOf(row.provider)}
-        </span>
-      }
-      title={row.provider}
-      sub={row.sub}
-      aside={
-        <>
-          <strong className="n5-amount">{row.amount}</strong>
-          {row.link && (
-            <a href={row.link} target="_blank" rel="noreferrer">
-              Άνοιγμα
-            </a>
-          )}
-          <Link
-            href={n5Href(row.id)}
-            aria-label={`Επεξεργασία: ${row.provider}`}
-          >
-            Επεξεργασία
-          </Link>
-        </>
-      }
-    />
+    <li className="ml-line">
+      <span className="ml-thumb" aria-hidden="true">
+        {initialsOf(row.provider)}
+      </span>
+      <span className="ml-main">
+        <strong>{row.provider}</strong>
+        <small>{row.sub}</small>
+      </span>
+      <strong className="n5-amount">{row.amount}</strong>
+      <span className="ml-quick">
+        {row.link && (
+          <a href={row.link} target="_blank" rel="noreferrer">
+            Άνοιγμα
+          </a>
+        )}
+        <Link href={n5Href(row.id)} aria-label={`Επεξεργασία: ${row.provider}`}>
+          Επεξεργασία
+        </Link>
+      </span>
+    </li>
   );
 }
 
@@ -159,52 +150,59 @@ export function SubscriptionsSection({ view, open }: SubscriptionsProps) {
   const isFormOpen = open === "new" || editing !== null;
   const totals = n5TotalsOf(view.totals);
   return (
-    <div id="subscriptions">
-      <Panel
-        label="Συνδρομές"
-        aside={
-          <>
-            <Link className="button" href={n5Href("new")}>
-              Νέα συνδρομή
-            </Link>
-          </>
-        }
-      >
-        <p className="note">
-          Η αλλαγή πλάνου γίνεται στον πάροχο· εδώ καταγράφεται. Επτά μέρες πριν
-          από κάθε ανανέωση έρχεται Ειδοποίηση.
+    <details
+      id="subscriptions"
+      className="ml-box"
+      open={isFormOpen || undefined}
+    >
+      <summary>
+        <h2 className="ml-box-title">Συνδρομές</h2>
+        <small>
+          {view.items.length === 0
+            ? "καμία καταγραφή"
+            : totals.map((t) => `${t.amount} ${t.currency}`).join(" · ")}
+        </small>
+      </summary>
+      <div className="ml-quick">
+        <Link data-primary="true" href={n5Href("new")}>
+          Νέα συνδρομή
+        </Link>
+      </div>
+      <p className="note">
+        Η αλλαγή πλάνου γίνεται στον πάροχο· εδώ καταγράφεται. Επτά μέρες πριν
+        από κάθε ανανέωση έρχεται Ειδοποίηση.
+      </p>
+      {isFormOpen && (
+        <SubscriptionForm key={editing?.id ?? "new"} sub={editing} />
+      )}
+      {view.items.length === 0 ? (
+        <p className="ml-empty">
+          Δεν έχει καταγραφεί καμία συνδρομή. Πρόσθεσε με «Νέα συνδρομή» ό,τι
+          πληρώνει η εταιρεία ή ο developer για το σύστημα.
         </p>
-        {isFormOpen && (
-          <SubscriptionForm key={editing?.id ?? "new"} sub={editing} />
-        )}
-        {view.items.length === 0 ? (
-          <p className="muted">
-            Δεν έχει καταγραφεί καμία συνδρομή. Πρόσθεσε με «Νέα συνδρομή» ό,τι
-            πληρώνει η εταιρεία ή ο developer για το σύστημα.
-          </p>
-        ) : (
-          <>
-            <div className="n5-bleed">
-              <RowList>
-                {view.items.map((sub) => (
-                  <SubscriptionRow key={sub.id} sub={sub} />
-                ))}
-                <GroupBand label="Σύνολο μηνιαίως" />
-                {totals.map((total) => (
-                  <ListRow
-                    key={total.currency}
-                    title={`Σύνολο μηνιαίως σε ${total.currency}`}
-                    aside={<strong>{total.amount}</strong>}
-                  />
-                ))}
-              </RowList>
-            </div>
-            {totals.length > 1 && (
-              <p className="muted">Τα νομίσματα δεν αθροίζονται μεταξύ τους.</p>
-            )}
-          </>
-        )}
-      </Panel>
-    </div>
+      ) : (
+        <>
+          <ul className="ml-list">
+            {view.items.map((sub) => (
+              <SubscriptionRow key={sub.id} sub={sub} />
+            ))}
+          </ul>
+          <h3 className="n5-totals">Σύνολο μηνιαίως</h3>
+          <ul className="ml-list">
+            {totals.map((total) => (
+              <li key={total.currency} className="ml-line">
+                <span className="ml-main">
+                  <strong>{`Σύνολο μηνιαίως σε ${total.currency}`}</strong>
+                </span>
+                <strong className="n5-amount">{total.amount}</strong>
+              </li>
+            ))}
+          </ul>
+          {totals.length > 1 && (
+            <p className="muted">Τα νομίσματα δεν αθροίζονται μεταξύ τους.</p>
+          )}
+        </>
+      )}
+    </details>
   );
 }

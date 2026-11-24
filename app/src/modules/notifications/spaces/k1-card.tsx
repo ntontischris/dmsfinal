@@ -1,6 +1,3 @@
-import { Panel } from "@/spaces/kit/panel";
-import { Badge } from "@/spaces/screens/shared";
-
 import {
   automationTitle,
   goesToClient,
@@ -14,7 +11,7 @@ import { K1AutomationForm } from "./k1-form";
 
 import "./k1.css";
 
-// Μία κάρτα Αυτοματισμού (prototype `k1-card.tsx`): διακόπτης στην κεφαλίδα, σήματα, σύνοψη και η φόρμα επεξεργασίας.
+// Ένα κουτί Αυτοματισμού (prototype `k1-card.tsx`): διακόπτης πάνω, σήματα, σύνοψη και η φόρμα επεξεργασίας.
 // Η «Δοκιμαστική αποστολή σε μένα» του prototype δεν έχει ενέργεια στην εφαρμογή και λείπει. Η κάρτα είναι περιοχή με
 // όνομα «τίτλος: κείμενο», όπως στην παλιά οθόνη, ώστε να ξεχωρίζουν δύο Αυτοματισμοί με τον ίδιο τίτλο.
 export function AutomationCard({
@@ -27,30 +24,30 @@ export function AutomationCard({
   const title = automationTitle(automation);
   return (
     <div role="region" aria-label={`${title}: ${automation.bodyEl}`}>
-      <Panel
-        label={title}
-        aside={
-          <EnabledSwitch id={automation.id} isEnabled={automation.isEnabled} />
-        }
-      >
+      <details className="ml-box" open>
+        <summary>
+          <h2 className="ml-box-title">{title}</h2>
+          <small>{timingText(automation)}</small>
+        </summary>
         <div className="k1-auto">
-          <div className="k1-meta" style={{ marginBottom: "var(--space-2)" }}>
+          <div className="k1-meta">
+            <EnabledSwitch
+              id={automation.id}
+              isEnabled={automation.isEnabled}
+            />
             {goesToClient(automation) && automation.isEssential && (
-              <Badge tone="strong">απαραίτητο</Badge>
+              <span className="ml-tag">απαραίτητο</span>
             )}
             {hasMissingEnglish(automation) && (
-              <Badge tone="attention">χωρίς αγγλικό</Badge>
+              <span className="ml-tag">χωρίς αγγλικό</span>
             )}
           </div>
-          <dl className="dl">
+          <dl className="ml-kv">
             <dt>Παραλήπτες</dt>
             <dd>
               {recipientText(automation, page)}
               {page.event.isCostOnly && (
-                <span className="muted">
-                  {" "}
-                  · κλειδωμένοι: μόνο όσοι βλέπουν κόστος
-                </span>
+                <small> · κλειδωμένοι: μόνο όσοι βλέπουν κόστος</small>
               )}
             </dd>
             <dt>Πότε</dt>
@@ -65,7 +62,7 @@ export function AutomationCard({
             <DeleteAutomation id={automation.id} />
           )}
         </div>
-      </Panel>
+      </details>
     </div>
   );
 }

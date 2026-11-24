@@ -1,9 +1,5 @@
 import Link from "next/link";
 
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge } from "@/spaces/screens/shared";
-
 import { fmtOpened } from "./o7-adapter";
 import { OpenForm } from "./o7-open-form";
 import { READINESS_HREF } from "./o-shared";
@@ -19,22 +15,25 @@ const BLOCKED_BEFORE_OPENING: readonly string[] = [
 
 export function WaitingCard() {
   return (
-    <div className="o-card o7-group">
-      <Panel label="Τι περιμένει το άνοιγμα" isFlush>
-        <p className="muted o7-pad">
-          Μέχρι το άνοιγμα η ομάδα δουλεύει κανονικά. Δεν γίνονται:
-        </p>
-        <RowList>
-          {BLOCKED_BEFORE_OPENING.map((text) => (
-            <ListRow
-              key={text}
-              title={text}
-              aside={<Badge tone="waiting">δεν γίνεται</Badge>}
-            />
-          ))}
-        </RowList>
-      </Panel>
-    </div>
+    <details className="ml-box o-card">
+      <summary>
+        <h2 className="ml-box-title">Τι περιμένει το άνοιγμα</h2>
+        <small>{`${BLOCKED_BEFORE_OPENING.length} πράγματα δεν γίνονται ακόμα`}</small>
+      </summary>
+      <p className="o-hint">
+        Μέχρι το άνοιγμα η ομάδα δουλεύει κανονικά. Δεν γίνονται:
+      </p>
+      <ul className="ml-list">
+        {BLOCKED_BEFORE_OPENING.map((text) => (
+          <li key={text} className="ml-line o-line">
+            <span className="ml-main">
+              <strong>{text}</strong>
+            </span>
+            <span className="ml-tag">δεν γίνεται</span>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -44,31 +43,22 @@ interface OpenButtonProps {
 }
 
 export function OpenButton({ isOwner, pending }: OpenButtonProps) {
-  if (!isOwner)
+  if (!isOwner || pending > 0)
     return (
-      <p className="note">
-        <button type="button" className="button" disabled>
+      <div className="ml-actions o-left">
+        <button type="button" data-primary="true" disabled>
           Άνοιγμα σε πελάτες
-        </button>{" "}
-        Το άνοιγμα το πατά μόνο ο Ιδιοκτήτης.
-      </p>
-    );
-  if (pending > 0)
-    return (
-      <p className="note">
-        <button type="button" className="button" disabled>
-          Άνοιγμα σε πελάτες
-        </button>{" "}
-        Εκκρεμούν ακόμα {pending}. Όταν γίνουν 0, ενεργοποιείται.
-      </p>
+        </button>
+        <span className="o-hint">
+          {isOwner
+            ? `Εκκρεμούν ακόμα ${pending}. Όταν γίνουν 0, ενεργοποιείται.`
+            : "Το άνοιγμα το πατά μόνο ο Ιδιοκτήτης."}
+        </span>
+      </div>
     );
   return (
-    <div className="btn-row">
-      <Link
-        className="button"
-        data-primary="true"
-        href={`${READINESS_HREF}?open=confirm`}
-      >
+    <div className="ml-actions o-left">
+      <Link data-primary="true" href={`${READINESS_HREF}?open=confirm`}>
         Άνοιγμα σε πελάτες
       </Link>
     </div>
@@ -77,30 +67,26 @@ export function OpenButton({ isOwner, pending }: OpenButtonProps) {
 
 export function OpenConfirm() {
   return (
-    <div className="o-card o7-warn" role="status">
-      <Panel label="Επιβεβαίωση ανοίγματος">
-        <p>
-          <strong>Γίνεται μία φορά, χωρίς επιστροφή.</strong> Από εκείνη τη
-          στιγμή το σύστημα επικοινωνεί κανονικά με πελάτες: φεύγουν emails,
-          ανοίγουν οι δημόσιες φόρμες και οι προσκλήσεις πελατών.
-        </p>
-        <OpenForm cancelHref={READINESS_HREF} />
-      </Panel>
-    </div>
+    <details className="ml-box o-card o7-warn" open role="status">
+      <summary>
+        <h2 className="ml-box-title">Επιβεβαίωση ανοίγματος</h2>
+        <small>γίνεται μία φορά, χωρίς επιστροφή</small>
+      </summary>
+      <p>
+        <strong>Γίνεται μία φορά, χωρίς επιστροφή.</strong> Από εκείνη τη στιγμή
+        το σύστημα επικοινωνεί κανονικά με πελάτες: φεύγουν emails, ανοίγουν οι
+        δημόσιες φόρμες και οι προσκλήσεις πελατών.
+      </p>
+      <OpenForm cancelHref={READINESS_HREF} />
+    </details>
   );
 }
 
 export function OpenedNotice({ openedAt }: { openedAt: string }) {
   return (
-    <div className="o-card" role="status">
-      <Panel
-        label={`Ανοιχτό από ${fmtOpened(openedAt)}`}
-        aside={<Badge>μόνο ανάγνωση</Badge>}
-      >
-        <p className="muted">
-          Το σύστημα δουλεύει με πελάτες. Η λίστα μένει εδώ μόνο για ανάγνωση.
-        </p>
-      </Panel>
-    </div>
+    <p className="o-first o7-opened" role="status">
+      <strong>{`Ανοιχτό από ${fmtOpened(openedAt)}`}</strong> · μόνο ανάγνωση.
+      Το σύστημα δουλεύει με πελάτες· η λίστα μένει εδώ μόνο για ανάγνωση.
+    </p>
   );
 }

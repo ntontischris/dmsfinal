@@ -1,8 +1,7 @@
 import Link from "next/link";
 
 import { can, getViewer } from "@/modules/access";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { EVENT_CODE_PATTERN } from "../automation-helpers";
 import {
@@ -36,8 +35,12 @@ const athensYear = (): number =>
 
 function Variables({ page }: { page: EventPage }) {
   return (
-    <Panel label="Μεταβλητές">
-      <p className="muted">
+    <details className="ml-box">
+      <summary>
+        <h2 className="ml-box-title">Μεταβλητές</h2>
+        <small>{`${page.event.variables.length} για τα κείμενα`}</small>
+      </summary>
+      <p className="note">
         Γράφονται σε άγκιστρα και είναι ίδιες στα ελληνικά και στα αγγλικά
         κείμενα. Μια άγνωστη μεταβλητή δεν αποθηκεύεται. Τα ποσά δεν φτάνουν σε
         όσους δεν βλέπουν ποσά.
@@ -47,11 +50,12 @@ function Variables({ page }: { page: EventPage }) {
           <code key={v}>{`{${v}}`}</code>
         ))}
       </div>
-    </Panel>
+    </details>
   );
 }
 
-function EventHeader({
+// Η κεφαλή της σελίδας Γεγονότος: το όνομά του είναι το h1 (κρύβει το h1 της ενότητας), με Ομάδα, Είδος και Μία περίπτωση.
+function EventHero({
   page,
   catalog,
 }: {
@@ -61,51 +65,51 @@ function EventHeader({
   const { event } = page;
   const group = catalog?.groups.find((g) => g.code === event.group);
   return (
-    <Panel
-      label={`${event.number}. ${event.label}`}
-      aside={
-        <Link className="button" href={k1Href(event.group, undefined)}>
-          Πίσω στον κατάλογο
-        </Link>
-      }
-    >
-      <dl className="dl">
-        <dt>Ομάδα</dt>
-        <dd>{group ? groupTitle(group) : event.group}</dd>
-        <dt>Είδος</dt>
-        <dd>{KIND_LABELS[event.kind]}</dd>
-        <dt>Μία περίπτωση</dt>
-        <dd>{event.caseOf}</dd>
-      </dl>
-      {event.isCostOnly && (
-        <p className="note">
-          Γεγονός κόστους: οι παραλήπτες είναι κλειδωμένοι, μόνο όσοι βλέπουν
-          κόστος και κερδοφορία.
-        </p>
-      )}
-      {!event.isWired && (
-        <p className="note">
-          <Badge tone="waiting">{WIRED_LATER}</Badge> Αυτό το Γεγονός συνδέεται
-          αργότερα: οι Αυτοματισμοί του αποθηκεύονται, αλλά δεν στέλνουν ακόμα
-          τίποτα.
-        </p>
-      )}
-    </Panel>
+    <header className="ml-hero k1-hero">
+      <span className="ml-hero-mono" aria-hidden="true">
+        {event.number}
+      </span>
+      <div>
+        <span className="ml-tag">{KIND_LABELS[event.kind]}</span>
+        <h1 data-page-title>{`${event.number}. ${event.label}`}</h1>
+        <dl className="ml-kv">
+          <dt>Ομάδα</dt>
+          <dd>{group ? groupTitle(group) : event.group}</dd>
+          <dt>Είδος</dt>
+          <dd>{KIND_LABELS[event.kind]}</dd>
+          <dt>Μία περίπτωση</dt>
+          <dd>{event.caseOf}</dd>
+        </dl>
+        {event.isCostOnly && (
+          <p>
+            Γεγονός κόστους: οι παραλήπτες είναι κλειδωμένοι, μόνο όσοι βλέπουν
+            κόστος και κερδοφορία.
+          </p>
+        )}
+        {!event.isWired && (
+          <p>
+            <span className="ml-tag">{WIRED_LATER}</span> Αυτό το Γεγονός
+            συνδέεται αργότερα: οι Αυτοματισμοί του αποθηκεύονται, αλλά δεν
+            στέλνουν ακόμα τίποτα.
+          </p>
+        )}
+      </div>
+      <div className="ml-quick">
+        <Link href={k1Href(event.group, undefined)}>Πίσω στον κατάλογο</Link>
+      </div>
+    </header>
   );
 }
 
 function EventBody({
   page,
-  catalog,
   holidays,
 }: {
   page: EventPage;
-  catalog: Catalog | null;
   holidays: Awaited<ReturnType<typeof getHolidays>> | null;
 }) {
   return (
-    <>
-      <EventHeader page={page} catalog={catalog} />
+    <div className="ml-stack">
       <Variables page={page} />
       {holidays?.ok && holidays.data && (
         <HolidayList holidays={holidays.data} />
@@ -121,11 +125,9 @@ function EventBody({
       ))}
       <NewAutomation page={page} />
       {page.automations.some((a) => !a.isInitial) && (
-        <p className="btn-row">
-          <Badge>έχει προσθήκες Διαχείρισης</Badge>
-        </p>
+        <p className="note">έχει προσθήκες Διαχείρισης</p>
       )}
-    </>
+    </div>
   );
 }
 
@@ -146,13 +148,18 @@ export async function SpacesAutomationEvent({ code }: { code: string }) {
       </div>
     );
   return (
-    <K1Frame>
+    <K1Frame
+      hero={
+        page?.data && (
+          <EventHero
+            page={page.data}
+            catalog={catalog.ok ? (catalog.data ?? null) : null}
+          />
+        )
+      }
+    >
       {page?.data ? (
-        <EventBody
-          page={page.data}
-          catalog={catalog.ok ? (catalog.data ?? null) : null}
-          holidays={holidays}
-        />
+        <EventBody page={page.data} holidays={holidays} />
       ) : (
         <StateNotice kind="empty" title="Δεν υπάρχει αυτό το Γεγονός">
           <Link href={AUTOMATIONS_PATH}>Πίσω στον κατάλογο</Link>

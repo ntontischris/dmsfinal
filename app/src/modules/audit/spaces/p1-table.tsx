@@ -1,8 +1,5 @@
-import { ListRow, Person, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge } from "@/spaces/screens/shared";
+import Link from "next/link";
 
-import { AUDIT_TITLE } from "../labels";
 import type { P1Row, P1Value } from "./p1-adapter";
 
 // Ποσά και κόστος έρχονται κρυμμένα από τη βάση ανά Δικαίωμα· η γραμμή μένει πάντα.
@@ -15,9 +12,9 @@ function Value({ value }: { value: P1Value }) {
 }
 
 function BeforeAfter({ row }: { row: P1Row }) {
-  if (row.changes.length === 0) return <>—</>;
+  if (row.changes.length === 0) return null;
   return (
-    <span className="p1-ba">
+    <small className="p1-ba">
       {row.changes.map((change, index) => (
         <span key={change.key}>
           {index > 0 && <br />}
@@ -32,38 +29,47 @@ function BeforeAfter({ row }: { row: P1Row }) {
           <span className="muted">{row.more}</span>
         </>
       )}
-    </span>
+    </small>
   );
 }
 
+function AuditLine({ row }: { row: P1Row }) {
+  return (
+    <li className="ml-line">
+      <time className="ml-thumb p1-when" dateTime={row.at}>
+        {row.when}
+      </time>
+      <span className="ml-main">
+        {row.href ? (
+          <Link href={row.href}>
+            <strong>{row.title}</strong>
+          </Link>
+        ) : (
+          <strong>{row.title}</strong>
+        )}
+        <small>
+          {row.actor} · {row.area}
+        </small>
+        <BeforeAfter row={row} />
+      </span>
+      <span className="ml-tag">{row.action}</span>
+    </li>
+  );
+}
+
+// Οι εγγραφές του Ίχνους: ανοιχτό κουτί, γιατί είναι η δουλειά της οθόνης.
 export function AuditTable({ rows }: { rows: readonly P1Row[] }) {
   return (
-    <Panel label={AUDIT_TITLE} aside={`${rows.length}`} isFlush>
-      <RowList>
-        {rows.map((e) => (
-          <ListRow
-            key={e.id}
-            lead={
-              <time className="p1-when" dateTime={e.at}>
-                {e.when}
-              </time>
-            }
-            href={e.href}
-            title={e.title}
-            sub={
-              <>
-                <Person name={e.actor} /> · {e.area}
-              </>
-            }
-            aside={
-              <>
-                <BeforeAfter row={e} />
-                <Badge>{e.action}</Badge>
-              </>
-            }
-          />
+    <details className="ml-box" open>
+      <summary>
+        <h2 className="ml-box-title">Εγγραφές</h2>
+        <small>{rows.length}</small>
+      </summary>
+      <ul className="ml-list">
+        {rows.map((row) => (
+          <AuditLine key={row.id} row={row} />
         ))}
-      </RowList>
-    </Panel>
+      </ul>
+    </details>
   );
 }

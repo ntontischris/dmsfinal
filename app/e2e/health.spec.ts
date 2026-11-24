@@ -11,7 +11,6 @@ test.describe.configure({ mode: "serial", retries: 0 });
 const PATH = "/app/health";
 const TITLE = "Υγεία συστήματος";
 
-
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -63,7 +62,7 @@ async function stuckEvent(P: string): Promise<string> {
 
 // Η γραμμή μιας αποστολής ή ενός Γεγονότος, από το κείμενό της (όνομα παραλήπτη ή λόγος με το όνομα του project).
 async function confirm(page: Page, text: string, label: string) {
-  const item = page.locator("li.part-row", { hasText: text });
+  const item = page.locator("li.ml-line", { hasText: text });
   await item.getByRole("button", { name: label, exact: true }).click();
   await item.getByRole("button", { name: `Ναι: ${label}` }).click();
   await expect(item).toHaveCount(0);
@@ -93,7 +92,11 @@ test("ο Ιδιοκτήτης βλέπει τη μπάρα, αγνοεί, ξαν
   ).toContainText(/θέλ(ει|ουν) προσοχή/);
   await expect(page.getByTestId("external-not-set-up")).toBeVisible();
   await expect(
-    card(page, "Αποστολές που απέτυχαν").getByText("θέλει προσοχή").first(),
+    page
+      .locator("details.ml-box")
+      .filter({ hasText: "Αποστολές που απέτυχαν" })
+      .getByText("θέλει προσοχή")
+      .first(),
   ).toBeVisible();
 
   await confirm(page, ignored, "Αγνόησε");
@@ -103,7 +106,7 @@ test("ο Ιδιοκτήτης βλέπει τη μπάρα, αγνοεί, ξαν
   // Η αγνοημένη αποστολή μένει στο Ιστορικό αποστολών.
   await page.goto("/app/settings/sends?channel=email");
   await expect(
-    page.locator("li.part-row", { hasText: ignored }).first(),
+    page.locator("li.ml-line", { hasText: ignored }).first(),
   ).toContainText("αγνοήθηκε");
 });
 

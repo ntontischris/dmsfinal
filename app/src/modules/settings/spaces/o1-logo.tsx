@@ -14,8 +14,16 @@ const PREVIEW_STYLE = {
 
 export function LogoCard({ version }: { version: string | null }) {
   return (
-    <SettingsCard title="Λογότυπο">
-      <div className="stack">
+    <SettingsCard
+      title="Λογότυπο"
+      hint={
+        version
+          ? "ανέβηκε· φαίνεται στη μπάρα και στα email"
+          : "το προεπιλεγμένο"
+      }
+      isOpen={false}
+    >
+      <>
         {version ? (
           // Το route σερβίρει το αρχείο από ιδιωτικό bucket· το next/image δεν προσθέτει κάτι εδώ.
           // eslint-disable-next-line @next/next/no-img-element
@@ -25,16 +33,14 @@ export function LogoCard({ version }: { version: string | null }) {
             style={PREVIEW_STYLE}
           />
         ) : (
-          <p className="muted">
+          <p className="ml-empty">
             Δεν έχει ανέβει λογότυπο· η εφαρμογή και τα email δείχνουν το
             προεπιλεγμένο.
           </p>
         )}
         <SettingsForm action={uploadLogo} resetOnSuccess>
-          <label className="stack">
-            <span className="muted">
-              {version ? "Νέο λογότυπο" : "Αρχείο λογότυπου"}
-            </span>
+          <label className="ml-field">
+            <span>{version ? "Νέο λογότυπο" : "Αρχείο λογότυπου"}</span>
             <input
               className="input"
               type="file"
@@ -43,22 +49,20 @@ export function LogoCard({ version }: { version: string | null }) {
               required
             />
           </label>
-          <span className="muted">
+          <p className="o-hint">
             PNG, JPG ή WebP έως 1 MB. Καλύτερα οριζόντιο, με διάφανο φόντο.
-          </span>
+          </p>
           <SaveRow card="logo" label="Ανέβασμα" />
         </SettingsForm>
         {version && (
-          <div className="btn-row">
-            <ActionButton
-              action={removeLogo}
-              fields={{}}
-              label="Αφαίρεση λογότυπου"
-              isDanger
-            />
-          </div>
+          <ActionButton
+            action={removeLogo}
+            fields={{}}
+            label="Αφαίρεση λογότυπου"
+            isDanger
+          />
         )}
-      </div>
+      </>
     </SettingsCard>
   );
 }

@@ -11,15 +11,14 @@ const SECTIONS: readonly { id: KSection; label: string; href: string }[] = [
   { id: "sends", label: "Ιστορικό αποστολών", href: SENDS_PATH },
 ];
 
-// Οι τρεις οθόνες των αποστολών (K1, K2, K3) σε μία σειρά καρτελών, όπως οι καρτέλες της παλιάς οθόνης: χωρίς αυτές
-// τα Μηνύματα συστήματος και το Ιστορικό αποστολών δεν ανοίγουν από πουθενά μέσα στους Αυτοματισμούς.
+// Οι τρεις οθόνες των αποστολών (K1, K2, K3) ως σύνδεσμοι-φίλτρα σελίδας (`nav.page-filters`), όχι καρτέλες: χωρίς
+// αυτούς τα Μηνύματα συστήματος και το Ιστορικό αποστολών δεν ανοίγουν από πουθενά μέσα στους Αυτοματισμούς.
 export function KSubnav({ current }: { current: KSection }) {
   return (
-    <nav className="tabs" aria-label="Αυτοματισμοί και αποστολές">
+    <nav className="page-filters" aria-label="Αυτοματισμοί και αποστολές">
       {SECTIONS.map((section) => (
         <Link
           key={section.id}
-          className="tab"
           href={section.href}
           aria-current={section.id === current ? "page" : undefined}
         >

@@ -38,7 +38,6 @@ export function ConfirmAction({
     return (
       <button
         type="button"
-        className="button"
         data-primary={isPrimary ? "true" : undefined}
         onClick={() => setIsConfirming(true)}
       >
@@ -46,24 +45,15 @@ export function ConfirmAction({
       </button>
     );
   return (
-    <form action={formAction} className="btn-row">
+    <form action={formAction} className="ml-actions">
       {Object.entries(fields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
       <span className="muted">{confirm}</span>
-      <button
-        type="submit"
-        className="button"
-        data-primary="true"
-        disabled={isPending}
-      >
+      <button type="submit" data-primary="true" disabled={isPending}>
         {SENDS.confirmYes}: {label}
       </button>
-      <button
-        type="button"
-        className="button"
-        onClick={() => setIsConfirming(false)}
-      >
+      <button type="button" onClick={() => setIsConfirming(false)}>
         {SENDS.cancel}
       </button>
       {state.error && (

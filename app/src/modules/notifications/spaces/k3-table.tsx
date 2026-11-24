@@ -1,9 +1,6 @@
 import Link from "next/link";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList, TimeLead } from "@/spaces/kit/parts";
-import { Badge } from "@/spaces/screens/shared";
 
 import { eventHref } from "../automation-helpers";
 import { whatOf } from "../sends-helpers";
@@ -18,6 +15,7 @@ import type { Send } from "../sends-schema";
 import { isAttention, timeParts, whatNextOf } from "./k3-model";
 import { RetryButton } from "./k3-retry";
 
+import "../../finance/spaces/money-lines.css";
 import "./k3.css";
 
 // Η πηγή της αποστολής: το Γεγονός του Αυτοματισμού (ανοίγει την K1) ή το Μήνυμα συστήματος (ανοίγει την K2).
@@ -43,7 +41,7 @@ const recipientOf = (send: Send): string =>
     : (send.recipientName ?? send.recipientEmail ?? "—");
 
 function Action({ send, canRetry }: { send: Send; canRetry: boolean }) {
-  if (send.isRetried) return <span className="part-sub">{RETRIED_NOTE}</span>;
+  if (send.isRetried) return <small>{RETRIED_NOTE}</small>;
   if (canRetry && send.retryRef)
     return <RetryButton outboxId={send.retryRef} />;
   return null;
@@ -59,10 +57,10 @@ function SendRow({ send: s, hasRetry, canRetry }: SendRowProps) {
   const { time, date } = timeParts(s.at);
   const next = whatNextOf(s);
   return (
-    <ListRow
-      lead={<TimeLead start={time} />}
-      title={whatOf(s)}
-      sub={
+    <li className="ml-line">
+      <span className="ml-thumb k3-time">{time}</span>
+      <span className="ml-main">
+        <strong>{whatOf(s)}</strong>
         <span className="k3-sub">
           <span>
             {date} · <Source send={s} />
@@ -75,19 +73,17 @@ function SendRow({ send: s, hasRetry, canRetry }: SendRowProps) {
           <span>
             Λόγος: {s.reason ?? "—"}
             {next && ` · ${next}`}
+            {` · Προσπάθειες: ${s.attempts}`}
           </span>
         </span>
-      }
-      aside={
-        <>
-          <span className="part-sub">Προσπάθειες: {s.attempts}</span>
-          <Badge tone={isAttention(s) ? "attention" : undefined}>
-            {STATE_LABELS[s.state]}
-          </Badge>
-          {hasRetry && <Action send={s} canRetry={canRetry} />}
-        </>
-      }
-    />
+      </span>
+      <span className="ml-tag" data-attention={isAttention(s) || undefined}>
+        {STATE_LABELS[s.state]}
+      </span>
+      <span className="ml-quick">
+        {hasRetry && <Action send={s} canRetry={canRetry} />}
+      </span>
+    </li>
   );
 }
 
@@ -99,8 +95,12 @@ interface SendTableProps {
 
 export function SendTable({ sends, hasRetry, canRetry }: SendTableProps) {
   return (
-    <Panel label="Αποστολές" aside={`${sends.length}`} isFlush>
-      <RowList>
+    <details className="ml-box" open>
+      <summary>
+        <h2 className="ml-box-title">Αποστολές</h2>
+        <small>{`${sends.length} σε αυτή τη σελίδα`}</small>
+      </summary>
+      <ul className="ml-list">
         {sends.map((s) => (
           <SendRow
             key={s.id}
@@ -109,7 +109,7 @@ export function SendTable({ sends, hasRetry, canRetry }: SendTableProps) {
             canRetry={canRetry}
           />
         ))}
-      </RowList>
-    </Panel>
+      </ul>
+    </details>
   );
 }

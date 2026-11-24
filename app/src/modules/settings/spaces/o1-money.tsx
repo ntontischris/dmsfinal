@@ -1,8 +1,6 @@
 import Link from "next/link";
 
 import { initialsOf } from "@/spaces/shell/avatar";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge } from "@/spaces/screens/shared";
 
 import { saveAssistantCap } from "../actions-assistant";
 import {
@@ -24,8 +22,8 @@ const O1_HREF = "/app/settings/company";
 function NewAccount({ isAdding }: { isAdding: boolean }) {
   if (!isAdding)
     return (
-      <div className="btn-row">
-        <Link className="button" href={`${O1_HREF}?bank=new`}>
+      <div className="ml-quick o-left">
+        <Link data-primary="true" href={`${O1_HREF}?bank=new`}>
           + Λογαριασμός
         </Link>
       </div>
@@ -43,14 +41,22 @@ function NewAccount({ isAdding }: { isAdding: boolean }) {
         />
       </div>
       <SaveRow card="bank" label="Προσθήκη λογαριασμού" isAlwaysEnabled />
-      <div className="btn-row">
-        <Link className="button" href={O1_HREF}>
-          Άκυρο
-        </Link>
+      <div className="ml-quick">
+        <Link href={O1_HREF}>Άκυρο</Link>
       </div>
     </SettingsForm>
   );
 }
+
+const bankHint = (banks: O1Banks): string => {
+  const preferred = banks.rows.find((row) => row.isDefault);
+  if (banks.rows.length === 0) return "εκκρεμεί";
+  const count =
+    banks.rows.length === 1
+      ? "1 λογαριασμός"
+      : `${banks.rows.length} λογαριασμοί`;
+  return preferred ? `${count} · προεπιλογή ${preferred.bank}` : count;
+};
 
 // Λογαριασμοί τραπέζης: ένας προεπιλεγμένος. Μόνο ο Ιδιοκτήτης προσθέτει, ορίζει προεπιλογή ή αποσύρει.
 export function BankCard({
@@ -63,46 +69,45 @@ export function BankCard({
   isAdding: boolean;
 }) {
   return (
-    <SettingsCard title="Λογαριασμοί τραπέζης">
+    <SettingsCard
+      title="Λογαριασμοί τραπέζης"
+      hint={bankHint(banks)}
+      isOpen={isAdding}
+    >
       {banks.rows.length === 0 ? (
-        <p>
+        <p className="ml-empty">
           Κανένας λογαριασμός ακόμα <Pending />
         </p>
       ) : (
-        <RowList>
+        <ul className="ml-list">
           {banks.rows.map((a) => (
-            <ListRow
-              key={a.id}
-              lead={
-                <span className="part-tile" aria-hidden="true">
-                  {initialsOf(a.bank)}
+            <li key={a.id} className="ml-line">
+              <span className="ml-thumb" aria-hidden="true">
+                {initialsOf(a.bank)}
+              </span>
+              <span className="ml-main">
+                {a.isDefault && <span className="ml-tag">προεπιλεγμένος</span>}
+                <strong>{a.bank}</strong>
+                <small>{`${a.iban} · ${a.holder}`}</small>
+              </span>
+              <span />
+              {!a.isDefault && isOwner && (
+                <span className="ml-quick">
+                  <ActionButton
+                    action={setDefaultBankAccount}
+                    fields={{ id: a.id }}
+                    label="Ορισμός προεπιλογής"
+                  />
+                  <ActionButton
+                    action={retireBankAccount}
+                    fields={{ id: a.id }}
+                    label="Απόσυρση"
+                  />
                 </span>
-              }
-              title={a.bank}
-              sub={`${a.iban} · ${a.holder}`}
-              aside={
-                a.isDefault ? (
-                  <Badge tone="strong">προεπιλεγμένος</Badge>
-                ) : (
-                  isOwner && (
-                    <>
-                      <ActionButton
-                        action={setDefaultBankAccount}
-                        fields={{ id: a.id }}
-                        label="Ορισμός προεπιλογής"
-                      />
-                      <ActionButton
-                        action={retireBankAccount}
-                        fields={{ id: a.id }}
-                        label="Απόσυρση"
-                      />
-                    </>
-                  )
-                )
-              }
-            />
+              )}
+            </li>
           ))}
-        </RowList>
+        </ul>
       )}
       {banks.retired > 0 && (
         <p className="muted o-hint">
@@ -137,7 +142,11 @@ export function AssistantCard({
   spendLine,
 }: AssistantCardProps) {
   return (
-    <SettingsCard title="Βοηθός">
+    <SettingsCard
+      title="Βοηθός"
+      hint="όρια widget και πλαφόν AI"
+      isOpen={false}
+    >
       <SettingsForm action={saveAssistantLimits} version={company.updated_at}>
         <div className="o-fields">
           <TextField

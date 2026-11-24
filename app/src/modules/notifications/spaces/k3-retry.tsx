@@ -23,32 +23,21 @@ export function RetryButton({ outboxId }: { outboxId: string }) {
   if (state.notice) return <KMessage state={state} />;
   if (!isConfirming)
     return (
-      <button
-        className="button"
-        type="button"
-        onClick={() => setIsConfirming(true)}
-      >
-        {RETRY_LABEL}
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsConfirming(true)}>
+          {RETRY_LABEL}
+        </button>
+      </span>
     );
   return (
     <form action={action}>
       <input type="hidden" name="ref" value={outboxId} />
-      <span className="part-sub">{RETRY_CONFIRM}</span>
-      <span className="btn-row">
-        <button
-          className="button"
-          data-primary="true"
-          type="submit"
-          disabled={isPending}
-        >
+      <small>{RETRY_CONFIRM}</small>
+      <span className="ml-quick">
+        <button data-primary="true" type="submit" disabled={isPending}>
           {RETRY_CONFIRM_YES}
         </button>
-        <button
-          className="button"
-          type="button"
-          onClick={() => setIsConfirming(false)}
-        >
+        <button type="button" onClick={() => setIsConfirming(false)}>
           {RETRY_CANCEL}
         </button>
       </span>
