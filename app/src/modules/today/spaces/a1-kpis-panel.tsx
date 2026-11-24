@@ -5,10 +5,17 @@ import { Strip } from "@/spaces/shell/strip";
 import type { TodayKpis } from "../view-schema";
 import { kpiStatsOf, riskRowsOf } from "./a1-kpis";
 
-// Δείκτες (d9): Τζίρος μήνα, Αξία pipeline, Ενεργές Παραγωγές, Περιθώριο φέτος, όσοι επιτρέπονται· από κάτω ο «ραντάρ
+// Δείκτες (d9): Τζίρος μήνα, Μπήκαν τον μήνα, Αξία pipeline, Ενεργές Παραγωγές, Περιθώριο φέτος, όσοι επιτρέπονται· από κάτω ο «ραντάρ
 // κινδύνου» μόνο όταν κάτι κινδυνεύει. Χωρίς τίποτα, δεν πιάνει χώρο.
-export function KpiBrief({ kpis }: { kpis: TodayKpis }) {
-  const stats = kpiStatsOf(kpis);
+export function KpiBrief({
+  kpis,
+  received,
+}: {
+  kpis: TodayKpis;
+  // Τ8: «Μπήκαν τον <μήνα>» δίπλα στον Τζίρο· null = δεν φαίνεται.
+  received: number | null;
+}) {
+  const stats = kpiStatsOf(kpis, received);
   const risks = riskRowsOf(kpis.risks);
   if (stats.length === 0 && risks.length === 0) return null;
   return (

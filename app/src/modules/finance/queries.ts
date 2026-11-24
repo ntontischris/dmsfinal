@@ -1,6 +1,7 @@
 import { createSupabase } from "@/lib/supabase/server";
 import { listClients } from "@/modules/sales";
 
+import { clientOptionsOf } from "./client-options";
 import { read, type ReadResult } from "./read";
 import type { ClientOption, PaymentMethod, ReceiptRow, WithholdingRate } from "./types";
 import { parseMethods, parseReceipts, parseWithholdingRates } from "./view-schema";
@@ -36,5 +37,5 @@ export async function listWithholdingRates(): Promise<ReadResult<WithholdingRate
 export async function listClientOptions(): Promise<ReadResult<ClientOption[]>> {
   const result = await listClients({ limit: CLIENT_OPTIONS_LIMIT });
   if (!result.ok) return { ok: false };
-  return { ok: true, data: result.data.map(({ id, name }) => ({ id, name })) };
+  return { ok: true, data: clientOptionsOf(result.data) };
 }

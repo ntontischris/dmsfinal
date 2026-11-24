@@ -9,14 +9,14 @@ import { fmtMoney } from "@/spaces/screens/shared";
 
 import { registerReceipt } from "../actions";
 import type { ClientOption, WithholdingRate } from "../types";
+import { ErrorMessage, type Option } from "./i4-form-fields";
 import {
-  ErrorMessage,
-  InputField,
-  InvoicePicker,
-  SelectField,
-  WithholdingFields,
-  type Option,
-} from "./i4-form-fields";
+  AmountStep,
+  ClientStep,
+  WhenStep,
+  clientChoicesOf,
+  type ReceiptFormValues,
+} from "./i4-form-steps";
 import {
   linkedPreviewOf,
   settlementOf,
@@ -36,18 +36,7 @@ interface I4FormProps {
   initial: { clientId?: string; invoiceId?: string };
 }
 
-interface FormValues {
-  clientId: string;
-  amount: string;
-  date: string;
-  method: string;
-  note: string;
-  invoiceIds: string[];
-  rateId: string;
-  withheld: string;
-  // Ο Χρήστης έγραψε ποσό: η φόρμα δεν το ξαναπροτείνει.
-  amountTouched: boolean;
-}
+type FormValues = ReceiptFormValues;
 
 const numberOf = (text: string): number => Number(text.replace(",", ".")) || 0;
 const textOf = (value: number): string =>
@@ -164,71 +153,6 @@ const initialFormOf = (props: I4FormProps): FormValues => {
   return { ...base, ...suggestionOf(open, props.rates, base) };
 };
 
-function FormFields(props: {
-  form: FormValues;
-  clients: readonly Option[];
-  methods: readonly Option[];
-  rates: readonly WithholdingRate[];
-  open: readonly OpenInvoice[];
-  set: (patch: Partial<FormValues>) => void;
-}) {
-  const { form, set } = props;
-  const suggest = (invoiceIds: string[], rateId: string) =>
-    suggestionOf(props.open, props.rates, { ...form, invoiceIds, rateId });
-  return (
-    <>
-      <SelectField
-        label="Πελάτης"
-        value={form.clientId}
-        options={props.clients}
-        placeholder="Διάλεξε Πελάτη…"
-        onChange={(clientId) =>
-          set({ clientId, invoiceIds: [], withheld: "", amountTouched: false })
-        }
-      />
-      <InvoicePicker
-        open={props.open}
-        selected={form.invoiceIds}
-        onChange={(ids) =>
-          set({ invoiceIds: ids, ...suggest(ids, form.rateId) })
-        }
-      />
-      <InputField
-        label="Ποσό (€, με ΦΠΑ)"
-        value={form.amount}
-        onChange={(amount) => set({ amount, amountTouched: true })}
-      />
-      <WithholdingFields
-        rates={props.rates.map((r) => ({ id: r.id, name: r.label }))}
-        rateId={form.rateId}
-        withheld={form.withheld}
-        onRate={(rateId) =>
-          set({ rateId, ...suggest(form.invoiceIds, rateId) })
-        }
-        onWithheld={(withheld) => set({ withheld })}
-      />
-      <InputField
-        label="Ημερομηνία"
-        type="date"
-        value={form.date}
-        onChange={(date) => set({ date })}
-      />
-      <SelectField
-        label="Τρόπος"
-        value={form.method}
-        options={props.methods}
-        onChange={(method) => set({ method })}
-      />
-      <InputField
-        label="Σημείωση"
-        type="text"
-        value={form.note}
-        onChange={(note) => set({ note })}
-      />
-    </>
-  );
-}
-
 const formDataOf = (form: FormValues): FormData => {
   const data = new FormData();
   data.set("clientId", form.clientId);
@@ -273,6 +197,8 @@ export function I4Form(props: I4FormProps) {
       : (props.openByClient[form.clientId] ?? []);
   const clientName =
     props.clients.find((c) => c.id === form.clientId)?.name ?? "";
+  const suggest = (invoiceIds: string[], rateId: string) =>
+    suggestionOf(open ?? [], props.rates, { ...form, invoiceIds, rateId });
   const handleSubmit = () =>
     startTransition(async () => {
       const recorded = {
@@ -296,29 +222,27 @@ export function I4Form(props: I4FormProps) {
           handleSubmit();
         }}
       >
-        <FormFields
+        <ClientStep
           form={form}
-          clients={props.clients}
-          methods={props.methods}
-          rates={props.rates}
-          open={open ?? []}
           set={set}
+          suggest={suggest}
+          clients={clientChoicesOf(props.clients)}
+          open={open ?? []}
         />
-        {!done && open !== null && (
-          <PreviewBox
-            open={open}
-            value={previewValue}
-            linked={form.invoiceIds}
-          />
-        )}
-        <button
-          type="submit"
-          className="button"
-          data-primary="true"
-          disabled={isPending}
-        >
-          {isPending ? "Αποθήκευση…" : "Καταχώρηση Είσπραξης"}
-        </button>
+        <AmountStep form={form} set={set} suggest={suggest} rates={props.rates}>
+          {!done && open !== null && (
+            <PreviewBox
+              open={open}
+              value={previewValue}
+              linked={form.invoiceIds}
+            />
+          )}
+        </AmountStep>
+        <WhenStep form={form} set={set} methods={props.methods}>
+          <button type="submit" className="i3-go" disabled={isPending}>
+            {isPending ? "Αποθήκευση…" : "Καταχώρηση Είσπραξης"}
+          </button>
+        </WhenStep>
         <ErrorMessage text={error} />
         {done && <DoneNote done={done} />}
       </form>

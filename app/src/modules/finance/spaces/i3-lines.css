@@ -2,21 +2,21 @@
 .i3-hero { --c: var(--brand-periwinkle); }
 .i3-hero .i3-lead { max-width: 40rem; font-size: .9rem; }
 .i3-hero .ml-quick button {
-  background: color-mix(in oklab, var(--brand-midnight) 85%, transparent);
+  background: color-mix(in oklab, var(--panel-midnight) 85%, transparent);
 }
 
 /* Βήμα: ανοιχτό κουτί με αριθμό, τίτλο και υπόδειξη */
 .i3-step {
   margin: 0; padding: .9rem 1rem 1rem; border-radius: 16px;
   border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 16%, transparent);
-  background: linear-gradient(160deg, color-mix(in oklab, var(--brand-deep) 75%, transparent), color-mix(in oklab, var(--brand-midnight) 75%, transparent));
+  background: linear-gradient(160deg, color-mix(in oklab, var(--panel-deep) 75%, transparent), color-mix(in oklab, var(--panel-midnight) 75%, transparent));
 }
 .i3-step-head { display: flex; align-items: center; gap: .8rem; margin: 0 0 .8rem; }
 .i3-step-head > div { display: grid; gap: .1rem; min-width: 0; }
 .i3-step-head small { color: var(--color-text-muted); font-size: .8rem; overflow-wrap: anywhere; }
 .i3-step-no {
   flex: none; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%;
-  font-weight: 800; color: var(--brand-periwinkle);
+  font-weight: 800; color: color-mix(in oklab, var(--brand-periwinkle) var(--panel-ink-mix), var(--color-text));
   border: 1.5px solid color-mix(in oklab, var(--brand-periwinkle) 60%, transparent);
 }
 .i3-step-body { display: grid; gap: .8rem; min-width: 0; }
@@ -24,7 +24,7 @@
 .i3-step-body .note { margin: 0; }
 
 /* Κλειστό κουτί μέσα σε βήμα */
-.i3-fold { background: color-mix(in oklab, var(--brand-midnight) 55%, transparent); }
+.i3-fold { background: color-mix(in oklab, var(--panel-midnight) 55%, transparent); }
 .i3-fold > summary strong { font-size: .92rem; }
 .i3-fold > summary small { overflow-wrap: anywhere; }
 .i3-fold[open] > summary::before { background: var(--brand-yellow); }
@@ -38,12 +38,14 @@
 .i3-cover .ml-amount { font-size: 1rem; }
 .i3-day { width: 2.8rem; height: 2.8rem; font-size: .78rem; }
 
-/* Το ένα κύριο κουμπί της σελίδας (κόκκινο) */
+/* Το ένα κύριο κουμπί της σελίδας: ίδιο με το κύριο κουμπί όλων των οθονών (.button[data-primary]) */
 .i3-go {
   justify-self: start; display: inline-flex; align-items: center; gap: .5rem; padding: .75rem 1.3rem;
-  border: 0; border-radius: 999px; font: inherit; font-weight: 800; cursor: pointer;
-  color: var(--color-text); background: var(--brand-rec);
-  box-shadow: 0 14px 34px -14px var(--brand-rec); transition: transform .2s, box-shadow .2s, opacity .2s;
+  border: 0; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer;
+  color: var(--color-on-accent); background: var(--color-accent); transition: filter .2s, opacity .2s;
 }
-.i3-go:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 18px 40px -14px var(--brand-rec); }
-.i3-go:disabled { cursor: not-allowed; opacity: .45; box-shadow: none; }
+.i3-go:hover:not(:disabled) { filter: brightness(1.1); }
+.i3-go:disabled { cursor: not-allowed; opacity: .45; }
+
+/* Τι λείπει για να ενεργοποιηθεί το κουμπί */
+.i3-missing { margin: 0; color: var(--color-text-muted); font-size: .85rem; }

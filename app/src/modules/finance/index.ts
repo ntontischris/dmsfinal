@@ -34,15 +34,17 @@ export { getLedger } from "./ledger-queries";
 // Χώροι: I1, I2, I3
 export { SpacesInvoices } from "./spaces/i2-screen";
 export { SpacesToInvoice } from "./spaces/i1-screen";
-export { WithMoneyDeck } from "./spaces/money-deck";
 export { SpacesNewInvoice } from "./spaces/i3-screen";
 export { SpacesInvoice } from "./spaces/i8-screen";
 // Χώροι: I4, I5
 export { SpacesReceipts } from "./spaces/i4-screen";
 export { SpacesLedger } from "./spaces/i5-screen";
+// Οι αριθμοί των καρτών των Τιμολογίων.
+export { FinanceNumbers } from "./spaces/finance-numbers";
 // Χώροι: I2, I5 του Χρήστη πελάτη.
 export { SpacesClientInvoices } from "./spaces/i2-client-screen";
 export { SpacesClientLedger } from "./spaces/i5-client-screen";
+export { SpacesClientInvoice } from "./spaces/i8-client-screen";
 // Τρόποι είσπραξης: για τη φόρμα της νέας εμφάνισης (O6).
 export { saveMethod, retireMethod, restoreMethod } from "./actions-methods";
 // Ποσοστά παρακράτησης (d6): για τη φόρμα του O6.

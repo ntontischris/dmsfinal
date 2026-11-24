@@ -13,12 +13,20 @@ import {
 } from "@/spaces/data/screens";
 
 export type SpaceId =
-  | "today"
+  | "home"
   | "clients"
-  | "production"
-  | "money"
-  | "talk"
-  | "company"
+  | "sales"
+  | "agreements"
+  | "productions"
+  | "filming"
+  | "calendar"
+  | "messages"
+  | "invoices"
+  | "reports"
+  | "team"
+  | "equipment"
+  | "knowledge"
+  | "settings"
   | "c-today"
   | "c-work"
   | "c-filming"
@@ -27,13 +35,21 @@ export type SpaceId =
 
 export type IconName =
   | "today"
+  | "home"
   | "clients"
+  | "sales"
+  | "agreements"
   | "production"
-  | "money"
+  | "filming"
+  | "calendar"
   | "talk"
+  | "money"
+  | "reports"
+  | "team"
+  | "equipment"
+  | "knowledge"
   | "company"
   | "work"
-  | "filming"
   | "account";
 
 export interface Space {
@@ -43,88 +59,147 @@ export interface Space {
   barLabel?: string;
   icon: IconName;
   audience: "team" | "client";
-  // Οι καρτέλες του Χώρου, με τη σειρά τους· η πρώτη ορατή είναι αυτή που ανοίγει.
+  // Η ομάδα του αριστερού μενού: ανάμεσα σε δύο ομάδες μπαίνει διαχωριστικό.
+  group?: number;
+  // Οι οθόνες του θέματος με τη σειρά τους· η πρώτη ορατή είναι αυτή που ανοίγει, οι άλλες φαίνονται από κάτω στο μενού.
   tabs: readonly string[];
-  // Οθόνες του Χώρου χωρίς καρτέλα: ουρές και σελίδες λεπτομέρειας.
+  // Οθόνες του θέματος χωρίς δική τους θέση: ουρές και σελίδες λεπτομέρειας.
   members: readonly string[];
-  // Σύνδεσμοι δίπλα στις καρτέλες προς οθόνη άλλου Χώρου (όχι αντίγραφό της), π.χ. «Τιμές» → Κατάλογος.
-  links?: readonly { label: string; code: string }[];
-  // Οι καρτέλες ως μεγάλες κάρτες με αριθμούς (η οθόνη τις ζωγραφίζει), όχι ως γραμμή στην κεφαλίδα.
-  deck?: boolean;
 }
 
-// Ίδιοι Χώροι με το prototype. Οι κωδικοί χωρίς σελίδα στην εφαρμογή (π.χ. Q1) απλώς δεν φαίνονται.
-// Το E5 και το N3 είναι οθόνες πελάτη· στους Χώρους ομάδας μπαίνουν μόνο για την περιήγηση χωρίς βάση. Το O8 (Ενσωματώσεις)
-// είναι το N5 του prototype και το KIT ο κατάλογος των components. Το N6 (Πρόσκληση) είναι η μία φόρμα πρόσκλησης (a2).
-export const SPACES: readonly Space[] = [
+// Το μενού της ομάδας: ένα θέμα ανά οντότητα (όπως το παλιό DMS), λίστα → σελίδα. Κάθε δουλειά έχει ένα σπίτι.
+// Κωδικοί χωρίς σελίδα στην εφαρμογή απλώς δεν φαίνονται. Το E5 και το N3 είναι οθόνες πελάτη· στην ομάδα μπαίνουν
+// μόνο για την περιήγηση χωρίς βάση. Το O8 (Ενσωματώσεις) είναι το N5 του prototype και το KIT ο κατάλογος των components.
+const TEAM_SPACES: readonly Space[] = [
   {
-    id: "today",
-    label: "Σήμερα",
-    icon: "today",
+    id: "home",
+    label: "Αρχική",
+    icon: "home",
     audience: "team",
-    tabs: ["A1", "A5", "E6"],
-    members: ["A2", "A6", "G4"],
+    group: 1,
+    tabs: ["A1"],
+    members: [],
   },
   {
     id: "clients",
     label: "Πελάτες",
     icon: "clients",
     audience: "team",
-    tabs: ["B1", "B3", "D1", "C1"],
-    members: ["B2", "B4", "B5", "B6", "C2", "D2", "D4", "N2"],
-    // Οι 4 καρτέλες ως κάρτες της οθόνης, όπως στα «Χρήματα»· οι ουρές (Χωρίς υπεύθυνο, Πιθανά διπλά, Εγκρίσεις) μένουν φίλτρα.
-    deck: true,
+    group: 2,
+    tabs: ["B1"],
+    members: ["B6", "B2", "N2"],
   },
   {
-    id: "production",
-    label: "Παραγωγή",
+    id: "sales",
+    label: "Πωλήσεις",
+    icon: "sales",
+    audience: "team",
+    group: 2,
+    tabs: ["B3"],
+    members: ["B5", "B4"],
+  },
+  {
+    id: "agreements",
+    label: "Συμφωνίες",
+    icon: "agreements",
+    audience: "team",
+    group: 2,
+    tabs: ["D1"],
+    members: ["D4", "D2"],
+  },
+  {
+    id: "productions",
+    label: "Παραγωγές",
     icon: "production",
     audience: "team",
-    tabs: ["E1", "G1", "H1", "F1"],
-    members: ["A7", "E2", "E3", "E4", "E7", "F2", "F3", "G2", "H2", "E5"],
+    group: 3,
+    tabs: ["G1", "G4", "H1"],
+    members: ["G2", "H2", "G3"],
   },
   {
-    id: "money",
-    label: "Χρήματα",
-    icon: "money",
+    id: "filming",
+    label: "Γυρίσματα",
+    icon: "filming",
     audience: "team",
-    // Οι δουλειές της εβδομάδας ως καρτέλες· τα σπάνια (Κερδοφορία, Αναφορές, Εξαγωγή, Καρτέλα) στα «Εργαλεία».
-    tabs: ["I1", "I2", "I4", "I6"],
-    members: ["I7", "M1", "M2", "I5", "G3", "I3"],
-    links: [{ label: "Τιμές", code: "C1" }],
-    deck: true,
+    group: 3,
+    tabs: ["E1", "E6"],
+    members: ["E2", "E3", "E4", "E7", "E5"],
   },
   {
-    id: "talk",
-    label: "Επικοινωνία",
+    id: "calendar",
+    label: "Ημερολόγιο",
+    icon: "calendar",
+    audience: "team",
+    group: 3,
+    tabs: ["A5"],
+    members: ["A7", "A6"],
+  },
+  {
+    id: "messages",
+    label: "Μηνύματα",
     icon: "talk",
     audience: "team",
+    group: 3,
     tabs: ["J1"],
     members: ["J2"],
   },
   {
-    id: "company",
-    label: "Εταιρεία",
+    id: "invoices",
+    label: "Τιμολόγια",
+    icon: "money",
+    audience: "team",
+    group: 4,
+    tabs: ["I2", "I1", "I4", "I6"],
+    members: ["I3", "I8", "I5"],
+  },
+  {
+    id: "reports",
+    label: "Αναφορές",
+    icon: "reports",
+    audience: "team",
+    group: 4,
+    tabs: ["M1"],
+    members: ["M2", "I7"],
+  },
+  {
+    id: "team",
+    label: "Ομάδα",
+    icon: "team",
+    audience: "team",
+    group: 5,
+    tabs: ["N1"],
+    members: ["N4", "N6", "N5", "N3"],
+  },
+  {
+    id: "equipment",
+    label: "Εξοπλισμός",
+    icon: "equipment",
+    audience: "team",
+    group: 5,
+    tabs: ["F1"],
+    members: ["F3", "F2"],
+  },
+  {
+    id: "knowledge",
+    label: "Γνώση",
+    icon: "knowledge",
+    audience: "team",
+    group: 5,
+    tabs: ["A8", "L1"],
+    members: ["L2", "L3"],
+  },
+  {
+    id: "settings",
+    label: "Ρυθμίσεις",
     icon: "company",
     audience: "team",
-    tabs: ["N1", "K1", "L1", "O1", "P2", "P1", "Q1"],
-    members: [
-      "K2",
-      "K3",
-      "L2",
-      "L3",
-      "N4",
-      "N6",
-      "N5",
-      "O2",
-      "O3",
-      "O6",
-      "O7",
-      "O8",
-      "KIT",
-      "N3",
-    ],
+    group: 5,
+    tabs: ["O1", "C1", "P2", "P1"],
+    members: ["K1", "K2", "K3", "O2", "O3", "O6", "O7", "O8", "C2", "KIT"],
   },
+];
+
+const CLIENT_SPACES: readonly Space[] = [
   {
     id: "c-today",
     label: "Σήμερα",
@@ -168,17 +243,19 @@ export const SPACES: readonly Space[] = [
   },
 ];
 
+export const SPACES: readonly Space[] = [...TEAM_SPACES, ...CLIENT_SPACES];
+
 // Εργαλεία πάνω δεξιά (Ειδοποιήσεις, Γνώση) και οθόνες του μενού προφίλ: δεν ανήκουν σε Χώρο.
 export const TOOL_CODES = ["A2", "A8"] as const;
 export const PROFILE_CODES = ["A3", "A4", "N3"] as const;
 
 // Οι ουρές δεν είναι καρτέλες: φαίνονται ως φίλτρα κάτω από τη λίστα-γονιό τους (ουρά → γονιός).
 export const QUEUES: Readonly<Record<string, string>> = {
-  B5: "B1",
+  B5: "B3",
   B6: "B1",
   D4: "D1",
   E2: "E1",
-  A7: "E1",
+  A7: "A5",
 };
 
 // Υποσελίδες με δικές τους καρτέλες μέσα στην οθόνη (Ρυθμίσεις): ανήκουν στην καρτέλα-γονιό, γιατί η οθόνη τις πλοηγεί ήδη.
@@ -194,7 +271,7 @@ const SUBPAGES: Readonly<Record<string, string>> = {
 const SHORT_LABELS: Readonly<Record<string, string>> = {
   A5: "Ημερολόγιο",
   B1: "Πελάτες",
-  B3: "Pipeline",
+  B3: "Ευκαιρίες",
   B5: "Χωρίς υπεύθυνο",
   B6: "Πιθανά διπλά",
   C1: "Κατάλογος",
@@ -249,7 +326,9 @@ const MOBILE_MAX = 5;
 const MOBILE_KEPT = 4;
 
 // Στο κινητό χωράνε έως 5· με περισσότερους, 4 στη μπάρα και οι υπόλοιποι (π.χ. Εταιρεία) στο «Περισσότερα».
-export const mobileBar = <T>(views: readonly T[]): { bar: readonly T[]; more: readonly T[] } =>
+export const mobileBar = <T>(
+  views: readonly T[],
+): { bar: readonly T[]; more: readonly T[] } =>
   views.length > MOBILE_MAX
     ? { bar: views.slice(0, MOBILE_KEPT), more: views.slice(MOBILE_KEPT) }
     : { bar: views, more: [] };
@@ -272,10 +351,9 @@ export interface SpaceView {
   queues: Readonly<Record<string, readonly ScreenLink[]>>;
   // Οθόνες του μενού χωρίς καρτέλα ή ουρά: στο «Περισσότερα» στο τέλος των καρτελών, για να μη χαθεί καμία.
   more: readonly ScreenLink[];
-  links: readonly (ScreenLink & { space: string })[];
-  // Όλοι οι ορατοί κωδικοί του Χώρου (καρτέλες, μέλη, λεπτομέρειες): ποιος Χώρος ανάβει.
+  // Όλοι οι ορατοί κωδικοί του θέματος (καρτέλες, μέλη, λεπτομέρειες): ποιο θέμα ανάβει.
   codes: readonly string[];
-  deck?: boolean;
+  group?: number;
 }
 
 export interface SpacesModel {
@@ -304,7 +382,7 @@ const isPlacedElsewhere = (code: string, tabs: readonly string[]): boolean =>
   tabs.includes(QUEUES[code] ?? SUBPAGES[code] ?? "");
 
 // Χωρίς ορατή καρτέλα, ό,τι φαίνεται από τα «Περισσότερα» γίνεται καρτέλα· ο Χώρος κρύβεται μόνο όταν δεν έχει τίποτα.
-const viewOf = (space: Space, allows: Allows): Omit<SpaceView, "links"> => {
+const viewOf = (space: Space, allows: Allows): SpaceView => {
   const tabs = visibleCodes(space.tabs, allows);
   const members = visibleCodes(space.members, allows);
   const rest = members.filter(
@@ -330,7 +408,7 @@ const viewOf = (space: Space, allows: Allows): Omit<SpaceView, "links"> => {
     queues,
     more: tabs.length > 0 ? rest.map((code) => linkOf(code, allows)) : [],
     codes: [...tabs, ...members],
-    ...(space.deck ? { deck: true } : {}),
+    ...(space.group === undefined ? {} : { group: space.group }),
   };
 };
 
@@ -338,29 +416,17 @@ const audienceOf = (allows: Allows): Space["audience"] =>
   allows("team") ? "team" : "client";
 
 export const spacesModel = (allows: Allows): SpacesModel => {
-  const views = SPACES.filter((space) => space.audience === audienceOf(allows))
-    .map((space) => ({ space, view: viewOf(space, allows) }))
-    .filter(({ view }) => view.tabs.length > 0);
-  // Οι σύνδεσμοι προς οθόνη άλλου Χώρου, μόνο όσες βλέπει ο Χρήστης.
-  const homeOf = (code: string) =>
-    views.find(({ view }) => view.codes.includes(code))?.view;
+  const spaces = SPACES.filter((space) => space.audience === audienceOf(allows))
+    .map((space) => viewOf(space, allows))
+    .filter((view) => view.tabs.length > 0);
+  // Ένα εργαλείο που έχει ήδη θέση στο μενού (η Γνώση της ομάδας) δεν μπαίνει δεύτερη φορά πάνω δεξιά.
+  const isInMenu = (code: string) =>
+    spaces.some((view) => [...view.tabs, ...view.more].some((link) => link.code === code));
   return {
-    spaces: views.map(({ space, view }) => ({
-      ...view,
-      links: (space.links ?? []).flatMap((link) => {
-        const home = homeOf(link.code);
-        return home
-          ? [
-              {
-                ...linkOf(link.code, allows),
-                label: link.label,
-                space: home.label,
-              },
-            ]
-          : [];
-      }),
-    })),
-    tools: visibleCodes(TOOL_CODES, allows).map((code) => linkOf(code, allows)),
+    spaces,
+    tools: visibleCodes(TOOL_CODES, allows)
+      .filter((code) => !isInMenu(code))
+      .map((code) => linkOf(code, allows)),
     profile: visibleCodes(PROFILE_CODES, allows).map((code) =>
       linkOf(code, allows),
     ),

@@ -5,13 +5,23 @@ import { useState } from "react";
 import { invoicesToCsv } from "../invoices-helpers";
 import type { InvoiceItem } from "../invoices-view-schema";
 import { athensToday } from "../money";
+import { type Debtor, debtorsToCsv } from "./i2-debtors";
 
 // Το «Εξαγωγή CSV» του prototype (`screens/i2-ui.tsx`): κατεβάζει στον browser τις γραμμές που φαίνονται, όπως η παλιά σελίδα.
-export function CsvButton({ rows }: { rows: readonly InvoiceItem[] }) {
+// Στο «Ποιος μας χρωστάει» φαίνονται Πελάτες, όχι Τιμολόγια: τότε εξάγει αυτούς.
+export function CsvButton({
+  rows,
+  debtors = [],
+}: {
+  rows: readonly InvoiceItem[];
+  debtors?: readonly Debtor[];
+}) {
   const [file, setFile] = useState<string | null>(null);
+  const isDebtors = debtors.length > 0;
   const handleExport = () => {
-    const name = `timologia-${athensToday()}.csv`;
-    const blob = new Blob([invoicesToCsv(rows)], { type: "text/csv;charset=utf-8" });
+    const name = `${isDebtors ? "xrostoun" : "timologia"}-${athensToday()}.csv`;
+    const csv = isDebtors ? debtorsToCsv(debtors) : invoicesToCsv(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

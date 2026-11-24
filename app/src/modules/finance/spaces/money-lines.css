@@ -15,14 +15,14 @@
   display: grid; grid-template-columns: auto 1fr; gap: .15rem .8rem; align-items: center; padding: .85rem 1rem;
   border-radius: 18px; text-decoration: none; color: var(--color-text);
   border: 1px solid color-mix(in oklab, var(--c) 16%, transparent);
-  background: linear-gradient(160deg, color-mix(in oklab, var(--brand-deep) 80%, transparent), color-mix(in oklab, var(--brand-midnight) 80%, transparent));
+  background: linear-gradient(160deg, color-mix(in oklab, var(--panel-deep) 80%, transparent), color-mix(in oklab, var(--panel-midnight) 80%, transparent));
   transition: border-color .25s, transform .25s;
 }
 .ml-shelf a:nth-child(2n) { --c: var(--brand-yellow); }
 .ml-shelf a:hover { transform: translateY(-2px); border-color: color-mix(in oklab, var(--c) 50%, transparent); }
 .ml-mark {
   grid-row: span 2; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 12px;
-  font-weight: 800; color: var(--c); border: 1.5px solid color-mix(in oklab, var(--c) 60%, transparent);
+  font-weight: 800; color: color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)); border: 1.5px solid color-mix(in oklab, var(--c) 60%, transparent);
 }
 .ml-shelf strong { font-size: .98rem; line-height: 1.2; }
 .ml-shelf small { color: var(--color-text-muted); font-size: .78rem; }
@@ -36,14 +36,14 @@
   border: 1px solid color-mix(in oklab, var(--c) 14%, transparent);
   background:
     radial-gradient(80% 140% at 0% 50%, color-mix(in oklab, var(--c) 10%, transparent), transparent 60%),
-    linear-gradient(100deg, color-mix(in oklab, var(--brand-deep) 85%, transparent), color-mix(in oklab, var(--brand-midnight) 85%, transparent));
+    linear-gradient(100deg, color-mix(in oklab, var(--panel-deep) 85%, transparent), color-mix(in oklab, var(--panel-midnight) 85%, transparent));
   transition: border-color .25s, box-shadow .3s;
 }
 .ml-line:hover { border-color: color-mix(in oklab, var(--c) 45%, transparent); box-shadow: 0 16px 40px -24px color-mix(in oklab, var(--c) 70%, transparent); }
 .ml-thumb {
   position: relative; display: grid; place-items: center; width: 3.1rem; height: 3.1rem; border-radius: 14px;
   font-weight: 800; letter-spacing: -.02em; color: var(--brand-midnight);
-  background: linear-gradient(140deg, color-mix(in oklab, var(--c) 90%, var(--color-text)), color-mix(in oklab, var(--c) 55%, var(--brand-deep)));
+  background: linear-gradient(140deg, color-mix(in oklab, var(--c) 90%, var(--color-text)), color-mix(in oklab, var(--c) 55%, var(--panel-deep)));
 }
 .ml-list > :nth-child(3n + 2) .ml-thumb { border-radius: 50%; }
 .ml-list > :nth-child(3n) .ml-thumb { border-radius: 14px 4px 14px 4px; }
@@ -60,7 +60,7 @@
   background: color-mix(in oklab, var(--c) 14%, transparent);
 }
 [data-urgent] > .ml-line .ml-tag, .ml-line[data-urgent] .ml-tag { color: var(--color-text); background: color-mix(in oklab, var(--brand-rec) 30%, transparent); }
-.ml-amount { text-align: right; font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--c); white-space: nowrap; }
+.ml-amount { text-align: right; font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; color: color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)); white-space: nowrap; }
 .ml-amount small { display: block; font-size: .72rem; font-weight: 500; color: var(--color-text-muted); }
 .ml-quick { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
 .ml-quick a, .ml-quick button {
@@ -80,26 +80,26 @@
 .ml-page {
   display: grid; gap: .8rem; margin-top: .35rem; padding: 1.1rem; border-radius: 6px 6px 22px 22px;
   border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 14%, transparent);
-  background: color-mix(in oklab, var(--brand-midnight) 70%, transparent);
+  background: color-mix(in oklab, var(--panel-midnight) 70%, transparent);
 }
 .ml-hero { position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .8rem 1.2rem; padding: 1.2rem 1.3rem; border-radius: 18px;
-  background: radial-gradient(100% 120% at 100% 0%, color-mix(in oklab, var(--brand-periwinkle) 22%, transparent), transparent 60%), linear-gradient(160deg, var(--brand-deep), var(--brand-midnight)); }
+  background: radial-gradient(100% 120% at 100% 0%, color-mix(in oklab, var(--brand-periwinkle) 22%, transparent), transparent 60%), linear-gradient(160deg, var(--panel-deep), var(--panel-midnight)); }
 .ml-hero-mono { position: absolute; right: .6rem; bottom: -1.6rem; font-size: 7rem; font-weight: 800; letter-spacing: -.08em; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px color-mix(in oklab, var(--brand-periwinkle) 30%, transparent); pointer-events: none; }
 .ml-hero > div { position: relative; display: grid; gap: .25rem; }
 .ml-hero h3, .ml-hero h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.02em; }
 .ml-hero h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
 .ml-hero > div > :first-child { justify-self: start; }
 .ml-hero-amount { margin-top: .4rem !important; font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; color: var(--color-text) !important; }
-.ml-hero-amount[data-open="true"] { color: var(--brand-periwinkle) !important; }
+.ml-hero-amount[data-open="true"] { color: color-mix(in oklab, var(--brand-periwinkle) var(--panel-ink-mix), var(--color-text)) !important; }
 .ml-hero-amount small { display: block; margin-top: .35rem; font-size: .82rem; font-weight: 500; color: var(--color-text-muted); }
 .ml-hero p { margin: 0; color: var(--color-text-muted); }
 .ml-hero > .ml-quick { position: relative; z-index: 1; display: flex; flex-wrap: nowrap; align-items: center; }
-.ml-hero .ml-quick a { background: color-mix(in oklab, var(--brand-midnight) 85%, transparent); }
+.ml-hero .ml-quick a { background: color-mix(in oklab, var(--panel-midnight) 85%, transparent); }
 .ml-hero .ml-quick a[data-primary] { background: var(--brand-periwinkle); }
 .ml-stack { display: grid; gap: .7rem; }
 .ml-stack > section { margin: 0; }
 .ml-box-title { margin: 0; font-size: 1rem; font-weight: 800; }
-.ml-box { border-radius: 14px; border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--brand-deep) 55%, transparent); }
+.ml-box { border-radius: 14px; border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
 .ml-box > summary { position: relative; display: grid; gap: .1rem; padding: .8rem 1rem .8rem 1.3rem; list-style: none; cursor: pointer; }
 .ml-box > summary::-webkit-details-marker { display: none; }
 .ml-box > summary::before { content: ""; position: absolute; left: .55rem; top: .8rem; bottom: .8rem; width: 3px; border-radius: 3px; background: var(--brand-periwinkle); }
@@ -122,8 +122,11 @@
 /* Καταχώρηση μέσα σε κλειστό κουτί (I4): ανοίγει με το «+ Νέα είσπραξη» */
 .ml-new { margin: 0 0 1.2rem; }
 .ml-new > summary strong { font-size: 1.05rem; }
-.ml-new[open] > summary::before { background: var(--brand-rec); }
+.ml-new[open] > summary::before { background: var(--color-accent); }
 .ml-new .kit-panel { margin: 0; border: 0; background: transparent; }
+
+/* Το κείμενο της υπενθύμισης (I8) κρατά τις αλλαγές γραμμής του μηνύματος */
+.ml-reminder-body { white-space: pre-line; }
 
 @media (max-width: 40rem) {
   .ml-line { grid-template-columns: auto minmax(0, 1fr); }

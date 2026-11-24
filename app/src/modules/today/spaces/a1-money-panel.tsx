@@ -78,7 +78,7 @@ export function MoneyBrief({
           </>
         )}
         <footer className="a1-card-foot">
-          <Link href={href}>Όλα τα τιμολόγια →</Link>
+          <Link href={href}>Ποιος μας χρωστάει →</Link>
         </footer>
       </Panel>
     </div>

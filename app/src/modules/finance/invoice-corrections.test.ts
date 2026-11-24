@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   correctionFormSchema,
   correctionPayload,
+  paymentRefFormSchema,
   voidFormSchema,
 } from "./invoice-corrections-schemas";
 import { changeText, correctHref, trailText } from "./invoice-detail-helpers";
@@ -69,6 +70,28 @@ describe("voidFormSchema", () => {
   });
 });
 
+describe("paymentRefFormSchema", () => {
+  it("should trim the payment code", () => {
+    expect(
+      paymentRefFormSchema.parse({ id: ID, paymentRef: "  RF18 0001  " })
+        .paymentRef,
+    ).toBe("RF18 0001");
+  });
+
+  it("should turn an empty payment code into null, so saving clears it", () => {
+    expect(
+      paymentRefFormSchema.parse({ id: ID, paymentRef: "   " }).paymentRef,
+    ).toBeNull();
+  });
+
+  it("should reject a payment code longer than 35 characters", () => {
+    expect(
+      paymentRefFormSchema.safeParse({ id: ID, paymentRef: "9".repeat(36) })
+        .success,
+    ).toBe(false);
+  });
+});
+
 describe("trail text", () => {
   it("writes old to new per field with Greek dates and money", () => {
     expect(
@@ -78,6 +101,12 @@ describe("trail text", () => {
       "ΜΑΡΚ: — → 400123",
     );
     expect(changeText({ field: "total", from: 1240, to: 992 })).toContain("→");
+  });
+
+  it("should write a payment code change in plain words", () => {
+    expect(
+      changeText({ field: "paymentRef", from: null, to: "RF18 0001" }),
+    ).toBe("Κωδικός πληρωμής (RF): — → RF18 0001");
   });
 
   it("joins action, changes and reason", () => {

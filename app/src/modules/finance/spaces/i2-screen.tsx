@@ -11,6 +11,7 @@ import { Strip } from "@/spaces/shell/strip";
 import { financeCaps } from "../caps";
 import { FILTER_LABELS } from "../invoices-labels";
 import { getInvoices, getVoidedInvoices } from "../invoices-queries";
+import { getPaymentInfo } from "../ledger-queries";
 import {
   INVOICE_FILTERS,
   type InvoiceFilter,
@@ -21,6 +22,9 @@ import { athensToday } from "../money";
 import { listReceipts } from "../queries";
 import type { ReceiptRow } from "../types";
 import { CsvButton } from "./i2-csv";
+import { LiveSearchForm } from "./i2-live-search";
+import { debtorsOf, matchesSearch } from "./i2-debtors";
+import { DebtorsTable } from "./i2-debtors-table";
 import {
   byClient,
   byMonth,
@@ -35,6 +39,7 @@ import {
   visibleInvoices,
 } from "./i2-model";
 import { InvoiceTable } from "./i2-table";
+import { NoBankWarning } from "./no-bank-warning";
 import { VoidedCard } from "./i2-voided";
 
 import "./i245.css";
@@ -44,6 +49,8 @@ export interface SpacesInvoicesQuery {
   filter: InvoiceFilter;
   client?: string;
   month?: string;
+  // Τ7: αναζήτηση σε αριθμό Τιμολογίου και όνομα Πελάτη (?q=).
+  q?: string;
 }
 
 const i2Href = (query: Partial<SpacesInvoicesQuery>): string =>
@@ -51,7 +58,28 @@ const i2Href = (query: Partial<SpacesInvoicesQuery>): string =>
     filter: query.filter === "all" ? undefined : query.filter,
     client: query.client,
     month: query.month,
+    q: query.q || undefined,
   });
+
+// Η αναζήτηση μένει πάντα ορατή πρώτη στη σειρά των φίλτρων, φιλτράρει όσο γράφεις και κρατά τα φίλτρα που ισχύουν.
+function InvoiceSearch({ query }: { query: SpacesInvoicesQuery }) {
+  return (
+    <LiveSearchForm className="kit-fb-search" action={hrefOf("I2")}>
+      <input
+        className="input grow"
+        type="search"
+        name="q"
+        placeholder="Αριθμός Τιμολογίου ή Πελάτης…"
+        aria-label="Αναζήτηση Τιμολογίου"
+        defaultValue={query.q ?? ""}
+        autoComplete="off"
+      />
+      {query.filter !== "all" && <input type="hidden" name="filter" value={query.filter} />}
+      {query.client && <input type="hidden" name="client" value={query.client} />}
+      {query.month && <input type="hidden" name="month" value={query.month} />}
+    </LiveSearchForm>
+  );
+}
 
 interface TotalsProps {
   totals: InvoicesView["totals"];
@@ -62,7 +90,7 @@ interface TotalsProps {
 
 // Η κορυφή των Χρημάτων: πόσα μπήκαν (με σύγκριση), πόσα τιμολογήθηκαν, πόσα μας χρωστούν, και το Τώρα του Χώρου.
 async function Totals({ totals, receipts, today, viewer }: TotalsProps) {
-  const strip = await getSpaceStrip(codesOfSpace("money"));
+  const strip = await getSpaceStrip(codesOfSpace("invoices"));
   const month = today.slice(0, 7);
   const previous = previousMonthOf(month);
   const hasReports = can(viewer, "reports.view");
@@ -156,7 +184,7 @@ export const monthGroupOf = (
   })),
 });
 
-// Χωρίς Πελάτη και μήνα, στην ίδια Κατάσταση.
+// Χωρίς Πελάτη, μήνα και αναζήτηση, στην ίδια Κατάσταση.
 export const i2ClearHref = (query: SpacesInvoicesQuery): string =>
   i2Href({ filter: query.filter });
 
@@ -178,10 +206,11 @@ export async function SpacesInvoices({
   const viewer = await getViewer();
   const caps = financeCaps(viewer);
   if (!caps.canView) return denied;
-  const [invoices, voided, receipts] = await Promise.all([
+  const [invoices, voided, receipts, payment] = await Promise.all([
     getInvoices("all"),
     query.filter === "all" ? getVoidedInvoices() : null,
     listReceipts(null),
+    getPaymentInfo(),
   ]);
   if (!invoices.ok)
     return (
@@ -196,22 +225,30 @@ export async function SpacesInvoices({
     : undefined;
   const months = invoiceMonthsOf(listed);
   const month = months.find((m) => m === query.month);
+  const search = query.q?.trim() ?? "";
   const current: SpacesInvoicesQuery = {
     filter: query.filter,
     client: clientId,
     month,
+    q: search || undefined,
   };
-  const all = byMonth(byClient(listed, clientId), month);
+  const all = byMonth(byClient(listed, clientId), month).filter((row) =>
+    matchesSearch(row, search),
+  );
   const rows = visibleInvoices(all, query.filter);
+  // Τ5: τα ληξιπρόθεσμα χωρίς επιλεγμένο Πελάτη δείχνονται ανά Πελάτη· ο Πελάτης ανοίγει τα Τιμολόγιά του.
+  const debtors =
+    query.filter === "overdue" && !clientId ? debtorsOf(rows) : [];
   const unpaidNote = query.filter === "unpaid" ? unpaidNoteOf(all) : null;
   return (
-    <div data-spaces>
+    <div data-spaces className="i2-page">
       <Totals
         totals={invoices.data.totals}
         receipts={receipts.ok ? receipts.data : null}
         today={today}
         viewer={viewer}
       />
+      {payment.ok && payment.data.bank === null && <NoBankWarning />}
       <FilterBar
         name="i2-filters"
         filters={[
@@ -220,7 +257,9 @@ export async function SpacesInvoices({
           ...(months.length > 1 ? [monthGroupOf(current, months)] : []),
         ]}
         clearHref={i2ClearHref(current)}
-      />
+      >
+        <InvoiceSearch query={current} />
+      </FilterBar>
       {unpaidNote && <p className="note">{unpaidNote}</p>}
       <div className="toolbar">
         {caps.canRegisterInvoices && (
@@ -228,12 +267,22 @@ export async function SpacesInvoices({
             Καταχώρηση Τιμολογίου
           </Link>
         )}
-        <CsvButton rows={rows} />
+        <CsvButton rows={rows} debtors={debtors} />
       </div>
       {rows.length === 0 ? (
         <StateNotice kind="empty" title="Κανένα Τιμολόγιο">
-          Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο.
+          {search
+            ? `Κανένα Τιμολόγιο δεν ταιριάζει με «${search}».`
+            : "Δεν υπάρχει Τιμολόγιο για αυτό το φίλτρο."}
         </StateNotice>
+      ) : debtors.length > 0 ? (
+        <DebtorsTable
+          debtors={debtors}
+          today={today}
+          clientHref={(client) => i2Href({ ...current, client })}
+          canCollect={caps.canRegister}
+          canRemind={caps.canRegisterInvoices}
+        />
       ) : (
         <InvoiceTable
           rows={rows}
@@ -241,6 +290,7 @@ export async function SpacesInvoices({
           canEdit={caps.canRegisterInvoices}
           canOpen
           canCollect={caps.canRegister}
+          canRemind={caps.canRegisterInvoices}
         />
       )}
       {voided?.ok === true && (

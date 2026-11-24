@@ -15,24 +15,34 @@ import {
 
 import { financeCaps } from "../caps";
 import { TRAIL_EMPTY } from "../invoice-corrections-labels";
-import { correctHref, trailText } from "../invoice-detail-helpers";
+import { correctHref, reminderHref } from "../invoice-detail-helpers";
 import type {
   InvoiceDetail,
   InvoicePayment,
   InvoicePayments,
 } from "../invoice-detail-schema";
+import type { Reminder } from "../invoice-reminder-schema";
+import { lastReminderText, trailRowsOf } from "../invoice-trail";
 import { pdfHref } from "../invoices-helpers";
 import { KIND_LABELS, STATUS_LABELS } from "../invoices-labels";
-import { getInvoiceDetail, getInvoicePayments } from "../invoices-queries";
+import {
+  getInvoiceDetail,
+  getInvoicePayments,
+  getInvoiceReminders,
+} from "../invoices-queries";
 import { athensToday } from "../money";
 import type { FinanceCaps } from "../types";
+
+import { PaymentRefBox } from "./i8-payment-ref";
+import { ReminderBox } from "./i8-reminder";
 
 import "./money-lines.css";
 
 // I8 Τιμολόγιο (d3): ένα Τιμολόγιο με τις πληρωμές του. Απαντά «πόσο μένει και τι κάνω;»: πάνω η κατάσταση, το υπόλοιπο
-// και τα κουμπιά (Ήρθε πληρωμή, PDF, Διόρθωση)· από κάτω κλειστά κουτιά: Πληρωμές, Αφορά, Ίχνος.
+// και τα κουμπιά (Ήρθε πληρωμή, Υπενθύμιση, PDF, Διόρθωση)· από κάτω κλειστά κουτιά: Υπενθύμιση (ληξιπρόθεσμο),
+// Πληρωμές, Αφορά, Ίχνος (καταχώριση, διορθώσεις, πληρωμές και υπενθυμίσεις).
 
-const TONES: Readonly<Record<string, BadgeTone>> = {
+export const TONES: Readonly<Record<string, BadgeTone>> = {
   paid: "strong",
   overdue: "attention",
   credit: "faded",
@@ -41,7 +51,7 @@ const TONES: Readonly<Record<string, BadgeTone>> = {
   voided: "faded",
 };
 
-const statusText = (status: string): string =>
+export const statusText = (status: string): string =>
   status === "voided"
     ? "ακυρωμένο"
     : (STATUS_LABELS[status as keyof typeof STATUS_LABELS] ?? status);
@@ -79,11 +89,18 @@ function Box(props: { title: string; hint: string; children: ReactNode }) {
   );
 }
 
-function Actions(props: {
+interface PageProps {
   detail: InvoiceDetail;
   money: InvoicePayments;
   caps: FinanceCaps;
-}) {
+  reminders: readonly Reminder[];
+}
+
+// Υπενθύμιση μόνο για ληξιπρόθεσμο, από όποιον καταχωρεί Τιμολόγια (η βάση το ξαναελέγχει).
+const canRemind = ({ detail, money, caps }: PageProps): boolean =>
+  caps.canRegisterInvoices && money.status === "overdue" && detail.voided === null;
+
+function Actions(props: PageProps) {
   const { detail, money, caps } = props;
   const canCollect =
     caps.canRegister && money.remaining > 0 && detail.voided === null;
@@ -96,6 +113,9 @@ function Actions(props: {
         >
           Ήρθε πληρωμή
         </Link>
+      )}
+      {canRemind(props) && (
+        <Link href={reminderHref(detail.id)}>Στείλε υπενθύμιση</Link>
       )}
       <a href={pdfHref(detail.id)} target="_blank" rel="noreferrer">
         Λήψη PDF
@@ -117,12 +137,9 @@ const subtitleOf = (detail: InvoiceDetail): string =>
     .filter((part): part is string => part !== null)
     .join(" · ");
 
-function Hero(props: {
-  detail: InvoiceDetail;
-  money: InvoicePayments;
-  caps: FinanceCaps;
-}) {
+function Hero(props: PageProps) {
   const { detail, money } = props;
+  const lastReminder = lastReminderText(props.reminders);
   return (
     <header className="ml-hero">
       <span className="ml-hero-mono" aria-hidden="true">
@@ -143,6 +160,7 @@ function Hero(props: {
             {fmtMoney(money.paid)}
           </small>
         </p>
+        {lastReminder && <p>{lastReminder}</p>}
       </div>
       <Actions {...props} />
     </header>
@@ -207,42 +225,48 @@ function Related({
   );
 }
 
-function Trail({ detail }: { detail: InvoiceDetail }) {
-  const hint =
-    detail.trail.length === 0 ? "τίποτα ακόμα" : `${detail.trail.length} αλλαγές`;
+function Trail({ detail, money, reminders }: PageProps) {
+  const rows = trailRowsOf(detail.trail, money.payments, reminders);
+  const hint = rows.length === 0 ? "τίποτα ακόμα" : `${rows.length} γραμμές`;
   return (
     <Box title="Ίχνος" hint={hint}>
-      {detail.trail.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="muted">{TRAIL_EMPTY}</p>
       ) : (
-        <Rows
-          items={detail.trail.map((entry) => ({
-            id: `${entry.at}-${entry.action}-${entry.reason ?? ""}`,
-            title: trailText(entry),
-            meta: `${fmtDate(athensToday(new Date(entry.at)))} · ${entry.byName ?? "—"}`,
-          }))}
-        />
+        <Rows items={rows} />
       )}
     </Box>
   );
 }
 
-function InvoicePage(props: {
-  detail: InvoiceDetail;
-  money: InvoicePayments;
-  caps: FinanceCaps;
-}) {
+function InvoicePage(props: PageProps & { isReminderOpen: boolean }) {
   return (
     <div data-spaces className="ml-stack">
       <Hero {...props} />
+      {canRemind(props) && (
+        <ReminderBox invoiceId={props.detail.id} isOpen={props.isReminderOpen} />
+      )}
       <Payments money={props.money} />
+      {props.detail.kind !== "credit" && (
+        <PaymentRefBox
+          invoiceId={props.detail.id}
+          paymentRef={props.detail.paymentRef ?? null}
+          canEdit={props.caps.canRegisterInvoices && props.detail.can.correct}
+        />
+      )}
       <Related detail={props.detail} money={props.money} />
-      <Trail detail={props.detail} />
+      <Trail {...props} />
     </div>
   );
 }
 
-export async function SpacesInvoice({ id }: { id: string }) {
+export async function SpacesInvoice({
+  id,
+  isReminderOpen = false,
+}: {
+  id: string;
+  isReminderOpen?: boolean;
+}) {
   const caps = financeCaps(await getViewer());
   if (!caps.canView)
     return (
@@ -252,9 +276,10 @@ export async function SpacesInvoice({ id }: { id: string }) {
         </StateNotice>
       </div>
     );
-  const [detail, money] = await Promise.all([
+  const [detail, money, reminders] = await Promise.all([
     getInvoiceDetail(id),
     getInvoicePayments(id, athensToday()),
+    getInvoiceReminders(id),
   ]);
   if (!detail.ok || !money.ok)
     return (
@@ -262,5 +287,13 @@ export async function SpacesInvoice({ id }: { id: string }) {
         <ErrorNotice what="το Τιμολόγιο" />
       </div>
     );
-  return <InvoicePage detail={detail.data} money={money.data} caps={caps} />;
+  return (
+    <InvoicePage
+      detail={detail.data}
+      money={money.data}
+      caps={caps}
+      reminders={reminders.ok ? reminders.data : []}
+      isReminderOpen={isReminderOpen}
+    />
+  );
 }

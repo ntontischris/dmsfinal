@@ -1,8 +1,4 @@
-import {
-  SpacesPipeline,
-  WithClientsDeck,
-  parseB3Selection,
-} from "@/modules/sales";
+import { SpacesPipeline, parseB3Selection } from "@/modules/sales";
 
 export const metadata = { title: "Pipeline Ευκαιριών" };
 
@@ -13,9 +9,5 @@ export default async function PipelinePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  return (
-    <WithClientsDeck active="B3">
-      <SpacesPipeline selection={parseB3Selection(await searchParams)} />
-    </WithClientsDeck>
-  );
+  return <SpacesPipeline selection={parseB3Selection(await searchParams)} />;
 }

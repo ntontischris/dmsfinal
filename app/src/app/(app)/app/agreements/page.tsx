@@ -4,7 +4,6 @@ import {
   SpacesClientAgreements,
   agreementCaps,
 } from "@/modules/agreements";
-import { WithClientsDeck } from "@/modules/sales";
 
 export const metadata = { title: "Συμφωνίες" };
 
@@ -16,9 +15,5 @@ export default async function AgreementsPage({
 }) {
   const [viewer, { view }] = await Promise.all([getViewer(), searchParams]);
   if (agreementCaps(viewer).isClient) return <SpacesClientAgreements />;
-  return (
-    <WithClientsDeck active="D1">
-      <SpacesAgreements view={view} />
-    </WithClientsDeck>
-  );
+  return <SpacesAgreements view={view} />;
 }

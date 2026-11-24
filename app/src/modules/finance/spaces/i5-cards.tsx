@@ -70,18 +70,15 @@ export function Box(props: {
   );
 }
 
-// Ο πελάτης το διαβάζει ως «Πώς πληρώνω»· η ομάδα βλέπει τι δείχνεται στον πελάτη (στοιχεία από τις Ρυθμίσεις).
+// Η ομάδα βλέπει τι δείχνεται στον πελάτη (στοιχεία από τις Ρυθμίσεις)· ο πελάτης βλέπει το ClientPayBox.
 export function PaymentBox(props: {
   payment: NonNullable<LedgerView["payment"]>;
-  isClient?: boolean;
-  isOpen?: boolean;
 }) {
-  const { payment, isClient = false } = props;
+  const { payment } = props;
   return (
     <Box
       id="pay"
-      isOpen={props.isOpen}
-      title={isClient ? "Πώς πληρώνω" : "Οδηγίες πληρωμής που βλέπει ο πελάτης"}
+      title="Οδηγίες πληρωμής που βλέπει ο πελάτης"
       hint={`${payment.bank} · IBAN με αντιγραφή`}
     >
       <dl className="dl">
@@ -95,11 +92,7 @@ export function PaymentBox(props: {
           <CopyButton value={payment.iban} what="το IBAN" />
         </dd>
         <dt>Αιτιολογία</dt>
-        <dd>
-          {isClient
-            ? "ο αριθμός του Τιμολογίου που πληρώνεις"
-            : "ο αριθμός του Τιμολογίου που πληρώνει ο πελάτης"}
-        </dd>
+        <dd>ο αριθμός του Τιμολογίου που πληρώνει ο πελάτης</dd>
       </dl>
     </Box>
   );

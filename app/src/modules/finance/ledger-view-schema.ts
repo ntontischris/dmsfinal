@@ -23,15 +23,19 @@ const ledgerEntrySchema = z.object({
   running: z.number(),
 });
 
+const bankSchema = z.object({
+  holder: z.string(),
+  bank: z.string(),
+  iban: z.string(),
+});
+
 const ledgerSchema = z.object({
   clientId: z.string(),
   clientName: z.string(),
   balance: z.number(),
   overdue: z.number(),
   entries: z.array(ledgerEntrySchema),
-  payment: z
-    .object({ holder: z.string(), bank: z.string(), iban: z.string() })
-    .nullable(),
+  payment: bankSchema.nullable(),
   toInvoice: z.object({ amount: z.number(), count: z.number() }).nullable(),
 });
 
@@ -46,6 +50,8 @@ const clientInvoiceSchema = z.object({
   remaining: z.number(),
   status: z.enum(INVOICE_STATUSES),
   creditForNumber: z.string().nullable(),
+  // Κωδικός πληρωμής (RF), αν τον έγραψε η ομάδα.
+  paymentRef: z.string().nullable().optional(),
 });
 
 const clientInvoicesSchema = z.object({ items: z.array(clientInvoiceSchema) });
@@ -54,10 +60,17 @@ const ledgerClientsSchema = z.array(
   z.object({ id: z.string(), name: z.string(), balance: z.number() }),
 );
 
+// «Πώς πληρώνω» (payment_info): ο προεπιλεγμένος λογαριασμός και η επικοινωνία της εταιρείας.
+const paymentInfoSchema = z.object({
+  bank: bankSchema.nullable(),
+  company: z.object({ name: z.string(), phone: z.string(), email: z.string() }),
+});
+
 export type LedgerEntry = z.infer<typeof ledgerEntrySchema>;
 export type LedgerView = z.infer<typeof ledgerSchema>;
 export type ClientInvoice = z.infer<typeof clientInvoiceSchema>;
 export type ClientInvoicesView = z.infer<typeof clientInvoicesSchema>;
+export type PaymentInfo = z.infer<typeof paymentInfoSchema>;
 export type LedgerClient = z.infer<typeof ledgerClientsSchema>[number];
 
 export const parseLedger = (data: unknown): LedgerView =>
@@ -66,3 +79,5 @@ export const parseClientInvoices = (data: unknown): ClientInvoicesView =>
   clientInvoicesSchema.parse(data);
 export const parseLedgerClients = (data: unknown): LedgerClient[] =>
   ledgerClientsSchema.parse(data);
+export const parsePaymentInfo = (data: unknown): PaymentInfo =>
+  paymentInfoSchema.parse(data);

@@ -63,19 +63,37 @@ describe("spacesModel: τίποτα δεν χάνεται", () => {
   });
 });
 
-describe("spacesModel: Χώροι από τα Δικαιώματα", () => {
-  it("η ομάδα βλέπει τους 6 Χώρους με τη σειρά τους", () => {
+describe("spacesModel: το μενού από τα Δικαιώματα", () => {
+  it("η ομάδα βλέπει τα 14 θέματα του μενού με τη σειρά τους", () => {
     expect(labelsOf(spacesModel(fullTeam))).toEqual([
-      "Σήμερα",
+      "Αρχική",
       "Πελάτες",
-      "Παραγωγή",
-      "Χρήματα",
-      "Επικοινωνία",
-      "Εταιρεία",
+      "Πωλήσεις",
+      "Συμφωνίες",
+      "Παραγωγές",
+      "Γυρίσματα",
+      "Ημερολόγιο",
+      "Μηνύματα",
+      "Τιμολόγια",
+      "Αναφορές",
+      "Ομάδα",
+      "Εξοπλισμός",
+      "Γνώση",
+      "Ρυθμίσεις",
     ]);
   });
 
-  it("ο πελάτης βλέπει τους Χώρους πελάτη, χωρίς όσους δεν του ανοίγουν", () => {
+  it("τα θέματα της ομάδας είναι σε 5 ομάδες, με την Αρχική μόνη της", () => {
+    const groups = spacesModel(fullTeam).spaces.map((view) => view.group);
+    expect(new Set(groups).size).toBe(5);
+    expect(groups[0]).not.toBe(groups[1]);
+  });
+
+  it("οι Ειδοποιήσεις μένουν εργαλείο και για τον πελάτη", () => {
+    expect(spacesModel(fullClient).tools.map((tool) => tool.code)).toContain("A2");
+  });
+
+  it("ο πελάτης βλέπει τα θέματα πελάτη, χωρίς όσα δεν του ανοίγουν", () => {
     expect(labelsOf(spacesModel(fullClient))).toEqual([
       "Σήμερα",
       "Η δουλειά μου",
@@ -85,99 +103,65 @@ describe("spacesModel: Χώροι από τα Δικαιώματα", () => {
     ]);
   });
 
-  it("κρύβει Χώρους, καρτέλες και ουρές που δεν επιτρέπονται", () => {
+  it("κρύβει θέματα, λίστες και ουρές που δεν επιτρέπονται", () => {
     const model = spacesModel(teamWith("clients.view"));
-    expect(labelsOf(model)).toEqual(["Σήμερα", "Πελάτες"]);
-    expect(space(model, "clients")?.tabs.map((tab) => tab.code)).toEqual([
-      "B1",
-    ]);
+    expect(labelsOf(model)).not.toContain("Τιμολόγια");
+    expect(labelsOf(model)).not.toContain("Πωλήσεις");
+    expect(space(model, "clients")?.tabs.map((tab) => tab.code)).toEqual(["B1"]);
     expect(space(model, "clients")?.queues.B1).toEqual([]);
-    expect(model.tools.map((tool) => tool.code)).toEqual(["A2", "A8"]);
+  });
+
+  it("η Γνώση μπαίνει στο μενού όταν φαίνεται, και τότε φεύγει από τα εργαλεία", () => {
+    const model = spacesModel(fullTeam);
+    expect(space(model, "knowledge")?.tabs.map((tab) => tab.code)).toContain("A8");
+    expect(model.tools.map((tool) => tool.code)).toEqual(["A2"]);
   });
 
   it("οι ουρές φαίνονται ως φίλτρα κάτω από τη λίστα-γονιό τους", () => {
-    const clients = space(spacesModel(fullTeam), "clients");
-    expect(clients?.queues.B1?.map((link) => link.code)).toEqual(["B5", "B6"]);
-    expect(clients?.queues.D1?.map((link) => link.code)).toEqual(["D4"]);
-    expect(clients?.more).toEqual([]);
-  });
-
-  it("όταν δεν φαίνεται καμία καρτέλα, οι οθόνες του Χώρου γίνονται καρτέλες για να μη χαθούν", () => {
-    const production = space(
-      spacesModel(teamWith("filming.approve")),
-      "production",
-    );
-    expect(production?.tabs.map((tab) => tab.code)).toEqual(["E2"]);
-  });
-
-  it("ο Χώρος ανοίγει την πρώτη ορατή καρτέλα του", () => {
-    const model = spacesModel(teamWith("finance.cost"));
-    expect(landingOf(space(model, "money")!)).toBe("/app/finance/expenses");
-    expect(landingOf(space(spacesModel(fullTeam), "today")!)).toBe("/app");
-  });
-
-  it("«Τα Γυρίσματά μου» είναι καρτέλα του «Σήμερα», ένα κλικ από την αρχή", () => {
-    const today = space(spacesModel(fullTeam), "today");
-    expect(today?.tabs.map((tab) => tab.code)).toContain("E6");
-  });
-
-  it("δίνει σύντομες ετικέτες και τον σύνδεσμο «Τιμές» προς τον Κατάλογο", () => {
     const model = spacesModel(fullTeam);
-    expect(space(model, "clients")?.tabs.map((tab) => tab.label)).toEqual([
-      "Πελάτες",
-      "Pipeline",
-      "Συμφωνίες",
-      "Κατάλογος",
-    ]);
-    expect(space(model, "money")?.links).toEqual([
-      { code: "C1", label: "Τιμές", href: "/app/catalogue", space: "Πελάτες" },
-    ]);
+    expect(space(model, "clients")?.queues.B1?.map((link) => link.code)).toEqual(["B6"]);
+    expect(space(model, "sales")?.queues.B3?.map((link) => link.code)).toEqual(["B5"]);
+    expect(space(model, "agreements")?.queues.D1?.map((link) => link.code)).toEqual(["D4"]);
+  });
+
+  it("όταν δεν φαίνεται καμία λίστα, οι οθόνες του θέματος γίνονται λίστες για να μη χαθούν", () => {
+    const filming = space(spacesModel(teamWith("filming.approve")), "filming");
+    expect(filming?.tabs.map((tab) => tab.code)).toEqual(["E2"]);
+  });
+
+  it("το θέμα ανοίγει την πρώτη ορατή λίστα του", () => {
+    expect(landingOf(space(spacesModel(teamWith("finance.cost")), "invoices")!)).toBe("/app/finance/expenses");
+    expect(landingOf(space(spacesModel(fullTeam), "home")!)).toBe("/app");
   });
 });
 
-describe("Χρήματα: 4 καρτέλες, τα σπάνια στα «Εργαλεία»", () => {
-  it("οι καρτέλες είναι κάρτες της οθόνης· οι άλλοι Χώροι κρατούν τη γραμμή καρτελών", () => {
-    const model = spacesModel(fullTeam);
-    expect(space(model, "money")?.deck).toBe(true);
-    expect(space(model, "production")?.deck).toBeUndefined();
+describe("Τιμολόγια: το πρώτο δείγμα", () => {
+  it("ανοίγει στη λίστα Τιμολογίων, με τις άλλες λίστες από κάτω", () => {
+    const invoices = space(spacesModel(fullTeam), "invoices");
+    expect(invoices?.tabs.map((tab) => tab.code)).toEqual(["I2", "I1", "I4", "I6"]);
+    expect(landingOf(invoices!)).toBe("/app/finance/invoices");
   });
 
-  it("δείχνει μόνο τις δουλειές της εβδομάδας ως καρτέλες", () => {
-    const money = space(spacesModel(fullTeam), "money");
-    expect(money?.tabs.map((tab) => tab.code)).toEqual(["I1", "I2", "I4", "I6"]);
-  });
-
-  it("η Κερδοφορία, οι Αναφορές, η Εξαγωγή και η Καρτέλα μένουν στα «Εργαλεία»", () => {
-    const money = space(spacesModel(fullTeam), "money");
-    expect(money?.more.map((link) => link.code)).toEqual(
-      expect.arrayContaining(["I7", "M1", "M2", "I5"]),
-    );
+  it("η Κερδοφορία και οι Αναφορές ζουν στις «Αναφορές»", () => {
+    const reports = space(spacesModel(fullTeam), "reports");
+    expect(reports?.tabs.map((tab) => tab.code)).toEqual(["M1"]);
+    expect([...(reports?.more ?? [])].map((link) => link.code)).toEqual(expect.arrayContaining(["M2", "I7"]));
   });
 });
 
-describe("Πελάτες: οι καρτέλες ως κάρτες της οθόνης", () => {
-  it("κρατά τις 4 καρτέλες ως κάρτες και τις ουρές ως φίλτρα", () => {
-    const clients = space(spacesModel(fullTeam), "clients");
-    expect(clients?.deck).toBe(true);
-    expect(clients?.tabs.map((tab) => tab.code)).toEqual(["B1", "B3", "D1", "C1"]);
-    expect(clients?.queues.B1?.map((queue) => queue.code)).toEqual(["B5", "B6"]);
-    expect(clients?.queues.D1?.map((queue) => queue.code)).toEqual(["D4"]);
-  });
-});
-
-describe("ποιος Χώρος ανάβει", () => {
+describe("ποιο θέμα ανάβει", () => {
   const model = spacesModel(fullTeam);
 
   it.each([
-    ["/app", "today"],
+    ["/app", "home"],
     ["/app/clients/123", "clients"],
     ["/app/clients/duplicates", "clients"],
-    ["/app/pipeline/abc", "clients"],
-    ["/app/team/roles/abc", "company"],
-    ["/app/filming/mine", "today"],
-    ["/app/messages/42", "talk"],
-    ["/app/notifications", "today"],
-  ])("%s → Χώρος %s", (pathname, spaceId) => {
+    ["/app/pipeline/abc", "sales"],
+    ["/app/team/roles/abc", "team"],
+    ["/app/filming/mine", "filming"],
+    ["/app/messages/42", "messages"],
+    ["/app/knowledge", "knowledge"],
+  ])("%s → %s", (pathname, spaceId) => {
     expect(spaceOf(codeOfPath(pathname), model)?.id).toBe(spaceId);
   });
 
@@ -185,48 +169,35 @@ describe("ποιος Χώρος ανάβει", () => {
     expect(screenCodeOf("/app/messages", model)).toBe("J1");
     const client = spacesModel(fullClient);
     expect(screenCodeOf("/app/messages", client)).toBe("J3");
-    expect(spaceOf(screenCodeOf("/app/messages", client), client)?.id).toBe(
-      "c-messages",
-    );
+    expect(spaceOf(screenCodeOf("/app/messages", client), client)?.id).toBe("c-messages");
   });
 
-  it("η Γνώση είναι εργαλείο, δεν ανάβει Χώρο", () => {
-    expect(spaceOf(codeOfPath("/app/knowledge"), model)).toBeUndefined();
-  });
-
-  it("ουρά και υποσελίδα ανάβουν την καρτέλα-γονιό τους", () => {
+  it("ουρά και υποσελίδα ανάβουν τη λίστα-γονιό τους", () => {
     expect(tabOf("B6")).toBe("B1");
     expect(tabOf("O2")).toBe("O1");
     expect(tabOf("B1")).toBe("B1");
   });
 });
 
-describe("Χώρος χωρίς τίποτα χρήσιμο", () => {
-  it("η «Εταιρεία» δεν φαίνεται σε Χρήστη ομάδας χωρίς Δικαίωμα σε αυτήν (όχι μόνο με το Kit)", () => {
-    expect(space(spacesModel(teamWith("filming.view")), "company")).toBeUndefined();
+describe("θέμα χωρίς τίποτα χρήσιμο", () => {
+  it("οι «Ρυθμίσεις» δεν φαίνονται σε Χρήστη ομάδας χωρίς Δικαίωμα σε αυτές", () => {
+    expect(space(spacesModel(teamWith("filming.view")), "settings")).toBeUndefined();
   });
 
-  it("ο Ιδιοκτήτης τη βλέπει, με το Kit στα «Περισσότερα»", () => {
-    const owner = (requirement: string) =>
-      requirement === "team" || requirement === "owner";
-    const company = space(spacesModel(owner), "company");
-    expect(company?.tabs.map((tab) => tab.code)).toEqual(["N4", "O8", "KIT"]);
+  it("ο Ιδιοκτήτης τις βλέπει, με το Kit μέσα", () => {
+    const owner = (requirement: string) => requirement === "team" || requirement === "owner";
+    expect(space(spacesModel(owner), "settings")?.codes).toContain("KIT");
   });
 });
 
 describe("mobileBar", () => {
-  it("με 6 Χώρους κρατά 4 στη μπάρα και οι υπόλοιποι πάνε στο «Περισσότερα»", () => {
+  it("με 14 θέματα κρατά 4 στη μπάρα και τα υπόλοιπα πάνε στο «Περισσότερα»", () => {
     const { bar, more } = mobileBar(spacesModel(fullTeam).spaces);
-    expect(bar.map((view) => view.id)).toEqual([
-      "today",
-      "clients",
-      "production",
-      "money",
-    ]);
-    expect(more.map((view) => view.id)).toEqual(["talk", "company"]);
+    expect(bar.map((view) => view.id)).toEqual(["home", "clients", "sales", "agreements"]);
+    expect(more).toHaveLength(10);
   });
 
-  it("έως 5 Χώροι χωράνε όλοι", () => {
+  it("έως 5 θέματα χωράνε όλα", () => {
     expect(mobileBar(spacesModel(fullClient).spaces).more).toEqual([]);
   });
 });

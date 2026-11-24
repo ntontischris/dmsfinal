@@ -1,0 +1,96 @@
+import { describe, expect, it } from "vitest";
+
+import { clientOptionsOf, type ClientSource } from "./client-options";
+
+const row = (overrides: Partial<ClientSource> = {}): ClientSource => ({
+  id: "6f1c2a4e-8b3d-4c5e-9f7a-1b2c3d4e5f60",
+  name: "Καφέ Αθηνά",
+  city: "Αθήνα",
+  managerName: "Νίκος",
+  afm: null,
+  contactEmail: "",
+  ...overrides,
+});
+
+describe("clientOptionsOf", () => {
+  it("should leave a unique name without hint", () => {
+    expect(clientOptionsOf([row()])).toEqual([
+      { id: row().id, name: "Καφέ Αθηνά" },
+    ]);
+  });
+
+  it("should add the city when two clients share a name", () => {
+    const options = clientOptionsOf([
+      row({ id: "a", city: "Αθήνα" }),
+      row({ id: "b", city: "Πάτρα" }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual(["Αθήνα", "Πάτρα"]);
+  });
+
+  it("should match names ignoring case and accents", () => {
+    const options = clientOptionsOf([
+      row({ id: "a", name: "ΚΑΦΕ ΑΘΗΝΑ", city: "Αθήνα" }),
+      row({ id: "b", name: "καφέ αθηνά ", city: "Βόλος" }),
+    ]);
+    expect(options.every((o) => o.hint !== undefined)).toBe(true);
+  });
+
+  it("should add the manager when the city is also shared", () => {
+    const options = clientOptionsOf([
+      row({ id: "a", managerName: "Νίκος" }),
+      row({ id: "b", managerName: "Μαρία" }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual([
+      "Αθήνα · Νίκος",
+      "Αθήνα · Μαρία",
+    ]);
+  });
+
+  it("should fall back to a short code when nothing else tells them apart", () => {
+    const options = clientOptionsOf([
+      row({ id: "aaaa1111", city: "", managerName: null }),
+      row({ id: "bbbb2222", city: "", managerName: null }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual(["κωδ. aaaa11", "κωδ. bbbb22"]);
+  });
+
+  it("should prefer the tax id when two clients share a name", () => {
+    const options = clientOptionsOf([
+      row({ id: "a", afm: "123456789" }),
+      row({ id: "b", afm: "987654321" }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual([
+      "ΑΦΜ 123456789",
+      "ΑΦΜ 987654321",
+    ]);
+  });
+
+  it("should use the email when tax id, city and manager are all shared", () => {
+    const options = clientOptionsOf([
+      row({ id: "a", city: "Θεσσαλονίκη", contactEmail: "a@example.com" }),
+      row({ id: "b", city: "Θεσσαλονίκη", contactEmail: "b@example.com" }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual([
+      "Θεσσαλονίκη · a@example.com",
+      "Θεσσαλονίκη · b@example.com",
+    ]);
+  });
+
+  it("should fall back to a short code when the composed hints are still the same", () => {
+    const options = clientOptionsOf([
+      row({ id: "aaaa1111", city: "Θεσσαλονίκη", managerName: "Νίκος" }),
+      row({ id: "bbbb2222", city: "Θεσσαλονίκη", managerName: "Νίκος" }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual(["κωδ. aaaa11", "κωδ. bbbb22"]);
+  });
+
+  it("should give every same-name client a different hint", () => {
+    const options = clientOptionsOf([
+      row({ id: "aaaa1111", city: "Αθήνα" }),
+      row({ id: "bbbb2222", city: "Πάτρα" }),
+      row({ id: "cccc3333", city: "Πάτρα" }),
+    ]);
+    const hints = options.map((o) => o.hint);
+    expect(new Set(hints).size).toBe(3);
+  });
+});

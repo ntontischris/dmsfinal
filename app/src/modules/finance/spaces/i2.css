@@ -1,5 +1,7 @@
 /* I2: Τιμολόγια. Πίνακας εργασίας, χωρίς σπασίματα λέξεων. */
 [data-look='spaces'] {
+/* Τ11: το «Μας χρωστούν» δεν βάφει τον αριθμό κόκκινο· το πρόβλημα το λέει η κόκκινη τελεία της ετικέτας. */
+& .i2-page .kit-stat[data-tone='attention'] .kit-stat-value { color: var(--color-text); }
 & .i2-table th, & .i2-table td { vertical-align: middle; }
 & .i2-number { min-width: 9rem; }
 & .i2-code { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }

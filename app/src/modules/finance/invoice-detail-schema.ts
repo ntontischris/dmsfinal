@@ -15,6 +15,7 @@ export const CHANGE_FIELDS = [
   "vat",
   "total",
   "mark",
+  "paymentRef",
 ] as const;
 export type ChangeField = (typeof CHANGE_FIELDS)[number];
 
@@ -42,6 +43,8 @@ const invoiceDetailSchema = z.object({
   vat: z.number(),
   total: z.number(),
   mark: z.string().nullable(),
+  // Κωδικός πληρωμής (RF): ελεύθερο κείμενο έως 35, null όταν δεν έχει γραφτεί.
+  paymentRef: z.string().nullable().optional(),
   clientId: z.string(),
   clientName: z.string(),
   creditFor: z.string().nullable(),

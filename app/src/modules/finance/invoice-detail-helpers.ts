@@ -39,3 +39,8 @@ export const trailText = (entry: TrailEntry): string => {
 
 export const correctHref = (invoiceId: string): string =>
   `/app/finance/invoices/new?invoice=${encodeURIComponent(invoiceId)}`;
+
+// Τ4: η σελίδα του Τιμολογίου με ανοιχτό το κουτί «Στείλε υπενθύμιση».
+export const REMINDER_ANCHOR = "remind";
+export const reminderHref = (invoiceId: string): string =>
+  `/app/finance/invoices/${encodeURIComponent(invoiceId)}?remind=1#${REMINDER_ANCHOR}`;

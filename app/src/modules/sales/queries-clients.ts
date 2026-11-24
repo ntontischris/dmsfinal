@@ -33,6 +33,8 @@ const clientRowSchema = z.array(
     can_open: z.boolean(),
     open_opportunities: z.number().nullable(),
     is_possible_duplicate: z.boolean(),
+    afm: z.string().nullish(),
+    contact_email: z.string().nullish(),
   }),
 );
 
@@ -46,6 +48,8 @@ const parseClientRows = (data: unknown): ClientRow[] =>
     canOpen: row.can_open,
     openOpportunities: row.open_opportunities,
     isPossibleDuplicate: row.is_possible_duplicate,
+    afm: row.afm ?? null,
+    contactEmail: row.contact_email ?? "",
   }));
 
 const clientDetailSchema = z.object({

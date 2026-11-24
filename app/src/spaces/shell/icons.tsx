@@ -73,6 +73,39 @@ const PATHS = {
     </>
   ),
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+  home: <path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6" />,
+  sales: <path d="M3 17l6-6 4 4 8-8M15 7h6v6" />,
+  agreements: (
+    <>
+      <path d="M6 3h9l4 4v14H6z" />
+      <path d="M14 3v5h5M9 13h7M9 17h4" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </>
+  ),
+  reports: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+  team: (
+    <>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5" />
+    </>
+  ),
+  equipment: (
+    <>
+      <rect x="2" y="7" width="14" height="11" rx="2" />
+      <path d="M16 11l6-3v9l-6-3" />
+    </>
+  ),
+  knowledge: (
+    <>
+      <path d="M2 5c3-1.5 7-1.5 10 1 3-2.5 7-2.5 10-1v14c-3-1.5-7-1.5-10 1-3-2.5-7-2.5-10-1z" />
+      <path d="M12 6v14" />
+    </>
+  ),
   more: (
     <>
       <circle cx="5" cy="12" r="1.2" />

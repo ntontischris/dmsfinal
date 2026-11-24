@@ -60,8 +60,6 @@
 :root & .shell-home .shell-monogram { visibility: hidden; }
 :root & .shell-home { background: url('/brand/monogram-primary-dark.svg') center / auto 1.35rem no-repeat; }
 :root[data-theme='light'] & .shell-home { background-image: url('/brand/monogram-primary-light.svg'); }
-:root & .shell-pill { background: color-mix(in oklab, var(--brand-midnight) 72%, transparent); }
-:root[data-theme='light'] & .shell-pill { background: color-mix(in oklab, #ffffff 80%, transparent); }
 
 /* Ετικέτες: αραιά κεφαλαία (eyebrow του screens2) */
 :root & :is(.kit-label, .eyebrow, .now-tile-label, .rtable th, .dl dt, .kcol h3, .status-help-title) {
@@ -204,5 +202,22 @@
   --kind-blue: #4f5fd6;
   --kind-pink: #c2417e;
   --kind-red: #d04b33;
+}
+}
+
+/* Τ9: τα πάνελ των «Χρημάτων» (γραμμές, hero, βήματα, κλειστά κουτιά, κάρτες-κάδρα) ήταν πάντα Deep/Midnight Navy, ενώ
+   το κείμενο (--color-text) γίνεται Midnight στο φωτεινό θέμα: σκούρο σε σκούρο. Τα φόντα τους περνούν από εδώ και στο
+   φωτεινό θέμα γίνονται ανοιχτά· τα έγχρωμα κείμενα (--c) σκουραίνουν κατά --panel-ink-mix για να διαβάζονται σε λευκό. */
+[data-look='spaces'] {
+& {
+  --panel-deep: var(--brand-deep);
+  --panel-midnight: var(--brand-midnight);
+  --panel-ink-mix: 100%;
+}
+
+:root[data-theme='light'] & {
+  --panel-deep: #ffffff;
+  --panel-midnight: #eef1fd;
+  --panel-ink-mix: 45%;
 }
 }

@@ -1,8 +1,4 @@
-import {
-  SpacesClients,
-  WithClientsDeck,
-  parseB1Filters,
-} from "@/modules/sales";
+import { SpacesClients, parseB1Filters } from "@/modules/sales";
 import { parsePage } from "@/spaces/kit/pager-model";
 
 export const metadata = { title: "Πελάτες" };
@@ -17,14 +13,12 @@ export default async function ClientsPage({
   const params = await searchParams;
   const { q, new: newStamp, deleted } = params;
   return (
-    <WithClientsDeck active="B1">
-      <SpacesClients
-        query={typeof q === "string" ? q.trim() : ""}
-        filters={parseB1Filters(params)}
-        page={parsePage(params.page)}
-        newStamp={typeof newStamp === "string" ? newStamp : undefined}
-        isDeleted={deleted === "1"}
-      />
-    </WithClientsDeck>
+    <SpacesClients
+      query={typeof q === "string" ? q.trim() : ""}
+      filters={parseB1Filters(params)}
+      page={parsePage(params.page)}
+      newStamp={typeof newStamp === "string" ? newStamp : undefined}
+      isDeleted={deleted === "1"}
+    />
   );
 }

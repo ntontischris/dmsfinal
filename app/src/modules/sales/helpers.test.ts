@@ -195,6 +195,8 @@ describe("toPickerClient", () => {
     canOpen: true,
     openOpportunities: 1,
     isPossibleDuplicate: false,
+    afm: null,
+    contactEmail: "",
   });
   it("ο δικός μου Πελάτης είναι «isMine»", () => {
     expect(toPickerClient(row(UUID_A), salesCaps(SELLER)).isMine).toBe(true);

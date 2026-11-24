@@ -66,3 +66,15 @@ export const correctionPayload = (values: CorrectionValues) => ({
   total: values.total,
   mark: values.mark,
 });
+
+const PAYMENT_REF_MESSAGE = "Ο κωδικός πληρωμής έχει έως 35 χαρακτήρες.";
+
+// Κωδικός πληρωμής (RF): ελεύθερο κείμενο έως 35· κενό = καθάρισμα (null στη βάση).
+export const paymentRefFormSchema = z.object({
+  id: z.uuid(ID_MESSAGE),
+  paymentRef: z
+    .string()
+    .trim()
+    .max(35, PAYMENT_REF_MESSAGE)
+    .transform((value) => (value === "" ? null : value)),
+});

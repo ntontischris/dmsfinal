@@ -50,3 +50,17 @@ test("κάρτες ενημέρωσης και κατάστασης δεν δί�
 test("άδειες κάρτες (κενή κατάσταση) δεν δίνουν Τώρα", () => {
   expect(nowOf([cardOf("action", [])])).toBeNull();
 });
+
+test("Τ8: το Τώρα του «Προς τιμολόγηση» λέει ότι είναι ένας Πελάτης, όχι το σύνολο", () => {
+  const { card, content } = cardOf(
+    "action",
+    [{ label: "Πελάτης Α", href: "/i1", meta: "1.300 €", isUrgent: true }],
+    "Προς τιμολόγηση",
+  );
+  expect(
+    nowOf([{ card: { ...card, id: "to_invoice" }, content }]),
+  ).toMatchObject({
+    label: "Περιμένει πιο πολύ για τιμολόγηση",
+    title: "Πελάτης Α",
+  });
+});

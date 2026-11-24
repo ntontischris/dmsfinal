@@ -4,9 +4,11 @@ import {
   parseClientInvoices,
   parseLedger,
   parseLedgerClients,
+  parsePaymentInfo,
   type ClientInvoicesView,
   type LedgerClient,
   type LedgerView,
+  type PaymentInfo,
 } from "./ledger-view-schema";
 import { read, type ReadResult } from "./read";
 
@@ -45,4 +47,11 @@ export async function listLedgerClients(): Promise<ReadResult<LedgerClient[]>> {
     supabase.rpc("clients_with_finance"),
     parseLedgerClients,
   );
+}
+
+// «Πώς πληρώνω»: για την ομάδα και για τον Χρήστη πελάτη με «Βλέπει Οικονομικά» (η βάση αρνείται στους άλλους).
+export async function getPaymentInfo(): Promise<ReadResult<PaymentInfo>> {
+  const supabase = await createSupabase();
+  if (!supabase) return { ok: false };
+  return read("getPaymentInfo", supabase.rpc("payment_info"), parsePaymentInfo);
 }

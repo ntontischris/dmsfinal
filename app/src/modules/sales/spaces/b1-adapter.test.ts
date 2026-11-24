@@ -24,6 +24,8 @@ const client = (overrides: Partial<ClientRow> = {}): ClientRow => ({
   canOpen: true,
   openOpportunities: 1,
   isPossibleDuplicate: false,
+  afm: null,
+  contactEmail: "",
   ...overrides,
 });
 

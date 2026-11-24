@@ -53,15 +53,18 @@ export function toplineOf(input: ToplineInput): string {
   return money ? `${remaining} · ${money}` : remaining;
 }
 
-// Το άθροισμα των «Προς τιμολόγηση» γραμμών όπως φαίνονται· null όταν δεν υπάρχουν.
-export function toInvoiceCentsOf(groups: readonly ListGroup[]): number | null {
+// Τ8: όταν φαίνεται η κάρτα «Προς τιμολόγηση», το ποσό είναι το ίδιο σύνολο με την κάρτα των Τιμολογίων (όλοι οι Πελάτες),
+// όχι μόνο οι γραμμές που χωράνε στη λίστα. Χωρίς σύνολο (δεν φόρτωσε), το άθροισμα των γραμμών. null = καμία γραμμή.
+export function toInvoiceCentsOf(
+  groups: readonly ListGroup[],
+  totalCents: number | null,
+): number | null {
   const amounts = groups
     .flatMap((group) => group.lines)
     .filter((line) => line.cardId === TO_INVOICE_CARD)
     .map((line) => line.row.amountCents ?? 0);
-  return amounts.length > 0
-    ? amounts.reduce((sum, cents) => sum + cents, 0)
-    : null;
+  if (amounts.length === 0) return null;
+  return totalCents ?? amounts.reduce((sum, cents) => sum + cents, 0);
 }
 
 const isCompanyCard = (item: Built): boolean =>

@@ -3,7 +3,6 @@ import {
   INVOICES_TITLE,
   SpacesClientInvoices,
   SpacesInvoices,
-  WithMoneyDeck,
   financeViewOf,
   parseInvoiceFilter,
 } from "@/modules/finance";
@@ -11,7 +10,12 @@ import {
 export const metadata = { title: INVOICES_TITLE };
 
 interface InvoicesPageProps {
-  searchParams: Promise<{ filter?: string; client?: string; month?: string }>;
+  searchParams: Promise<{
+    filter?: string;
+    client?: string;
+    month?: string;
+    q?: string;
+  }>;
 }
 
 // I2: τα Τιμολόγια (Χώροι). Ο Χρήστης πελάτη με «Βλέπει Οικονομικά» βλέπει τη δική του όψη. Η ομάδα θέλει «Βλέπει Οικονομικά» και «Βλέπει ποσά»· η καταχώρηση θέλει «Καταχωρεί Τιμολόγια».
@@ -24,10 +28,13 @@ export default async function InvoicesPage({
   if (financeViewOf(viewer) === "client")
     return <SpacesClientInvoices query={{ filter, month: params.month }} />;
   return (
-    <WithMoneyDeck active="I2">
-      <SpacesInvoices
-        query={{ filter, client: params.client, month: params.month }}
-      />
-    </WithMoneyDeck>
+    <SpacesInvoices
+      query={{
+        filter,
+        client: params.client,
+        month: params.month,
+        q: params.q,
+      }}
+    />
   );
 }
