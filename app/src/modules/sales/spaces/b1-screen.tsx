@@ -168,7 +168,7 @@ export async function SpacesClients({
           Ο Πελάτης διαγράφηκε.
         </p>
       )}
-      <div className="toolbar">
+      <div className="ml-row">
         <span className="muted grow">
           {caps.manageScope === "mine" &&
             "Ένας Πελάτης, ένας πωλητής: βλέπεις το όνομα των Πελατών των άλλων, αλλά ανοίγεις μόνο τους δικούς σου και όσους έχουν δική σου Ευκαιρία. "}

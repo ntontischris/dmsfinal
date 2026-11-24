@@ -17,6 +17,7 @@
    .ml-line[data-current]        η τρέχουσα γραμμή (π.χ. τρέχουσα Περίοδος, τρέχον βήμα)· data-current="false" αγνοείται.
    .ml-tag[data-tone="warn"]     κίτρινη ετικέτα (περιμένει / θέλει προσοχή), όπως το .ml-meter[data-tone="warn"].
    .ml-quick[data-align="start"] σειρά κουμπιών στοιχισμένη αριστερά (μέσα σε φόρμες και κουτιά).
+   .ml-row                       σειρά φίλτρων / πεδίων (στη θέση του αποσυρμένου .toolbar)· .grow απλώνεται.
    .ml-notice                    η όψη των κοινών StateNotice / ErrorNotice (spaces/screens/shared.tsx)· ζει στο
                                  spaces/styles/screens.css, ώστε να φορτώνει σε κάθε οθόνη του κελύφους.
    Για κείμενο μόνο για αναγνώστες οθόνης: η utility .sr-only του Tailwind (φορτώνει από το app/globals.css). */
@@ -167,6 +168,8 @@
 .ml-line[data-current]:not([data-current="false"]) { border-color: color-mix(in oklab, var(--brand-periwinkle) 55%, transparent); }
 .ml-tag[data-tone="warn"] { --c: var(--brand-yellow); }
 .ml-quick[data-align="start"] { justify-content: flex-start; }
+.ml-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
+.ml-row .grow { flex: 1 1 12rem; }
 
 /* Μετρητής: λεπτή μπάρα με ετικέτα αριστερά και αριθμό δεξιά (όψη του .part-meter, τόνος από --c) */
 .ml-meter { --c: var(--brand-periwinkle); display: grid; grid-template-columns: auto minmax(3rem, 1fr) auto; align-items: center; gap: .6rem; min-width: 9rem; font-size: .78rem; }

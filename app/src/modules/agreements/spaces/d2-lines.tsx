@@ -49,7 +49,7 @@ function FreeLineForm({ agreementId }: { agreementId: string }) {
     <D2Form
       action={addFreeLine}
       submitLabel="Προσθήκη ελεύθερης γραμμής"
-      className="toolbar"
+      className="ml-row"
       resetOnSuccess
     >
       <IdField id={agreementId} />
@@ -90,11 +90,11 @@ function AddLine({
   const selected = options.find((option) => option.itemId === selectedId);
   return (
     <>
-      <div className="toolbar d2-add">
+      <div className="ml-row d2-add">
         <D2Form
           action={addCatalogueLine}
           submitLabel="Προσθήκη"
-          className="toolbar"
+          className="ml-row"
         >
           <IdField id={agreement.id} />
           <select

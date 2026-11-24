@@ -60,17 +60,17 @@ export function Referral({
 }) {
   if (audience === "client")
     return (
-      <Link className="button" href="/app/messages">
-        {CHAT_LINK_TEXT}
-      </Link>
+      <p className="ml-quick" data-align="start">
+        <Link href="/app/messages">{CHAT_LINK_TEXT}</Link>
+      </p>
     );
   const href = question
     ? `/app/knowledge?${new URLSearchParams({ q: question }).toString()}`
     : "/app/knowledge";
   return (
-    <Link className="button" href={href}>
-      {SEARCH_LINK_TEXT}
-    </Link>
+    <p className="ml-quick" data-align="start">
+      <Link href={href}>{SEARCH_LINK_TEXT}</Link>
+    </p>
   );
 }
 
