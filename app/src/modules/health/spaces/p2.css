@@ -14,9 +14,6 @@
   & .p2-banner > p {
     margin: 0;
   }
-  & .p2-banner[data-red="true"] {
-    background: color-mix(in oklab, var(--brand-rec) 8%, var(--color-surface));
-  }
   & .p2-banner[data-red="true"] > strong::before,
   & .p2-card[data-red="true"] .ml-box-title::before {
     content: "";
