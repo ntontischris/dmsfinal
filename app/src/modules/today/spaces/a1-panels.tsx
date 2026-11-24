@@ -1,9 +1,8 @@
 import Link from "next/link";
 
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-
 import { formatCents } from "../helpers";
+import { initialsOf } from "./a1-deck-model";
+import { BriefBox, BriefFoot, BriefLine } from "./a1-lines";
 import type { CardContent } from "./a1-model";
 import type { Programme } from "./a1-programme";
 
@@ -20,74 +19,71 @@ export function ProgrammePanel({
 }) {
   const dayWord = programme.day === "today" ? "σήμερα" : "αύριο";
   return (
-    <div className="a1-brief-panel" data-part="programme">
-      <Panel label="Το πρόγραμμα">
-        <p className="a1-day">{programme.heading}</p>
-        {programme.slots.length === 0 ? (
-          <p className="muted a1-empty">
-            Κανένα Γύρισμα {dayWord}.
-            {programme.next && (
-              <>
-                {" "}
-                Επόμενο:{" "}
-                <Link href={programme.next.href}>
-                  {programme.next.when}
-                </Link>, {programme.next.label}.
-              </>
-            )}
-          </p>
-        ) : (
-          <div className="a1-rows">
-            <RowList>
-              {programme.slots.map((slot) => (
-                <ListRow
-                  key={`${slot.href}${slot.time}`}
-                  lead={<span className="a1-time">{slot.time}</span>}
-                  title={slot.label}
-                  href={slot.href}
-                  sub={slot.note}
-                />
-              ))}
-            </RowList>
-          </div>
-        )}
-        <footer className="a1-card-foot">
-          <Link href={href}>Όλη η εβδομάδα →</Link>
-        </footer>
-      </Panel>
-    </div>
+    <BriefBox part="programme" label="Το πρόγραμμα">
+      <p className="a1-day">{programme.heading}</p>
+      {programme.slots.length === 0 ? (
+        <p className="ml-empty">
+          Κανένα Γύρισμα {dayWord}.
+          {programme.next && (
+            <>
+              {" "}
+              Επόμενο:{" "}
+              <Link href={programme.next.href}>
+                {programme.next.when}
+              </Link>, {programme.next.label}.
+            </>
+          )}
+        </p>
+      ) : (
+        <ul className="ml-list">
+          {programme.slots.map((slot) => (
+            <BriefLine
+              key={`${slot.href}${slot.time}`}
+              thumb={slot.time}
+              title={slot.label}
+              label={slot.label}
+              sub={slot.note}
+              href={slot.href}
+            />
+          ))}
+        </ul>
+      )}
+      <BriefFoot>
+        <Link href={href}>Όλη η εβδομάδα →</Link>
+      </BriefFoot>
+    </BriefBox>
   );
 }
 
 // Όταν τα Χρήματα (today_money) δεν φόρτωσαν: οι γραμμές της κάρτας «Ληξιπρόθεσμα Τιμολόγια».
 export function MoneyPanel({ content }: { content: CardContent }) {
   return (
-    <div className="a1-brief-panel" data-part="money">
-      <Panel label="Χρήματα" aside={content.count}>
-        <p className="muted a1-summary">Ληξιπρόθεσμα Τιμολόγια</p>
-        <div className="a1-rows">
-          <RowList>
-            {content.rows.slice(0, MONEY_SHOWN).map((row) => (
-              <ListRow
-                key={`${row.href}${row.label}`}
-                title={row.label}
-                href={row.href}
-                sub={row.note}
-                aside={
-                  row.amountCents !== undefined ? (
-                    <span className="a1-amount">
-                      {formatCents(row.amountCents)}
-                    </span>
-                  ) : undefined
-                }
-              />
-            ))}
-          </RowList>
-        </div>
-        <footer className="a1-card-foot">
-          <Link href={content.allHref}>Ποιος μας χρωστάει →</Link>
-        </footer>
-      </Panel>
-    </div>
+    <BriefBox
+      part="money"
+      label="Χρήματα"
+      aside={<span className="a1-box-count">{content.count}</span>}
+    >
+      <p className="a1-summary">Ληξιπρόθεσμα Τιμολόγια</p>
+      <ul className="ml-list">
+        {content.rows.slice(0, MONEY_SHOWN).map((row) => (
+          <BriefLine
+            key={`${row.href}${row.label}`}
+            thumb={initialsOf(row.label) || "€"}
+            title={row.label}
+            label={row.label}
+            sub={row.note}
+            href={row.href}
+            amount={
+              row.amountCents !== undefined
+                ? formatCents(row.amountCents)
+                : undefined
+            }
+          />
+        ))}
+      </ul>
+      <BriefFoot>
+        <Link href={content.allHref}>Ποιος μας χρωστάει →</Link>
+      </BriefFoot>
+    </BriefBox>
   );
 }
