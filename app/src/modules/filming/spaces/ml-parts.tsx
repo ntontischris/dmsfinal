@@ -56,6 +56,8 @@ interface LineProps {
   aside?: ReactNode;
   isFaded?: boolean;
   isCurrent?: boolean;
+  // Ό,τι μπαίνει κάτω από τη γραμμή σε όλο το πλάτος (στοιχεία, ενέργειες).
+  children?: ReactNode;
 }
 
 export function Line({
@@ -68,6 +70,7 @@ export function Line({
   aside,
   isFaded,
   isCurrent,
+  children,
 }: LineProps) {
   return (
     <li
@@ -88,6 +91,7 @@ export function Line({
         {sub && <small>{sub}</small>}
       </span>
       {aside && <span className="ml-quick">{aside}</span>}
+      {children && <div className="fl-more">{children}</div>}
     </li>
   );
 }

@@ -19,11 +19,9 @@ import { button, listItem, project, signIn } from "./sales-parts";
 // Σειριακά: το Ωράριο είναι μία γραμμή κοινή για όλα τα specs και το (α) πρέπει να τρέξει πρώτο.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-// Στην ουρά Εγκρίσεων κάθε Γύρισμα είναι δύο γραμμές: η κεφαλή (Πελάτης) και από κάτω οι ενέργειές του.
+// Στην ουρά Εγκρίσεων κάθε Γύρισμα είναι μία γραμμή: η κεφαλή (Πελάτης) και από κάτω, μέσα της, οι ενέργειές του.
 const queueRow = (owner: Page, title: string, client: string): Locator =>
-  panel(owner, title).locator("li.part-row", { hasText: client });
-const actionsOf = (row: Locator): Locator =>
-  row.locator("xpath=following-sibling::li[1]");
+  panel(owner, title).locator("li.ml-line", { hasText: client });
 
 test("ο Ιδιοκτήτης ορίζει το Ωράριο και προσθέτει και σβήνει εξαίρεση", async ({
   page,
@@ -64,8 +62,7 @@ test("ο Πελάτης κλείνει κράτηση, ο Ιδιοκτήτης �
   await inSpaces(browser, "owner@example.com", async (owner) => {
     await visit(owner, "/app/filming/queue");
     const row = queueRow(owner, "Αναμένουν έγκριση", CLIENT_PRODUCT_NAME(P));
-    const actions = actionsOf(row);
-    await button(actions, "Έγκριση").click();
+    await button(row, "Έγκριση").click();
     // Η απάντηση φαίνεται στη γραμμή· αν ήταν η τελευταία, η ουρά δείχνει ότι δεν περιμένει τίποτα.
     await expect(
       owner.getByText(/εγκρίθηκε|Τίποτα δεν περιμένει απάντηση/).first(),
@@ -92,12 +89,11 @@ test("ο Πελάτης ζητά μετάθεση, ο Ιδιοκτήτης τη�
   await inSpaces(browser, "owner@example.com", async (owner) => {
     await visit(owner, "/app/filming/queue");
     const row = queueRow(owner, "Αιτήματα μετάθεσης", CLIENT_PRODUCT_NAME(P));
-    const actions = actionsOf(row);
-    await button(actions, "Απόρριψη").click();
-    await actions
+    await button(row, "Απόρριψη").click();
+    await row
       .getByLabel(/Λόγος απόρριψης της μετάθεσης/)
       .fill("e2e: δεν χωράει η ώρα");
-    await button(actions, "Απορρίπτω").click();
+    await button(row, "Απορρίπτω").click();
     await expect(
       owner
         .getByText(/μένει στην παλιά ώρα|Τίποτα δεν περιμένει απάντηση/)

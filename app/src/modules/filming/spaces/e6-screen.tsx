@@ -27,9 +27,10 @@ function MyList({
 }) {
   return (
     <nav aria-label="Τα Γυρίσματά μου">
-      <h2 className="ml-box-title">
-        Τα Γυρίσματά μου <small>{entries.length}</small>
-      </h2>
+      <header className="fl-group-head">
+        <h2 className="ml-box-title">Τα Γυρίσματά μου</h2>
+        <small>{entries.length}</small>
+      </header>
       <Lines>
         {entries.map((entry) => {
           const [, , day] = dayOf(entry).split("-");

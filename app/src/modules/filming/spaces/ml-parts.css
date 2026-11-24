@@ -147,3 +147,23 @@
   justify-content: space-between;
   gap: 0.5rem 1rem;
 }
+.fl-more {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.fl-more > * {
+  margin: 0;
+}
+.fl-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.6rem;
+}
+.fl-group-head small {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
