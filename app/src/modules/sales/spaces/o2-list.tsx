@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import {
@@ -27,6 +26,8 @@ import {
 } from "./o2-adapter";
 import { StageProbability } from "./o2-probability";
 import { SpacesActionForm } from "./spaces-form";
+
+import "../../finance/spaces/money-lines.css";
 
 // Λίστα Ρύθμισης Πωλήσεων (prototype `screens/o-shared.tsx` ListEditor), με τις πραγματικές ενέργειες της σημερινής
 // σελίδας: σειρά ↑↓, μετονομασία, Νέα → διαγραφή, Σε χρήση → απόσυρση (Στάδιο: με μεταφορά), αποσυρμένη → επανενεργοποίηση.
@@ -349,8 +350,12 @@ export function O2List({
   const visible = showRetired ? items : active;
   const retiredCount = items.length - active.length;
   return (
-    <div className="o-card">
-      <Panel label={title} aside={<Badge>μόνο ελληνικά</Badge>}>
+    <section className="o-card">
+      <details className="ml-box" open={showRetired || undefined}>
+        <summary>
+          <h2 className="ml-box-title">{title}</h2>
+          <small>{`${active.length} ενεργές · μόνο ελληνικά`}</small>
+        </summary>
         {notes.view}
         <RowList>
           {visible.map((item, index) => (
@@ -379,7 +384,7 @@ export function O2List({
             </Link>
           )}
         </div>
-      </Panel>
-    </div>
+      </details>
+    </section>
   );
 }

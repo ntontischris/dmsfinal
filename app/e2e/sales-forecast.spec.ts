@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { panel } from "./catalogue-parts";
+import { openPanel, panel } from "./catalogue-parts";
 import {
   button,
   field,
@@ -118,7 +118,7 @@ test("Ρυθμίσεις › Πωλήσεις: η Διαχείριση ορίζ�
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/sales");
-  const stages = panel(page, "Στάδια");
+  const stages = await openPanel(page, "Στάδια");
   const input = stages.getByLabel("Πιθανότητα %: Νέα", { exact: true });
   await expect(input).toBeVisible();
   // Ίδια τιμή με αυτή που έχει: το τεστ δεν αλλάζει την πρόβλεψη των άλλων.

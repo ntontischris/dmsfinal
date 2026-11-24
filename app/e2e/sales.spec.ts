@@ -15,7 +15,7 @@ import {
   signIn,
   tableRow,
 } from "./sales-parts";
-import { panel } from "./catalogue-parts";
+import { openPanel, panel } from "./catalogue-parts";
 
 // Πελάτες και Ευκαιρίες (B1–B6) και Ρυθμίσεις › Πωλήσεις (O2) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Φανταστικά στοιχεία.
 // Τους Πελάτες και τις Ευκαιρίες που διαβάζονται εδώ τους φτιάχνει το e2e/seed.mjs (βοηθητικά: e2e/sales-parts.ts).
@@ -349,7 +349,7 @@ test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάν
     .click();
   await expect(page).toHaveURL(/\/app\/settings\/sales$/);
 
-  const sources = panel(page, "Πηγές");
+  const sources = await openPanel(page, "Πηγές");
   const newValue = sources.getByLabel("Νέα τιμή", { exact: true });
   await expect(async () => {
     if (!(await newValue.isVisible()))

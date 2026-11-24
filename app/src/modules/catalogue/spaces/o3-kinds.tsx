@@ -7,7 +7,6 @@ import { INITIAL_FORM_STATE, type FormState } from "@/lib/form-state";
 import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 
 import {
@@ -27,6 +26,7 @@ import {
   type KindStatus,
 } from "./o3-kinds-model";
 
+import "../../finance/spaces/money-lines.css";
 import "./o3-kinds.css";
 
 // Είδη Παροχής της O3 στη νέα εμφάνιση (prototype `screens/o3-types.tsx`), με τις πραγματικές ενέργειες της κλασικής:
@@ -330,9 +330,12 @@ export function SpacesProvisionKinds({
   const retiredCount = kinds.filter((kind) => kind.isRetired).length;
   const visible = showRetired ? kinds : kinds.filter((kind) => !kind.isRetired);
   return (
-    <div className="o-card">
-      <Panel label="Είδη Παροχής">
-        <Badge>ελληνικά και αγγλικά</Badge>
+    <section className="o-card">
+      <details className="ml-box" open={showRetired || undefined}>
+        <summary>
+          <h2 className="ml-box-title">Είδη Παροχής</h2>
+          <small>{`${kinds.length - retiredCount} ενεργά · ελληνικά και αγγλικά`}</small>
+        </summary>
         {notices.map((notice, index) => (
           <p key={index} className="note" role="status">
             {notice}
@@ -379,7 +382,7 @@ export function SpacesProvisionKinds({
           Την προθεσμία παράδοσης ανά είδος την ορίζεις στα{" "}
           <Link href={DELIVERABLES_HREF}>Παραδοτέα (O5)</Link>.
         </p>
-      </Panel>
-    </div>
+      </details>
+    </section>
   );
 }
