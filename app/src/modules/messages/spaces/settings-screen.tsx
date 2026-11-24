@@ -36,7 +36,7 @@ export async function SpacesMessageSettings() {
         <ErrorNotice what="οι Ρυθμίσεις Μηνυμάτων" />
       ) : (
         <SettingsForm action={saveMessageSettings}>
-          <SettingsCard title="Χρόνοι Συνομιλίας">
+          <SettingsCard title="Χρόνοι Συνομιλίας" isOpen>
             <TextField
               id="ms-edit-minutes"
               name="editMinutes"

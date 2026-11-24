@@ -66,8 +66,7 @@ interface SettingsCardProps {
   title: string;
   // Μία φράση κάτω από τον τίτλο του κουτιού (τι έχει μέσα).
   hint?: string;
-  // Κουτί Ρυθμίσεων (`details.ml-box`). Ανοιχτό εξ ορισμού για τις οθόνες των άλλων modules που το χρησιμοποιούν·
-  // οι οθόνες που θέλουν κλειστά κουτιά περνούν isOpen={false}.
+  // Κουτί Ρυθμίσεων (`details.ml-box`), κλειστό εξ ορισμού· μόνο μια σελίδα με ένα κουτί περνά isOpen.
   isOpen?: boolean;
   children: ReactNode;
 }
@@ -75,17 +74,20 @@ interface SettingsCardProps {
 export function SettingsCard({
   title,
   hint,
-  isOpen = true,
+  isOpen = false,
   children,
 }: SettingsCardProps) {
+  // Το `section` κρατά την κάρτα με τον τίτλο της ως περιοχή, όπως πριν το ml-box.
   return (
-    <details className="ml-box o-card" open={isOpen}>
-      <summary>
-        <h2 className="ml-box-title">{title}</h2>
-        {hint && <small>{hint}</small>}
-      </summary>
-      <div className="o-card-body">{children}</div>
-    </details>
+    <section className="o-card">
+      <details className="ml-box" open={isOpen || undefined}>
+        <summary>
+          <h2 className="ml-box-title">{title}</h2>
+          {hint && <small>{hint}</small>}
+        </summary>
+        <div className="o-card-body">{children}</div>
+      </details>
+    </section>
   );
 }
 
@@ -205,7 +207,7 @@ export function ListEditor({
           </li>
         ))}
       </ul>
-      <p className="ml-actions o-list-actions">
+      <div className="ml-actions o-list-actions">
         {addSlot}
         {(retiredCount > 0 || showRetired) && (
           <Link href={toggleRetiredHref}>
@@ -214,7 +216,7 @@ export function ListEditor({
               : `Δείξε αποσυρμένες (${retiredCount})`}
           </Link>
         )}
-      </p>
+      </div>
       {isBilingual && (
         <p className="muted o-hint">
           Τη βλέπει πελάτης ή Επισκέπτης, οπότε η αποθήκευση θέλει και τις δύο
