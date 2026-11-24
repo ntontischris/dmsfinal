@@ -2,7 +2,6 @@
 .n-box-body { display: grid; gap: .8rem; min-width: 0; }
 .n-box-body > p { margin: 0; }
 .n-box-body .ml-list { margin: 0; }
-.ml-box[data-danger] > summary::before { background: var(--brand-yellow); }
 
 /* Τμήμα λίστας: τίτλος αριστερά, γρήγορα κουμπιά δεξιά */
 .n-list-section { display: grid; gap: .6rem; margin: 0; }
@@ -30,8 +29,6 @@
 .n-step-body .note, .n-step-body .muted { margin: 0; }
 .n-steps { display: grid; gap: .8rem; }
 
-/* Επικίνδυνη ενέργεια: σιωπηλό περίγραμμα, όχι κόκκινο (το κόκκινο μένει για το κύριο CTA) */
-.ml-quick :is(a, button)[data-danger] { border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent); }
 .n-confirm { display: grid; gap: .8rem; padding: 1rem 1.1rem; border-radius: 14px;
   border: 1px solid color-mix(in oklab, var(--brand-yellow) 45%, transparent);
   background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
@@ -44,7 +41,6 @@
 .n-choice label { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.4rem; padding: .3rem .9rem; border-radius: 999px; cursor: pointer;
   border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent); font-size: .88rem; }
 .n-choice label:has(input:checked) { border-color: var(--brand-periwinkle); background: color-mix(in oklab, var(--brand-periwinkle) 14%, transparent); }
-.ml-actions :is(a, button)[data-danger] { border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent); }
 /* Υπόδειξη προσοχής (π.χ. «Δεν απενεργοποιείς τον εαυτό σου.»): κίτρινη τελεία, όχι κόκκινη */
 .n-warn { margin: 0; font-size: .88rem; color: var(--color-text); }
 .n-warn::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: .4rem; vertical-align: middle; border-radius: 50%; background: var(--brand-yellow); }
