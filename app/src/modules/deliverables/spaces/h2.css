@@ -119,22 +119,10 @@
   & > .ml-stack {
     margin-top: var(--space-3);
   }
-  & .h2-box-body {
-    display: grid;
-    gap: var(--space-3);
-    min-width: 0;
-  }
-  & .h2-box-body > p,
-  & .h2-box-body > dl {
-    margin: 0;
-  }
   & .ml-quick.h2-actions {
     justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
-  }
-  & .ml-tag[data-tone="warn"] {
-    --c: var(--brand-yellow);
   }
   & .ml-quick [data-danger] {
     border-color: color-mix(in oklab, var(--color-text) 30%, transparent);

@@ -182,21 +182,10 @@
   & > .ml-stack {
     margin-top: var(--space-3);
   }
-  & .h2-box-body {
-    display: grid;
-    gap: var(--space-3);
-    min-width: 0;
-  }
-  & .h2-box-body > p {
-    margin: 0;
-  }
   & .ml-quick.h34-actions {
     justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
-  }
-  & .ml-tag[data-tone="warn"] {
-    --c: var(--brand-yellow);
   }
   & .h34-form {
     border-color: color-mix(in oklab, var(--color-text) 10%, transparent);
@@ -230,15 +219,6 @@
     margin-top: var(--space-1);
     white-space: pre-wrap;
   }
-}
-/* Τα κουτιά Παραδοτέων και μέσα στη Σελίδα Παραγωγής (όψη πελάτη). */
-[data-look="spaces"] .h2-box-body {
-  display: grid;
-  gap: var(--space-3);
-  min-width: 0;
-}
-[data-look="spaces"] .ml-box .h2-box-body > .ml-list {
-  margin: 0;
 }
 /* O5: τα πεδία των Κανόνων μέσα στα κουτιά. */
 [data-look="spaces"] .o5 {

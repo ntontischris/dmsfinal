@@ -39,7 +39,6 @@
 /* Η όψη των εσωτερικών οθονών (money-lines.css): ετικέτα προειδοποίησης κίτρινη, φόρμα νέας Εσωτερικής, ομάδες Περιόδων πελάτη. */
 [data-look='spaces'] .g1-page {
 & .page-filters { margin: 0 0 var(--space-3); }
-& .ml-tag[data-tone='warn'] { --c: var(--brand-yellow); }
 & .g1-signals { align-content: center; }
 & .g1-client-filter { justify-content: flex-start; margin: 0 0 var(--space-3); }
 & .g1-new { display: grid; gap: var(--space-3); padding-top: var(--space-3); margin: 0 0 var(--space-4); }

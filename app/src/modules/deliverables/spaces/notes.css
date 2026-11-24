@@ -68,9 +68,6 @@
   font-variant-numeric: tabular-nums;
   text-decoration: none;
 }
-[data-look="spaces"] .ml-line[data-faded] {
-  opacity: 0.65;
-}
 [data-look="spaces"] .vn-list .vn-replies,
 [data-look="spaces"] .vn-list .vn-seen {
   margin-top: var(--space-2);

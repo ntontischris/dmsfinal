@@ -216,23 +216,12 @@
   & > .ml-stack {
     margin-top: var(--space-3);
   }
-  & .g2-box-body {
-    display: grid;
-    gap: var(--space-3);
-    min-width: 0;
-  }
-  & .g2-box-body > p {
-    margin: 0;
-  }
   & .ml-quick.g2-actions,
   .ml-quick.g2-add,
   .ml-quick.g2-signals,
   .ml-quick.g2-owner {
     justify-content: flex-start;
     align-items: center;
-  }
-  & .ml-tag[data-tone="warn"] {
-    --c: var(--brand-yellow);
   }
   & .ml-quick [data-danger] {
     border-color: color-mix(in oklab, var(--color-text) 30%, transparent);

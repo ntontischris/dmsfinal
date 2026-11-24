@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { initialsOf } from "@/spaces/shell/avatar";
 
 import "../../finance/spaces/money-lines.css";
+import "./boxes.css";
 
 // Ένα κουτί της Σελίδας Παραδοτέου (details.ml-box): κλειστό από προεπιλογή, ο τίτλος (h2) και μια μικρή ένδειξη στην κεφαλίδα.
 export function H2Box(props: {
