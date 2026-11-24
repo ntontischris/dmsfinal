@@ -168,7 +168,7 @@ export function H2Actions(props: PanelProps) {
   const canFix = detail.can.edit && detail.versionCount > 0;
   const ruleNote = ruleNoteOf(detail.client === null, props.ctx.internalReview);
   return (
-    <H2Box title="Ενέργειες" isOpen>
+    <H2Box title="Ενέργειες">
       {(detail.can.addVersion || canFix) && (
         <div className="ml-quick h2-actions">
           {detail.can.addVersion && (

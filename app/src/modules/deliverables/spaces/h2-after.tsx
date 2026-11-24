@@ -20,7 +20,6 @@ export function H2FinalFiles({ detail }: PanelProps) {
   return (
     <H2Box
       title="Τελικά αρχεία"
-      isOpen
       hint={detail.approvedAt && `εγκρίθηκε ${fmtDay(detail.approvedAt)}`}
     >
       {link ? (
@@ -76,7 +75,7 @@ export function H2FinalFiles({ detail }: PanelProps) {
 
 function Cancelled({ detail }: { detail: DeliverableDetail }) {
   return (
-    <H2Box title="Ακύρωση" hint="ακυρώθηκε" isOpen>
+    <H2Box title="Ακύρωση" hint="ακυρώθηκε">
       <p>
         Ακυρώθηκε. Λόγος: {detail.cancelReason ?? "—"}.
         {detail.cancelOutcome &&

@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { visit } from "./filming-parts";
+import { openBoxes, visit } from "./filming-parts";
 import { button } from "./sales-parts";
 
 // Βοηθητικά των e2e των Παραδοτέων (H1–H4, ενότητα της G2), στη νέα εμφάνιση (Χώροι).
@@ -98,7 +98,9 @@ export async function addVersion(
   const form = page.locator("form", {
     has: page.getByRole("button", { name: "Προσθήκη Έκδοσης", exact: true }),
   });
+  // Τα κουτιά του H2 είναι κλειστά στην αρχή (details.ml-box)· το «Νέα Έκδοση» είναι στο κουτί «Ενέργειες».
   await expect(async () => {
+    await openBoxes(page);
     if (!(await form.isVisible())) await button(page, "Νέα Έκδοση").click();
     await expect(form).toBeVisible({ timeout: 1_000 });
   }).toPass();
@@ -111,7 +113,7 @@ export async function addVersion(
   ).toBeVisible();
 }
 
-// Το κουτί «Εκδόσεις» του H2 (ανοιχτό): η επιλεγμένη Έκδοση με τα σχόλιά της και τη φόρμα σχολίου.
+// Το κουτί «Εκδόσεις» του H2 (κλειστό στην αρχή, το ανοίγει το openBoxes): η επιλεγμένη Έκδοση με τα σχόλιά της και τη φόρμα σχολίου.
 export const versionsPanel = (page: Page): Locator =>
   page.locator("section").filter({
     has: page.getByRole("heading", { name: "Εκδόσεις", exact: true }),
@@ -122,6 +124,7 @@ export async function addTeamComment(
   page: Page,
   comment: { body: string; timecode?: string; isInternal?: boolean },
 ): Promise<void> {
+  await openBoxes(page);
   const versions = versionsPanel(page);
   const form = versions.locator("form", {
     has: page.getByRole("button", { name: "Προσθήκη σχολίου", exact: true }),

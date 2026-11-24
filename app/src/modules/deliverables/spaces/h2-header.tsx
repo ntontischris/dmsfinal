@@ -62,13 +62,15 @@ function AssigneeField({ detail, ctx }: PanelProps) {
       <span className="h2-inline">
         <H2Person name={name} />
         {name}
-        <button
-          type="button"
-          aria-label={`Αλλαγή Ανατεθειμένου (τώρα: ${name})`}
-          onClick={() => setIsEditing(true)}
-        >
-          Αλλαγή
-        </button>
+        <span className="ml-quick">
+          <button
+            type="button"
+            aria-label={`Αλλαγή Ανατεθειμένου (τώρα: ${name})`}
+            onClick={() => setIsEditing(true)}
+          >
+            Αλλαγή
+          </button>
+        </span>
       </span>
     );
   return (
@@ -94,16 +96,32 @@ function AssigneeField({ detail, ctx }: PanelProps) {
   );
 }
 
+// Η προθεσμία φαίνεται μία φορά: ως κείμενο, και ως πεδίο ημερομηνίας μόνο αφού πατηθεί «Αλλαγή».
 function DeadlineField({ detail }: PanelProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const text = detail.deadline
     ? fmtDate(detail.deadline)
     : detail.filmingId
       ? "μετά το Γύρισμα"
       : "χωρίς ημερομηνία";
   if (!detail.can.edit) return <span>{text}</span>;
+  if (!isEditing)
+    return (
+      <span className="h2-inline">
+        <span>{text}</span>
+        <span className="ml-quick">
+          <button
+            type="button"
+            aria-label={`Αλλαγή Προθεσμίας (τώρα: ${text})`}
+            onClick={() => setIsEditing(true)}
+          >
+            Αλλαγή
+          </button>
+        </span>
+      </span>
+    );
   return (
     <span className="h2-inline">
-      <span>{text}</span>
       <AutoSaveForm
         action={updateDeliverable}
         hidden={withoutKey(keepOf(detail), "deadline")}
@@ -172,7 +190,6 @@ export function H2Facts(props: PanelProps) {
     <H2Box
       title="Στοιχεία"
       hint={roundsLabel(detail.roundsUsed, detail.roundsLimit)}
-      isOpen
     >
       <dl className="ml-kv">
         <dt>Πελάτης — Παραγωγή</dt>

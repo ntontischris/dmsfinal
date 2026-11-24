@@ -10,7 +10,7 @@ import {
   pageTitle,
   versionsPanel,
 } from "./deliverables-parts";
-import { visit } from "./filming-parts";
+import { openBoxes, visit } from "./filming-parts";
 import { button, project, shot, signIn, tableRow } from "./sales-parts";
 
 // Παραδοτέα (H1, H2, ενότητα της G2) από άκρη σε άκρη, στη νέα εμφάνιση (Χώροι). Η Εσωτερική Παραγωγή φτιάχνεται εδώ
@@ -68,6 +68,7 @@ test("ο Ιδιοκτήτης φτιάχνει Παραδοτέο, το στέλ
     .getByRole("link", { name: "Άνοιγμα για έλεγχο", exact: true })
     .click();
   await expect(page).toHaveURL(/\/app\/deliverables\/[0-9a-f-]{36}/);
+  await openBoxes(page);
   await button(page, "Εγκρίνω (οριστικό)").click();
   // Μετά την έγκριση οι Ενέργειες φεύγουν (δεν ζητιούνται πια), γι' αυτό ελέγχουμε την κατάσταση, όχι το μήνυμα.
   await expect(

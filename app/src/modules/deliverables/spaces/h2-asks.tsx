@@ -12,7 +12,6 @@ export function H2ClientAsks({ detail }: { detail: DeliverableDetail }) {
     <H2Box
       title="Τι ζήτησε ο πελάτης"
       hint={`${asks.length} ${asks.length === 1 ? "σημείο" : "σημεία"}`}
-      isOpen
     >
       <ul className="ml-list">
         {asks.map((ask) => (

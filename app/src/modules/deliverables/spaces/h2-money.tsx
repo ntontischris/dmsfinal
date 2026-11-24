@@ -66,7 +66,6 @@ export function H2Charge({ detail, ctx }: PanelProps) {
     <H2Box
       title="Απόφαση χρέωσης"
       hint={isPending ? "θέλει απόφαση" : "αποφασίστηκε"}
-      isOpen={isPending}
     >
       <p>Η Παροχή δεν έφτανε για το Παραδοτέο. Η δουλειά δεν σταμάτησε.</p>
       {!isPending ? (
@@ -144,7 +143,6 @@ export function H2Requests({ detail, ctx }: PanelProps) {
     <H2Box
       title="Αιτήματα αλλαγής μετά την έγκριση"
       hint={`${detail.requests.length} αιτήματα`}
-      isOpen={detail.requests.some((r) => !r.decision)}
     >
       <ul className="ml-list">
         {detail.requests.map((r) => (

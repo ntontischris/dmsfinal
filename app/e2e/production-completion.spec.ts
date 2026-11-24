@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { openBox } from "./agreements-parts";
-import { visit } from "./filming-parts";
+import { openBoxes, visit } from "./filming-parts";
 import { createInternal, PRODUCTION_URL } from "./productions-parts";
 import { button, card, project, shot, signIn } from "./sales-parts";
 
@@ -69,7 +69,9 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   const addVersion = page.locator("form", {
     has: page.getByRole("button", { name: "Προσθήκη Έκδοσης", exact: true }),
   });
+  // Τα κουτιά του H2 είναι κλειστά στην αρχή· το «Νέα Έκδοση» και το «Εγκρίνω» είναι στο κουτί «Ενέργειες».
   await expect(async () => {
+    await openBoxes(page);
     if (!(await addVersion.isVisible()))
       await button(page, "Νέα Έκδοση").click();
     await expect(addVersion).toBeVisible({ timeout: 1_000 });
@@ -77,6 +79,7 @@ test("ο Ιδιοκτήτης προσθέτει Εργασία, την κλεί
   await addVersion.locator('input[name="url"]').fill(LINK);
   await button(addVersion, "Προσθήκη Έκδοσης").click();
   // Με την επιτυχία η φόρμα κλείνει και η v1 περιμένει έγκριση.
+  await openBoxes(page);
   await button(page, "Εγκρίνω (οριστικό)").click();
   await expect(button(page, "Εγκρίνω (οριστικό)")).toHaveCount(0);
   await expect(

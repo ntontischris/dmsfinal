@@ -214,7 +214,7 @@ export function H2Versions({ detail, ctx }: PanelProps) {
   }
   const version = versions.find((v) => v.number === picked) ?? versions.at(-1);
   return (
-    <H2Box title="Εκδόσεις" hint={`${versions.length} συνολικά`} isOpen>
+    <H2Box title="Εκδόσεις" hint={`${versions.length} συνολικά`}>
       {detail.versions.length > 0 && (
         <ViewChoice view={view} onChange={setView} />
       )}

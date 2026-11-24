@@ -63,7 +63,6 @@ export function H2RoundCharges({ detail, ctx }: PanelProps) {
     <H2Box
       title="Γύροι πέρα από το όριο"
       hint={`${detail.roundCharges.length} γύροι`}
-      isOpen={detail.roundCharges.some((charge) => charge.decision === null)}
     >
       <ul className="ml-list">
         {detail.roundCharges.map((charge) => (
