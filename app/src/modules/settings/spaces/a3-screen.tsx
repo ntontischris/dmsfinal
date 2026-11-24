@@ -190,7 +190,6 @@ export async function SpacesProfile() {
         exists={link.ok && link.data.exists}
         createdLabel={createdAt ? formatDateTime(createdAt) : null}
         isClient={isClient}
-        isOpen={false}
       />
       <RolesBox part={part} canManage={isOwner(viewer)} />
       {isClient && part.memberships.length > 0 && (
