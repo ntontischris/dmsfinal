@@ -28,7 +28,7 @@ import { STATE_WORDS } from "./g1-rows";
 import { G2ClientPage } from "./g2-client";
 import { G2State } from "./g2-live";
 import { G2Members } from "./g2-members";
-import { G2Money } from "./g2-money";
+import { G2Agreement } from "./g2-money";
 import {
   cancellationOf,
   deliveryBlockers,
@@ -38,7 +38,7 @@ import {
 } from "./g2-model";
 import { G2Hero } from "./g2-hero";
 import { G2Trail } from "./g2-notes";
-import { G2Deliverables, G2Filmings, G2Provisions } from "./g2-sections";
+import { G2Deliverables, G2Filmings } from "./g2-sections";
 import { G2Tasks } from "./g2-tasks";
 
 import "../../finance/spaces/money-lines.css";
@@ -223,8 +223,7 @@ function G2Page({
           delivery={deliveryOf(production)}
           cancellation={cancellationOf(production)}
         />
-        <G2Provisions production={production} />
-        {!production.isInternal && <G2Money productionId={production.id} />}
+        <G2Agreement production={production} />
         <G2Filmings filmings={production.filmings} />
         <G2Deliverables
           production={production}

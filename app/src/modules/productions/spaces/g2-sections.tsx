@@ -5,7 +5,6 @@ import { athensDate, athensTime } from "@/modules/filming";
 import { hrefOf } from "@/spaces/data/screens";
 import { Badge, fmtDate } from "@/spaces/screens/shared";
 
-import { periodLabel } from "../helpers";
 import type { ProductionDetail, ProductionFilming } from "../types";
 import { G2Box } from "./g2-box";
 import {
@@ -48,15 +47,12 @@ export function ProvisionMeter(props: {
   );
 }
 
-// Οι Παροχές της Περιόδου. Η εφάπαξ δεν έχει Περίοδο και η βάση δεν δίνει εδώ τις Παροχές της Συμφωνίας: το κουτί λείπει.
-export function G2Provisions({ production }: { production: ProductionDetail }) {
-  if (production.isInternal || !production.period) return null;
+// Οι Παροχές της Περιόδου ως μετρητές (μέσα στο κουτί «Παροχές και τιμή»). Η εφάπαξ δεν έχει Περίοδο: τίποτα.
+export function ProvisionRows({ production }: { production: ProductionDetail }) {
+  if (!production.period) return null;
   const rows = provisionRowsOf(production.balances);
   return (
-    <G2Box
-      title="Παροχές της Περιόδου"
-      hint={periodLabel(production.period.starts)}
-    >
+    <>
       {rows.length === 0 && <p className="ml-empty">Δεν υπάρχουν Παροχές.</p>}
       <ul className="g2-provisions">
         {rows.map((row) => (
@@ -70,7 +66,7 @@ export function G2Provisions({ production }: { production: ProductionDetail }) {
           </li>
         ))}
       </ul>
-    </G2Box>
+    </>
   );
 }
 

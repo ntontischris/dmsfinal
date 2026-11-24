@@ -89,7 +89,6 @@ function ClientState({
   return (
     <G2Box
       title="Κατάσταση"
-      isOpen
       hint={
         <Badge tone={production.state === "cancelled" ? "faded" : "strong"}>
           {STATE_WORDS[production.state]}

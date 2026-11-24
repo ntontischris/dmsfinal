@@ -6,6 +6,7 @@ import {
   confirmWithReason,
   createInternal,
   openProduction,
+  openState,
 } from "./productions-parts";
 import { button, card, project, shot, signIn, tableRow } from "./sales-parts";
 
@@ -130,6 +131,6 @@ test("η Παραγωγή με Εύρος «όσα με αφορούν» βλέ�
 
   await openProduction(page, `Showreel ${P}`);
   // Η μεταβίβαση είναι το «Αλλαγή» του Υπευθύνου στο πάνελ «Κατάσταση».
-  await expect(button(card(page, "Κατάσταση"), "Αλλαγή")).toHaveCount(0);
+  await expect(button(await openState(page), "Αλλαγή")).toHaveCount(0);
   await shot(page, "g2-production");
 });

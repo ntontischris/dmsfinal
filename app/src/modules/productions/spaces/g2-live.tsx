@@ -206,7 +206,6 @@ export function G2State(props: G2StateProps) {
   return (
     <G2Box
       title="Κατάσταση"
-      isOpen
       hint={
         <Badge tone={props.state === "cancelled" ? "faded" : "strong"}>
           {props.stateWord}
