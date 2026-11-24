@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import { getViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Rows } from "@/spaces/kit/rows";
 import {
   Badge,
   ErrorNotice,
@@ -75,6 +74,34 @@ const capitalize = (text: string): string =>
 const initialsOf = (number: string): string =>
   number.replace(/[^\p{L}\p{N}]/gu, "").slice(-4);
 
+interface LineItem {
+  id: string;
+  title: string;
+  meta: string;
+  href?: string;
+}
+
+// Οι γραμμές των κουτιών (Πληρωμές, Αφορά, Ίχνος) ως .ml-line: αριθμός, τίτλος (σύνδεσμος αν έχει) και στοιχεία.
+function Lines({ items }: { items: readonly LineItem[] }) {
+  return (
+    <ol className="ml-list">
+      {items.map((item, index) => (
+        <li key={item.id} className="ml-line">
+          <span className="ml-thumb" aria-hidden="true">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="ml-main">
+            <strong>
+              {item.href ? <Link href={item.href}>{item.title}</Link> : item.title}
+            </strong>
+            <small>{item.meta}</small>
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function Box(props: { title: string; hint: string; children: ReactNode }) {
   return (
     <section>
@@ -117,7 +144,12 @@ function Actions(props: PageProps) {
       {canRemind(props) && (
         <Link href={reminderHref(detail.id)}>Στείλε υπενθύμιση</Link>
       )}
-      <a href={pdfHref(detail.id)} target="_blank" rel="noreferrer">
+      <a
+        data-primary={canCollect ? undefined : "true"}
+        href={pdfHref(detail.id)}
+        target="_blank"
+        rel="noreferrer"
+      >
         Λήψη PDF
       </a>
       {caps.canRegisterInvoices && detail.can.correct && (
@@ -178,7 +210,7 @@ function Payments({ money }: { money: InvoicePayments }) {
       {money.payments.length === 0 ? (
         <p className="muted">Καμία πληρωμή ακόμα.</p>
       ) : (
-        <Rows
+        <Lines
           items={money.payments.map((p) => ({
             id: p.receiptId,
             title: fmtMoney(p.applied),
@@ -220,7 +252,7 @@ function Related({
   const hint = `Πελάτης · ${money.agreements.length} Συμφωνίες · ${money.productions.length} Παραγωγές`;
   return (
     <Box title="Αφορά" hint={hint}>
-      <Rows items={items} />
+      <Lines items={items} />
     </Box>
   );
 }
@@ -233,7 +265,7 @@ function Trail({ detail, money, reminders }: PageProps) {
       {rows.length === 0 ? (
         <p className="muted">{TRAIL_EMPTY}</p>
       ) : (
-        <Rows items={rows} />
+        <Lines items={rows} />
       )}
     </Box>
   );

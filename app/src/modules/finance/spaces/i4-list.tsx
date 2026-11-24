@@ -40,14 +40,12 @@ function RowActions(props: {
     <>
       <button
         type="button"
-        className="button"
         onClick={() => props.onStart("διόρθωση")}
       >
         Διόρθωση
       </button>
       <button
         type="button"
-        className="button"
         onClick={() => props.onStart("διαγραφή")}
       >
         Διαγραφή

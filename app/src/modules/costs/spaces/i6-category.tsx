@@ -87,16 +87,17 @@ function LineRows({ item, ci, ii, editable, update, remove }: ItemProps) {
                   )
                 }
               />
-              <button
-                type="button"
-                className="button"
-                data-danger
-                onClick={() =>
-                  remove(removeLine(ci, ii, li), removedLineText(line))
-                }
-              >
-                Αφαίρεση γραμμής
-              </button>
+              <span className="ml-quick">
+                <button
+                  type="button"
+                  data-danger
+                  onClick={() =>
+                    remove(removeLine(ci, ii, li), removedLineText(line))
+                  }
+                >
+                  Αφαίρεση γραμμής
+                </button>
+              </span>
             </>
           ) : (
             <span>{fmtMoney(line.amount)}</span>
@@ -107,19 +108,20 @@ function LineRows({ item, ci, ii, editable, update, remove }: ItemProps) {
   );
 }
 
-function ItemActions({ item, ci, ii, update, remove }: Omit<ItemProps, "editable">) {
+function ItemActions({
+  item,
+  ci,
+  ii,
+  update,
+  remove,
+}: Omit<ItemProps, "editable">) {
   return (
-    <div className="i67-actions">
-      <button
-        type="button"
-        className="button"
-        onClick={() => update(addLine(ci, ii, newId()))}
-      >
+    <div className="i67-actions ml-quick">
+      <button type="button" onClick={() => update(addLine(ci, ii, newId()))}>
         Προσθήκη γραμμής
       </button>
       <button
         type="button"
-        className="button"
         data-danger
         onClick={() => remove(removeItem(ci, ii), removedItemText(item))}
       >
@@ -144,7 +146,13 @@ function ItemBlock(props: ItemProps) {
       </div>
       <LineRows {...props} />
       {editable && (
-        <ItemActions item={item} ci={ci} ii={ii} update={update} remove={remove} />
+        <ItemActions
+          item={item}
+          ci={ci}
+          ii={ii}
+          update={update}
+          remove={remove}
+        />
       )}
     </div>
   );
@@ -157,17 +165,12 @@ function CategoryActions({
   remove,
 }: Omit<CategoryProps, "editable">) {
   return (
-    <div className="i67-actions">
-      <button
-        type="button"
-        className="button"
-        onClick={() => update(addItem(ci, newId()))}
-      >
+    <div className="i67-actions ml-quick">
+      <button type="button" onClick={() => update(addItem(ci, newId()))}>
         Προσθήκη εξόδου
       </button>
       <button
         type="button"
-        className="button"
         data-danger
         onClick={() => remove(removeCategory(ci), removedCategoryText(cat))}
       >

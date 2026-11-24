@@ -35,8 +35,7 @@ interface EditorProps {
   canEditHours?: boolean;
   // Μήνας χωρίς ανάλυση: το ένα σύνολό του μετρά όσο δεν υπάρχουν γραμμές.
   baseTotal?: number;
-  // Οι καρτέλες μηνών και οι σημειώσεις του μήνα, μέσα στην κεφαλίδα.
-  tabs: ReactNode;
+  // Οι σημειώσεις του μήνα, μέσα στην κεφαλίδα.
   notes?: ReactNode;
 }
 
@@ -77,12 +76,7 @@ function SaveRow({ month, cats, hours, touched, onSaved }: SaveProps) {
         </p>
       )}
       <p>
-        <button
-          type="submit"
-          className="button"
-          data-primary="true"
-          disabled={isPending || !touched}
-        >
+        <button type="submit" data-primary disabled={isPending || !touched}>
           {isPending ? "Αποθήκευση…" : "Αποθήκευση"}
         </button>
       </p>
@@ -99,8 +93,8 @@ function NewCategoryBox({ onAdd }: { onAdd: () => void }) {
           Κατηγορία → έξοδα → γραμμές με ποσό. Μετά η «Αποθήκευση» πάνω δεξιά.
         </small>
       </summary>
-      <p>
-        <button type="button" className="button" onClick={onAdd}>
+      <p className="ml-actions">
+        <button type="button" data-primary onClick={onAdd}>
           Προσθήκη κατηγορίας
         </button>
       </p>
@@ -111,21 +105,50 @@ function NewCategoryBox({ onAdd }: { onAdd: () => void }) {
 function UndoBar({ message, onUndo }: { message: string; onUndo: () => void }) {
   // Στο τέλος και «κολλημένο» κάτω: φαίνεται όπου κι αν πατήθηκε η αφαίρεση.
   return (
-    <p className="note btn-row i67-undo" role="status">
+    <p className="note ml-quick i67-undo" role="status">
       <span>{message}</span>
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        onClick={onUndo}
-      >
+      <button type="button" data-primary onClick={onUndo}>
         Αναίρεση
       </button>
     </p>
   );
 }
 
-function useEditor(categories: readonly ExpenseCategory[], productiveHours: number) {
+// Οι Παραγωγικές ώρες σε δικό τους κλειστό κουτί (όχι πεδίο μέσα στην κεφαλίδα)· η «Αποθήκευση» πάνω τις κρατά μαζί.
+function HoursBox({
+  hours,
+  onHours,
+}: {
+  hours: number;
+  onHours: (hours: number) => void;
+}) {
+  return (
+    <details className="ml-box">
+      <summary>
+        <strong className="ml-box-title">Παραγωγικές ώρες</strong>
+        <small>{hours} ώρες τον μήνα · από αυτές βγαίνει το Κόστος ώρας</small>
+      </summary>
+      <div className="ml-fields">
+        <label className="ml-field">
+          <span>Παραγωγικές ώρες</span>
+          <input
+            className="input"
+            type="number"
+            min={1}
+            value={hours}
+            onChange={(e) => onHours(Number(e.target.value) || 0)}
+          />
+          <small>Μετά πάτα «Αποθήκευση» πάνω.</small>
+        </label>
+      </div>
+    </details>
+  );
+}
+
+function useEditor(
+  categories: readonly ExpenseCategory[],
+  productiveHours: number,
+) {
   const [state, setState] = useState<EditorState>(() => ({
     cats: toDrafts(categories),
     undo: null,
@@ -168,7 +191,6 @@ export function I6Editor(props: EditorProps) {
   return (
     <>
       <I6HeroShell
-        tabs={props.tabs}
         notes={props.notes}
         actions={
           editable && (
@@ -182,14 +204,9 @@ export function I6Editor(props: EditorProps) {
           )
         }
       >
-        <I6Facts
-          month={month}
-          total={total}
-          hours={ed.hours}
-          canEditHours={canEditHours}
-          onHours={ed.updateHours}
-        />
+        <I6Facts month={month} total={total} hours={ed.hours} />
       </I6HeroShell>
+      {canEditHours && <HoursBox hours={ed.hours} onHours={ed.updateHours} />}
       {ed.touched && (
         <p className="note" role="status">
           Ισχύει από αυτόν τον μήνα και μετά· οι κλεισμένοι μήνες δεν αλλάζουν.

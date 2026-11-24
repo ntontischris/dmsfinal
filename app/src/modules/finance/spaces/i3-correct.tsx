@@ -121,8 +121,8 @@ function VoidForm({ invoiceId }: { invoiceId: string }) {
         />
       </Field>
       <p className="muted">{INVOICE_VOID_BODY}</p>
-      <p className="i3-actions">
-        <button type="submit" className="button" data-danger="true" disabled={reason.trim() === "" || isPending}>
+      <p className="ml-actions">
+        <button type="submit" data-primary disabled={reason.trim() === "" || isPending}>
           Ακύρωση καταχώρισης
         </button>{" "}
         <FormFeedback error={state.error} notice={state.notice} />

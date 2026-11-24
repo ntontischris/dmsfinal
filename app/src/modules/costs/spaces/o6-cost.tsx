@@ -10,7 +10,6 @@ import {
 } from "@/modules/catalogue";
 import { SaveRow, SettingsForm } from "@/modules/settings";
 import { hrefOf } from "@/spaces/data/screens";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 import { fmtPercent } from "@/spaces/screens/shared";
 
 import { G3Box } from "./g3-box";
@@ -68,8 +67,8 @@ export function CostMonthsGlance({ months }: { months: readonly CostMonth[] }) {
           ))}
         </ul>
       )}
-      <p className="btn-row">
-        <Link className="button" href={hrefOf("I6")}>
+      <p className="ml-quick o6-form">
+        <Link data-primary href={hrefOf("I6")}>
           Έξοδα και Κόστος ώρας
         </Link>
       </p>
@@ -81,35 +80,36 @@ export function CostMonthsGlance({ months }: { months: readonly CostMonth[] }) {
   );
 }
 
+// Κάθε πολλαπλασιαστής μία γραμμή (ml-line): όνομα και ελάχιστο περιθώριο, το πεδίο δεξιά.
 function MultiplierRows({ hint }: { hint: CostHint }) {
   return (
-    <RowList>
+    <ul className="ml-list">
       {multiplierRowsOf(hint.multipliers).map((row) => (
-        <ListRow
-          key={row.name}
-          title={row.label}
-          sub={
-            <>
-              Ελάχιστο περιθώριο: {fmtPercent(row.margin)}
-              <span className="muted"> (1 − 1/{decimalText(row.factor)})</span>
-            </>
-          }
-          aside={
-            <label className="o5-days">
-              <span className="part-sub">Πολλαπλασιαστής</span>
-              <input
-                className="input"
-                name={row.name}
-                inputMode="decimal"
-                required
-                aria-label={`Πολλαπλασιαστής ${row.label}`}
-                defaultValue={decimalText(row.factor)}
-              />
-            </label>
-          }
-        />
+        <li key={row.name} className="ml-line">
+          <span className="ml-thumb" aria-hidden="true">
+            ×{decimalText(row.factor)}
+          </span>
+          <span className="ml-main">
+            <strong>{row.label}</strong>
+            <small>
+              Ελάχιστο περιθώριο: {fmtPercent(row.margin)} (1 − 1/
+              {decimalText(row.factor)})
+            </small>
+          </span>
+          <label className="ml-field o6-factor">
+            <span>Πολλαπλασιαστής</span>
+            <input
+              className="input"
+              name={row.name}
+              inputMode="decimal"
+              required
+              aria-label={`Πολλαπλασιαστής ${row.label}`}
+              defaultValue={decimalText(row.factor)}
+            />
+          </label>
+        </li>
       ))}
-    </RowList>
+    </ul>
   );
 }
 

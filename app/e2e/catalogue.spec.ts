@@ -261,7 +261,11 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
 
   // Ο επόμενος μήνας στην I6: μία γραμμή 9.900 € και 220 ώρες → 45,00 € την ώρα. Αν τον έγραψε ήδη το άλλο project,
   // αλλάζει η ίδια γραμμή (η αποθήκευση αντικαθιστά όλη την ανάλυση), άρα το αποτέλεσμα είναι πάντα το ίδιο.
-  await page.locator("nav.tabs a.tab").last().click();
+  await page
+    .locator("details.kit-fb-card", { hasText: "Μήνας" })
+    .locator("summary")
+    .click();
+  await page.locator(".kit-fb-pop a").last().click();
   await expect(page).toHaveURL(/\?month=\d{4}-\d{2}$/);
   if ((await page.getByLabel("Ποσό γραμμής").count()) === 0) {
     await page.getByText("+ Νέα κατηγορία", { exact: true }).click();
@@ -276,6 +280,7 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
       .click();
   }
   await page.getByLabel("Ποσό γραμμής").first().fill("9900");
+  await page.locator("summary", { hasText: "Παραγωγικές ώρες" }).click();
   await page.getByLabel("Παραγωγικές ώρες").fill("220");
   await page.getByRole("button", { name: "Αποθήκευση", exact: true }).click();
   await expect(
@@ -293,7 +298,9 @@ test("Ρυθμίσεις › Οικονομικά: Κόστος ώρας και 
 
   const range = panel(page, "Εύρος τιμής και Υπέρβαση κόστους");
   await range.locator("summary").first().click();
-  const minimum = rowTitled(range, "Ελάχιστη");
+  const minimum = range.locator("li.ml-line").filter({
+    has: page.locator("strong").getByText("Ελάχιστη", { exact: true }),
+  });
   const saveMin = async (value: string, margin: RegExp) => {
     await control(range, "Πολλαπλασιαστής Ελάχιστη").fill(value);
     await button(range, "Αποθήκευση").click();

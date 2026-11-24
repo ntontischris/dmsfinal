@@ -47,13 +47,17 @@ function TeamLedger(props: {
       <MoneyHero
         mono={initialsOf(data.clientName)}
         title={data.clientName}
+        isRecord
         label={balanceLabelOf(data.balance, false)}
         amount={Math.abs(data.balance)}
         isOpen={data.balance > 0}
         facts={factsOf(rows, data.overdue)}
         hasWarning={data.overdue > 0}
         actions={
-          <TeamActions clientId={data.clientId} canRegister={props.canRegister} />
+          <TeamActions
+            clientId={data.clientId}
+            canRegister={props.canRegister}
+          />
         }
       />
       {data.toInvoice && (

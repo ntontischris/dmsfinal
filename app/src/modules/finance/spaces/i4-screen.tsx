@@ -113,7 +113,7 @@ export async function SpacesReceipts({ query = {} }: { query?: ReceiptsQuery }) 
   );
   return (
     <Spaces>
-      <div className="toolbar">
+      <div className="ml-quick i245-actions">
         <ReceiptsCsv rows={receipts.data} />
       </div>
       {!invoices.ok && (

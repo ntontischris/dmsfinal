@@ -59,7 +59,7 @@ function Message({ state }: { state: FormState }) {
 function ReadOnly({ saved }: { saved: HoursValue }) {
   return (
     <>
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Ώρες γυρίσματος</dt>
         <dd>
           {n(saved.shoot)}
@@ -137,10 +137,12 @@ function InternalEstimateForm({
             defaultValue={text(value?.directCost ?? 0)}
           />
         </label>
-        <Message state={result} />
-        <button className="button" type="submit" disabled={isPending}>
-          {isPending ? "Αποθήκευση…" : "Αποθήκευση εκτίμησης"}
-        </button>
+        <div className="ml-actions">
+          <Message state={result} />
+          <button type="submit" data-primary disabled={isPending}>
+            {isPending ? "Αποθήκευση…" : "Αποθήκευση εκτίμησης"}
+          </button>
+        </div>
       </fieldset>
     </form>
   );
@@ -208,15 +210,12 @@ function HoursFields(props: G3FormProps) {
         Οι ώρες γράφονται όποτε θες, όχι μόνο μετά την παράδοση. Μισές ώρες
         (χωρίς επιβεβαίωση ή χωρίς μοντάζ) μετράνε ως «χωρίς πραγματικές ώρες».
       </p>
-      <Message state={props.result} />
-      <button
-        className="button"
-        type="submit"
-        data-primary="true"
-        disabled={props.isSaving}
-      >
-        {props.isSaving ? "Αποθήκευση…" : "Αποθήκευση ωρών"}
-      </button>
+      <div className="ml-actions">
+        <Message state={props.result} />
+        <button type="submit" data-primary disabled={props.isSaving}>
+          {props.isSaving ? "Αποθήκευση…" : "Αποθήκευση ωρών"}
+        </button>
+      </div>
     </form>
   );
 }
