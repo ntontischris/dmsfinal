@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
-
 import { deleteCrewTemplate, saveCrewTemplate } from "../actions-templates";
 import type { CrewTemplate, NamedRef } from "../types";
 import { useRun } from "./e3-run";
 import { LastDone } from "./e3-ui";
+import { Box, Line, Lines } from "./ml-parts";
 
 // Πρότυπα συνεργείου (prototype `screens/e7-templates.tsx`): γρήγορος τρόπος να γεμίσει το Συνεργείο στο E3.
 // Αποθήκευση και διαγραφή πάνε στα πραγματικά actions· η λίστα φρεσκάρεται από τη βάση.
@@ -59,63 +57,64 @@ function TemplateForm({
     if (!nameError && !peopleError) onSave();
   };
   return (
-    <div>
-      <Panel label={draft.id ? "Αλλαγή Προτύπου" : "Νέο Πρότυπο συνεργείου"}>
-        <div className="e-form">
-          <label>
-            Όνομα (υποχρεωτικό)
-            <input
-              className="input"
-              value={draft.name}
-              onChange={(e) => onChange({ ...draft, name: e.target.value })}
-            />
-          </label>
-          <div className="e-field">
-            Άτομα (τουλάχιστον ένα)
-            <div className="e-checks">
-              {people.map((person) => (
-                <label key={person.id}>
-                  <input
-                    type="checkbox"
-                    checked={draft.personIds.includes(person.id)}
-                    onChange={() => handleToggle(person.id)}
-                  />
-                  {person.name}
-                </label>
-              ))}
-            </div>
-          </div>
-          <label>
-            Σημείωση
-            <input
-              className="input"
-              value={draft.note}
-              onChange={(e) => onChange({ ...draft, note: e.target.value })}
-            />
-          </label>
-          {tried && (nameError || peopleError) && (
-            <p className="e-warn" role="alert">
-              {nameError && "Γράψε όνομα. "}
-              {peopleError && "Διάλεξε τουλάχιστον ένα άτομο."}
-            </p>
-          )}
-          <div className="btn-row">
-            <button
-              type="button"
-              className="button"
-              data-primary="true"
-              disabled={isPending}
-              onClick={handleSave}
-            >
-              Αποθήκευση
-            </button>
-            <button type="button" className="button" onClick={onCancel}>
-              Άκυρο
-            </button>
+    <Box
+      title={draft.id ? "Αλλαγή Προτύπου" : "Νέο Πρότυπο συνεργείου"}
+      hint="Όνομα, άτομα, σημείωση"
+      isOpen
+    >
+      <div className="ml-fields">
+        <label className="ml-field">
+          <span>Όνομα (υποχρεωτικό)</span>
+          <input
+            className="input"
+            value={draft.name}
+            onChange={(e) => onChange({ ...draft, name: e.target.value })}
+          />
+        </label>
+        <div className="ml-field" data-wide>
+          <span>Άτομα (τουλάχιστον ένα)</span>
+          <div className="e-checks">
+            {people.map((person) => (
+              <label key={person.id}>
+                <input
+                  type="checkbox"
+                  checked={draft.personIds.includes(person.id)}
+                  onChange={() => handleToggle(person.id)}
+                />
+                {person.name}
+              </label>
+            ))}
           </div>
         </div>
-      </Panel>
-    </div>
+        <label className="ml-field">
+          <span>Σημείωση</span>
+          <input
+            className="input"
+            value={draft.note}
+            onChange={(e) => onChange({ ...draft, note: e.target.value })}
+          />
+        </label>
+        {tried && (nameError || peopleError) && (
+          <p className="e-warn fl-wide" role="alert">
+            {nameError && "Γράψε όνομα. "}
+            {peopleError && "Διάλεξε τουλάχιστον ένα άτομο."}
+          </p>
+        )}
+        <div className="ml-actions">
+          <button
+            type="button"
+            data-primary="true"
+            disabled={isPending}
+            onClick={handleSave}
+          >
+            Αποθήκευση
+          </button>
+          <button type="button" onClick={onCancel}>
+            Άκυρο
+          </button>
+        </div>
+      </div>
+    </Box>
   );
 }
 
@@ -137,51 +136,42 @@ function TemplatePanel({
   onCancelDelete: () => void;
 }) {
   return (
-    <Panel label={template.name}>
-      <RowList>
+    <Box
+      title={template.name}
+      hint={`${template.members.length} ${template.members.length === 1 ? "άτομο" : "άτομα"}`}
+    >
+      <Lines label={`Άτομα του Προτύπου ${template.name}`}>
         {template.members.map((member) => (
-          <ListRow
-            key={member.id}
-            lead={<Avatar name={member.name} size={32} />}
-            title={member.name}
-          />
+          <Line key={member.id} thumb={member.name} title={member.name} />
         ))}
-      </RowList>
-      {template.note && <p className="muted">{template.note}</p>}
+      </Lines>
+      {template.note && <p className="fl-note">{template.note}</p>}
       {isDeleting ? (
-        <div className="btn-row">
-          <span className="muted">
-            Σβήνεται το Πρότυπο· τα Γυρίσματα δεν αλλάζουν.
-          </span>
+        <div className="ml-quick fl-row">
+          <small>Σβήνεται το Πρότυπο· τα Γυρίσματα δεν αλλάζουν.</small>
           <button
             type="button"
-            className="button"
             data-danger="true"
             disabled={isPending}
             onClick={onDelete}
           >
             Ναι, διαγραφή
           </button>
-          <button type="button" className="button" onClick={onCancelDelete}>
+          <button type="button" onClick={onCancelDelete}>
             Άκυρο
           </button>
         </div>
       ) : (
-        <div className="btn-row">
-          <button type="button" className="button" onClick={onEdit}>
+        <div className="ml-quick fl-row">
+          <button type="button" onClick={onEdit}>
             Αλλαγή
           </button>
-          <button
-            type="button"
-            className="button"
-            data-danger="true"
-            onClick={onAskDelete}
-          >
+          <button type="button" data-danger="true" onClick={onAskDelete}>
             Διαγραφή
           </button>
         </div>
       )}
-    </Panel>
+    </Box>
   );
 }
 
@@ -221,11 +211,10 @@ export function E7Templates({
         <strong>μπλοκάρει</strong>. Αν σβήσεις Πρότυπο που χρησιμοποιήθηκε, τα
         Γυρίσματα που το είχαν <strong>δεν αλλάζουν</strong>.
       </div>
-      <div className="btn-row" style={{ marginBottom: "var(--space-4)" }}>
+      <div className="ml-head">
         <button
           type="button"
-          className="button"
-          data-primary="true"
+          className="ml-cta"
           onClick={() => setDraft(EMPTY_DRAFT)}
         >
           Νέο Πρότυπο
@@ -243,10 +232,9 @@ export function E7Templates({
         />
       )}
       {templates.length === 0 ? (
-        <section className="card notice" data-kind="empty" role="status">
-          <h2>Κανένα Πρότυπο συνεργείου</h2>
-          <p className="muted">Φτιάξε το πρώτο με «Νέο Πρότυπο».</p>
-        </section>
+        <p className="ml-empty" role="status">
+          Κανένα Πρότυπο συνεργείου. Φτιάξε το πρώτο με «Νέο Πρότυπο».
+        </p>
       ) : (
         templates.map((template) => (
           <TemplatePanel
