@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { can, getViewer, isClientViewer } from "@/modules/access";
+import { initialsOf } from "@/spaces/shell/avatar";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import {
@@ -36,6 +37,7 @@ import {
   type A2Item,
   type A2PrefGroup,
 } from "./a2-adapter";
+import { A2Empty } from "./a2-empty";
 import { SpacesLanguageChoice } from "./a3-language";
 import { MarkAllRead } from "./a2-mark-all";
 import { PrefToggle } from "./a2-pref-toggle";
@@ -103,16 +105,17 @@ function InboxFilters({
   );
 }
 
-// Μία Ειδοποίηση = μία γραμμή: η αδιάβαστη με την τελεία κατάστασης και την ετικέτα «Νέα», η διαβασμένη σβηστή.
+// Μία Ειδοποίηση = μία γραμμή: η αδιάβαστη με γαλάζια τελεία και την ετικέτα «Νέα» (αδιάβαστο δεν σημαίνει επείγον),
+// η διαβασμένη σβηστή.
 function NotificationLine({ item }: { item: A2Item }) {
   return (
     <li
       className="ml-line a2-line"
-      data-urgent={!item.isRead || undefined}
+      data-unread={!item.isRead || undefined}
       data-faded={item.isRead || undefined}
     >
       <span className="ml-thumb" aria-hidden="true">
-        {item.title.trim().charAt(0).toUpperCase()}
+        {initialsOf(item.title)}
       </span>
       <div className="ml-main">
         {!item.isRead && <span className="ml-tag">Νέα</span>}
@@ -139,15 +142,18 @@ function InboxTab({
     <>
       <InboxFilters filter={filter} unread={page.unread} />
       {items.length > 0 ? (
-        <ul className="ml-list" aria-label="Ειδοποιήσεις">
+        <>
+          <p className="a2-count">
+            {items.length} {items.length === 1 ? "Ειδοποίηση" : "Ειδοποιήσεις"}
+          </p>
+          <ul className="ml-list" aria-label="Ειδοποιήσεις">
           {items.map((item) => (
             <NotificationLine key={item.id} item={item} />
           ))}
-        </ul>
+          </ul>
+        </>
       ) : (
-        <StateNotice kind="empty" title={EMPTY_TITLE}>
-          {EMPTY_TEXT}
-        </StateNotice>
+        <A2Empty title={EMPTY_TITLE}>{EMPTY_TEXT}</A2Empty>
       )}
       {page.hasMore && last && (
         <p className="ml-quick a2-more">
@@ -182,12 +188,10 @@ function PrefsTab({
     <>
       <p className="note">{isClient ? PREFS_CLIENT_NOTE : PREFS_TEAM_NOTE}</p>
       {groups.length === 0 ? (
-        <StateNotice kind="empty" title={PREFS_EMPTY_TITLE}>
-          {PREFS_EMPTY_TEXT}
-        </StateNotice>
+        <A2Empty title={PREFS_EMPTY_TITLE}>{PREFS_EMPTY_TEXT}</A2Empty>
       ) : (
         groups.map((group) => (
-          <details key={group.label} className="ml-box" open>
+          <details key={group.label} className="ml-box">
             <summary>
               <span className="ml-box-title">{group.label}</span>
               <small>{group.rows.length}</small>
@@ -243,7 +247,7 @@ async function PrefsBody({
       canConfigure={canConfigure}
       language={
         language?.ok && language.data ? (
-          <details className="ml-box" open>
+          <details className="ml-box">
             <summary>
               <h2 className="ml-box-title">{LANGUAGE_TITLE}</h2>
             </summary>
