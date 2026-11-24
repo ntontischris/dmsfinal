@@ -204,3 +204,20 @@
   --kind-red: #d04b33;
 }
 }
+
+/* Τ9: τα πάνελ των «Χρημάτων» (γραμμές, hero, βήματα, κλειστά κουτιά, κάρτες-κάδρα) ήταν πάντα Deep/Midnight Navy, ενώ
+   το κείμενο (--color-text) γίνεται Midnight στο φωτεινό θέμα: σκούρο σε σκούρο. Τα φόντα τους περνούν από εδώ και στο
+   φωτεινό θέμα γίνονται ανοιχτά· τα έγχρωμα κείμενα (--c) σκουραίνουν κατά --panel-ink-mix για να διαβάζονται σε λευκό. */
+[data-look='spaces'] {
+& {
+  --panel-deep: var(--brand-deep);
+  --panel-midnight: var(--brand-midnight);
+  --panel-ink-mix: 100%;
+}
+
+:root[data-theme='light'] & {
+  --panel-deep: #ffffff;
+  --panel-midnight: #eef1fd;
+  --panel-ink-mix: 45%;
+}
+}

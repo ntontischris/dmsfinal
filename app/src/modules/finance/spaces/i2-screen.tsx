@@ -205,7 +205,7 @@ export async function SpacesInvoices({
   const rows = visibleInvoices(all, query.filter);
   const unpaidNote = query.filter === "unpaid" ? unpaidNoteOf(all) : null;
   return (
-    <div data-spaces>
+    <div data-spaces className="i2-page">
       <Totals
         totals={invoices.data.totals}
         receipts={receipts.ok ? receipts.data : null}

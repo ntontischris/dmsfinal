@@ -1,6 +1,6 @@
 /* Κάρτες-κάδρα των «Χρημάτων» (από το prototype `dms/pelates/pelates.css`, με τα tokens της εφαρμογής). */
 .money-deck { display: flex; gap: .7rem; height: 17rem; margin: 0 0 1.4rem; }
-.money-deck-wait { border-radius: 26px; background: linear-gradient(160deg, var(--brand-deep), var(--brand-midnight)); opacity: .5; }
+.money-deck-wait { border-radius: 26px; background: linear-gradient(160deg, var(--panel-deep), var(--panel-midnight)); opacity: .5; }
 .money-reel {
   --c: var(--brand-periwinkle);
   position: relative; flex: 1 1 0; min-width: 0; overflow: hidden;
@@ -11,7 +11,7 @@
   background:
     radial-gradient(120% 70% at 85% 115%, color-mix(in oklab, var(--c) 30%, transparent), transparent 60%),
     repeating-linear-gradient(0deg, color-mix(in oklab, var(--color-text) 2%, transparent) 0 1px, transparent 1px 3px),
-    linear-gradient(160deg, color-mix(in oklab, var(--brand-deep) 92%, var(--c)), var(--brand-midnight));
+    linear-gradient(160deg, color-mix(in oklab, var(--panel-deep) 92%, var(--c)), var(--panel-midnight));
   transition: flex-grow .55s cubic-bezier(.2, .8, .2, 1), border-color .3s, box-shadow .4s, transform .3s;
   animation: money-rise .6s cubic-bezier(.2, .8, .2, 1) both;
 }
@@ -41,7 +41,7 @@
 .money-reel-top {
   align-self: start; display: flex; justify-content: space-between; align-items: center; padding: .2rem .3rem 0;
   font-size: .7rem; font-weight: 800; letter-spacing: .2em; font-variant-numeric: tabular-nums;
-  color: color-mix(in oklab, var(--c) 75%, var(--color-text-muted));
+  color: color-mix(in oklab, color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)) 75%, var(--color-text-muted));
 }
 .money-rec { font-style: normal; display: inline-flex; align-items: center; gap: .35rem; color: var(--brand-rec); }
 .money-rec::before {
@@ -51,10 +51,10 @@
 .money-reel-count {
   font-size: clamp(3.6rem, 2.6rem + 4vw, 6rem); font-weight: 800; line-height: .82; letter-spacing: -.07em;
   font-variant-numeric: tabular-nums; color: transparent;
-  -webkit-text-stroke: 1.5px color-mix(in oklab, var(--c) 70%, transparent);
+  -webkit-text-stroke: 1.5px color-mix(in oklab, color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)) 70%, transparent);
   transition: color .4s, -webkit-text-stroke-color .4s;
 }
-.money-reel:hover .money-reel-count, .money-reel[aria-current="page"] .money-reel-count { color: var(--c); -webkit-text-stroke-color: var(--c); }
+.money-reel:hover .money-reel-count, .money-reel[aria-current="page"] .money-reel-count { color: color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)); -webkit-text-stroke-color: color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)); }
 .money-reel-title { font-size: 1.05rem; line-height: 1.15; letter-spacing: -.02em; min-height: 2.3em; display: flex; align-items: end; }
 .money-reel-foot { display: grid; gap: .45rem; min-width: 0; padding-top: .55rem; }
 .money-reel-foot small { color: var(--color-text-muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
