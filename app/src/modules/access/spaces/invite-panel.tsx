@@ -237,7 +237,7 @@ function KindChoice(props: {
   return (
     <Step no={1} title="Ποιον προσκαλείς" hint="Ομάδα ή Πελάτη">
       <fieldset className="n-choice">
-        <legend className="n-sr-only">Ποιον προσκαλείς</legend>
+        <legend className="sr-only">Ποιον προσκαλείς</legend>
         {(Object.keys(KIND_LABELS) as InviteKind[]).map((kind) => (
           <label key={kind}>
             <input

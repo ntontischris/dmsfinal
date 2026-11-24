@@ -1,7 +1,6 @@
 /* A3 Προφίλ και προτιμήσεις (prototype `screens/a3.css`, αυτούσιο· τα .a4-* ζουν στο access/spaces/a4.css) */
 [data-look='spaces'] {
 & .a3-choice { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-start; }
-& .a3-choice button[aria-current="true"] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
 & .a3-box-body { display: grid; gap: .8rem; min-width: 0; }
 & .a3-box-body > p { margin: 0; }
 & .a3-wrap { overflow-wrap: anywhere; }
