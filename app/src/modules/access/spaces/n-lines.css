@@ -44,3 +44,8 @@
 .n-choice label { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.4rem; padding: .3rem .9rem; border-radius: 999px; cursor: pointer;
   border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent); font-size: .88rem; }
 .n-choice label:has(input:checked) { border-color: var(--brand-periwinkle); background: color-mix(in oklab, var(--brand-periwinkle) 14%, transparent); }
+.ml-actions :is(a, button)[data-danger] { border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent); }
+/* Υπόδειξη προσοχής (π.χ. «Δεν απενεργοποιείς τον εαυτό σου.»): κίτρινη τελεία, όχι κόκκινη */
+.n-warn { margin: 0; font-size: .88rem; color: var(--color-text); }
+.n-warn::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: .4rem; vertical-align: middle; border-radius: 50%; background: var(--brand-yellow); }
+.n-block { display: block; margin-top: .3rem; }
