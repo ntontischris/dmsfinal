@@ -1,9 +1,5 @@
 import Link from "next/link";
 
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge } from "@/spaces/screens/shared";
-
 import { setReadinessConfirmation } from "../actions";
 import type { LineView } from "./o7-adapter";
 import { ActionButton } from "./o-form";
@@ -28,10 +24,10 @@ function ConfirmButton({
   if (line.done) return null;
   return (
     <>
-      <button type="button" className="button" disabled>
+      <button type="button" disabled>
         Επιβεβαίωση
-      </button>{" "}
-      <span className="muted">Επιβεβαιώνει ο Ιδιοκτήτης</span>
+      </button>
+      <small>Επιβεβαιώνει ο Ιδιοκτήτης</small>
     </>
   );
 }
@@ -46,8 +42,7 @@ function LineAction({ line, isOwner, isLocked }: ActionProps) {
   if (isLocked) return null;
   if (line.isManual) return <ConfirmButton line={line} isOwner={isOwner} />;
   if (line.done) return null;
-  if (line.comesWith)
-    return <span className="muted">έρχεται με {line.comesWith}</span>;
+  if (line.comesWith) return <small>έρχεται με {line.comesWith}</small>;
   return line.href ? <Link href={line.href}>Συμπλήρωσε</Link> : null;
 }
 
@@ -57,43 +52,36 @@ interface LinesProps {
   isLocked: boolean;
 }
 
+// Το κύριο κουτί της οθόνης, ανοιχτό: αυτό ρωτά η σελίδα («τι λείπει ακόμα;»).
 export function RequiredLines({ lines, isOwner, isLocked }: LinesProps) {
+  const ready = lines.filter((line) => line.done).length;
   return (
-    <div className="o-card">
-      <Panel
-        label="Τι πρέπει να είναι έτοιμο"
-        aside={`${lines.filter((line) => line.done).length}/${lines.length}`}
-        isFlush
-      >
-        <RowList>
-          {lines.map((line) => (
-            <ListRow
-              key={line.id}
-              lead={
-                <span className="part-tile" aria-hidden="true">
-                  {line.done ? "✓" : "…"}
-                </span>
-              }
-              title={line.what}
-              sub={<>Ποιος το συμπληρώνει: {line.who}</>}
-              aside={
-                <>
-                  {line.done ? (
-                    <Badge tone="strong">έτοιμο</Badge>
-                  ) : (
-                    <Badge tone="attention">εκκρεμεί</Badge>
-                  )}
-                  <LineAction
-                    line={line}
-                    isOwner={isOwner}
-                    isLocked={isLocked}
-                  />
-                </>
-              }
-            />
-          ))}
-        </RowList>
-      </Panel>
-    </div>
+    <details className="ml-box o-card" open>
+      <summary>
+        <h2 className="ml-box-title">Τι πρέπει να είναι έτοιμο</h2>
+        <small>{`${ready}/${lines.length} έτοιμα`}</small>
+      </summary>
+      <ul className="ml-list">
+        {lines.map((line) => (
+          <li
+            key={line.id}
+            className="ml-line"
+            data-faded={line.done ? "true" : undefined}
+          >
+            <span className="ml-thumb" aria-hidden="true">
+              {line.done ? "✓" : "…"}
+            </span>
+            <span className="ml-main">
+              <strong>{line.what}</strong>
+              <small>Ποιος το συμπληρώνει: {line.who}</small>
+            </span>
+            <span className="ml-tag">{line.done ? "έτοιμο" : "εκκρεμεί"}</span>
+            <span className="ml-quick">
+              <LineAction line={line} isOwner={isOwner} isLocked={isLocked} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

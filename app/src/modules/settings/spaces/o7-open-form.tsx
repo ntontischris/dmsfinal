@@ -11,7 +11,7 @@ export function OpenForm({ cancelHref }: { cancelHref: string }) {
   const { state, isPending, onSubmit, formRef } = useKeptForm(openToClients);
   return (
     <form ref={formRef} onSubmit={onSubmit}>
-      <span className="stack o-field">
+      <span className="ml-field o-field">
         <label htmlFor="o7-confirm">Γράψε ΑΝΟΙΓΜΑ για επιβεβαίωση</label>
         <input
           id="o7-confirm"
@@ -25,18 +25,11 @@ export function OpenForm({ cancelHref }: { cancelHref: string }) {
           {state.error}
         </p>
       )}
-      <div className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-danger="true"
-          disabled={isPending}
-        >
+      <div className="ml-actions">
+        <Link href={cancelHref}>Άκυρο</Link>
+        <button type="submit" data-primary="true" disabled={isPending}>
           {isPending ? "Άνοιγμα…" : "Άνοιγμα τώρα"}
         </button>
-        <Link className="button" href={cancelHref}>
-          Άκυρο
-        </Link>
       </div>
     </form>
   );
