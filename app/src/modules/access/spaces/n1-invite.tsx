@@ -17,15 +17,15 @@ import { Line, ListSection } from "./n-parts";
 export function InviteMessage({ state }: { state: FormState<unknown> }) {
   if (state.error)
     return (
-      <p className="note" role="alert">
+      <small className="n-msg n-warn" role="alert">
         {state.error}
-      </p>
+      </small>
     );
   if (state.notice)
     return (
-      <p className="note" role="status">
+      <small className="n-msg" role="status">
         {state.notice}
-      </p>
+      </small>
     );
   return null;
 }

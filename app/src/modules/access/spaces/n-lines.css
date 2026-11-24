@@ -56,3 +56,7 @@
 .n-reach td[data-scope='all'] { color: var(--color-text); font-weight: 600; }
 .n-reach td[data-scope='mine'] { color: color-mix(in oklab, var(--brand-periwinkle) var(--panel-ink-mix), var(--color-text)); }
 .n-reach td[data-scope='none'] { color: var(--color-text-muted); }
+
+/* Μήνυμα ενέργειας (αντί του παλιού .note): μικρό κείμενο, κίτρινη τελεία όταν είναι σφάλμα (.n-warn) */
+.n-msg { display: block; margin: 0; font-size: .85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.n-msg.n-warn { color: var(--color-text); }

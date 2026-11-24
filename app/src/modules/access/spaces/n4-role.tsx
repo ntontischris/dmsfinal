@@ -226,9 +226,6 @@ export async function SpacesRole({
   return (
     <div data-spaces className="n4">
       <div className="ml-stack">
-        <p>
-          <Link href={ROLES_PATH}>← Όλοι οι Ρόλοι</Link>
-        </p>
         <RoleHero
           role={current}
           canDelete={removal.canDelete}
