@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 
 import { StateNotice } from "@/spaces/screens/shared";
 
+import { getReceiptAmounts, getToInvoiceTotal } from "../finance-reads";
+import { receivedInMonth } from "../finance-facts";
 import { arrangeToday } from "../layout";
 import { CUSTOMIZE_PATH } from "../labels";
 import {
@@ -42,6 +44,7 @@ import { withoutRepeats } from "./a1-zones";
 
 const MONEY_CARD = "overdue_invoices";
 const WEEK_CARD = "week_filming";
+const TO_INVOICE_CARD = "to_invoice";
 
 // Ένα κομμάτι της ενημέρωσης που δεν φόρτωσε (ή δεν επιτρέπεται) απλώς λείπει· η σελίδα δεν σπάει.
 async function partOf<T>(
@@ -59,16 +62,18 @@ async function partOf<T>(
 
 interface PanelsProps {
   kpis: TodayKpis | null;
+  // Τ8: πόσα μπήκαν τον μήνα των δεικτών· null = οι Εισπράξεις δεν φόρτωσαν ή δεν επιτρέπονται.
+  received: number | null;
   programme: { data: Programme; href: string } | null;
   money: { data: TodayMoney | null; card: Built } | null;
   team: TodayTeam | null;
 }
 
 // Τα πάνελ της ενημέρωσης (Δείκτες, Πρόγραμμα, Χρήματα, Η ομάδα): μέσα στη γραμμή κορυφής, κλειστά από προεπιλογή.
-function TodayPanels({ kpis, programme, money, team }: PanelsProps) {
+function TodayPanels({ kpis, received, programme, money, team }: PanelsProps) {
   return (
     <>
-      {kpis && <KpiBrief kpis={kpis} />}
+      {kpis && <KpiBrief kpis={kpis} received={received} />}
       {programme && (
         <ProgrammePanel programme={programme.data} href={programme.href} />
       )}
@@ -114,18 +119,24 @@ export async function TeamBriefing({
     .map((card) => card.code);
   const shown = new Set(shownCodes);
   // Οι δείκτες (d9) δεν είναι κάρτα: φαίνονται σε όποιον έχει το Δικαίωμα κάθε δείκτη (η βάση κρύβει τους υπόλοιπους).
-  const [loaded, money, team, day, visit, kpis] = await Promise.all([
-    loadCards(counts.cards),
-    shown.has(MONEY_CARD) ? partOf("money", getTodayMoney) : null,
-    partOf("team", getTodayTeam),
-    shown.has(WEEK_CARD)
-      ? partOf("programme", () =>
-          getTodayProgramme(programmeDateOf(stamp).date),
-        )
-      : null,
-    getTodayVisit(),
-    partOf("kpis", getTodayKpis),
-  ]);
+  const [loaded, money, team, day, visit, kpis, toInvoice, receipts] =
+    await Promise.all([
+      loadCards(counts.cards),
+      shown.has(MONEY_CARD) ? partOf("money", getTodayMoney) : null,
+      partOf("team", getTodayTeam),
+      shown.has(WEEK_CARD)
+        ? partOf("programme", () =>
+            getTodayProgramme(programmeDateOf(stamp).date),
+          )
+        : null,
+      getTodayVisit(),
+      partOf("kpis", getTodayKpis),
+      // Τ8: ίδιο σύνολο «Προς τιμολόγηση» και ίδιες Εισπράξεις με τις κάρτες των Τιμολογίων.
+      shown.has(TO_INVOICE_CARD)
+        ? partOf("to invoice", getToInvoiceTotal)
+        : null,
+      partOf("receipts", getReceiptAmounts),
+    ]);
   const failed = new Set(
     loaded.filter((item) => item.failed).map((item) => item.built.card.id),
   );
@@ -166,12 +177,16 @@ export async function TeamBriefing({
   const topline = toplineOf({
     remaining: remainingOf(list),
     overdueCents: money?.overdueCents ?? null,
-    toInvoiceCents: toInvoiceCentsOf(list),
+    toInvoiceCents: toInvoiceCentsOf(
+      list,
+      toInvoice === null ? null : Math.round(toInvoice * 100),
+    ),
     canSeeAmounts: money !== null,
   });
   const panels = (
     <TodayPanels
       kpis={kpis}
+      received={kpis && receipts ? receivedInMonth(receipts, kpis.month) : null}
       programme={
         programme && brief.week
           ? { data: programme, href: brief.week.content.allHref }

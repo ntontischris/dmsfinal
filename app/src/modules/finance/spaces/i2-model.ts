@@ -39,6 +39,7 @@ export const matchesFilter = (
 ): boolean => {
   if (filter === "unpaid") return row.kind !== "credit" && row.remaining > 0;
   if (filter === "overdue") return row.status === "overdue";
+  if (filter === "paid") return row.status === "paid";
   if (filter === "credit") return row.kind === "credit";
   return true;
 };
@@ -112,7 +113,10 @@ const ageInDays = (date: string, today: string): number =>
 const days = (n: number): string => (n === 1 ? "1 μέρα" : `${n} μέρες`);
 
 // «καθυστερεί 32 μέρες» ή «λήγει σε 3 μέρες»· null όταν δεν χρωστιέται τίποτα.
-export const dueNoteOf = (row: InvoiceItem, today: string): string | null => {
+export const dueNoteOf = (
+  row: Pick<InvoiceItem, "dueDate" | "remaining">,
+  today: string,
+): string | null => {
   const due = row.dueDate;
   if (!due || row.remaining <= 0) return null;
   const late = ageInDays(due, today);

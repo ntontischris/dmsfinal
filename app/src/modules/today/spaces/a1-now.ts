@@ -12,6 +12,11 @@ interface BuiltCard {
   content: CardContent;
 }
 
+// Κάρτες με μία γραμμή ανά Πελάτη: το Τώρα λέει ότι είναι ένας Πελάτης, όχι το σύνολο της κάρτας (Τ8).
+const NOW_LABEL: Readonly<Record<string, string>> = {
+  to_invoice: "Περιμένει πιο πολύ για τιμολόγηση",
+};
+
 export function nowOf(built: readonly BuiltCard[]): Now | null {
   for (const { card, content } of built) {
     if (card.kind !== "action") continue;
@@ -19,7 +24,7 @@ export function nowOf(built: readonly BuiltCard[]): Now | null {
     if (row)
       return {
         cardId: card.id,
-        label: card.title,
+        label: NOW_LABEL[card.id] ?? card.title,
         title: row.label,
         detail: row.meta,
         action: "Άνοιξε",

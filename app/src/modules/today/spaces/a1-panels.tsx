@@ -85,7 +85,7 @@ export function MoneyPanel({ content }: { content: CardContent }) {
           </RowList>
         </div>
         <footer className="a1-card-foot">
-          <Link href={content.allHref}>Όλα τα τιμολόγια →</Link>
+          <Link href={content.allHref}>Ποιος μας χρωστάει →</Link>
         </footer>
       </Panel>
     </div>

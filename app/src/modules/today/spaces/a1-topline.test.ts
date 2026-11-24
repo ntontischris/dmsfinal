@@ -38,9 +38,9 @@ describe("toplineOf", () => {
   });
 
   it("should split the money into overdue plus to invoice", () => {
-    expect(toplineOf({ ...base, overdueCents: 375100, toInvoiceCents: 490000 })).toBe(
-      "Μένουν 7 · 3.751 € ληξιπρόθεσμα + 4.900 € προς τιμολόγηση",
-    );
+    expect(
+      toplineOf({ ...base, overdueCents: 375100, toInvoiceCents: 490000 }),
+    ).toBe("Μένουν 7 · 3.751 € ληξιπρόθεσμα + 4.900 € προς τιμολόγηση");
   });
 
   it("should omit money without the amounts permission", () => {
@@ -106,7 +106,7 @@ describe("companyStateOf", () => {
 });
 
 describe("toInvoiceCentsOf", () => {
-  it("should sum the amounts of the to_invoice lines", () => {
+  it("should use the whole to-invoice total, not only the lines shown (Τ8)", () => {
     const groups = [
       groupOf("money", [
         lineOf("to_invoice", 100),
@@ -114,12 +114,22 @@ describe("toInvoiceCentsOf", () => {
         lineOf("overdue_invoices", 900),
       ]),
     ];
-    expect(toInvoiceCentsOf(groups)).toBe(350);
+    expect(toInvoiceCentsOf(groups, 740000)).toBe(740000);
+  });
+
+  it("should sum the shown to_invoice lines when the total did not load", () => {
+    const groups = [
+      groupOf("money", [lineOf("to_invoice", 100), lineOf("to_invoice", 250)]),
+    ];
+    expect(toInvoiceCentsOf(groups, null)).toBe(350);
   });
 
   it("should return null when there are no to_invoice lines", () => {
     expect(
-      toInvoiceCentsOf([groupOf("money", [lineOf("overdue_invoices", 900)])]),
+      toInvoiceCentsOf(
+        [groupOf("money", [lineOf("overdue_invoices", 900)])],
+        740000,
+      ),
     ).toBeNull();
   });
 });

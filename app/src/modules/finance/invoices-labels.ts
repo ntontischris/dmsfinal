@@ -9,6 +9,7 @@ export const FILTER_LABELS: Readonly<Record<InvoiceFilter, string>> = {
   all: "όλα",
   unpaid: "ανεξόφλητα",
   overdue: "ληξιπρόθεσμα",
+  paid: "εξοφλημένα",
   credit: "πιστωτικά",
 };
 
