@@ -5,7 +5,7 @@ import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { financeViewOf } from "../caps";
 import {
   CLIENT_INVOICES_EMPTY_TEXT,
-  CLIENT_INVOICES_NO_ACCESS_TEXT,
+  CLIENT_FINANCE_NO_ACCESS_TEXT,
 } from "../ledger-labels";
 import { getClientInvoices } from "../ledger-queries";
 import { athensToday } from "../money";
@@ -32,7 +32,7 @@ import "./i5-lines.css";
 
 // I2 Τιμολόγια του Χρήστη πελάτη (Χρήματα restyle): μόνο τα δικά του, από την ίδια ανάγνωση (client_invoices_view).
 // Πάνω τι μένει να πληρώσει και «Πώς πληρώνω»· από κάτω τα φίλτρα και τα Τιμολόγια ως γραμμές με PDF. Χωρίς τα σύνολα
-// της ομάδας, στήλη Πελάτη, Πελάτη-φίλτρο, Ίχνος ή ακυρωμένα.
+// της ομάδας, στήλη Πελάτη, Πελάτη-φίλτρο, Ίχνος ή ακυρωμένα. Ο αριθμός κάθε γραμμής ανοίγει τη σελίδα του Τιμολογίου (Τ12).
 export async function SpacesClientInvoices({
   query,
 }: {
@@ -43,7 +43,7 @@ export async function SpacesClientInvoices({
     return (
       <div data-spaces>
         <StateNotice kind="denied" title="Χωρίς δικαίωμα">
-          {CLIENT_INVOICES_NO_ACCESS_TEXT}
+          {CLIENT_FINANCE_NO_ACCESS_TEXT}
         </StateNotice>
       </div>
     );
@@ -90,6 +90,7 @@ export async function SpacesClientInvoices({
           today={athensToday()}
           canEdit={false}
           showClient={false}
+          canOpen
         />
       )}
     </div>

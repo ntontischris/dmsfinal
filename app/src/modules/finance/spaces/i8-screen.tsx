@@ -32,7 +32,7 @@ import "./money-lines.css";
 // I8 Τιμολόγιο (d3): ένα Τιμολόγιο με τις πληρωμές του. Απαντά «πόσο μένει και τι κάνω;»: πάνω η κατάσταση, το υπόλοιπο
 // και τα κουμπιά (Ήρθε πληρωμή, PDF, Διόρθωση)· από κάτω κλειστά κουτιά: Πληρωμές, Αφορά, Ίχνος.
 
-const TONES: Readonly<Record<string, BadgeTone>> = {
+export const TONES: Readonly<Record<string, BadgeTone>> = {
   paid: "strong",
   overdue: "attention",
   credit: "faded",
@@ -41,7 +41,7 @@ const TONES: Readonly<Record<string, BadgeTone>> = {
   voided: "faded",
 };
 
-const statusText = (status: string): string =>
+export const statusText = (status: string): string =>
   status === "voided"
     ? "ακυρωμένο"
     : (STATUS_LABELS[status as keyof typeof STATUS_LABELS] ?? status);
