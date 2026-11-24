@@ -3,11 +3,10 @@
 import { useActionState, useState } from "react";
 
 import { INITIAL_FORM_STATE, type FormState } from "@/lib/form-state";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 
 import { deleteSection, moveSection, saveSection } from "../actions-sections";
 import type { ManageSection } from "../view-schema";
+import { KBox } from "./k-box";
 import { SpacesForm } from "./k-form";
 
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
@@ -36,16 +35,15 @@ function RowAction({
         <input key={name} type="hidden" name={name} value={value} />
       ))}
       <button
-        className="button"
         type="submit"
         aria-label={ariaLabel}
-        data-danger={isDanger ? "true" : undefined}
+        data-danger={isDanger || undefined}
         disabled={isPending}
       >
         {label}
       </button>
       {state.error && (
-        <span className="part-sub" role="alert">
+        <span className="k-note" role="alert">
           {state.error}
         </span>
       )}
@@ -57,8 +55,8 @@ function SectionFields({ section }: { section?: ManageSection }) {
   return (
     <>
       <input type="hidden" name="id" value={section?.id ?? ""} />
-      <label>
-        Όνομα
+      <label className="ml-field">
+        <span>Όνομα</span>
         <input
           className="input"
           name="name"
@@ -67,8 +65,8 @@ function SectionFields({ section }: { section?: ManageSection }) {
           required
         />
       </label>
-      <label>
-        Περιγραφή (μία πρόταση)
+      <label className="ml-field">
+        <span>Περιγραφή (μία πρόταση)</span>
         <input
           className="input"
           name="description"
@@ -91,66 +89,60 @@ function SectionRow({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   return (
-    <>
-      <ListRow
-        title={section.name}
-        sub={
-          <>
-            {section.description && (
-              <span className="part-sub">{section.description}</span>
-            )}
-            <span className="part-sub">{section.itemCount} στοιχεία</span>
-          </>
-        }
-        aside={
-          <>
-            {!isFirst && (
-              <RowAction
-                action={moveSection}
-                fields={{ id: section.id, direction: "up" }}
-                label="↑"
-                ariaLabel="Πάνω"
-              />
-            )}
-            {!isLast && (
-              <RowAction
-                action={moveSection}
-                fields={{ id: section.id, direction: "down" }}
-                label="↓"
-                ariaLabel="Κάτω"
-              />
-            )}
-            <button
-              className="button"
-              type="button"
-              aria-pressed={isEditing}
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              Επεξεργασία
-            </button>
-          </>
-        }
-      />
+    <li className="ml-line k-section-line">
+      <span className="ml-thumb" aria-hidden="true">
+        {section.name.slice(0, 1)}
+      </span>
+      <div className="ml-main">
+        <strong>{section.name}</strong>
+        {section.description && <small>{section.description}</small>}
+        <small>{section.itemCount} στοιχεία</small>
+      </div>
+      <span className="ml-quick">
+        {!isFirst && (
+          <RowAction
+            action={moveSection}
+            fields={{ id: section.id, direction: "up" }}
+            label="↑"
+            ariaLabel="Πάνω"
+          />
+        )}
+        {!isLast && (
+          <RowAction
+            action={moveSection}
+            fields={{ id: section.id, direction: "down" }}
+            label="↓"
+            ariaLabel="Κάτω"
+          />
+        )}
+        <button
+          type="button"
+          aria-pressed={isEditing}
+          onClick={() => setIsEditing(!isEditing)}
+        >
+          Επεξεργασία
+        </button>
+      </span>
       {isEditing && (
-        <li className="part-row">
-          <span className="part-row-main">
-            <SpacesForm
-              action={saveSection}
-              submitLabel="Αποθήκευση"
-              className="l1-form"
-            >
-              <SectionFields section={section} />
-            </SpacesForm>
+        <div className="k-section-edit">
+          <SpacesForm
+            action={saveSection}
+            submitLabel="Αποθήκευση"
+            className="ml-fields"
+          >
+            <SectionFields section={section} />
+          </SpacesForm>
+          <div className="ml-quick">
             <RowAction
               action={deleteSection}
               fields={{ id: section.id }}
               label="Διαγραφή Ενότητας"
               isDanger
             />
-          </span>
-        </li>
+          </div>
+        </div>
       )}
-    </>
+    </li>
   );
 }
 
@@ -164,32 +156,28 @@ export function SectionsTab({
 }) {
   const [isAdding, setIsAdding] = useState(isOpenAtStart);
   return (
-    <Panel
-      label="Ενότητες"
-      isFlush
-      aside={
+    <KBox title="Ενότητες" hint={`${sections.length} Ενότητες`} isOpen>
+      <div className="ml-quick">
         <button
-          className="button"
           type="button"
-          data-primary="true"
+          data-primary
           aria-pressed={isAdding}
           onClick={() => setIsAdding(!isAdding)}
         >
           Νέα Ενότητα
         </button>
-      }
-    >
+      </div>
       {isAdding && (
         <SpacesForm
           action={saveSection}
           submitLabel="Νέα Ενότητα"
-          className="l1-form l1-pad"
+          className="ml-fields"
           resetOnSuccess
         >
           <SectionFields />
         </SpacesForm>
       )}
-      <RowList>
+      <ul className="ml-list">
         {sections.map((section, index) => (
           <SectionRow
             key={section.id}
@@ -198,11 +186,11 @@ export function SectionsTab({
             isLast={index === sections.length - 1}
           />
         ))}
-      </RowList>
-      <p className="note l1-pad">
+      </ul>
+      <p className="k-note">
         Ένα επίπεδο, χωρίς υποενότητες. Ενότητα με στοιχεία δεν διαγράφεται·
         πρώτα μετακινούνται τα στοιχεία.
       </p>
-    </Panel>
+    </KBox>
   );
 }

@@ -20,4 +20,10 @@
 & .k-checks legend { font-size: .8rem; font-weight: 700; color: var(--color-text-muted); margin-bottom: .3rem; }
 & .k-checks label { display: inline-flex; align-items: center; gap: .3rem; }
 & .k-pager { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: center; }
+& .ml-fields > .k-note { grid-column: 1 / -1; }
+& .ml-quick form { display: inline-flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin: 0; }
+& .k-section-edit { grid-column: 1 / -1; display: grid; gap: .6rem; position: relative; z-index: 1; }
+& .k-shortcuts { display: flex; flex-wrap: wrap; gap: .4rem; }
+& .k-shortcuts span { color: var(--color-text-muted); font-size: .82rem; align-self: center; }
+& .page-filters { margin: 0 0 1rem; }
 }
