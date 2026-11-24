@@ -1,4 +1,3 @@
-import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 
 import { getViewer } from "@/modules/access";
@@ -8,6 +7,7 @@ import { agreementCaps } from "../helpers";
 import { listClientAgreements } from "../queries-client";
 import { clientCardOf, type ClientCardView } from "./client-adapter";
 
+import "../../finance/spaces/money-lines.css";
 import "./d1.css";
 
 // Τρέχων μήνας και ό,τι απομένει, ίδιο με τη Σήμερα και τη Συμφωνία (το κλεισμένο Γύρισμα κρατά).

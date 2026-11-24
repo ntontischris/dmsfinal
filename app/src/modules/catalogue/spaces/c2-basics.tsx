@@ -1,6 +1,5 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import { updateItem } from "../actions-items";
 import { moneyInput } from "../components/item-basics-form-parts";
 import { itemKindLabel, priceSuffix, priceText } from "../helpers";
@@ -10,6 +9,8 @@ import type { CatalogueCaps, CatalogueItem } from "../types";
 import { vatHint } from "./c2-adapter";
 import { C2Box, C2Sub } from "./c2-box";
 import { C2Form, C2Submit, Dash, Field } from "./c2-form";
+
+import "../../finance/spaces/money-lines.css";
 
 interface BasicsProps {
   item: CatalogueItem;

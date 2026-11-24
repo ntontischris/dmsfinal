@@ -1,6 +1,5 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 
 import { hrefOf } from "@/spaces/data/screens";
@@ -28,6 +27,8 @@ import type {
 
 import { C2Box } from "./c2-box";
 import { C2Form, C2Submit, Field } from "./c2-form";
+
+import "../../finance/spaces/money-lines.css";
 
 interface CostProps {
   item: CatalogueItem;

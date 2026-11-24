@@ -1,6 +1,5 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { setPublic } from "../actions-items";
@@ -9,6 +8,8 @@ import type { CatalogueItem } from "../types";
 import { visitorLine } from "./c2-adapter";
 import { C2Box } from "./c2-box";
 import { C2Form, C2Submit, Dash, Field } from "./c2-form";
+
+import "../../finance/spaces/money-lines.css";
 
 const INTRO =
   "Πώς φαίνεται το Πακέτο στην Ιστοσελίδα και στον Βοηθό. Οι τιμές έχουν μία πηγή: εδώ.";

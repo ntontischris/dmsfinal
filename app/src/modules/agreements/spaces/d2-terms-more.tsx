@@ -1,6 +1,5 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { Badge } from "@/spaces/screens/shared";
@@ -10,6 +9,8 @@ import { milestoneText } from "../helpers";
 import { MILESTONE_LABELS } from "../labels";
 import type { AgreementDetail, MilestoneTrigger } from "../types";
 import { D2Form, IdField, NumberInput } from "./d2-ui";
+
+import "../../finance/spaces/money-lines.css";
 
 // Όριο αλλαγών και Δόσεις σε ορόσημα (prototype `screens/d2-terms-more.tsx`), με τα πραγματικά actions και τα ίδια
 // κρυφά πεδία JSON (`limits`, `milestones`) με τη σημερινή σελίδα.

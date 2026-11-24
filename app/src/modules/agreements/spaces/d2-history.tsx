@@ -1,4 +1,3 @@
-import "../../finance/spaces/money-lines.css";
 import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 
 import { formatDate, formatDateTime } from "../helpers";
@@ -10,6 +9,8 @@ import type {
 } from "../types";
 import { D2Box } from "./d2-box";
 import { ItemRows } from "./lane-rows";
+
+import "../../finance/spaces/money-lines.css";
 
 // Αιτήματα αλλαγών, Αναθεωρήσεις και Υπογραφή (prototype `screens/d2-history.tsx`), από την πραγματική Συμφωνία.
 

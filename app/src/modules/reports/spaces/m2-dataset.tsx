@@ -1,4 +1,3 @@
-import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 
 import { AUDIT_PATH, AUDIT_TITLE } from "@/modules/audit";
@@ -22,6 +21,8 @@ import type { KnownPeriod } from "./m1-finance-parts";
 import { Box, initialsOf } from "./m1-box";
 import { DatasetButton } from "./m2-buttons";
 import { m2Href } from "./m2-model";
+
+import "../../finance/spaces/money-lines.css";
 
 // Εξαγωγή συνόλου δεδομένων (prototype `screens/m2-dataset.tsx`): τι, Περίοδος (όπου ισχύει), μορφή, τι θα περιέχει,
 // «Εξαγωγή». Ποια σύνολα, αν έχουν Περίοδο και πόσες γραμμές: από τη βάση (export_datasets).
