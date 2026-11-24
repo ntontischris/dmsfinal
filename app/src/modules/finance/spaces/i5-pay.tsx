@@ -17,9 +17,11 @@ export function CopyButton({ value, what }: { value: string; what: string }) {
   };
   return (
     <>
-      <button type="button" className="button" onClick={handleClick}>
-        Αντιγραφή
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={handleClick}>
+          Αντιγραφή
+        </button>
+      </span>
       <span
         className="feedback-msg"
         data-tone="ok"

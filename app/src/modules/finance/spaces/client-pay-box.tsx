@@ -43,7 +43,7 @@ function BankDetails({
   reference?: PaymentReference;
 }) {
   return (
-    <dl className="dl">
+    <dl className="ml-kv">
       <dt>Δικαιούχος</dt>
       <dd>{bank.holder}</dd>
       <dt>Τράπεζα</dt>
@@ -83,7 +83,7 @@ function AskUs({
         Επικοινώνησε μαζί μας για τον τρόπο πληρωμής{name ? ` (${name})` : ""}.
       </p>
       {(links.length > 0 || hasRef) && (
-        <dl className="dl">
+        <dl className="ml-kv">
           {links.map((link) => (
             <Fragment key={link.label}>
               <dt>{link.label}</dt>

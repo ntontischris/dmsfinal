@@ -81,7 +81,7 @@ export function PaymentBox(props: {
       title="Οδηγίες πληρωμής που βλέπει ο πελάτης"
       hint={`${payment.bank} · IBAN με αντιγραφή`}
     >
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Δικαιούχος</dt>
         <dd>{payment.holder}</dd>
         <dt>Τράπεζα</dt>

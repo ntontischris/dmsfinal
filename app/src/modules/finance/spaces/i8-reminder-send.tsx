@@ -12,11 +12,11 @@ export function SendReminderForm({ invoiceId }: { invoiceId: string }) {
   return (
     <form ref={formRef} onSubmit={onSubmit}>
       <input type="hidden" name="id" value={invoiceId} />
-      <p>
-        <button type="submit" className="button" data-primary="true" disabled={isPending || isSent}>
-          {isPending ? "Στέλνεται…" : "Στείλε υπενθύμιση"}
-        </button>{" "}
+      <p className="ml-actions">
         <FormFeedback error={state.error} notice={state.notice} />
+        <button type="submit" data-primary disabled={isPending || isSent}>
+          {isPending ? "Στέλνεται…" : "Στείλε υπενθύμιση"}
+        </button>
       </p>
     </form>
   );

@@ -40,11 +40,11 @@ export function PaymentRefBox(props: {
                 Τον βλέπει ο Πελάτης στο «Πώς πληρώνω». Άφησέ τον κενό για να
                 φύγει.
               </p>
-              <p>
-                <button type="submit" className="button" disabled={isPending}>
-                  {isPending ? "Αποθηκεύεται…" : "Αποθήκευση"}
-                </button>{" "}
+              <p className="ml-actions">
                 <FormFeedback error={state.error} notice={state.notice} />
+                <button type="submit" data-primary disabled={isPending}>
+                  {isPending ? "Αποθηκεύεται…" : "Αποθήκευση"}
+                </button>
               </p>
             </form>
           ) : (
