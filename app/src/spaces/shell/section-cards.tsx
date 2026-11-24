@@ -71,7 +71,7 @@ interface CardProps {
   isActive: boolean;
 }
 
-// Χωρίς αριθμό (ακόμα φορτώνει ή δεν τον δικαιούται ο θεατής) η κάρτα δείχνει μια ήσυχη τελεία.
+// Χωρίς αριθμό (ακόμα φορτώνει ή δεν τον δικαιούται ο θεατής) η θέση του μένει κενή: μια σκέτη τελεία έμοιαζε με σφάλμα.
 function Card({ card, index, number, isActive }: CardProps) {
   return (
     <Link
@@ -88,7 +88,7 @@ function Card({ card, index, number, isActive }: CardProps) {
         {number?.isUrgent && <i className="money-rec">ΚΑΘΥΣΤΕΡΕΙ</i>}
       </span>
       <span className="money-reel-count" aria-hidden>
-        {number?.count ?? "·"}
+        {number?.count}
       </span>
       <strong className="money-reel-title">{card.label}</strong>
       <span className="money-reel-foot">

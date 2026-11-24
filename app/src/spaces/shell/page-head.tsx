@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { titleOf } from "@/spaces/data/screens";
 import {
@@ -17,11 +17,18 @@ interface PageHeadProps {
   model: SpacesModel;
 }
 
+// Η Καταχώρηση Τιμολογίου με ?invoice= είναι η Διόρθωση μιας καταχώρισης (ίδια οθόνη I3): η διαδρομή το λέει.
+const detailTitleOf = (code: string, search: URLSearchParams): string =>
+  code === "I3" && search.has("invoice")
+    ? "Διόρθωση Τιμολογίου"
+    : titleOf(code);
+
 // Η κεφαλίδα κάθε οθόνης: σε μια λίστα του μενού ο τίτλος της και από κάτω τα φίλτρα-ουρές της· στις σελίδες
 // λεπτομέρειας μόνο το θέμα από πάνω για επιστροφή (τον τίτλο του στοιχείου τον γράφει η ίδια η σελίδα).
 // Οι άλλες λίστες του θέματος ζουν στο αριστερό μενού. Τα φίλτρα αλλάζουν χωρίς να πετούν τη σελίδα στην κορυφή.
 export function PageHead({ model }: PageHeadProps) {
   const code = screenCodeOf(usePathname(), model);
+  const search = useSearchParams();
   const view = spaceOf(code, model);
   if (!code || !view) return null;
   const tab = tabOf(code);
@@ -32,7 +39,8 @@ export function PageHead({ model }: PageHeadProps) {
     return (
       <header className="page-head">
         <p className="eyebrow">
-          <Link href={landingOf(view)}>{view.label}</Link> / {titleOf(code)}
+          <Link href={landingOf(view)}>{view.label}</Link> /{" "}
+          {detailTitleOf(code, search)}
         </p>
       </header>
     );

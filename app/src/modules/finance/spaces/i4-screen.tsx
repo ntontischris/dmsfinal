@@ -27,6 +27,7 @@ import {
 
 import "./i245.css";
 import "./money-lines.css";
+import "./i3-lines.css";
 
 const Spaces = ({ children }: { children: ReactNode }) => (
   <div data-spaces>{children}</div>

@@ -1,6 +1,4 @@
-import Link from "next/link";
 
-import { hrefOf } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice, fmtDate, fmtMoney } from "@/spaces/screens/shared";
 
 import type { InvoiceDetail } from "../invoice-detail-schema";
@@ -34,7 +32,6 @@ function CorrectionHero({ invoice }: { invoice: InvoiceDetail }) {
         </p>
       }
       lead={LEAD}
-      actions={<Link href={hrefOf("I3", { client: invoice.clientId })}>+ Νέα καταχώριση για τον Πελάτη</Link>}
     />
   );
 }
