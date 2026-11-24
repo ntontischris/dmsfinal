@@ -47,7 +47,7 @@ export function MoneyBrief({
           {money.debtors.map((debtor, index) => (
             <BriefLine
               key={debtor.id}
-              thumb={initialsOf(debtor.name)}
+              thumb={initialsOf(debtor.name) || "€"}
               title={debtor.name}
               label={debtor.name}
               href={debtor.link}

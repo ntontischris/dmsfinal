@@ -1,7 +1,7 @@
 [data-look='spaces'] {
 & .a1-hello { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: end; justify-content: space-between; margin-block: var(--space-4); min-width: 0; }
 & .a1-hello .eyebrow { margin: 0; }
-& .a1-summary, & .a1-empty { margin: 0; font-size: var(--text-sm); }
+& .a1-summary { margin: 0; font-size: var(--text-sm); }
 & .a1-quiet { margin-top: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); overflow-wrap: anywhere; }
 & .a1-quiet-mark { color: var(--color-accent); }
 & .a1-customize { margin-bottom: var(--space-4); }
@@ -16,14 +16,10 @@
 /* Ζώνες της Σήμερα: επείγοντα, σε αναμονή, για ενημέρωση, και τα τεχνικά κλειστά. */
 & .a1-zone { margin-top: var(--space-4); min-width: 0; }
 & .a1-zone-title { margin: 0 0 var(--space-2); font-size: var(--text-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
-& .a1-zone[data-zone='urgent'] .a1-zone-title { color: var(--color-danger); }
 
 & .a1-hello p { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
-& .a1-hello a:not(.button) { text-decoration: none; color: var(--color-accent); }
 & .a1-zone { margin-top: var(--space-6); }
 & .a1-zone-title { display: inline-flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; }
-& .a1-zone[data-zone='urgent'] > .a1-zone-title { color: var(--color-text); }
-& .a1-zone[data-zone='urgent'] > .a1-zone-title::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-rec); }
 /* Η Σήμερα της ομάδας ως ενημέρωση (#241): μία πρόταση πάνω από τη γραμμή κορυφής και τη λίστα. */
 & .a1-lead { margin: 0 0 var(--space-4); max-width: 62ch; font-size: 1.1rem; line-height: 1.45; color: var(--color-text); }
 /* Γραμμή κορυφής (κλειστή): «Μένουν N · Υ € να μπουν»· τα πάνελ (Δείκτες, Πρόγραμμα, Χρήματα, Ομάδα) μέσα, κλειστά. */
@@ -71,7 +67,7 @@
 & .a1-more { margin-top: var(--space-2); }
 & .a1-notice { margin-bottom: var(--space-4); }
 & .a1-notice h2 { margin: 0 0 0.3rem; font-size: 1rem; font-weight: 800; color: var(--color-text); }
-& .a1-notice[data-kind='error'] { border-style: solid; border-color: color-mix(in oklab, var(--brand-rec) 40%, transparent); }
+& .a1-notice[data-kind='error'] { border-style: solid; border-color: var(--color-border-strong); }
 & .a1-shelf { margin-top: var(--space-4); }
 /* Οι Δείκτες: πλακίδια με σιγανή ετικέτα, μεγάλο αριθμό και μικρή εξήγηση. */
 & .a1-kpis { display: grid; gap: var(--space-3); min-width: 0; }
@@ -89,4 +85,13 @@
 /* Οι μπάρες των οφειλετών σε Periwinkle. */
 & [data-part='money'] .a1-bar > span { background: var(--brand-periwinkle); }
 & .a1-customize form > * + * { margin-top: var(--space-3); }
+/* Η κλειστή κάρτα του Πελάτη: τίτλος + μία φράση αριστερά, αριθμός δεξιά. */
+& .a1-fold { min-width: 0; margin-bottom: var(--space-4); }
+& .a1-fold > .ml-box > summary { display: flex; gap: var(--space-2); align-items: center; justify-content: space-between; }
+& .a1-fold-title { display: grid; gap: 0.1rem; min-width: 0; overflow-wrap: anywhere; }
+& .a1-boxes > .a1-fold { margin-bottom: var(--space-4); }
+/* «ουρά» σιγανή, ώστε να ξεχωρίζει από το «πίσω». */
+& .ml-tag[data-tone='waiting'] { color: var(--color-text-muted); background: none; border-color: color-mix(in oklab, var(--color-text) 18%, transparent); }
+/* Απόσταση κάτω από τη γραμμή κορυφής. */
+& .a1-topline { margin-bottom: var(--space-4); }
 }

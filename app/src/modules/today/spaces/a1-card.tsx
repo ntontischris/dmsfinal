@@ -1,16 +1,15 @@
 import Link from "next/link";
 
 import { initialsOf } from "./a1-deck-model";
-import { BriefBox, BriefLine } from "./a1-lines";
+import { BriefLine } from "./a1-lines";
 import { ROWS_SHOWN, type CardContent, type CardDef } from "./a1-model";
 
-// Η κάρτα της Σήμερα του Πελάτη στην τελική όψη: κουτί με τίτλο και αριθμό, γραμμές με ρήμα, και από κάτω το κουμπί της.
+import { footOf, isOpenOf, urgentRowsOf } from "./a1-client-model";
+
+// Η κάρτα της Σήμερα του Πελάτη στην τελική όψη: κλειστό κουτί με τίτλο, αριθμό και μία φράση· ανοίγει σε γραμμές
+// με ρήμα και από κάτω το κουμπί της. Ανοιχτή μόνη της μόνο όταν κάτι επείγει.
 
 export const cardAnchorOf = (card: CardDef): string => `a1-card-${card.id}`;
-
-// Οι ήπιες κάρτες (ζητούν κάτι από πελάτη) δεν βάφονται κόκκινες.
-export const urgentRowsOf = (card: CardDef, content: CardContent): number =>
-  card.isGentle ? 0 : content.rows.filter((row) => row.isUrgent).length;
 
 function CardLines({
   rows,
@@ -37,24 +36,27 @@ function CardLines({
 }
 
 function CardBody({ card, content }: { card: CardDef; content: CardContent }) {
-  if (content.count > 0)
-    return (
-      <>
-        {content.summary && <p className="a1-summary">{content.summary}</p>}
-        {content.rows.length > 0 && (
-          <CardLines rows={content.rows} isGentle={card.isGentle} />
-        )}
-      </>
-    );
-  // Η δική μου λίστα είναι άδεια, αλλά στην ομάδα κάτι έχει καθυστερήσει: φαίνεται με το όνομα του ανθρώπου.
+  if (content.rows.length > 0)
+    return <CardLines rows={content.rows} isGentle={card.isGentle} />;
+  // Η δική μου λίστα είναι άδεια, αλλά στην ομάδα κάτι έχει καθυστερήσει: φαίνεται με το όνομα του ανθρώπου, χωρίς κόκκινο.
   if (content.teamRows?.length)
-    return (
-      <>
-        <p className="a1-summary">{content.emptyText}</p>
-        <CardLines rows={content.teamRows} />
-      </>
-    );
-  return <p className="ml-empty">{content.emptyText}</p>;
+    return <CardLines rows={content.teamRows} isGentle />;
+  return null;
+}
+
+function CardCount({ card, content }: { card: CardDef; content: CardContent }) {
+  const hasCount =
+    content.count > 0 && card.kind !== "info" && !content.isCountless;
+  if (!hasCount) return null;
+  return (
+    <span
+      className="a1-box-count"
+      data-urgent={urgentRowsOf(card, content) > 0 || undefined}
+      aria-label={`${content.count} σε αναμονή`}
+    >
+      {content.count}
+    </span>
+  );
 }
 
 export function TodayCard({
@@ -64,38 +66,34 @@ export function TodayCard({
   card: CardDef;
   content: CardContent;
 }) {
-  const hasCount =
-    content.count > 0 && card.kind !== "info" && !content.isCountless;
   const allLabel =
     content.rows.length > ROWS_SHOWN ? `Όλα (${content.rows.length})` : "Όλα";
   return (
-    <BriefBox
-      id={cardAnchorOf(card)}
-      label={card.title}
-      aside={
-        hasCount ? (
-          <span
-            className="a1-box-count"
-            data-urgent={urgentRowsOf(card, content) > 0 || undefined}
-            aria-label={`${content.count} σε αναμονή`}
-          >
-            {content.count}
+    <section className="a1-fold" id={cardAnchorOf(card)}>
+      <details className="ml-box" open={isOpenOf(card, content)}>
+        <summary>
+          <span className="a1-fold-title">
+            <h2 className="ml-box-title">{card.title}</h2>
+            <small>{footOf(card, content)}</small>
           </span>
-        ) : undefined
-      }
-    >
-      <CardBody card={card} content={content} />
-      <footer className="ml-quick a1-box-foot">
-        {content.cta && (
-          <Link data-primary href={content.cta.href}>
-            {content.cta.label}
+          <CardCount card={card} content={content} />
+        </summary>
+        <CardBody card={card} content={content} />
+        <footer className="ml-quick a1-box-foot">
+          {content.cta && (
+            <Link data-primary href={content.cta.href}>
+              {content.cta.label}
+            </Link>
+          )}
+          <Link
+            href={content.allHref}
+            aria-label={`${allLabel}: ${card.title}`}
+          >
+            {allLabel} →
           </Link>
-        )}
-        <Link href={content.allHref} aria-label={`${allLabel}: ${card.title}`}>
-          {allLabel} →
-        </Link>
-      </footer>
-    </BriefBox>
+        </footer>
+      </details>
+    </section>
   );
 }
 

@@ -10,7 +10,7 @@ import { getTodayCounts } from "../queries";
 import type { TodayCounts } from "../view-schema";
 import { athensStamp, cardDefOf, type Built } from "./a1-adapter";
 import { CardError, QuietCards, TodayCard } from "./a1-card";
-import { ClientDeck, ClientMoneyShelf } from "./a1-client";
+import { ClientMoneyShelf } from "./a1-client";
 import { Customize } from "./a1-customize";
 import { TeamBriefing } from "./a1-briefing";
 import { TodayNotice } from "./a1-lines";
@@ -137,6 +137,7 @@ async function TodayCards({
           που διάλεξες.
         </TodayNotice>
       )}
+      <ClientMoneyShelf viewer={viewer} />
       {layout.isAllHidden ? (
         <TodayNotice kind="empty" title="Έκρυψες όλες τις κάρτες">
           Πάτα «Προσαρμογή» για να εμφανίσεις όσες θέλεις, ή{" "}
@@ -144,7 +145,6 @@ async function TodayCards({
         </TodayNotice>
       ) : (
         <>
-          <ClientDeck items={main.filter(({ card }) => !failed.has(card.id))} />
           <div className="a1-boxes">{cardBoxesOf(main, failed)}</div>
           {zones.more.length > 0 && (
             <details className="ml-box a1-more">
@@ -164,7 +164,6 @@ async function TodayCards({
           "/app"
         }
       />
-      <ClientMoneyShelf viewer={viewer} />
     </>
   );
 }
