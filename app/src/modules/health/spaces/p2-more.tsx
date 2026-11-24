@@ -1,8 +1,7 @@
 import Link from "next/link";
+import type { CSSProperties, ReactNode } from "react";
 
-import { ListRow, Meter, RowList } from "@/spaces/kit/parts";
 import { hrefOf } from "@/spaces/data/screens";
-import { Badge } from "@/spaces/screens/shared";
 
 import {
   ignoreFailedSend,
@@ -13,6 +12,32 @@ import { ACTIONS_NOTE, AI, EVENTS, GOOGLE, SENDS } from "../labels";
 import type { P2Ai, P2Model } from "./p2-adapter";
 import { ConfirmAction } from "./p2-confirm";
 import { HealthCard, RedNote } from "./p2-parts";
+
+// Μία γραμμή που θέλει ενέργεια: τίτλος, υπότιτλος, ετικέτα και τα κουμπιά της.
+function ActionLine({
+  title,
+  sub,
+  tag,
+  children,
+}: {
+  title: string;
+  sub: string;
+  tag: string;
+  children: ReactNode;
+}) {
+  return (
+    <li className="ml-line">
+      <span className="ml-main">
+        <strong>{title}</strong>
+        <small>{sub}</small>
+      </span>
+      <span className="ml-tag" data-attention="true">
+        {tag}
+      </span>
+      <span className="ml-quick">{children}</span>
+    </li>
+  );
+}
 
 export function FailedSendsCard({
   items,
@@ -28,35 +53,27 @@ export function FailedSendsCard({
       {items.length === 0 ? (
         <p className="muted">{SENDS.empty}</p>
       ) : (
-        <RowList>
+        <ul className="ml-list">
           {items.map((s) => (
-            <ListRow
-              key={s.id}
-              title={s.title}
-              sub={s.sub}
-              aside={
-                <>
-                  <Badge tone="attention">απέτυχε</Badge>
-                  {s.retryRef && (
-                    <ConfirmAction
-                      label={SENDS.resend}
-                      confirm={SENDS.resendConfirm}
-                      action={resendFailedSend}
-                      fields={{ ref: s.retryRef }}
-                      isPrimary
-                    />
-                  )}
-                  <ConfirmAction
-                    label={SENDS.ignore}
-                    confirm={SENDS.ignoreConfirm}
-                    action={ignoreFailedSend}
-                    fields={{ ref: s.id }}
-                  />
-                </>
-              }
-            />
+            <ActionLine key={s.id} title={s.title} sub={s.sub} tag="απέτυχε">
+              {s.retryRef && (
+                <ConfirmAction
+                  label={SENDS.resend}
+                  confirm={SENDS.resendConfirm}
+                  action={resendFailedSend}
+                  fields={{ ref: s.retryRef }}
+                  isPrimary
+                />
+              )}
+              <ConfirmAction
+                label={SENDS.ignore}
+                confirm={SENDS.ignoreConfirm}
+                action={ignoreFailedSend}
+                fields={{ ref: s.id }}
+              />
+            </ActionLine>
           ))}
-        </RowList>
+        </ul>
       )}
       {more && <p className="muted">{more}</p>}
       {total > 0 && (
@@ -75,19 +92,15 @@ export function GoogleSyncCard({ google }: { google: P2Model["google"] }) {
     <HealthCard
       title={GOOGLE.title}
       red={google.isRed}
-      badge={<Badge tone={google.badge.tone}>{google.badge.label}</Badge>}
+      status={google.badge.label}
     >
       {google.reason && <p className="note">{google.reason}</p>}
-      <RowList>
-        <ListRow
-          title={GOOGLE.lastSync}
-          aside={<strong>{google.lastSync}</strong>}
-        />
-        <ListRow
-          title={GOOGLE.queued}
-          aside={<strong>{google.queued}</strong>}
-        />
-      </RowList>
+      <dl className="ml-kv">
+        <dt>{GOOGLE.lastSync}</dt>
+        <dd>{google.lastSync}</dd>
+        <dt>{GOOGLE.queued}</dt>
+        <dd>{google.queued}</dd>
+      </dl>
       <p className="muted">{GOOGLE.rule}</p>
     </HealthCard>
   );
@@ -107,26 +120,18 @@ export function StuckEventsCard({
       {items.length === 0 ? (
         <p className="muted">{EVENTS.empty}</p>
       ) : (
-        <RowList>
+        <ul className="ml-list">
           {items.map((e) => (
-            <ListRow
-              key={e.id}
-              title={e.title}
-              sub={e.sub}
-              aside={
-                <>
-                  <Badge tone="attention">κόλλησε</Badge>
-                  <ConfirmAction
-                    label={EVENTS.retry}
-                    confirm={EVENTS.retryConfirm}
-                    action={retryStuckEvent}
-                    fields={{ id: String(e.id) }}
-                  />
-                </>
-              }
-            />
+            <ActionLine key={e.id} title={e.title} sub={e.sub} tag="κόλλησε">
+              <ConfirmAction
+                label={EVENTS.retry}
+                confirm={EVENTS.retryConfirm}
+                action={retryStuckEvent}
+                fields={{ id: String(e.id) }}
+              />
+            </ActionLine>
           ))}
-        </RowList>
+        </ul>
       )}
       {waiting && <p>{waiting}</p>}
       {isRed && (
@@ -136,6 +141,31 @@ export function StuckEventsCard({
         </>
       )}
     </HealthCard>
+  );
+}
+
+function AiMeter({ ai }: { ai: P2Ai }) {
+  const percent = Math.min(
+    100,
+    Math.round((ai.usedDollars / Math.max(1, ai.capDollars)) * 100),
+  );
+  return (
+    <div
+      className="ml-meter"
+      role="meter"
+      aria-label={`Χρήση ${ai.usedDollars} από ${ai.capDollars}`}
+      aria-valuemin={0}
+      aria-valuemax={ai.capDollars}
+      aria-valuenow={ai.usedDollars}
+      data-tone={ai.isRed ? "warn" : undefined}
+      style={{ "--v": `${percent}%` } as CSSProperties}
+    >
+      <span>Χρήση</span>
+      <i>
+        <b />
+      </i>
+      <strong>{percent}%</strong>
+    </div>
   );
 }
 
@@ -153,21 +183,16 @@ export function AssistantCapCard({
       ) : (
         <>
           <p>{ai.text}</p>
-          <Meter
-            label="Χρήση"
-            used={ai.usedDollars}
-            total={ai.capDollars}
-            tone={ai.isRed ? "attention" : undefined}
-          />
+          <AiMeter ai={ai} />
         </>
       )}
       <p className="muted">{ai.rule}</p>
       {ai.isRed && <RedNote event={57} />}
       {isOwner ? (
-        <div className="btn-row">
+        <p className="ml-actions">
           <Link href={hrefOf("O1")}>Όρια στις Ρυθμίσεις (O1)</Link>
           <Link href={hrefOf("O8")}>Χρήση και συνδρομές (O8)</Link>
-        </div>
+        </p>
       ) : (
         <p className="muted">{AI.changeOthers}</p>
       )}
