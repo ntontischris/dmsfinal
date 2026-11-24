@@ -32,8 +32,5 @@
 & .i13-group .i13-sum { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: var(--space-3) var(--space-4); }
 & .i13-total { margin-left: auto; text-align: right; color: var(--color-text-muted); font-size: var(--text-sm); }
 & .i13-total strong { display: block; font-size: 1.25rem; color: var(--color-text); font-variant-numeric: tabular-nums; }
-& .i13-money { font-weight: 700; font-variant-numeric: tabular-nums; }
 & .i13-date { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-text); white-space: nowrap; }
-& .i13-money { font-weight: 700; font-variant-numeric: tabular-nums; }
-& .i13-done-wrap .kit-panel { border-color: var(--color-accent); }
 }
