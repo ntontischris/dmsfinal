@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useTransition, type RefObject } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import {
   bookingHref,
   withAgreement,
@@ -17,6 +15,7 @@ import {
 } from "../booking-links";
 import { formatHours } from "../helpers-time";
 import { E5Confirm } from "./e5-confirm";
+import { Step } from "./ml-parts";
 import { bookingStepOf, dayLabel, groupDays, type DayView } from "./e5-model";
 import { DayPicker, FirstFreeHint, Legend, Steps } from "./e5-picker";
 
@@ -74,13 +73,12 @@ function Choices({
 }) {
   if (items.length < 2) return null;
   return (
-    <Panel label={label}>
-      <div className="e-times">
+    <Step title={label}>
+      <div className="e-times ml-quick">
         {items.map((item) => (
           <button
             key={item.id}
             type="button"
-            className="button"
             aria-pressed={item.id === current}
             disabled={!item.isAvailable}
             onClick={() => onPick(item.id)}
@@ -89,7 +87,7 @@ function Choices({
           </button>
         ))}
       </div>
-    </Panel>
+    </Step>
   );
 }
 
@@ -114,19 +112,15 @@ export function E5Booking(props: E5BookingProps) {
   const isReschedule = selection.reschedule !== undefined;
 
   return (
-    <div className="e-form" style={{ maxWidth: "none" }} aria-busy={isBusy}>
+    <div className="fl-steps" aria-busy={isBusy}>
       {!hasAnyDay && !isReschedule && (
-        <section className="card notice" data-kind="empty" role="status">
-          <h2>Δεν σου μένει γύρισμα να κλείσεις</h2>
-          <p className="muted">
+        <section className="fl-step" role="status">
+          <h2 className="ml-box-title">Δεν σου μένει γύρισμα να κλείσεις</h2>
+          <p>
             Στις επόμενες {props.horizonDays} μέρες δεν υπάρχει ελεύθερη μέρα
             στο πακέτο σου. Μπορείς να μας ζητήσεις ένα επιπλέον γύρισμα.
           </p>
-          <Link
-            className="button"
-            data-primary="true"
-            href={props.messagesHref}
-          >
+          <Link className="ml-cta" href={props.messagesHref}>
             Ζήτα επιπλέον γύρισμα
           </Link>
         </section>
@@ -148,8 +142,8 @@ export function E5Booking(props: E5BookingProps) {
         </>
       )}
       <Steps step={step} />
-      <Panel label={isReschedule ? "1. Διάλεξε νέα μέρα" : "1. Διάλεξε μέρα"}>
-        <p className="muted">
+      <Step no={1} title={isReschedule ? "Διάλεξε νέα μέρα" : "Διάλεξε μέρα"}>
+        <p className="fl-note">
           Κλείνεις τουλάχιστον {props.noticeHours} ώρες πριν. Οι γκρι μέρες δεν
           κλείνονται· γράφουν από κάτω γιατί.
         </p>
@@ -161,18 +155,17 @@ export function E5Booking(props: E5BookingProps) {
           isBusy={isBusy}
           onPick={(day) => go(withDay(base, day))}
         />
-      </Panel>
+      </Step>
 
       {date && (
         <section ref={refFor(2)}>
-          <Panel label="2. Πόσες ώρες;">
-            <p className="muted">Για την {dayLabel(date)}.</p>
-            <div className="e-times">
+          <Step no={2} title="Πόσες ώρες;">
+            <p className="fl-note">Για την {dayLabel(date)}.</p>
+            <div className="e-times ml-quick">
               {props.durations.map((value) => (
                 <button
                   key={value}
                   type="button"
-                  className="button"
                   aria-pressed={hours === value}
                   disabled={isBusy}
                   onClick={() => go(withHours(base, String(value)))}
@@ -181,25 +174,24 @@ export function E5Booking(props: E5BookingProps) {
                 </button>
               ))}
             </div>
-          </Panel>
+          </Step>
         </section>
       )}
 
       {date && hours !== null && times && (
         <section ref={refFor(3)}>
-          <Panel label="3. Τι ώρα ξεκινάμε;">
+          <Step no={3} title="Τι ώρα ξεκινάμε;">
             {times.length === 0 ? (
               <p className="e-warn">
                 Δεν υπάρχει ελεύθερη ώρα για {formatHours(hours)} ώρες εκείνη τη
                 μέρα. Δοκίμασε μικρότερη διάρκεια ή άλλη μέρα.
               </p>
             ) : (
-              <div className="e-times">
+              <div className="e-times ml-quick">
                 {times.map((value) => (
                   <button
                     key={value}
                     type="button"
-                    className="button"
                     aria-pressed={time === value}
                     disabled={isBusy}
                     onClick={() =>
@@ -211,14 +203,14 @@ export function E5Booking(props: E5BookingProps) {
                 ))}
               </div>
             )}
-            <p className="muted">Ώρα Ελλάδας.</p>
-          </Panel>
+            <p className="fl-note">Ώρα Ελλάδας.</p>
+          </Step>
         </section>
       )}
 
       {date && hours !== null && time && (
         <section ref={refFor(4)}>
-          <Panel label="4. Έλεγξε και επιβεβαίωσε">
+          <Step no={4} title="Έλεγξε και επιβεβαίωσε">
             <E5Confirm
               agreementId={props.agreementId}
               kindId={props.kindId}
@@ -230,7 +222,7 @@ export function E5Booking(props: E5BookingProps) {
               needsApproval={props.needsApproval}
               rescheduleId={selection.reschedule ?? null}
             />
-          </Panel>
+          </Step>
         </section>
       )}
     </div>

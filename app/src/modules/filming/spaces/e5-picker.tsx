@@ -32,7 +32,7 @@ export function DayPicker({
                 key={day}
                 id={`e-day-${day}`}
                 type="button"
-                className="button e-day"
+                className="e-day"
                 title={status.kind === "blocked" ? status.why : undefined}
                 aria-pressed={date === day}
                 disabled={status.kind === "blocked" || isBusy}
@@ -85,12 +85,7 @@ export function FirstFreeHint({ days }: { days: readonly DayView[] }) {
         {hint.why} Η πρώτη ελεύθερη μέρα είναι η{" "}
         <strong>{dayLabel(hint.firstFree)}</strong>.
       </p>
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        onClick={jump}
-      >
+      <button type="button" className="ml-cta" onClick={jump}>
         Πήγαινε στην {dayLabel(hint.firstFree)}
       </button>
     </div>

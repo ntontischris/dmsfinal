@@ -87,7 +87,7 @@ export function Line({
 }
 
 interface StepProps {
-  no: number;
+  no?: number;
   title: string;
   hint?: string;
   children: ReactNode;
@@ -98,9 +98,11 @@ export function Step({ no, title, hint, children }: StepProps) {
   return (
     <section className="fl-step">
       <header className="fl-step-head">
-        <span className="fl-step-no" aria-hidden="true">
-          {no}
-        </span>
+        {no !== undefined && (
+          <span className="fl-step-no" aria-hidden="true">
+            {no}
+          </span>
+        )}
         <div>
           <h2 className="ml-box-title">{title}</h2>
           {hint && <small>{hint}</small>}

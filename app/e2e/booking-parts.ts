@@ -74,13 +74,13 @@ export async function bookFirstFreeSlot(
 ): Promise<void> {
   await page.locator("button.e-day:enabled").first().click();
   await expect(page).toHaveURL(/day=/);
-  const durations = page.locator("section.kit-panel", {
-    has: page.getByRole("heading", { name: "2. Πόσες ώρες;" }),
+  const durations = page.locator("section.fl-step", {
+    has: page.getByRole("heading", { name: "Πόσες ώρες;" }),
   });
   await durations.getByRole("button", { name: "2 ώρες", exact: true }).click();
   await expect(page).toHaveURL(/hours=2/);
-  const times = page.locator("section.kit-panel", {
-    has: page.getByRole("heading", { name: "3. Τι ώρα ξεκινάμε;" }),
+  const times = page.locator("section.fl-step", {
+    has: page.getByRole("heading", { name: "Τι ώρα ξεκινάμε;" }),
   });
   await times.locator(".e-times button:enabled").first().click();
   await expect(page).toHaveURL(/time=/);
