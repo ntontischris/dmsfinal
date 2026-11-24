@@ -18,11 +18,12 @@ export function TeamBrief({ team }: { team: TodayTeam }) {
             return (
               <BriefLine
                 key={person.id}
-                thumb={initialsOf(person.name)}
+                thumb={initialsOf(person.name) || "·"}
                 title={person.name}
                 label={person.name}
                 sub={teamLineOf(person)}
                 tag={pill.label}
+                tagTone={pill.tone}
                 isUrgent={pill.tone === "attention"}
               />
             );

@@ -1,16 +1,14 @@
 import Link from "next/link";
 
-import type { StatProps } from "@/spaces/kit/panel";
-
 import type { TodayKpis } from "../view-schema";
-import { kpiStatsOf, riskRowsOf } from "./a1-kpis";
+import { kpiStatsOf, riskRowsOf, type KpiStat } from "./a1-kpis";
 import { BriefBox, BriefLine } from "./a1-lines";
 
 // Δείκτες (d9): Τζίρος μήνα, Μπήκαν τον μήνα, Αξία pipeline, Ενεργές Παραγωγές, Περιθώριο φέτος, όσοι επιτρέπονται· από κάτω ο «ραντάρ
 // κινδύνου» μόνο όταν κάτι κινδυνεύει. Χωρίς τίποτα, δεν πιάνει χώρο.
 
 // Ένα πλακίδιο: σιγανή ετικέτα, μεγάλος αριθμός, μικρή εξήγηση και βέλος όταν ανοίγει τη λίστα πίσω του.
-function KpiTile({ label, value, hint, tone, href }: StatProps) {
+function KpiTile({ label, value, hint, tone, href }: KpiStat) {
   const body = (
     <>
       <span className="a1-kpi-label">{label}</span>

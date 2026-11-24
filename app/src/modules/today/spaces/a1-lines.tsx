@@ -34,6 +34,7 @@ export interface BriefLineProps {
   title: ReactNode;
   sub?: ReactNode;
   tag?: string;
+  tagTone?: string;
   amount?: ReactNode;
   // Το ρήμα του κουμπιού και πού πάει· χωρίς href η γραμμή δεν έχει κουμπί.
   href?: string;
@@ -47,6 +48,7 @@ export function BriefLine({
   title,
   sub,
   tag,
+  tagTone,
   amount,
   href,
   action = "Άνοιξε",
@@ -64,7 +66,11 @@ export function BriefLine({
         {thumb}
       </span>
       <span className="ml-main">
-        {tag && <span className="ml-tag">{tag}</span>}
+        {tag && (
+          <span className="ml-tag" data-tone={tagTone}>
+            {tag}
+          </span>
+        )}
         <strong>{title}</strong>
         {sub && <small>{sub}</small>}
       </span>

@@ -1,17 +1,25 @@
 // Δείκτες και «ραντάρ κινδύνου» της Σήμερα (d9, όπως η μπάρα δεικτών του παλιού DMS). Μόνο ό,τι έδωσε η βάση: δείκτης
 // null → δεν φαίνεται. Οι αριθμοί είναι τα ίδια σύνολα με τις Αναφορές (Τζίρος, Κέρδος) και την πρόβλεψη Πωλήσεων.
 
-import type { StatProps } from "@/spaces/kit/panel";
-import { fmtPercent } from "@/spaces/screens/shared";
+import { fmtPercent, type BadgeTone } from "@/spaces/screens/shared";
 
 import type { KpiRisk, TodayKpis } from "../view-schema";
 import { wholeEuros } from "./a1-facts";
 import { countWord } from "./a1-model";
 import { monthAccusativeOf } from "./a1-money";
 
+// Ένας δείκτης: ετικέτα, αριθμός, μικρή εξήγηση, τόνος και πού πηγαίνει.
+export interface KpiStat {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: BadgeTone;
+  href?: string;
+}
+
 const eurosOf = (amount: number): string => wholeEuros(amount * 100);
 
-const turnoverStat = (turnover: number): StatProps => ({
+const turnoverStat = (turnover: number): KpiStat => ({
   label: "Τζίρος μήνα",
   value: eurosOf(turnover),
   hint: "καθαρά, μείον Πιστωτικά",
@@ -19,7 +27,7 @@ const turnoverStat = (turnover: number): StatProps => ({
 });
 
 // Τ8: πόσα μπήκαν τον μήνα, από τις ίδιες Εισπράξεις με την κάρτα των Τιμολογίων (με ΦΠΑ, όχι ο τζίρος).
-const receivedStat = (month: string, received: number): StatProps => ({
+const receivedStat = (month: string, received: number): KpiStat => ({
   label: `Μπήκαν τον ${monthAccusativeOf(Number(month.slice(5, 7)))}`,
   value: eurosOf(received),
   hint: "Εισπράξεις με ΦΠΑ",
@@ -29,7 +37,7 @@ const receivedStat = (month: string, received: number): StatProps => ({
 // Χωρίς «Βλέπει ποσά» η πρόβλεψη δεν έχει ποσά: μένει το πλήθος των ανοιχτών Ευκαιριών.
 const pipelineStat = (
   pipeline: NonNullable<TodayKpis["pipeline"]>,
-): StatProps => {
+): KpiStat => {
   const open = countWord(pipeline.open, "ανοιχτή", "ανοιχτές");
   return pipeline.weighted === null || pipeline.total === null
     ? {
@@ -45,13 +53,13 @@ const pipelineStat = (
       };
 };
 
-const productionsStat = (count: number): StatProps => ({
+const productionsStat = (count: number): KpiStat => ({
   label: "Ενεργές Παραγωγές",
   value: String(count),
   href: "/app/productions",
 });
 
-const marginStat = (margin: NonNullable<TodayKpis["margin"]>): StatProps => ({
+const marginStat = (margin: NonNullable<TodayKpis["margin"]>): KpiStat => ({
   label: "Περιθώριο φέτος",
   value: margin.margin === null ? "—" : fmtPercent(margin.margin),
   hint:
@@ -66,7 +74,7 @@ const marginStat = (margin: NonNullable<TodayKpis["margin"]>): StatProps => ({
 export const kpiStatsOf = (
   kpis: TodayKpis,
   received: number | null = null,
-): StatProps[] => [
+): KpiStat[] => [
   ...(kpis.turnover === null ? [] : [turnoverStat(kpis.turnover)]),
   ...(received === null ? [] : [receivedStat(kpis.month, received)]),
   ...(kpis.pipeline === null ? [] : [pipelineStat(kpis.pipeline)]),
