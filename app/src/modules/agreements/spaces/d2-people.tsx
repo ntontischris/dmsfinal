@@ -50,7 +50,7 @@ function AddRecipient({
     setEmail("");
   };
   return (
-    <div className="d2-row">
+    <div className="ml-row">
       <input
         className="input grow"
         aria-label="Όνομα παραλήπτη"

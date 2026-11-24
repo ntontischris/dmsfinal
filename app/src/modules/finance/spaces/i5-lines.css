@@ -8,7 +8,7 @@
 .i5-line[data-side="debit"] { --c: color-mix(in oklab, var(--brand-periwinkle) 55%, var(--color-text)); }
 .i5-running { display: grid; justify-items: end; gap: .1rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .i5-running small { color: var(--color-text-muted); font-size: .72rem; }
-.i5-box-actions { justify-content: flex-start; margin-top: .6rem; }
+.i5-box-actions { margin-top: .6rem; }
 .i5-head { margin-bottom: .8rem; }
 
 @media (max-width: 40rem) {

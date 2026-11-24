@@ -36,38 +36,6 @@
 & .kit-stat[data-tone='attention'] .kit-stat-value { color: var(--color-danger); }
 & .kit-stat-hint { font-size: var(--text-sm); color: var(--color-text-muted); }
 
-/* Πλαϊνή στήλη ιδιοτήτων (Μοντάζ): κωδικός, τίτλος, ιδιότητες, ενέργειες */
-& .kit-split { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: var(--space-4); align-items: start; }
-& .kit-split[data-side='start'] { grid-template-columns: 18rem minmax(0, 1fr); }
-@media (max-width: 60rem) { & .kit-split, & .kit-split[data-side='start'] { grid-template-columns: 1fr; } }
-& .kit-inspector { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; position: sticky; top: 6.5rem; min-width: 0; }
-@media (max-width: 60rem) { & .kit-inspector { position: static; } }
-& .kit-inspector-code { margin: var(--space-4) var(--space-4) var(--space-1); font: 500 var(--text-sm) var(--font-mono); color: var(--color-accent); }
-& .kit-inspector-title { margin: 0 var(--space-4) var(--space-3); font-size: 1.2rem; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; overflow-wrap: anywhere; }
-& .kit-inspector .dl { padding: var(--space-3) var(--space-4); margin: 0; border-top: 1px solid var(--color-border); grid-template-columns: 6.5rem 1fr; }
-& .kit-inspector-foot { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-border); display: grid; gap: var(--space-2); }
-& .kit-inspector-foot .button { justify-content: center; text-decoration: none; }
-
-/* Timeline (Μοντάζ): κανάλια με κλιπ σε άξονα χρόνου, playhead = σήμερα */
-& .kit-timeline { overflow-x: auto; }
-& .kit-tl { position: relative; min-width: 36rem; display: grid; grid-template-columns: 7.5rem 1fr; }
-& .kit-tl-ruler, & .kit-tl-lane { display: contents; }
-& .kit-tl-name { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); border-right: 1px solid var(--color-border); background: var(--color-surface-raised); overflow-wrap: anywhere; }
-& .kit-tl-track { position: relative; min-height: 2.6rem; border-bottom: 1px solid var(--color-border); background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--kit-tl-cols) - 1px), var(--color-border) calc(100% / var(--kit-tl-cols) - 1px) calc(100% / var(--kit-tl-cols))); }
-& .kit-tl-ticks { position: relative; height: 1.7rem; border-bottom: 1px solid var(--color-border-strong); }
-& .kit-tl-tick { position: absolute; top: 0.35rem; translate: 0.3rem 0; }
-& .kit-tl-clip {
-  position: absolute; top: 0.35rem; bottom: 0.35rem; min-width: 5.5rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-  padding: 0.15rem 0.45rem; border-radius: var(--radius-sm); font-size: var(--text-xs); line-height: 1.5; text-decoration: none;
-  background: var(--color-surface-raised); border: 1px solid var(--color-border-strong); color: var(--color-text);
-}
-& .kit-tl-clip[data-tone='strong'] { background: var(--tint-accent-22); border-color: var(--tint-accent-70); }
-& .kit-tl-clip[data-tone='attention'] { background: var(--tint-danger-20); border-color: var(--tint-danger-70); }
-& .kit-tl-clip[data-tone='ok'] { background: var(--tint-ok-18); border-color: var(--tint-ok-60); }
-& .kit-tl-overlay { position: absolute; top: 0; bottom: 0; left: 7.5rem; right: 0; pointer-events: none; }
-& .kit-tl-head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--color-danger); pointer-events: none; z-index: 1; }
-& .kit-tl-head::before { content: ''; position: absolute; top: 0; left: -4px; border: 5px solid transparent; border-top-color: var(--color-danger); }
-
 /* Βήματα (κόμβοι της Χρωματικής διόρθωσης) */
 & .kit-steps { display: flex; list-style: none; margin: 0 0 var(--space-4); padding: 0; counter-reset: kit-step; overflow-x: auto; }
 & .kit-step { flex: 1 1 0; min-width: 7.5rem; counter-increment: kit-step; position: relative; padding: 0 var(--space-3) 0 0; }
@@ -85,31 +53,8 @@
 & .kit-step[data-state='todo'] .kit-step-label { color: var(--color-text-muted); font-weight: 500; }
 & .kit-step-hint { display: block; font-size: var(--text-xs); color: var(--color-text-muted); }
 
-/* Φίλτρα σε ομάδα (segmented) */
-& .kit-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius); margin-bottom: var(--space-4); max-width: 100%; }
-& .kit-seg a {
-  display: inline-flex; gap: var(--space-2); align-items: baseline; padding: 0.3rem var(--space-3); border-radius: var(--radius-sm);
-  font-size: var(--text-sm); text-decoration: none; color: var(--color-text-muted); white-space: nowrap;
-}
-& .kit-seg a:hover { color: var(--color-text); }
-& .kit-seg a[aria-current='true'] { background: var(--color-surface-raised); color: var(--color-text); font-weight: 600; box-shadow: inset 0 0 0 1px var(--color-border-strong); }
-& .kit-seg .num { font-size: var(--text-xs); color: var(--color-text-muted); }
-
-/* Γραμμή λίστας (Φως): αριθμός, τίτλος, στοιχεία, δεξιά τιμή */
-& .kit-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-border); }
-& .kit-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); align-items: baseline; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
-& .kit-row-index { font: 500 var(--text-xs) var(--font-mono); color: var(--color-text-muted); }
-& .kit-row-title { font-size: 1.05rem; font-weight: 500; letter-spacing: -0.01em; text-decoration: none; overflow-wrap: anywhere; }
-& a.kit-row-title:hover { color: var(--color-accent); }
-& .kit-row-meta { grid-column: 2; font-size: var(--text-sm); color: var(--color-text-muted); }
-& .kit-row-aside { grid-column: 3; grid-row: 1 / span 2; justify-self: end; text-align: right; display: grid; gap: var(--space-1); justify-items: end; }
-@media (max-width: 30rem) {
-  & .kit-row { grid-template-columns: 2rem minmax(0, 1fr); }
-  & .kit-row-aside { grid-column: 2; grid-row: auto; justify-self: start; justify-items: start; text-align: left; }
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  & .kit-seg a, & .kit-stat, & .kit-row-title { transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease; }
+  & .kit-stat { transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease; }
 }
 
 /* Τώρα: το κίτρινο πλακίδιο, το ένα πιο επείγον της οθόνης */
@@ -146,7 +91,7 @@
 & .kit-fb-pop { position: absolute; top: calc(100% + var(--space-1)); left: 0; z-index: 30; box-sizing: border-box; width: min(300px, calc(100vw - 2rem)); display: grid; gap: var(--space-2); padding: var(--space-2); background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: 0 20px 50px -20px var(--shadow-color); font-weight: 400; }
 & .kit-fb-card[data-end='true'] > .kit-fb-pop { left: auto; right: 0; }
 /* Πάνελ που κόβουν ό,τι βγαίνει έξω: όσο είναι ανοιχτή μια λίστα, την αφήνουν να φανεί */
-& :is(.kit-panel, .kit-inspector):has(.kit-fb-card[open]) { overflow: visible; }
+& .kit-panel:has(.kit-fb-card[open]) { overflow: visible; }
 & .kit-fb-find { width: 100%; box-sizing: border-box; }
 & .kit-fb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 300px; overflow: auto; }
 & .kit-fb-opt { display: flex; align-items: center; gap: var(--space-3); padding: 0.4rem var(--space-2); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: var(--text-sm); font-weight: 500; text-decoration: none; }

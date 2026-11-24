@@ -7,7 +7,7 @@
 & .o6-methods .ml-list { margin: 0 0 .8rem; }
 & .ml-line .ml-main form { margin-top: .4rem; }
 & .o6-methods .ml-new form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-& .o6-form { justify-content: flex-start; align-items: center; }
+& .o6-form { align-items: center; }
 & .o6-factor { display: grid; gap: .3rem; width: 7rem; margin: 0; }
 & .o6-factor > span { font-size: .8rem; font-weight: 700; color: var(--color-text-muted); }
 & .o6-factor input { width: 100%; }

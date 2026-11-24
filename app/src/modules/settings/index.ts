@@ -25,7 +25,6 @@ export {
   READINESS_HREF as SPACES_READINESS_HREF,
   RecentChanges as SpacesRecentChanges,
   SettingsCard,
-  SettingsTabs as SpacesSettingsTabs,
   TextField,
   type ListItemStatus,
   type SettingsListItem,

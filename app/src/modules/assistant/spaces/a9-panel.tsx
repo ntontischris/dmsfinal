@@ -60,13 +60,12 @@ function Welcome({
       <Answer>
         <p>{WELCOME_TEXT}</p>
       </Answer>
-      <div className="a9-sugg">
+      <div className="a9-sugg ml-quick" data-align="start">
         <span className="muted">Δοκίμασε:</span>
         {SUGGESTIONS[audience].map((question) => (
           <button
             key={question}
             type="button"
-            className="button"
             onClick={() => onPick(question)}
           >
             {question}
@@ -94,7 +93,11 @@ function InputBar({
     onAsk(question);
   };
   return (
-    <form className="a9-input" onSubmit={onSubmit}>
+    <form
+      className="a9-input ml-quick"
+      data-align="start"
+      onSubmit={onSubmit}
+    >
       <input
         className="input"
         type="text"
@@ -106,7 +109,6 @@ function InputBar({
       />
       <button
         type="submit"
-        className="button"
         data-primary="true"
         disabled={isBusy || text.trim() === ""}
       >
@@ -154,16 +156,15 @@ export function A9Panel({ audience, chat, onClose }: A9PanelProps) {
       <section className="a9-panel" aria-label={ASSISTANT_TITLE}>
         <div className="a9-head">
           <h2 id="a9-title">{ASSISTANT_TITLE}</h2>
-          <div className="a9-actions">
+          <div className="a9-actions ml-quick">
             <button
               type="button"
-              className="button"
               onClick={chat.reset}
               disabled={chat.isBusy}
             >
               Νέα Συζήτηση
             </button>
-            <button type="button" className="button" onClick={onClose}>
+            <button type="button" onClick={onClose}>
               Κλείσιμο
             </button>
           </div>

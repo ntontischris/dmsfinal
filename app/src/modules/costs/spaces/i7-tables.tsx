@@ -71,7 +71,7 @@ function ProductionLine({ row }: { row: ProductionRow }) {
 export function ProductionTable(props: { rows: readonly ProductionRow[] }) {
   return (
     <table className="ml-table ml-list">
-      <caption className="i67-caption">Περιθώριο ανά Παραγωγή</caption>
+      <caption className="sr-only">Περιθώριο ανά Παραγωγή</caption>
       <thead>
         <tr>
           <td aria-hidden="true" />
@@ -137,7 +137,7 @@ export function GroupTable(props: {
         </p>
       )}
       <table className="ml-table ml-list">
-        <caption className="i67-caption">
+        <caption className="sr-only">
           Περιθώριο ανά {props.isMonth ? "Μήνα" : "Πελάτη"}
         </caption>
         <thead>

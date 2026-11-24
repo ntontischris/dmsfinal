@@ -26,10 +26,6 @@
 .ml-quick.fl-row {
   justify-content: flex-start;
 }
-:is(.e, .o4, .fl-step) .ml-quick button[aria-pressed="true"] {
-  border-color: var(--brand-periwinkle);
-  background: color-mix(in oklab, var(--brand-periwinkle) 16%, transparent);
-}
 .fl-acts {
   display: grid;
   gap: 0.7rem;
@@ -111,9 +107,6 @@
 .fl-steps {
   display: grid;
   gap: 0.8rem;
-}
-.fl-line[data-current] {
-  border-color: color-mix(in oklab, var(--brand-periwinkle) 55%, transparent);
 }
 .fl-date {
   display: grid;

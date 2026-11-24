@@ -19,6 +19,3 @@
 & .b4-hero > .ml-quick { flex-wrap: wrap; justify-content: flex-end; max-width: 22rem; }
 }
 
-/* Σειρά φίλτρων/πεδίων (αντί του αποσυρμένου .toolbar) */
-[data-look='spaces'] .b4-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
-[data-look='spaces'] .b4-row .grow { flex: 1 1 12rem; }

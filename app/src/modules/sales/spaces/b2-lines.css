@@ -33,9 +33,4 @@
 & .b2-attention > .ml-list { margin: 0; }
 }
 
-/* Σειρά φίλτρων/πεδίων (αντί του αποσυρμένου .toolbar) */
-[data-look='spaces'] .b2-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); }
-[data-look='spaces'] .b2-row .grow { flex: 1 1 12rem; }
 
-/* Απόρριψη, ανάκληση, διαγραφή μέσα σε ml-quick: χαμηλωμένο κείμενο (όχι κόκκινο), για να ξεχωρίζει από το κύριο */
-[data-look='spaces'] .ml-quick :is(a, button)[data-danger]:not([data-danger='false']) { color: var(--color-text-muted); }

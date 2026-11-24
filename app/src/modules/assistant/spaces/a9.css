@@ -16,7 +16,7 @@
 & .a9-input .input { flex: 1 1 10rem; }
 & .a9-count { font-size: var(--text-sm); color: var(--color-text-muted); }
 & .a9-sugg { display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; }
-& .a9-sugg .button { text-align: left; overflow-wrap: anywhere; max-width: 100%; }
+& .a9-sugg button { text-align: left; overflow-wrap: anywhere; max-width: 100%; white-space: normal; }
 @media (max-width: 480px) { & .a9-panel { max-width: none; } }
 /* Ύφος ταυτότητας */
 & .a9-scen a { padding: 0.2rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-border); text-decoration: none; font-weight: 600; }
@@ -30,7 +30,7 @@
 & .a9-row .a9-a { align-self: auto; background: color-mix(in oklab, var(--color-text) 6%, transparent); border-color: transparent; }
 & .a9-q { border-color: transparent; }
 & .a9-sugg { flex-direction: row; flex-wrap: wrap; align-items: center; }
-& .a9-sugg .button { border-radius: 999px; min-height: 2.75rem; }
+& .a9-sugg button { min-height: 2.75rem; }
 & .a9-capped { align-self: stretch; max-width: 100%; }
 & .a9-head h2 { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); }
 /* Το παράθυρο σε κάθε οθόνη: κουμπί κάτω δεξιά, πάνελ στο desktop, όλη η οθόνη στο κινητό (πάνω από την κάτω μπάρα). */

@@ -1,8 +1,7 @@
 import Link from "next/link";
 
 import { FilterBar } from "@/spaces/kit/filter-bar";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge, ErrorNotice } from "@/spaces/screens/shared";
+import { ErrorNotice } from "@/spaces/screens/shared";
 
 import { getClientSends } from "../queries-sends";
 import { formatWhen, sendsHref, whatOf } from "../sends-helpers";
@@ -18,7 +17,8 @@ import {
   type ClientSendsFilter,
 } from "./b2-sends-filters";
 import { sendsSummary } from "./b2-sends-model";
-import { ItemRows } from "./lane-rows";
+import "../../finance/spaces/money-lines.css";
+import "./b2-sends.css";
 
 interface SpacesClientSendsProps {
   clientId: string;
@@ -39,7 +39,8 @@ export async function SpacesClientSends({
   if (!result.data) return null;
   const { items, hasMore } = result.data;
   return (
-    <Panel label="Τι στάλθηκε στον Πελάτη">
+    <section className="b2-sends">
+      <h4 className="sr-only">Τι στάλθηκε στον Πελάτη</h4>
       <FilterBar
         name="b2-sends-filters"
         {...clientSendsGroups(clientId, filter)}
@@ -53,25 +54,25 @@ export async function SpacesClientSends({
       ) : (
         <>
           <p>{sendsSummary(items, hasMore)}</p>
-          <ItemRows
-            items={items.map((send) => ({
-              id: send.id,
-              lead: (
-                <time className="part-sub" dateTime={send.at}>
-                  {formatWhen(send.at)}
-                </time>
-              ),
-              title: whatOf(send),
-              sub: send.recipientName ?? undefined,
-              aside: (
-                <Badge
-                  tone={send.state === "failed" ? "attention" : undefined}
+          <ul className="ml-list">
+            {items.map((send) => (
+              <li key={send.id} className="ml-line">
+                <span className="ml-main">
+                  <strong>{whatOf(send)}</strong>
+                  <small>
+                    <time dateTime={send.at}>{formatWhen(send.at)}</time>
+                    {send.recipientName && ` · ${send.recipientName}`}
+                  </small>
+                </span>
+                <span
+                  className="ml-tag"
+                  data-tone={send.state === "failed" ? "warn" : undefined}
                 >
                   {STATE_LABELS[send.state]}
-                </Badge>
-              ),
-            }))}
-          />
+                </span>
+              </li>
+            ))}
+          </ul>
         </>
       )}
       <p className="muted">
@@ -92,6 +93,6 @@ export async function SpacesClientSends({
           </>
         )}
       </p>
-    </Panel>
+    </section>
   );
 }

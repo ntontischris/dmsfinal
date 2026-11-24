@@ -1,0 +1,2 @@
+/* «Τι στάλθηκε στον Πελάτη» (B2): γραμμές χωρίς μικρογραφία, κείμενο αριστερά και κατάσταση δεξιά. */
+[data-look='spaces'] .b2-sends .ml-line { grid-template-columns: minmax(0, 1fr) auto; }

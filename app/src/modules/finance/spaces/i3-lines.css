@@ -20,7 +20,6 @@
   border: 1.5px solid color-mix(in oklab, var(--brand-periwinkle) 60%, transparent);
 }
 .i3-step-body { display: grid; gap: .8rem; min-width: 0; }
-.i3-step-body > .toolbar { margin: 0; }
 .i3-step-body .note { margin: 0; }
 
 /* Κλειστό κουτί μέσα σε βήμα */
@@ -47,8 +46,6 @@
 .i3-go:hover:not(:disabled) { filter: brightness(1.1); }
 .i3-go:disabled { cursor: not-allowed; opacity: .45; }
 
-/* Καταστροφική ενέργεια (ακύρωση, διαγραφή): κόκκινο περίγραμμα, ποτέ το κύριο χρώμα */
-.ml-actions :is(a, button)[data-danger] { border-color: var(--color-danger); color: var(--color-danger); }
 
 /* Τι λείπει για να ενεργοποιηθεί το κουμπί */
 .i3-missing { margin: 0; color: var(--color-text-muted); font-size: .85rem; }

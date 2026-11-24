@@ -123,7 +123,9 @@ function NotificationLine({ item }: { item: A2Item }) {
         <small>{item.sub}</small>
       </div>
       <span className="ml-quick">
-        <OpenButton id={item.id}>Άνοιγμα</OpenButton>
+        <OpenButton id={item.id} isPrimary={!item.isRead}>
+          Άνοιγμα
+        </OpenButton>
       </span>
     </li>
   );

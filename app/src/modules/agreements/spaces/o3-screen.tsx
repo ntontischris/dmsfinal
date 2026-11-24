@@ -6,7 +6,6 @@ import {
 } from "@/modules/catalogue";
 import {
   SpacesRecentChanges,
-  SpacesSettingsTabs,
   o1ChangesOf,
   recentChanges,
 } from "@/modules/settings";
@@ -87,7 +86,6 @@ export async function SpacesAgreementsSettings({
   ]);
   return (
     <div data-spaces>
-      <SpacesSettingsTabs code="O3" />
       {!defaults.ok || !kinds.ok || !kindsWithLimits.ok || !usage.ok ? (
         <ErrorNotice what="τις Ρυθμίσεις των Συμφωνιών" />
       ) : (

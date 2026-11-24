@@ -35,7 +35,12 @@ function RateForm(props: {
     resetOnSuccess: props.rate === undefined,
   });
   return (
-    <form ref={formRef} className="ml-quick o6-form" onSubmit={onSubmit}>
+    <form
+      ref={formRef}
+      className="ml-quick o6-form"
+      data-align="start"
+      onSubmit={onSubmit}
+    >
       <input type="hidden" name="id" value={props.rate?.id ?? ""} />
       <input
         className="input"
@@ -138,7 +143,7 @@ export function WithholdingEditor(props: {
           ))}
         </ul>
       )}
-      <div className="ml-quick o6-form o-list-actions">
+      <div className="ml-quick o6-form o-list-actions" data-align="start">
         <AddRate save={props.actions.save} />
       </div>
       <p className="muted o-hint">{RATES_NOTE}</p>
