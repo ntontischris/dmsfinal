@@ -152,4 +152,8 @@
   & .k1-switch {
     min-height: 44px;
   }
+  & .k1-legend {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
 }

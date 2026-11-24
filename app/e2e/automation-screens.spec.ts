@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 import { visit } from "./filming-parts";
@@ -21,6 +21,15 @@ function serviceClient() {
       "Λείπει το NEXT_PUBLIC_SUPABASE_URL ή το SUPABASE_SERVICE_ROLE_KEY",
     );
   return createClient(url, key, { auth: { persistSession: false } });
+}
+
+// Τα κουτιά (ομάδες, κάρτες Αυτοματισμών) είναι κλειστά από προεπιλογή.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
 }
 
 async function restoreOwnerChanges(P: string): Promise<void> {
@@ -65,6 +74,7 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
 
     // K1: κατάλογος → Γεγονός «Νέο Μήνυμα».
     await visit(page, "/app/settings/automations");
+    await openBoxes(page);
     await page
       .getByRole("main")
       .getByRole("link", { name: /Νέο Μήνυμα/ })
@@ -94,6 +104,7 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
 
     const card = page.getByRole("region", { name: new RegExp(MARKER(P)) });
     await expect(card).toBeVisible();
+    await openBoxes(page);
     await expect(
       card.getByRole("heading", {
         name: "Ειδοποίηση · προστέθηκε από τη Διαχείριση",

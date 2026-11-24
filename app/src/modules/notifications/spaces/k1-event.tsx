@@ -54,7 +54,7 @@ function Variables({ page }: { page: EventPage }) {
   );
 }
 
-// Η κεφαλή της σελίδας Γεγονότος: το όνομά του είναι το h1 (κρύβει το h1 της ενότητας), με Ομάδα, Είδος και Μία περίπτωση.
+// Η κεφαλή της σελίδας Γεγονότος: το όνομά του είναι το h1 (κρύβει το h1 της ενότητας), με Ομάδα, Είδος (σήμα) και Μία περίπτωση.
 function EventHero({
   page,
   catalog,
@@ -75,8 +75,6 @@ function EventHero({
         <dl className="ml-kv">
           <dt>Ομάδα</dt>
           <dd>{group ? groupTitle(group) : event.group}</dd>
-          <dt>Είδος</dt>
-          <dd>{KIND_LABELS[event.kind]}</dd>
           <dt>Μία περίπτωση</dt>
           <dd>{event.caseOf}</dd>
         </dl>
@@ -121,7 +119,12 @@ function EventBody({
         </StateNotice>
       )}
       {page.automations.map((a) => (
-        <AutomationCard key={a.id} page={page} automation={a} />
+        <AutomationCard
+          key={a.id}
+          page={page}
+          automation={a}
+          isOpen={page.automations.length === 1}
+        />
       ))}
       <NewAutomation page={page} />
       {page.automations.some((a) => !a.isInitial) && (
