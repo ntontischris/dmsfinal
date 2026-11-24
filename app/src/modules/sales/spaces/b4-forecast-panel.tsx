@@ -1,4 +1,3 @@
-import "../../finance/spaces/money-lines.css";
 import { ErrorNotice } from "@/spaces/screens/shared";
 
 import { NO_MANAGER_LABEL } from "../labels";
@@ -18,6 +17,8 @@ import {
   valueText,
   weightedText,
 } from "./forecast-adapter";
+
+import "../../finance/spaces/money-lines.css";
 
 // Η υπόδειξη του κουτιού: η Πιθανότητα και η σταθμισμένη (με «Βλέπει ποσά»)· για τον Υπεύθυνο και η αλλαγή.
 const hintOf = (

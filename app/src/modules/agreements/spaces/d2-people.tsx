@@ -1,6 +1,5 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { Avatar } from "@/spaces/kit/parts";
@@ -14,6 +13,8 @@ import type { AgreementDetail, LinkInfo, Recipient } from "../types";
 import { D2Box } from "./d2-box";
 import { D2Form, D2Scope, Field, IdField } from "./d2-ui";
 import { ItemRows } from "./lane-rows";
+
+import "../../finance/spaces/money-lines.css";
 
 // «Υπογράφων και παραλήπτες» (prototype `screens/d2-people.tsx`). Στη Σύνταξη η λίστα αλλάζει και αποθηκεύεται όλη μαζί
 // (`setRecipients`, ίδιο JSON με τη σημερινή σελίδα)· μετά την αποστολή φαίνεται ο Σύνδεσμος του καθενός.
@@ -49,7 +50,7 @@ function AddRecipient({
     setEmail("");
   };
   return (
-    <div className="toolbar">
+    <div className="d2-row">
       <input
         className="input grow"
         aria-label="Όνομα παραλήπτη"
@@ -65,7 +66,7 @@ function AddRecipient({
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <span className="ml-quick">
+      <span className="ml-quick" style={{ display: "inline-flex" }}>
         <button type="button" disabled={isFull} onClick={add}>
           Προσθήκη παραλήπτη
         </button>
@@ -158,7 +159,7 @@ function RecipientsEditor({ agreement }: { agreement: AgreementDetail }) {
               </Badge>
               <span className="muted">δεν στάλθηκε ακόμα</span>
               {!row.isSignatory && (
-                <span className="ml-quick">
+                <span className="ml-quick" style={{ display: "inline-flex" }}>
                   <button
                     type="button"
                     onClick={() =>

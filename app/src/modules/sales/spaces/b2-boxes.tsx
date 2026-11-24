@@ -50,9 +50,16 @@ function PeopleBox({ ctx, isOpen }: BoxProps) {
   );
 }
 
+const forgottenText = (ctx: ClientPageCtx): string | null => {
+  const count = ctx.d.openRows.filter((row) => row.isForgotten).length;
+  if (count === 0) return null;
+  return count === 1 ? "1 ξεχασμένη" : `${count} ξεχασμένες`;
+};
+
 const workHint = (ctx: ClientPageCtx): string =>
   [
     `${ctx.d.openRows.length} ανοιχτές Ευκαιρίες`,
+    forgottenText(ctx),
     ctx.allowed.includes("agreements")
       ? (ctx.d.activeAgreement ?? "καμία ενεργή Συμφωνία")
       : null,
@@ -61,7 +68,7 @@ const workHint = (ctx: ClientPageCtx): string =>
     .filter((part): part is string => part !== null)
     .join(" · ");
 
-// Ευκαιρίες, Συμφωνίες και Παραγωγές του Πελάτη, η καθεμία με σύνδεσμο στη δική της λίστα.
+// Ευκαιρίες, Συμφωνίες και Παραγωγές του Πελάτη. Οι Παραγωγές φορτώνουν μόνο όταν το κουτί ανοίγει από το ?tab=· αλλιώς σύνδεσμος.
 function WorkBox({ ctx, isOpen }: BoxProps) {
   const agreements = ctx.data.agreements ?? [];
   return (
@@ -78,22 +85,32 @@ function WorkBox({ ctx, isOpen }: BoxProps) {
           empty="Καμία Ευκαιρία για αυτόν τον Πελάτη."
         />
         <BoxLinks>
-          <Link href={hrefOf("B3")}>Άνοιγμα στο Pipeline</Link>
+          <Link href={hrefOf("B3")}>Όλο το Pipeline</Link>
         </BoxLinks>
       </Sub>
       {ctx.allowed.includes("agreements") && (
         <Sub id="b2-agreements" title="Συμφωνίες">
           <AgreementLines agreements={agreements} />
           <BoxLinks>
-            <Link href={hrefOf("D1")}>Άνοιγμα στη λίστα Συμφωνιών</Link>
+            <Link href={hrefOf("D1")}>Όλες οι Συμφωνίες</Link>
           </BoxLinks>
         </Sub>
       )}
       {ctx.allowed.includes("productions") && (
         <Sub id="b2-productions" title="Παραγωγές">
-          <Suspense fallback={<p className="ml-empty">Φορτώνουν…</p>}>
-            <ProductionsSection clientId={ctx.client.id} />
-          </Suspense>
+          {isOpen ? (
+            <Suspense fallback={<p className="ml-empty">Φορτώνουν…</p>}>
+              <ProductionsSection clientId={ctx.client.id} />
+            </Suspense>
+          ) : (
+            <BoxLinks>
+              <Link
+                href={hrefOf("B2", { id: ctx.client.id, tab: "productions" })}
+              >
+                Δες τις Παραγωγές
+              </Link>
+            </BoxLinks>
+          )}
         </Sub>
       )}
     </Box>

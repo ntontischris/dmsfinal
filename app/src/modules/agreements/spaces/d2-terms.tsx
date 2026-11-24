@@ -1,6 +1,5 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import { setMoneyTerms, updateTerms } from "../actions-draft";
 import { formatDate } from "../helpers";
 import { AUTO_RENEWAL_NOTE } from "../labels";
@@ -10,6 +9,8 @@ import { MoneyRows } from "./d2-terms-money";
 import { MilestoneTerms, RevisionLimitTerms } from "./d2-terms-more";
 import { D2Box } from "./d2-box";
 import { D2Form, Field, IdField, NumberInput } from "./d2-ui";
+
+import "../../finance/spaces/money-lines.css";
 
 // Οι Όροι της Συμφωνίας (prototype `screens/d2-terms.tsx`): πεδίο για όποιον γράφει την πρόταση, κείμενο για τους άλλους,
 // και η προεπιλογή δίπλα όταν άλλαξε. Κάθε ομάδα πεδίων αποθηκεύεται με το δικό της πραγματικό action.

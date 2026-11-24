@@ -1,4 +1,3 @@
-import "../../finance/spaces/money-lines.css";
 import { FilterBar } from "@/spaces/kit/filter-bar";
 import { Badge } from "@/spaces/screens/shared";
 
@@ -11,6 +10,8 @@ import { packMonths, pickPackMonth, type ExportQuery } from "../export/url";
 import { Box } from "./m1-box";
 import { PackButton } from "./m2-buttons";
 import { m2Href, packButtonLabel, packMonthLabel } from "./m2-model";
+
+import "../../finance/spaces/money-lines.css";
 
 // Οι στήλες των φύλλων του Excel: ίδιες με την «Άλλη εξαγωγή». Τα «Έξοδα» μόνο για όποιον τα βλέπει (d10).
 const SHEETS = [

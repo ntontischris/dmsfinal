@@ -20,15 +20,13 @@ export function NoteToggle({
   const [isOpen, setIsOpen] = useState(false);
   return (
     <>
-      <span className="ml-quick">
-        <button
-          type="button"
-          aria-expanded={isOpen}
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          Πρόσθεσε σημείωση
-        </button>
-      </span>
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        Πρόσθεσε σημείωση
+      </button>
       {isOpen && (
         <div className="b2-note-form">
           <ActivityLog

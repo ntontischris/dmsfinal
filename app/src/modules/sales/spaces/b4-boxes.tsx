@@ -1,10 +1,11 @@
-import "../../finance/spaces/money-lines.css";
 import type { ReactNode } from "react";
 
 import type { ListItem, Opportunity } from "../types";
 import { ActivityLog, type B2ActivityRow } from "./b2-activity-log";
 import { CloseLost } from "./b4-controls";
 import { TitleEditor } from "./b4-title";
+
+import "../../finance/spaces/money-lines.css";
 
 // Ένα κλειστό κουτί της Σελίδας Ευκαιρίας: τίτλος και υπόδειξη στο summary, το σώμα μόνο όταν το ανοίξεις.
 // Το `id` μπαίνει στο σώμα· ο σύνδεσμος #id από την κεφαλίδα ανοίγει έτσι το κουτί.

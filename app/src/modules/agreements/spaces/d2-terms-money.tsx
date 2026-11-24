@@ -1,9 +1,10 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import { formatMoney, formatNumber } from "../helpers";
 import type { AgreementDetail } from "../types";
 import { Field, NumberInput, decimalInput, moneyInput } from "./d2-ui";
+
+import "../../finance/spaces/money-lines.css";
 
 // Έκπτωση πρώτων μηνών και ρήτρα λύσης (μηνιαία): όρος τιμής, γι' αυτό πεδία μόνο για όποιον «Βλέπει ποσά».
 

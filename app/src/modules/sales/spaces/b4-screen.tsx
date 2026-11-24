@@ -33,12 +33,14 @@ import { ActivitiesBox, ControlBox } from "./b4-boxes";
 import { FollowUp } from "./b4-controls";
 import { ForecastBox } from "./b4-forecast-panel";
 import { OpportunityHero } from "./b4-hero";
+import { OpenOnHash } from "./b4-open-on-hash";
 
 import "../../finance/spaces/money-lines.css";
 import "./b4-lines.css";
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
   <div data-spaces className="ml-stack b4-page">
+    <OpenOnHash />
     {children}
   </div>
 );

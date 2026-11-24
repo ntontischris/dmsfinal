@@ -123,7 +123,7 @@ function EditRow({
       action={editActivity}
       submitLabel="Αποθήκευση"
       isPrimary
-      className="toolbar"
+      className="b2-row"
       onDone={onDone}
     >
       <input type="hidden" name="activityId" value={row.id} />
@@ -202,7 +202,7 @@ export function ActivityLog({
         <SpacesActionForm
           action={logActivity}
           submitLabel="Καταγραφή"
-          className="toolbar"
+          className="b2-row"
           isPrimary={false}
           resetOnSuccess
         >

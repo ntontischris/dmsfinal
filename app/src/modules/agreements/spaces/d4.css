@@ -62,3 +62,6 @@
 .d4-previous p {
   margin: 0 0 0.4rem;
 }
+
+/* Απόρριψη, ανάκληση, διαγραφή μέσα σε ml-quick: χαμηλωμένο κείμενο (όχι κόκκινο), για να ξεχωρίζει από το κύριο */
+[data-look='spaces'] .ml-quick :is(a, button)[data-danger]:not([data-danger='false']) { color: var(--color-text-muted); }

@@ -1,4 +1,3 @@
-import "../../finance/spaces/money-lines.css";
 import Link from "next/link";
 
 import { Badge } from "@/spaces/screens/shared";
@@ -15,6 +14,8 @@ import { DEVIATION_STATUS_LABELS } from "../labels";
 import type { AgreementDetail, CostBlock } from "../types";
 import { D2Box } from "./d2-box";
 import { approvedRevisionOf } from "./d2-model";
+
+import "../../finance/spaces/money-lines.css";
 
 // Κόστος και περιθώριο, Παρεκκλίσεις (prototype `screens/d2-cost.tsx`) με τα πραγματικά νούμερα της βάσης.
 

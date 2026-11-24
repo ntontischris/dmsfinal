@@ -53,7 +53,7 @@ export function AgreementsTable({
 
   return (
     <>
-      <div className="toolbar d1l-views">
+      <div className="d1-row d1l-views">
         <div
           className="d1-seg ml-quick"
           role="group"
@@ -71,7 +71,7 @@ export function AgreementsTable({
           ))}
         </div>
       </div>
-      <div className="toolbar">
+      <div className="d1-row">
         <input
           className="input grow"
           type="search"

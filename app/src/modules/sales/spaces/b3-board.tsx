@@ -63,7 +63,7 @@ function StageColumns(props: {
   drag: ReturnType<typeof useStageDrag>;
 }) {
   return (
-    <div className="kanban b3-kanban">
+    <div className="b3-kanban">
       {props.columns.map((stage) => {
         const inStage = props.open.filter(
           (card) => props.drag.stageOf(card) === stage.id,

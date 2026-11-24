@@ -83,7 +83,7 @@ function RowAction({
     <form ref={formRef} onSubmit={onSubmit} style={{ display: "inline" }}>
       <input type="hidden" name="id" value={id} />
       {children}
-      <span className="ml-quick">
+      <span className="ml-quick" style={{ display: "inline-flex" }}>
         <button
           type="submit"
           data-danger={isDanger ? "true" : undefined}

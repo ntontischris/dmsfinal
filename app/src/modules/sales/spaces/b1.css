@@ -7,3 +7,7 @@
   text-decoration: none; color: var(--color-danger); background: color-mix(in oklab, var(--brand-rec, var(--color-danger)) 16%, transparent);
 }
 & .b1-duplicate:hover { background: color-mix(in oklab, var(--brand-rec, var(--color-danger)) 26%, transparent); } }
+
+/* Διακόπτες (aria-pressed) μέσα σε ml-quick: η ενεργή θέση ως γεμάτο χάπι, στοίχιση αριστερά */
+[data-look='spaces'] .choice-row.ml-quick { justify-content: flex-start; }
+[data-look='spaces'] .choice-row.ml-quick button[aria-pressed='true'] { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }

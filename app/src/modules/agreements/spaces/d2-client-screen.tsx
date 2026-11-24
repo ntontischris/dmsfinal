@@ -111,10 +111,7 @@ function Body({
       <ClientHeader agreement={agreement} />
       {document && <ClientSummary agreement={agreement} document={document} />}
       {document && (
-        <D2Box
-          title="Το έγγραφο"
-          hint="όπως το υπέγραψες, για ανάγνωση ή εκτύπωση"
-        >
+        <D2Box title="Το έγγραφο" hint="για ανάγνωση ή εκτύπωση">
           <Document document={document} isProposal={false} isEmbedded />
         </D2Box>
       )}

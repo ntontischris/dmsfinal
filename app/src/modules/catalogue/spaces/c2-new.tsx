@@ -1,6 +1,5 @@
 "use client";
 
-import "../../finance/spaces/money-lines.css";
 import { useState } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
@@ -13,6 +12,8 @@ import { provisionsIntro } from "./c2-adapter";
 import { C2Step } from "./c2-box";
 import { C2Form, C2Submit, Field } from "./c2-form";
 import { ProvisionsEditor, ProvisionsNote } from "./c2-provisions";
+
+import "../../finance/spaces/money-lines.css";
 
 interface C2NewProps {
   kinds: readonly ProvisionKind[];
