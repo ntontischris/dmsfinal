@@ -100,7 +100,7 @@ export function A5Nav({
         <Link href={go(shiftAnchor(params.view, params.date, -1))}>
           ‹ Προηγούμενη
         </Link>
-        <Link href={go(today)} data-primary>
+        <Link href={go(today)} data-primary={isTodayOut || undefined}>
           Σήμερα
         </Link>
         <Link href={go(shiftAnchor(params.view, params.date, 1))}>

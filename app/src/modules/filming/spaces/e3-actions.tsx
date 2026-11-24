@@ -362,9 +362,11 @@ export function E3Actions({ card, newTimeProblem }: ActionsProps) {
         can.undo &&
         form !== "undo" && (
           <div className="fl-box-body">
-            <button type="button" onClick={() => setForm("undo")}>
-              Αναίρεση
-            </button>
+            <div className="ml-quick fl-row">
+              <button type="button" onClick={() => setForm("undo")}>
+                Αναίρεση
+              </button>
+            </div>
             <p className="muted">
               Για «έγινε» ή «δεν έγινε» που μπήκε κατά λάθος.
             </p>

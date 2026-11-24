@@ -141,103 +141,105 @@ export function E4Form({
               />
             </p>
           )}
-          {canInternal && (
-            <div className="ml-field">
-              <span>Για</span>
-              <div className="ml-quick fl-row">
-                {(["client", "internal"] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className="e-pick"
-                    aria-pressed={mode === value}
-                    onClick={() => setMode(value)}
-                  >
-                    {value === "client" ? "Πελάτη" : "Εσωτερική Παραγωγή"}
-                  </button>
-                ))}
+          <div className="ml-fields">
+            {canInternal && (
+              <div className="ml-field">
+                <span>Για</span>
+                <div className="ml-quick fl-row">
+                  {(["client", "internal"] as const).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className="e-pick"
+                      aria-pressed={mode === value}
+                      onClick={() => setMode(value)}
+                    >
+                      {value === "client" ? "Πελάτη" : "Εσωτερική Παραγωγή"}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          {isInternal ? (
-            <label className="ml-field">
-              <span>Εσωτερική Παραγωγή</span>
-              <select
-                className="input"
-                name="productionId"
-                value={productionId}
-                onChange={(e) => setProductionId(e.target.value)}
-              >
-                <option value="" disabled>
-                  Διάλεξε Παραγωγή…
-                </option>
-                {productions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <>
+            )}
+            {isInternal ? (
               <label className="ml-field">
-                <span>Πελάτης</span>
+                <span>Εσωτερική Παραγωγή</span>
                 <select
                   className="input"
-                  value={clientId}
-                  onChange={(e) => handleClient(e.target.value)}
+                  name="productionId"
+                  value={productionId}
+                  onChange={(e) => setProductionId(e.target.value)}
                 >
-                  {clients.map((item) => (
+                  <option value="" disabled>
+                    Διάλεξε Παραγωγή…
+                  </option>
+                  {productions.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
                     </option>
                   ))}
                 </select>
               </label>
-              {agreements.length > 1 ? (
+            ) : (
+              <>
                 <label className="ml-field">
-                  <span>Συμφωνία</span>
+                  <span>Πελάτης</span>
                   <select
                     className="input"
+                    value={clientId}
+                    onChange={(e) => handleClient(e.target.value)}
+                  >
+                    {clients.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {agreements.length > 1 ? (
+                  <label className="ml-field">
+                    <span>Συμφωνία</span>
+                    <select
+                      className="input"
+                      name="agreementId"
+                      value={agreement?.id ?? ""}
+                      onChange={(e) => handleAgreement(e.target.value)}
+                    >
+                      {agreements.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.title}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <input
+                    type="hidden"
                     name="agreementId"
                     value={agreement?.id ?? ""}
-                    onChange={(e) => handleAgreement(e.target.value)}
-                  >
-                    {agreements.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : (
-                <input
-                  type="hidden"
-                  name="agreementId"
-                  value={agreement?.id ?? ""}
-                />
-              )}
-              {agreement && agreement.kinds.length > 1 ? (
-                <label className="ml-field">
-                  <span>Παροχή</span>
-                  <select
-                    className="input"
-                    name="kindId"
-                    value={kindId}
-                    onChange={(e) => handleKind(e.target.value)}
-                  >
-                    {agreement.kinds.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : (
-                kindId && <input type="hidden" name="kindId" value={kindId} />
-              )}
-            </>
-          )}
+                  />
+                )}
+                {agreement && agreement.kinds.length > 1 ? (
+                  <label className="ml-field">
+                    <span>Παροχή</span>
+                    <select
+                      className="input"
+                      name="kindId"
+                      value={kindId}
+                      onChange={(e) => handleKind(e.target.value)}
+                    >
+                      {agreement.kinds.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  kindId && <input type="hidden" name="kindId" value={kindId} />
+                )}
+              </>
+            )}
+          </div>
         </Step>
         <Step no={2} title="Πότε και πού" hint="Μέρα, ώρα, διάρκεια, χώρος">
           <div className="ml-fields">

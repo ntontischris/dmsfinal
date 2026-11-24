@@ -85,9 +85,11 @@ export function FirstFreeHint({ days }: { days: readonly DayView[] }) {
         {hint.why} Η πρώτη ελεύθερη μέρα είναι η{" "}
         <strong>{dayLabel(hint.firstFree)}</strong>.
       </p>
-      <button type="button" className="ml-cta" onClick={jump}>
-        Πήγαινε στην {dayLabel(hint.firstFree)}
-      </button>
+      <span className="ml-quick fl-row">
+        <button type="button" onClick={jump}>
+          Πήγαινε στην {dayLabel(hint.firstFree)}
+        </button>
+      </span>
     </div>
   );
 }
