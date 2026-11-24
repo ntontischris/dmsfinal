@@ -11,6 +11,8 @@ import { CopyButton } from "./i5-pay";
 interface ClientPayBoxProps {
   // null όταν δεν φορτώθηκαν οι οδηγίες: ο πελάτης βλέπει πάλι το «Επικοινωνήστε μαζί μας».
   info: PaymentInfo | null;
+  // Ο λογαριασμός από άλλη ανάγνωση (π.χ. την Καρτέλα), όταν οι οδηγίες δεν φορτώθηκαν.
+  fallbackBank?: PaymentInfo["bank"];
   // Ο αριθμός του Τιμολογίου που πληρώνει (στη σελίδα ενός Τιμολογίου).
   reference?: string;
   isOpen?: boolean;
@@ -71,8 +73,13 @@ function AskUs({ company }: { company: PaymentInfo["company"] | null }) {
   );
 }
 
-export function ClientPayBox({ info, reference, isOpen }: ClientPayBoxProps) {
-  const bank = info?.bank ?? null;
+export function ClientPayBox({
+  info,
+  fallbackBank = null,
+  reference,
+  isOpen,
+}: ClientPayBoxProps) {
+  const bank = info ? info.bank : fallbackBank;
   return (
     <Box
       id="pay"

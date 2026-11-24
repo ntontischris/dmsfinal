@@ -10,6 +10,7 @@ import {
   getInvoiceContext,
   getInvoiceDetail,
   getInvoices,
+  getVoidedInvoices,
 } from "../invoices-queries";
 import { numberSuggestionsOf } from "../invoices-model";
 import { athensToday } from "../money";
@@ -66,10 +67,13 @@ async function Workbench({
   clientStep: ReactNode;
 }) {
   // Ο προτεινόμενος αριθμός βγαίνει από τα Τιμολόγια της εταιρείας (πιο πρόσφατα πρώτα)· αν λείπουν, μένει κενός.
-  const [ctx, all] = await Promise.all([
+  // Οι αριθμοί των ακυρωμένων καταχωρίσεων δεν ξαναπροτείνονται.
+  const [ctx, all, voided] = await Promise.all([
     getInvoiceContext(clientId),
     getInvoices("all"),
+    getVoidedInvoices(),
   ]);
+  const voidedNumbers = voided.ok ? voided.data.map((item) => item.number) : [];
   if (!ctx.ok)
     return (
       <div className="ml-stack">
@@ -82,7 +86,7 @@ async function Workbench({
       key={clientId}
       clientId={clientId}
       ctx={ctx.data}
-      suggestions={all.ok ? numberSuggestionsOf(all.data.items) : {}}
+      suggestions={all.ok ? numberSuggestionsOf(all.data.items, voidedNumbers) : {}}
       today={athensToday()}
       clientStep={clientStep}
     />

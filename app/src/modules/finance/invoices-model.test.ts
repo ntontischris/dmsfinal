@@ -312,6 +312,13 @@ describe("numberSuggestionsOf", () => {
     });
   });
 
+  it("should not suggest the number of a voided registration again", () => {
+    const latestFirst = [{ kind: "invoice" as const, number: "A-13" }];
+    expect(numberSuggestionsOf(latestFirst, ["A-14", "A-15"])).toEqual({
+      invoice: "A-16",
+    });
+  });
+
   it("should skip kinds whose latest number has no digits", () => {
     expect(numberSuggestionsOf([{ kind: "receipt", number: "ΧΩΡΙΣ" }])).toEqual(
       {},

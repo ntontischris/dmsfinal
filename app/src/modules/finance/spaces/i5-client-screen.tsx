@@ -58,7 +58,7 @@ function ClientLedger({
         hasWarning={data.overdue > 0}
         actions={<ClientActions owes={owes} />}
       />
-      <ClientPayBox info={info} isOpen={owes} />
+      <ClientPayBox info={info} fallbackBank={data.payment} isOpen={owes} />
       <NoteBox />
     </div>
   );

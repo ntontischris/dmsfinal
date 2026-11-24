@@ -144,15 +144,25 @@ export const nextNumberOf = (last: string): string => {
 
 export type NumberSuggestions = Partial<Record<InvoiceKind, string>>;
 
-// Η πρόταση αριθμού ανά είδος, από τα Τιμολόγια της εταιρείας (το πρώτο ανά είδος είναι το πιο πρόσφατο).
+// Ο επόμενος αριθμός που δεν έχει ήδη πιαστεί (π.χ. από ακυρωμένη καταχώριση: ο αριθμός της δεν ξαναδίνεται).
+const freeNumberOf = (number: string, taken: ReadonlySet<string>): string => {
+  const next = nextNumberOf(number);
+  return next !== "" && taken.has(next) ? freeNumberOf(next, taken) : next;
+};
+
+// Η πρόταση αριθμού ανά είδος, από τα Τιμολόγια της εταιρείας (το πρώτο ανά είδος είναι το πιο πρόσφατο), χωρίς τους
+// αριθμούς των ακυρωμένων καταχωρίσεων (taken).
 export const numberSuggestionsOf = (
   latestFirst: readonly { kind: InvoiceKind; number: string }[],
-): NumberSuggestions =>
-  latestFirst.reduce<NumberSuggestions>((acc, item) => {
+  taken: readonly string[] = [],
+): NumberSuggestions => {
+  const takenSet = new Set(taken);
+  return latestFirst.reduce<NumberSuggestions>((acc, item) => {
     if (acc[item.kind] !== undefined) return acc;
-    const next = nextNumberOf(item.number);
+    const next = freeNumberOf(item.number, takenSet);
     return next === "" ? acc : { ...acc, [item.kind]: next };
   }, {});
+};
 
 // Αλλαγή είδους: ο προτεινόμενος αριθμός ακολουθεί το είδος, όσο ο Χρήστης δεν έχει γράψει δικό του.
 export const withKind = (form: DraftForm, kind: InvoiceKind, suggestions: NumberSuggestions): DraftForm => {
