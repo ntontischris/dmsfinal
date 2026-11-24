@@ -163,7 +163,12 @@ export async function G2ClientPage({
         actions={
           canChat &&
           !production.isInternal && (
-            <Link href={hrefOf("J3")}>Άνοιγμα Συνομιλίας</Link>
+            <Link
+              href={hrefOf("J3")}
+              title="Η Συνομιλία είναι μία ανά Πελάτη, για όλες τις Παραγωγές σου."
+            >
+              Άνοιγμα Συνομιλίας
+            </Link>
           )
         }
       />

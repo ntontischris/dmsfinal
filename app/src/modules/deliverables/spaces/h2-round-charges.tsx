@@ -72,7 +72,7 @@ export function H2RoundCharges({ detail, ctx }: PanelProps) {
             className="ml-line"
             data-urgent={charge.decision === null ? "" : undefined}
           >
-            <span className="ml-main">
+            <div className="ml-main">
               <strong>{`Γύρος ${charge.round} από όριο ${charge.roundsLimit}`}</strong>
               <small>{`v${charge.version} · ${fmtDay(charge.createdAt)}`}</small>
               {charge.decision !== null ? (
@@ -86,7 +86,7 @@ export function H2RoundCharges({ detail, ctx }: PanelProps) {
                     : "Η χρέωση αποφασίζεται από όποιον βλέπει ποσά."}
                 </p>
               )}
-            </span>
+            </div>
             <span className="ml-quick">
               {charge.decision === null ? (
                 <Badge tone="attention">θέλει απόφαση</Badge>

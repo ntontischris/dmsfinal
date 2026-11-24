@@ -56,6 +56,10 @@ function Missing() {
   );
 }
 
+// Η Συνομιλία είναι μία ανά Πελάτη· ο σύνδεσμος την ανοίγει φιλτραρισμένη στην ετικέτα της Παραγωγής.
+const CHAT_HINT =
+  "Η Συνομιλία είναι μία ανά Πελάτη· τα μηνύματα αυτής της Παραγωγής ανοίγουν φιλτραρισμένα.";
+
 function Header({
   production,
   viewer,
@@ -74,7 +78,7 @@ function Header({
       meta={
         <>
           {client === null ? (
-            "Εσωτερική Παραγωγή"
+            "Εσωτερική Παραγωγή · μόνο Εσωτερικά Μηνύματα"
           ) : canOpenClient ? (
             <Link href={hrefOf("B2", { id: client.id })}>{client.name}</Link>
           ) : (
@@ -98,7 +102,11 @@ function Header({
       }
       actions={
         <>
-          {threadHref && <Link href={threadHref}>Άνοιγμα Συνομιλίας</Link>}
+          {threadHref && (
+            <Link href={threadHref} title={CHAT_HINT}>
+              Άνοιγμα Συνομιλίας
+            </Link>
+          )}
           {costsCaps(viewer).canView && (
             <Link href={`/app/productions/${production.id}/costs`}>
               Κόστος και ώρες

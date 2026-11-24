@@ -181,9 +181,7 @@ export function G2Deliverables({
             className="ml-line"
             data-faded={line.isFaded ? "" : undefined}
           >
-            <span className="ml-thumb" aria-hidden="true">
-              {line.lead}
-            </span>
+            <span className="ml-thumb">{line.lead}</span>
             <span className="ml-main">
               <strong>
                 <Link href={hrefOf("H2", { id: line.id })}>{line.title}</Link>
