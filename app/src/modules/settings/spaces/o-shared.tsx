@@ -7,6 +7,7 @@ import { Badge, type BadgeTone } from "@/spaces/screens/shared";
 
 import type { O1Change } from "./o1-adapter";
 
+import "../../finance/spaces/money-lines.css";
 import "./o.css";
 
 // Κοινά της σελίδας Ρυθμίσεων στη νέα εμφάνιση (prototype `screens/o-shared.tsx`): καρτέλες, κλειδωμένο πεδίο, λίστες,
@@ -63,17 +64,30 @@ export function Pending() {
   return <Badge tone="attention">εκκρεμεί</Badge>;
 }
 
+interface SettingsCardProps {
+  title: string;
+  // Μία φράση κάτω από τον τίτλο του κουτιού (τι έχει μέσα).
+  hint?: string;
+  // Κουτί Ρυθμίσεων (`details.ml-box`). Ανοιχτό εξ ορισμού για τις οθόνες των άλλων modules που το χρησιμοποιούν·
+  // οι οθόνες που θέλουν κλειστά κουτιά περνούν isOpen={false}.
+  isOpen?: boolean;
+  children: ReactNode;
+}
+
 export function SettingsCard({
   title,
+  hint,
+  isOpen = true,
   children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+}: SettingsCardProps) {
   return (
-    <div className="o-card">
-      <Panel label={title}>{children}</Panel>
-    </div>
+    <details className="ml-box o-card" open={isOpen}>
+      <summary>
+        <h2 className="ml-box-title">{title}</h2>
+        {hint && <small>{hint}</small>}
+      </summary>
+      <div className="o-card-body">{children}</div>
+    </details>
   );
 }
 
@@ -103,7 +117,7 @@ export function TextField({
   ...input
 }: TextFieldProps) {
   return (
-    <span className="stack o-field">
+    <span className="ml-field o-field">
       <label htmlFor={id}>
         {label} {isPending && <Pending />}
       </label>
@@ -114,7 +128,7 @@ export function TextField({
         placeholder={isPending ? "εκκρεμεί" : undefined}
         {...input}
       />
-      {hint && <span className="muted o-hint">{hint}</span>}
+      {hint && <small>{hint}</small>}
     </span>
   );
 }
@@ -249,35 +263,40 @@ export function RecentChanges({
   areaLabel,
 }: RecentChangesProps) {
   return (
-    <div className="o-recent">
-      <Panel
-        label="Τελευταίες αλλαγές"
-        aside={
-          auditHref && (
+    <details className="ml-box o-recent">
+      <summary>
+        <h2 className="ml-box-title">Τελευταίες αλλαγές</h2>
+        <small>
+          {changes.length === 0
+            ? "καμία ακόμα"
+            : `${changes.length} πιο πρόσφατες · ${changes[0]?.at ?? ""}`}
+        </small>
+      </summary>
+      <div className="o-card-body">
+        {changes.length === 0 ? (
+          <p className="ml-empty">Καμία αλλαγή ακόμα σε αυτή την ενότητα.</p>
+        ) : (
+          <ul className="ml-list">
+            {changes.map((entry) => (
+              <li key={entry.id} className="ml-line o-line">
+                <span className="ml-main">
+                  <strong>{`${entry.actor} · ${entry.subject}`}</strong>
+                  <small>
+                    {[entry.at, entry.fields].filter(Boolean).join(" · ")}
+                  </small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {auditHref && (
+          <div className="ml-quick o-left">
             <Link href={auditHref}>
               Όλες οι αλλαγές στο Ίχνος ({areaLabel})
             </Link>
-          )
-        }
-        isFlush
-      >
-        {changes.length === 0 ? (
-          <p className="muted o-recent-empty">
-            Καμία αλλαγή ακόμα σε αυτή την ενότητα.
-          </p>
-        ) : (
-          <RowList>
-            {changes.map((entry) => (
-              <ListRow
-                key={entry.id}
-                lead={<span className="part-sub">{entry.at}</span>}
-                title={`${entry.actor} · ${entry.subject}`}
-                sub={entry.fields}
-              />
-            ))}
-          </RowList>
+          </div>
         )}
-      </Panel>
-    </div>
+      </div>
+    </details>
   );
 }

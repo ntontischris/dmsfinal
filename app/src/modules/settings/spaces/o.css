@@ -1,25 +1,39 @@
-/* Ρυθμίσεις O1–O7 (prototype `screens/o.css`, αυτούσιο· το `:root X` έγινε `:root & X`) */
+/* Ρυθμίσεις O1–O9: κάθε κάρτα είναι `details.ml-box` (money-lines.css). Εδώ μόνο τα δικά τους: πλέγμα πεδίων,
+   κλειδωμένο πεδίο, ενέργεια μίας γραμμής, σημείωμα πρώτου στησίματος. Κάποια τα χρησιμοποιούν και οι O2–O6 των άλλων modules. */
 [data-look='spaces'] {
-& .o-card { margin-bottom: var(--space-4); min-width: 0; }
-& .o-card > h2 { margin-top: 0; }
-& .o-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
+& .o-card { min-width: 0; }
+& .ml-stack > .o-card, .ml-stack > form > .o-card { margin: 0; }
+& form > .o-card + .o-card { margin-top: .7rem; }
+& .o-card-body { display: grid; gap: var(--space-3); }
+& .o-card-body > form { display: grid; gap: var(--space-3); }
+& .o-card-body h3 { margin: var(--space-2) 0 0; font-size: .95rem; font-weight: 800; }
+& .o-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .9rem 1rem; margin-bottom: var(--space-3); }
 & .o-field { width: 100%; }
 & .o-field .input, .o-field .select { width: 100%; max-width: none; box-sizing: border-box; }
-& .o-hint { font-size: var(--text-sm); }
-& .o-locked { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; padding: var(--space-2) 0; border-top: 1px solid var(--color-border); font-size: var(--text-sm); }
+& .o-field > label { font-size: .8rem; font-weight: 700; color: var(--color-text-muted); }
+& .o-hint { font-size: var(--text-sm); color: var(--color-text-muted); }
+& .o-locked {
+  display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; padding: 0.6rem 0;
+  border-top: 1px solid color-mix(in oklab, var(--color-text) 7%, transparent); font-size: var(--text-sm);
+}
 & .o-locked > span:nth-child(2) { flex: 1 1 10rem; overflow-wrap: anywhere; }
 & .o-list-actions { margin-top: var(--space-3); }
-& .o-recent { margin-top: var(--space-6); }
-& .o-first { border-left-color: var(--color-attention); }
-:root & .o-first { border-left: 1px solid var(--color-border); background: color-mix(in oklab, var(--brand-rec) 8%, var(--color-surface)); }
-& .o-first > :first-child::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.5rem; vertical-align: middle; border-radius: 50%; background: var(--brand-rec); }
-& .o-locked { border-top-color: color-mix(in oklab, var(--color-text) 7%, transparent); }
+& .o-recent { margin-top: .7rem; }
+& .o-action { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: 0; }
+& :is(.ml-quick, .ml-actions) :is(a, button)[data-danger] { color: var(--color-text-muted); }
+& .o-left { justify-content: flex-start; }
+& .o-line { grid-template-columns: minmax(0, 1fr) auto; }
+& .o-first {
+  margin: 0 0 var(--space-4); padding: .8rem 1rem; border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--brand-yellow) 30%, transparent);
+  background: color-mix(in oklab, var(--brand-yellow) 8%, transparent); color: var(--color-text);
+}
+& .o-first::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 0.5rem; vertical-align: middle; border-radius: 50%; background: var(--brand-rec); }
 & .o-card a:not(.button) { font-weight: 600; text-decoration: none; }
 & .o-card a:not(.button):hover { color: var(--color-accent); }
-& .o-recent-empty { padding: 0 1.25rem 1rem; margin: 0; }
+& .o-card .ml-quick a { font-weight: 700; }
 & .kit-panel-head .kit-label a { text-transform: none; letter-spacing: 0; }
-& .o-locked { padding: 0.6rem 0; }
-& .o-card .part-rows { margin: 0 -1.25rem 0.5rem; }
+& .o-card .part-rows { margin: 0 0 0.5rem; }
 & .o-card .part-row .input { max-width: 14rem; }
 & .o5-check { display: inline-flex; gap: var(--space-2); align-items: center; min-height: 44px; font-weight: 600; }
 & .o5-days { display: grid; gap: 0.2rem; }

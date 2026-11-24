@@ -12,6 +12,8 @@ import type { FormState } from "@/lib/form-state";
 import { useFormChanged } from "@/lib/use-form-changed";
 import { useKeptForm } from "@/lib/use-kept-form";
 
+import "../../finance/spaces/money-lines.css";
+
 // Η αποθήκευση των καρτών Ρυθμίσεων στη νέα εμφάνιση: η μορφή του SaveRow του prototype (`screens/o-shared.tsx`),
 // με το πραγματικό action. Μία φόρμα μπορεί να απλώνεται σε δύο κάρτες (π.χ. Στοιχεία + Υπογράφων), γιατί το action
 // αποθηκεύει όλα τα πεδία μαζί· κάθε κάρτα έχει το δικό της κουμπί και το μήνυμα φαίνεται κάτω από όποιο πατήθηκε.
@@ -98,10 +100,9 @@ export function SaveRow({
           {form.state.notice}
         </p>
       )}
-      <div className="btn-row">
+      <div className="ml-actions">
         <button
           type="submit"
-          className="button"
           data-primary="true"
           name="card"
           value={card}
@@ -135,13 +136,12 @@ export function ActionButton({
 }: ActionButtonProps) {
   const { state, isPending, onSubmit, formRef } = useKeptForm(action);
   return (
-    <form ref={formRef} onSubmit={onSubmit} style={{ display: "inline" }}>
+    <form ref={formRef} onSubmit={onSubmit} className="ml-quick o-action">
       {Object.entries(fields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
       <button
         type="submit"
-        className="button"
         data-primary={isPrimary ? "true" : undefined}
         data-danger={isDanger ? "true" : undefined}
         disabled={isPending}
