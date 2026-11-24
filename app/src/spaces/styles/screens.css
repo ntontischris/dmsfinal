@@ -64,7 +64,7 @@
   color: var(--color-text-muted); background: var(--color-surface);
 }
 & .badge::before { content: ''; width: 0.45em; height: 0.45em; border-radius: 50%; background: currentColor; opacity: 0.7; flex: none; }
-& .badge[data-tone='attention'], & .badge[data-tone='danger'] { border-color: var(--tint-danger-55); color: var(--color-danger); background: var(--tint-danger-10); }
+& .badge[data-tone='attention'], & .badge[data-tone='danger'] { border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent); color: color-mix(in oklab, var(--brand-yellow) var(--panel-ink-mix), var(--color-text)); background: color-mix(in oklab, var(--brand-yellow) 14%, transparent); }
 & .badge[data-tone='strong'] { border-color: var(--tint-accent-60); color: var(--color-accent); background: var(--tint-accent-10); font-weight: 600; }
 & .badge[data-tone='ok'] { border-color: var(--tint-ok-55); color: var(--color-ok); background: var(--tint-ok-10); }
 & .badge[data-tone='attention']::before, & .badge[data-tone='danger']::before { opacity: 1; box-shadow: 0 0 6px currentColor; }

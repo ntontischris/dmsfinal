@@ -4,9 +4,9 @@
 & .b1-package { display: block; font-weight: 600; }
 & .b1-duplicate {
   justify-self: start; padding: 0.15rem 0.65rem; border-radius: 999px; font-size: var(--text-xs); font-weight: 600; white-space: nowrap;
-  text-decoration: none; color: var(--color-danger); background: color-mix(in oklab, var(--brand-rec, var(--color-danger)) 16%, transparent);
+  text-decoration: none; color: color-mix(in oklab, var(--brand-yellow) var(--panel-ink-mix), var(--color-text)); background: color-mix(in oklab, var(--brand-yellow) 16%, transparent);
 }
-& .b1-duplicate:hover { background: color-mix(in oklab, var(--brand-rec, var(--color-danger)) 26%, transparent); } }
+& .b1-duplicate:hover { background: color-mix(in oklab, var(--brand-yellow) 26%, transparent); } }
 
 /* Διακόπτες (aria-pressed) μέσα σε ml-quick: στοίχιση αριστερά (η ενεργή θέση έρχεται από το money-lines.css) */
 [data-look='spaces'] .choice-row.ml-quick { justify-content: flex-start; }

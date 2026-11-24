@@ -130,7 +130,8 @@
   border: 1px solid var(--color-border-strong); background: none; color: var(--color-text-muted);
 }
 :root & .badge::before { display: none; }
-:root & .badge:is([data-tone='attention'], [data-tone='danger']) { border-color: transparent; background: color-mix(in oklab, var(--brand-rec) 20%, transparent); color: var(--color-danger); }
+/* «Θέλει προσοχή» (π.χ. «Ξεχασμένη», «καθυστερεί») = κίτρινη προειδοποίηση με περίγραμμα· το κόκκινο μένει για CTA, τελεία, rec. */
+:root & .badge:is([data-tone='attention'], [data-tone='danger']) { border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent); background: color-mix(in oklab, var(--brand-yellow) 14%, transparent); color: color-mix(in oklab, var(--brand-yellow) var(--panel-ink-mix), var(--color-text)); font-weight: 700; }
 :root & .badge[data-tone='strong'] { border-color: transparent; background: color-mix(in oklab, var(--brand-periwinkle) 18%, transparent); color: var(--color-accent); }
 :root & .badge[data-tone='ok'] { border-color: transparent; background: color-mix(in oklab, var(--color-ok) 16%, transparent); color: var(--color-ok); }
 :root & .badge[data-tone='waiting'] { border-color: transparent; background: color-mix(in oklab, var(--brand-yellow) 18%, transparent); color: var(--brand-yellow); }

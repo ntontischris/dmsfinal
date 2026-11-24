@@ -11,7 +11,7 @@
 & .e1-when .badge { margin-left: var(--space-2); }
 & .e1-late { display: block; font-size: var(--text-sm); color: var(--color-accent); font-weight: 600; }
 & .e1-pill::before { display: none; }
-& .e1-pill[data-look='problem'] { border-color: color-mix(in oklab, var(--color-danger) 55%, transparent); color: var(--color-danger); background: color-mix(in oklab, var(--color-danger) 10%, transparent); font-weight: 600; }
+& .e1-pill[data-look='problem'] { border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent); color: color-mix(in oklab, var(--brand-yellow) var(--panel-ink-mix), var(--color-text)); background: color-mix(in oklab, var(--brand-yellow) 14%, transparent); font-weight: 600; }
 & .e1-pill[data-look='pending'] { border-color: var(--color-now); color: var(--color-text); background: color-mix(in oklab, var(--color-now) 25%, transparent); }
 & .e1-pill[data-look='action'] { border-color: color-mix(in oklab, var(--color-accent) 60%, transparent); color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 10%, transparent); font-weight: 600; }
 & .e1-pill[data-look='ok'] { border-color: color-mix(in oklab, var(--color-ok) 55%, transparent); color: var(--color-ok); background: color-mix(in oklab, var(--color-ok) 10%, transparent); }
