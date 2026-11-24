@@ -42,7 +42,9 @@ function SearchForm({ q }: { q: string }) {
         aria-label="Αναζήτηση"
         maxLength={200}
       />
-      <button type="submit">Αναζήτηση</button>
+      <button type="submit" data-primary>
+        Αναζήτηση
+      </button>
     </form>
   );
 }
@@ -100,9 +102,7 @@ async function groupsOf(
     return found.ok ? searchGroups(q, found.data) : null;
   }
   const library = await getLibrary();
-  return library.ok
-    ? onlySection(libraryGroups(library.data), section)
-    : null;
+  return library.ok ? onlySection(libraryGroups(library.data), section) : null;
 }
 
 // A8 Γνώση στη νέα εμφάνιση (prototype `screens/A8.tsx`): οι Ενότητες με τα δημοσιευμένα στοιχεία του Κοινού μου.

@@ -159,7 +159,7 @@ export async function SpacesConversations({
           <div>
             <Badge>Μόνο ανάγνωση</Badge>
             <h1>Συζητήσεις Βοηθού</h1>
-            <p>{list.total} Συζητήσεις συνολικά σε αυτό το είδος.</p>
+            <p>{READ_ONLY_NOTE}</p>
           </div>
         </header>
       </section>
@@ -190,7 +190,6 @@ export async function SpacesConversations({
         )}
         <UsageSlot />
       </div>
-      <p className="k-note">{READ_ONLY_NOTE}</p>
     </div>
   );
 }

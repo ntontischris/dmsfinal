@@ -26,7 +26,9 @@ export function NewItem({ sections }: NewItemProps) {
           <button
             key={option}
             type="button"
-            data-primary={option === "article" ? "true" : undefined}
+            data-primary={
+              kind === null && option === "article" ? "true" : undefined
+            }
             aria-pressed={kind === option}
             onClick={() => setKind(kind === option ? null : option)}
           >
