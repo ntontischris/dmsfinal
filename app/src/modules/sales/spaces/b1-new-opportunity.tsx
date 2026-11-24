@@ -280,25 +280,25 @@ export function NewOpportunity({
               ? "Νέος πελάτης και Ευκαιρία"
               : "Νέα Ευκαιρία σε υπάρχοντα Πελάτη"}
           </h2>
-          <div className="choice-row" role="group" aria-label="Τι πελάτης">
-            <span className="ml-quick">
-              <button
-                type="button"
-                aria-pressed={mode === "new"}
-                onClick={() => setMode("new")}
-              >
-                Νέος πελάτης
-              </button>
-            </span>
-            <span className="ml-quick">
-              <button
-                type="button"
-                aria-pressed={mode === "existing"}
-                onClick={() => setMode("existing")}
-              >
-                Υπάρχων πελάτης
-              </button>
-            </span>
+          <div
+            className="choice-row ml-quick"
+            role="group"
+            aria-label="Τι πελάτης"
+          >
+            <button
+              type="button"
+              aria-pressed={mode === "new"}
+              onClick={() => setMode("new")}
+            >
+              Νέος πελάτης
+            </button>
+            <button
+              type="button"
+              aria-pressed={mode === "existing"}
+              onClick={() => setMode("existing")}
+            >
+              Υπάρχων πελάτης
+            </button>
           </div>
           {mode === "new" ? (
             <NewClientForm sources={activeSources} />
