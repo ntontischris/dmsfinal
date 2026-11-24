@@ -29,6 +29,7 @@ export async function SpacesDuplicates() {
     );
   return (
     <Frame>
+      <h1 data-page-title>Πιθανά διπλά</h1>
       <p className="muted">
         Κάθε γραμμή είναι δύο Πελάτες που μοιάζουν: συγχώνευσέ τους ή πες «είναι
         άλλος».

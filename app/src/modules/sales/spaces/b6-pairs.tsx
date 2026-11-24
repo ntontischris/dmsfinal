@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 import { initialsOf } from "@/spaces/shell/avatar";
 
@@ -40,7 +39,10 @@ const agreementsOf = (side: DuplicateSide) =>
 
 function Side({ side, title }: { side: DuplicateSide; title: string }) {
   return (
-    <Panel label={side.name} aside={<Badge>{title}</Badge>}>
+    <section className="b6-side" aria-label={side.name}>
+      <h4 className="b6-side-title">
+        {side.name} <Badge>{title}</Badge>
+      </h4>
       <ItemRows
         items={[
           ...fieldsOf(side).map(([label, value]) => ({
@@ -51,7 +53,7 @@ function Side({ side, title }: { side: DuplicateSide; title: string }) {
           ...agreementsOf(side),
         ]}
       />
-    </Panel>
+    </section>
   );
 }
 
@@ -87,9 +89,9 @@ function Pair({
             </span>
           </strong>
           <small>
-            Η Συγχώνευση ενώνει τους δύο Πελάτες σε έναν, με όλες τις
-            Ευκαιρίες, Συμφωνίες και το ιστορικό τους. Το «είναι άλλος» κλείνει
-            το σήμα χωρίς ένωση.
+            Η Συγχώνευση ενώνει τους δύο Πελάτες σε έναν, με όλες τις Ευκαιρίες,
+            Συμφωνίες και το ιστορικό τους. Το «είναι άλλος» κλείνει το σήμα
+            χωρίς ένωση.
           </small>
         </span>
         <div className="ml-quick b6-quick">
@@ -137,7 +139,7 @@ function Pair({
             στοιχεία, Συμφωνίες, Παραγωγές και Τιμολόγια κάθε πλευράς
           </small>
         </summary>
-        <div className="compare">
+        <div className="b6-compare">
           <Side side={pair.candidate} title="Νέος, με σήμα «Πιθανό διπλό»" />
           <Side side={pair.existing} title="Υπάρχων" />
         </div>
@@ -154,13 +156,10 @@ export function DuplicatePairs({ pairs }: { pairs: readonly DuplicatePair[] }) {
     <>
       {notes.view}
       {pending.length === 0 ? (
-        <section className="card notice" role="status">
-          <h2>Δεν έμειναν Πιθανά διπλά</h2>
-          <p className="muted">
-            Όταν μια φόρμα μοιάζει με υπάρχοντα Πελάτη χωρίς ακριβές ταίριασμα,
-            θα εμφανιστεί εδώ.
-          </p>
-        </section>
+        <p className="ml-empty" role="status">
+          Δεν έμειναν Πιθανά διπλά. Όταν μια φόρμα μοιάζει με υπάρχοντα Πελάτη
+          χωρίς ακριβές ταίριασμα, θα εμφανιστεί εδώ.
+        </p>
       ) : (
         pending.map((pair) => (
           <Pair

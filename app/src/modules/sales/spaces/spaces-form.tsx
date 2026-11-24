@@ -7,6 +7,8 @@ import { useKeptForm } from "@/lib/use-kept-form";
 
 import { ClosedDayChoice } from "./closed-day-choice";
 
+import "../../finance/spaces/money-lines.css";
+
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
 interface SpacesActionFormProps {
@@ -18,7 +20,7 @@ interface SpacesActionFormProps {
   children?: ReactNode;
 }
 
-// Οι φόρμες των οθονών του prototype (`.field`, `.note`, `.button`) πάνω σε πραγματική ενέργεια: κρατά ό,τι γράφτηκε αν
+// Οι φόρμες των οθονών του prototype (`.field`, `.note`, κουμπιά σε `.ml-actions`) πάνω σε πραγματική ενέργεια: κρατά ό,τι γράφτηκε αν
 // η βάση πει όχι, δείχνει το λάθος ή την ενημέρωση όπως τα δείχνει το prototype.
 export function SpacesActionForm({
   action,
@@ -47,10 +49,9 @@ export function SpacesActionForm({
           {state.notice}
         </p>
       )}
-      <span className="btn-row">
+      <span className="ml-actions">
         <button
           type="submit"
-          className="button"
           data-primary={isPrimary ? "true" : undefined}
           disabled={isPending}
         >

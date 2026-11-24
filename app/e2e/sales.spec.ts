@@ -32,7 +32,7 @@ const boardCard = (page: Page, title: string): Locator =>
 // Ένα ζευγάρι των Πιθανών διπλών (B6): οι δύο πλευρές του έχουν για τίτλο το όνομα του Πελάτη.
 const duplicatePair = (page: Page, name: string): Locator =>
   page
-    .locator("section", { has: page.locator(".compare") })
+    .locator("section", { has: page.locator(".b6-compare") })
     .filter({ has: page.getByRole("heading", { name, exact: true }) });
 
 // Μια γραμμή λίστας των Ρυθμίσεων (O2) με ακριβή τίτλο.

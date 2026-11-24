@@ -50,6 +50,7 @@ export async function SpacesUnassigned() {
     lists.data.sources.find((source) => source.id === id)?.label ?? "—";
   return (
     <Frame>
+      <h1 data-page-title>Χωρίς υπεύθυνο</h1>
       <p className="muted b5-what">
         Δώσε Υπεύθυνο σε ό,τι ήρθε από τη φόρμα και απάντησε στα Αιτήματα
         πρόσβασης.
@@ -79,7 +80,7 @@ export async function SpacesUnassigned() {
         </StateNotice>
       ) : (
         <>
-          <h2>Χωρίς υπεύθυνο</h2>
+          <h2>Ευκαιρίες από τη φόρμα</h2>
           <UnassignedQueue
             assignable={assignable.data}
             items={queue.data.map((item) => ({
