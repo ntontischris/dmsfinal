@@ -33,7 +33,7 @@ const kindLabel = (kind: KindCandidate): string =>
     ? kind.label
     : `${kind.label} · υπόλοιπο ${kind.balance}`;
 
-// Νέο Παραδοτέο από το Αίτημα στο ύφος του prototype (`.j2-form`, `.toolbar`): ίδια πεδία με τη φόρμα των Παραδοτέων,
+// Νέο Παραδοτέο από το Αίτημα στο ύφος του prototype (`.j2-form`, `.j-inline`): ίδια πεδία με τη φόρμα των Παραδοτέων,
 // ίδιο server action· χωρίς υπόλοιπο ζητά χρέωση ή «χωρίς χρέωση» με λόγο.
 export function DeliverableFromRequest({
   messageId,
@@ -55,7 +55,7 @@ export function DeliverableFromRequest({
     >
       <input type="hidden" name="id" value={messageId} />
       <input type="hidden" name="productionId" value={productionId} />
-      <label className="toolbar">
+      <label className="j-inline">
         <span>Είδος</span>
         <select
           className="input"
@@ -80,7 +80,7 @@ export function DeliverableFromRequest({
         maxLength={200}
         autoComplete="off"
       />
-      <label className="toolbar">
+      <label className="j-inline">
         <span>Υπεύθυνος</span>
         <select className="input" name="assigneeId" defaultValue="">
           <option value="">Χωρίς υπεύθυνο</option>
@@ -91,7 +91,7 @@ export function DeliverableFromRequest({
           ))}
         </select>
       </label>
-      <label className="toolbar">
+      <label className="j-inline">
         <span>Γύρισμα</span>
         <select className="input" name="filmingId" defaultValue="">
           <option value="">Χωρίς Γύρισμα</option>
@@ -104,7 +104,7 @@ export function DeliverableFromRequest({
       </label>
       {needsCharge && (
         <>
-          <label className="toolbar">
+          <label className="j-inline">
             <span>Χρέωση (το είδος δεν έχει υπόλοιπο)</span>
             <select className="input" name="charge" defaultValue="pending">
               <option value="pending">Να αποφασιστεί χρέωση</option>

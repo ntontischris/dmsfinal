@@ -33,10 +33,9 @@ export function MessageActions({
     return null;
   return (
     <div className="stack">
-      <div className="btn-row">
+      <div className="ml-quick j-row">
         {message.canMark && (
           <button
-            className="button"
             type="button"
             onClick={() => toggle("request")}
           >
@@ -45,7 +44,6 @@ export function MessageActions({
         )}
         {showTag && (
           <button
-            className="button"
             type="button"
             onClick={() => toggle("tag")}
           >
@@ -54,7 +52,6 @@ export function MessageActions({
         )}
         {message.canEdit && (
           <button
-            className="button"
             type="button"
             onClick={() => toggle("edit")}
           >
@@ -63,7 +60,6 @@ export function MessageActions({
         )}
         {message.canDelete && (
           <button
-            className="button"
             data-danger
             type="button"
             onClick={() => toggle("delete")}
@@ -86,12 +82,11 @@ export function MessageActions({
         </p>
       )}
       {mode === "request" && (
-        <JForm action={markRequest} className="btn-row" onSuccess={close}>
+        <JForm action={markRequest} className="ml-quick j-row" onSuccess={close}>
           <input type="hidden" name="id" value={message.id} />
           {REQUEST_KINDS.map((kind) => (
             <button
               key={kind}
-              className="button"
               type="submit"
               name="kind"
               value={kind}
@@ -102,9 +97,9 @@ export function MessageActions({
         </JForm>
       )}
       {mode === "tag" && (
-        <JForm action={setMessageTag} className="toolbar" onSuccess={close}>
+        <JForm action={setMessageTag} className="j-inline" onSuccess={close}>
           <input type="hidden" name="id" value={message.id} />
-          <label className="toolbar">
+          <label className="j-inline">
             <span>Ετικέτα</span>
             <select
               className="input"

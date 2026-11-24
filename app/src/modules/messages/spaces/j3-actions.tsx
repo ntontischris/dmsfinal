@@ -20,7 +20,7 @@ export function ClientMessageActions({ message }: { message: J2Message }) {
     return null;
   return (
     <div className="stack">
-      <div className="btn-row">
+      <div className="ml-quick j-row">
         {message.canEdit && (
           <button type="button" onClick={() => toggle("edit")}>
             Διόρθωση

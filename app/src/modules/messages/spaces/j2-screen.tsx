@@ -2,8 +2,8 @@ import Link from "next/link";
 
 import { getViewer } from "@/modules/access";
 import { FilterBar } from "@/spaces/kit/filter-bar";
-import { Entity } from "@/spaces/kit/parts";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import { messagesCaps } from "../caps";
 import { AutoRefresh } from "../components/auto-refresh";
@@ -21,6 +21,7 @@ import {
   type MessageFilters,
 } from "../helpers";
 import {
+  BACK_TO_INBOX,
   COMPOSER_READONLY,
   PARTIAL_BANNER,
   THREAD_EMPTY_TEXT,
@@ -33,6 +34,7 @@ import { markThreadReadAfterRender } from "../mark-read";
 import { getInbox, getThread } from "../queries";
 import { sideRequestsOf, timelineOf } from "../request-helpers";
 import type { InboxItem, Thread } from "../view-schema";
+import { JEmpty } from "./j-empty";
 import { MessageBubble } from "./j-message";
 import { MessageActions } from "./j2-actions";
 import {
@@ -48,6 +50,7 @@ import { ReadAtScope } from "./j2-read-at";
 import { ChangeBubble, RequestBox } from "./j2-request";
 import { J2Side } from "./j2-side";
 
+import "../../finance/spaces/money-lines.css";
 import "./j.css";
 import "./j2.css";
 
@@ -60,42 +63,53 @@ interface SpacesThreadProps {
 function Header({
   thread,
   clientHref,
-  others,
 }: {
   thread: Thread;
   clientHref: string | undefined;
-  others: readonly InboxItem[];
 }) {
   const header = j2HeaderOf(thread.client, clientHref);
   return (
-    <section className="card">
-      <h2 className="card-title">Συνομιλία:</h2>
-      <Entity name={header.name} href={header.href} sub={header.sub} />
-      <div className="j2-switch">
-        <FilterBar
-          label="Άλλη Συνομιλία"
-          filters={
-            others.length > 1
-              ? [
-                  {
-                    label: "Πελάτης",
-                    isSearchable: true,
-                    options: others.map((row) => ({
-                      label: row.clientName,
-                      href: threadHref(row.clientId),
-                      isCurrent: row.clientId === thread.client.id,
-                    })),
-                  },
-                ]
-              : []
-          }
-        >
-          <Link className="button" href={MESSAGES_PATH}>
-            Όλες οι Συνομιλίες
-          </Link>
-        </FilterBar>
+    <header className="ml-hero j2-hero">
+      <span className="ml-hero-mono" aria-hidden="true">
+        {initialsOf(header.name)}
+      </span>
+      <div>
+        <span className="ml-tag">Συνομιλία</span>
+        <h1>{header.name}</h1>
+        <p>{header.sub}</p>
       </div>
-    </section>
+      <span className="ml-quick">
+        {header.href && <Link href={header.href}>Καρτέλα Πελάτη</Link>}
+        <Link href={MESSAGES_PATH}>{BACK_TO_INBOX}</Link>
+      </span>
+    </header>
+  );
+}
+
+// «Άλλη Συνομιλία»: αλλαγή Πελάτη χωρίς επιστροφή στα Εισερχόμενα (μόνο όταν υπάρχουν κι άλλες).
+function ThreadSwitch({
+  thread,
+  others,
+}: {
+  thread: Thread;
+  others: readonly InboxItem[];
+}) {
+  if (others.length < 2) return null;
+  return (
+    <FilterBar
+      label="Άλλη Συνομιλία"
+      filters={[
+        {
+          label: "Πελάτης",
+          isSearchable: true,
+          options: others.map((row) => ({
+            label: row.clientName,
+            href: threadHref(row.clientId),
+            isCurrent: row.clientId === thread.client.id,
+          })),
+        },
+      ]}
+    />
   );
 }
 
@@ -135,9 +149,7 @@ function Timeline({
     return isFiltered ? (
       <p className="muted">Κανένα Μήνυμα σε αυτό το φίλτρο.</p>
     ) : (
-      <StateNotice kind="empty" title={THREAD_EMPTY_TITLE}>
-        <p>{THREAD_EMPTY_TEXT}</p>
-      </StateNotice>
+      <JEmpty title={THREAD_EMPTY_TITLE}>{THREAD_EMPTY_TEXT}</JEmpty>
     );
   return (
     <ReadAtScope readAt={thread.readAt}>
@@ -210,10 +222,12 @@ export async function SpacesThread({ clientId, filters }: SpacesThreadProps) {
       <Header
         thread={thread}
         clientHref={caps.canOpenClient ? `/app/clients/${clientId}` : undefined}
-        others={inbox.ok ? inbox.data.items : []}
       />
       {thread.partial && <p className="note">{PARTIAL_BANNER}</p>}
-      <ProductionFilter thread={thread} filters={filters} />
+      <div className="j2-filters">
+        <ThreadSwitch thread={thread} others={inbox.ok ? inbox.data.items : []} />
+        <ProductionFilter thread={thread} filters={filters} />
+      </div>
       <div className="j2-layout">
         <div className="j2-thread">
           <Timeline thread={thread} filters={filters} candidates={candidates} />

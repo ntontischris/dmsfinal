@@ -23,7 +23,7 @@ interface JFormProps {
   children: ReactNode;
 }
 
-// Η φόρμα των ενεργειών της Συνομιλίας στο ύφος του prototype (`.j2-form`, `.btn-row`), δεμένη στα πραγματικά server actions.
+// Η φόρμα των ενεργειών της Συνομιλίας στο ύφος του prototype (`.j2-form`, `.ml-actions`), δεμένη στα πραγματικά server actions.
 // Κρατά ό,τι γράφτηκε αν αποτύχει· το λάθος φαίνεται όπως στο prototype (`.j2-error`).
 export function JForm({
   action,
@@ -57,20 +57,19 @@ export function JForm({
         </p>
       )}
       {(showSubmit || onCancel || aside) && (
-        <div className="btn-row">
+        <div className="ml-actions j-row">
           {showSubmit && (
             <button
-              className="button"
               type="submit"
-              data-primary={!isDanger}
-              data-danger={isDanger}
+              data-primary={!isDanger || undefined}
+              data-danger={isDanger || undefined}
               disabled={isPending || isDisabled}
             >
               {isPending ? pendingLabel : submitLabel}
             </button>
           )}
           {onCancel && (
-            <button className="button" type="button" onClick={onCancel}>
+            <button type="button" onClick={onCancel}>
               Άκυρο
             </button>
           )}
