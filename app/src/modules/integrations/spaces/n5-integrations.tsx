@@ -91,10 +91,14 @@ interface CardProps {
 function IntegrationCard({ item, analytics, extra }: CardProps) {
   const card = n5CardOf(item);
   return (
-    <details className="ml-box n5-card" open={card.isDown || undefined}>
+    <details
+      className="ml-box n5-card"
+      data-tone={card.tone}
+      open={card.isDown || undefined}
+    >
       <summary>
         <h2 className="ml-box-title">{card.name}</h2>
-        <small>{card.status}</small>
+        <small className="n5-status">{card.status}</small>
       </summary>
       <p className="muted">{card.purpose}</p>
       <dl className="ml-kv">
