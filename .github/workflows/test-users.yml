@@ -1,0 +1,82 @@
+# Δοκιμαστικοί Χρήστες (ένας ανά Ρόλο + δύο Πελάτες) στη ζωντανή βάση, για τα κουμπιά «Δες ως…» και τους ελεγκτές.
+# create = φτιάχνει/ξαναενεργοποιεί και βάζει τον κωδικό από το secret TEST_USERS_PASSWORD · remove = τους κλείνει.
+# Η λίστα: app/scripts/test-users.json · το δέσιμο με Ρόλους και Πελάτες επίδειξης: app/scripts/test-users.sql.
+# Μόνο με το χέρι, μόνο από το main. Ο κωδικός δεν τυπώνεται ποτέ.
+name: test-users
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'create = φτιάξε/άνοιξε τους δοκιμαστικούς Χρήστες · remove = κλείσ’ τους'
+        required: true
+        type: choice
+        options: [create, remove]
+
+concurrency:
+  group: demo-data
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  run:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      TEST_USERS_PASSWORD: ${{ secrets.TEST_USERS_PASSWORD }}
+      ACTION: ${{ inputs.action }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      - name: Σύνδεση με τη βάση
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "Λείπουν τα secrets της βάσης."; exit 1
+          fi
+          if [ "$ACTION" = "create" ] && [ ${#TEST_USERS_PASSWORD} -lt 12 ]; then
+            echo "Λείπει το secret TEST_USERS_PASSWORD (τουλάχιστον 12 χαρακτήρες)."; exit 1
+          fi
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Λογαριασμοί (email + κωδικός)
+        if: inputs.action == 'create'
+        run: |
+          key=$(supabase projects api-keys --project-ref "$SUPABASE_PROJECT_REF" --reveal -o json \
+            | jq -r '[.[] | select(.name == "service_role" or .type == "secret")][0].api_key // empty')
+          if [ -z "$key" ]; then echo "Δεν βρέθηκε κλειδί service role."; exit 1; fi
+          echo "::add-mask::$key"
+          api="https://$SUPABASE_PROJECT_REF.supabase.co/auth/v1/admin/users"
+          existing=$(curl -sf "$api?per_page=1000" -H "apikey: $key" -H "Authorization: Bearer $key" \
+            | jq -c '[.users[] | {email: (.email | ascii_downcase), id}]')
+          jq -c '.[]' scripts/test-users.json | while read -r user; do
+            email=$(echo "$user" | jq -r .email)
+            body=$(echo "$user" | jq -c --arg pw "$TEST_USERS_PASSWORD" \
+              '{email, password: $pw, email_confirm: true, user_metadata: {name}}')
+            id=$(echo "$existing" | jq -r --arg e "$email" '.[] | select(.email == $e) | .id')
+            if [ -z "$id" ]; then
+              code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$api" \
+                -H "apikey: $key" -H "Authorization: Bearer $key" -H 'Content-Type: application/json' -d "$body")
+              echo "$email: νέος ($code)"
+            else
+              code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT "$api/$id" \
+                -H "apikey: $key" -H "Authorization: Bearer $key" -H 'Content-Type: application/json' \
+                -d "$(echo "$body" | jq -c '{password, ban_duration: "none"}')")
+              echo "$email: υπάρχει, νέος κωδικός ($code)"
+            fi
+            case "$code" in 2*) ;; *) exit 1 ;; esac
+          done
+      - name: Ρόλοι και Πελάτες επίδειξης
+        run: |
+          users=$(jq -c '[.[] | {email, name, team_role, client_rank}]' scripts/test-users.json)
+          sql=$(cat scripts/test-users.sql)
+          sql=${sql//__ACTION__/$ACTION}
+          sql=${sql//__USERS__/$users}
+          printf '%s' "$sql" > /tmp/test-users.sql
+          supabase db query --linked -f /tmp/test-users.sql
