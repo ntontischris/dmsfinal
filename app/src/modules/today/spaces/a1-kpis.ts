@@ -7,6 +7,7 @@ import { fmtPercent } from "@/spaces/screens/shared";
 import type { KpiRisk, TodayKpis } from "../view-schema";
 import { wholeEuros } from "./a1-facts";
 import { countWord } from "./a1-model";
+import { monthAccusativeOf } from "./a1-money";
 
 const eurosOf = (amount: number): string => wholeEuros(amount * 100);
 
@@ -15,6 +16,14 @@ const turnoverStat = (turnover: number): StatProps => ({
   value: eurosOf(turnover),
   hint: "καθαρά, μείον Πιστωτικά",
   href: "/app/reports?report=turnover&period=this-month",
+});
+
+// Τ8: πόσα μπήκαν τον μήνα, από τις ίδιες Εισπράξεις με την κάρτα των Τιμολογίων (με ΦΠΑ, όχι ο τζίρος).
+const receivedStat = (month: string, received: number): StatProps => ({
+  label: `Μπήκαν τον ${monthAccusativeOf(Number(month.slice(5, 7)))}`,
+  value: eurosOf(received),
+  hint: "Εισπράξεις με ΦΠΑ",
+  href: "/app/finance/receipts",
 });
 
 // Χωρίς «Βλέπει ποσά» η πρόβλεψη δεν έχει ποσά: μένει το πλήθος των ανοιχτών Ευκαιριών.
@@ -53,9 +62,13 @@ const marginStat = (margin: NonNullable<TodayKpis["margin"]>): StatProps => ({
   href: "/app/reports?report=profit&period=this-year",
 });
 
-// Η σειρά των πλακιδίων: Τζίρος, pipeline, Παραγωγές, Περιθώριο· όσα επιτρέπονται.
-export const kpiStatsOf = (kpis: TodayKpis): StatProps[] => [
+// Η σειρά των πλακιδίων: Τζίρος, Μπήκαν, pipeline, Παραγωγές, Περιθώριο· όσα επιτρέπονται.
+export const kpiStatsOf = (
+  kpis: TodayKpis,
+  received: number | null = null,
+): StatProps[] => [
   ...(kpis.turnover === null ? [] : [turnoverStat(kpis.turnover)]),
+  ...(received === null ? [] : [receivedStat(kpis.month, received)]),
   ...(kpis.pipeline === null ? [] : [pipelineStat(kpis.pipeline)]),
   ...(kpis.activeProductions === null
     ? []

@@ -15,7 +15,8 @@ const toInvoiceCard = (facts: FinanceFacts["toInvoice"]): CardNumber | null =>
     count: String(facts.clients),
     hint:
       facts.clients > 0
-        ? `${fmtMoney(facts.total)} περιμένουν`
+        ? // Τ8: ίδιο σύνολο και ίδια λέξη με τη γραμμή κορυφής της Σήμερα· το πλήθος μετρά Πελάτες, όχι Τιμολογητέα.
+          `Πελάτες · ${fmtMoney(facts.total)} προς τιμολόγηση (χωρίς ΦΠΑ)`
         : "όλα τιμολογημένα",
   };
 

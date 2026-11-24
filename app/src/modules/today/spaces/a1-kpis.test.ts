@@ -58,6 +58,24 @@ describe("kpiStatsOf", () => {
     expect(stat).toMatchObject({ label: "Ανοιχτές Ευκαιρίες", value: "1" });
   });
 
+  it("«Μπήκαν τον <μήνα>» δίπλα στον Τζίρο, όταν φόρτωσαν οι Εισπράξεις (Τ8)", () => {
+    const stats = kpiStatsOf(kpisOf(), 1250.5);
+    expect(stats.map((s) => [s.label, s.value]).slice(0, 2)).toEqual([
+      ["Τζίρος μήνα", "4.000 €"],
+      ["Μπήκαν τον Ιούνιο", "1.251 €"],
+    ]);
+    expect(stats[1]).toMatchObject({
+      hint: "Εισπράξεις με ΦΠΑ",
+      href: "/app/finance/receipts",
+    });
+  });
+
+  it("χωρίς Εισπράξεις (null) δεν φαίνεται το «Μπήκαν»", () => {
+    expect(kpiStatsOf(kpisOf(), null).map((s) => s.label)).not.toContain(
+      "Μπήκαν τον Ιούνιο",
+    );
+  });
+
   it("αρνητικό Περιθώριο θέλει προσοχή· χωρίς μήνες με Έξοδα παύλα", () => {
     expect(
       kpiStatsOf(kpisOf({ margin: { margin: -0.1, months: 1 } }))[3],

@@ -26,7 +26,8 @@ describe("financeNumbersOf", () => {
       factsOf({ toInvoice: { clients: 3, total: 1500 } }),
     );
     expect(numbers.I1?.count).toBe("3");
-    expect(numbers.I1?.hint).toContain("περιμένουν");
+    expect(numbers.I1?.hint).toMatch(/^Πελάτες · /);
+    expect(numbers.I1?.hint).toContain("προς τιμολόγηση (χωρίς ΦΠΑ)");
   });
 
   it("should say all invoiced when no client waits", () => {

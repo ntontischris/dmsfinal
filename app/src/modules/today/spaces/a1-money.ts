@@ -19,6 +19,10 @@ const MONTHS = [
   "Δεκέμβριος",
 ] as const;
 
+// «τον Ιούνιο»: αιτιατική του μήνα (1–12).
+export const monthAccusativeOf = (month: number): string =>
+  MONTHS[month - 1].replace(/ς$/, "");
+
 // «3.940 € ληξιπρόθεσμα · 6 τιμολόγια»: το μεγάλο ποσό και η γραμμή δίπλα του.
 export const overdueTotalOf = (money: TodayMoney) => ({
   amount: wholeEuros(money.overdueCents),
