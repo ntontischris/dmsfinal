@@ -128,7 +128,7 @@ export function WhenStep(
   );
 }
 
-// Ίδια ονόματα Πελατών ξεχωρίζουν με την αχνή λέξη (πόλη ή υπεύθυνος) δίπλα στο όνομα.
+// Ίδια ονόματα Πελατών ξεχωρίζουν με την αχνή λέξη (ΑΦΜ, πόλη, email ή υπεύθυνος) δίπλα στο όνομα.
 export const clientChoicesOf = (clients: readonly ClientOption[]): Option[] =>
   clients.map((c) => ({
     id: c.id,

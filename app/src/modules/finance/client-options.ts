@@ -6,25 +6,40 @@ export interface ClientSource {
   name: string;
   city: string;
   managerName: string | null;
+  afm?: string | null;
+  contactEmail?: string;
 }
 
 const keyOf = (name: string): string =>
   name.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("el").trim();
 
+const clean = (value: string | null | undefined): string => (value ?? "").trim();
+
+// Η τιμή ξεχωρίζει τον Πελάτη όταν υπάρχει και κανένας άλλος συνονόματος δεν την έχει.
+const isUnique = (
+  value: string,
+  twins: readonly ClientSource[],
+  read: (twin: ClientSource) => string | null | undefined,
+): boolean =>
+  value !== "" && twins.filter((twin) => clean(read(twin)) === value).length === 1;
+
 const hintOf = (
   client: ClientSource,
   twins: readonly ClientSource[],
 ): string => {
-  const city = client.city.trim();
-  const isCityEnough =
-    city !== "" &&
-    twins.filter((twin) => twin.city.trim() === city).length === 1;
-  if (isCityEnough) return city;
-  const parts = [city, client.managerName ?? ""].filter((part) => part !== "");
+  const afm = clean(client.afm);
+  if (isUnique(afm, twins, (twin) => twin.afm)) return `ΑΦΜ ${afm}`;
+  const city = clean(client.city);
+  if (isUnique(city, twins, (twin) => twin.city)) return city;
+  const email = clean(client.contactEmail);
+  const extra = isUnique(email, twins, (twin) => twin.contactEmail)
+    ? email
+    : clean(client.managerName);
+  const parts = [city, extra].filter((part) => part !== "");
   return parts.length > 0 ? parts.join(" · ") : `κωδ. ${client.id.slice(0, 6)}`;
 };
 
-// Πελάτες για τις φόρμες: όταν δύο έχουν το ίδιο όνομα, μια αχνή λέξη (πόλη, μετά υπεύθυνος) τους ξεχωρίζει.
+// Πελάτες για τις φόρμες: όταν δύο έχουν το ίδιο όνομα, μια αχνή λέξη (ΑΦΜ, πόλη, email, μετά υπεύθυνος) τους ξεχωρίζει.
 export const clientOptionsOf = (
   rows: readonly ClientSource[],
 ): ClientOption[] =>

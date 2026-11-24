@@ -51,4 +51,26 @@ describe("clientOptionsOf", () => {
     ]);
     expect(options.map((o) => o.hint)).toEqual(["κωδ. aaaa11", "κωδ. bbbb22"]);
   });
+
+  it("should prefer the tax id when two clients share a name", () => {
+    const options = clientOptionsOf([
+      row({ id: "a", afm: "123456789" }),
+      row({ id: "b", afm: "987654321" }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual([
+      "ΑΦΜ 123456789",
+      "ΑΦΜ 987654321",
+    ]);
+  });
+
+  it("should use the email when tax id, city and manager are all shared", () => {
+    const options = clientOptionsOf([
+      row({ id: "a", city: "Θεσσαλονίκη", contactEmail: "a@example.com" }),
+      row({ id: "b", city: "Θεσσαλονίκη", contactEmail: "b@example.com" }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual([
+      "Θεσσαλονίκη · a@example.com",
+      "Θεσσαλονίκη · b@example.com",
+    ]);
+  });
 });
