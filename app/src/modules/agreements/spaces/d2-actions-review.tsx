@@ -20,7 +20,7 @@ export function ApprovalActions({ agreementId }: { agreementId: string }) {
     return decideApproval(previous, form);
   };
   return (
-    <D2Form action={decide} hideSubmit className="btn-row">
+    <D2Form action={decide} hideSubmit className="ml-quick">
       {(isPending) => (
         <>
           <IdField id={agreementId} />
@@ -33,7 +33,6 @@ export function ApprovalActions({ agreementId }: { agreementId: string }) {
           />
           <button
             type="submit"
-            className="button"
             data-primary="true"
             disabled={isPending}
             onClick={() => (decision.current = "approve")}
@@ -42,7 +41,6 @@ export function ApprovalActions({ agreementId }: { agreementId: string }) {
           </button>
           <button
             type="submit"
-            className="button"
             data-danger="true"
             disabled={isPending}
             onClick={() => (decision.current = "reject")}
@@ -64,13 +62,11 @@ export function RevisionButton({ agreement }: { agreement: AgreementDetail }) {
       : `Θα γίνει αναθεώρηση ${next} με νέα Ισχύς· οι παλιοί Σύνδεσμοι ακυρώνονται.`;
   if (!isAsking)
     return (
-      <button
-        type="button"
-        className="button"
-        onClick={() => setIsAsking(true)}
-      >
-        Νέα αναθεώρηση
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsAsking(true)}>
+          Νέα αναθεώρηση
+        </button>
+      </span>
     );
   return (
     <span className="d2-ask">
@@ -86,20 +82,11 @@ export function RevisionButton({ agreement }: { agreement: AgreementDetail }) {
               placeholder="Τι αλλάζει (προαιρετικά)"
               autoComplete="off"
             />
-            <span className="btn-row">
-              <button
-                type="submit"
-                className="button"
-                data-primary="true"
-                disabled={isPending}
-              >
+            <span className="ml-quick">
+              <button type="submit" data-primary="true" disabled={isPending}>
                 Συνέχεια
               </button>
-              <button
-                type="button"
-                className="button"
-                onClick={() => setIsAsking(false)}
-              >
+              <button type="button" onClick={() => setIsAsking(false)}>
                 Άκυρο
               </button>
             </span>

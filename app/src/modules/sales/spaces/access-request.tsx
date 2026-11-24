@@ -21,14 +21,15 @@ export function AccessRequest({
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        onClick={() => setIsOpen(true)}
-      >
-        Αίτημα πρόσβασης
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          data-primary="true"
+          onClick={() => setIsOpen(true)}
+        >
+          Αίτημα πρόσβασης
+        </button>
+      </span>
     );
   return (
     <>
@@ -49,12 +50,8 @@ export function AccessRequest({
           aria-label="Σχόλιο"
         />
       </SpacesActionForm>
-      <div className="btn-row">
-        <button
-          type="button"
-          className="button"
-          onClick={() => setIsOpen(false)}
-        >
+      <div className="ml-quick">
+        <button type="button" onClick={() => setIsOpen(false)}>
           Άκυρο
         </button>
       </div>

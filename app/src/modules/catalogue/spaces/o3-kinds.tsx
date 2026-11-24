@@ -83,15 +83,16 @@ function RowAction({
     <form ref={formRef} onSubmit={onSubmit} style={{ display: "inline" }}>
       <input type="hidden" name="id" value={id} />
       {children}
-      <button
-        type="submit"
-        className="button"
-        data-danger={isDanger ? "true" : undefined}
-        aria-label={ariaLabel}
-        disabled={isPending}
-      >
-        {label}
-      </button>
+      <span className="ml-quick">
+        <button
+          type="submit"
+          data-danger={isDanger ? "true" : undefined}
+          aria-label={ariaLabel}
+          disabled={isPending}
+        >
+          {label}
+        </button>
+      </span>
       <FormNote state={state} />
     </form>
   );
@@ -174,10 +175,9 @@ function KindForm({
     <form ref={formRef} className="stack" onSubmit={onSubmit}>
       {kind && <input type="hidden" name="id" value={kind.id} />}
       <KindFields kind={kind} />
-      <span className="btn-row">
+      <span className="ml-quick">
         <button
           type="submit"
-          className="button"
           data-primary="true"
           disabled={isPending || (kind !== undefined && !isChanged)}
         >
@@ -283,15 +283,16 @@ function KindRow({
         <>
           {status !== "Νέο" && <span className="part-sub">{uses} χρήσεις</span>}
           <Badge tone={TONE[status]}>{status}</Badge>
-          <button
-            type="button"
-            className="button"
-            aria-expanded={isEditing}
-            aria-label={`Επεξεργασία: ${kind.label}`}
-            onClick={() => setIsEditing((current) => !current)}
-          >
-            Επεξεργασία
-          </button>
+          <span className="ml-quick">
+            <button
+              type="button"
+              aria-expanded={isEditing}
+              aria-label={`Επεξεργασία: ${kind.label}`}
+              onClick={() => setIsEditing((current) => !current)}
+            >
+              Επεξεργασία
+            </button>
+          </span>
           <StatusAction kind={kind} status={status} onDone={onDone} />
         </>
       }
@@ -303,9 +304,11 @@ function AddKind() {
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button type="button" className="button" onClick={() => setIsOpen(true)}>
-        + Νέο είδος Παροχής
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsOpen(true)}>
+          + Νέο είδος Παροχής
+        </button>
+      </span>
     );
   return <KindForm action={createKind} submitLabel="Προσθήκη" />;
 }
@@ -352,11 +355,10 @@ export function SpacesProvisionKinds({
             ))}
           </RowList>
         )}
-        <div className="btn-row o-list-actions">
+        <div className="ml-quick o-list-actions">
           <AddKind />
           {(retiredCount > 0 || showRetired) && (
             <Link
-              className="button"
               href={showRetired ? SETTINGS_HREF : `${SETTINGS_HREF}?retired=1`}
             >
               {showRetired

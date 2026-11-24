@@ -56,14 +56,11 @@ function LeadForm({
           {state.notice}
         </p>
       )}
-      <button
-        type="submit"
-        className="button"
-        data-primary="true"
-        disabled={isPending}
-      >
-        {submitLabel}
-      </button>
+      <span className="ml-quick">
+        <button type="submit" data-primary="true" disabled={isPending}>
+          {submitLabel}
+        </button>
+      </span>
     </form>
   );
 }
@@ -267,14 +264,15 @@ export function NewOpportunity({
   }, [isOpen]);
   return (
     <>
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        onClick={() => setMode(mode ? null : "new")}
-      >
-        Νέος Πελάτης / Ευκαιρία
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          data-primary="true"
+          onClick={() => setMode(mode ? null : "new")}
+        >
+          Νέος Πελάτης / Ευκαιρία
+        </button>
+      </span>
       {mode && (
         <section ref={formRef} className="card" style={{ flexBasis: "100%" }}>
           <h2>
@@ -283,22 +281,24 @@ export function NewOpportunity({
               : "Νέα Ευκαιρία σε υπάρχοντα Πελάτη"}
           </h2>
           <div className="choice-row" role="group" aria-label="Τι πελάτης">
-            <button
-              type="button"
-              className="button"
-              aria-pressed={mode === "new"}
-              onClick={() => setMode("new")}
-            >
-              Νέος πελάτης
-            </button>
-            <button
-              type="button"
-              className="button"
-              aria-pressed={mode === "existing"}
-              onClick={() => setMode("existing")}
-            >
-              Υπάρχων πελάτης
-            </button>
+            <span className="ml-quick">
+              <button
+                type="button"
+                aria-pressed={mode === "new"}
+                onClick={() => setMode("new")}
+              >
+                Νέος πελάτης
+              </button>
+            </span>
+            <span className="ml-quick">
+              <button
+                type="button"
+                aria-pressed={mode === "existing"}
+                onClick={() => setMode("existing")}
+              >
+                Υπάρχων πελάτης
+              </button>
+            </span>
           </div>
           {mode === "new" ? (
             <NewClientForm sources={activeSources} />

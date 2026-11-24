@@ -76,7 +76,7 @@ export function ManagerChange({
     setOpportunityManager,
   );
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="btn-row">
+    <form ref={formRef} onSubmit={onSubmit} className="ml-quick">
       <input type="hidden" name="opportunityId" value={opportunityId} />
       <select
         className="select"

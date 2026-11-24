@@ -139,7 +139,7 @@ function CostFields({ item, caps, actual }: CostProps) {
         value={directCostText(item)}
         hint="Ό,τι δεν είναι ώρες της ομάδας: drone, freelancer, μετακίνηση."
         input={
-          <span className="btn-row">
+          <span className="ml-quick">
             <input
               id="c2-direct-cost"
               name="directCost"

@@ -18,14 +18,15 @@ export function CreateProposal({
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        onClick={() => setIsOpen(true)}
-      >
-        Νέα πρόταση
-      </button>
+      <span className="ml-quick">
+        <button
+          type="button"
+          data-primary="true"
+          onClick={() => setIsOpen(true)}
+        >
+          Νέα πρόταση
+        </button>
+      </span>
     );
   return (
     <SpacesActionForm action={createAgreement} submitLabel="Σύνταξη πρότασης">
@@ -66,7 +67,7 @@ export function ProposalQuickAction({
       action={needsApproval ? requestApproval : sendProposal}
       submitLabel={needsApproval ? "Αίτημα έγκρισης" : "Αποστολή"}
       isPrimary={!needsApproval}
-      className="btn-row"
+      className="ml-quick"
     >
       <input type="hidden" name="agreementId" value={agreementId} />
     </SpacesActionForm>

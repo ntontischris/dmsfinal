@@ -42,7 +42,7 @@ export function MoneyRows({
         value={discountText(money)}
         hint={isEditing ? standard : undefined}
         input={
-          <span className="btn-row">
+          <span className="ml-quick">
             <NumberInput
               id="t-disc"
               name="discountPercent"

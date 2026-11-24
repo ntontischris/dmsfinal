@@ -29,35 +29,29 @@ function Choices({ proposal, onPick }: ChoicesProps) {
       {!proposal.canSign && proposal.signatoryName && (
         <p className="note">{t.onlySignatory(proposal.signatoryName)}</p>
       )}
-      <div className="btn-row">
+      <div className="ml-quick">
         {proposal.canSign && (
           <button
             type="button"
-            className="button"
             data-primary="true"
             onClick={() => onPick("sign")}
           >
             {t.sign}
           </button>
         )}
-        <button
-          type="button"
-          className="button"
-          onClick={() => onPick("changes")}
-        >
+        <button type="button" onClick={() => onPick("changes")}>
           {t.requestChanges}
         </button>
         {proposal.canSign && (
           <button
             type="button"
-            className="button"
             data-danger="true"
             onClick={() => onPick("decline")}
           >
             {t.reject}
           </button>
         )}
-        <button type="button" className="button" onClick={() => window.print()}>
+        <button type="button" onClick={() => window.print()}>
           {t.print}
         </button>
       </div>

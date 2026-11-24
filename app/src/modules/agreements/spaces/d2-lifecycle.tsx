@@ -33,17 +33,21 @@ function Toggle({ label, children }: { label: string; children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <button type="button" className="button" onClick={() => setIsOpen(true)}>
-        {label}
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsOpen(true)}>
+          {label}
+        </button>
+      </span>
     );
   return (
     <fieldset className="d2-form">
       <legend>{label}</legend>
       {children}
-      <button type="button" className="button" onClick={() => setIsOpen(false)}>
-        Άκυρο
-      </button>
+      <span className="ml-quick">
+        <button type="button" onClick={() => setIsOpen(false)}>
+          Άκυρο
+        </button>
+      </span>
     </fieldset>
   );
 }
@@ -194,12 +198,12 @@ export function LifecyclePanel(props: PanelProps) {
       <D2Scope>
         <div className="stack">
           <StatusLines {...props} />
-          <div className="btn-row d2-life-actions">
+          <div className="ml-quick d2-life-actions">
             {can.renew && (
               <D2Form
                 action={renewAgreement}
                 submitLabel="Ανανέωση τώρα"
-                className="btn-row"
+                className="ml-quick"
               >
                 <IdField id={agreementId} />
               </D2Form>
@@ -208,7 +212,7 @@ export function LifecyclePanel(props: PanelProps) {
               <D2Form
                 action={cancelDissolution}
                 submitLabel="Ακύρωση Λύσης"
-                className="btn-row"
+                className="ml-quick"
               >
                 <IdField id={agreementId} />
               </D2Form>
@@ -217,7 +221,7 @@ export function LifecyclePanel(props: PanelProps) {
               <D2Form
                 action={setContinuation}
                 submitLabel="Συνεχίζει κανονικά"
-                className="btn-row"
+                className="ml-quick"
               >
                 <IdField id={agreementId} />
                 <input type="hidden" name="continue" value="yes" />

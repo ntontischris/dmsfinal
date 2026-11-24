@@ -58,7 +58,7 @@ export function ControlBox({
       <p className="muted">
         Η χαμένη Ευκαιρία κλείνει με λόγο απώλειας και δεν αναιρείται.
       </p>
-      <p className="btn-row">
+      <p className="ml-quick">
         <CloseLost opportunityId={opportunity.id} reasons={lossReasons} />
       </p>
     </Box>

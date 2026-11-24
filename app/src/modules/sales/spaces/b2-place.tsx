@@ -68,20 +68,11 @@ export function ClientPlace({ client, canEdit }: ClientPlaceProps) {
             {state.error}
           </p>
         )}
-        <span className="btn-row">
-          <button
-            type="submit"
-            className="button"
-            data-primary="true"
-            disabled={isPending}
-          >
+        <span className="ml-quick">
+          <button type="submit" data-primary="true" disabled={isPending}>
             Αποθήκευση
           </button>
-          <button
-            type="button"
-            className="button"
-            onClick={() => setIsEditing(false)}
-          >
+          <button type="button" onClick={() => setIsEditing(false)}>
             Άκυρο
           </button>
         </span>
@@ -95,13 +86,11 @@ export function ClientPlace({ client, canEdit }: ClientPlaceProps) {
       <PlaceLine label="Έδρα" value={client.address} />
       <PlaceLine label="Γύρισμα" value={client.filmingLocation} />
       {canEdit && (
-        <button
-          type="button"
-          className="button"
-          onClick={() => setIsEditing(true)}
-        >
-          {isEmpty ? "Πρόσθεσε διεύθυνση" : "Αλλαγή διεύθυνσης"}
-        </button>
+        <span className="ml-quick">
+          <button type="button" onClick={() => setIsEditing(true)}>
+            {isEmpty ? "Πρόσθεσε διεύθυνση" : "Αλλαγή διεύθυνσης"}
+          </button>
+        </span>
       )}
     </>
   );

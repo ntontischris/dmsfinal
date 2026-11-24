@@ -68,7 +68,7 @@ interface RowInputProps {
 
 function RowInputs({ row, rows, kinds, isPerPeriod, onChange }: RowInputProps) {
   return (
-    <span className="btn-row">
+    <span className="ml-quick">
       <input
         className="input"
         type="number"
@@ -125,14 +125,15 @@ export function ProvisionsEditor({
   const handleRemove = (key: number) =>
     setRows((current) => current.filter((row) => row.key !== key));
   const addButton = (
-    <button
-      type="button"
-      className="button"
-      disabled={!hasFreeKind(rows, kinds)}
-      onClick={handleAdd}
-    >
-      Προσθήκη Παροχής
-    </button>
+    <span className="ml-quick">
+      <button
+        type="button"
+        disabled={!hasFreeKind(rows, kinds)}
+        onClick={handleAdd}
+      >
+        Προσθήκη Παροχής
+      </button>
+    </span>
   );
   return (
     <>
@@ -160,13 +161,11 @@ export function ProvisionsEditor({
               ),
               sub: kind ? measureText(kind) : undefined,
               aside: (
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => handleRemove(row.key)}
-                >
-                  Αφαίρεση
-                </button>
+                <span className="ml-quick">
+                  <button type="button" onClick={() => handleRemove(row.key)}>
+                    Αφαίρεση
+                  </button>
+                </span>
               ),
             };
           })}

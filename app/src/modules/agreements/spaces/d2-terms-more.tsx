@@ -128,7 +128,7 @@ function MilestoneRow({
   canRemove: boolean;
 }) {
   return (
-    <li className="btn-row">
+    <li className="ml-quick">
       <NumberInput
         label="Ποσοστό δόσης (%)"
         inputMode="decimal"
@@ -163,7 +163,6 @@ function MilestoneRow({
       )}
       <button
         type="button"
-        className="button"
         aria-label="Αφαίρεση δόσης"
         disabled={!canRemove}
         onClick={onRemove}
@@ -227,13 +226,8 @@ function MilestonesEditor({ agreement }: { agreement: AgreementDetail }) {
           />
         ))}
       </ul>
-      <span className="btn-row">
-        <button
-          type="button"
-          className="button"
-          disabled={rows.length >= MAX_ROWS}
-          onClick={add}
-        >
+      <span className="ml-quick">
+        <button type="button" disabled={rows.length >= MAX_ROWS} onClick={add}>
           + Δόση
         </button>
       </span>

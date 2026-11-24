@@ -27,22 +27,21 @@ export function ClientDelete({
   if (block !== null)
     return (
       <>
-        <button type="button" className="button" data-danger disabled>
-          Διαγραφή Πελάτη
-        </button>
+        <span className="ml-quick">
+          <button type="button" data-danger disabled>
+            Διαγραφή Πελάτη
+          </button>
+        </span>
         <p className="muted">Δεν σβήνεται: {block}.</p>
       </>
     );
   if (!isConfirming)
     return (
-      <button
-        type="button"
-        className="button"
-        data-danger
-        onClick={() => setIsConfirming(true)}
-      >
-        Διαγραφή Πελάτη
-      </button>
+      <span className="ml-quick">
+        <button type="button" data-danger onClick={() => setIsConfirming(true)}>
+          Διαγραφή Πελάτη
+        </button>
+      </span>
     );
   return (
     <form
@@ -71,20 +70,15 @@ export function ClientDelete({
           <li>{state.error}</li>
         </ul>
       )}
-      <span className="btn-row">
+      <span className="ml-quick">
         <button
           type="submit"
-          className="button"
           data-danger
           disabled={isPending || typed.trim() !== clientName.trim()}
         >
           {isPending ? "Διαγραφή…" : "Διαγραφή"}
         </button>
-        <button
-          type="button"
-          className="button"
-          onClick={() => setIsConfirming(false)}
-        >
+        <button type="button" onClick={() => setIsConfirming(false)}>
           Άκυρο
         </button>
       </span>

@@ -134,7 +134,7 @@ function PriceFields({
             editable
             value={null}
             input={
-              <span className="btn-row">
+              <span className="ml-quick">
                 <input
                   id="c2-price"
                   name="price"

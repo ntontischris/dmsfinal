@@ -34,7 +34,7 @@ const textOf = (n: number | null, toText: (v: number) => string) =>
 function HoursInputs({ line, form }: { line: AgreementLine; form: string }) {
   return (
     <Labeled label="Ώρες γύρ. / μοντ. · άμεσο κόστος">
-      <span className="btn-row">
+      <span className="ml-quick">
         <NumberInput
           name="hoursShoot"
           form={form}
@@ -130,16 +130,11 @@ export function LineEdit(props: LineEditProps) {
           initial={line.provisions}
         />
       </Labeled>
-      <span className="btn-row d2-line-save">
-        <button
-          type="submit"
-          className="button"
-          data-primary="true"
-          form={ids.update}
-        >
+      <span className="ml-quick d2-line-save">
+        <button type="submit" data-primary="true" form={ids.update}>
           Αποθήκευση γραμμής
         </button>
-        <button type="submit" className="button" form={ids.remove}>
+        <button type="submit" form={ids.remove}>
           Αφαίρεση
         </button>
       </span>

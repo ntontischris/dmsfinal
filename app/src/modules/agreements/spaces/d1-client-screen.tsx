@@ -52,13 +52,14 @@ function ClientAgreementCard({ card }: { card: ClientCardView }) {
         )}
         <RemainingProvisions current={card.current} />
       </dl>
-      <Link
-        className="button"
-        data-primary={card.isProposal ? "true" : undefined}
-        href={card.href}
-      >
-        {card.cta}
-      </Link>
+      <span className="ml-quick">
+        <Link
+          data-primary={card.isProposal ? "true" : undefined}
+          href={card.href}
+        >
+          {card.cta}
+        </Link>
+      </span>
     </article>
   );
 }

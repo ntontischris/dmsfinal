@@ -102,7 +102,7 @@ function PriceSection({ item, caps, vatRate }: BasicsProps) {
             )
           }
           input={
-            <span className="btn-row">
+            <span className="ml-quick">
               <input
                 id="c2-price"
                 name="price"

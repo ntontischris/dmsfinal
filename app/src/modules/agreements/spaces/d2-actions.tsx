@@ -39,7 +39,7 @@ function SendActions({ agreement }: { agreement: AgreementDetail }) {
           action={requestApproval}
           submitLabel="Αίτημα έγκρισης"
           isPrimary
-          className="btn-row"
+          className="ml-quick"
         >
           <IdField id={agreement.id} />
         </D2Form>
@@ -49,7 +49,7 @@ function SendActions({ agreement }: { agreement: AgreementDetail }) {
           action={sendProposal}
           submitLabel="Αποστολή"
           isPrimary={!can.requestApproval}
-          className="btn-row"
+          className="ml-quick"
         >
           <IdField id={agreement.id} />
         </D2Form>
@@ -79,7 +79,7 @@ function ExpiredActions({
           action={extendProposal}
           submitLabel="Παράταση"
           isPrimary
-          className="btn-row"
+          className="ml-quick"
         >
           <IdField id={agreement.id} />
           <NumberInput
@@ -95,7 +95,7 @@ function ExpiredActions({
           action={closeLost}
           submitLabel="Κλείσιμο ως χαμένη"
           isDanger
-          className="btn-row"
+          className="ml-quick"
         >
           <IdField id={agreement.id} />
           <select
@@ -150,7 +150,7 @@ function FlowActions(props: ActionsProps) {
         <D2Form
           action={withdrawApproval}
           submitLabel="Απόσυρση αιτήματος"
-          className="btn-row"
+          className="ml-quick"
         >
           <IdField id={agreement.id} />
         </D2Form>
@@ -174,7 +174,7 @@ export function ActionBar(props: ActionsProps) {
   return (
     <section className="d2-actions" aria-label="Ενέργειες">
       <D2Scope>
-        <div className="btn-row">
+        <div className="ml-quick">
           <FlowActions {...props} />
         </div>
       </D2Scope>
