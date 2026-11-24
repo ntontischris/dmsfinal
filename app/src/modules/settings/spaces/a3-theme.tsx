@@ -29,11 +29,10 @@ export function ThemeChoice() {
     (): ThemePreference => "dark",
   );
   return (
-    <div className="a3-choice">
+    <div className="ml-quick a3-choice">
       {THEMES.map((item) => (
         <button
           key={item.id}
-          className="button"
           type="button"
           aria-current={item.id === theme}
           onClick={() => chooseTheme(item.id)}
