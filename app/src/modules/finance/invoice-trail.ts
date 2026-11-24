@@ -13,11 +13,15 @@ export interface TrailRow {
   meta: string;
 }
 
+// Ημερομηνία πληρωμής (ΕΕΕΕ-ΜΜ-ΗΗ) ή χρονοσφραγίδα: ταξινόμηση με τον ίδιο χρόνο, όχι με το κείμενο.
+const timeOf = (at: string): number =>
+  new Date(at.length === 10 ? `${at}T00:00:00` : at).getTime();
+
 const dayOf = (at: string): string =>
   formatReceiptDate(at.length === 10 ? at : athensToday(new Date(at)));
 
-const fromEntry = (entry: TrailEntry): TrailRow => ({
-  id: `e-${entry.at}-${entry.action}`,
+const fromEntry = (entry: TrailEntry, index: number): TrailRow => ({
+  id: `e-${index}`,
   at: entry.at,
   title: trailText(entry),
   meta: `${dayOf(entry.at)} · ${entry.byName ?? "—"}`,
@@ -35,8 +39,8 @@ export const reminderTitle = (reminder: Reminder): string =>
     ? "Υπενθύμιση στον Πελάτη (με το χέρι)"
     : "Υπενθύμιση στον Πελάτη (αυτόματη)";
 
-const fromReminder = (reminder: Reminder): TrailRow => ({
-  id: `r-${reminder.at}`,
+const fromReminder = (reminder: Reminder, index: number): TrailRow => ({
+  id: `r-${index}`,
   at: reminder.at,
   title: reminderTitle(reminder),
   meta: `${dayOf(reminder.at)} · ${reminder.manual ? (reminder.byName ?? "—") : "αυτόματα"}`,
@@ -51,7 +55,7 @@ export const trailRowsOf = (
     ...entries.map(fromEntry),
     ...payments.map(fromPayment),
     ...reminders.map(fromReminder),
-  ].sort((a, b) => a.at.localeCompare(b.at));
+  ].sort((a, b) => timeOf(a.at) - timeOf(b.at));
 
 // «Τελευταία υπενθύμιση 20/11/2026 (με το χέρι)», ή null όταν δεν έφυγε καμία. Η λίστα έρχεται νεότερη πρώτα.
 export const lastReminderText = (reminders: readonly Reminder[]): string | null => {

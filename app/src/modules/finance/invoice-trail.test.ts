@@ -48,6 +48,23 @@ describe("trailRowsOf", () => {
     ]);
   });
 
+  it("should order by time even when the offsets differ", () => {
+    const rows = trailRowsOf(
+      [entry({ at: "2026-03-01T10:00:00+02:00" })],
+      [],
+      [reminder({ at: "2026-03-01T09:00:00+00:00" })],
+    );
+    expect(rows.map((row) => row.title)).toEqual([
+      "Καταχωρήθηκε",
+      "Υπενθύμιση στον Πελάτη (αυτόματη)",
+    ]);
+  });
+
+  it("should give every row its own key, even for the same moment", () => {
+    const rows = trailRowsOf([entry(), entry()], [], [reminder(), reminder()]);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(4);
+  });
+
   it("should show who sent a manual reminder and the method of a payment", () => {
     const rows = trailRowsOf([], [payment()], [reminder({ manual: true, byName: "Άννα" })]);
     expect(rows.map((row) => row.meta)).toEqual(["17/03/2026 · Άννα", "05/04/2026 · Τραπεζική κατάθεση"]);
