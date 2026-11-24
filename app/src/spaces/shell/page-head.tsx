@@ -27,7 +27,7 @@ const detailTitleOf = (code: string, search: URLSearchParams): string =>
 // λεπτομέρειας μόνο το θέμα από πάνω για επιστροφή (τον τίτλο του στοιχείου τον γράφει η ίδια η σελίδα).
 // Οι άλλες λίστες του θέματος ζουν στο αριστερό μενού. Τα φίλτρα αλλάζουν χωρίς να πετούν τη σελίδα στην κορυφή.
 // Μια οθόνη μέσα σε λίστα (π.χ. καρτέλα ενός Μέλους της Ομάδας) γράφει δικό της τίτλο με <h1 data-page-title>: τότε
-// το CSS κρύβει το h1 του θέματος και δείχνει στη θέση του το «θέμα /» για επιστροφή, ώστε να μένει ένα h1.
+// το CSS κρύβει το h1 του θέματος και δείχνει στη θέση του το «← θέμα» για επιστροφή, ώστε να μένει ένα h1.
 export function PageHead({ model }: PageHeadProps) {
   const code = screenCodeOf(usePathname(), model);
   const search = useSearchParams();
@@ -51,7 +51,7 @@ export function PageHead({ model }: PageHeadProps) {
   return (
     <header className="page-head">
       <p className="eyebrow page-head-back">
-        <Link href={landingOf(view)}>{view.label}</Link> /
+        <Link href={landingOf(view)}>← {view.label}</Link>
       </p>
       <h1>
         {labelOf(tabLink ? tab : code)}

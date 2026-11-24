@@ -127,7 +127,7 @@
 & .page-head .eyebrow { margin: 0; }
 & .page-head .eyebrow a { text-decoration: none; }
 & .page-head-dot { color: var(--color-danger); }
-/* Η οθόνη έδωσε δικό της τίτλο (<h1 data-page-title>): φεύγει το h1 του θέματος, μένει το «θέμα /» για επιστροφή */
+/* Η οθόνη έδωσε δικό της τίτλο (<h1 data-page-title>): φεύγει το h1 του θέματος, μένει το «← θέμα» για επιστροφή */
 & .page-head-back { display: none; }
 & .app-main:has([data-page-title]) .page-head > h1 { display: none; }
 & .app-main:has([data-page-title]) .page-head-back { display: block; }
