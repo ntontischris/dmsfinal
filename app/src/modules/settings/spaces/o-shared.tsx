@@ -1,9 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
-import { Badge, type BadgeTone } from "@/spaces/screens/shared";
+import { Badge } from "@/spaces/screens/shared";
 
 import type { O1Change } from "./o1-adapter";
 
@@ -61,7 +59,7 @@ export function LockedField({
 }
 
 export function Pending() {
-  return <Badge tone="attention">εκκρεμεί</Badge>;
+  return <span className="ml-tag">εκκρεμεί</span>;
 }
 
 interface SettingsCardProps {
@@ -133,12 +131,6 @@ export function TextField({
   );
 }
 
-const STATUS_TONE: Readonly<Record<string, BadgeTone>> = {
-  Νέα: "waiting",
-  "Σε χρήση": "ok",
-  Αποσύρθηκε: "faded",
-};
-
 export type ListItemStatus = "Νέα" | "Σε χρήση" | "Αποσύρθηκε";
 
 export interface SettingsListItem {
@@ -178,74 +170,58 @@ export function ListEditor({
   );
   const retiredCount = items.length - visible.length;
   return (
-    <div className="o-card">
-      <Panel
-        label={title}
-        aside={
-          <>
-            <Badge>
-              {isBilingual ? "ελληνικά και αγγλικά" : "μόνο ελληνικά"}
-            </Badge>
-          </>
-        }
-      >
-        {notice && (
-          <div className="note" role="status">
-            {notice}
-          </div>
-        )}
-        <RowList>
-          {visible.map((item, index) => (
-            <ListRow
-              key={item.id}
-              isFaded={item.status === "Αποσύρθηκε"}
-              lead={
-                <span>
-                  {index + 1}{" "}
-                  <span className="muted" aria-hidden="true">
-                    ↑↓
-                  </span>
-                </span>
-              }
-              title={item.label}
-              sub={
-                isBilingual
-                  ? (item.labelEn ?? <Badge tone="attention">λείπει</Badge>)
-                  : undefined
-              }
-              aside={
-                <>
-                  <span className="part-sub">
-                    {item.status !== "Νέα" && `${item.uses} χρήσεις`}
-                  </span>
-                  <Badge tone={STATUS_TONE[item.status]}>{item.status}</Badge>
-                  {item.actions}
-                  {item.status === "Αποσύρθηκε" && (
-                    <span className="muted">ξαναμπαίνει με το χέρι</span>
-                  )}
-                </>
-              }
-            />
-          ))}
-        </RowList>
-        <div className="btn-row o-list-actions">
-          {addSlot}
-          {(retiredCount > 0 || showRetired) && (
-            <Link className="button" href={toggleRetiredHref}>
-              {showRetired
-                ? "Κρύψε αποσυρμένες"
-                : `Δείξε αποσυρμένες (${retiredCount})`}
-            </Link>
-          )}
+    <details className="ml-box o-card" open>
+      <summary>
+        <h2 className="ml-box-title">{title}</h2>
+        <small>{isBilingual ? "ελληνικά και αγγλικά" : "μόνο ελληνικά"}</small>
+      </summary>
+      {notice && (
+        <div className="note" role="status">
+          {notice}
         </div>
-        {isBilingual && (
-          <p className="muted o-hint">
-            Τη βλέπει πελάτης ή Επισκέπτης, οπότε η αποθήκευση θέλει και τις δύο
-            γλώσσες.
-          </p>
+      )}
+      <ul className="ml-list">
+        {visible.map((item, index) => (
+          <li
+            key={item.id}
+            className="ml-line"
+            data-faded={item.status === "Αποσύρθηκε" || undefined}
+          >
+            <span className="ml-thumb" aria-hidden="true">
+              {index + 1}
+            </span>
+            <span className="ml-main">
+              <strong>{item.label}</strong>
+              {isBilingual && (
+                <small>{item.labelEn ?? "λείπει η αγγλική ετικέτα"}</small>
+              )}
+              {item.status !== "Νέα" && <small>{`${item.uses} χρήσεις`}</small>}
+              {item.status === "Αποσύρθηκε" && (
+                <small>ξαναμπαίνει με το χέρι</small>
+              )}
+            </span>
+            <span className="ml-tag">{item.status}</span>
+            {item.actions && <span className="ml-quick">{item.actions}</span>}
+          </li>
+        ))}
+      </ul>
+      <p className="ml-actions o-list-actions">
+        {addSlot}
+        {(retiredCount > 0 || showRetired) && (
+          <Link href={toggleRetiredHref}>
+            {showRetired
+              ? "Κρύψε αποσυρμένες"
+              : `Δείξε αποσυρμένες (${retiredCount})`}
+          </Link>
         )}
-      </Panel>
-    </div>
+      </p>
+      {isBilingual && (
+        <p className="muted o-hint">
+          Τη βλέπει πελάτης ή Επισκέπτης, οπότε η αποθήκευση θέλει και τις δύο
+          γλώσσες.
+        </p>
+      )}
+    </details>
   );
 }
 
