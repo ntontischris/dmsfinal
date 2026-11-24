@@ -100,6 +100,8 @@ test("01 · στο Προφίλ ο Ιδιοκτήτης έχει σύνδεσμ�
   await signIn(page, OWNER);
   await page.goto("/app/settings/profile");
   await expect(page.getByRole("heading", { name: "Οι Ρόλοι μου" })).toBeVisible();
+  // Το κουτί «Οι Ρόλοι μου» είναι κλειστό· ο σύνδεσμος φαίνεται αφού ανοίξει.
+  await page.getByRole("heading", { name: "Οι Ρόλοι μου" }).click();
   await expect(page.getByRole("link", { name: "Ρόλοι και Δικαιώματα" })).toBeVisible();
   await expect(page.getByText("Τους Ρόλους δεν τους αλλάζεις εσύ")).toHaveCount(0);
 });
