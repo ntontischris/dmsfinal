@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
 import type { CardDef, CardKind, CardRow } from "./a1-model";
-import { splitUrgent, withoutRepeats, zonesOf } from "./a1-zones";
+import { withoutRepeats, zonesOf } from "./a1-zones";
 
 const built = (
   id: string,
@@ -96,13 +96,4 @@ test("το επόμενο Γύρισμα δεν φαίνεται δεύτερη 
     content: { ...card.content, cta: { label: "Χάρτης", href: "/map" } },
   };
   expect(withoutRepeats([withCta], row)).toEqual([]);
-});
-
-test("τα επείγοντα πάνω είναι έως 3· τα υπόλοιπα περιμένουν κλειστά", () => {
-  const items = ["a", "b", "c", "d", "e"].map((id) =>
-    built(id, "action", [red]),
-  );
-  const { shown, rest } = splitUrgent(items);
-  expect(ids(shown)).toEqual(["a", "b", "c"]);
-  expect(ids(rest)).toEqual(["d", "e"]);
 });

@@ -43,26 +43,24 @@ export function Customize({
     available.some((card) => card.id === id && isMovable(card)),
   );
   return (
-    <section className="card a1-customize" aria-labelledby="a1-customize-title">
+    <section
+      className="ml-box a1-box a1-customize"
+      aria-labelledby="a1-customize-title"
+    >
       <form action={action}>
-        <header className="a1-card-head">
-          <h2 id="a1-customize-title">Προσαρμογή της «Σήμερα»</h2>
-          <span className="btn-row">
+        <header className="a1-box-head">
+          <h2 id="a1-customize-title" className="ml-box-title">
+            Προσαρμογή της «Σήμερα»
+          </h2>
+          <span className="ml-actions">
             {/* Κλείσιμο χωρίς αποθήκευση: η «Σήμερα» μένει όπως ήταν. */}
-            <Link className="button" href="/app">
-              Κλείσιμο
-            </Link>
-            <button
-              className="button"
-              data-primary="true"
-              type="submit"
-              disabled={isPending}
-            >
+            <Link href="/app">Κλείσιμο</Link>
+            <button data-primary="true" type="submit" disabled={isPending}>
               Τέλος
             </button>
           </span>
         </header>
-        <p className="muted">
+        <p className="a1-summary" data-muted>
           Βλέπεις όσες κάρτες σου επιτρέπουν τα Δικαιώματά σου. Κρύψε όσες δεν
           θέλεις και άλλαξε τη σειρά. Η αλλαγή ισχύει μόνο για σένα. Μια κάρτα
           που κρύβεις δεν σταματά τις Ειδοποιήσεις της.
@@ -84,12 +82,11 @@ export function Customize({
                     <span className="muted">· {card.source}</span>
                   )}
                 </span>
-                <span className="btn-row">
+                <span className="ml-quick">
                   {isMovable(card) ? (
                     <>
                       <button
                         type="button"
-                        className="button"
                         disabled={!isShown || index <= 0}
                         onClick={() => setShown(moved(shown, card.id, -1))}
                         aria-label={`${card.title} πιο πάνω`}
@@ -98,7 +95,6 @@ export function Customize({
                       </button>
                       <button
                         type="button"
-                        className="button"
                         disabled={!isShown || index >= movable.length - 1}
                         onClick={() => setShown(moved(shown, card.id, 1))}
                         aria-label={`${card.title} πιο κάτω`}
@@ -111,7 +107,6 @@ export function Customize({
                   )}
                   <button
                     type="button"
-                    className="button"
                     onClick={() => setShown(toggled(shown, card.id))}
                   >
                     {isShown ? "Κρύψε" : "Εμφάνισε"}
@@ -140,8 +135,8 @@ function ResetForm() {
   );
   return (
     <form action={action}>
-      <p>
-        <button className="button" type="submit" disabled={isPending}>
+      <p className="ml-quick a1-box-foot">
+        <button type="submit" disabled={isPending}>
           Επαναφορά προεπιλογής
         </button>
       </p>
