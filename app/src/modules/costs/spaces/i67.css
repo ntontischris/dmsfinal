@@ -36,6 +36,8 @@
 .i7-line .i67-signals { align-items: center; }
 .i7-line .ml-main strong a { color: inherit; text-decoration: none; }
 .i7-line .ml-main strong a:hover { text-decoration: underline; }
+/* Αφαίρεση γραμμής / κατηγορίας: κόκκινο περίγραμμα */
+.ml-quick button[data-danger] { border-color: var(--color-danger); color: var(--color-danger); }
 .ml-amount[data-sign="gain"] { color: var(--color-ok); }
 .ml-amount[data-sign="loss"] { color: var(--color-danger); }
 .ml-amount[data-sign="none"] { color: var(--color-text-muted); }

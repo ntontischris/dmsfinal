@@ -154,7 +154,8 @@ export function ReasonBox(props: {
         </button>
         <button
           type="button"
-          data-primary
+          data-primary={isDelete ? undefined : true}
+          data-danger={isDelete || undefined}
           disabled={reason.trim() === "" || isPending}
           onClick={handleConfirm}
         >
