@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { answerDeliverable } from "../actions-client";
+import { H2Box } from "./h2-box";
 import { roundsLabel } from "./h3-adapter";
 import { H34Form } from "./h4-form";
 
@@ -30,17 +29,20 @@ export function H4Decision({
   const canRequest = note.trim().length > 0 && (!isOverLimit || isAcked);
 
   return (
-    <Panel
-      label="Η απάντησή σου"
-      aside={
-        <span className="muted">{roundsLabel(roundsUsed, roundsLimit)}</span>
-      }
+    <H2Box
+      title="Η απάντησή σου"
+      hint={roundsLabel(roundsUsed, roundsLimit)}
+      isOpen
     >
       {/* Δύο ισότιμες επιλογές· η πατημένη φαίνεται με ✓ και χρώμα. Τίποτα δεν στέλνεται πριν το επιβεβαιώσεις. */}
-      <div className="btn-row" role="group" aria-label="Η απάντησή σου">
+      <div
+        className="ml-quick h34-actions"
+        role="group"
+        aria-label="Η απάντησή σου"
+      >
         <button
           type="button"
-          className="button h34-choice"
+          className="h34-choice"
           aria-pressed={mode === "approve"}
           onClick={() => setMode("approve")}
         >
@@ -48,7 +50,7 @@ export function H4Decision({
         </button>
         <button
           type="button"
-          className="button h34-choice"
+          className="h34-choice"
           aria-pressed={mode === "changes"}
           onClick={() => setMode("changes")}
         >
@@ -118,6 +120,6 @@ export function H4Decision({
           )}
         </H34Form>
       )}
-    </Panel>
+    </H2Box>
   );
 }

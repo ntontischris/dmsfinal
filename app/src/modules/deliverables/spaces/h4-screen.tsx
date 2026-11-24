@@ -14,9 +14,10 @@ import {
 } from "./h4-adapter";
 import { H4After, H4FinalFiles } from "./h4-after";
 import { H4Decision } from "./h4-decision";
-import { H4Signals, VersionTabs } from "./h4-parts";
+import { H4Hero, VersionTabs } from "./h4-parts";
 import { H4Review } from "./h4-review";
 
+import "../../finance/spaces/money-lines.css";
 import "./h34.css";
 
 interface SpacesClientDeliverableProps {
@@ -53,11 +54,9 @@ function Versions({
   const latest = versions.at(-1)?.number;
   if (!version || latest === undefined)
     return (
-      <section className="card">
-        <p className="muted">
-          Δεν έχει σταλεί ακόμα Έκδοση. Θα ειδοποιηθείς μόλις είναι έτοιμη.
-        </p>
-      </section>
+      <p className="ml-empty">
+        Δεν έχει σταλεί ακόμα Έκδοση. Θα ειδοποιηθείς μόλις είναι έτοιμη.
+      </p>
     );
   const notice = answerNoticeOf(detail);
   const isLatest = version.number === latest;
@@ -77,7 +76,7 @@ function Versions({
       >
         {/* Στη θέση της απόφασης: τι έγινε, ποιος ειδοποιήθηκε, τι ακολουθεί. */}
         {notice && (
-          <section className="card h34-done" role="status">
+          <section className="ml-box h34-done" role="status">
             <h2>{notice.title}</h2>
             {notice.lines.map((line) => (
               <p key={line}>{line}</p>
@@ -121,18 +120,11 @@ export async function SpacesClientDeliverable({
 
   const detail = result.data;
   const isApproved = detail.state === "approved";
-  // Ο τίτλος: το Παραδοτέο (η κεφαλίδα του κελύφους γράφει μόνο τον Χώρο).
+  // Ο τίτλος: το Παραδοτέο, στην κεφαλίδα· από κάτω τα κουτιά, με τη σειρά που τα χρειάζεται ο πελάτης.
   return wrap(
-    <>
-      <header className="page-head">
-        <h1>
-          {detail.title}
-          <span className="page-head-dot">.</span>
-        </h1>
-      </header>
-      <div className="h34">
-        <H4Signals detail={detail} />
-        {detail.state === "cancelled" && <p className="h34-warn">Ακυρώθηκε.</p>}
+    <div className="h34">
+      <H4Hero detail={detail} />
+      <div className="ml-stack">
         {/* Η λήψη του τελικού αρχείου ψηλά: είναι ο λόγος που ξαναμπαίνει ο πελάτης. */}
         {(isApproved || detail.finalFilesUrl !== null) && (
           <H4FinalFiles finalLink={detail.finalFilesUrl} />
@@ -156,8 +148,8 @@ export async function SpacesClientDeliverable({
               νέα Έκδοση.
             </p>
           )}
+        <p className="note">Δεν εγκρίνεται τίποτα αυτόματα.</p>
       </div>
-      <p className="note">Δεν εγκρίνεται τίποτα αυτόματα.</p>
-    </>,
+    </div>,
   );
 }

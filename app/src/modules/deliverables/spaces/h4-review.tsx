@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
 import { useVideoControl } from "@/spaces/kit/video-player";
 
 import {
@@ -11,6 +10,7 @@ import {
   resolveAsClient,
 } from "../actions-client";
 import type { ClientVersion } from "../client-types";
+import { H2Box } from "./h2-box";
 import { H4CommentForm } from "./h4-comments";
 import { AnswerLine } from "./h4-parts";
 import { H4Player } from "./h4-player";
@@ -53,10 +53,7 @@ export function H4Review({
         control={control}
       />
       {children}
-      <Panel
-        label="Σχόλια"
-        aside={<span className="muted">{version.comments.length}</span>}
-      >
+      <H2Box title="Σχόλια" hint={`${version.comments.length} σχόλια`} isOpen>
         <AnswerLine version={version} />
         <VideoNotes
           notes={version.comments}
@@ -71,7 +68,7 @@ export function H4Review({
             control={control}
           />
         )}
-      </Panel>
+      </H2Box>
     </>
   );
 }

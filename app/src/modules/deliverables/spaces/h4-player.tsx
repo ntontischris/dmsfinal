@@ -4,11 +4,11 @@ import { useState } from "react";
 
 import { useKeptForm } from "@/lib/use-kept-form";
 import { isVideoLink } from "@/lib/video-embed";
-import { Panel } from "@/spaces/kit/panel";
 import { VideoPlayer, type VideoControl } from "@/spaces/kit/video-player";
 
 import { reportBrokenLink } from "../actions-client";
 import type { ClientVersion } from "../client-types";
+import { H2Box } from "./h2-box";
 
 interface PlayerProps {
   deliverableId: string;
@@ -33,11 +33,7 @@ function ReportButton({
     <form ref={formRef} style={{ display: "contents" }} onSubmit={onSubmit}>
       <input type="hidden" name="deliverableId" value={deliverableId} />
       <input type="hidden" name="versionNumber" value={versionNumber} />
-      <button
-        type="submit"
-        className="button"
-        disabled={isReported || isPending}
-      >
+      <button type="submit" disabled={isReported || isPending}>
         Δεν παίζει το βίντεο;
       </button>
       {state.error && (
@@ -61,7 +57,7 @@ export function H4Player({
   const hasEmbed = isVideoLink(version.url);
   const title = `Έκδοση v${version.number}`;
   return (
-    <Panel label={title}>
+    <H2Box title={title} hint="το βίντεο" isOpen>
       <div className="h34-player">
         {hasEmbed && (
           <VideoPlayer
@@ -77,9 +73,8 @@ export function H4Player({
             Δεν βλέπεις το βίντεο εδώ; Πάτα «Δες το βίντεο σε νέα καρτέλα».
           </p>
         )}
-        <div className="btn-row">
+        <div className="ml-quick h34-actions">
           <a
-            className="button"
             data-primary={!hasEmbed || hasStarted ? "true" : undefined}
             href={version.url}
             target="_blank"
@@ -101,6 +96,6 @@ export function H4Player({
           </p>
         )}
       </div>
-    </Panel>
+    </H2Box>
   );
 }

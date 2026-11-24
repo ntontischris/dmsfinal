@@ -2,21 +2,23 @@
 
 import { useCallback, useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { requestChangeAfterApproval } from "../actions-client";
 import type { ClientOpenRequest } from "../client-types";
+import { H2Box } from "./h2-box";
 import { fmtDay } from "./h4-adapter";
 import { H34Form } from "./h4-form";
 
 // Τελικά αρχεία: στην κορυφή της σελίδας μόλις εγκριθεί το Παραδοτέο (prototype `screens/h4-after.tsx`).
 export function H4FinalFiles({ finalLink }: { finalLink: string | null }) {
   return (
-    <Panel label="Τελικά αρχεία">
+    <H2Box
+      title="Τελικά αρχεία"
+      hint={finalLink ? "έτοιμα για λήψη" : "ετοιμάζονται"}
+      isOpen
+    >
       {finalLink ? (
-        <div className="stack">
+        <div className="ml-quick h34-actions">
           <a
-            className="button"
             data-primary="true"
             href={finalLink}
             target="_blank"
@@ -25,7 +27,7 @@ export function H4FinalFiles({ finalLink }: { finalLink: string | null }) {
           >
             Λήψη τελικού αρχείου
           </a>
-          <p className="muted">Ανοίγει σε νέα καρτέλα.</p>
+          <small className="muted">Ανοίγει σε νέα καρτέλα.</small>
         </div>
       ) : (
         <p className="muted">
@@ -33,7 +35,7 @@ export function H4FinalFiles({ finalLink }: { finalLink: string | null }) {
           λήψης.
         </p>
       )}
-    </Panel>
+    </H2Box>
   );
 }
 
@@ -53,7 +55,11 @@ export function H4After({ deliverableId, request, canRequest }: AfterProps) {
   }, []);
 
   return (
-    <Panel label="Αλλαγή μετά την έγκριση">
+    <H2Box
+      title="Αλλαγή μετά την έγκριση"
+      hint={request ? "το εξετάζει η ομάδα" : "αν θέλεις κάτι ακόμα"}
+      isOpen={request !== null || isOpen}
+    >
       {request ? (
         <p className="h34-memo" role="status">
           Το αίτημά σου στάλθηκε στις {fmtDay(request.createdAt)} και το
@@ -62,13 +68,11 @@ export function H4After({ deliverableId, request, canRequest }: AfterProps) {
       ) : (
         canRequest && (
           <>
-            <button
-              type="button"
-              className="button"
-              onClick={() => setIsOpen(true)}
-            >
-              Ζητώ αλλαγή
-            </button>
+            <div className="ml-quick h34-actions">
+              <button type="button" onClick={() => setIsOpen(true)}>
+                Ζητώ αλλαγή
+              </button>
+            </div>
             {isOpen && (
               <H34Form
                 action={requestChangeAfterApproval}
@@ -94,6 +98,6 @@ export function H4After({ deliverableId, request, canRequest }: AfterProps) {
           </>
         )
       )}
-    </Panel>
+    </H2Box>
   );
 }
