@@ -4,8 +4,6 @@ import { useState } from "react";
 
 import type { FormState } from "@/lib/form-state";
 import { useKeptForm } from "@/lib/use-kept-form";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Panel } from "@/spaces/kit/panel";
 import { Badge } from "@/spaces/screens/shared";
 
 import {
@@ -15,6 +13,8 @@ import {
 } from "../actions-kinds";
 import type { BlockedKind } from "../types";
 import { KindBadge, KindStyleForm } from "./o4-kind-style";
+
+import "../../finance/spaces/money-lines.css";
 
 // Τα Είδη κλεισμένου χρόνου στις Ρυθμίσεις › Γυρίσματα, στη μορφή του ListEditor του prototype (`screens/o-shared.tsx`),
 // όπως οι Τρόποι είσπραξης της O6: προσθήκη, μετονομασία, απόσυρση και επαναφορά· χωρίς διαγραφή.
@@ -41,7 +41,7 @@ function RenameForm({ kind }: { kind: BlockedKind }) {
   const [value, setValue] = useState(kind.label);
   const isChanged = value.trim() !== "" && value !== kind.label;
   return (
-    <form ref={formRef} className="btn-row" onSubmit={onSubmit}>
+    <form ref={formRef} className="ml-quick o4k-row" onSubmit={onSubmit}>
       <input type="hidden" name="id" value={kind.id} />
       <input
         className="input"
@@ -53,7 +53,6 @@ function RenameForm({ kind }: { kind: BlockedKind }) {
       />
       <button
         type="submit"
-        className="button"
         data-primary="true"
         disabled={isPending || !isChanged}
       >
@@ -77,7 +76,7 @@ function RowAction({
   return (
     <form ref={formRef} onSubmit={onSubmit} style={{ display: "inline" }}>
       <input type="hidden" name="id" value={id} />
-      <button type="submit" className="button" disabled={isPending}>
+      <button type="submit" disabled={isPending}>
         {isPending ? "Περιμένε…" : label}
       </button>
       <FormNote state={state} />
@@ -97,51 +96,46 @@ function KindRow({ kind, index }: { kind: BlockedKind; index: number }) {
     <KindStyleForm kind={kind} />
   ) : undefined;
   return (
-    <ListRow
-      isFaded={kind.retired}
-      lead={<span>{index + 1}</span>}
-      title={
-        <>
+    <li className="ml-line o4k-line" data-faded={kind.retired || undefined}>
+      <span className="o4k-no">{index + 1}</span>
+      <span className="ml-main">
+        <strong>
           <KindBadge kind={kind} />
           {kind.label}
-        </>
-      }
-      sub={sub}
-      aside={
-        <>
-          <Badge tone={kind.retired ? "faded" : "ok"}>
-            {kind.retired ? "Αποσύρθηκε" : "Σε χρήση"}
-          </Badge>
-          {!kind.retired && (
-            <>
-              <button
-                type="button"
-                className="button"
-                aria-expanded={editing === "rename"}
-                aria-label={`Μετονομασία: ${kind.label}`}
-                onClick={() => toggle("rename")}
-              >
-                Μετονομασία
-              </button>
-              <button
-                type="button"
-                className="button"
-                aria-expanded={editing === "style"}
-                aria-label={`Χρώμα και εικονίδιο: ${kind.label}`}
-                onClick={() => toggle("style")}
-              >
-                Χρώμα
-              </button>
-            </>
-          )}
-          <RowAction
-            action={kind.retired ? restoreBlockedKind : retireBlockedKind}
-            id={kind.id}
-            label={kind.retired ? "Επαναφορά" : "Απόσυρση"}
-          />
-        </>
-      }
-    />
+        </strong>
+        {sub && <span className="o4k-sub">{sub}</span>}
+      </span>
+      <span className="ml-quick">
+        <Badge tone={kind.retired ? "faded" : "ok"}>
+          {kind.retired ? "Αποσύρθηκε" : "Σε χρήση"}
+        </Badge>
+        {!kind.retired && (
+          <>
+            <button
+              type="button"
+              aria-expanded={editing === "rename"}
+              aria-label={`Μετονομασία: ${kind.label}`}
+              onClick={() => toggle("rename")}
+            >
+              Μετονομασία
+            </button>
+            <button
+              type="button"
+              aria-expanded={editing === "style"}
+              aria-label={`Χρώμα και εικονίδιο: ${kind.label}`}
+              onClick={() => toggle("style")}
+            >
+              Χρώμα
+            </button>
+          </>
+        )}
+        <RowAction
+          action={kind.retired ? restoreBlockedKind : retireBlockedKind}
+          id={kind.id}
+          label={kind.retired ? "Επαναφορά" : "Απόσυρση"}
+        />
+      </span>
+    </li>
   );
 }
 
@@ -152,12 +146,12 @@ function AddKind() {
   });
   if (!isOpen)
     return (
-      <button type="button" className="button" onClick={() => setIsOpen(true)}>
+      <button type="button" onClick={() => setIsOpen(true)}>
         + Νέο Είδος
       </button>
     );
   return (
-    <form ref={formRef} className="btn-row" onSubmit={onSubmit}>
+    <form ref={formRef} className="ml-quick o4k-row" onSubmit={onSubmit}>
       <input type="hidden" name="id" value="" />
       <input
         className="input"
@@ -166,12 +160,7 @@ function AddKind() {
         aria-label="Νέο Είδος"
         placeholder="π.χ. Γιατρός"
       />
-      <button
-        type="submit"
-        className="button"
-        data-primary="true"
-        disabled={isPending}
-      >
+      <button type="submit" data-primary="true" disabled={isPending}>
         Προσθήκη Είδους
       </button>
       <FormNote state={state} />
@@ -185,28 +174,27 @@ export function BlockedKindsEditor({
   kinds: readonly BlockedKind[];
 }) {
   return (
-    <div className="o-card">
-      <Panel
-        label="Είδη κλεισμένου χρόνου"
-        aside={<Badge>μόνο ελληνικά</Badge>}
-      >
-        {kinds.length === 0 ? (
-          <p className="muted">
-            Κανένα Είδος ακόμα. Χωρίς Είδη ο κλεισμένος χρόνος φαίνεται ως
-            «Κλεισμένος χρόνος».
-          </p>
-        ) : (
-          <RowList>
-            {kinds.map((kind, index) => (
-              <KindRow key={kind.id} kind={kind} index={index} />
-            ))}
-          </RowList>
-        )}
-        <div className="btn-row o-list-actions">
-          <AddKind />
-        </div>
-        <p className="muted o-hint">{KINDS_NOTE}</p>
-      </Panel>
-    </div>
+    <section className="o-card o4k-card">
+      <header className="o4k-head">
+        <h2 className="ml-box-title">Είδη κλεισμένου χρόνου</h2>
+        <small>μόνο ελληνικά</small>
+      </header>
+      {kinds.length === 0 ? (
+        <p className="ml-empty">
+          Κανένα Είδος ακόμα. Χωρίς Είδη ο κλεισμένος χρόνος φαίνεται ως
+          «Κλεισμένος χρόνος».
+        </p>
+      ) : (
+        <ul className="ml-list">
+          {kinds.map((kind, index) => (
+            <KindRow key={kind.id} kind={kind} index={index} />
+          ))}
+        </ul>
+      )}
+      <div className="ml-quick o-list-actions">
+        <AddKind />
+      </div>
+      <p className="o4k-note">{KINDS_NOTE}</p>
+    </section>
   );
 }

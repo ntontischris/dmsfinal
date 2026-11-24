@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { can, getViewer } from "@/modules/access";
 import {
   SpacesRecentChanges,
-  SpacesSettingsTabs,
   o1ChangesOf,
   recentChanges,
 } from "@/modules/settings";
@@ -20,7 +19,11 @@ import { O4Rules } from "./o4-rules";
 
 import "./o4.css";
 
-const AUDITED = ["filming_settings", "booking_exceptions", "blocked_time_kinds"];
+const AUDITED = [
+  "filming_settings",
+  "booking_exceptions",
+  "blocked_time_kinds",
+];
 const AUDIT_HREF = "/app/audit?area=settings";
 const ENTITY_LABELS = {
   filming_settings: "Ρυθμίσεις Γυρισμάτων",
@@ -30,12 +33,15 @@ const ENTITY_LABELS = {
 
 function Parts({ part }: { part: O4Part }) {
   return (
-    <nav className="tabs o4-parts" aria-label="Μέρη των Ρυθμίσεων Γυρισμάτων">
+    <nav
+      className="page-filters o4-parts"
+      aria-label="Μέρη των Ρυθμίσεων Γυρισμάτων"
+    >
       {O4_PARTS.map((item) => (
         <Link
           key={item.id}
-          className="tab"
           href={partHref(item.id)}
+          scroll={false}
           aria-current={item.id === part ? "page" : undefined}
         >
           {item.label}
@@ -92,8 +98,7 @@ export async function SpacesFilmingSettings({
   const changes = await recentChanges(AUDITED);
   return (
     <div data-spaces>
-      <SpacesSettingsTabs code="O4" />
-      <div className="o4">
+      <div className="o4 ml-stack">
         <Parts part={current} />
         <Body part={current} slots={{ google, calendar }} />
       </div>
