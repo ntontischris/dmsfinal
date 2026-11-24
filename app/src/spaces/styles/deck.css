@@ -55,7 +55,7 @@
   transition: color .4s, -webkit-text-stroke-color .4s;
 }
 .money-reel:hover .money-reel-count, .money-reel[aria-current="page"] .money-reel-count { color: color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)); -webkit-text-stroke-color: color-mix(in oklab, var(--c) var(--panel-ink-mix), var(--color-text)); }
-.money-reel-title { font-size: 1.05rem; line-height: 1.15; letter-spacing: -.02em; min-height: 2.3em; display: flex; align-items: end; }
+.money-reel-title { font-size: 1.05rem; line-height: 1.15; letter-spacing: -.02em; min-height: 2.3em; display: flex; align-items: end; overflow-wrap: anywhere; hyphens: auto; }
 .money-reel-foot { display: grid; gap: .45rem; min-width: 0; padding-top: .55rem; }
 .money-reel-foot small { color: var(--color-text-muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .money-reel[data-urgent] .money-reel-foot small { color: var(--color-text); font-weight: 600; }
@@ -66,6 +66,17 @@
   background: color-mix(in oklab, var(--c) 82%, var(--color-text)); border: 2px solid var(--brand-midnight);
 }
 .money-faces span:first-child { margin-left: 0; }
+
+/* Πολλές κάρτες (data-many): πλέγμα από μικρά κάδρα, ο τίτλος σε δύο γραμμές αντί να κόβεται. */
+.money-deck[data-many] {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); height: auto;
+}
+.money-deck[data-many] .money-reel {
+  grid-template-rows: auto auto; align-content: space-between; min-height: 6.5rem; padding: .85rem 1rem; border-radius: 18px;
+}
+.money-deck[data-many] .money-reel-count, .money-deck[data-many] .money-reel-foot { display: none; }
+.money-deck[data-many] .money-reel-title { min-height: 0; font-size: .95rem; }
+.money-deck[data-many] .money-reel-vf { inset: .45rem; }
 
 @keyframes money-rise { from { opacity: 0; transform: translateY(18px) scale(.97); } }
 @keyframes money-blink { 50% { opacity: .15; } }
@@ -78,4 +89,9 @@
   .money-reel { min-height: 10rem; padding: 1rem; }
   .money-reel-count { font-size: 3.2rem; }
   .money-reel-foot small { display: none; }
+  /* Στο κινητό οι πολλές κάρτες γίνονται λίστα δύο στηλών με σκέτους τίτλους: η κεφαλίδα της σελίδας μένει κοντά. */
+  .money-deck[data-many] { gap: .4rem; margin-bottom: 1rem; }
+  .money-deck[data-many] .money-reel { min-height: 0; padding: .55rem .75rem; border-radius: 12px; grid-template-rows: auto; }
+  .money-deck[data-many] .money-reel-top, .money-deck[data-many] .money-reel-vf { display: none; }
+  .money-deck[data-many] .money-reel-title { font-size: .85rem; }
 }
