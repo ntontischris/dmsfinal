@@ -298,9 +298,14 @@ test("ο Έλεγχος ετοιμότητας μένει στις 12 γραμμ
 }) => {
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/readiness");
-  const list = card(page, "Τι πρέπει να είναι έτοιμο");
-  await expect(list.locator("li.part-row")).toHaveCount(12);
+  const list = page.locator("details.ml-box").filter({
+    has: page.getByRole("heading", {
+      name: "Τι πρέπει να είναι έτοιμο",
+      exact: true,
+    }),
+  });
+  await expect(list.locator("li.ml-line")).toHaveCount(12);
   await expect(
-    list.locator("li.part-row").filter({ hasText: /Συμφωνί/ }),
+    list.locator("li.ml-line").filter({ hasText: /Συμφωνί/ }),
   ).toHaveCount(0);
 });
