@@ -50,16 +50,11 @@ export function ExportButton({
     });
   return (
     <>
-      <button
-        type="button"
-        className="button"
-        onClick={handleClick}
-        disabled={isPending}
-      >
+      <button type="button" onClick={handleClick} disabled={isPending}>
         {isPending ? EXPORT_WORKING : label}
       </button>
       {(state.error || state.notice) && (
-        <span className="note" role={state.error ? "alert" : "status"}>
+        <span className="g-note" role={state.error ? "alert" : "status"}>
           {state.error ?? state.notice}
         </span>
       )}

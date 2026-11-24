@@ -45,12 +45,12 @@ export function RequestForm({ subjects }: { subjects: GdprSubjects }) {
     { resetOnSuccess: true },
   );
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="n1-form">
-      <div className="n1-field">
+    <form ref={formRef} onSubmit={onSubmit} className="ml-fields">
+      <div className="ml-field">
         <label htmlFor="gdpr-kind">Είδος</label>
         <select
-          id="gdpr-kind"
           className="input"
+          id="gdpr-kind"
           name="kind"
           defaultValue="export"
         >
@@ -61,11 +61,11 @@ export function RequestForm({ subjects }: { subjects: GdprSubjects }) {
           ))}
         </select>
       </div>
-      <div className="n1-field">
+      <div className="ml-field">
         <label htmlFor="gdpr-subject">Ποιον αφορά</label>
         <select
-          id="gdpr-subject"
           className="input"
+          id="gdpr-subject"
           name="subject"
           required
           defaultValue=""
@@ -84,42 +84,35 @@ export function RequestForm({ subjects }: { subjects: GdprSubjects }) {
           ))}
         </select>
       </div>
-      <div className="n1-field">
+      <div className="ml-field">
         <label htmlFor="gdpr-received">Ημερομηνία λήψης</label>
         <input
-          id="gdpr-received"
           className="input"
+          id="gdpr-received"
           name="receivedOn"
           type="date"
         />
-        <p className="muted">
-          Κενό = σήμερα. Η προθεσμία είναι 1 μήνας από τη λήψη.
-        </p>
+        <small>Κενό = σήμερα. Η προθεσμία είναι 1 μήνας από τη λήψη.</small>
       </div>
-      <div className="n1-field">
+      <div className="ml-field">
         <label htmlFor="gdpr-note">Σημείωση</label>
         <input
-          id="gdpr-note"
           className="input"
+          id="gdpr-note"
           name="note"
           maxLength={1000}
           autoComplete="off"
         />
       </div>
-      <div className="btn-row">
-        <button
-          type="submit"
-          className="button"
-          data-primary
-          disabled={isPending}
-        >
-          {isPending ? "Καταγραφή…" : "Καταγραφή αιτήματος"}
-        </button>
+      <div className="ml-actions">
         {(state.error || state.notice) && (
-          <p className="note" role={state.error ? "alert" : "status"}>
+          <p className="g-note" role={state.error ? "alert" : "status"}>
             {state.error ?? state.notice}
           </p>
         )}
+        <button type="submit" data-primary disabled={isPending}>
+          {isPending ? "Καταγραφή…" : "Καταγραφή αιτήματος"}
+        </button>
       </div>
     </form>
   );
