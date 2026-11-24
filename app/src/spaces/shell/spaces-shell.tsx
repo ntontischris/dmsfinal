@@ -5,7 +5,8 @@ import type { ComponentProps, ReactNode } from "react";
 import type { SpacesModel } from "@/spaces/data/spaces";
 import { Monogram } from "@/spaces/shell/icons";
 import { PageHead } from "@/spaces/shell/page-head";
-import { BottomBar, SpaceNav } from "@/spaces/shell/space-nav";
+import { SideMenu } from "@/spaces/shell/side-menu";
+import { BottomBar } from "@/spaces/shell/space-nav";
 import { TopTools } from "@/spaces/shell/top-tools";
 
 // Η σειρά του prototype: globals → kit → brand (root layout), shell, parts, screens. Όλα μόνο κάτω από [data-look='spaces'].
@@ -17,7 +18,6 @@ import "@/spaces/styles/parts.css";
 import "@/spaces/styles/screens.css";
 import "@/spaces/styles/page.css";
 import "@/spaces/styles/app.css";
-
 
 interface SpacesShellProps {
   model: SpacesModel;
@@ -50,8 +50,8 @@ function HomeMark({ version }: { version: string | null }) {
   );
 }
 
-// Το κέλυφος των Χώρων, από το prototype (`app/[role]/layout.tsx`): χάπι πάνω με μονόγραμμα, Χώρους και εργαλεία,
-// η κεφαλίδα του Χώρου με τις καρτέλες, και στο κινητό μπάρα κάτω. Οι Χώροι βγαίνουν από τα Δικαιώματα (spacesModel).
+// Το κέλυφος: αριστερό μενού με ένα θέμα ανά οντότητα (όπως το παλιό DMS), εργαλεία πάνω δεξιά, η κεφαλίδα της
+// σελίδας, και στο κινητό μπάρα κάτω. Τα θέματα βγαίνουν από τα Δικαιώματα (spacesModel).
 export function SpacesShell({
   model,
   tools,
@@ -65,27 +65,37 @@ export function SpacesShell({
       <a className="skip-link" href="#main" data-spaces>
         Μετάβαση στο περιεχόμενο
       </a>
-      <header className="shell-bar" data-spaces>
-        <nav className="shell-pill" aria-label="Χώροι">
-          <Link className="shell-home" href="/app" aria-label="Σήμερα">
+      <div className="shell-frame">
+        <aside className="shell-side" data-spaces>
+          <Link className="shell-home" href="/app" aria-label="Αρχική">
             <HomeMark version={logoVersion} />
           </Link>
-          <SpaceNav model={model} />
-          <span className="shell-divider" />
-          <TopTools {...tools} />
-        </nav>
-      </header>
-      {notice && (
-        <p className="shell-notice" role="status" data-spaces>
-          {notice}
-        </p>
-      )}
-      <main id="main" className="app-main" tabIndex={-1}>
-        <div data-spaces>
-          <PageHead model={model} />
+          <SideMenu model={model} />
+        </aside>
+        <div className="shell-column">
+          <header className="shell-bar" data-spaces>
+            <Link
+              className="shell-home shell-home-mobile"
+              href="/app"
+              aria-label="Αρχική"
+            >
+              <HomeMark version={logoVersion} />
+            </Link>
+            <TopTools {...tools} />
+          </header>
+          {notice && (
+            <p className="shell-notice" role="status" data-spaces>
+              {notice}
+            </p>
+          )}
+          <main id="main" className="app-main" tabIndex={-1}>
+            <div data-spaces>
+              <PageHead model={model} />
+            </div>
+            {children}
+          </main>
         </div>
-        {children}
-      </main>
+      </div>
       <BottomBar model={model} />
       {assistant}
     </div>

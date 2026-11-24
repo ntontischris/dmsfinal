@@ -62,7 +62,7 @@ interface TotalsProps {
 
 // Η κορυφή των Χρημάτων: πόσα μπήκαν (με σύγκριση), πόσα τιμολογήθηκαν, πόσα μας χρωστούν, και το Τώρα του Χώρου.
 async function Totals({ totals, receipts, today, viewer }: TotalsProps) {
-  const strip = await getSpaceStrip(codesOfSpace("money"));
+  const strip = await getSpaceStrip(codesOfSpace("invoices"));
   const month = today.slice(0, 7);
   const previous = previousMonthOf(month);
   const hasReports = can(viewer, "reports.view");

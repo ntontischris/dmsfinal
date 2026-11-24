@@ -83,7 +83,6 @@ export { SalesRoutingCard } from "./components/sales-routing-card";
 export { ListEditor } from "./components/list-editor";
 export { StagesEditor } from "./components/stages-editor";
 export { SpacesClients } from "./spaces/b1-screen";
-export { WithClientsDeck } from "./spaces/clients-deck";
 export { parseB1Filters } from "./spaces/b1-filters";
 export { SpacesClient } from "./spaces/b2-screen";
 export { SpacesOpportunity } from "./spaces/b4-screen";

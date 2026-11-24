@@ -20,7 +20,7 @@ interface SpaceLinksProps {
   model: SpacesModel;
   views: readonly SpaceView[];
   className: string;
-  showLabels: "wide" | "always";
+  showLabels: "always";
   children?: ReactNode;
 }
 
@@ -47,7 +47,7 @@ function SpaceLinks({
             title={view.label}
           >
             <Icon name={view.icon} size={18} />
-            <span>{showLabels === "always" ? view.barLabel : view.label}</span>
+            <span>{view.barLabel}</span>
             <NavPending />
           </Link>
         </li>
@@ -57,20 +57,8 @@ function SpaceLinks({
   );
 }
 
-interface SpaceNavProps {
+interface BottomBarProps {
   model: SpacesModel;
-}
-
-// Οι Χώροι στο χάπι πάνω (desktop).
-export function SpaceNav({ model }: SpaceNavProps) {
-  return (
-    <SpaceLinks
-      model={model}
-      views={model.spaces}
-      className="space-nav"
-      showLabels="wide"
-    />
-  );
 }
 
 interface MoreSpacesProps {
@@ -92,7 +80,7 @@ function MoreSpaces({ model, views }: MoreSpacesProps) {
           </>
         }
         summaryClassName="bottom-bar-more-button"
-        label="Περισσότεροι Χώροι"
+        label="Περισσότερα θέματα"
       >
         <ul className="tool-menu-list" data-align="end" data-side="top">
           {views.map((view) => (
@@ -114,10 +102,10 @@ function MoreSpaces({ model, views }: MoreSpacesProps) {
 }
 
 // Οι Χώροι σε μπάρα κάτω (κινητό): έως 5· με περισσότερους, 4 και οι υπόλοιποι στο «Περισσότερα».
-export function BottomBar({ model }: SpaceNavProps) {
+export function BottomBar({ model }: BottomBarProps) {
   const { bar, more } = mobileBar(model.spaces);
   return (
-    <nav className="bottom-bar" aria-label="Χώροι" data-spaces>
+    <nav className="bottom-bar" aria-label="Μενού" data-spaces>
       <SpaceLinks
         model={model}
         views={bar}

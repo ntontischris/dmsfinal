@@ -3,7 +3,6 @@ import {
   INVOICES_TITLE,
   SpacesClientInvoices,
   SpacesInvoices,
-  WithMoneyDeck,
   financeViewOf,
   parseInvoiceFilter,
 } from "@/modules/finance";
@@ -24,10 +23,8 @@ export default async function InvoicesPage({
   if (financeViewOf(viewer) === "client")
     return <SpacesClientInvoices query={{ filter, month: params.month }} />;
   return (
-    <WithMoneyDeck active="I2">
-      <SpacesInvoices
-        query={{ filter, client: params.client, month: params.month }}
-      />
-    </WithMoneyDeck>
+    <SpacesInvoices
+      query={{ filter, client: params.client, month: params.month }}
+    />
   );
 }

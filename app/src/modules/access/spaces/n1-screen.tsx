@@ -82,7 +82,7 @@ export async function SpacesTeam({
   if (!can(viewer, "access.team")) return <Denied />;
   const [team, strip] = await Promise.all([
     loadTeam(),
-    getSpaceStrip(codesOfSpace("company")),
+    getSpaceStrip(codesOfSpace("team")),
   ]);
   const { users, roles, permissions, invitations, dates } = team;
   if (!users.ok || !roles.ok || !permissions.ok)

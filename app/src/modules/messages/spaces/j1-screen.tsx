@@ -193,7 +193,7 @@ export async function SpacesInbox({ tab, view }: SpacesInboxProps) {
   const [inbox, requests, strip] = await Promise.all([
     getInbox(),
     getRequestsView(requestsViewFor(tab, shownView)),
-    getSpaceStrip(codesOfSpace("talk")),
+    getSpaceStrip(codesOfSpace("messages")),
   ]);
   if (!inbox.ok)
     return (

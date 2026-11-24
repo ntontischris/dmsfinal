@@ -120,7 +120,7 @@ export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
   const isClient = isClientViewer(viewer);
   const views = visibleViews(caps.canApprove);
   const [strip, ...results] = await Promise.all([
-    getSpaceStrip(codesOfSpace(isClient ? "c-filming" : "production")),
+    getSpaceStrip(codesOfSpace(isClient ? "c-filming" : "filming")),
     ...views.map((view) => listFilmings(view.id)),
   ]);
   const counts = new Map(

@@ -9,7 +9,7 @@ import {
   titleOf,
   type Allows,
 } from "@/spaces/data/screens";
-import { SPACES, labelOf, spacesModel } from "@/spaces/data/spaces";
+import { labelOf, spacesModel } from "@/spaces/data/spaces";
 
 export interface SearchItem {
   label: string;
@@ -22,11 +22,12 @@ export interface SearchItem {
   kind: "section" | "item";
 }
 
-// Οι λέξεις των συνδέσμων άλλων Χώρων (π.χ. «Τιμές» για τον Κατάλογο) βρίσκουν κι αυτές την οθόνη.
+// Λέξεις που βρίσκουν μια οθόνη χωρίς να είναι ο τίτλος της (π.χ. «Τιμές» για τον Κατάλογο).
+const EXTRA_WORDS: Readonly<Record<string, readonly string[]>> = {
+  C1: ["Τιμές"],
+};
 const linkWordsOf = (code: string): readonly string[] =>
-  SPACES.flatMap((space) => space.links ?? [])
-    .filter((link) => link.code === code)
-    .map((link) => link.label);
+  EXTRA_WORDS[code] ?? [];
 
 // Μόνο οθόνες με σταθερή διαδρομή: οι σελίδες ενός στοιχείου (π.χ. ένας Πελάτης) ανοίγουν από τη λίστα τους.
 const sectionsOf = (allows: Allows): readonly SearchItem[] =>
