@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Person } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 
 import {
@@ -18,6 +16,7 @@ import type {
   ProductionViewerCan,
 } from "../types";
 import type { StateStory } from "./g2-model";
+import { G2Box, G2Person } from "./g2-box";
 import { ReasonForm, RunResult, useRun } from "./g2-ui";
 
 export interface G2StateProps {
@@ -95,32 +94,19 @@ function Actions({
   if (!can.deliver && !can.cancel && !can.reopen) return null;
   return (
     <div className="stack">
-      <div className="btn-row">
+      <div className="ml-quick g2-actions">
         {can.deliver && (
-          <button
-            type="button"
-            className="button"
-            onClick={() => setDialog("deliver")}
-          >
+          <button type="button" onClick={() => setDialog("deliver")}>
             Παράδοση χειροκίνητα
           </button>
         )}
         {can.reopen && (
-          <button
-            type="button"
-            className="button"
-            onClick={() => setDialog("reopen")}
-          >
+          <button type="button" onClick={() => setDialog("reopen")}>
             Επανάνοιγμα
           </button>
         )}
         {can.cancel && (
-          <button
-            type="button"
-            className="button"
-            data-danger
-            onClick={() => setDialog("cancel")}
-          >
+          <button type="button" data-danger onClick={() => setDialog("cancel")}>
             Ακύρωση Παραγωγής
           </button>
         )}
@@ -179,21 +165,18 @@ function OwnerField({
   return (
     <>
       {!canChange || !isChanging ? (
-        <span className="row">
-          <Person name={owner?.name ?? "Χωρίς υπεύθυνο"} />
+        <span className="row ml-quick g2-owner">
+          {owner ? <G2Person name={owner.name} /> : null}
+          <span>{owner?.name ?? "Χωρίς υπεύθυνο"}</span>
           {canChange && (
-            <button
-              type="button"
-              className="button"
-              onClick={() => setIsChanging(true)}
-            >
+            <button type="button" onClick={() => setIsChanging(true)}>
               Αλλαγή
             </button>
           )}
         </span>
       ) : (
         <select
-          className="select"
+          className="input"
           aria-label="Νέος Υπεύθυνος"
           defaultValue=""
           disabled={transfer.isPending}
@@ -221,15 +204,16 @@ function OwnerField({
 // Το πάνελ «Κατάσταση» του prototype (`g2-live.tsx`), όψη ομάδας.
 export function G2State(props: G2StateProps) {
   return (
-    <Panel
-      label="Κατάσταση"
-      aside={
+    <G2Box
+      title="Κατάσταση"
+      isOpen
+      hint={
         <Badge tone={props.state === "cancelled" ? "faded" : "strong"}>
           {props.stateWord}
         </Badge>
       }
     >
-      <dl className="dl">
+      <dl className="ml-kv">
         <dt>Υπεύθυνος</dt>
         <dd>
           <OwnerField {...props} />
@@ -237,6 +221,6 @@ export function G2State(props: G2StateProps) {
       </dl>
       <StateBlock {...props} />
       <Actions productionId={props.productionId} can={props.can} />
-    </Panel>
+    </G2Box>
   );
 }

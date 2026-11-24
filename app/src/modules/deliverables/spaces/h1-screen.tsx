@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { getViewer, type Viewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
-import { Segmented } from "@/spaces/kit/segmented";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { deliverablesCaps } from "../caps";
@@ -25,6 +24,7 @@ import { ChargesCard, RulesCard } from "./h1-panels";
 import { ReviewTable } from "./h1-review";
 import { ClientQueueTable, ForMeTable, type ListQuery } from "./h1-rows";
 
+import "../../finance/spaces/money-lines.css";
 import "./h1.css";
 
 // «Με αφορά»: ο Χρήστης δουλεύει Παραδοτέα μόνο στις Παραγωγές όπου είναι Μέλος (το Εύρος το κρίνει η βάση).
@@ -85,18 +85,18 @@ export async function SpacesDeliverables({ query: raw }: { query: RawQuery }) {
     late: query.late,
   };
   return (
-    <div data-spaces>
+    <div data-spaces className="h1-page">
       {isScopedOf(viewer) && (
         <p className="note">
           Με αφορά: μόνο Παραδοτέα Παραγωγών όπου είσαι Μέλος.
         </p>
       )}
       {charges?.ok && <ChargesCard items={charges.data} />}
-      <nav className="tabs" aria-label="Προβολή ουράς">
+      <nav className="page-filters" aria-label="Προβολή ουράς">
         {views.map((v) => (
           <Link
             key={v}
-            className="tab"
+            scroll={false}
             aria-current={v === view ? "page" : undefined}
             href={hrefH1({
               view: v === views[0] ? undefined : v,
@@ -122,9 +122,9 @@ export async function SpacesDeliverables({ query: raw }: { query: RawQuery }) {
         hasLate={view === "mine"}
       />
       {shown.length === 0 ? (
-        <StateNotice kind="empty" title={EMPTY[view].title}>
-          {EMPTY[view].text}
-        </StateNotice>
+        <p className="ml-empty" role="status">
+          <strong>{EMPTY[view].title}</strong> {EMPTY[view].text}
+        </p>
       ) : view === "mine" ? (
         <ForMeTable items={shown} back={back} />
       ) : view === "review" ? (
@@ -148,24 +148,34 @@ function WhoChoice(props: {
   back: ListQuery;
 }) {
   const mine = filterQueue(props.items, { onlyAssignee: props.viewerId });
+  const options = [
+    {
+      label: "Μόνο εμένα",
+      href: hrefH1({ ...props.back, who: "me" }),
+      isCurrent: props.isMineOnly,
+      count: mine.length,
+    },
+    {
+      label: "Όλη η ομάδα",
+      href: hrefH1({ ...props.back, who: undefined }),
+      isCurrent: !props.isMineOnly,
+      count: props.items.length,
+    },
+  ];
   return (
-    <Segmented
-      label="Ποιανού"
-      options={[
-        {
-          label: "Μόνο εμένα",
-          href: hrefH1({ ...props.back, who: "me" }),
-          isCurrent: props.isMineOnly,
-          count: mine.length,
-        },
-        {
-          label: "Όλη η ομάδα",
-          href: hrefH1({ ...props.back, who: undefined }),
-          isCurrent: !props.isMineOnly,
-          count: props.items.length,
-        },
-      ]}
-    />
+    <nav className="page-filters" aria-label="Ποιανού">
+      {options.map((option) => (
+        <Link
+          key={option.label}
+          href={option.href}
+          scroll={false}
+          aria-current={option.isCurrent ? "page" : undefined}
+        >
+          {option.label}
+          <span className="page-filter-count">{option.count}</span>
+        </Link>
+      ))}
+    </nav>
   );
 }
 
@@ -182,7 +192,7 @@ function QueueFilters(props: {
   const isFiltered =
     !!props.filter.person || !!props.filter.client || !!props.filter.isLateOnly;
   return (
-    <form className="h1-toolbar" method="get" action={hrefH1({})}>
+    <form className="h1-toolbar ml-quick" method="get" action={hrefH1({})}>
       {props.back.view && (
         <input type="hidden" name="view" value={props.back.view} />
       )}
@@ -194,7 +204,7 @@ function QueueFilters(props: {
       )}
       {people.length > 1 && (
         <select
-          className="select"
+          className="input"
           name="person"
           aria-label="Άτομο"
           defaultValue={props.filter.person ?? ""}
@@ -208,7 +218,7 @@ function QueueFilters(props: {
         </select>
       )}
       <select
-        className="select"
+        className="input"
         name="client"
         aria-label="Πελάτης"
         defaultValue={props.filter.client ?? ""}
@@ -220,13 +230,12 @@ function QueueFilters(props: {
           </option>
         ))}
       </select>
-      <button type="submit" className="button">
+      <button type="submit">
         Φίλτρο
       </button>
       {props.hasLate && (
         <Link
-          className="button"
-          data-primary={props.filter.isLateOnly}
+          data-primary={props.filter.isLateOnly ? "true" : undefined}
           aria-pressed={props.filter.isLateOnly}
           href={hrefWith({ late: props.filter.isLateOnly ? undefined : "1" })}
         >

@@ -1,14 +1,16 @@
+import Link from "next/link";
+import type { CSSProperties } from "react";
+
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList, Segments } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
 import { initialsOf } from "@/spaces/shell/avatar";
 
+import { H2Box } from "./h2-box";
 import { CLIENT_WORDS, countWord, rowSubOf, type H3Group } from "./h3-adapter";
 
 import "./h34.css";
 
-// Μία Περίοδος της H3 (prototype `screens/h3-group.tsx`): μετρητές Παροχών και τα Παραδοτέα της.
+// Μία Περίοδος της H3 ως κουτί: μετρητές Παροχών (.ml-meter) και τα Παραδοτέα της ως γραμμές.
 
 export function ClientStatusBadge({ state }: { state: string }) {
   return (
@@ -18,13 +20,32 @@ export function ClientStatusBadge({ state }: { state: string }) {
   );
 }
 
+const percentOf = (part: number, total: number): string =>
+  `${total === 0 ? 0 : Math.round((part / total) * 100)}%`;
+
 function Counter({ group }: { group: H3Group }) {
   if (group.rows.length === 0) return null;
   return (
     <ul className="h34-counters">
       {group.rows.map((r) => (
         <li key={r.label}>
-          <Segments label={r.label} used={r.used} total={r.total} />
+          <span
+            className="ml-meter"
+            role="meter"
+            aria-label={`${r.label}: ${r.used} από ${r.total}`}
+            aria-valuenow={r.used}
+            aria-valuemin={0}
+            aria-valuemax={r.total}
+            style={{ "--v": percentOf(r.used, r.total) } as CSSProperties}
+          >
+            <span>{r.label}</span>
+            <i>
+              <b />
+            </i>
+            <strong>
+              {r.used}/{r.total}
+            </strong>
+          </span>
           <div className="h34-total">
             <span>
               <strong>{r.total}</strong>
@@ -49,30 +70,42 @@ function Counter({ group }: { group: H3Group }) {
   );
 }
 
-export function PeriodCard({ group }: { group: H3Group }) {
+export function PeriodCard({
+  group,
+  isOpen = false,
+}: {
+  group: H3Group;
+  isOpen?: boolean;
+}) {
   return (
-    <Panel label={group.label}>
+    <H2Box
+      title={group.label}
+      hint={`${group.deliverables.length} Παραδοτέα`}
+      isOpen={isOpen}
+    >
       <Counter group={group} />
       {group.deliverables.length === 0 ? (
-        <p className="muted">Κανένα Παραδοτέο ακόμα.</p>
+        <p className="ml-empty">Κανένα Παραδοτέο ακόμα.</p>
       ) : (
-        <RowList>
+        <ul className="ml-list">
           {group.deliverables.map((d) => (
-            <ListRow
-              key={d.id}
-              lead={
-                <span className="part-tile" aria-hidden="true">
-                  {initialsOf(d.title)}
-                </span>
-              }
-              href={hrefOf("H2", { id: d.id })}
-              title={d.title}
-              sub={rowSubOf(d)}
-              aside={<ClientStatusBadge state={CLIENT_WORDS[d.state]} />}
-            />
+            <li key={d.id} className="ml-line">
+              <span className="ml-thumb" aria-hidden="true">
+                {initialsOf(d.title)}
+              </span>
+              <span className="ml-main">
+                <strong>
+                  <Link href={hrefOf("H2", { id: d.id })}>{d.title}</Link>
+                </strong>
+                <small>{rowSubOf(d)}</small>
+              </span>
+              <span className="ml-quick">
+                <ClientStatusBadge state={CLIENT_WORDS[d.state]} />
+              </span>
+            </li>
           ))}
-        </RowList>
+        </ul>
       )}
-    </Panel>
+    </H2Box>
   );
 }

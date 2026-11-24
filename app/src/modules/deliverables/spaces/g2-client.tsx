@@ -1,14 +1,16 @@
+import Link from "next/link";
+
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import type { ClientDeliverableCard } from "../client-types";
+import { clientRowSubOf, visibleForClient } from "./g2-client-model";
+import { H2Box } from "./h2-box";
 import { CLIENT_WORDS } from "./h3-adapter";
 import { ClientStatusBadge } from "./h3-group";
-import { clientRowSubOf, visibleForClient } from "./g2-client-model";
 
-// Τα Παραδοτέα της Σελίδας Παραγωγής στην όψη πελάτη (prototype `screens/g2-sections.tsx` G2ClientDeliverables),
-// από την όψη πελάτη της βάσης (ίδια ανάγνωση με την παλιά G2 πελάτη). Η σελίδα του Παραδοτέου για τον πελάτη είναι η H4.
+// Τα Παραδοτέα της Σελίδας Παραγωγής στην όψη πελάτη, ως κουτιά με γραμμές-κάρτες (.ml-list),
+// από την όψη πελάτη της βάσης. Η σελίδα του Παραδοτέου για τον πελάτη είναι η H4.
 export function G2ClientDeliverables({
   awaiting,
   deliverables,
@@ -20,35 +22,50 @@ export function G2ClientDeliverables({
   return (
     <>
       {awaiting.length > 0 && (
-        <Panel label="Περιμένουν εσένα" isFlush>
-          <RowList>
+        <H2Box
+          title="Περιμένουν εσένα"
+          hint={`${awaiting.length} Παραδοτέα`}
+          isOpen
+        >
+          <ul className="ml-list">
             {awaiting.map((d) => (
-              <ListRow
-                key={d.id}
-                title={d.title}
-                href={hrefOf("H2", { id: d.id })}
-                isHighlighted
-              />
+              <li key={d.id} className="ml-line" data-urgent="">
+                <span className="ml-thumb" aria-hidden="true">
+                  {initialsOf(d.title)}
+                </span>
+                <span className="ml-main">
+                  <strong>
+                    <Link href={hrefOf("H2", { id: d.id })}>{d.title}</Link>
+                  </strong>
+                </span>
+              </li>
             ))}
-          </RowList>
-        </Panel>
+          </ul>
+        </H2Box>
       )}
-      <Panel label="Παραδοτέα" aside={visible.length} isFlush>
+      <H2Box title="Παραδοτέα" hint={`${visible.length} Παραδοτέα`}>
         {visible.length === 0 && (
-          <p className="muted g2-pad">Δεν υπάρχουν ακόμα Παραδοτέα.</p>
+          <p className="ml-empty">Δεν υπάρχουν ακόμα Παραδοτέα.</p>
         )}
-        <RowList>
+        <ul className="ml-list">
           {visible.map((d) => (
-            <ListRow
-              key={d.id}
-              title={d.title}
-              href={hrefOf("H2", { id: d.id })}
-              sub={clientRowSubOf(d)}
-              aside={<ClientStatusBadge state={CLIENT_WORDS[d.state]} />}
-            />
+            <li key={d.id} className="ml-line">
+              <span className="ml-thumb" aria-hidden="true">
+                {initialsOf(d.title)}
+              </span>
+              <span className="ml-main">
+                <strong>
+                  <Link href={hrefOf("H2", { id: d.id })}>{d.title}</Link>
+                </strong>
+                <small>{clientRowSubOf(d)}</small>
+              </span>
+              <span className="ml-quick">
+                <ClientStatusBadge state={CLIENT_WORDS[d.state]} />
+              </span>
+            </li>
           ))}
-        </RowList>
-      </Panel>
+        </ul>
+      </H2Box>
     </>
   );
 }

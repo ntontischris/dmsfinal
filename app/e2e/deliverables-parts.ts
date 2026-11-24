@@ -18,7 +18,7 @@ export const pageTitle = (page: Page, title: string): Locator =>
     name: new RegExp(`^${escapeRegex(title)}\\.?$`),
   });
 
-// Η καρτέλα μιας Έκδοσης στο H2: «v1 · αναμένει πελάτη».
+// Το κουμπί μιας Έκδοσης στο H2: «v1 · αναμένει πελάτη».
 export const versionTab = (
   page: Page,
   version: number,
@@ -56,9 +56,9 @@ export async function createInternalProduction(
   await expect(pageTitle(page, title)).toBeVisible();
 }
 
-// Το πάνελ «Παραδοτέα» της G2 (ο τίτλος του πάνελ είναι h2).
+// Το κουτί «Παραδοτέα» της G2 (ο τίτλος του κουτιού είναι h2).
 export const deliverablesPanel = (page: Page): Locator =>
-  page.locator("section.kit-panel").filter({
+  page.locator("section").filter({
     has: page.getByRole("heading", { name: "Παραδοτέα", exact: true }),
   });
 
@@ -68,6 +68,10 @@ export async function createDeliverable(
   title: string,
 ): Promise<void> {
   const panel = deliverablesPanel(page);
+  // Το κουτί είναι κλειστό στην αρχή (details.ml-box).
+  const box = panel.locator("details.ml-box").first();
+  if ((await box.getAttribute("open")) === null)
+    await box.locator("> summary").click();
   const form = panel.locator("form", {
     has: page.getByRole("button", {
       name: "Δημιουργία Παραδοτέου",
@@ -107,9 +111,9 @@ export async function addVersion(
   ).toBeVisible();
 }
 
-// Το πάνελ «Εκδόσεις» του H2: η επιλεγμένη Έκδοση με τα σχόλιά της και τη φόρμα σχολίου.
+// Το κουτί «Εκδόσεις» του H2 (ανοιχτό): η επιλεγμένη Έκδοση με τα σχόλιά της και τη φόρμα σχολίου.
 export const versionsPanel = (page: Page): Locator =>
-  page.locator("section.kit-panel").filter({
+  page.locator("section").filter({
     has: page.getByRole("heading", { name: "Εκδόσεις", exact: true }),
   });
 

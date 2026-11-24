@@ -7,7 +7,7 @@ import { useKeptForm } from "@/lib/use-kept-form";
 
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
-// Οι φόρμες του H2 (prototype `screens/h2-forms.tsx`: `.h2-form`, `.h2-error`, `.btn-row`) πάνω στις πραγματικές ενέργειες.
+// Οι φόρμες του H2 (prototype `screens/h2-forms.tsx`: `.h2-form`, `.h2-error`, `.ml-quick`) πάνω στις πραγματικές ενέργειες.
 // Κρατά ό,τι γράφτηκε αν η βάση πει όχι και δείχνει το λάθος της· με επιτυχία κλείνει (η σελίδα φρεσκάρεται από τη βάση).
 
 function Message({ state }: { state: FormState }) {
@@ -65,10 +65,9 @@ export function H2Form({
       <Hidden fields={hidden} />
       {children}
       <Message state={state} />
-      <div className="btn-row">
+      <div className="ml-quick h2-actions">
         <button
           type="submit"
-          className="button"
           data-primary={isPrimary || undefined}
           data-danger={isDanger || undefined}
           disabled={isPending}
@@ -76,7 +75,7 @@ export function H2Form({
           {submitLabel}
         </button>
         {onClose && (
-          <button type="button" className="button" onClick={onClose}>
+          <button type="button" onClick={onClose}>
             Άκυρο
           </button>
         )}
@@ -105,7 +104,6 @@ export function ButtonForm({
       <Hidden fields={hidden} />
       <button
         type="submit"
-        className="button"
         data-primary={isPrimary || undefined}
         disabled={isPending}
       >

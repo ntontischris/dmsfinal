@@ -35,6 +35,7 @@ import { CLIENT_VIEWS } from "./g1-client-model";
 import { G1BoardSection, G1ModeSwitch, G1WorkloadSection } from "./g1-modes";
 import { G1Team } from "./g1-team";
 
+import "../../finance/spaces/money-lines.css";
 import "./g1.css";
 
 // Η διεύθυνση όπως τη δίνει η σελίδα· μετρούν μόνο οι απλές τιμές.
@@ -120,11 +121,11 @@ function ViewTabs({
   clientId: string | undefined;
 }) {
   return (
-    <nav className="tabs" aria-label="Προβολή Παραγωγών">
+    <nav className="page-filters" aria-label="Προβολή Παραγωγών">
       {views.map((item) => (
         <Link
           key={item.id}
-          className="tab"
+          scroll={false}
           aria-current={item.id === active ? "page" : undefined}
           href={hrefOf("G1", {
             view: item.id === "open" ? undefined : item.id,
@@ -142,9 +143,8 @@ function ViewTabs({
 function ClientFilter({ name, view }: { name: string; view: View }) {
   const params: HrefParams = { view: view === "open" ? undefined : view };
   return (
-    <p className="g1-filter">
+    <p className="ml-quick g1-client-filter">
       <Link
-        className="button"
         aria-label={`Αφαίρεση φίλτρου Πελάτη ${name}`}
         href={hrefOf("G1", params)}
       >
@@ -194,7 +194,7 @@ async function ClientProductions({
     all.filter((card) => matches(active, card, NO_SIGNALS)),
   );
   return (
-    <div data-spaces>
+    <div data-spaces className="g1-page">
       <ViewTabs
         views={views}
         active={active}
@@ -203,9 +203,7 @@ async function ClientProductions({
         clientId={undefined}
       />
       {shown.length === 0 ? (
-        <StateNotice kind="empty" title="Καμία Παραγωγή εδώ.">
-          {EMPTY_CLIENT}
-        </StateNotice>
+        <p className="ml-empty">{EMPTY_CLIENT}</p>
       ) : (
         <G1ClientCards
           cards={shown}
@@ -262,7 +260,7 @@ export async function SpacesProductions({ query: raw }: { query: RawQuery }) {
   const people = candidates?.ok ? candidates.data : [];
 
   return (
-    <div data-spaces>
+    <div data-spaces className="g1-page">
       {isScoped && (
         <p className="note">
           Με αφορά: Παραγωγές όπου είσαι Μέλος (Υπεύθυνος ή με ανάθεση σε
