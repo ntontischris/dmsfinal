@@ -125,6 +125,7 @@ export async function GdprUserSection({
   return (
     <GdprBox
       title={PANEL_LABEL}
+      isDanger
       hint={user.block ? BLOCK_TEXT[user.block] : "Εξαγωγή και Ανωνυμοποίηση"}
     >
       <p className="g-note">

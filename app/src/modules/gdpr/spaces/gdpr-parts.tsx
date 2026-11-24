@@ -13,11 +13,17 @@ export function GdprBox(props: {
   title: string;
   hint: string;
   isOpen?: boolean;
+  // Κουτί με μη αναστρέψιμη ενέργεια (Ανωνυμοποίηση): κίτρινη τελεία αντί για τη συνηθισμένη.
+  isDanger?: boolean;
   children: ReactNode;
 }) {
   return (
     <section>
-      <details className="ml-box" open={props.isOpen} data-danger="true">
+      <details
+        className="ml-box"
+        open={props.isOpen}
+        data-danger={props.isDanger ? "true" : undefined}
+      >
         <summary>
           <h2 className="ml-box-title">{props.title}</h2>
           <small>{props.hint}</small>
