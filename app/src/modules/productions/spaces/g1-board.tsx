@@ -30,7 +30,7 @@ function BoardCard({
       </span>
       {canMove && (
         <select
-          className="select"
+          className="input"
           aria-label={`Στάδιο: ${card.title}`}
           value={card.stage?.id ?? ""}
           disabled={move.isPending}

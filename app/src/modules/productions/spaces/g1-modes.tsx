@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Person } from "@/spaces/kit/parts";
-import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
+import { ErrorNotice } from "@/spaces/screens/shared";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import { listProductionStages, listWorkload } from "../queries";
 import type { ProductionCard } from "../types";
@@ -28,10 +28,11 @@ export function G1ModeSwitch({
   clientId: string | undefined;
 }) {
   return (
-    <p className="g1-filter" aria-label="Λειτουργία">
+    <nav className="page-filters g1-modes" aria-label="Λειτουργία">
       {MODES.filter((mode) => mode.id !== "load" || canSeeLoad).map((mode) => (
         <Link
           key={mode.id}
+          scroll={false}
           aria-current={mode.id === active ? "page" : undefined}
           href={hrefOf("G1", {
             mode: mode.id === "list" ? undefined : mode.id,
@@ -41,7 +42,7 @@ export function G1ModeSwitch({
           {mode.label}
         </Link>
       ))}
-    </p>
+    </nav>
   );
 }
 
@@ -74,36 +75,44 @@ export async function G1WorkloadSection() {
   if (!read.ok) return <ErrorNotice what="ο φόρτος" />;
   if (read.data.length === 0)
     return (
-      <StateNotice kind="empty" title="Δεν υπάρχουν ενεργοί Χρήστες ομάδας.">
-        <p>Ο φόρτος μετριέται για όσους είναι ενεργοί στην Ομάδα.</p>
-      </StateNotice>
+      <p className="ml-empty">
+        Δεν υπάρχουν ενεργοί Χρήστες ομάδας: ο φόρτος μετριέται για όσους είναι
+        ενεργοί στην Ομάδα.
+      </p>
     );
   return (
-    <table className="rtable" aria-label="Φόρτος ανά άτομο">
+    <table className="ml-table ml-list" aria-label="Φόρτος ανά άτομο">
       <thead>
         <tr>
           <th>Άτομο</th>
-          <th>Ανοιχτές Παραγωγές</th>
-          <th>Ανοιχτές Εργασίες</th>
-          <th>Ανοιχτά Παραδοτέα</th>
+          <th>Ανοιχτά</th>
           <th>Γυρίσματα 7 ημερών</th>
         </tr>
       </thead>
       <tbody>
         {read.data.map((row) => (
-          <tr key={row.userId}>
-            <td data-label="Άτομο">
-              <Person name={row.name} />
+          <tr
+            key={row.userId}
+            className="ml-line"
+            data-urgent={row.lateTasks > 0 ? "" : undefined}
+          >
+            <td className="ml-thumb" aria-hidden="true">
+              {initialsOf(row.name)}
             </td>
-            <td data-label="Ανοιχτές Παραγωγές">{row.productions}</td>
-            <td data-label="Ανοιχτές Εργασίες">
-              {row.tasks}{" "}
+            <td className="ml-main">
               {row.lateTasks > 0 && (
-                <Badge tone="attention">{`${row.lateTasks} εκπρόθεσμες`}</Badge>
+                <span className="ml-tag">{`${row.lateTasks} εκπρόθεσμες`}</span>
               )}
+              <strong>{row.name}</strong>
+              <small>
+                {row.productions} Παραγωγές · {row.tasks} Εργασίες ·{" "}
+                {row.deliverables} Παραδοτέα
+              </small>
             </td>
-            <td data-label="Ανοιχτά Παραδοτέα">{row.deliverables}</td>
-            <td data-label="Γυρίσματα 7 ημερών">{row.filmings}</td>
+            <td className="ml-amount">
+              {row.filmings}
+              <small>Γυρίσματα 7 ημερών</small>
+            </td>
           </tr>
         ))}
       </tbody>

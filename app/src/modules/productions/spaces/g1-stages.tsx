@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import {
   moveProductionStage,
   saveProductionStage,
@@ -34,11 +32,11 @@ function StageLine({
         value={label}
         onChange={(event) => setLabel(event.target.value)}
       />
+      <span className="ml-quick">
       {label.trim() !== stage.label && (
         <button
           type="button"
-          className="button"
-          disabled={save.isPending || label.trim() === ""}
+            disabled={save.isPending || label.trim() === ""}
           onClick={() => save.run({ stageId: stage.id, label })}
         >
           Αποθήκευση
@@ -48,8 +46,7 @@ function StageLine({
         <>
           <button
             type="button"
-            className="button"
-            aria-label={`Πιο πάνω: ${stage.label}`}
+                aria-label={`Πιο πάνω: ${stage.label}`}
             disabled={isFirst || move.isPending}
             onClick={() => move.run({ stageId: stage.id, step: "-1" })}
           >
@@ -57,8 +54,7 @@ function StageLine({
           </button>
           <button
             type="button"
-            className="button"
-            aria-label={`Πιο κάτω: ${stage.label}`}
+                aria-label={`Πιο κάτω: ${stage.label}`}
             disabled={isLast || move.isPending}
             onClick={() => move.run({ stageId: stage.id, step: "1" })}
           >
@@ -68,7 +64,6 @@ function StageLine({
       )}
       <button
         type="button"
-        className="button"
         disabled={active.isPending}
         onClick={() =>
           active.run({ stageId: stage.id, active: String(!stage.isActive) })
@@ -76,6 +71,7 @@ function StageLine({
       >
         {stage.isActive ? "Απόσυρση" : "Επαναφορά"}
       </button>
+      </span>
       {result && <RunResult result={result} />}
     </li>
   );
@@ -93,9 +89,9 @@ function AddStage() {
         value={label}
         onChange={(event) => setLabel(event.target.value)}
       />
+      <span className="ml-quick">
       <button
         type="button"
-        className="button"
         disabled={add.isPending || label.trim() === ""}
         onClick={() =>
           add.run({ stageId: "", label }, (state) => {
@@ -105,6 +101,7 @@ function AddStage() {
       >
         Προσθήκη Σταδίου
       </button>
+      </span>
       <RunResult result={add.result} />
     </div>
   );
@@ -115,9 +112,12 @@ function AddStage() {
 export function G1Stages({ stages }: { stages: readonly ProductionStage[] }) {
   const active = stages.filter((stage) => stage.isActive);
   return (
-    <details className="g1-stages">
-      <summary>Επεξεργασία Σταδίων</summary>
-      <Panel label="Στάδια του πίνακα" aside={active.length}>
+    <details className="ml-box g1-stages">
+      <summary>
+        <h2 className="ml-box-title">Επεξεργασία Σταδίων</h2>
+        <small>Στάδια του πίνακα · {active.length} ενεργά</small>
+      </summary>
+      <div>
         <ul className="g1-stage-list">
           {stages.map((stage) => (
             <StageLine
@@ -129,7 +129,7 @@ export function G1Stages({ stages }: { stages: readonly ProductionStage[] }) {
           ))}
         </ul>
         <AddStage />
-      </Panel>
+      </div>
     </details>
   );
 }
