@@ -48,11 +48,12 @@ function BillableRow({ row }: { row: BillableItem }) {
 function BillableTable({ items }: { items: readonly BillableItem[] }) {
   return (
     <table className="ml-table ml-list">
+      <caption className="i13-caption">Τιμολογητέα</caption>
       <thead>
         <tr>
-          <th>Μέρες ανοιχτό</th>
-          <th>Τιμολογητέο</th>
-          <th>Ποσό (καθαρό)</th>
+          <td aria-hidden="true" />
+          <th scope="col">Τιμολογητέο</th>
+          <th scope="col">Ποσό (καθαρό)</th>
         </tr>
       </thead>
       <tbody>

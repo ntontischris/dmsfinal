@@ -1,5 +1,6 @@
 /* I1 + I3: Προς τιμολόγηση, Καταχώρηση Τιμολογίου. Μόνο ουδέτερα tokens. */
 [data-look='spaces'] {
+& .i13-caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 & .i13-cell { min-width: 0; overflow-wrap: anywhere; }
 & .i13-sub { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
 & .i13-signals { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
