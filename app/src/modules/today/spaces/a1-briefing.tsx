@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 
 import { StateNotice } from "@/spaces/screens/shared";
 
-import { getReceiptAmounts, getToInvoiceTotal } from "../finance-reads";
-import { receivedInMonth } from "../finance-facts";
+import { receivedFor } from "../finance-facts";
+import { getMonthReceived, getToInvoiceTotal } from "../finance-reads";
 import { arrangeToday } from "../layout";
 import { CUSTOMIZE_PATH } from "../labels";
 import {
@@ -119,7 +119,7 @@ export async function TeamBriefing({
     .map((card) => card.code);
   const shown = new Set(shownCodes);
   // Οι δείκτες (d9) δεν είναι κάρτα: φαίνονται σε όποιον έχει το Δικαίωμα κάθε δείκτη (η βάση κρύβει τους υπόλοιπους).
-  const [loaded, money, team, day, visit, kpis, toInvoice, receipts] =
+  const [loaded, money, team, day, visit, kpis, toInvoice, received] =
     await Promise.all([
       loadCards(counts.cards),
       shown.has(MONEY_CARD) ? partOf("money", getTodayMoney) : null,
@@ -135,7 +135,7 @@ export async function TeamBriefing({
       shown.has(TO_INVOICE_CARD)
         ? partOf("to invoice", getToInvoiceTotal)
         : null,
-      partOf("receipts", getReceiptAmounts),
+      partOf("received", getMonthReceived),
     ]);
   const failed = new Set(
     loaded.filter((item) => item.failed).map((item) => item.built.card.id),
@@ -186,7 +186,7 @@ export async function TeamBriefing({
   const panels = (
     <TodayPanels
       kpis={kpis}
-      received={kpis && receipts ? receivedInMonth(receipts, kpis.month) : null}
+      received={kpis ? receivedFor(kpis.month, received) : null}
       programme={
         programme && brief.week
           ? { data: programme, href: brief.week.content.allHref }
