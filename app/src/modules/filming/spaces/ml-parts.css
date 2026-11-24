@@ -26,11 +26,7 @@
 .ml-quick.fl-row {
   justify-content: flex-start;
 }
-.ml-quick button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.ml-quick button[aria-pressed="true"] {
+:is(.e, .o4, .fl-step) .ml-quick button[aria-pressed="true"] {
   border-color: var(--brand-periwinkle);
   background: color-mix(in oklab, var(--brand-periwinkle) 16%, transparent);
 }
