@@ -5,7 +5,6 @@ import {
   SaveRow,
   SettingsCard,
   SettingsForm,
-  SpacesSettingsTabs,
   TextField,
 } from "@/modules/settings";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
@@ -33,7 +32,6 @@ export async function SpacesMessageSettings() {
   const { editMinutes, requestOpenDays } = MESSAGE_SETTINGS_LIMITS;
   return (
     <div data-spaces>
-      <SpacesSettingsTabs code="messages" />
       {!settings.ok ? (
         <ErrorNotice what="οι Ρυθμίσεις Μηνυμάτων" />
       ) : (

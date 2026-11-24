@@ -16,6 +16,8 @@ import type { RequestKind, ThreadProduction } from "../view-schema";
 import { CLIENT_REQUEST_KINDS, j3SentNoticeOf } from "./j3-adapter";
 import { JForm } from "./j2-form";
 
+import "../../finance/spaces/money-lines.css";
+import "./j.css";
 import "./j3.css";
 
 interface J3ComposerProps {
@@ -45,7 +47,6 @@ function ModeSwitch({
     <div className="j3-modes" role="group" aria-label="Τι θέλεις να κάνεις">
       <button
         type="button"
-        className="button"
         aria-pressed={!isRequest}
         onClick={() => onMode("message")}
       >
@@ -57,7 +58,6 @@ function ModeSwitch({
       </button>
       <button
         type="button"
-        className="button"
         aria-pressed={isRequest}
         onClick={() => onMode("request")}
       >
@@ -163,13 +163,13 @@ export function J3Composer({
     <>
       <JForm
         action={sendMessage}
-        className="card j3-composer"
+        className="j3-composer"
         submitLabel={isRequest ? "Στείλε το αίτημα" : "Στείλε το μήνυμα"}
         pendingLabel="Αποστολή…"
         isDisabled={isEmpty || uploads.isUploading}
         onSuccess={handleSent}
       >
-        <h2 className="card-title">Νέο μήνυμα</h2>
+        <h2 className="ml-box-title">Νέο μήνυμα</h2>
         <p className="j3-to">
           <span className="muted">Προς:</span> <strong>{recipient}</strong>
         </p>
@@ -207,7 +207,7 @@ export function J3Composer({
           </small>
         </label>
         <div className="j3-field">
-          <label className="button j3-attach">
+          <label className="j-pill j3-attach">
             Πρόσθεσε αρχείο
             <input
               type="file"
@@ -227,6 +227,7 @@ export function J3Composer({
                     <input type="hidden" name="attachments" value={item.path} />
                   )}
                   <button
+                    className="j-pill"
                     type="button"
                     onClick={() => uploads.remove(item.key)}
                     aria-label={`Αφαίρεση ${item.name}`}

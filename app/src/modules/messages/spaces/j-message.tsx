@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Avatar } from "@/spaces/kit/parts";
+import { initialsOf } from "@/spaces/shell/avatar";
 
 import type { J2Message } from "./j2-adapter";
 import { NewBadge } from "./j2-read-at";
 
+import "../../finance/spaces/money-lines.css";
 import "./j.css";
 
 interface MessageBubbleProps {
@@ -35,7 +36,9 @@ export function MessageBubble({
       data-internal={message.isInternal}
     >
       <header className="jmsg-head">
-        <Avatar name={message.authorName} size={28} />
+        <span className="ml-avatars" aria-hidden="true">
+          <span>{initialsOf(message.authorName)}</span>
+        </span>
         <strong>{message.authorName}</strong>
         {!isClientViewer && message.side === "team" && !message.isInternal && (
           <span className="muted">προς πελάτη</span>
@@ -73,7 +76,7 @@ export function MessageBubble({
       )}
       {message.isEdited && <p className="muted jmsg-mark">διορθώθηκε</p>}
       {children}
-      {actions && <div className="btn-row jmsg-actions">{actions}</div>}
+      {actions && <div className="jmsg-actions">{actions}</div>}
     </article>
   );
 }

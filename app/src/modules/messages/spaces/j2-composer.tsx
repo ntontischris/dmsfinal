@@ -129,7 +129,7 @@ export function Composer({
           <strong>Προς:</strong>{" "}
           {isInternal ? "μόνο την ομάδα · δεν το βλέπει ο πελάτης" : clientName}
         </p>
-        <label className="toolbar">
+        <label className="j-inline">
           <span>Ετικέτα</span>
           <select
             className="input"
@@ -154,7 +154,7 @@ export function Composer({
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <div className="toolbar">
+        <div className="j-inline ml-quick j-row">
           {mentionable.length > 0 && (
             <select
               className="input"
@@ -172,7 +172,6 @@ export function Composer({
             </select>
           )}
           <button
-            className="button"
             type="button"
             onClick={() => fileRef.current?.click()}
           >
@@ -205,7 +204,7 @@ export function Composer({
                   <input type="hidden" name="attachments" value={item.path} />
                 )}
                 <button
-                  className="button"
+                  className="j-pill"
                   type="button"
                   onClick={() => uploads.remove(item.key)}
                 >

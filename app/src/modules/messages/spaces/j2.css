@@ -1,39 +1,45 @@
 [data-look='spaces'] {
-/* Στυλ της οθόνης J2 «Συνομιλία». */
+/* J2 «Συνομιλία»: hero, φίλτρα, χρονολόγιο, συντάκτης (sticky) και πλαϊνό κουτί Αιτημάτων. Μόνο tokens. */
+& .j2-hero { margin-bottom: var(--space-3); }
+& .j2-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: start; }
+& .j2-filters .kit-fb { margin-bottom: 0; }
 
-
-& .j2-layout { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
+& .j2-layout { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); margin-top: var(--space-3); }
 @media (min-width: 60rem) { & .j2-layout { grid-template-columns: minmax(0, 1fr) 18rem; align-items: start; } }
-
 & .j2-thread { display: grid; gap: var(--space-3); min-width: 0; }
 
-& .j2-req { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); display: grid; gap: var(--space-2); font-size: var(--text-sm); min-width: 0; background: var(--color-bg); }
+& .j2-req { display: grid; gap: var(--space-2); min-width: 0; padding: var(--space-2) var(--space-3); border-radius: 14px; font-size: var(--text-sm); border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
 & .j2-req p { margin: 0; }
+& .j2-req[data-faded] { opacity: 0.75; }
 & .j2-req-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 
 & .j2-form { display: grid; gap: var(--space-2); min-width: 0; }
 & .j2-form .input { width: 100%; box-sizing: border-box; }
+& .j2-error { margin: 0; font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
+& .j2-error::before { content: "• "; color: var(--brand-rec); }
 
-& .j2-composer { border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); padding: var(--space-3); display: grid; gap: var(--space-2); min-width: 0; }
-& .j2-composer[data-internal='true'] { border: 2px dashed var(--color-attention); background: color-mix(in oklch, var(--color-attention) 10%, var(--color-surface)); }
+/* Ο συντάκτης μένει ορατός στο κάτω μέρος· ο διακόπτης δείχνει καθαρά την επιλογή (χρώμα και ✓). */
+& .j2-composer {
+  position: sticky; bottom: 0; z-index: 2; display: grid; gap: var(--space-2); min-width: 0; padding: var(--space-3);
+  border-radius: 18px; border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: var(--panel-deep);
+  box-shadow: 0 -6px 16px color-mix(in oklab, var(--color-text) 12%, transparent);
+}
+& .j2-composer[data-internal='true'] { border: 1px dashed var(--brand-yellow); background: color-mix(in oklab, var(--brand-yellow) 8%, var(--panel-deep)); }
 & .j2-composer textarea { width: 100%; box-sizing: border-box; min-height: 5rem; }
-& .j2-composer .btn-row, & .j2-form .btn-row { flex-wrap: wrap; }
-& .j2-error { margin: 0; font-size: var(--text-sm); color: var(--color-attention); font-weight: 600; }
-
-& .j2-side a { overflow-wrap: anywhere; }
-& .j2-switch { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: start; margin-top: var(--space-2); }
-& .j2-switch .kit-fb { margin-bottom: 0; }
-
-/* Η φόρμα μένει ορατή στο κάτω μέρος· ο διακόπτης δείχνει καθαρά την επιλογή (χρώμα και ✓). */
-& .j2-composer { position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -6px 16px color-mix(in oklab, var(--color-text) 12%, transparent); }
-& .j2-seg { display: inline-flex; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; width: fit-content; max-width: 100%; }
-& .j2-seg button { font: inherit; font-size: var(--text-sm); padding: var(--space-1) var(--space-3); border: 0; background: transparent; color: var(--color-text); cursor: pointer; }
-& .j2-seg button[aria-pressed='true'] { background: var(--color-accent); color: var(--color-bg); font-weight: 600; }
-& .j2-composer[data-internal='true'] .j2-seg button[aria-pressed='true'] { background: var(--color-attention); color: var(--color-bg); }
+& .j2-seg { display: inline-flex; width: fit-content; max-width: 100%; overflow: hidden; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--color-text) 18%, transparent); }
+& .j2-seg button { padding: var(--space-1) var(--space-3); border: 0; font: inherit; font-size: var(--text-sm); cursor: pointer; color: var(--color-text); background: transparent; }
+& .j2-seg button[aria-pressed='true'] { font-weight: 700; color: var(--brand-midnight); background: var(--brand-periwinkle); }
+& .j2-composer[data-internal='true'] .j2-seg button[aria-pressed='true'] { color: var(--brand-midnight); background: var(--brand-yellow); }
 & .j2-to { margin: 0; font-size: var(--text-sm); }
-/* Ύφος ταυτότητας */
-& .j2-req, & .j2-composer { border-radius: var(--radius-lg); }
-& .j2-composer[data-internal='true'] { border: 1px dashed var(--color-attention); }
-& .j2-side a { text-decoration: none; font-weight: 600; }
-& .j2-side a:hover { color: var(--color-accent); }
-& .j2-side-empty { margin: 0; padding: var(--space-3) 1.25rem; } }
+
+& .j2-side .ml-box > ul { margin-top: 0; }
+& .j2-side a { overflow-wrap: anywhere; }
+& .j2-side-empty { margin: 0; }
+}
+[data-look='spaces'] {
+& .j2-side-row { display: grid; gap: 0.1rem; }
+& .j2-side-row[data-faded] { opacity: 0.6; }
+& .j2-side-row a { font-weight: 700; text-decoration: none; color: var(--color-text); }
+& .j2-side-row a:hover { color: var(--brand-periwinkle); }
+& .j2-side-row small { color: var(--color-text-muted); font-size: 0.78rem; }
+}

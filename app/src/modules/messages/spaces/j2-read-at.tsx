@@ -2,8 +2,6 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 
-import { Badge } from "@/spaces/screens/shared";
-
 // Ο δείκτης ανάγνωσης της ΠΡΩΤΗΣ απόδοσης κρατιέται όσο μένει ανοιχτή η σελίδα: η ανανέωση των 20″ δεν σβήνει τα «νέο».
 const ReadAtContext = createContext<string | null>(null);
 
@@ -27,5 +25,5 @@ export function NewBadge({ at, canBeNew }: { at: string; canBeNew: boolean }) {
   const readAt = useContext(ReadAtContext);
   if (!canBeNew) return null;
   if (readAt !== null && Date.parse(at) <= Date.parse(readAt)) return null;
-  return <Badge tone="strong">νέο</Badge>;
+  return <span className="ml-tag">νέο</span>;
 }

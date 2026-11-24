@@ -43,10 +43,9 @@ export function RequestActions({
   return (
     <>
       {request.canHandle && (
-        <div className="btn-row">
+        <div className="ml-quick j-row">
           {request.kind === "deliverable" && (
             <button
-              className="button"
               data-primary
               type="button"
               onClick={() => toggle("deliverable")}
@@ -56,7 +55,6 @@ export function RequestActions({
           )}
           {request.kind === "filming" && (
             <Link
-              className="button"
               data-primary
               href={`/app/filming/new?fromRequest=${messageId}&client=${clientId}`}
             >
@@ -64,14 +62,12 @@ export function RequestActions({
             </Link>
           )}
           <button
-            className="button"
             type="button"
             onClick={() => toggle("done")}
           >
             Ολοκληρώθηκε
           </button>
           <button
-            className="button"
             data-danger
             type="button"
             onClick={() => toggle("reject")}
@@ -142,9 +138,9 @@ export function RequestActions({
         </JForm>
       )}
       {request.canReassign && (
-        <JForm action={assignRequest} className="toolbar">
+        <JForm action={assignRequest} className="j-inline">
           <input type="hidden" name="id" value={messageId} />
-          <label className="toolbar">
+          <label className="j-inline">
             <span>Αλλαγή υπευθύνου</span>
             <select
               className="input"
