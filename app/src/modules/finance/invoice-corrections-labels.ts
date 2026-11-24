@@ -5,8 +5,7 @@ import type { ChangeField, TrailAction } from "./invoice-detail-schema";
 export const INVOICE_VOID_BODY =
   "Ακυρώνεται η καταχώριση. Η ενέργεια γράφεται στο Ίχνος και δεν αναιρείται.";
 
-export const TRAIL_EMPTY =
-  "Το Ίχνος το βλέπει όποιος έχει «Βλέπει ίχνος ενεργειών».";
+export const TRAIL_EMPTY = "Δεν έχει γραφτεί τίποτα ακόμα.";
 
 export const FIELD_LABELS: Readonly<Record<ChangeField, string>> = {
   number: "Αριθμός",
