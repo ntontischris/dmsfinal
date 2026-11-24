@@ -47,5 +47,8 @@
 .i3-go:hover:not(:disabled) { filter: brightness(1.1); }
 .i3-go:disabled { cursor: not-allowed; opacity: .45; }
 
+/* Καταστροφική ενέργεια (ακύρωση, διαγραφή): κόκκινο περίγραμμα, ποτέ το κύριο χρώμα */
+.ml-actions :is(a, button)[data-danger] { border-color: var(--color-danger); color: var(--color-danger); }
+
 /* Τι λείπει για να ενεργοποιηθεί το κουμπί */
 .i3-missing { margin: 0; color: var(--color-text-muted); font-size: .85rem; }

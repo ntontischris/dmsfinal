@@ -71,11 +71,12 @@ function ProductionLine({ row }: { row: ProductionRow }) {
 export function ProductionTable(props: { rows: readonly ProductionRow[] }) {
   return (
     <table className="ml-table ml-list">
+      <caption className="i67-caption">Περιθώριο ανά Παραγωγή</caption>
       <thead>
         <tr>
-          <th>Αρχικά</th>
-          <th>Παραγωγή</th>
-          <th>Περιθώριο</th>
+          <td aria-hidden="true" />
+          <th scope="col">Παραγωγή</th>
+          <th scope="col">Περιθώριο</th>
         </tr>
       </thead>
       <tbody>
@@ -136,11 +137,14 @@ export function GroupTable(props: {
         </p>
       )}
       <table className="ml-table ml-list">
+        <caption className="i67-caption">
+          Περιθώριο ανά {props.isMonth ? "Μήνα" : "Πελάτη"}
+        </caption>
         <thead>
           <tr>
-            <th>Παραγωγές που μετρούν</th>
-            <th>{props.isMonth ? "Μήνας" : "Πελάτης"}</th>
-            <th>Περιθώριο</th>
+            <td aria-hidden="true" />
+            <th scope="col">{props.isMonth ? "Μήνας" : "Πελάτης"}</th>
+            <th scope="col">Περιθώριο</th>
           </tr>
         </thead>
         <tbody>
