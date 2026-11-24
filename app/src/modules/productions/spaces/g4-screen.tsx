@@ -67,12 +67,11 @@ function TaskLine({ task }: { task: MyTask }) {
 
 function NoTasks() {
   return (
-    <StateNotice kind="empty" title="Δεν έχεις ανοιχτές εργασίες">
-      <p>
-        Όταν σου αναθέσουν Εργασία σε μια Παραγωγή, θα τη βρεις εδώ και θα
-        ειδοποιηθείς. <Link href={hrefOf("G1")}>Στις Παραγωγές</Link>
-      </p>
-    </StateNotice>
+    <p className="ml-empty" role="status">
+      <strong>Δεν έχεις ανοιχτές εργασίες.</strong> Όταν σου αναθέσουν Εργασία
+      σε μια Παραγωγή, θα τη βρεις εδώ και θα ειδοποιηθείς.{" "}
+      <Link href={hrefOf("G1")}>Στις Παραγωγές</Link>
+    </p>
   );
 }
 
