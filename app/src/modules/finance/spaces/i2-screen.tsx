@@ -261,9 +261,9 @@ export async function SpacesInvoices({
         <InvoiceSearch query={current} />
       </FilterBar>
       {unpaidNote && <p className="note">{unpaidNote}</p>}
-      <div className="toolbar">
+      <div className="ml-quick i245-actions">
         {caps.canRegisterInvoices && (
-          <Link className="button" data-primary="true" href={hrefOf("I3")}>
+          <Link data-primary href={hrefOf("I3")}>
             Καταχώρηση Τιμολογίου
           </Link>
         )}

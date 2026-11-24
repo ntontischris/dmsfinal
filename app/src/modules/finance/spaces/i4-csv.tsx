@@ -25,7 +25,7 @@ export function ReceiptsCsv({ rows }: { rows: readonly ReceiptRow[] }) {
   };
   return (
     <>
-      <button type="button" className="button" onClick={handleExport}>
+      <button type="button" onClick={handleExport}>
         Εξαγωγή CSV
       </button>
       {file && (

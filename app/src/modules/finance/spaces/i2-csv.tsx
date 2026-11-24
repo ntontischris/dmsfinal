@@ -32,7 +32,7 @@ export function CsvButton({
   };
   return (
     <>
-      <button type="button" className="button" onClick={handleExport}>
+      <button type="button" onClick={handleExport}>
         Εξαγωγή CSV
       </button>
       {file && (
