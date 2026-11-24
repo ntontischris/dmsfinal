@@ -67,12 +67,12 @@ export function OpenButton({ isOwner, pending }: OpenButtonProps) {
 
 export function OpenConfirm() {
   return (
-    <details className="ml-box o-card o7-warn" open role="status">
+    <details className="ml-box o-card o7-warn" open>
       <summary>
         <h2 className="ml-box-title">Επιβεβαίωση ανοίγματος</h2>
         <small>γίνεται μία φορά, χωρίς επιστροφή</small>
       </summary>
-      <p>
+      <p role="status">
         <strong>Γίνεται μία φορά, χωρίς επιστροφή.</strong> Από εκείνη τη στιγμή
         το σύστημα επικοινωνεί κανονικά με πελάτες: φεύγουν emails, ανοίγουν οι
         δημόσιες φόρμες και οι προσκλήσεις πελατών.

@@ -27,7 +27,7 @@ export function OpenForm({ cancelHref }: { cancelHref: string }) {
       )}
       <div className="ml-actions">
         <Link href={cancelHref}>Άκυρο</Link>
-        <button type="submit" data-primary="true" disabled={isPending}>
+        <button type="submit" data-danger="true" disabled={isPending}>
           {isPending ? "Άνοιγμα…" : "Άνοιγμα τώρα"}
         </button>
       </div>
