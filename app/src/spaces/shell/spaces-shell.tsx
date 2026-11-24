@@ -5,6 +5,7 @@ import type { ComponentProps, ReactNode } from "react";
 import type { SpacesModel } from "@/spaces/data/spaces";
 import { Monogram } from "@/spaces/shell/icons";
 import { PageHead } from "@/spaces/shell/page-head";
+import { SectionCards } from "@/spaces/shell/section-cards";
 import { SideMenu } from "@/spaces/shell/side-menu";
 import { BottomBar } from "@/spaces/shell/space-nav";
 import { TopTools } from "@/spaces/shell/top-tools";
@@ -18,6 +19,7 @@ import "@/spaces/styles/parts.css";
 import "@/spaces/styles/screens.css";
 import "@/spaces/styles/page.css";
 import "@/spaces/styles/app.css";
+import "@/spaces/styles/deck.css";
 
 interface SpacesShellProps {
   model: SpacesModel;
@@ -50,8 +52,8 @@ function HomeMark({ version }: { version: string | null }) {
   );
 }
 
-// Το κέλυφος: αριστερό μενού με ένα θέμα ανά οντότητα (όπως το παλιό DMS), εργαλεία πάνω δεξιά, η κεφαλίδα της
-// σελίδας, και στο κινητό μπάρα κάτω. Τα θέματα βγαίνουν από τα Δικαιώματα (spacesModel).
+// Το κέλυφος: αριστερό μενού με ένα θέμα ανά οντότητα (όπως το παλιό DMS), εργαλεία πάνω δεξιά, οι κάρτες
+// του θέματος, η κεφαλίδα της σελίδας, και στο κινητό μπάρα κάτω. Τα θέματα βγαίνουν από τα Δικαιώματα (spacesModel).
 export function SpacesShell({
   model,
   tools,
@@ -90,6 +92,7 @@ export function SpacesShell({
           )}
           <main id="main" className="app-main" tabIndex={-1}>
             <div data-spaces>
+              <SectionCards model={model} />
               <PageHead model={model} />
             </div>
             {children}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import "../../finance/spaces/money-deck.css";
+import "@/spaces/styles/deck.css";
 import "./a1-deck.css";
 import { breakdownOf, facesOf, isUrgentGroup } from "./a1-deck-model";
 import { countedOf, type ListGroup } from "./a1-list";
