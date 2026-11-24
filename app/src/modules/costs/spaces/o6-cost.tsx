@@ -96,7 +96,7 @@ function MultiplierRows({ hint }: { hint: CostHint }) {
               {decimalText(row.factor)})
             </small>
           </span>
-          <label className="ml-field o6-factor">
+          <label className="o6-factor">
             <span>Πολλαπλασιαστής</span>
             <input
               className="input"
