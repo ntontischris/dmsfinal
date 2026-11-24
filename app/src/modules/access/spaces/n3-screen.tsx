@@ -1,14 +1,7 @@
 import Link from "next/link";
 
-import { Panel } from "@/spaces/kit/panel";
-import { Avatar, ListRow, RowList } from "@/spaces/kit/parts";
 import { hrefOf } from "@/spaces/data/screens";
-import {
-  Badge,
-  ErrorNotice,
-  StateNotice,
-  fmtDate,
-} from "@/spaces/screens/shared";
+import { ErrorNotice, StateNotice, fmtDate } from "@/spaces/screens/shared";
 
 import {
   listClientUsers,
@@ -23,56 +16,30 @@ import {
   n2MembersOf,
   type N2Member,
 } from "./n2-adapter";
-import { N2InviteForm, N2RemoveButton } from "./n2-forms";
+import { N2RemoveButton } from "./n2-forms";
 import { PendingInvitations } from "./n2-sections";
+import { InvitePanel } from "./invite-panel";
+import { Hero, Line, ListSection } from "./n-parts";
 
 import "./n2.css";
 
 const TEAM_NOTE = "Η ομάδα της Devre Media ειδοποιείται για την αφαίρεση.";
 
-function ColleagueRow(props: {
-  m: N2Member;
-  clientId: string;
-  clientName: string;
-}) {
-  const { m } = props;
+const pluralColleagues = (n: number): string =>
+  n === 1 ? "1 συνάδελφος" : `${n} συνάδελφοι`;
+
+function ColleagueSub({ m }: { m: N2Member }) {
   return (
-    <ListRow
-      lead={<Avatar name={m.name} size={36} />}
-      title={
+    <>
+      <span className="n2-wrap">{m.email}</span> · μπήκε {fmtDate(m.joinedAt)}
+      {m.isMe && (
         <>
-          {m.name} {m.isMe && <Badge tone="strong">εσύ</Badge>}
-        </>
-      }
-      sub={
-        <>
-          <span className="n2-wrap">{m.email}</span>
           <br />
-          Μπήκε {fmtDate(m.joinedAt)}
-          {m.isMe && (
-            <>
-              <br />
-              Δεν αφαιρείς τον εαυτό σου. Για αποχώρηση, γράψε στη{" "}
-              <Link href={hrefOf("J1")}>Συνομιλία</Link>.
-            </>
-          )}
+          Δεν αφαιρείς τον εαυτό σου. Για αποχώρηση, γράψε στη{" "}
+          <Link href={hrefOf("J1")}>Συνομιλία</Link>.
         </>
-      }
-      aside={
-        <>
-          <Badge>{m.role}</Badge>
-          {!m.isMe && (
-            <N2RemoveButton
-              clientId={props.clientId}
-              clientName={props.clientName}
-              userId={m.id}
-              name={m.name}
-              note={TEAM_NOTE}
-            />
-          )}
-        </>
-      }
-    />
+      )}
+    </>
   );
 }
 
@@ -83,33 +50,47 @@ function ColleaguesSection(props: {
 }) {
   return (
     <div role="group" aria-label="Συνάδελφοι">
-      <Panel label="Συνάδελφοι" aside={<Badge>{props.members.length}</Badge>}>
+      <ListSection
+        title="Συνάδελφοι"
+        hint={pluralColleagues(props.members.length)}
+      >
         {props.members.length === 0 ? (
-          <p className="muted">
+          <p className="ml-empty">
             Δεν υπάρχουν ακόμα συνάδελφοι. Προσκάλεσε κάποιον από την ομάδα σου
             από κάτω.
           </p>
         ) : (
-          <div className="n2-bleed">
-            <RowList>
-              {props.members.map((m) => (
-                <ColleagueRow
-                  key={m.id}
-                  m={m}
-                  clientId={props.clientId}
-                  clientName={props.clientName}
-                />
-              ))}
-            </RowList>
-          </div>
+          <ul className="ml-list">
+            {props.members.map((m) => (
+              <Line
+                key={m.id}
+                name={m.name}
+                title={m.name}
+                tag={m.isMe ? `${m.role} · εσύ` : m.role}
+                sub={<ColleagueSub m={m} />}
+                quick={
+                  m.isMe ? undefined : (
+                    <N2RemoveButton
+                      clientId={props.clientId}
+                      clientName={props.clientName}
+                      userId={m.id}
+                      name={m.name}
+                      note={TEAM_NOTE}
+                    />
+                  )
+                }
+              />
+            ))}
+          </ul>
         )}
-      </Panel>
+      </ListSection>
     </div>
   );
 }
 
-// N3 Συνάδελφοι στη νέα εμφάνιση (prototype `screens/N3.tsx`): ο Χρήστης πελάτη βλέπει και προσκαλεί συναδέλφους στον
-// τρέχοντα Πελάτη του (c.colleagues). Η βάση κρίνει κάθε ενέργεια και ποιους Ρόλους μπορεί να δώσει.
+// N3 Συνάδελφοι: ο Χρήστης πελάτη βλέπει και προσκαλεί συναδέλφους στον τρέχοντα Πελάτη του (c.colleagues).
+// Κεφαλίδα με τον τίτλο της σελίδας (το μενού προφίλ δεν έχει κεφαλίδα θέματος), λίστα στο ύφος των «Χρημάτων»,
+// προσκλήσεις σε αναμονή και η πρόσκληση σε αριθμημένα βήματα (ίδια με τη N6). Η βάση κρίνει κάθε ενέργεια.
 export async function SpacesColleagues({ viewer }: { viewer: Viewer }) {
   if (viewer.status !== "signed-in" || !can(viewer, "c.colleagues"))
     return (
@@ -164,11 +145,14 @@ async function Colleagues(props: {
     );
   const members = n2MembersOf(users.data, props.viewer.userId);
   return (
-    <div data-spaces>
-      <p className="note">
-        Οι άνθρωποι του Πελάτη «{props.clientName}» που μπαίνουν στην πύλη. Όταν
-        προσκαλείς ή αφαιρείς συνάδελφο, ειδοποιείται η ομάδα της Devre Media.
-      </p>
+    <div data-spaces className="n-stack">
+      <Hero
+        mono="Σ"
+        tag={props.clientName}
+        title="Συνάδελφοι"
+        lead="Οι άνθρωποι του Πελάτη που μπαίνουν στην πύλη. Όταν προσκαλείς ή αφαιρείς συνάδελφο, ειδοποιείται η ομάδα της Devre Media."
+        isDetail
+      />
       <ColleaguesSection
         members={members}
         clientId={props.clientId}
@@ -180,11 +164,14 @@ async function Colleagues(props: {
           colleagueInvitedBy(members),
         )}
       />
-      <N2InviteForm
+      <InvitePanel
         title="Πρόσκληση συναδέλφου"
-        clientId={props.clientId}
-        clientName={props.clientName}
-        roles={roles}
+        team={null}
+        client={{
+          clients: [{ id: props.clientId, name: props.clientName }],
+          roles,
+          presetClientId: props.clientId,
+        }}
         footnote="Προεπιλογή: «Πλήρης». Δίνεις μόνο Ρόλους που δεν ξεπερνούν τον δικό σου. Η ομάδα της Devre Media ειδοποιείται."
       />
     </div>
