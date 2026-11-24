@@ -1,0 +1,9 @@
+[
+  { "email": "dokimi-idioktitis@example.com", "name": "Δοκιμή · Ιδιοκτήτης", "team_role": "owner", "label": "Ιδιοκτήτης" },
+  { "email": "dokimi-diaxeirisi@example.com", "name": "Δοκιμή · Διαχείριση", "team_role": "Διαχείριση", "label": "Διαχείριση" },
+  { "email": "dokimi-paragogi@example.com", "name": "Δοκιμή · Παραγωγή", "team_role": "Παραγωγή", "label": "Παραγωγή" },
+  { "email": "dokimi-poliseis@example.com", "name": "Δοκιμή · Πωλήσεις", "team_role": "Πωλήσεις", "label": "Πωλήσεις" },
+  { "email": "dokimi-logistis@example.com", "name": "Δοκιμή · Λογιστής", "team_role": "Λογιστής", "label": "Λογιστής" },
+  { "email": "dokimi-pelatis-a@example.com", "name": "Δοκιμή · Πελάτης Α", "client_rank": 1, "label": "Πελάτης Α" },
+  { "email": "dokimi-pelatis-b@example.com", "name": "Δοκιμή · Πελάτης Β", "client_rank": 2, "label": "Πελάτης Β" }
+]
