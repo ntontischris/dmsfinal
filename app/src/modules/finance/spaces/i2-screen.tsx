@@ -11,6 +11,7 @@ import { Strip } from "@/spaces/shell/strip";
 import { financeCaps } from "../caps";
 import { FILTER_LABELS } from "../invoices-labels";
 import { getInvoices, getVoidedInvoices } from "../invoices-queries";
+import { getPaymentInfo } from "../ledger-queries";
 import {
   INVOICE_FILTERS,
   type InvoiceFilter,
@@ -35,6 +36,7 @@ import {
   visibleInvoices,
 } from "./i2-model";
 import { InvoiceTable } from "./i2-table";
+import { NoBankWarning } from "./no-bank-warning";
 import { VoidedCard } from "./i2-voided";
 
 import "./i245.css";
@@ -178,10 +180,11 @@ export async function SpacesInvoices({
   const viewer = await getViewer();
   const caps = financeCaps(viewer);
   if (!caps.canView) return denied;
-  const [invoices, voided, receipts] = await Promise.all([
+  const [invoices, voided, receipts, payment] = await Promise.all([
     getInvoices("all"),
     query.filter === "all" ? getVoidedInvoices() : null,
     listReceipts(null),
+    getPaymentInfo(),
   ]);
   if (!invoices.ok)
     return (
@@ -212,6 +215,7 @@ export async function SpacesInvoices({
         today={today}
         viewer={viewer}
       />
+      {payment.ok && payment.data.bank === null && <NoBankWarning />}
       <FilterBar
         name="i2-filters"
         filters={[
