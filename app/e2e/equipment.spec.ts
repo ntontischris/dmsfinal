@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import {
+  openBox,
   openItemFromRegistry,
   openMoreScreens,
   openNewItem,
@@ -49,7 +50,7 @@ test("ο Ιδιοκτήτης φτιάχνει Κατηγορία και αντ�
   await expect(tableRow(page, CAMERA)).toBeVisible();
   await expect(button(page, NEW_ITEM_LABEL)).toBeVisible();
 
-  const categories = card(page, "Κατηγορίες");
+  const categories = await openBox(page, "Κατηγορίες");
   await categories.getByLabel("Νέα Κατηγορία", { exact: true }).fill(CATEGORY);
   await button(categories, "Προσθήκη").click();
   await expect(categories.locator("li", { hasText: CATEGORY })).toBeVisible();

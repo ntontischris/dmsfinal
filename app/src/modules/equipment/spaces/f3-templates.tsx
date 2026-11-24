@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge } from "@/spaces/screens/shared";
 import { initialsOf } from "@/spaces/shell/avatar";
 
 import {
@@ -18,6 +15,7 @@ import type {
   EquipmentTemplate,
   TemplateItem,
 } from "../types";
+import { FBox } from "./f-box";
 import { useRunAction } from "./f-run";
 import { EMPTY_DRAFT, TemplateForm, type Draft } from "./f3-template-form";
 
@@ -60,27 +58,27 @@ export function F3Templates({ templates, items, canEdit }: F3TemplatesProps) {
 
   return (
     <>
-      <div className="e-info">
-        Το Πρότυπο δεσμεύει με ένα κλικ πολλά αντικείμενα σε ένα Γύρισμα. Στην
-        εφαρμογή ισχύουν οι κανόνες της Δέσμευσης: αντικείμενο «σε επισκευή» ή
-        «αποσυρμένο» <strong>παραλείπεται</strong>, και σύγκρουση με άλλο
-        Γύρισμα <strong>προειδοποιεί</strong> ή <strong>παραλείπεται</strong>,
-        όπως ορίζουν οι Κανόνες γυρισμάτων. Αν σβήσεις Πρότυπο, τα Γυρίσματα που
-        το χρησιμοποίησαν <strong>δεν αλλάζουν</strong>.
-      </div>
-      {canEdit ? (
-        <div className="btn-row" style={{ marginBottom: "var(--space-4)" }}>
+      <div className="ml-head">
+        <p>
+          Το Πρότυπο δεσμεύει με ένα κλικ πολλά αντικείμενα σε ένα Γύρισμα. Στην
+          εφαρμογή ισχύουν οι κανόνες της Δέσμευσης: αντικείμενο «σε επισκευή» ή
+          «αποσυρμένο» <strong>παραλείπεται</strong>, και σύγκρουση με άλλο
+          Γύρισμα <strong>προειδοποιεί</strong> ή <strong>παραλείπεται</strong>,
+          όπως ορίζουν οι Κανόνες γυρισμάτων. Αν σβήσεις Πρότυπο, τα Γυρίσματα
+          που το χρησιμοποίησαν <strong>δεν αλλάζουν</strong>.
+        </p>
+        {canEdit && (
           <button
             type="button"
-            className="button"
-            data-primary="true"
+            className="ml-cta"
             onClick={() => setDraft(EMPTY_DRAFT)}
           >
             Νέο Πρότυπο
           </button>
-        </div>
-      ) : (
-        <p className="muted">
+        )}
+      </div>
+      {!canEdit && (
+        <p className="f-note">
           Μόνο ανάγνωση: τα Πρότυπα τα φτιάχνει όποιος δεσμεύει εξοπλισμό ή
           διαχειρίζεται απόθεμα.
         </p>
@@ -102,63 +100,60 @@ export function F3Templates({ templates, items, canEdit }: F3TemplatesProps) {
         </p>
       )}
       {templates.length === 0 ? (
-        <section className="card notice" data-kind="empty" role="status">
-          <h2>Κανένα Πρότυπο εξοπλισμού</h2>
-          <p className="muted">
-            {canEdit
-              ? "Φτιάξε το πρώτο με «Νέο Πρότυπο»."
-              : "Δεν έχει φτιαχτεί ακόμα Πρότυπο."}
-          </p>
-        </section>
+        <p className="ml-empty" role="status">
+          <strong>Κανένα Πρότυπο εξοπλισμού.</strong>{" "}
+          {canEdit
+            ? "Φτιάξε το πρώτο με «Νέο Πρότυπο»."
+            : "Δεν έχει φτιαχτεί ακόμα Πρότυπο."}
+        </p>
       ) : (
-        templates.map((template) => (
-          <Panel label={template.name} key={template.id}>
-            <TemplateItems items={template.items} />
-            {template.note && <p className="muted">{template.note}</p>}
-            {canEdit &&
-              (deleting === template.id ? (
-                <div className="btn-row">
-                  <span className="muted">
-                    Σβήνεται το Πρότυπο· τα Γυρίσματα δεν αλλάζουν.
-                  </span>
-                  <button
-                    type="button"
-                    className="button"
-                    data-danger="true"
-                    disabled={remove.isPending}
-                    onClick={() => handleDelete(template.id)}
-                  >
-                    Ναι, διαγραφή
-                  </button>
-                  <button
-                    type="button"
-                    className="button"
-                    onClick={() => setDeleting(null)}
-                  >
-                    Άκυρο
-                  </button>
-                </div>
-              ) : (
-                <div className="btn-row">
-                  <button
-                    type="button"
-                    className="button"
-                    onClick={() => setDraft(draftOf(template))}
-                  >
-                    Αλλαγή
-                  </button>
-                  <button
-                    type="button"
-                    className="button"
-                    data-danger="true"
-                    onClick={() => setDeleting(template.id)}
-                  >
-                    Διαγραφή
-                  </button>
-                </div>
-              ))}
-          </Panel>
-        ))
+        <div className="ml-stack">
+          {templates.map((template) => (
+            <FBox
+              key={template.id}
+              title={template.name}
+              hint={`${template.items.length} αντικείμενα`}
+            >
+              <TemplateItems items={template.items} />
+              {template.note && <p className="f-note">{template.note}</p>}
+              {canEdit &&
+                (deleting === template.id ? (
+                  <div className="ml-actions">
+                    <span className="f-note">
+                      Σβήνεται το Πρότυπο· τα Γυρίσματα δεν αλλάζουν.
+                    </span>
+                    <button type="button" onClick={() => setDeleting(null)}>
+                      Άκυρο
+                    </button>
+                    <button
+                      type="button"
+                      data-danger
+                      disabled={remove.isPending}
+                      onClick={() => handleDelete(template.id)}
+                    >
+                      Ναι, διαγραφή
+                    </button>
+                  </div>
+                ) : (
+                  <div className="ml-actions">
+                    <button
+                      type="button"
+                      onClick={() => setDraft(draftOf(template))}
+                    >
+                      Αλλαγή
+                    </button>
+                    <button
+                      type="button"
+                      data-danger
+                      onClick={() => setDeleting(template.id)}
+                    >
+                      Διαγραφή
+                    </button>
+                  </div>
+                ))}
+            </FBox>
+          ))}
+        </div>
       )}
     </>
   );
@@ -166,25 +161,24 @@ export function F3Templates({ templates, items, canEdit }: F3TemplatesProps) {
 
 function TemplateItems({ items }: { items: readonly TemplateItem[] }) {
   return (
-    <RowList>
+    <ul className="ml-list">
       {items.map((item) => (
-        <ListRow
-          key={item.id}
-          lead={
-            <span className="part-tile" aria-hidden="true">
-              {initialsOf(item.name)}
+        <li key={item.id} className="ml-line">
+          <span className="ml-thumb" aria-hidden="true">
+            {initialsOf(item.name)}
+          </span>
+          <div className="ml-main">
+            <strong>{item.name}</strong>
+          </div>
+          {item.status !== "available" ? (
+            <span className="ml-tag">
+              {STATUS_LABELS[item.status]}: θα παραλειφθεί
             </span>
-          }
-          title={item.name}
-          aside={
-            item.status !== "available" && (
-              <Badge tone="attention">
-                {STATUS_LABELS[item.status]}: θα παραλειφθεί
-              </Badge>
-            )
-          }
-        />
+          ) : (
+            <span />
+          )}
+        </li>
       ))}
-    </RowList>
+    </ul>
   );
 }

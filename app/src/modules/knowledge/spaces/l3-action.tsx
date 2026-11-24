@@ -38,13 +38,12 @@ export function L3Action({
     INITIAL_FORM_STATE,
   );
   return (
-    <form action={dispatch} className="btn-row">
+    <form action={dispatch} className="k-action">
       {Object.entries(fields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
       <button
         type="submit"
-        className="button"
         data-primary={tone === "primary" ? "true" : undefined}
         data-danger={tone === "danger" ? "true" : undefined}
         disabled={isPending || isDisabled}
@@ -52,7 +51,7 @@ export function L3Action({
         {label}
       </button>
       {state.error && (
-        <span className="part-sub" role="alert">
+        <span className="k-note" role="alert">
           {state.error}
         </span>
       )}

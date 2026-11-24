@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { STATUS_LABELS } from "../labels";
 import type { EquipmentItemRow } from "../types";
 import { pickerGroupsOf } from "./f-model";
@@ -52,19 +50,25 @@ export function TemplateForm({
     if (!nameError && !peopleError) onSave();
   };
   return (
-    <div>
-      <Panel label={draft.id ? "Αλλαγή Προτύπου" : "Νέο Πρότυπο εξοπλισμού"}>
-        <div className="e-form">
-          <label>
-            Όνομα (υποχρεωτικό)
+    <section>
+      <details className="ml-box ml-new" open>
+        <summary>
+          <h2 className="ml-box-title">
+            {draft.id ? "Αλλαγή Προτύπου" : "Νέο Πρότυπο εξοπλισμού"}
+          </h2>
+          <small>Όνομα, αντικείμενα ανά Κατηγορία, σημείωση.</small>
+        </summary>
+        <div className="ml-fields">
+          <label className="ml-field" data-wide>
+            <span>Όνομα (υποχρεωτικό)</span>
             <input
               className="input"
               value={draft.name}
               onChange={(e) => onChange({ ...draft, name: e.target.value })}
             />
           </label>
-          <div className="e-field">
-            Αντικείμενα (τουλάχιστον ένα)
+          <div className="ml-field" data-wide>
+            <span>Αντικείμενα (τουλάχιστον ένα)</span>
             {pickerGroupsOf(items, draft.itemIds).map((group) => (
               <fieldset key={group.categoryId} className="f-group">
                 <legend>{group.categoryName}</legend>
@@ -85,8 +89,8 @@ export function TemplateForm({
               </fieldset>
             ))}
           </div>
-          <label>
-            Σημείωση
+          <label className="ml-field" data-wide>
+            <span>Σημείωση</span>
             <input
               className="input"
               value={draft.note}
@@ -94,32 +98,31 @@ export function TemplateForm({
             />
           </label>
           {tried && (nameError || peopleError) && (
-            <p className="e-warn" role="alert">
+            <p className="e-warn ml-field" data-wide role="alert">
               {nameError && "Γράψε όνομα. "}
               {peopleError && "Διάλεξε τουλάχιστον ένα αντικείμενο."}
             </p>
           )}
           {error && (
-            <p className="e-warn" role="alert">
+            <p className="e-warn ml-field" data-wide role="alert">
               {error}
             </p>
           )}
-          <div className="btn-row">
+          <div className="ml-actions">
+            <button type="button" onClick={onCancel}>
+              Άκυρο
+            </button>
             <button
               type="button"
-              className="button"
-              data-primary="true"
+              data-primary
               disabled={isPending}
               onClick={handleSave}
             >
               Αποθήκευση
             </button>
-            <button type="button" className="button" onClick={onCancel}>
-              Άκυρο
-            </button>
           </div>
         </div>
-      </Panel>
-    </div>
+      </details>
+    </section>
   );
 }

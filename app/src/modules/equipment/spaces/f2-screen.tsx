@@ -26,6 +26,7 @@ import {
 import { replacementsFor } from "./f-model";
 import { F2Item } from "./f2-item";
 
+import "../../finance/spaces/money-lines.css";
 import "./f.css";
 
 function Frame({ children }: { children: ReactNode }) {

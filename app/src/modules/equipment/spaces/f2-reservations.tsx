@@ -4,12 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { LastDone, Warning } from "./f-ui";
-import { Panel } from "@/spaces/kit/panel";
-import { DateLead, ListRow, RowList } from "@/spaces/kit/parts";
-import { Badge } from "@/spaces/screens/shared";
 
 import type { EquipmentStatus } from "../types";
 import type { CandidateView, ReservationView } from "./f-adapter";
+import { FBox } from "./f-box";
 import { conflictText, overlaps } from "./f-model";
 import { useRunAction } from "./f-run";
 import { releaseFromItem, reserveFromItem } from "./f2-reserve-actions";
@@ -64,9 +62,10 @@ export function F2Reservations({
   return (
     <>
       {conflicts.length > 0 && (
-        <Panel
-          label="Συγκρούσεις"
-          aside={<Badge tone="attention">{conflicts.length}</Badge>}
+        <FBox
+          title="Συγκρούσεις"
+          hint={`${conflicts.length} επικαλύψεις`}
+          isOpen
         >
           {conflicts.map(({ a, b }) => (
             <Warning key={`${a.key}-${b.key}`}>
@@ -76,17 +75,14 @@ export function F2Reservations({
             </Warning>
           ))}
           {access.blocks !== null && (
-            <p className="note">{conflictText(access.blocks)}</p>
+            <p className="f-note">{conflictText(access.blocks)}</p>
           )}
-        </Panel>
+        </FBox>
       )}
-      <Panel
-        label="Μελλοντικές Δεσμεύσεις"
-        aside={
-          <>
-            <span className="badge">{reservations.length}</span>
-          </>
-        }
+      <FBox
+        title="Μελλοντικές Δεσμεύσεις"
+        hint={`${reservations.length} Δεσμεύσεις`}
+        isOpen
       >
         {!isAvailable && reservations.length > 0 && (
           <Warning>
@@ -98,21 +94,26 @@ export function F2Reservations({
           </Warning>
         )}
         {reservations.length === 0 && (
-          <p className="muted">Καμία μελλοντική Δέσμευση.</p>
+          <p className="ml-empty">Καμία μελλοντική Δέσμευση.</p>
         )}
-        <RowList>
-          {reservations.map((f) => (
-            <ListRow
-              key={f.key}
-              lead={<DateLead weekday={f.weekday} day={f.day} />}
-              title={<FilmingLink view={f} />}
-              aside={
-                <>
-                  <Badge>{f.stateLabel}</Badge>
-                  {access.canReserve && f.filmingId && (
+        {reservations.length > 0 && (
+          <ul className="ml-list">
+            {reservations.map((f) => (
+              <li key={f.key} className="ml-line">
+                <span className="ml-thumb" aria-hidden="true">
+                  {f.day}
+                </span>
+                <div className="ml-main">
+                  <strong>
+                    <FilmingLink view={f} />
+                  </strong>
+                  <small>{f.weekday}</small>
+                </div>
+                <span className="ml-tag">{f.stateLabel}</span>
+                {access.canReserve && f.filmingId ? (
+                  <span className="ml-quick">
                     <button
                       type="button"
-                      className="button"
                       disabled={isPending}
                       onClick={() =>
                         run(releaseFromItem, {
@@ -123,24 +124,26 @@ export function F2Reservations({
                     >
                       Αποδέσμευση
                     </button>
-                  )}
-                </>
-              }
-            />
-          ))}
-        </RowList>
+                  </span>
+                ) : (
+                  <span />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
         {access.canReserve && (
-          <div className="stack">
+          <div className="f-box-body">
             {!isAvailable ? (
-              <p className="muted">
+              <p className="f-note">
                 Νέα Δέσμευση γίνεται μόνο σε «διαθέσιμο» αντικείμενο.
               </p>
             ) : candidates.length === 0 ? (
-              <p className="muted">
+              <p className="f-note">
                 Δεν υπάρχει ανοιχτό Γύρισμα όπου μπορείς να το δεσμεύσεις.
               </p>
             ) : (
-              <div className="e3-inline">
+              <div className="e3-inline ml-actions">
                 <select
                   className="select"
                   aria-label="Γύρισμα για Δέσμευση"
@@ -156,7 +159,7 @@ export function F2Reservations({
                 </select>
                 <button
                   type="button"
-                  className="button"
+                 
                   disabled={!pickedFilming || isPickedBlocked || isPending}
                   onClick={() => {
                     if (!pickedFilming) return;
@@ -178,7 +181,7 @@ export function F2Reservations({
               </Warning>
             ))}
             {access.isReserveScoped && (
-              <p className="note">
+              <p className="f-note">
                 Δεσμεύεις μόνο σε Γυρίσματα όπου είσαι Μέλος της Παραγωγής ή του
                 Συνεργείου.
               </p>
@@ -189,7 +192,7 @@ export function F2Reservations({
           log={message ? [message] : []}
           tone={last.error ? "error" : "ok"}
         />
-      </Panel>
+      </FBox>
     </>
   );
 }

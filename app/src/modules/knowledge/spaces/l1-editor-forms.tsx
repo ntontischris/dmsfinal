@@ -30,11 +30,11 @@ export function ContentForm({
           ? "Αποθήκευση (ισχύει αμέσως)"
           : "Αποθήκευση"
       }
-      className="l1-form"
+      className="ml-fields"
     >
       <input type="hidden" name="id" value={item.id} />
-      <label>
-        Ενότητα
+      <label className="ml-field">
+        <span>Ενότητα</span>
         <select
           className="input"
           name="sectionId"
@@ -47,8 +47,8 @@ export function ContentForm({
           ))}
         </select>
       </label>
-      <label>
-        Τίτλος
+      <label className="ml-field">
+        <span>Τίτλος</span>
         <input
           className="input"
           name="title"
@@ -57,8 +57,8 @@ export function ContentForm({
           required
         />
       </label>
-      <label>
-        Περίληψη (1–2 γραμμές, απαραίτητη για δημοσίευση)
+      <label className="ml-field" data-wide>
+        <span>Περίληψη (1–2 γραμμές, απαραίτητη για δημοσίευση)</span>
         <textarea
           className="input"
           name="summary"
@@ -112,11 +112,11 @@ export function AudienceForm({
     <SpacesForm
       action={saveAudience}
       submitLabel="Αποθήκευση Κοινού"
-      className="l1-form"
+      className="ml-fields"
       tone="plain"
     >
       <input type="hidden" name="id" value={item.id} />
-      <fieldset className="l1-checks">
+      <fieldset className="k-checks">
         <legend>Κοινό</legend>
         <RoleChecks
           roles={roles.filter((role) => role.kind === "team")}
@@ -154,7 +154,7 @@ export function PublishedActions({ item }: { item: EditableItem }) {
       >
         <IdField id={item.id} />
       </SpacesForm>
-      <p className="note">Γυρίζει σε πρόχειρο· ο Βοηθός το ξεχνά αμέσως.</p>
+      <p className="k-note">Γυρίζει σε πρόχειρο· ο Βοηθός το ξεχνά αμέσως.</p>
     </>
   );
 }
@@ -171,7 +171,7 @@ export function DraftActions({ item }: { item: EditableItem }) {
       >
         <IdField id={item.id} />
         {blockers.length > 0 && (
-          <ul className="l1-blockers" aria-label="Τι λείπει για τη δημοσίευση">
+          <ul className="k-blockers" aria-label="Τι λείπει για τη δημοσίευση">
             {blockers.map((blocker) => (
               <li key={blocker}>{blocker}</li>
             ))}
@@ -186,7 +186,7 @@ export function DraftActions({ item }: { item: EditableItem }) {
       >
         <IdField id={item.id} />
       </SpacesForm>
-      <p className="note">
+      <p className="k-note">
         Δημοσιευμένο στοιχείο πρώτα αποσύρεται. Η διαγραφή είναι οριστική· οι
         Συζητήσεις που το είχαν πηγή το δείχνουν ως «δεν υπάρχει πια».
       </p>
