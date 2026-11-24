@@ -45,7 +45,7 @@
 & .a9-error { color: var(--color-attention); font-weight: 600; }
 & .a9-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 48rem) { & .a9-launch { bottom: calc(5.5rem + env(safe-area-inset-bottom)); } }
-@media (min-width: 48rem) {
+@media (width > 48rem) {
   /* Στο desktop το κουμπί κάθεται κάτω αριστερά, πάνω στο αριστερό μενού (15rem), για να μην καλύπτει κουμπιά της σελίδας. */
   & .a9-launch { right: auto; left: var(--space-3); max-width: calc(15rem - 2 * var(--space-3)); }
   & .a9-dock { inset: auto var(--space-4) var(--space-4) auto; width: 26rem; height: min(40rem, calc(100dvh - 6rem)); background: transparent; }
