@@ -203,8 +203,8 @@ test("Ρυθμίσεις › Συμφωνίες: Είδη Παροχής", async
   await page.goto("/app/settings/agreements");
   await expect(
     page
-      .getByRole("navigation", { name: "Ενότητες Ρυθμίσεων" })
-      .getByRole("link", { name: "Συμφωνίες", exact: true }),
+      .getByRole("navigation", { name: "Ρυθμίσεις", exact: true })
+      .getByRole("link", { name: "Ρυθμίσεις Συμφωνιών", exact: true }),
   ).toHaveAttribute("aria-current", /.+/);
 
   const kinds = panel(page, "Είδη Παροχής");

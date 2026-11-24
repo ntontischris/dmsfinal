@@ -258,8 +258,8 @@ test("οι Ρυθμίσεις Συμφωνιών (O3) αλλάζουν τις π
   await page.goto("/app/settings/agreements");
   await expect(
     page
-      .getByRole("navigation", { name: "Ενότητες Ρυθμίσεων" })
-      .getByRole("link", { name: "Συμφωνίες", exact: true }),
+      .getByRole("navigation", { name: "Ρυθμίσεις", exact: true })
+      .getByRole("link", { name: "Ρυθμίσεις Συμφωνιών", exact: true }),
   ).toHaveAttribute("aria-current", /.+/);
   for (const title of [
     "Όροι Συμφωνίας",

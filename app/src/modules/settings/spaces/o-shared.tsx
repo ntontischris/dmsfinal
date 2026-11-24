@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { can, getViewer } from "@/modules/access";
 import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Panel } from "@/spaces/kit/panel";
 import { Badge, type BadgeTone } from "@/spaces/screens/shared";
@@ -37,32 +36,11 @@ export const SETTINGS_TABS: readonly {
 
 export const READINESS_HREF = "/app/settings/readiness";
 
-export async function SettingsTabs({ code }: { code: string }) {
-  const viewer = await getViewer();
-  const tabs = SETTINGS_TABS.filter(
-    (tab) => !tab.needs || can(viewer, tab.needs),
-  );
-  return (
-    <nav className="tabs" aria-label="Ενότητες Ρυθμίσεων">
-      {tabs.map((tab) => (
-        <Link
-          key={tab.code}
-          className="tab"
-          href={tab.href}
-          aria-current={tab.code === code ? "page" : undefined}
-        >
-          {tab.label}
-        </Link>
-      ))}
-      <Link
-        className="tab"
-        href={READINESS_HREF}
-        aria-current={code === "O7" ? "page" : undefined}
-      >
-        Έλεγχος ετοιμότητας
-      </Link>
-    </nav>
-  );
+// Οι υποσελίδες των Ρυθμίσεων πλοηγούνται πλέον μόνο από τις κάρτες του θέματος (spaces/data/spaces.ts): οι καρτέλες
+// μέσα στη σελίδα δεν δείχνουν τίποτα. Οι κλήσεις τους φεύγουν σε επόμενο βήμα.
+export function SettingsTabs(props: { code: string }): null {
+  void props;
+  return null;
 }
 
 export function LockedField({

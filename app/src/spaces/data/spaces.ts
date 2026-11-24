@@ -69,7 +69,7 @@ export interface Space {
 
 // Το μενού της ομάδας: ένα θέμα ανά οντότητα (όπως το παλιό DMS), λίστα → σελίδα. Κάθε δουλειά έχει ένα σπίτι.
 // Κωδικοί χωρίς σελίδα στην εφαρμογή απλώς δεν φαίνονται. Το E5 και το N3 είναι οθόνες πελάτη· στην ομάδα μπαίνουν
-// μόνο για την περιήγηση χωρίς βάση. Το O8 (Ενσωματώσεις) είναι το N5 του prototype και το KIT ο κατάλογος των components.
+// μόνο για την περιήγηση χωρίς βάση. Το O8 (Ενσωματώσεις) είναι το N5 του prototype.
 const TEAM_SPACES: readonly Space[] = [
   {
     id: "home",
@@ -194,8 +194,10 @@ const TEAM_SPACES: readonly Space[] = [
     icon: "company",
     audience: "team",
     group: 5,
-    tabs: ["O1", "C1", "P2", "P1"],
-    members: ["K1", "K2", "K3", "O2", "O3", "O6", "O7", "O8", "C2", "KIT"],
+    // Οι υποσελίδες των Ρυθμίσεων (O2–O9) είναι κάρτες του θέματος, αμέσως μετά την Εταιρεία: η μόνη πλοήγησή τους
+    // (οι παλιές καρτέλες μέσα στη σελίδα, SettingsTabs, έφυγαν).
+    tabs: ["O1", "O2", "O3", "O4", "O5", "O6", "O9", "O7", "C1", "P2", "P1"],
+    members: ["K1", "K2", "K3", "O8", "C2"],
   },
 ];
 
@@ -258,15 +260,6 @@ export const QUEUES: Readonly<Record<string, string>> = {
   A7: "A5",
 };
 
-// Υποσελίδες με δικές τους καρτέλες μέσα στην οθόνη (Ρυθμίσεις): ανήκουν στην καρτέλα-γονιό, γιατί η οθόνη τις πλοηγεί ήδη.
-const SUBPAGES: Readonly<Record<string, string>> = {
-  O2: "O1",
-  O3: "O1",
-  O6: "O1",
-  O7: "O1",
-  K3: "O1",
-};
-
 // Σύντομες ετικέτες για καρτέλες και φίλτρα· ο πλήρης τίτλος μένει στην αναζήτηση.
 const SHORT_LABELS: Readonly<Record<string, string>> = {
   A5: "Ημερολόγιο",
@@ -318,8 +311,7 @@ export const labelOf = (code: string): string =>
 export const barLabel = (space: Pick<Space, "label" | "barLabel">): string =>
   space.barLabel ?? space.label;
 
-export const tabOf = (code: string): string =>
-  QUEUES[code] ?? SUBPAGES[code] ?? code;
+export const tabOf = (code: string): string => QUEUES[code] ?? code;
 
 const MOBILE_MAX = 5;
 // Με περισσότερους Χώρους, η μπάρα κρατά τόσους και οι υπόλοιποι πάνε στο «Περισσότερα».
@@ -379,7 +371,7 @@ const SHELF_PAGES: readonly string[] = ["M2"];
 const isPlacedElsewhere = (code: string, tabs: readonly string[]): boolean =>
   (TOOL_CODES as readonly string[]).includes(code) ||
   (PROFILE_CODES as readonly string[]).includes(code) ||
-  tabs.includes(QUEUES[code] ?? SUBPAGES[code] ?? "");
+  tabs.includes(QUEUES[code] ?? "");
 
 // Χωρίς ορατή καρτέλα, ό,τι φαίνεται από τα «Περισσότερα» γίνεται καρτέλα· ο Χώρος κρύβεται μόνο όταν δεν έχει τίποτα.
 const viewOf = (space: Space, allows: Allows): SpaceView => {

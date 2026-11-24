@@ -344,8 +344,8 @@ test("Ρυθμίσεις › Πωλήσεις: λίστες και πού πάν
   await signIn(page, "admin@example.com");
   await page.goto("/app/settings/company");
   await page
-    .getByRole("navigation", { name: "Ενότητες Ρυθμίσεων" })
-    .getByRole("link", { name: "Πωλήσεις", exact: true })
+    .getByRole("navigation", { name: "Ρυθμίσεις", exact: true })
+    .getByRole("link", { name: "Ρυθμίσεις Πωλήσεων", exact: true })
     .click();
   await expect(page).toHaveURL(/\/app\/settings\/sales$/);
 
