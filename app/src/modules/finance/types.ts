@@ -58,4 +58,6 @@ export interface FinanceCaps {
 export interface ClientOption {
   id: string;
   name: string;
+  // Όταν δύο Πελάτες έχουν το ίδιο όνομα: πόλη ή υπεύθυνος που τους ξεχωρίζει.
+  hint?: string;
 }

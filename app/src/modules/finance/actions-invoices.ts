@@ -88,10 +88,17 @@ async function readPdf(file: FormDataEntryValue | null): Promise<Step<Buffer>> {
   return { ok: true, value: bytes };
 }
 
-export async function registerInvoice(
-  _: FormState,
-  form: FormData,
-): Promise<FormState> {
+// Απρόβλεπτο σφάλμα (δίκτυο, αποθήκευση) γίνεται ελληνικό μήνυμα στη φόρμα· ό,τι έγραψε ο Χρήστης μένει.
+export async function registerInvoice(state: FormState, form: FormData): Promise<FormState> {
+  try {
+    return await register(state, form);
+  } catch (error) {
+    console.error("finance registerInvoice", error);
+    return { error: REGISTER_FAILED_TEXT };
+  }
+}
+
+async function register(_: FormState, form: FormData): Promise<FormState> {
   const parsed = invoiceFormSchema.safeParse(pick(form, invoiceFormKeys));
   if (!parsed.success) return firstIssue(parsed.error);
   const pdf = await readPdf(form.get("pdf"));

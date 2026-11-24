@@ -10,7 +10,12 @@ import {
   emptyDraft,
   expectedVat,
   hasTaxMismatch,
+  missingOf,
+  nextNumberOf,
+  numberSuggestionsOf,
+  startDraft,
   warningsOf,
+  withKind,
   withNet,
   type DraftForm,
 } from "./invoices-model";
@@ -239,5 +244,117 @@ describe("coverageOf", () => {
     expect(coverageText(rows[0]!)).toBe("καλύπτεται πλήρως");
     expect(coverageText(rows[1]!)).toContain("μένει");
     expect(coverageText(coverageOf(open, 0).rows[0]!)).toBe("μένει ανοιχτό");
+  });
+});
+
+describe("missingOf", () => {
+  it("should list nothing when the draft is complete", () => {
+    expect(missingOf(draft(), context(), true)).toEqual([]);
+  });
+
+  it("should name every missing piece in form words", () => {
+    const empty = { ...emptyDraft(TODAY), issueDate: "" };
+    expect(missingOf(empty, context(), false)).toEqual([
+      "PDF",
+      "Αριθμός",
+      "Ημερομηνία έκδοσης",
+      "Καθαρό ποσό",
+    ]);
+  });
+
+  it("should ask for the total once amounts are typed by hand", () => {
+    expect(
+      missingOf(draft({ total: "", autoAmounts: false }), context(), true),
+    ).toEqual(["Σύνολο"]);
+  });
+
+  it("should ask which invoice a credit corrects and for the tax id confirmation", () => {
+    const form = draft({ kind: "credit", pdfTaxId: "999999999" });
+    expect(missingOf(form, context(), true)).toEqual([
+      "Ποιο Τιμολόγιο διορθώνει",
+      "Επιβεβαίωση ΑΦΜ",
+    ]);
+  });
+
+  it("should agree with canSubmit", () => {
+    expect(canSubmit(draft({ number: " " }), context(), true)).toBe(false);
+    expect(canSubmit(draft(), context(), true)).toBe(true);
+  });
+});
+
+describe("nextNumberOf", () => {
+  it("should add one to the trailing number keeping leading zeros and prefix", () => {
+    expect(nextNumberOf("DEMO-017")).toBe("DEMO-018");
+    expect(nextNumberOf("Α-99")).toBe("Α-100");
+    expect(nextNumberOf("87")).toBe("88");
+  });
+
+  it("should keep a non-digit tail", () => {
+    expect(nextNumberOf("12/Α")).toBe("13/Α");
+  });
+
+  it("should not guess when there is no number", () => {
+    expect(nextNumberOf("ΧΩΡΙΣ")).toBe("");
+    expect(nextNumberOf("")).toBe("");
+  });
+});
+
+describe("numberSuggestionsOf", () => {
+  it("should suggest the next number per kind from the latest of each kind", () => {
+    const latestFirst = [
+      { kind: "invoice" as const, number: "A-12" },
+      { kind: "credit" as const, number: "ΠΤ-3" },
+      { kind: "invoice" as const, number: "A-11" },
+    ];
+    expect(numberSuggestionsOf(latestFirst)).toEqual({
+      invoice: "A-13",
+      credit: "ΠΤ-4",
+    });
+  });
+
+  it("should skip kinds whose latest number has no digits", () => {
+    expect(numberSuggestionsOf([{ kind: "receipt", number: "ΧΩΡΙΣ" }])).toEqual(
+      {},
+    );
+  });
+});
+
+describe("startDraft", () => {
+  it("should prefill the next number and the amount to invoice", () => {
+    const form = startDraft(TODAY, context({ toInvoice: 1000 }), {
+      invoice: "A-13",
+    });
+    expect(form).toMatchObject({
+      number: "A-13",
+      net: "1000",
+      vat: "240",
+      total: "1240",
+      kind: "invoice",
+    });
+  });
+
+  it("should leave amounts empty when there is nothing to invoice", () => {
+    const form = startDraft(TODAY, context({ toInvoice: 0 }), {});
+    expect(form).toEqual(emptyDraft(TODAY));
+  });
+});
+
+describe("withKind", () => {
+  const suggestions = { invoice: "A-13", credit: "ΠΤ-4" };
+
+  it("should switch the suggested number with the kind", () => {
+    const form = withKind(draft({ number: "A-13" }), "credit", suggestions);
+    expect(form).toMatchObject({ kind: "credit", number: "ΠΤ-4" });
+  });
+
+  it("should keep a number the user typed", () => {
+    const form = withKind(draft({ number: "X-1" }), "credit", suggestions);
+    expect(form).toMatchObject({ kind: "credit", number: "X-1" });
+  });
+
+  it("should clear the suggestion when the new kind has none", () => {
+    expect(
+      withKind(draft({ number: "A-13" }), "receipt", suggestions).number,
+    ).toBe("");
   });
 });

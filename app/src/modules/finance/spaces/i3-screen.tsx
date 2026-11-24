@@ -2,10 +2,16 @@ import type { ReactNode } from "react";
 
 import { getViewer } from "@/modules/access";
 import { hrefOf } from "@/spaces/data/screens";
+import { FilterBar } from "@/spaces/kit/filter-bar";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import { financeCaps } from "../caps";
-import { getInvoiceContext, getInvoiceDetail } from "../invoices-queries";
+import {
+  getInvoiceContext,
+  getInvoiceDetail,
+  getInvoices,
+} from "../invoices-queries";
+import { numberSuggestionsOf } from "../invoices-model";
 import { athensToday } from "../money";
 import { listClientOptions } from "../queries";
 import type { ClientOption } from "../types";
@@ -23,7 +29,7 @@ export interface SpacesNewInvoiceQuery {
   invoiceId?: string;
 }
 
-// Βήμα 1: ο Πελάτης στη διεύθυνση (?client=), με φόρμα GET.
+// Βήμα 1: ο Πελάτης στη διεύθυνση (?client=). Λίστα με αναζήτηση· ίδια ονόματα ξεχωρίζουν με αχνή λέξη (πόλη).
 function ClientStep({
   clients,
   clientId,
@@ -32,32 +38,22 @@ function ClientStep({
   clientId: string | undefined;
 }) {
   const name = clients.find((c) => c.id === clientId)?.name;
+  const options = clients.map((c) => ({
+    label: c.name,
+    href: hrefOf("I3", { client: c.id }),
+    isCurrent: c.id === clientId,
+    hint: c.hint,
+  }));
   return (
     <Step
       no={1}
       title="Πελάτης"
       hint={name ?? "Διάλεξε τον Πελάτη του Τιμολογίου για να συνεχίσεις."}
     >
-      <form method="get" action={hrefOf("I3")} className="toolbar">
-        <label>
-          Πελάτης{" "}
-          <select
-            className="select"
-            name="client"
-            defaultValue={clientId ?? ""}
-          >
-            {clientId === undefined && <option value="">Διάλεξε…</option>}
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" className="button">
-          {clientId === undefined ? "Συνέχεια" : "Αλλαγή"}
-        </button>
-      </form>
+      <FilterBar
+        label="Πελάτης του Τιμολογίου"
+        filters={[{ label: "Πελάτης", options, isSearchable: true }]}
+      />
     </Step>
   );
 }
@@ -69,7 +65,11 @@ async function Workbench({
   clientId: string;
   clientStep: ReactNode;
 }) {
-  const ctx = await getInvoiceContext(clientId);
+  // Ο προτεινόμενος αριθμός βγαίνει από τα Τιμολόγια της εταιρείας (πιο πρόσφατα πρώτα)· αν λείπουν, μένει κενός.
+  const [ctx, all] = await Promise.all([
+    getInvoiceContext(clientId),
+    getInvoices("all"),
+  ]);
   if (!ctx.ok)
     return (
       <div className="ml-stack">
@@ -82,6 +82,7 @@ async function Workbench({
       key={clientId}
       clientId={clientId}
       ctx={ctx.data}
+      suggestions={all.ok ? numberSuggestionsOf(all.data.items) : {}}
       today={athensToday()}
       clientStep={clientStep}
     />

@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import { KIND_LABELS } from "../invoices-labels";
-import { dueOf, withNet, type DraftForm } from "../invoices-model";
+import { dueOf, withKind, withNet, type DraftForm, type NumberSuggestions } from "../invoices-model";
 import { INVOICE_KINDS, type InvoiceContext, type InvoiceKind } from "../invoices-view-schema";
 
 interface FieldProps {
@@ -96,7 +96,8 @@ export function InvoiceFields({
   ctx,
   onChange,
   onReplace,
-}: FieldsProps & { onReplace: (next: DraftForm) => void }) {
+  suggestions,
+}: FieldsProps & { onReplace: (next: DraftForm) => void; suggestions: NumberSuggestions }) {
   return (
     <div className="i13-fields">
       <Field label="Είδος">
@@ -105,7 +106,7 @@ export function InvoiceFields({
           name="kind"
           value={form.kind}
           onChange={(e) => {
-            if (isKind(e.target.value)) onChange({ kind: e.target.value });
+            if (isKind(e.target.value)) onReplace(withKind(form, e.target.value, suggestions));
           }}
         >
           {INVOICE_KINDS.map((k) => (

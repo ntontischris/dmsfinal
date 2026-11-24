@@ -118,17 +118,54 @@ export function warningsOf(form: DraftForm, ctx: InvoiceContext): Warning[] {
   return warnings;
 }
 
-export const canSubmit = (
-  form: DraftForm,
-  ctx: InvoiceContext,
-  hasFile: boolean,
-): boolean =>
-  hasFile &&
-  form.number.trim() !== "" &&
-  form.issueDate !== "" &&
-  amountOf(form.total) > 0 &&
-  (form.kind !== "credit" || form.creditFor !== "") &&
-  (!hasTaxMismatch(form, ctx) || form.taxIdConfirmed);
+// Τι λείπει ακόμα για την καταχώριση, με τις λέξεις της φόρμας (φαίνεται κάτω από το κουμπί).
+export const missingOf = (form: DraftForm, ctx: InvoiceContext, hasFile: boolean): string[] =>
+  [
+    hasFile ? null : "PDF",
+    form.number.trim() === "" ? "Αριθμός" : null,
+    form.issueDate === "" ? "Ημερομηνία έκδοσης" : null,
+    amountOf(form.total) > 0 ? null : form.autoAmounts ? "Καθαρό ποσό" : "Σύνολο",
+    form.kind === "credit" && form.creditFor === "" ? "Ποιο Τιμολόγιο διορθώνει" : null,
+    hasTaxMismatch(form, ctx) && !form.taxIdConfirmed ? "Επιβεβαίωση ΑΦΜ" : null,
+  ].filter((part): part is string => part !== null);
+
+export const canSubmit = (form: DraftForm, ctx: InvoiceContext, hasFile: boolean): boolean =>
+  missingOf(form, ctx, hasFile).length === 0;
+
+// Ο επόμενος αριθμός μιας σειράς: ο τελευταίος καταχωρισμένος με το τελικό του νούμερο +1, με τα ίδια μηδενικά
+// μπροστά (DEMO-017 → DEMO-018, Α-99 → Α-100). Χωρίς νούμερο στο τέλος δεν μαντεύουμε: κενό.
+export const nextNumberOf = (last: string): string => {
+  const match = /^(.*?)(\d+)(\D*)$/.exec(last.trim());
+  if (!match) return "";
+  const [, head, digits, tail] = match;
+  const next = String(BigInt(digits) + 1n).padStart(digits.length, "0");
+  return `${head}${next}${tail}`;
+};
+
+export type NumberSuggestions = Partial<Record<InvoiceKind, string>>;
+
+// Η πρόταση αριθμού ανά είδος, από τα Τιμολόγια της εταιρείας (το πρώτο ανά είδος είναι το πιο πρόσφατο).
+export const numberSuggestionsOf = (
+  latestFirst: readonly { kind: InvoiceKind; number: string }[],
+): NumberSuggestions =>
+  latestFirst.reduce<NumberSuggestions>((acc, item) => {
+    if (acc[item.kind] !== undefined) return acc;
+    const next = nextNumberOf(item.number);
+    return next === "" ? acc : { ...acc, [item.kind]: next };
+  }, {});
+
+// Αλλαγή είδους: ο προτεινόμενος αριθμός ακολουθεί το είδος, όσο ο Χρήστης δεν έχει γράψει δικό του.
+export const withKind = (form: DraftForm, kind: InvoiceKind, suggestions: NumberSuggestions): DraftForm => {
+  const number = form.number.trim();
+  const isSuggested = number === "" || number === suggestions[form.kind];
+  return isSuggested ? { ...form, kind, number: suggestions[kind] ?? "" } : { ...form, kind };
+};
+
+// Η πρώτη εικόνα της φόρμας: ο επόμενος αριθμός και το «Προς τιμολόγηση» του Πελάτη ως καθαρό (με ΦΠΑ και σύνολο).
+export const startDraft = (today: string, ctx: InvoiceContext, suggestions: NumberSuggestions): DraftForm => {
+  const empty = { ...emptyDraft(today), number: suggestions.invoice ?? "" };
+  return ctx.toInvoice > 0 ? withNet(empty, decimalText(ctx.toInvoice), ctx.vatRate) : empty;
+};
 
 export interface CoverageRow {
   billable: OpenBillable;

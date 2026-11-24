@@ -9,12 +9,13 @@ import { registerInvoice } from "../actions-invoices";
 import { KIND_LABELS } from "../invoices-labels";
 import {
   amountOf,
-  canSubmit,
   dueOf,
-  emptyDraft,
   hasTaxMismatch,
+  missingOf,
+  startDraft,
   warningsOf,
   type DraftForm,
+  type NumberSuggestions,
 } from "../invoices-model";
 import type { InvoiceContext } from "../invoices-view-schema";
 import { ExtraFields, FormFeedback, InvoiceFields } from "./i3-fields";
@@ -96,7 +97,10 @@ interface FormPartProps {
 }
 
 function DetailsStep(
-  props: FormPartProps & { onReplace: (next: DraftForm) => void },
+  props: FormPartProps & {
+    onReplace: (next: DraftForm) => void;
+    suggestions: NumberSuggestions;
+  },
 ) {
   const { form, ctx, onChange } = props;
   return (
@@ -110,6 +114,7 @@ function DetailsStep(
         ctx={ctx}
         onChange={onChange}
         onReplace={props.onReplace}
+        suggestions={props.suggestions}
       />
       <Fold title="Λήξη, ΦΠΑ, σύνολο, ΜΑΡΚ, ΑΦΜ" hint={extraHint(form, ctx)}>
         <ExtraFields form={form} ctx={ctx} onChange={onChange} />
@@ -120,7 +125,7 @@ function DetailsStep(
 
 function CheckStep(
   props: FormPartProps & {
-    isDisabled: boolean;
+    missing: readonly string[];
     isPending: boolean;
     error?: string;
   },
@@ -153,17 +158,20 @@ function CheckStep(
         </label>
       )}
       <p className="note">
-        Η καταχώριση στέλνει email με το PDF σε όλους τους Χρήστες του Πελάτη με
-        «Βλέπει Οικονομικά». Δεν παραλείπεται.
+        Η καταχώριση στέλνει email με το PDF στους ανθρώπους του Πελάτη που
+        βλέπουν τα Τιμολόγιά του. Δεν παραλείπεται.
       </p>
       <FormFeedback error={props.error} />
       <button
         type="submit"
         className="i3-go"
-        disabled={props.isDisabled || props.isPending}
+        disabled={props.missing.length > 0 || props.isPending}
       >
         {props.isPending ? "Αποθήκευση…" : "Επιβεβαίωση και καταχώρηση"}
       </button>
+      {props.missing.length > 0 && (
+        <p className="i3-missing">Λείπει: {props.missing.join(", ")}</p>
+      )}
     </Step>
   );
 }
@@ -181,7 +189,7 @@ function DoneNotice({
       tag="Έτοιμο"
       title={notice}
       facts={[
-        "Email με το PDF φεύγει σε όλους τους Χρήστες του Πελάτη με «Βλέπει Οικονομικά».",
+        "Email με το PDF φεύγει στους ανθρώπους του Πελάτη που βλέπουν τα Τιμολόγιά του.",
       ]}
       actions={
         <button type="button" onClick={onAgain}>
@@ -195,14 +203,23 @@ function DoneNotice({
 interface WorkbenchProps {
   clientId: string;
   ctx: InvoiceContext;
+  suggestions: NumberSuggestions;
   today: string;
   // Το βήμα 1 (Πελάτης): φόρμα GET του διακομιστή, έξω από τη φόρμα της καταχώρησης.
   clientStep: ReactNode;
 }
 
-// Η πρόχειρη φόρμα και το όνομα του PDF, με επαναφορά για «Νέα καταχώριση».
-function useDraft(today: string) {
-  const empty = useMemo(() => emptyDraft(today), [today]);
+// Η πρόχειρη φόρμα (προσυμπληρωμένη: επόμενος αριθμός, «Προς τιμολόγηση» ως καθαρό) και το όνομα του PDF,
+// με επαναφορά για «Νέα καταχώριση».
+function useDraft(
+  today: string,
+  ctx: InvoiceContext,
+  suggestions: NumberSuggestions,
+) {
+  const empty = useMemo(
+    () => startDraft(today, ctx, suggestions),
+    [today, ctx, suggestions],
+  );
   const [form, setForm] = useState<DraftForm>(empty);
   const [fileName, setFileName] = useState("");
   const handleChange = (change: Partial<DraftForm>) =>
@@ -219,11 +236,12 @@ function useDraft(today: string) {
 export function I3Workbench({
   clientId,
   ctx,
+  suggestions,
   today,
   clientStep,
 }: WorkbenchProps) {
   const { form, setForm, fileName, setFileName, handleChange, reset } =
-    useDraft(today);
+    useDraft(today, ctx, suggestions);
   const { state, isPending, onSubmit, formRef } = useKeptForm(registerInvoice, {
     resetOnSuccess: true,
   });
@@ -250,12 +268,13 @@ export function I3Workbench({
             ctx={ctx}
             onChange={handleChange}
             onReplace={setForm}
+            suggestions={suggestions}
           />
           <CheckStep
             form={form}
             ctx={ctx}
             onChange={handleChange}
-            isDisabled={!canSubmit(form, ctx, fileName !== "")}
+            missing={missingOf(form, ctx, fileName !== "")}
             isPending={isPending}
             error={state.error}
           />
