@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { getViewer } from "@/modules/access";
 import {
   athensMonthStart,
@@ -7,6 +5,7 @@ import {
   listCostMonths,
 } from "@/modules/catalogue";
 import { hrefOf } from "@/spaces/data/screens";
+import { FilterBar, type FilterGroup } from "@/spaces/kit/filter-bar";
 import { Badge, ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import type { MonthExpenses } from "../expenses-schema";
@@ -31,30 +30,27 @@ import "./i67.css";
 // I6 Έξοδα και Κόστος ώρας στη νέα εμφάνιση (prototype `screens/I6.tsx`). Τη βλέπει όποιος «Βλέπει κόστος και
 // κερδοφορία»· τα έξοδα και τις ώρες τα αλλάζει όποιος «Διαχειρίζεται κόστος» (όπως η O6), μόνο σε τρέχοντα ή επόμενο μήνα.
 // Το «Καταχωρεί Έξοδα» του prototype (Λογιστής) δεν υπάρχει ακόμα ως Δικαίωμα.
-// Εμφάνιση «Χρημάτων» (όπως η I8): κεφαλίδα με τους μήνες και το Κόστος ώρας, οι κατηγορίες ως γραμμές, το Ιστορικό σε
+// Εμφάνιση «Χρημάτων» (όπως η I8): ο μήνας στα φίλτρα, κεφαλίδα με το Κόστος ώρας, οι κατηγορίες ως γραμμές, το Ιστορικό σε
 // κλειστό κουτί.
 
-interface TabsProps {
+interface MonthsProps {
   tabs: readonly string[];
   month: string;
   current: string;
 }
 
-function MonthTabs({ tabs, month, current }: TabsProps) {
-  return (
-    <nav className="tabs" aria-label="Μήνας">
-      {tabs.map((m) => (
-        <Link
-          key={m}
-          className="tab"
-          aria-current={m === month ? "page" : undefined}
-          href={hrefOf("I6", { month: paramOfMonth(m, current) })}
-        >
-          {fmtMonth(m)}
-        </Link>
-      ))}
-    </nav>
-  );
+// Ο μήνας ως φίλτρο της σελίδας (όχι εσωτερικές καρτέλες): ίδιες διευθύνσεις `?month=`.
+const monthGroupOf = ({ tabs, month, current }: MonthsProps): FilterGroup => ({
+  label: "Μήνας",
+  options: tabs.map((m) => ({
+    label: fmtMonth(m),
+    href: hrefOf("I6", { month: paramOfMonth(m, current) }),
+    isCurrent: m === month,
+  })),
+});
+
+function MonthFilter(props: MonthsProps) {
+  return <FilterBar label="Μήνας" filters={[monthGroupOf(props)]} />;
 }
 
 function SeedNote({ seed }: { seed: EditorSeed }) {
@@ -94,16 +90,13 @@ interface BodyProps {
   history: readonly HistoryRow[];
 }
 
-// Ο μήνας: με επεξεργαστή, η κεφαλίδα του (Κόστος ώρας, Αποθήκευση) ζει μέσα στον επεξεργαστή· χωρίς, μόνο οι μήνες.
-function MonthBody({ view, tabs, current }: Omit<BodyProps, "history">) {
+// Ο μήνας: με επεξεργαστή, η κεφαλίδα του (Κόστος ώρας, Αποθήκευση) ζει μέσα στον επεξεργαστή· χωρίς, μόνο η κεφαλίδα.
+function MonthBody({ view }: { view: MonthExpenses }) {
   const seed = seedOf(view);
-  const monthTabs = (
-    <MonthTabs tabs={tabs} month={view.month} current={current} />
-  );
   if (!seed || (view.saved === null && !view.canEdit))
     return (
       <>
-        <I6HeroShell tabs={monthTabs} />
+        <I6HeroShell />
         <StateNotice kind="empty" title="Δεν υπάρχουν έξοδα για αυτόν τον μήνα">
           Δεν έχει καταχωρηθεί κόστος για τον μήνα που διάλεξες.
         </StateNotice>
@@ -118,7 +111,6 @@ function MonthBody({ view, tabs, current }: Omit<BodyProps, "history">) {
       baseTotal={seed.baseTotal}
       editable={view.canEdit}
       canEditHours={view.canEdit}
-      tabs={monthTabs}
       notes={<MonthNotes view={view} seed={seed} />}
     />
   );
@@ -127,7 +119,8 @@ function MonthBody({ view, tabs, current }: Omit<BodyProps, "history">) {
 function Body({ view, tabs, current, history }: BodyProps) {
   return (
     <div className="ml-stack">
-      <MonthBody view={view} tabs={tabs} current={current} />
+      <MonthFilter tabs={tabs} month={view.month} current={current} />
+      <MonthBody view={view} />
       <HourCostHistory rows={history} />
     </div>
   );

@@ -26,10 +26,9 @@
 }
 
 /* Εμφάνιση «Χρημάτων» (money-lines.css): η κεφαλίδα της I6, οι κατηγορίες ως γραμμές, το κέρδος της I7 κατά πρόσημο */
-.i6-hero .tabs { margin: .4rem 0 0; }
+.i6-hero h2 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: -.02em; }
 .i6-facts { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.2rem; }
 .i6-facts strong { color: var(--color-text); font-variant-numeric: tabular-nums; }
-.i6-hours { width: 6rem; display: inline-block; }
 .ml-hero > .i6-save { flex-direction: column; align-items: flex-end; max-width: 18rem; }
 .i6-save-form { display: grid; gap: .4rem; justify-items: end; }
 .i6-save-form p { margin: 0; text-align: right; }
