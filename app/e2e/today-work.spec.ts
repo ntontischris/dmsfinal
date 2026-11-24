@@ -3,13 +3,13 @@ import { expect, test } from "@playwright/test";
 import { button, project, signIn } from "./sales-parts";
 import { clickUntil } from "./today-parts";
 
-// Σήμερα Σγ (#182) στη νέα εμφάνιση (Χώροι): οι κάρτες «Η δουλειά μου» μαζεύονται στο «Και άλλα». Ο Ιδιοκτήτης φτιάχνει
-// ένα πρόχειρο Παραδοτέο σε δική του Εσωτερική Παραγωγή· η γραμμή «Παραδοτέα για μένα» το μετρά και οδηγεί στην ουρά H1
-// «Για μένα». Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
+// Σήμερα Σγ (#182) στη νέα εμφάνιση (Χώροι): τα «Παραδοτέα για μένα» είναι γραμμές της κάρτας «Η δουλειά μου σήμερα»
+// (?g=mine). Ο Ιδιοκτήτης φτιάχνει ένα πρόχειρο Παραδοτέο σε δική του Εσωτερική Παραγωγή· η κάρτα το μετρά και η γραμμή
+// του (ή το «Και N ακόμα παραδοτέα →», όταν δεν χωρά) οδηγεί σε αυτό. Σειριακά, χωρίς retries· τα δύο projects μοιράζονται μία βάση.
 test.describe.configure({ mode: "serial", retries: 0 });
 
 
-const MY_DELIVERABLES = "Παραδοτέα για μένα";
+const MINE = "Η δουλειά μου σήμερα";
 
 test("ένα νέο Παραδοτέο μετρά στο «Παραδοτέα για μένα» και ο σύνδεσμος πηγαίνει στην ουρά", async ({
   page,
@@ -47,19 +47,33 @@ test("ένα νέο Παραδοτέο μετρά στο «Παραδοτέα γ
     "Το Παραδοτέο δημιουργήθηκε.",
   );
 
-  await page.goto("/app");
+  await page.goto("/app?g=mine");
   await expect(
     page.getByRole("heading", { level: 1, name: "Σήμερα" }),
   ).toBeVisible();
-  const others = page.locator("details.a1-others");
-  await others.locator("summary").click();
-  const mine = others.getByRole("listitem").filter({
-    has: page.getByRole("link", { name: MY_DELIVERABLES, exact: true }),
-  });
-  await expect(mine).toBeVisible();
-  await expect(mine.locator(".a1-other-count")).toHaveText(/^[1-9]\d*$/);
+  const deck = page.getByRole("navigation", { name: "Οι ομάδες της Σήμερα" });
+  await expect(
+    deck.locator("a[href='/app?g=mine'] .money-reel-count"),
+  ).toHaveText(/^[1-9]\d*$/);
 
-  await mine.getByRole("link", { name: MY_DELIVERABLES, exact: true }).click();
+  const zone = page.locator("section", {
+    has: page.getByRole("heading", { level: 2, name: MINE, exact: true }),
+  });
+  const line = zone.getByRole("link", {
+    name: `Άνοιξε: ${DELIVERABLE}`,
+    exact: true,
+  });
+  const more = zone.getByRole("link", { name: /^Και \d+ ακόμα παραδοτέα? →$/ });
+  await expect(line.or(more).first()).toBeVisible();
+  if ((await line.count()) > 0) {
+    await line.click();
+    await expect(page).toHaveURL(/\/app\/deliverables\/[0-9a-f-]{36}$/);
+    await expect(
+      page.getByRole("heading", { level: 1, name: DELIVERABLE }),
+    ).toBeVisible();
+    return;
+  }
+  await more.click();
   await expect(page).toHaveURL(/\/app\/deliverables\?view=mine$/);
   await expect(
     page.getByRole("link", { name: DELIVERABLE, exact: true }).first(),

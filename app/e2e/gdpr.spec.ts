@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { listItem, signIn } from "./sales-parts";
 import { serviceClient, teamUser, unique, uniqueEmail } from "./team-parts";
+import { openFolds } from "./today-parts";
 
 // Ομάδα Νβ (#208): Αιτήματα GDPR. Καταγραφή, προθεσμία και κλείσιμο, εξαγωγή Πελάτη (περιεχόμενα του ZIP),
 // ανωνυμοποίηση με πληκτρολόγηση ονόματος, άρνηση για τη Διαχείριση. Φανταστικά στοιχεία· τα δεδομένα στήνονται με το
@@ -131,15 +132,15 @@ test("ο Ιδιοκτήτης καταγράφει αίτημα, βλέπει τ
   const row = listItem(page, `Εξαγωγή: ${clientName}`);
   await expect(row).toContainText(/λήγει σε (28|29|30|31) μέρες/);
 
-  // Στη Σήμερα οι προθεσμίες GDPR είναι αποφάσεις του «Μόνο εσύ μπορείς». Φαίνονται οι 5 σημαντικότερες· όταν το
-  // αίτημα δεν χωρά σε αυτές, μετρά στο «Και N ακόμα».
-  await page.goto("/app");
-  const decisions = page.locator("[data-part='decisions']");
-  const open = decisions.getByRole("link", {
+  // Στη Σήμερα οι προθεσμίες GDPR ανήκουν στην «Η εταιρεία δουλεύει»: γραμμή της κάρτας (ή «Και N ακόμα») όταν η
+  // κάρτα φαίνεται, αλλιώς μέσα στο κλειστό «Η εταιρεία: N σε αναμονή». Όλα πηγαίνουν στο GDPR.
+  await page.goto("/app?g=company");
+  await openFolds(page);
+  const main = page.getByRole("main");
+  const open = main.getByRole("link", {
     name: `Άνοιξε: Εξαγωγή: ${clientName}`,
   });
-  const more = decisions.getByRole("link", { name: /^Και \d+ ακόμα/ });
-  await expect(open.or(more).first()).toBeVisible();
+  await expect(main.locator(`a[href='${GDPR}']`).first()).toBeVisible();
   if ((await open.count()) > 0)
     await expect(open).toHaveAttribute("href", GDPR);
 

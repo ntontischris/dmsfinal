@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 import { signIn } from "../sales-parts";
+import { openFolds } from "../today-parts";
 
 // Περιήγηση Ιδιοκτήτη, διαδρομή 01: Είσοδος, Σήμερα και εργαλεία (docs/walkthrough/owner.md).
 const OWNER = "owner@example.com";
-const HEALTH = "Υγεία συστήματος";
-const DECISIONS = "Μόνο εσύ μπορείς";
+const DECK = "Οι ομάδες της Σήμερα";
 
 
 test("01 · η Είσοδος δεν έχει Google και ο λάθος κωδικός δεν λέει αν υπάρχει λογαριασμός", async ({
@@ -20,24 +20,32 @@ test("01 · η Είσοδος δεν έχει Google και ο λάθος κωδ
   await expect(page.getByText("Λάθος email ή κωδικός.")).toBeVisible();
 });
 
-test("01 · η Σήμερα είναι ενημέρωση: αποφάσεις, πρόγραμμα και «Και άλλα», χωρίς τη γραμμή με τους αριθμούς", async ({
+test("01 · η Σήμερα είναι ενημέρωση: ομάδες, κορυφή με το πρόγραμμα και η εταιρεία, χωρίς τη γραμμή με τους αριθμούς", async ({
   page,
 }) => {
   await signIn(page, OWNER);
-  await expect(page.getByRole("heading", { name: DECISIONS })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Το πρόγραμμα" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: DECK })).toBeVisible();
   await expect(page.locator(".a1-lead")).toContainText("εσένα");
   await expect(page.locator(".a1-strip")).toHaveCount(0);
-  const more = page.locator("details.a1-others");
-  await expect(more.locator("summary")).toHaveText(/^Και άλλα/);
-  await more.locator("summary").click();
-  await expect(more.locator(".a1-other-list, .a1-quiet").first()).toBeVisible();
-  // Η Υγεία πάνω μόνο όταν κάτι χάλασε· αλλιώς μία ήσυχη γραμμή μέσα στο «Και άλλα». Πάντα σε ένα από τα δύο.
-  await expect(page.getByRole("heading", { name: HEALTH }).or(more.getByRole("link", { name: HEALTH }))).toHaveCount(1);
+  // Η κορυφή είναι κλειστή· μέσα της το πρόγραμμα, τα χρήματα και η ομάδα.
+  await expect(page.getByText("Δείκτες, πρόγραμμα, χρήματα και ομάδα", { exact: true })).toBeVisible();
+  await openFolds(page);
+  await expect(page.getByRole("heading", { name: "Το πρόγραμμα" })).toBeVisible();
+  // Η εταιρεία (και η Υγεία της) φαίνεται πάντα με έναν από τους τρεις τρόπους: κάρτα όταν κάτι επείγει,
+  // «Η εταιρεία: N σε αναμονή», ή «Όλα λειτουργούν».
+  await expect(
+    page
+      .getByRole("navigation", { name: DECK })
+      .locator("a[href='/app?g=company']")
+      .or(page.getByText(/^Η εταιρεία: \d+ σε αναμονή$/))
+      .or(page.getByText("Όλα λειτουργούν", { exact: true }))
+      .first(),
+  ).toBeVisible();
 });
 
 test("01 · η Σήμερα έχει τα Χρήματα (ποσό και ρυθμός του μήνα) και την ομάδα", async ({ page }) => {
   await signIn(page, OWNER);
+  await openFolds(page);
   const money = page.locator("[data-part='money']");
   await expect(money.getByRole("heading", { name: "Χρήματα" })).toBeVisible();
   await expect(money.locator(".a1-money-total strong")).toHaveText(/€$/);
@@ -57,7 +65,9 @@ test("01 · η Σήμερα έχει τα Χρήματα (ποσό και ρυθ
 // (και αν κάτι αποτύχει) η Αναίρεση αφήνει τη βάση όπως ήταν, για τα επόμενα τεστ του ίδιου shard.
 test("01 · το «Αργότερα» κρύβει μια απόφαση ως αύριο το πρωί και η Αναίρεση τη φέρνει πίσω", async ({ page }) => {
   await signIn(page, OWNER);
-  const decisions = page.locator("[data-part='decisions']");
+  // Οι Ευκαιρίες «Χωρίς υπεύθυνο» είναι στην ομάδα «Περιμένω από εξωτερικούς».
+  await page.goto("/app?g=externals");
+  const decisions = page.getByRole("main");
   const later = decisions.getByRole("button", { name: /^Αργότερα: / });
   const quiet = decisions.locator(".a1-later-line");
   await expect(later.first()).toBeVisible();
@@ -129,7 +139,7 @@ test("01 · η Σήμερα δεν έχει διπλή γραμμή «Η εβδ�
   page,
 }) => {
   await signIn(page, OWNER);
-  await expect(page.getByRole("heading", { name: DECISIONS })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: DECK })).toBeVisible();
   await expect(page.getByText("Η εβδομάδα:")).toHaveCount(0);
   await page.goto("/app/filming?tab=week");
   await expect(page.getByRole("link", { name: /^Επόμενες 7 ημέρες/ })).toHaveAttribute("aria-current", "page");
