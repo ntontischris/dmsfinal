@@ -118,7 +118,7 @@ export function Facts({
 }) {
   const pending = card.signals.pendingReschedule;
   return (
-    <Box title="Στοιχεία" hint="Πότε, πού, Συμφωνία, Παραγωγή" isOpen>
+    <Box title="Στοιχεία" hint="Πότε, πού, Συμφωνία" isOpen>
       <dl className="ml-kv">
         <Pair term="Πότε">
           {whenOf(card)} ({hoursLabel(card.hours)})
@@ -144,11 +144,6 @@ export function Facts({
             )}
           </Pair>
         )}
-        <Pair term="Παραγωγή">
-          <Link href={hrefOf("G2", { id: card.production.id })}>
-            {card.production.title}
-          </Link>
-        </Pair>
         {!isClient && (
           <Pair term="Προέλευση">{ORIGIN_LABELS[card.origin]}</Pair>
         )}

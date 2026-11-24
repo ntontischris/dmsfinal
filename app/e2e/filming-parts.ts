@@ -23,6 +23,7 @@ export async function visit(page: Page, url: string): Promise<void> {
 }
 
 // Η καρτέλα E3 έχει κλειστά κουτιά (details.ml-box)· τα τεστ τα ανοίγουν όλα για να δουλέψουν μέσα τους.
+// Γι' αυτό στο E3 μπαίνουμε πάντα με το visit()· ένα σκέτο page.goto αφήνει τα κουτιά κλειστά.
 export async function openBoxes(page: Page): Promise<void> {
   const boxes = page.locator("details.ml-box");
   await boxes.first().waitFor({ state: "attached" });

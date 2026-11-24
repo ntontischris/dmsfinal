@@ -23,7 +23,6 @@ interface E3CrewProps {
   // Όσοι έχουν Κλεισμένο χρόνο που τέμνει το Γύρισμα (μόνο προειδοποίηση).
   blockedIds: readonly string[];
   canApprove: boolean;
-  isOpen?: boolean;
 }
 
 function SlotRow({
@@ -78,7 +77,6 @@ export function E3Crew({
   templates,
   blockedIds,
   canApprove,
-  isOpen = false,
 }: E3CrewProps) {
   const [picked, setPicked] = useState("");
   const { run, isPending, result } = useRun();
@@ -94,7 +92,6 @@ export function E3Crew({
     <Box
       title="Συνεργείο"
       hint={countLabel(card.crew.length, "άτομο", "άτομα")}
-      isOpen={isOpen}
     >
       {card.crew.length === 0 && (
         <p className="muted">{emptyCrewNote(card.state, canApprove)}</p>
