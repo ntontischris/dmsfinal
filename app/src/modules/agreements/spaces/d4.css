@@ -7,7 +7,7 @@
 .d4l-queue > p { margin: 0; }
 .d4-item, .d4-result { display: grid; gap: .45rem; margin: 0; }
 .d4-item > .ml-box { margin-left: 1.2rem; }
-.d4l-form { margin-left: 1.2rem; padding: .9rem 1rem; border-radius: 14px; border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 30%, transparent); background: color-mix(in oklab, var(--brand-deep) 55%, transparent); }
+.d4l-form { margin-left: 1.2rem; padding: .9rem 1rem; border-radius: 14px; border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 30%, transparent); background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
 .ml-quick .d4l-approve { color: var(--brand-midnight); background: var(--brand-periwinkle); border-color: transparent; }
 @media (max-width: 40rem) { .d4-item > .ml-box, .d4l-form { margin-left: 0; } }
 .d4l-rights { margin: 0 0 1rem; }

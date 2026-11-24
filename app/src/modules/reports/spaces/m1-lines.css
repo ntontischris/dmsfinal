@@ -10,14 +10,14 @@
 .m1-facts > div {
   display: grid; gap: .15rem; padding: .7rem .9rem; border-radius: 14px; min-width: 0;
   border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 14%, transparent);
-  background: color-mix(in oklab, var(--brand-deep) 60%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 60%, transparent);
 }
 .m1-facts dt { color: var(--color-text-muted); font-size: .78rem; font-weight: 700; }
 .m1-facts dd { margin: 0; display: grid; gap: .1rem; }
 .m1-facts strong { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .m1-facts small { color: var(--color-text-muted); font-size: .75rem; }
 .ml-hero .m1-facts { position: relative; margin-top: .6rem; }
-.ml-hero .m1-facts > div { background: color-mix(in oklab, var(--brand-midnight) 70%, transparent); }
+.ml-hero .m1-facts > div { background: color-mix(in oklab, var(--panel-midnight) 70%, transparent); }
 
 /* Ράφι Αναφορών: μία σειρά μαλακών καρτών ανά οικογένεια */
 .m1-family { margin: 0 0 .5rem; font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-muted); }

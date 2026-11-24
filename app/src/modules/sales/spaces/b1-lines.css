@@ -5,7 +5,7 @@
 & .b1-card {
   display: grid; gap: .1rem; align-content: start; padding: .8rem 1rem; border-radius: 16px; color: var(--color-text); text-decoration: none;
   border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 14%, transparent);
-  background: color-mix(in oklab, var(--brand-deep) 60%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 60%, transparent);
   transition: border-color .25s;
 }
 & a.b1-card:hover { border-color: color-mix(in oklab, var(--brand-periwinkle) 50%, transparent); }
