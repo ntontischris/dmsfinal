@@ -45,13 +45,7 @@
   max-width: 11rem;
 }
 
-/* Επικίνδυνη ενέργεια: κίτρινο περίγραμμα, όχι κόκκινο (το κόκκινο μένει για το κύριο CTA) */
-.ml-box[data-danger] > summary::before {
-  background: var(--brand-yellow);
-}
-:is(.ml-actions, .ml-quick) :is(a, button)[data-danger] {
-  border-color: color-mix(in oklab, var(--brand-yellow) 55%, transparent);
-}
+/* Επιβεβαίωση επικίνδυνης ενέργειας: κίτρινο περίγραμμα, όχι κόκκινο */
 .g-confirm {
   display: grid;
   gap: 0.8rem;
@@ -84,8 +78,4 @@
   vertical-align: middle;
   border-radius: 50%;
   background: var(--brand-yellow);
-}
-.ml-actions > .g-confirm {
-  flex-basis: 100%;
-  text-align: left;
 }

@@ -1,5 +1,3 @@
-import { ListRow, RowList } from "@/spaces/kit/parts";
-
 import type { Grants } from "../permissions";
 import type { PermissionDef, RoleKind } from "../queries";
 import { permissionAreas } from "./team-reach";
@@ -40,30 +38,26 @@ function PermissionRow({ perm, current, locked }: PermissionRowProps) {
     perm.scopes.length === 1 &&
     perm.scopes[0] === "all";
   return (
-    <ListRow
-      title={
-        <>
-          {perm.label}
-          {onlyAll && <span className="muted"> (μόνο «Όλα»)</span>}
-        </>
-      }
-      aside={
-        <span className="n4-choices" role="radiogroup" aria-label={perm.label}>
-          {choices.map((choice) => (
-            <label key={choice.value || "none"} className="n4-choice">
-              <input
-                type="radio"
-                name={`perm.${perm.code}`}
-                value={choice.value}
-                defaultChecked={current === choice.value}
-                disabled={locked}
-              />
-              {choice.label}
-            </label>
-          ))}
-        </span>
-      }
-    />
+    <li className="n4-perm">
+      <span className="n4-perm-label">
+        {perm.label}
+        {onlyAll && <span className="muted"> (μόνο «Όλα»)</span>}
+      </span>
+      <span className="n4-choices" role="radiogroup" aria-label={perm.label}>
+        {choices.map((choice) => (
+          <label key={choice.value || "none"} className="n4-choice">
+            <input
+              type="radio"
+              name={`perm.${perm.code}`}
+              value={choice.value}
+              defaultChecked={current === choice.value}
+              disabled={locked}
+            />
+            {choice.label}
+          </label>
+        ))}
+      </span>
+    </li>
   );
 }
 
@@ -87,21 +81,21 @@ export function PermissionMatrix({
   return (
     <div className="n4-matrix">
       {kind === "team" && (
-        <p className="note">
+        <small className="n4-hint">
           «Όσα με αφορούν»: μόνο ό,τι αφορά τον ίδιο τον Χρήστη. «Όλα»: όλη η
           εταιρεία. Φαίνονται μόνο τα Εύρη που υποστηρίζει κάθε Δικαίωμα.
-        </p>
+        </small>
       )}
       {kind === "client" && (
-        <p className="note">
+        <small className="n4-hint">
           Τα Δικαιώματα πελάτη δεν έχουν Εύρος: καλύπτουν τον Πελάτη που έχει
           επιλέξει ο Χρήστης.
-        </p>
+        </small>
       )}
       {permissionAreas(permissions, kind).map((area) => (
         <fieldset key={area} className="n4-area" disabled={isLocked}>
           <legend>{area}</legend>
-          <RowList>
+          <ul className="n4-perms">
             {permissions
               .filter((p) => p.kind === kind && p.area === area)
               .map((perm) => (
@@ -112,7 +106,7 @@ export function PermissionMatrix({
                   locked={isLocked}
                 />
               ))}
-          </RowList>
+          </ul>
         </fieldset>
       ))}
     </div>

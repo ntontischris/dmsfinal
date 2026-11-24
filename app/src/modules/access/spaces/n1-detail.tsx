@@ -90,8 +90,7 @@ function UserHero({
   isConfirming: boolean;
 }) {
   // Στην επιβεβαίωση το «γιατί όχι» το λέει η κάρτα της· εδώ μόνο στην κανονική όψη.
-  const block =
-    target.isActive && !isConfirming ? preview?.block : undefined;
+  const block = target.isActive && !isConfirming ? preview?.block : undefined;
   return (
     <Hero
       mono={initialsOf(target.name)}
@@ -274,9 +273,6 @@ export function UserDetail(props: UserDetailProps) {
   const { target, preview, isOwner, confirm } = props;
   return (
     <div className="ml-stack">
-      <p>
-        <Link href={hrefOf("N1")}>← Όλοι οι Χρήστες ομάδας</Link>
-      </p>
       <UserHero
         target={target}
         preview={preview}

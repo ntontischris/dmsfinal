@@ -74,9 +74,9 @@ export function DeleteRoleConfirm({
       )}
       <div className="ml-actions">
         {state.error && (
-          <p className="note" role="alert">
+          <small className="n-msg n-warn" role="alert">
             {state.error}
-          </p>
+          </small>
         )}
         <Link href={backHref}>Άκυρο</Link>
         <button type="submit" data-danger="true" disabled={isDeleting}>

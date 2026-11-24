@@ -21,9 +21,12 @@ import { Box, Step } from "./n-parts";
 function Message({ state }: { state: FormState<unknown> }) {
   if (!state.error && !state.notice) return null;
   return (
-    <p className="note" role={state.error ? "alert" : "status"}>
+    <small
+      className={state.error ? "n-msg n-warn" : "n-msg"}
+      role={state.error ? "alert" : "status"}
+    >
       {state.error ?? state.notice}
-    </p>
+    </small>
   );
 }
 

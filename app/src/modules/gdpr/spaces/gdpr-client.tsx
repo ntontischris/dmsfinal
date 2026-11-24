@@ -24,7 +24,11 @@ export async function GdprClientSection({ clientId }: { clientId: string }) {
     user.clientIds.includes(clientId),
   );
   return (
-    <GdprBox title={PANEL_LABEL} hint="Εξαγωγή Πελάτη, Επαφής και Χρηστών">
+    <GdprBox
+      title={PANEL_LABEL}
+      hint="Εξαγωγή Πελάτη, Επαφής και Χρηστών"
+      isDanger
+    >
       <p className="g-note">
         Στοιχεία, Χρήστες, Συμφωνίες, Τιμολόγια σε PDF, Εισπράξεις, Γυρίσματα,
         Παραδοτέα με links και Συνομιλία. {ZIP_NOTE}

@@ -27,7 +27,6 @@ import { InvitationList } from "./n1-invite";
 import { UserList } from "./n1-list";
 import { listTeamUserDates } from "./n1-load";
 import { RoleReachTable } from "./n1-reach-table";
-import { Box } from "./n-parts";
 import { userReachText } from "./team-reach";
 
 import "./n1.css";
@@ -104,7 +103,11 @@ export async function SpacesTeam({ status, gdprRequests }: SpacesTeamProps) {
             διαλέγεις Ρόλους και του στέλνεται σύνδεσμος που ισχύει 7 μέρες.
           </StateNotice>
         ) : (
-          <UserList users={rows} filter={pickFilter(status)} />
+          <UserList
+            users={rows}
+            filter={pickFilter(status)}
+            canManageRoles={me.isOwner}
+          />
         )}
         {invitations.ok ? (
           <InvitationList invitations={n1InvitationsOf(invitations.data)} />
@@ -113,14 +116,6 @@ export async function SpacesTeam({ status, gdprRequests }: SpacesTeamProps) {
         )}
         <RoleReachTable roles={roles.data} permissions={permissions.data} />
         {me.isOwner && !isAlone && gdprRequests}
-        {me.isOwner && (
-          <Box title="Ρόλοι και Δικαιώματα" hint="Τι κάνει κάθε Ρόλος">
-            <p>
-              Τι κάνει κάθε Ρόλος (Δικαιώματα, Εύρος, νέοι Ρόλοι) αλλάζει στη{" "}
-              <Link href={hrefOf("N4")}>Ρόλοι και Δικαιώματα</Link>.
-            </p>
-          </Box>
-        )}
       </div>
     </div>
   );

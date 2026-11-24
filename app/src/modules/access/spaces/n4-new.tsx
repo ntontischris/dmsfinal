@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { FilterBar } from "@/spaces/kit/filter-bar";
 import { ErrorNotice } from "@/spaces/screens/shared";
 
 import {
@@ -23,8 +22,6 @@ const KINDS: readonly { kind: RoleKind; label: string }[] = [
   { kind: "client", label: "Ρόλος πελάτη" },
 ];
 
-const chip = (isOn: boolean) => (isOn ? "strong" : undefined);
-
 function NewRoleChips({
   kind,
   sources,
@@ -36,13 +33,11 @@ function NewRoleChips({
 }) {
   return (
     <>
-      <div className="n4-chips" role="group" aria-label="Είδος">
+      <div className="ml-quick n4-chips" role="group" aria-label="Είδος">
         <span className="muted">Είδος:</span>
         {KINDS.map((k) => (
           <Link
             key={k.kind}
-            className="badge"
-            data-tone={chip(k.kind === kind)}
             aria-current={k.kind === kind ? "true" : undefined}
             href={newRoleHref(k.kind)}
           >
@@ -54,24 +49,24 @@ function NewRoleChips({
         Το είδος δεν αλλάζει μετά τη δημιουργία. Ένας Ρόλος ομάδας δεν γίνεται
         Ρόλος πελάτη, ούτε το αντίστροφο.
       </p>
-      <FilterBar
-        label="Αφετηρία"
-        filters={[
-          {
-            label: "Ξεκίνα",
-            all: {
-              label: "από το μηδέν",
-              href: newRoleHref(kind),
-              isCurrent: !source,
-            },
-            options: sources.map((def) => ({
-              label: `Αντίγραφο του «${def.name}»`,
-              href: newRoleHref(kind, def.id),
-              isCurrent: def.id === source?.id,
-            })),
-          },
-        ]}
-      />
+      <div className="ml-quick n4-chips" role="group" aria-label="Αφετηρία">
+        <span className="muted">Αφετηρία:</span>
+        <Link
+          aria-current={!source ? "true" : undefined}
+          href={newRoleHref(kind)}
+        >
+          από το μηδέν
+        </Link>
+        {sources.map((def) => (
+          <Link
+            key={def.id}
+            aria-current={def.id === source?.id ? "true" : undefined}
+            href={newRoleHref(kind, def.id)}
+          >
+            Αντίγραφο του «{def.name}»
+          </Link>
+        ))}
+      </div>
       {kind === "team" && (
         <p className="muted">
           Ο Ιδιοκτήτης δεν αντιγράφεται: όσα κάνει μόνο αυτός δεν δίνονται σε
@@ -107,9 +102,6 @@ export async function SpacesNewRole({
   return (
     <div data-spaces className="n4">
       <div className="ml-stack">
-        <p>
-          <Link href={ROLES_PATH}>← Όλοι οι Ρόλοι</Link>
-        </p>
         <Hero
           mono="+"
           tag={`Ρόλος ${KIND_LABEL[kind]}`}

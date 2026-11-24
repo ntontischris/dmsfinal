@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { isOwner, type Viewer } from "@/modules/access";
-import { hrefOf } from "@/spaces/data/screens";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 
 import {
@@ -130,9 +129,6 @@ export async function SpacesGdpr({ viewer, anonymize }: SpacesGdprProps) {
   const open = register.data.requests.filter((r) => !r.completedOn).length;
   return (
     <div data-spaces className="g-stack">
-      <p>
-        <Link href={hrefOf("N1")}>← Ομάδα</Link>
-      </p>
       <header className="ml-hero">
         <span className="ml-hero-mono" aria-hidden="true">
           G

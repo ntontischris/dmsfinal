@@ -41,10 +41,12 @@ function UserLine({ user }: { user: N1User }) {
 interface UserListProps {
   users: readonly N1User[];
   filter: StatusFilter;
+  // Ο Ιδιοκτήτης: γρήγορος σύνδεσμος στους Ρόλους και τα Δικαιώματα (N4).
+  canManageRoles?: boolean;
 }
 
 // Οι Χρήστες ομάδας (Ενεργοί / Απενεργοποιημένοι ως φίλτρα), σε γραμμές όπως η λίστα των Τιμολογίων.
-export function UserList({ users, filter }: UserListProps) {
+export function UserList({ users, filter, canManageRoles }: UserListProps) {
   const shown = users.filter((u) => matchesFilter(u, filter));
   const count = (f: StatusFilter) =>
     users.filter((u) => matchesFilter(u, f)).length;
@@ -52,9 +54,14 @@ export function UserList({ users, filter }: UserListProps) {
     <ListSection
       title="Χρήστες ομάδας"
       quick={
-        <Link href={hrefOf("N6")} data-primary>
-          Πρόσκληση Χρήστη
-        </Link>
+        <>
+          {canManageRoles && (
+            <Link href={hrefOf("N4")}>Ρόλοι και Δικαιώματα</Link>
+          )}
+          <Link href={hrefOf("N6")} data-primary>
+            Πρόσκληση Χρήστη
+          </Link>
+        </>
       }
     >
       <nav className="page-filters" aria-label="Κατάσταση Χρηστών">
