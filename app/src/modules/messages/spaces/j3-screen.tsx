@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { ErrorNotice } from "@/spaces/screens/shared";
-import { initialsOf } from "@/spaces/shell/avatar";
 
 import { AutoRefresh } from "../components/auto-refresh";
 import { chatTopicOf } from "../components/refresh-mode";
@@ -24,7 +23,7 @@ import {
   changeAbout,
 } from "../request-labels";
 import type { ChangeRequest, ClientContext, Thread } from "../view-schema";
-import { JEmpty } from "./j-empty";
+import { JCount, JEmpty } from "./j-empty";
 import { MessageBubble } from "./j-message";
 import { ReadAtScope } from "./j2-read-at";
 import { ClientMessageActions } from "./j3-actions";
@@ -73,10 +72,9 @@ function RequestLine({ row }: { row: J3RequestRow }) {
   return (
     <li className="ml-line" data-faded={row.isFaded || undefined}>
       <span className="ml-thumb" aria-hidden="true">
-        {initialsOf(row.title)}
+        {Array.from(row.title)[0] ?? "•"}
       </span>
-      <span className="ml-main">
-        <span className="ml-tag">{row.box.state}</span>
+      <div className="ml-main">
         <strong>{row.title}</strong>
         <small>
           {row.when}
@@ -84,7 +82,7 @@ function RequestLine({ row }: { row: J3RequestRow }) {
         </small>
         {row.text && <span className="j3-req-text">{row.text}</span>}
         <RequestBox request={row.box} />
-      </span>
+      </div>
       <span aria-hidden="true" />
       {(row.chatHref || row.deliverable) && (
         <span className="ml-quick">
@@ -104,11 +102,14 @@ function RequestsTab({ rows }: { rows: readonly J3RequestRow[] }) {
       </JEmpty>
     );
   return (
-    <ul className="ml-list" aria-label="Αιτήματα">
-      {rows.map((row) => (
-        <RequestLine key={row.key} row={row} />
-      ))}
-    </ul>
+    <>
+      <JCount n={rows.length} one="Αίτημα" many="Αιτήματα" />
+      <ul className="ml-list" aria-label="Αιτήματα">
+        {rows.map((row) => (
+          <RequestLine key={row.key} row={row} />
+        ))}
+      </ul>
+    </>
   );
 }
 

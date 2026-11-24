@@ -28,6 +28,7 @@
 & .jthread { display: grid; gap: var(--space-3); min-width: 0; }
 
 /* Σειρές κουμπιών: ίδιο pill με το `.ml-quick`, αλλά στοιχισμένα αριστερά μέσα σε φόρμες και φούσκες. */
+& .j-count { margin: 0 0 var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); }
 & .j-row { justify-content: flex-start; align-items: center; }
 & .j-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-width: 0; font-size: var(--text-sm); }
 & .j-inline .input { flex: 1 1 12rem; min-width: 0; }
