@@ -109,16 +109,22 @@ const cancelOf = (card: FilmingCard): string =>
   `${formatDate(card.cancelledAt ?? "")}${card.cancelledSide === "client" ? " (πελάτης)" : " (ομάδα)"}${card.cancelledReason ? `: ${card.cancelledReason}` : ""}${card.burned ? " · η Παροχή κάηκε" : ""}`;
 
 // Ο πελάτης δεν βλέπει τα εσωτερικά (Προέλευση, Έγκριση, Πραγματική διάρκεια)· βλέπει τον λόγο απόρριψης.
+// Η ομάδα παίρνει μέσα (children) και τα Στοιχεία χώρου: ένα κουτί για όλα τα στοιχεία του Γυρίσματος.
 export function Facts({
   card,
   isClient,
+  children,
 }: {
   card: FilmingCard;
   isClient: boolean;
+  children?: ReactNode;
 }) {
   const pending = card.signals.pendingReschedule;
   return (
-    <Box title="Στοιχεία" hint="Πότε, πού, Συμφωνία" isOpen>
+    <Box
+      title="Στοιχεία"
+      hint={children ? "Πότε, πού, Συμφωνία, χώρος" : "Πότε, πού, Συμφωνία"}
+    >
       <dl className="ml-kv">
         <Pair term="Πότε">
           {whenOf(card)} ({hoursLabel(card.hours)})
@@ -158,6 +164,7 @@ export function Facts({
           <Pair term="Ακύρωση">{cancelOf(card)}</Pair>
         )}
       </dl>
+      {children}
     </Box>
   );
 }
@@ -239,7 +246,7 @@ export function Mine({
   const myWord = RESPONSE_WORDS[slot.response];
   const reply = replyOf(slot, card.state, card.sheet?.version ?? null);
   return (
-    <Box title="Είσαι στο Συνεργείο" hint={`Η απάντησή σου: ${myWord}`} isOpen>
+    <Box title="Είσαι στο Συνεργείο" hint={`Η απάντησή σου: ${myWord}`}>
       {card.cancelRequest && (
         <p className="e3-warn" role="note">
           Ο πελάτης ζήτησε ακύρωση· περιμένει απόφαση.

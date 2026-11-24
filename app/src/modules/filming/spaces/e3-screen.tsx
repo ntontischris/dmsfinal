@@ -277,8 +277,9 @@ export async function SpacesFilming({
         )}
         {isCrewView && mine}
         <E3Actions card={card} newTimeProblem={tools.newTimeProblem} />
-        <Facts card={card} isClient={false} />
-        <E3Details card={card} />
+        <Facts card={card} isClient={false}>
+          <E3Details card={card} />
+        </Facts>
         {(card.viewerCan.crew || card.crew.length > 0) && (
           <E3Crew
             card={card}

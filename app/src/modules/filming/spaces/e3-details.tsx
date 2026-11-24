@@ -13,9 +13,8 @@ import type {
 } from "../types";
 import { useRun } from "./e3-run";
 import { LastDone } from "./e3-ui";
-import { Box } from "./ml-parts";
 
-// Στοιχεία χώρου (c9): ποιον βρίσκει το Συνεργείο στον χώρο, τηλέφωνο, πού ανεβαίνουν τα αρχεία, και αν το Γύρισμα
+// Στοιχεία χώρου (c9), μέρος του κουτιού «Στοιχεία»: ποιον βρίσκει το Συνεργείο στον χώρο, τηλέφωνο, πού ανεβαίνουν τα αρχεία, και αν το Γύρισμα
 // γράφτηκε στο Google Calendar. Μόνο για την ομάδα (ο Πελάτης δεν παίρνει «team»).
 
 const GOOGLE_LOOK: Readonly<
@@ -154,7 +153,8 @@ export function E3Details({ card }: { card: FilmingCard }) {
   const team = card.team;
   if (!team) return null;
   return (
-    <Box title="Στοιχεία χώρου" hint="Επαφή, τηλέφωνο, αρχεία, Google">
+    <section className="fl-box-body">
+      <h3 className="ml-box-title">Στοιχεία χώρου</h3>
       <GoogleLine google={team.google} />
       {isEditing ? (
         <DetailsForm
@@ -174,6 +174,6 @@ export function E3Details({ card }: { card: FilmingCard }) {
           )}
         </>
       )}
-    </Box>
+    </section>
   );
 }
