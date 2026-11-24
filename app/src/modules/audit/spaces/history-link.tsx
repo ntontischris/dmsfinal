@@ -18,9 +18,5 @@ export function SpacesHistoryLink({
   id,
 }: SpacesHistoryLinkProps) {
   if (!can(viewer, "audit.view")) return null;
-  return (
-    <Link className="button" href={historyHref(entity, id)}>
-      {HISTORY_LINK}
-    </Link>
-  );
+  return <Link href={historyHref(entity, id)}>{HISTORY_LINK}</Link>;
 }

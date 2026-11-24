@@ -13,7 +13,7 @@ const AUDIT_PATH = "/app/audit";
 const companyTabs = (page: Page) =>
   page.getByRole("navigation", { name: "Εταιρεία" });
 const chips = (page: Page) => page.getByRole("list", { name: "Ενεργά φίλτρα" });
-const auditRows = (page: Page) => page.locator("li.part-row");
+const auditRows = (page: Page) => page.locator("li.ml-line");
 
 test("ο Ιδιοκτήτης φιλτράρει το Ίχνος και τα φίλτρα μένουν στη διεύθυνση", async ({
   page,
@@ -29,7 +29,7 @@ test("ο Ιδιοκτήτης φιλτράρει το Ίχνος και τα φ�
     companyTabs(page).getByRole("link", { name: "Ίχνος", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await expect(
-    page.getByRole("heading", { name: "Ίχνος ενεργειών" }),
+    page.getByRole("heading", { name: "Ίχνος ενεργειών", level: 1 }),
   ).toBeVisible();
   await expect(auditRows(page).first()).toBeVisible();
 
@@ -42,7 +42,7 @@ test("ο Ιδιοκτήτης φιλτράρει το Ίχνος και τα φ�
   await expect(chips(page)).toContainText("Περιοχή: Κατάλογος");
   await expect(chips(page)).toContainText("Περίοδος: 30 μέρες");
   await expect(
-    auditRows(page).locator(".part-sub", { hasText: "Κατάλογος" }).first(),
+    auditRows(page).locator("small", { hasText: "Κατάλογος" }).first(),
   ).toBeVisible();
 
   // Ο σελιδοδείκτης ξανανοίγει την ίδια εικόνα.
