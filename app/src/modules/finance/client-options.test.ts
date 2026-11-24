@@ -7,6 +7,8 @@ const row = (overrides: Partial<ClientSource> = {}): ClientSource => ({
   name: "Καφέ Αθηνά",
   city: "Αθήνα",
   managerName: "Νίκος",
+  afm: null,
+  contactEmail: "",
   ...overrides,
 });
 
@@ -72,5 +74,23 @@ describe("clientOptionsOf", () => {
       "Θεσσαλονίκη · a@example.com",
       "Θεσσαλονίκη · b@example.com",
     ]);
+  });
+
+  it("should fall back to a short code when the composed hints are still the same", () => {
+    const options = clientOptionsOf([
+      row({ id: "aaaa1111", city: "Θεσσαλονίκη", managerName: "Νίκος" }),
+      row({ id: "bbbb2222", city: "Θεσσαλονίκη", managerName: "Νίκος" }),
+    ]);
+    expect(options.map((o) => o.hint)).toEqual(["κωδ. aaaa11", "κωδ. bbbb22"]);
+  });
+
+  it("should give every same-name client a different hint", () => {
+    const options = clientOptionsOf([
+      row({ id: "aaaa1111", city: "Αθήνα" }),
+      row({ id: "bbbb2222", city: "Πάτρα" }),
+      row({ id: "cccc3333", city: "Πάτρα" }),
+    ]);
+    const hints = options.map((o) => o.hint);
+    expect(new Set(hints).size).toBe(3);
   });
 });

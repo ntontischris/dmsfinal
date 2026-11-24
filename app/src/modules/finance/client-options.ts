@@ -6,8 +6,8 @@ export interface ClientSource {
   name: string;
   city: string;
   managerName: string | null;
-  afm?: string | null;
-  contactEmail?: string;
+  afm: string | null;
+  contactEmail: string;
 }
 
 const keyOf = (name: string): string =>
@@ -23,7 +23,7 @@ const isUnique = (
 ): boolean =>
   value !== "" && twins.filter((twin) => clean(read(twin)) === value).length === 1;
 
-const hintOf = (
+const describedHintOf = (
   client: ClientSource,
   twins: readonly ClientSource[],
 ): string => {
@@ -35,8 +35,19 @@ const hintOf = (
   const extra = isUnique(email, twins, (twin) => twin.contactEmail)
     ? email
     : clean(client.managerName);
-  const parts = [city, extra].filter((part) => part !== "");
-  return parts.length > 0 ? parts.join(" · ") : `κωδ. ${client.id.slice(0, 6)}`;
+  return [city, extra].filter((part) => part !== "").join(" · ");
+};
+
+// Αν η περιγραφή βγει ίδια με άλλου συνονόματου (ή κενή), μένει ο σύντομος κωδικός, που είναι πάντα δικός του.
+const hintOf = (
+  client: ClientSource,
+  twins: readonly ClientSource[],
+): string => {
+  const hint = describedHintOf(client, twins);
+  const isShared = twins.some(
+    (twin) => twin.id !== client.id && describedHintOf(twin, twins) === hint,
+  );
+  return hint === "" || isShared ? `κωδ. ${client.id.slice(0, 6)}` : hint;
 };
 
 // Πελάτες για τις φόρμες: όταν δύο έχουν το ίδιο όνομα, μια αχνή λέξη (ΑΦΜ, πόλη, email, μετά υπεύθυνος) τους ξεχωρίζει.

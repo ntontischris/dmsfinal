@@ -32,6 +32,9 @@ export interface ClientRow {
   canOpen: boolean;
   openOpportunities: number | null;
   isPossibleDuplicate: boolean;
+  // Μόνο όταν ανοίγεις τον Πελάτη (αλλιώς null / ""): ξεχωρίζουν συνονόματους στις επιλογές Πελάτη.
+  afm: string | null;
+  contactEmail: string;
 }
 export interface ClientDetail {
   id: string;
