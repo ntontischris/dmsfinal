@@ -45,3 +45,14 @@
 .n-warn { margin: 0; font-size: .88rem; color: var(--color-text); }
 .n-warn::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: .4rem; vertical-align: middle; border-radius: 50%; background: var(--brand-yellow); }
 .n-block { display: block; margin-top: .3rem; }
+
+/* Ποιος Ρόλος βλέπει τι: πραγματικός πίνακας (Ρόλοι × περιοχές), κύλιση μόνο μέσα στο κουτί */
+.n-reach-scroll { overflow-x: auto; min-width: 0; }
+.n-reach { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.n-reach th, .n-reach td { padding: .5rem .7rem; text-align: left; vertical-align: top; white-space: nowrap;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); }
+.n-reach thead th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600; }
+.n-reach tbody th { font-weight: 600; color: var(--color-text); }
+.n-reach td[data-scope='all'] { color: var(--color-text); font-weight: 600; }
+.n-reach td[data-scope='mine'] { color: color-mix(in oklab, var(--brand-periwinkle) var(--panel-ink-mix), var(--color-text)); }
+.n-reach td[data-scope='none'] { color: var(--color-text-muted); }
