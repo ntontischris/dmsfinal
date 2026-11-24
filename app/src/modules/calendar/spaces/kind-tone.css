@@ -36,3 +36,14 @@
 & .kind-icon-own .input { width: 5rem; }
 & .kind-check { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; font-size: var(--text-sm); }
 }
+
+/* O4 Είδη κλεισμένου χρόνου στην τελική όψη (ml-*). Μόνο tokens. */
+[data-look='spaces'] {
+& .o4k-card { display: grid; gap: var(--space-3); padding: 1rem 1.1rem; border-radius: 14px; border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent); background: color-mix(in oklab, var(--panel-deep) 55%, transparent); }
+& .o4k-card > * { margin: 0; }
+& .o4k-head { display: flex; align-items: baseline; gap: var(--space-2); }
+& .o4k-head small, & .o4k-note { color: var(--color-text-muted); }
+& .o4k-no { display: grid; place-items: center; min-width: 2rem; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+& .o4k-sub { display: block; margin-top: var(--space-2); }
+& .o4k-row { justify-content: flex-start; flex-wrap: wrap; align-items: center; }
+}

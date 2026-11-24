@@ -17,23 +17,24 @@ import {
 import { E5Booking } from "./e5-booking";
 import { dayViewsOf } from "./e5-model";
 
+import "../../finance/spaces/money-lines.css";
 import "./e.css";
 
 const wrap = (body: ReactNode) => (
   <div data-spaces>
-    <div className="e">{body}</div>
+    <div className="e ml-stack">{body}</div>
   </div>
 );
 
 function NoBooking() {
   return (
-    <section className="card notice" data-kind="empty" role="status">
-      <h2>Δεν σου μένει γύρισμα να κλείσεις</h2>
-      <p className="muted">
+    <section className="fl-step" role="status">
+      <h2 className="ml-box-title">Δεν σου μένει γύρισμα να κλείσεις</h2>
+      <p>
         Το πακέτο σου δεν έχει ελεύθερο γύρισμα αυτή τη στιγμή. Μπορείς να μας
         ζητήσεις ένα επιπλέον γύρισμα.
       </p>
-      <Link className="button" data-primary="true" href={hrefOf("J3")}>
+      <Link className="ml-cta" href={hrefOf("J3")}>
         Ζήτα επιπλέον γύρισμα
       </Link>
     </section>

@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 
 import { issueSheet, saveSheet } from "../actions-sheet";
 import { formatDateTime } from "../helpers-time";
@@ -13,6 +11,7 @@ import { addShot, moveShot, removeShot, renameShot } from "../sheet-model";
 import type { SheetShot, SheetView } from "../sheet-types";
 import { useRun } from "./e3-run";
 import { LastDone } from "./e3-ui";
+import { Box, Line, Lines } from "./ml-parts";
 
 interface E3SheetProps {
   filmingId: string;
@@ -74,11 +73,11 @@ function ShotList({
   };
   return (
     <>
-      <h3>Shot list</h3>
+      <h3 className="ml-box-title">Shot list</h3>
       {items.length === 0 && <p className="muted">Κενή.</p>}
-      <RowList>
+      <Lines label="Shot list">
         {items.map((item, index) => (
-          <ListRow
+          <Line
             key={item.id}
             lead={String(index + 1)}
             title={
@@ -88,7 +87,9 @@ function ShotList({
                   shot={item}
                   index={index}
                   isPending={isPending}
-                  onRename={(text) => onChange(renameShot(items, item.id, text))}
+                  onRename={(text) =>
+                    onChange(renameShot(items, item.id, text))
+                  }
                 />
               ) : (
                 item.text
@@ -99,7 +100,6 @@ function ShotList({
                 <>
                   <button
                     type="button"
-                    className="button"
                     aria-label="Μετακίνηση πάνω"
                     disabled={index === 0 || isPending}
                     onClick={() => onChange(moveShot(items, item.id, -1))}
@@ -108,7 +108,6 @@ function ShotList({
                   </button>
                   <button
                     type="button"
-                    className="button"
                     aria-label="Μετακίνηση κάτω"
                     disabled={index === items.length - 1 || isPending}
                     onClick={() => onChange(moveShot(items, item.id, 1))}
@@ -117,7 +116,6 @@ function ShotList({
                   </button>
                   <button
                     type="button"
-                    className="button"
                     disabled={isPending}
                     onClick={() => onChange(removeShot(items, item.id))}
                   >
@@ -128,9 +126,9 @@ function ShotList({
             }
           />
         ))}
-      </RowList>
+      </Lines>
       {canEdit && (
-        <div className="e3-inline">
+        <div className="ml-quick fl-row e3-inline">
           <input
             className="input"
             aria-label="Νέο πλάνο"
@@ -146,7 +144,6 @@ function ShotList({
           />
           <button
             type="button"
-            className="button"
             disabled={!draft.trim() || isPending}
             onClick={add}
           >
@@ -181,25 +178,28 @@ export function E3Sheet({ filmingId, sheet }: E3SheetProps) {
     : (sheet.latest?.crewNote ?? sheet.crewNote);
 
   return (
-    <Panel
-      label="Δελτίο γυρίσματος"
-      aside={
-        <Link className="button" href={hrefOf("E6")}>
-          Όψη μέλους
-        </Link>
+    <Box
+      title="Δελτίο γυρίσματος"
+      hint={
+        current
+          ? `Έκδοση ${current.version} · shot list και σημείωση`
+          : "Δεν έχει σταλεί ακόμα"
       }
     >
+      <div className="ml-quick fl-row">
+        <Link href={hrefOf("E6")}>Όψη μέλους</Link>
+      </div>
       {isFirst && <p className="muted">Δεν έχει σταλεί ακόμα Δελτίο.</p>}
-      <RowList>
+      <Lines label="Εκδόσεις Δελτίου">
         {sheet.versions.map((version) => (
-          <ListRow
+          <Line
             key={version.version}
             lead={`v${version.version}`}
             title={`Έκδοση ${version.version}`}
             sub={`${formatDateTime(version.issuedAt)} · ${version.issuedByName ?? "Αυτόματα"} · ${version.change ?? "Πρώτη αποστολή"}`}
           />
         ))}
-      </RowList>
+      </Lines>
       {sheet.hasChanges && current && (
         <p className="e3-warn">
           Άλλαξαν στοιχεία μετά την έκδοση {current.version}. Αν ισχύει ο
@@ -208,22 +208,20 @@ export function E3Sheet({ filmingId, sheet }: E3SheetProps) {
         </p>
       )}
       {sheet.canIssue && (isFirst || sheet.hasChanges) && (
-        <div className="stack e3-form">
+        <div className="ml-fields e3-form">
           {!isFirst && (
-            <label>
-              Τι άλλαξε (υποχρεωτικό)
+            <label className="ml-field" data-wide>
+              <span>Τι άλλαξε (υποχρεωτικό)</span>
               <input
-                className="input"
                 maxLength={300}
                 value={change}
                 onChange={(event) => setChange(event.target.value)}
               />
             </label>
           )}
-          <div className="btn-row">
+          <div className="ml-actions">
             <button
               type="button"
-              className="button"
               data-primary="true"
               disabled={isPending || (!isFirst && !change.trim())}
               onClick={send}
@@ -239,21 +237,20 @@ export function E3Sheet({ filmingId, sheet }: E3SheetProps) {
         isPending={isPending}
         onChange={(next) => save(next)}
       />
-      <h3>Σημείωση για το Συνεργείο</h3>
+      <h3 className="ml-box-title">Σημείωση για το Συνεργείο</h3>
       {sheet.canEdit ? (
-        <div className="stack e3-form">
+        <div className="ml-fields e3-form">
           <textarea
-            className="input"
+            className="input fl-wide"
             rows={3}
             maxLength={2000}
             aria-label="Σημείωση για το Συνεργείο"
             value={crewNote}
             onChange={(event) => setCrewNote(event.target.value)}
           />
-          <div className="btn-row">
+          <div className="ml-actions">
             <button
               type="button"
-              className="button"
               disabled={isPending || crewNote === (sheet.crewNote ?? "")}
               onClick={() => save(shots, crewNote)}
             >
@@ -265,6 +262,6 @@ export function E3Sheet({ filmingId, sheet }: E3SheetProps) {
         <p>{shownNote ?? <span className="muted">Καμία.</span>}</p>
       )}
       <LastDone log={result ? [result.text] : []} tone={result?.tone ?? "ok"} />
-    </Panel>
+    </Box>
   );
 }

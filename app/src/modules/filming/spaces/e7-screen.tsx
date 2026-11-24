@@ -24,7 +24,7 @@ export async function SpacesCrewTemplates() {
   ]);
   return (
     <div data-spaces>
-      <div className="e">
+      <div className="e ml-stack">
         {templates.ok && people.ok ? (
           <E7Templates templates={templates.data} people={people.data} />
         ) : (

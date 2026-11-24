@@ -4,7 +4,6 @@ import { can, getViewer, isClientViewer, type Viewer } from "@/modules/access";
 import { getSpaceStrip } from "@/modules/today";
 import { hrefOf } from "@/spaces/data/screens";
 import { codesOfSpace } from "@/spaces/data/spaces";
-import { Panel } from "@/spaces/kit/panel";
 import { ErrorNotice, StateNotice } from "@/spaces/screens/shared";
 import { Strip } from "@/spaces/shell/strip";
 
@@ -21,6 +20,7 @@ import {
 import { groupFilmings } from "./e1-groups";
 import { E1Table } from "./e1-table";
 
+import "../../finance/spaces/money-lines.css";
 import "./e1.css";
 
 interface SpacesFilmingsProps {
@@ -41,13 +41,13 @@ function Views({
   counts: ReadonlyMap<FilmingTab, number | null>;
 }) {
   return (
-    <nav className="tabs" aria-label="Προβολή Γυρισμάτων">
+    <nav className="page-filters" aria-label="Προβολή Γυρισμάτων">
       {views.map((item) => {
         const count = counts.get(item.id);
         return (
           <Link
             key={item.id}
-            className="tab"
+            scroll={false}
             aria-current={item.id === tab ? "page" : undefined}
             href={hrefOf("E1", {
               tab: item.id === "open" ? undefined : item.id,
@@ -87,18 +87,24 @@ function Groups({
       </StateNotice>
     );
   return groups.map((group) => (
-    <div key={group.id} className="e1-group" data-attention={group.isAttention}>
-      <Panel label={group.label} aside={group.filmings.length} isFlush>
-        <E1Table
-          filmings={group.filmings}
-          nowMs={nowMs}
-          today={today}
-          nextId={group.nextId}
-          isLate={group.isAttention}
-          isClient={isClient}
-        />
-      </Panel>
-    </div>
+    <section
+      key={group.id}
+      className="e1-group"
+      data-attention={group.isAttention}
+    >
+      <h2 className="ml-box-title e1-group-title">
+        {group.label} <small>{group.filmings.length}</small>
+      </h2>
+      <E1Table
+        label={group.label}
+        filmings={group.filmings}
+        nowMs={nowMs}
+        today={today}
+        nextId={group.nextId}
+        isLate={group.isAttention}
+        isClient={isClient}
+      />
+    </section>
   ));
 }
 
@@ -137,25 +143,23 @@ export async function SpacesFilmings({ tab }: SpacesFilmingsProps) {
     <div data-spaces>
       <Strip stats={strip.stats} now={strip.now} />
       {isScoped(viewer) && (
-        <p className="note">
+        <p className="ml-empty">
           «Με αφορά»: βλέπεις τα Γυρίσματα στα οποία συμμετέχεις.
         </p>
       )}
-      {isClient && can(viewer, "c.book") && (
-        <div className="toolbar">
-          <Link className="button" data-primary="true" href={hrefOf("E5")}>
+      <div className="ml-head">
+        <Views views={views} tab={tab} counts={counts} />
+        {isClient && can(viewer, "c.book") && (
+          <Link className="ml-cta" href={hrefOf("E5")}>
             Κλείσε νέο Γύρισμα
           </Link>
-        </div>
-      )}
-      {caps.canBook && (
-        <div className="toolbar">
-          <Link className="button" data-primary="true" href={hrefOf("E4")}>
+        )}
+        {caps.canBook && (
+          <Link className="ml-cta" href={hrefOf("E4")}>
             Νέο Γύρισμα
           </Link>
-        </div>
-      )}
-      <Views views={views} tab={tab} counts={counts} />
+        )}
+      </div>
       {current.ok ? (
         <Groups rows={current.data} nowMs={nowMs} isClient={isClient} />
       ) : (

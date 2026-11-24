@@ -31,7 +31,7 @@ function QuickAdds({ kinds, date, canBlockOthers }: A5ToolbarProps) {
   const adds = quickAddsOf(kinds, date);
   if (adds.length === 0)
     return (
-      <Link className="button" href={hrefOf("A6", { date })}>
+      <Link href={hrefOf("A6", { date })}>
         {canBlockOthers
           ? "Ρεπό / Άδεια / Μη διαθέσιμος"
           : "Ρεπό / Άδεια / Δεν είμαι διαθέσιμος"}
@@ -51,15 +51,15 @@ function QuickAdds({ kinds, date, canBlockOthers }: A5ToolbarProps) {
 
 export function A5Toolbar(props: A5ToolbarProps) {
   return (
-    <div className="toolbar">
+    <div className="ml-quick a5-acts">
       {props.isTeam && <QuickAdds {...props} />}
       {props.isTeam && props.canNewFilming && (
-        <Link className="button" data-primary="true" href={hrefOf("E4")}>
+        <Link className="ml-cta" href={hrefOf("E4")}>
           + Γύρισμα
         </Link>
       )}
       {!props.isTeam && props.canBook && (
-        <Link className="button" data-primary="true" href={hrefOf("E5")}>
+        <Link className="ml-cta" href={hrefOf("E5")}>
           Κλείσε νέο Γύρισμα
         </Link>
       )}
@@ -69,12 +69,12 @@ export function A5Toolbar(props: A5ToolbarProps) {
 
 export function A5Tabs({ params }: { params: CalendarParams }) {
   return (
-    <nav className="tabs" aria-label="Προβολή">
+    <nav className="page-filters" aria-label="Προβολή">
       {CALENDAR_VIEWS.map((view) => (
         <Link
           key={view.id}
-          className="tab"
           href={calendarHref(params, { view: view.id })}
+          scroll={false}
           aria-current={view.id === params.view ? "page" : undefined}
         >
           {view.label}
@@ -96,26 +96,20 @@ export function A5Nav({
   const isTodayOut = today < from || today > to;
   return (
     <div className="a5-nav">
-      <Link
-        className="button"
-        href={go(shiftAnchor(params.view, params.date, -1))}
-      >
-        ‹ Προηγούμενη
-      </Link>
-      <Link className="button" href={go(today)}>
-        Σήμερα
-      </Link>
-      <Link
-        className="button"
-        href={go(shiftAnchor(params.view, params.date, 1))}
-      >
-        Επόμενη ›
-      </Link>
+      <span className="ml-quick a5-steps">
+        <Link href={go(shiftAnchor(params.view, params.date, -1))}>
+          ‹ Προηγούμενη
+        </Link>
+        <Link href={go(today)} data-primary>
+          Σήμερα
+        </Link>
+        <Link href={go(shiftAnchor(params.view, params.date, 1))}>
+          Επόμενη ›
+        </Link>
+      </span>
       <strong className="a5-range">{titleOf(params.view, params.date)}</strong>
       {isTodayOut && (
-        <span className="muted a5-today-note">
-          Σήμερα είναι {fmtLong(today)}.
-        </span>
+        <small className="a5-today-note">Σήμερα είναι {fmtLong(today)}.</small>
       )}
     </div>
   );
@@ -132,7 +126,7 @@ interface A5FiltersProps {
 function PersonFilter({ params, people }: A5FiltersProps) {
   return (
     <div className="a5-filter">
-      <span className="muted">Άτομο:</span>
+      <small>Άτομο:</small>
       {people.map((option) => (
         <Link
           key={option.id ?? "all"}
@@ -150,7 +144,7 @@ function PersonFilter({ params, people }: A5FiltersProps) {
 function LayerFilter({ params, options }: A5FiltersProps) {
   return (
     <div className="a5-filter">
-      <span className="muted">Δείξε:</span>
+      <small>Δείξε:</small>
       {options.map((layer) => {
         const isOn = params.layers.includes(layer.key);
         return (
@@ -182,9 +176,9 @@ export function A5Filters(props: A5FiltersProps) {
     <details className="a5-filters">
       <summary>
         Φίλτρα{" "}
-        <span className="muted">
+        <small>
           ({filtersSummary(props.options, props.params.layers, person)})
-        </span>
+        </small>
       </summary>
       {hasPeople && <PersonFilter {...props} />}
       <LayerFilter {...props} />

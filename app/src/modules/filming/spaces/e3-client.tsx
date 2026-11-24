@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 
-import { Panel } from "@/spaces/kit/panel";
-
 import { withdrawRescheduleRequest } from "../actions-book";
 import { athensDate, athensTime, formatDateTime } from "../helpers-time";
 import type { FilmingCard } from "../types";
 import { fmtDay } from "./e3-model";
 import { useRun } from "./e3-run";
 import { LastDone } from "./e3-ui";
+import "./ml-parts.css";
+import "../../finance/spaces/money-lines.css";
 
 // «Τι μπορείς να κάνεις» του πελάτη (prototype `screens/e3-client.tsx`), με τις ενέργειες της παλιάς σελίδας: μετάθεση μέσω
 // της Κράτησης (E5) και απόσυρση του αιτήματος. Η ακύρωση και το αίτημα ακύρωσης του prototype λείπουν (δεν υπάρχει action).
@@ -38,18 +38,19 @@ export function E3ClientActions({ card }: { card: FilmingCard }) {
     !!moveHref || !!pending || !!slotProblem || !!card.cancelRequest;
   if (!hasAny)
     return result ? (
-      <section className="card">
+      <section className="fl-acts">
         <LastDone log={[result.text]} tone={result.tone} />
       </section>
     ) : null;
   return (
-    <Panel label="Τι μπορείς να κάνεις">
+    <section className="fl-acts" aria-label="Τι μπορείς να κάνεις">
+      <h2 className="ml-box-title">Τι μπορείς να κάνεις</h2>
       <LastDone log={result ? [result.text] : []} tone={result?.tone ?? "ok"} />
-      {slotProblem && <p className="note">{slotProblem}</p>}
+      {slotProblem && <p className="fl-note">{slotProblem}</p>}
       {moveHref && (
-        <div className="stack">
-          <div className="btn-row">
-            <Link className="button" href={moveHref}>
+        <div className="fl-box-body">
+          <div className="ml-quick fl-row">
+            <Link href={moveHref} data-primary="true">
               Ζητώ άλλη μέρα
             </Link>
           </div>
@@ -57,24 +58,23 @@ export function E3ClientActions({ card }: { card: FilmingCard }) {
         </div>
       )}
       {card.cancelRequest && (
-        <p className="note">
+        <p className="fl-note">
           Έχεις ζητήσει ακύρωση ({card.cancelRequest.reason}). Περιμένει
           απάντηση από την ομάδα.
         </p>
       )}
       {pending && (
-        <div className="stack">
-          <p className="note">
+        <div className="fl-box-body">
+          <p className="fl-note">
             Ζήτησες μετάθεση στις {formatDateTime(pending.startsAt)}. Περιμένει
             έγκριση· μέχρι τότε το Γύρισμα μένει{" "}
             {fmtDay(athensDate(card.startsAt))} {athensTime(card.startsAt)}–
             {endOf(card)}.
           </p>
           {card.viewerCan.clientWithdrawReschedule && (
-            <div className="btn-row">
+            <div className="ml-quick fl-row">
               <button
                 type="button"
-                className="button"
                 disabled={isPending}
                 onClick={() =>
                   run(withdrawRescheduleRequest, { filmingId: card.id })
@@ -86,6 +86,6 @@ export function E3ClientActions({ card }: { card: FilmingCard }) {
           )}
         </div>
       )}
-    </Panel>
+    </section>
   );
 }

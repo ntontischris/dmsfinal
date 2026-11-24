@@ -3,14 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
-
 import {
   renewCalendarLink,
   revokeCalendarLink,
   type LinkState,
 } from "../actions-link";
+import { SideBox, SideLine } from "./a5-box";
 
 // «Στο κινητό σου» από το prototype (`screens/a5-link.tsx`), με τον πραγματικό σύνδεσμο: το token φαίνεται μία φορά,
 // μετά τη δημιουργία ή την ανανέωση, και μόνο στη μνήμη της σελίδας (μένει το hash στη βάση).
@@ -77,9 +75,9 @@ function Address({ url }: { url: string }) {
   };
   return (
     <>
-      <div className="a5-url">
+      <div className="a5-url ml-quick">
         <code>{url}</code>
-        <button type="button" className="button" onClick={handleCopy}>
+        <button type="button" onClick={handleCopy}>
           {isCopied ? "Αντιγράφηκε" : "Αντιγραφή"}
         </button>
       </div>
@@ -106,17 +104,17 @@ function Confirm({ confirming, isPending, onConfirm, onCancel }: ConfirmProps) {
           ? "Ο παλιός σύνδεσμος σταματά αμέσως. Θα χρειαστεί να τον ξαναπροσθέσεις στο κινητό."
           : "Ο σύνδεσμος σταματά αμέσως."}
       </p>
-      <div className="btn-row">
+      <div className="ml-quick a5-row-acts">
         <button
           type="button"
-          className="button"
+
           data-danger="true"
           disabled={isPending}
           onClick={onConfirm}
         >
           {isRenew ? "Ανανέωση τώρα" : "Κατάργηση τώρα"}
         </button>
-        <button type="button" className="button" onClick={onCancel}>
+        <button type="button" onClick={onCancel}>
           Άκυρο
         </button>
       </div>
@@ -134,21 +132,22 @@ interface ActionsProps {
 function Actions({ exists, isPending, onCreate, onAsk }: ActionsProps) {
   if (!exists)
     return (
-      <button
-        type="button"
-        className="button"
-        data-primary="true"
-        disabled={isPending}
-        onClick={onCreate}
-      >
-        {isPending ? "Δημιουργία…" : "Δημιουργία συνδέσμου"}
-      </button>
+      <div className="ml-quick a5-row-acts">
+        <button
+          type="button"
+          data-primary="true"
+          disabled={isPending}
+          onClick={onCreate}
+        >
+          {isPending ? "Δημιουργία…" : "Δημιουργία συνδέσμου"}
+        </button>
+      </div>
     );
   return (
-    <div className="btn-row">
+    <div className="ml-quick a5-row-acts">
       <button
         type="button"
-        className="button"
+
         disabled={isPending}
         onClick={() => onAsk("renew")}
       >
@@ -156,7 +155,7 @@ function Actions({ exists, isPending, onCreate, onAsk }: ActionsProps) {
       </button>
       <button
         type="button"
-        className="button"
+
         data-danger="true"
         disabled={isPending}
         onClick={() => onAsk("revoke")}
@@ -196,7 +195,10 @@ export function CalendarLinkCard({
     });
 
   return (
-    <Panel label="Στο κινητό σου">
+    <SideBox
+      title="Στο κινητό σου"
+      hint={exists ? "Ενεργός σύνδεσμος" : "Χωρίς σύνδεσμο"}
+    >
       <p className="muted">Σύνδεσμος ημερολογίου (μόνο για εσένα)</p>
       {url ? (
         <Address url={url} />
@@ -228,18 +230,15 @@ export function CalendarLinkCard({
         </p>
       )}
       <h3>Τι περιέχει</h3>
-      <RowList>
+      <ul className="ml-list">
         {(isClient ? CLIENT_CONTENT : TEAM_CONTENT).map((text) => (
-          <ListRow
-            key={text}
-            title={<span className="a5-plain">{text}</span>}
-          />
+          <SideLine key={text} title={text} />
         ))}
-      </RowList>
+      </ul>
       <Instructions />
       <p className="note">
         Μόνο ανάγνωση. Παύει να λειτουργεί αν απενεργοποιηθεί ο λογαριασμός σου.
       </p>
-    </Panel>
+    </SideBox>
   );
 }

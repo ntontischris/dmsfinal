@@ -3,9 +3,9 @@ import Link from "next/link";
 import { formatDateTime } from "@/modules/filming";
 import type { GoogleView } from "@/modules/google";
 import { hrefOf } from "@/spaces/data/screens";
-import { Panel } from "@/spaces/kit/panel";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge } from "@/spaces/screens/shared";
+
+import { SideBox, SideLine } from "./a5-box";
 
 const RECENT_LIMIT = 5;
 const DELETIONS_HREF = "/app/calendar/google-deletions";
@@ -60,11 +60,11 @@ function Changes({ view }: { view: GoogleView }) {
   return (
     <>
       <h3>Πρόσφατα από το Google</h3>
-      <RowList>
+      <ul className="ml-list">
         {view.activity.slice(0, RECENT_LIMIT).map((entry, index) => (
-          <ListRow
+          <SideLine
             key={`${entry.at}-${index}`}
-            title={<span className="a5-plain">{entry.message}</span>}
+            title={entry.message}
             sub={formatDateTime(entry.at)}
             aside={
               entry.filmingId && (
@@ -75,7 +75,7 @@ function Changes({ view }: { view: GoogleView }) {
             }
           />
         ))}
-      </RowList>
+      </ul>
     </>
   );
 }
@@ -89,7 +89,10 @@ export function A5Google({
   isStale: boolean;
 }) {
   return (
-    <Panel label="Εταιρικό ημερολόγιο Google">
+    <SideBox
+      title="Εταιρικό ημερολόγιο Google"
+      hint={isStale ? "Εκτός συγχρονισμού" : "Συγχρονίζεται"}
+    >
       {isStale ? <Outage view={view} /> : <Synced view={view} />}
       <p>
         Διαγραφές που περιμένουν επιβεβαίωση:{" "}
@@ -105,6 +108,6 @@ export function A5Google({
           γίνεται μη διαθεσιμότητα (ρεπό/άδεια), ποτέ Γύρισμα.
         </p>
       )}
-    </Panel>
+    </SideBox>
   );
 }

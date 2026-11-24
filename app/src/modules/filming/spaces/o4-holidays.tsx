@@ -1,9 +1,9 @@
 import { ActionButton, SettingsCard } from "@/modules/settings";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 import { Badge, fmtDate } from "@/spaces/screens/shared";
 
 import { toggleHolidayOpen } from "../actions-booking";
 import type { BookingHoliday } from "../booking-types";
+import { Line, Lines } from "./ml-parts";
 import { dateLeadOf } from "./o4-hours";
 import { holidayLook } from "./o4-model";
 
@@ -35,9 +35,9 @@ export function O4Holidays({
       {holidays.length === 0 ? (
         <p className="muted o-hint">Οι αργίες υπολογίζονται αυτόματα.</p>
       ) : (
-        <RowList>
+        <Lines>
           {holidays.map((h) => (
-            <ListRow
+            <Line
               key={h.day}
               isFaded={h.isPast}
               lead={dateLeadOf(h.day)}
@@ -62,7 +62,7 @@ export function O4Holidays({
               }
             />
           ))}
-        </RowList>
+        </Lines>
       )}
       <p className="muted o-hint">
         Οι αργίες που εξαρτώνται από το Πάσχα υπολογίζονται από το ορθόδοξο

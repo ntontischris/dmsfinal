@@ -1,5 +1,4 @@
 import { SaveRow, SettingsCard, SettingsForm } from "@/modules/settings";
-import { ListRow, RowList } from "@/spaces/kit/parts";
 
 import { saveFilmingSettings } from "../actions-settings";
 import {
@@ -9,6 +8,7 @@ import {
   SHEET_LABELS,
 } from "../labels";
 import type { FilmingSettings } from "../types";
+import { Line, Lines } from "./ml-parts";
 import { YES_NO, o4RulesOf, type O4Rule } from "./o4-model";
 
 // Ο Κανόνας: λίστα επιλογών, ναι/όχι (στέλνει «on»/κενό όπως το κουτάκι της παλιάς φόρμας) ή αριθμός.
@@ -59,16 +59,16 @@ export function O4Rules({ settings }: { settings: FilmingSettings }) {
         έτοιμες και απλώς ελέγχονται.
       </p>
       <SettingsForm action={saveFilmingSettings}>
-        <RowList>
+        <Lines>
           {rules.map((rule) => (
-            <ListRow
+            <Line
               key={rule.name}
               title={<label htmlFor={`o4-${rule.name}`}>{rule.label}</label>}
               sub={rule.hint}
               aside={<RuleControl rule={rule} />}
             />
           ))}
-        </RowList>
+        </Lines>
         <SaveRow card="rules" />
       </SettingsForm>
       <p className="muted o-hint">

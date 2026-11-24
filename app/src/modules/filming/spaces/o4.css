@@ -6,3 +6,11 @@
 /* Ύφος ταυτότητας */
 & .o4-rule { border-top-color: color-mix(in oklab, var(--color-text) 7%, transparent); }
 }
+
+/* Τελική όψη (ml-*): ημερομηνία μπροστά στη γραμμή, σειρά επιλογών διάρκειας, «+ Νέα εξαίρεση». Μόνο tokens. */
+[data-look='spaces'] {
+& .o4-date { display: grid; justify-items: center; line-height: 1.1; }
+& .o4-date small { color: var(--color-text-muted); text-transform: uppercase; }
+& .o4-checks { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+& .o4 details > summary { cursor: pointer; font-weight: 600; }
+}

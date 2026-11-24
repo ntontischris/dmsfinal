@@ -25,33 +25,25 @@ export function A6Delete({ id, day, label }: A6DeleteProps) {
       {isConfirming ? (
         <div className="a6-confirm" role="alertdialog">
           <span>Να διαγραφεί ο «{label}»; Δεν αναιρείται.</span>
-          <span className="a6-actions">
-            <button
-              className="button"
-              data-danger="true"
-              type="submit"
-              disabled={isPending}
-            >
+          <span className="ml-quick a6-row">
+            <button data-danger="true" type="submit" disabled={isPending}>
               {isPending ? "Διαγραφή…" : "Διαγραφή"}
             </button>
-            <button
-              className="button"
-              type="button"
-              onClick={() => setIsConfirming(false)}
-            >
+            <button type="button" onClick={() => setIsConfirming(false)}>
               Άκυρο
             </button>
           </span>
         </div>
       ) : (
-        <button
-          className="button"
-          data-danger="true"
-          type="button"
-          onClick={() => setIsConfirming(true)}
-        >
-          Διαγραφή
-        </button>
+        <span className="ml-quick a6-row">
+          <button
+            data-danger="true"
+            type="button"
+            onClick={() => setIsConfirming(true)}
+          >
+            Διαγραφή
+          </button>
+        </span>
       )}
       {state.error && (
         <p className="a6-error" role="alert">

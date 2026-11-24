@@ -16,12 +16,13 @@ import {
 } from "./e2-adapter";
 import { E2Queue } from "./e2-queue";
 
+import "../../finance/spaces/money-lines.css";
 import "./e.css";
 import "./e1.css";
 
 function NoAnswerNote({ settings }: { settings: FilmingSettings }) {
   return (
-    <p className="note">
+    <p className="fl-note">
       Αν δεν απαντήσει κανείς σε {settings.noAnswerHours} ώρες:{" "}
       {NO_ANSWER_LABELS[settings.noAnswerAction].toLocaleLowerCase("el")}.
       Αλλάζει στις <Link href="/app/settings/filming">Ρυθμίσεις</Link>. Σε
@@ -43,7 +44,10 @@ export async function SpacesFilmingQueue() {
         </StateNotice>
       </div>
     );
-  const [queue, settings] = await Promise.all([getQueue(), getFilmingSettings()]);
+  const [queue, settings] = await Promise.all([
+    getQueue(),
+    getFilmingSettings(),
+  ]);
   if (!queue.ok)
     return (
       <div data-spaces>
@@ -56,17 +60,18 @@ export async function SpacesFilmingQueue() {
     pending.length + cancelRequests.length + rescheduleRequests.length === 0;
   // Η ουρά μένει πάντα στη σελίδα: μετά την τελευταία απόφαση δείχνει το αποτέλεσμα και από κάτω το «τίποτα».
   return (
-    <div data-spaces>
+    <div data-spaces className="e ml-stack">
       {settings.ok && !isEmpty && <NoAnswerNote settings={settings.data} />}
       <E2Queue
         pending={pendingOldestFirst(pending).map(pendingItemOf)}
         cancels={cancelRequests.map((entry) => cancelItemOf(entry, nowMs))}
         reschedules={rescheduleRequests.map(rescheduleItemOf)}
         empty={
-          <StateNotice kind="empty" title="Τίποτα δεν περιμένει απάντηση.">
-            Όταν ένας πελάτης κλείσει Γύρισμα ή ζητήσει ακύρωση μετά το Όριο, θα
-            εμφανιστεί εδώ. <Link href={hrefOf("E1")}>Όλα τα Γυρίσματα</Link>
-          </StateNotice>
+          <div className="ml-empty" role="status">
+            <strong>Τίποτα δεν περιμένει απάντηση.</strong> Όταν ένας πελάτης
+            κλείσει Γύρισμα ή ζητήσει ακύρωση μετά το Όριο, θα εμφανιστεί εδώ.{" "}
+            <Link href={hrefOf("E1")}>Όλα τα Γυρίσματα</Link>
+          </div>
         }
       />
     </div>
