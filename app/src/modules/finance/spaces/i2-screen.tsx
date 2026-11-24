@@ -22,6 +22,7 @@ import { athensToday } from "../money";
 import { listReceipts } from "../queries";
 import type { ReceiptRow } from "../types";
 import { CsvButton } from "./i2-csv";
+import { LiveSearchForm } from "./i2-live-search";
 import { debtorsOf, matchesSearch } from "./i2-debtors";
 import { DebtorsTable } from "./i2-debtors-table";
 import {
@@ -60,10 +61,10 @@ const i2Href = (query: Partial<SpacesInvoicesQuery>): string =>
     q: query.q || undefined,
   });
 
-// Η αναζήτηση μένει πάντα ορατή πρώτη στη σειρά των φίλτρων και κρατά τα φίλτρα που ισχύουν.
+// Η αναζήτηση μένει πάντα ορατή πρώτη στη σειρά των φίλτρων, φιλτράρει όσο γράφεις και κρατά τα φίλτρα που ισχύουν.
 function InvoiceSearch({ query }: { query: SpacesInvoicesQuery }) {
   return (
-    <form className="kit-fb-search" method="get" action={hrefOf("I2")} role="search">
+    <LiveSearchForm className="kit-fb-search" action={hrefOf("I2")}>
       <input
         className="input grow"
         type="search"
@@ -76,7 +77,7 @@ function InvoiceSearch({ query }: { query: SpacesInvoicesQuery }) {
       {query.filter !== "all" && <input type="hidden" name="filter" value={query.filter} />}
       {query.client && <input type="hidden" name="client" value={query.client} />}
       {query.month && <input type="hidden" name="month" value={query.month} />}
-    </form>
+    </LiveSearchForm>
   );
 }
 
