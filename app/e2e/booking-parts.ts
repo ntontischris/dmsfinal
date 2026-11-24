@@ -92,8 +92,18 @@ export async function bookFirstFreeSlot(
 
 // Ο Ιδιοκτήτης ορίζει το Ωράριο 08:00–20:00 για όλες τις μέρες, Χωρητικότητα 2, διάρκειες 2 και 3, βήμα 60.
 // Τα πεδία της φόρμας εδώ, όχι σε όλη τη σελίδα: η φόρμα των εξαιρέσεων έχει δικό της πεδίο «Χωρητικότητα».
+// Τα κουτιά Ρυθμίσεων (SettingsCard) είναι κλειστά από προεπιλογή: ανοίγουν πριν γεμίσουν τα πεδία τους.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
+}
+
 export async function setOpeningHours(page: Page): Promise<void> {
   await page.goto(HOURS_URL, { waitUntil: "networkidle" });
+  await openBoxes(page);
   const hoursForm = page.locator("form", {
     has: page.locator('select[name="open-1"]'),
   });

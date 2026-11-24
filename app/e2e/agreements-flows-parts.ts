@@ -166,6 +166,15 @@ async function waitAlive(page: Page) {
 }
 
 // Γράφει την τιμή και αποθηκεύει· αν το πεδίο έχει ήδη αυτή την τιμή, δεν υπάρχει τίποτα να αποθηκευτεί.
+// Τα κουτιά Ρυθμίσεων (SettingsCard) είναι κλειστά από προεπιλογή: ανοίγουν πριν γεμίσουν τα πεδία τους.
+async function openBoxes(page: Page): Promise<void> {
+  await page
+    .locator("details.ml-box")
+    .evaluateAll((boxes) =>
+      boxes.forEach((box) => ((box as HTMLDetailsElement).open = true)),
+    );
+}
+
 async function saveValue(
   page: Page,
   scope: Locator,
@@ -173,6 +182,7 @@ async function saveValue(
   value: string,
 ) {
   await waitAlive(page);
+  await openBoxes(page);
   if ((await input.inputValue()) === value) return;
   await input.fill(value);
   await expect(button(scope, "Αποθήκευση")).toBeEnabled();
