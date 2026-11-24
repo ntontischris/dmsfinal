@@ -9,7 +9,6 @@ import { project, signIn } from "./sales-parts";
 // βάση, γι' αυτό ό,τι αλλάζει επανέρχεται στο finally.
 test.describe.configure({ mode: "serial", retries: 0 });
 
-
 const CLIENT_EMAIL = (P: string): string => `notify.${P}@example.com`;
 const MARKER = (P: string): string => `Δοκιμή K1 ${P}`;
 
@@ -78,7 +77,7 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
 
     // Δεύτερος Αυτοματισμός Ειδοποίησης προς συγκεκριμένο Χρήστη.
     await page.getByRole("button", { name: "Προσθήκη Αυτοματισμού" }).click();
-    const form = page.locator("section.kit-panel").filter({
+    const form = page.locator("details.ml-new").filter({
       has: page.getByRole("heading", {
         name: "Νέος Αυτοματισμός",
         exact: true,
@@ -120,8 +119,8 @@ test("ο Ιδιοκτήτης προσθέτει και σβήνει Αυτομ�
       .click();
     await expect(page).toHaveURL(/\/app\/settings\/system-messages$/);
     await page
-      .locator("li.part-row")
-      .filter({ has: page.locator(".part-title", { hasText: /^Πρόσκληση$/ }) })
+      .locator("li.ml-line")
+      .filter({ has: page.locator("strong", { hasText: /^Πρόσκληση$/ }) })
       .getByRole("link", { name: "Επεξεργασία" })
       .click();
     await expect(page).toHaveURL(/\/app\/settings\/system-messages\/invite$/);

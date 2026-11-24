@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { useKeptForm } from "@/lib/use-kept-form";
-import { Panel } from "@/spaces/kit/panel";
 
 import { deleteAutomation, setAutomationEnabled } from "../actions-automations";
 import {
@@ -15,7 +14,7 @@ import type { EventPage } from "../automation-view-schema";
 import { KMessage } from "./k-form";
 import { K1AutomationForm } from "./k1-form";
 
-// Ο διακόπτης «Ενεργός» (στην κεφαλίδα του Panel, όπως στο prototype), η διαγραφή σε δύο βήματα και η «Προσθήκη Αυτοματισμού».
+// Ο διακόπτης «Ενεργός» (πάνω στο κουτί του Αυτοματισμού), η διαγραφή σε δύο βήματα και η «Προσθήκη Αυτοματισμού».
 
 export function EnabledSwitch({
   id,
@@ -60,11 +59,10 @@ export function DeleteAutomation({ id }: { id: string }) {
     <form ref={formRef} onSubmit={onSubmit}>
       <input type="hidden" name="id" value={id} />
       {/* Διαφορετικά keys: αλλιώς η React ξαναχρησιμοποιεί το ίδιο κουμπί και διαγράφει χωρίς επιβεβαίωση. */}
-      <div className="btn-row" style={{ marginTop: "var(--space-3)" }}>
+      <div className="ml-actions">
         {isConfirming ? (
           <button
             key="confirm"
-            className="button"
             data-danger="true"
             type="submit"
             disabled={isPending}
@@ -74,7 +72,6 @@ export function DeleteAutomation({ id }: { id: string }) {
         ) : (
           <button
             key="ask"
-            className="button"
             data-danger="true"
             type="button"
             onClick={() => setIsConfirming(true)}
@@ -92,9 +89,8 @@ export function NewAutomation({ page }: { page: EventPage }) {
   const [isOpen, setIsOpen] = useState(false);
   if (!isOpen)
     return (
-      <div className="btn-row">
+      <div className="ml-actions">
         <button
-          className="button"
           data-primary="true"
           type="button"
           onClick={() => setIsOpen(true)}
@@ -104,18 +100,16 @@ export function NewAutomation({ page }: { page: EventPage }) {
       </div>
     );
   return (
-    <Panel
-      label="Νέος Αυτοματισμός"
-      aside={
-        <button
-          className="button"
-          type="button"
-          onClick={() => setIsOpen(false)}
-        >
+    <details className="ml-new ml-box" open>
+      <summary>
+        <h2 className="ml-box-title">Νέος Αυτοματισμός</h2>
+        <small>παραλήπτες, πότε και κείμενο</small>
+      </summary>
+      <div className="ml-quick k1-left">
+        <button type="button" onClick={() => setIsOpen(false)}>
           Ακύρωση
         </button>
-      }
-    >
+      </div>
       <div className="k1-auto">
         <K1AutomationForm
           page={page}
@@ -123,6 +117,6 @@ export function NewAutomation({ page }: { page: EventPage }) {
           onSuccess={() => setIsOpen(false)}
         />
       </div>
-    </Panel>
+    </details>
   );
 }

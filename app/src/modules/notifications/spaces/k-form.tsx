@@ -59,9 +59,8 @@ export function KForm({
     <form ref={formRef} onSubmit={onSubmit} className={className}>
       {children}
       <KMessage state={state} />
-      <div className="btn-row" style={{ marginTop: "var(--space-3)" }}>
+      <div className="ml-actions">
         <button
-          className="button"
           data-primary="true"
           type="submit"
           disabled={isPending || (onlyWhenChanged && !isChanged)}

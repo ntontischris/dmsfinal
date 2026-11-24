@@ -1,8 +1,31 @@
 /* K3 Ιστορικό αποστολών (prototype `screens/k3.css`) */
-[data-look='spaces'] {
-& .k3-cell { min-width: 0; overflow-wrap: anywhere; }
-& .k3-sub { display: block; color: var(--color-text-muted); font-size: var(--text-sm); }
-& .k3-cell a:not(.button) { font-weight: 600; text-decoration: none; }
-& .k3-cell a:not(.button):hover { color: var(--color-accent); }
-& .k3-sub { display: grid; gap: 0.1rem; }
+[data-look="spaces"] {
+  & .k3-cell {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  & .k3-sub {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  & .k3-sub a {
+    font-weight: 600;
+    text-decoration: none;
+  }
+  & .k3-sub a:hover {
+    color: var(--color-accent);
+  }
+  & .k3-time {
+    font-variant-numeric: tabular-nums;
+    font-size: var(--text-sm);
+  }
+  & .ml-tag[data-attention] {
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  & .k3-sub {
+    display: grid;
+    gap: 0.1rem;
+  }
 }
