@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { initialsOf } from "@/spaces/shell/avatar";
 
+import { JCount } from "./j-empty";
 import type { J1Conversation, J1Mention } from "./j1-adapter";
 
 import "../../finance/spaces/money-lines.css";
@@ -16,7 +17,7 @@ function ConversationLine({ row }: { row: J1Conversation }) {
       <span className="ml-thumb" aria-hidden="true">
         {initialsOf(row.name)}
       </span>
-      <span className="ml-main">
+      <div className="ml-main">
         {(openRequests > 0 || row.isPartial) && (
           <span className="j1-tags">
             {openRequests > 0 && (
@@ -33,16 +34,17 @@ function ConversationLine({ row }: { row: J1Conversation }) {
           <Link href={row.href}>{row.name}</Link>
         </strong>
         <small className="j1-preview">{row.preview}</small>
-      </span>
+      </div>
       <span className="ml-amount">
         {hasUnread && row.unread}
         <small>{hasUnread ? `αδιάβαστα · ${row.when}` : row.when}</small>
       </span>
-      <span className="ml-quick">
+      {/* Ίδιος προορισμός με το όνομα: μία στάση πληκτρολογίου ανά γραμμή, το κουμπί είναι μόνο για το ποντίκι. */}
+      <span className="ml-quick" aria-hidden="true">
         <Link
           href={row.href}
           data-primary={hasUnread || undefined}
-          aria-label={`Άνοιγμα Συνομιλίας: ${row.name}`}
+          tabIndex={-1}
         >
           Άνοιγμα
         </Link>
@@ -57,27 +59,32 @@ export function ConversationList({
   rows: readonly J1Conversation[];
 }) {
   return (
-    <ul className="ml-list" aria-label="Συνομιλίες">
-      {rows.map((row) => (
-        <ConversationLine key={row.id} row={row} />
-      ))}
-    </ul>
+    <>
+      <JCount n={rows.length} one="Συνομιλία" many="Συνομιλίες" />
+      <ul className="ml-list" aria-label="Συνομιλίες">
+        {rows.map((row) => (
+          <ConversationLine key={row.id} row={row} />
+        ))}
+      </ul>
+    </>
   );
 }
 
 export function MentionList({ items }: { items: readonly J1Mention[] }) {
   return (
-    <ul className="ml-list" aria-label="Με ανέφεραν">
+    <>
+      <JCount n={items.length} one="αναφορά" many="αναφορές" />
+      <ul className="ml-list" aria-label="Με ανέφεραν">
       {items.map((m) => (
         <li key={m.id} className="ml-line">
           <span className="ml-thumb" aria-hidden="true">
             {initialsOf(m.clientName)}
           </span>
-          <span className="ml-main">
+          <div className="ml-main">
             <span className="ml-tag">{m.when}</span>
             <strong>{m.clientName}</strong>
             <small className="j1-preview">{m.text}</small>
-          </span>
+          </div>
           <span aria-hidden="true" />
           <span className="ml-quick">
             <Link data-primary href={m.href}>
@@ -86,6 +93,7 @@ export function MentionList({ items }: { items: readonly J1Mention[] }) {
           </span>
         </li>
       ))}
-    </ul>
+      </ul>
+    </>
   );
 }

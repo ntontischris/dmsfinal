@@ -15,7 +15,7 @@ const countText = (rows: readonly J2SideRow[]): string => {
 export function J2Side({ rows }: { rows: readonly J2SideRow[] }) {
   return (
     <aside className="j2-side" aria-label={SIDE_TITLE}>
-      <details className="ml-box" open>
+      <details className="ml-box">
         <summary>
           <span className="ml-box-title">{SIDE_TITLE}</span>
           <small>{countText(rows)}</small>

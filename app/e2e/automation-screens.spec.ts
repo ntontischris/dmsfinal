@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 import { visit } from "./filming-parts";
@@ -12,6 +12,15 @@ test.describe.configure({ mode: "serial", retries: 0 });
 
 const CLIENT_EMAIL = (P: string): string => `notify.${P}@example.com`;
 const MARKER = (P: string): string => `Δοκιμή K1 ${P}`;
+
+// Οι Προτιμήσεις των Ειδοποιήσεων: ένα κλειστό κουτί ανά Γεγονός, ανοίγει από τον τίτλο του.
+async function openPrefGroup(page: Page, label: string): Promise<void> {
+  const box = page
+    .locator("details.ml-box")
+    .filter({ has: page.locator("summary").getByText(label, { exact: true }) });
+  if ((await box.getAttribute("open")) === null)
+    await box.locator("summary").click();
+}
 
 // Το service role χρησιμεύει μόνο για να επανέλθει η βάση αν το τεστ σταματήσει στη μέση.
 function serviceClient() {
@@ -156,6 +165,9 @@ test("ο πελάτης βλέπει κλειδωμένο το απαραίτη�
     await visit(page, "/app/notifications");
     await page.getByRole("link", { name: "Προτιμήσεις", exact: true }).click();
     await expect(page).toHaveURL(/tab=prefs/);
+    // Κάθε Γεγονός είναι κλειστό κουτί: ανοίγουμε όσα χρειαζόμαστε.
+    await openPrefGroup(page, "Αίτημα ολοκληρώθηκε ή απορρίφθηκε");
+    await openPrefGroup(page, "Νέο Μήνυμα");
 
     const locked = page.getByRole("checkbox", {
       name: "Λαμβάνω: Αίτημα ολοκληρώθηκε ή απορρίφθηκε · Ειδοποίηση",
@@ -178,6 +190,7 @@ test("ο πελάτης βλέπει κλειδωμένο το απαραίτη�
     await saved;
     await expect(message).toBeEnabled();
     await page.reload();
+    await openPrefGroup(page, "Νέο Μήνυμα");
     await expect(
       page.getByRole("checkbox", { name: "Λαμβάνω: Νέο Μήνυμα · Ειδοποίηση" }),
     ).not.toBeChecked();

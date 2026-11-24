@@ -4,6 +4,7 @@ import { initialsOf } from "@/spaces/shell/avatar";
 
 import { requestsHref, type RequestView } from "../request-helpers";
 import { STALE_BADGE, VIEW_LABELS } from "../request-labels";
+import { JCount } from "./j-empty";
 import type { J1Request } from "./j1-adapter";
 
 import "../../finance/spaces/money-lines.css";
@@ -35,7 +36,7 @@ export function ViewLinks({
 
 function Closing({ closing }: { closing: NonNullable<J1Request["closing"]> }) {
   return (
-    <span className="j1-closing">
+    <div className="j1-closing">
       <small>{closing.line}</small>
       {closing.isAutomatic && <p>έκλεισε μόνο του όταν δημιουργήθηκε</p>}
       {closing.isDone && closing.result && (
@@ -46,7 +47,7 @@ function Closing({ closing }: { closing: NonNullable<J1Request["closing"]> }) {
       {closing.isDone && closing.link && <p>Σύνδεσμος: {closing.link}</p>}
       {closing.isDone && closing.comment && <p>{closing.comment}</p>}
       {!closing.isDone && closing.reply && <p>Απάντηση: {closing.reply}</p>}
-    </span>
+    </div>
   );
 }
 
@@ -60,7 +61,7 @@ function RequestItem({ m }: { m: J1Request }) {
       <span className="ml-thumb" aria-hidden="true">
         {initialsOf(m.clientName)}
       </span>
-      <span className="ml-main">
+      <div className="ml-main">
         <span className="j1-tags">
           <span className="ml-tag">{m.state}</span>
           {m.isStale && <span className="ml-tag">{STALE_BADGE}</span>}
@@ -73,7 +74,7 @@ function RequestItem({ m }: { m: J1Request }) {
         {m.text && <span className="j1-req-text">{m.text}</span>}
         <small>{m.owner}</small>
         {m.closing && <Closing closing={m.closing} />}
-      </span>
+      </div>
       <span aria-hidden="true" />
       <span className="ml-quick">
         <Link data-primary={m.isOpen || undefined} href={m.href}>
@@ -86,10 +87,13 @@ function RequestItem({ m }: { m: J1Request }) {
 
 export function RequestList({ items }: { items: readonly J1Request[] }) {
   return (
-    <ul className="ml-list" aria-label="Αιτήματα">
-      {items.map((m) => (
-        <RequestItem key={m.key} m={m} />
-      ))}
-    </ul>
+    <>
+      <JCount n={items.length} one="Αίτημα" many="Αιτήματα" />
+      <ul className="ml-list" aria-label="Αιτήματα">
+        {items.map((m) => (
+          <RequestItem key={m.key} m={m} />
+        ))}
+      </ul>
+    </>
   );
 }

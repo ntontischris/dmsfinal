@@ -16,7 +16,7 @@
 & .j2-form { display: grid; gap: var(--space-2); min-width: 0; }
 & .j2-form .input { width: 100%; box-sizing: border-box; }
 & .j2-error { margin: 0; font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
-& .j2-error::before { content: "• "; color: var(--brand-rec); }
+& .j2-error::before { content: "• "; color: var(--brand-yellow); }
 
 /* Ο συντάκτης μένει ορατός στο κάτω μέρος· ο διακόπτης δείχνει καθαρά την επιλογή (χρώμα και ✓). */
 & .j2-composer {
