@@ -81,7 +81,7 @@
 & .pc-actions .ml-quick { justify-content: flex-start; }
 
 /* B: δύο στήλες με κολλητή κάρτα */
-& .pc-split { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
+& .pc-split { display: grid; grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
 & .pc-aside { position: sticky; top: 1rem; display: grid; gap: .7rem; }
 & .pc-aside .pc-hero { flex-wrap: wrap; }
 & .pc-main { display: grid; gap: .7rem; }

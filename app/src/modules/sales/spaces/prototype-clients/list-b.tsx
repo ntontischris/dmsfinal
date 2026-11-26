@@ -69,7 +69,7 @@ export function ListB(props: ProtoListProps) {
         <h2 className="ml-box-title">{title}</h2>
         <ShortList {...props} />
         <div className="ml-quick" data-align="start">
-          {props.isAll || props.pick ? (
+          {props.isAll ? (
             <Link href={listHref(props.variant)}>Μόνο όσοι θέλουν εσένα</Link>
           ) : (
             <Link href={listHref(props.variant, { all: "1" })}>
