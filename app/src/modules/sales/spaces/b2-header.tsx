@@ -72,7 +72,7 @@ function MoreMenu({ ctx }: { ctx: ClientPageCtx }) {
   );
 }
 
-function HeroActions({ ctx }: { ctx: ClientPageCtx }) {
+export function HeroActions({ ctx }: { ctx: ClientPageCtx }) {
   const canLog = ctx.canEdit && ctx.data.activities !== null;
   return (
     <div className="ml-quick b2-hero-quick">

@@ -28,6 +28,12 @@ import {
 import { ClientHero } from "./b2-header";
 import { loadClient } from "./b2-load";
 import { clientBoxesFor, openBoxOf } from "./b2-page-model";
+import { ProtoClient } from "./prototype-clients/client-switch";
+import { SwitcherSlot } from "./prototype-clients/switcher-slot";
+import {
+  parseVariant,
+  type PrototypeParams,
+} from "./prototype-clients/variants";
 
 import "../../finance/spaces/money-lines.css";
 import "./b2.css";
@@ -38,6 +44,8 @@ interface SpacesClientProps {
   tab: string | undefined;
   // Τα φίλτρα της καρτέλας «Τι στάλθηκε».
   sendsFilter: ClientSendsFilter;
+  // PROTOTYPE — throwaway: ?variant=A..E δείχνει μία από τις πέντε παραλλαγές.
+  prototype?: PrototypeParams;
 }
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
@@ -111,9 +119,10 @@ interface ClientViewProps {
   caps: SalesCaps;
   tab: string | undefined;
   sendsFilter: ClientSendsFilter;
+  prototype?: PrototypeParams;
 }
 
-async function ClientView(props: ClientViewProps) {
+async function ctxOf(props: ClientViewProps): Promise<ClientPageCtx> {
   const { viewer, client, caps } = props;
   const isGranted = clientAccess(caps, client) === "granted";
   const rights = rightsOf(viewer, client);
@@ -142,7 +151,22 @@ async function ClientView(props: ClientViewProps) {
       ? data.opportunities.find((o) => o.managerId === caps.userId)
       : undefined,
   };
-  const ctx: ClientPageCtx = { ...input, d: deriveClientPage(input) };
+  return { ...input, d: deriveClientPage(input) };
+}
+
+async function ClientView(props: ClientViewProps) {
+  const ctx = await ctxOf(props);
+  const variant = parseVariant(props.prototype?.variant);
+  const switcher = (
+    <SwitcherSlot isShown={props.prototype?.showSwitcher ?? false} />
+  );
+  if (variant)
+    return (
+      <Frame>
+        <ProtoClient ctx={ctx} variant={variant} tab={props.tab} />
+        {switcher}
+      </Frame>
+    );
   const open = openBoxOf(props.tab, ctx.boxes);
   return (
     <Frame>
@@ -152,6 +176,7 @@ async function ClientView(props: ClientViewProps) {
         <AttentionPanel ctx={ctx} />
         <ClientBoxes ctx={ctx} open={open} />
       </div>
+      {switcher}
     </Frame>
   );
 }
@@ -162,6 +187,7 @@ export async function SpacesClient({
   clientId,
   tab,
   sendsFilter,
+  prototype,
 }: SpacesClientProps) {
   const viewer = await getViewer();
   const caps = salesCaps(viewer);
@@ -208,6 +234,7 @@ export async function SpacesClient({
       caps={caps}
       tab={tab}
       sendsFilter={sendsFilter}
+      prototype={prototype}
     />
   );
 }

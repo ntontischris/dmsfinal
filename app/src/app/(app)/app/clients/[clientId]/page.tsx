@@ -9,7 +9,12 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; state?: string; channel?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    state?: string;
+    channel?: string;
+    variant?: string;
+  }>;
 }) {
   const [{ clientId }, query] = await Promise.all([params, searchParams]);
   return (
@@ -17,6 +22,10 @@ export default async function ClientPage({
       clientId={clientId}
       tab={typeof query.tab === "string" ? query.tab : undefined}
       sendsFilter={parseClientSendsFilter(query)}
+      prototype={{
+        variant: typeof query.variant === "string" ? query.variant : undefined,
+        showSwitcher: process.env.VERCEL_ENV !== "production",
+      }}
     />
   );
 }

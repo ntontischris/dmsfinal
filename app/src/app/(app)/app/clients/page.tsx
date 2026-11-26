@@ -19,6 +19,13 @@ export default async function ClientsPage({
       page={parsePage(params.page)}
       newStamp={typeof newStamp === "string" ? newStamp : undefined}
       isDeleted={deleted === "1"}
+      prototype={{
+        variant:
+          typeof params.variant === "string" ? params.variant : undefined,
+        pick: typeof params.pick === "string" ? params.pick : undefined,
+        isAll: params.all === "1",
+        showSwitcher: process.env.VERCEL_ENV !== "production",
+      }}
     />
   );
 }

@@ -26,6 +26,14 @@ import { NewOpportunity } from "./b1-new-opportunity";
 import { B1Top } from "./b1-top";
 import { listClientsOnce, listOverviewsOnce } from "./clients-once";
 import { GuideLink } from "./guide-link";
+import { parsePick } from "./prototype-clients/list-model";
+import type { ProtoListProps } from "./prototype-clients/list-parts";
+import { ProtoList } from "./prototype-clients/list-switch";
+import { SwitcherSlot } from "./prototype-clients/switcher-slot";
+import {
+  parseVariant,
+  type PrototypeParams,
+} from "./prototype-clients/variants";
 
 import "../../finance/spaces/money-lines.css";
 import "./b1.css";
@@ -41,6 +49,8 @@ interface SpacesClientsProps {
   newStamp: string | undefined;
   // Μόλις διαγράφηκε Πελάτης (η ενέργεια γυρίζει εδώ με ?deleted=1).
   isDeleted?: boolean;
+  // PROTOTYPE — throwaway: ?variant=A..E δείχνει μία από τις πέντε παραλλαγές.
+  prototype?: PrototypeParams;
 }
 
 // Ο πωλητής με «όσα με αφορούν» διαλέγει μόνο Πελάτες με Υπεύθυνο (οι υπόλοιποι πάνε από το «Χωρίς υπεύθυνο»).
@@ -123,6 +133,47 @@ function ClientsList({
   );
 }
 
+// PROTOTYPE — throwaway: η παραλλαγή της λίστας, με τα ίδια κομμάτια (Νέα Ευκαιρία, «Με μια ματιά», Οδηγός).
+function PrototypeClients({
+  list,
+  clients,
+  strip,
+  extra,
+}: {
+  list: Pick<ProtoListProps, "rows" | "query" | "caps" | "variant" | "today">;
+  clients: readonly ClientRow[];
+  strip: Awaited<ReturnType<typeof getSpaceStrip>>;
+  extra: Pick<SpacesClientsProps, "prototype" | "newStamp" | "isDeleted">;
+}) {
+  const { prototype, newStamp, isDeleted } = extra;
+  return (
+    <div data-spaces>
+      {isDeleted && (
+        <p className="note" role="status">
+          Ο Πελάτης διαγράφηκε.
+        </p>
+      )}
+      <ProtoList
+        {...list}
+        pick={parsePick(prototype?.pick)}
+        isAll={prototype?.isAll ?? false}
+        newOpportunity={
+          list.caps.canManage && (
+            <NewOpportunitySlot
+              clients={clients}
+              caps={list.caps}
+              newStamp={newStamp}
+            />
+          )
+        }
+        glance={<B1Top stats={strip.stats} now={strip.now} />}
+        guide={<GuideLink />}
+      />
+      <SwitcherSlot isShown={prototype?.showSwitcher ?? false} />
+    </div>
+  );
+}
+
 // B1 Πελάτες στη νέα εμφάνιση (prototype `screens/B1.tsx`): όλοι οι Πελάτες με όνομα και Υπεύθυνο, και η εικόνα του καθενός
 // (κατάσταση, πακέτο και μήνας, Συμφωνίες, Υπόλοιπο, τελευταία επαφή) από μία ανάγνωση. Ανοίγουν μόνο όσοι αφορούν τον Χρήστη.
 export async function SpacesClients({
@@ -131,6 +182,7 @@ export async function SpacesClients({
   page = 1,
   newStamp,
   isDeleted = false,
+  prototype,
 }: SpacesClientsProps) {
   const caps = salesCaps(await getViewer());
   if (!caps.canViewClients)
@@ -156,6 +208,16 @@ export async function SpacesClients({
     clients.data.filter((row) => row.canOpen).map((row) => row.id),
   );
   const rows = b1RowsOf(clients.data, overviews.ok ? overviews.data : [], caps);
+  const variant = parseVariant(prototype?.variant);
+  if (variant)
+    return (
+      <PrototypeClients
+        list={{ rows, query, caps, variant, today: athensToday() }}
+        clients={clients.data}
+        strip={strip}
+        extra={{ prototype, newStamp, isDeleted }}
+      />
+    );
   return (
     <div data-spaces>
       <p className="b1-what">
@@ -203,6 +265,7 @@ export async function SpacesClients({
           caps={caps}
         />
       )}
+      <SwitcherSlot isShown={prototype?.showSwitcher ?? false} />
     </div>
   );
 }

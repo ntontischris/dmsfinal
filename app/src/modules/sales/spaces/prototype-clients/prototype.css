@@ -1,0 +1,118 @@
+/* PROTOTYPE — throwaway, branch prototype/clients-three-levels. Οι πέντε παραλλαγές των οθονών Πελατών, μόνο με tokens
+   και το λεξιλόγιο των «Χρημάτων» (money-lines.css). */
+[data-look='spaces'] {
+& .pc-page { display: grid; gap: 1rem; min-width: 0; padding-bottom: 4rem; }
+& .pc-page > *, & .pc-section, & .pc-main, & .pc-aside { min-width: 0; }
+& .pc-section { display: grid; gap: .5rem; }
+& .pc-kicker { margin: 0; font-size: var(--text-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-muted); }
+& .pc-sample {
+  display: inline-block; margin-left: .3rem; padding: 0 .45rem; border-radius: 999px; font-size: var(--text-xs); font-weight: 600;
+  color: var(--color-text-muted); border: 1px dashed var(--color-border-strong); vertical-align: middle;
+}
+
+/* Η μπάρα των 2–3 καθημερινών ενεργειών */
+& .pc-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+& .pc-bar-end { justify-content: flex-end; }
+& .pc-search { flex: 1 1 14rem; min-width: 0; }
+& .pc-search .input { width: 100%; }
+& .pc-search-large { width: min(100%, 36rem); margin: 0 auto; }
+& .pc-search-large .input { padding: .9rem 1.2rem; font-size: 1.1rem; border-radius: 999px; }
+& .pc-menu { display: grid; gap: .5rem; }
+& .pc-picked { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
+& .pc-ok strong { color: var(--color-text); }
+& .pc-chips { justify-content: flex-start; }
+& .pc-center { justify-content: center; }
+& .pc-chips a[data-warn] { border-color: color-mix(in oklab, var(--brand-rec) 45%, transparent); }
+& .pc-cards { margin: 0; }
+& .pc-box-body { display: grid; gap: .6rem; }
+
+/* B: πλακίδια */
+& .pc-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: .6rem; }
+& .pc-tile[data-current] { border-color: var(--brand-periwinkle); background: color-mix(in oklab, var(--brand-periwinkle) 14%, transparent); }
+& .pc-tile[data-warn] > strong { color: color-mix(in oklab, var(--brand-rec) var(--panel-ink-mix), var(--color-text)); }
+
+/* C: μεγάλη αναζήτηση στο κέντρο */
+& .pc-hero-search { display: grid; gap: .9rem; justify-items: center; padding: 2.5rem 1rem 1.5rem; text-align: center; }
+& .pc-hero-search h2 { margin: 0; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800; }
+& .pc-hero-search .pc-ok { width: min(100%, 36rem); }
+
+/* D: λωρίδες */
+& .pc-lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; align-items: start; }
+& .pc-lane {
+  display: grid; gap: .6rem; padding: .8rem; border-radius: 16px; min-width: 0;
+  border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent);
+  background: color-mix(in oklab, var(--panel-deep) 45%, transparent);
+}
+& .pc-lane[data-lane="needs"] { border-top: 3px solid var(--brand-rec); }
+& .pc-lane[data-lane="running"] { border-top: 3px solid var(--brand-periwinkle); }
+& .pc-lane[data-lane="quiet"] { border-top: 3px solid var(--color-border-strong); }
+& .pc-lane header small { color: var(--color-text-muted); font-size: .8rem; }
+& .pc-count { margin-left: .3rem; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+& .pc-more > summary { cursor: pointer; color: var(--color-text-muted); font-size: .85rem; }
+
+/* E: κάρτες-ερωτήσεις */
+& .pc-questions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: .7rem; align-items: start; }
+& .pc-question > summary { grid-template-columns: auto minmax(0, 1fr); column-gap: .8rem; align-items: center; }
+& .pc-question > summary > small { grid-column: 2; }
+& .pc-q-count {
+  grid-row: span 2; display: grid; place-items: center; min-width: 2.6rem; height: 2.6rem; padding: 0 .4rem; border-radius: 12px;
+  font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  background: color-mix(in oklab, var(--brand-periwinkle) 16%, transparent);
+}
+& .pc-question[data-urgent] .pc-q-count { background: color-mix(in oklab, var(--brand-rec) 30%, transparent); }
+
+/* Σελίδα Πελάτη: μικρή κεφαλίδα */
+& .pc-back { margin: 0; font-size: .9rem; }
+& .pc-hero {
+  position: relative; overflow: hidden; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; border-radius: 18px;
+  background: color-mix(in oklab, var(--panel-midnight) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 14%, transparent);
+}
+& .pc-hero .ml-hero-mono { font-size: 4.5rem; bottom: -1.2rem; }
+& .pc-hero-text { position: relative; flex: 1; min-width: 0; }
+& .pc-hero-text h1 { margin: 0 0 .25rem; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800; overflow-wrap: anywhere; }
+& .pc-hero-text p { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; color: var(--color-text-muted); }
+& .pc-icons { position: relative; display: flex; gap: .4rem; }
+& .pc-icons a {
+  display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 999px; text-decoration: none; color: var(--color-text);
+  border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 30%, transparent);
+}
+& .pc-icons a:hover { border-color: var(--brand-periwinkle); }
+& .pc-actions .ml-quick { justify-content: flex-start; }
+
+/* B: δύο στήλες με κολλητή κάρτα */
+& .pc-split { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
+& .pc-aside { position: sticky; top: 1rem; display: grid; gap: .7rem; }
+& .pc-aside .pc-hero { flex-wrap: wrap; }
+& .pc-main { display: grid; gap: .7rem; }
+
+/* C: η ενημέρωση */
+& .pc-brief { display: grid; gap: .5rem; justify-items: start; padding: 1.2rem 1.3rem; border-radius: 18px; background: color-mix(in oklab, var(--panel-midnight) 70%, transparent); }
+& .pc-brief[data-worry] { border-left: 4px solid var(--brand-rec); }
+& .pc-brief h1 { margin: 0; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800; overflow-wrap: anywhere; }
+& .pc-brief-text { margin: 0; max-width: 60ch; font-size: 1.05rem; line-height: 1.55; }
+
+/* D: γραμμή χρόνου */
+& .pc-timeline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin: 0; padding: 0; list-style: none; }
+& .pc-timeline > li { display: grid; gap: .5rem; align-content: start; padding: .8rem; border-radius: 16px; min-width: 0; background: color-mix(in oklab, var(--panel-deep) 45%, transparent); }
+& .pc-timeline > li[data-step="now"] { border: 1px solid color-mix(in oklab, var(--brand-periwinkle) 40%, transparent); }
+& .pc-timeline > li[data-step="done"] { opacity: .85; }
+
+@media (max-width: 760px) {
+  & .pc-lanes, & .pc-timeline, & .pc-split { grid-template-columns: minmax(0, 1fr); }
+  & .pc-aside { position: static; }
+  & .pc-hero-search { padding-top: 1.2rem; }
+}
+
+/* Ο διακόπτης παραλλαγών: επίτηδες διαφορετικός (κίτρινο χάπι, διακεκομμένο περίγραμμα), κάτω στο κέντρο */
+& .pc-switcher {
+  position: fixed; left: 50%; bottom: 1rem; z-index: 60; transform: translateX(-50%); display: flex; align-items: center; gap: .4rem;
+  max-width: calc(100vw - 2rem); padding: .3rem .4rem; border-radius: 999px; font-size: .9rem; font-weight: 700; white-space: nowrap;
+  color: var(--brand-midnight); background: var(--brand-yellow); border: 2px dashed var(--brand-midnight);
+}
+& .pc-switcher span { padding: 0 .4rem; overflow: hidden; text-overflow: ellipsis; }
+& .pc-switcher button {
+  display: grid; place-items: center; width: 2rem; height: 2rem; border: 0; border-radius: 999px; cursor: pointer; font: inherit;
+  color: var(--brand-yellow); background: var(--brand-midnight);
+}
+}

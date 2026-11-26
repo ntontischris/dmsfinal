@@ -30,7 +30,7 @@ const peopleHint = (ctx: ClientPageCtx): string => {
     : "Χρήστες του Πελάτη και προσκλήσεις";
 };
 
-function PeopleBox({ ctx, isOpen }: BoxProps) {
+export function PeopleBox({ ctx, isOpen }: BoxProps) {
   return (
     <Box
       id="b2-people"
@@ -69,7 +69,7 @@ const workHint = (ctx: ClientPageCtx): string =>
     .join(" · ");
 
 // Ευκαιρίες, Συμφωνίες και Παραγωγές του Πελάτη. Οι Παραγωγές φορτώνουν μόνο όταν το κουτί ανοίγει από το ?tab=· αλλιώς σύνδεσμος.
-function WorkBox({ ctx, isOpen }: BoxProps) {
+export function WorkBox({ ctx, isOpen }: BoxProps) {
   const agreements = ctx.data.agreements ?? [];
   return (
     <Box
@@ -147,7 +147,7 @@ const commsHint = (ctx: ClientPageCtx): string => {
 };
 
 // Συνομιλία, Τι στάλθηκε και Δραστηριότητες.
-function CommsBox({ ctx, isOpen }: BoxProps) {
+export function CommsBox({ ctx, isOpen }: BoxProps) {
   const has = (tab: "chat" | "activities" | "dispatches") =>
     ctx.allowed.includes(tab);
   return (
@@ -208,7 +208,7 @@ const ledgerHint = (ctx: ClientPageCtx): string =>
     : `υπόλοιπο ${fmtMoney(ctx.data.ledger?.balance ?? 0)}`);
 
 // Η Καρτέλα Πελάτη μέσα στη σελίδα, με σύνδεσμο στην πλήρη.
-function LedgerBox({ ctx, isOpen }: BoxProps) {
+export function LedgerBox({ ctx, isOpen }: BoxProps) {
   const entries = ctx.data.ledgerEntries;
   return (
     <Box
