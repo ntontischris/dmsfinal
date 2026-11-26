@@ -35,7 +35,10 @@ function StagePill({ ctx }: { ctx: ClientPageCtx }) {
 
 function MoreMenu({ ctx }: { ctx: ClientPageCtx }) {
   const assignable =
-    ctx.caps.canTransfer && ctx.data.assignable?.ok
+    // Μεταβίβαση μόνο όταν υπάρχουν 2+ πωλητές (F10).
+    ctx.caps.canTransfer &&
+    ctx.data.assignable?.ok &&
+    ctx.data.assignable.data.length >= 2
       ? ctx.data.assignable.data
       : null;
   // Χωρίς καμία ενέργεια το «⋯» δεν φαίνεται (π.χ. Χρήστης μόνο ανάγνωσης).

@@ -8,7 +8,14 @@ import { initialsOf } from "@/spaces/shell/avatar";
 import type { SalesCaps } from "@/modules/sales/types";
 import { b1ColumnsOf, type B1Row } from "../b1-adapter";
 import { ClientsTable } from "../b1-clients-table";
-import { duplicatesOf, needsYou, type Answer, type Pick } from "./list-model";
+import {
+  duplicatesOf,
+  needsYou,
+  rowsOfPick,
+  type Answer,
+  type Pick,
+  type RenewIds,
+} from "./list-model";
 import { withVariant, type Variant } from "./variants";
 
 export interface ProtoListProps {
@@ -20,6 +27,8 @@ export interface ProtoListProps {
   // «Δείξε όλους» (?all=1).
   isAll: boolean;
   today: string;
+  // Πελάτες με Συμφωνία που λήγει σε 30 μέρες.
+  renew: RenewIds;
   // Τα έτοιμα κομμάτια της σημερινής οθόνης: «+ Νέα Ευκαιρία», οι κάρτες «Με μια ματιά», ο Οδηγός.
   newOpportunity: ReactNode;
   glance: ReactNode;
@@ -137,7 +146,11 @@ const NO_FILTERS = { status: null, isNoShoot: false, pkg: null } as const;
 
 // Η πλήρης λίστα της σημερινής οθόνης (ίδιες γραμμές), με τους συνδέσμους να κρατούν την παραλλαγή.
 export function FullList(props: ProtoListProps) {
-  const rows = props.rows.map((row) => ({
+  const source =
+    props.isAll && props.pick === "candidate"
+      ? rowsOfPick(props.rows, "candidate", props.today)
+      : props.rows;
+  const rows = source.map((row) => ({
     ...row,
     href: withVariant(row.href, props.variant),
   }));
@@ -188,6 +201,9 @@ export function ListMore(props: ProtoListProps) {
           <Link href={hrefOf("B6")}>Πιθανά διπλά ({duplicates})</Link>
         )}
         <Link href={hrefOf("B1")}>Πλήρης λίστα με φίλτρα και στήλες</Link>
+        <span>
+          Εξαγωγή <Sample />
+        </span>
         {props.guide}
       </div>
     </details>

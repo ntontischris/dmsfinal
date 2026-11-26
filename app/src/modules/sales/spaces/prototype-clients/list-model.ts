@@ -3,9 +3,30 @@
 import type { B1Row } from "../b1-adapter";
 
 // Τα φίλτρα της παραλλαγής (?pick=): ποιοι χρωστούν, ποιοι δεν έχουν γύρισμα, ποιοι σώπασαν, ποιοι είναι υποψήφιοι.
-export type Pick = "owes" | "noshoot" | "quiet" | "candidate";
+export type Pick = "owes" | "noshoot" | "quiet" | "renew" | "candidate";
 
-const PICKS: readonly Pick[] = ["owes", "noshoot", "quiet", "candidate"];
+const PICKS: readonly Pick[] = ["owes", "noshoot", "quiet", "renew", "candidate"];
+
+// Πελάτες με ενεργή Συμφωνία που λήγει σε ≤ RENEW_DAYS μέρες (από το agreements_list).
+export type RenewIds = ReadonlySet<string>;
+const NO_RENEW: RenewIds = new Set();
+const RENEW_DAYS = 30;
+
+export const renewIdsOf = (
+  agreements: readonly { clientId: string; state: string; endOn: string | null }[],
+  today: string,
+): RenewIds =>
+  new Set(
+    agreements
+      .filter(
+        (a) =>
+          a.state === "active" &&
+          a.endOn !== null &&
+          daysSince(today, a.endOn) >= 0 &&
+          daysSince(today, a.endOn) <= RENEW_DAYS,
+      )
+      .map((a) => a.clientId),
+  );
 
 export const parsePick = (value: unknown): Pick | null =>
   PICKS.find((pick) => pick === value) ?? null;
@@ -21,8 +42,14 @@ export const isQuiet = (row: B1Row, today: string): boolean =>
   row.status === "Ενεργός" &&
   (row.lastContact === null || daysSince(row.lastContact, today) > QUIET_DAYS);
 
-const matchesPick = (row: B1Row, pick: Pick, today: string): boolean => {
+const matchesPick = (
+  row: B1Row,
+  pick: Pick,
+  today: string,
+  renew: RenewIds,
+): boolean => {
   if (row.isTaken) return false;
+  if (pick === "renew") return renew.has(row.id);
   if (pick === "owes") return row.hasBalance === true;
   if (pick === "noshoot") return row.month?.hasNoShoot === true;
   if (pick === "quiet") return isQuiet(row, today);
@@ -33,7 +60,8 @@ export const rowsOfPick = (
   rows: readonly B1Row[],
   pick: Pick,
   today: string,
-): B1Row[] => rows.filter((row) => matchesPick(row, pick, today));
+  renew: RenewIds = NO_RENEW,
+): B1Row[] => rows.filter((row) => matchesPick(row, pick, today, renew));
 
 export interface Answer {
   pick: Pick;
@@ -53,6 +81,11 @@ const TEXT: Readonly<
     one: "χωρίς γύρισμα αυτόν τον μήνα",
     many: "χωρίς γύρισμα αυτόν τον μήνα",
     question: "Ποιος δεν έχει γύρισμα;",
+  },
+  renew: {
+    one: "ανανεώνεται σύντομα",
+    many: "ανανεώνονται σύντομα",
+    question: "Ποιανού λήγει η Συμφωνία;",
   },
   quiet: {
     one: "ενεργός χωρίς επαφή 45+ μέρες",
@@ -76,8 +109,9 @@ export const answerOf = (
   rows: readonly B1Row[],
   pick: Pick,
   today: string,
+  renew: RenewIds = NO_RENEW,
 ): Answer => {
-  const picked = rowsOfPick(rows, pick, today);
+  const picked = rowsOfPick(rows, pick, today, renew);
   const text = TEXT[pick];
   return {
     pick,

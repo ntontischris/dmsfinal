@@ -1,4 +1,5 @@
 import { getViewer } from "@/modules/access";
+import { listAgreements } from "@/modules/agreements";
 import { getSpaceStrip } from "@/modules/today";
 import {
   columnFilterGroups,
@@ -26,7 +27,7 @@ import { NewOpportunity } from "./b1-new-opportunity";
 import { B1Top } from "./b1-top";
 import { listClientsOnce, listOverviewsOnce } from "./clients-once";
 import { GuideLink } from "./guide-link";
-import { parsePick } from "./prototype-clients/list-model";
+import { parsePick, renewIdsOf } from "./prototype-clients/list-model";
 import type { ProtoListProps } from "./prototype-clients/list-parts";
 import { ProtoList } from "./prototype-clients/list-switch";
 import { SwitcherSlot } from "./prototype-clients/switcher-slot";
@@ -140,7 +141,10 @@ function PrototypeClients({
   strip,
   extra,
 }: {
-  list: Pick<ProtoListProps, "rows" | "query" | "caps" | "variant" | "today">;
+  list: Pick<
+    ProtoListProps,
+    "rows" | "query" | "caps" | "variant" | "today" | "renew"
+  >;
   clients: readonly ClientRow[];
   strip: Awaited<ReturnType<typeof getSpaceStrip>>;
   extra: Pick<SpacesClientsProps, "prototype" | "newStamp" | "isDeleted">;
@@ -209,15 +213,19 @@ export async function SpacesClients({
   );
   const rows = b1RowsOf(clients.data, overviews.ok ? overviews.data : [], caps);
   const variant = parseVariant(prototype?.variant);
-  if (variant)
+  if (variant) {
+    const today = athensToday();
+    const agreements = await listAgreements();
+    const renew = renewIdsOf(agreements.ok ? agreements.data : [], today);
     return (
       <PrototypeClients
-        list={{ rows, query, caps, variant, today: athensToday() }}
+        list={{ rows, query, caps, variant, today, renew }}
         clients={clients.data}
         strip={strip}
         extra={{ prototype, newStamp, isDeleted }}
       />
     );
+  }
   return (
     <div data-spaces>
       <p className="b1-what">

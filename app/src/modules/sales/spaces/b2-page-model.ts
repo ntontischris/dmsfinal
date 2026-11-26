@@ -13,9 +13,9 @@ export type ClientBox = "summary" | "people" | "work" | "comms" | "ledger";
 export const CLIENT_BOX_LABELS: Readonly<Record<ClientBox, string>> = {
   summary: "Σύνοψη",
   people: "Άνθρωποι",
-  work: "Δουλειές",
+  work: "Συνεργασία",
   comms: "Επικοινωνία",
-  ledger: "Καρτέλα",
+  ledger: "Χρήματα",
 };
 
 // Οι διευθύνσεις ?tab= (παλιές καρτέλες, οι πέντε ενωμένες και τα ονόματα των κουτιών) ανοίγουν το σωστό κουτί.
