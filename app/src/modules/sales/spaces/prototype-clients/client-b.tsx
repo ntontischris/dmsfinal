@@ -2,19 +2,14 @@
 // δεξιά τέσσερις καρτέλες: Συνεργασία (πρώτη) · Επικοινωνία · Χρήματα · Στοιχεία (μαζί οι Άνθρωποι).
 import Link from "next/link";
 
-import { hrefOf } from "@/spaces/data/screens";
-import { Box, Lines } from "../b2-box";
-import { CommsBox, LedgerBox, PeopleBox, WorkBox } from "../b2-boxes";
+import { CommsBox } from "../b2-boxes";
+import { BOX_OF_TAB, CLIENT_BOX_LABELS, type ClientBox } from "../b2-page-model";
 import type { ClientPageCtx } from "../b2-context";
-import { Summary, summaryHint } from "../b2-overview";
-import { CLIENT_BOX_LABELS, type ClientBox } from "../b2-page-model";
+import { AheadLines, CardActions } from "./client-b-card";
+import { DetailsTab, LedgerTab, WorkTab } from "./client-b-tabs";
 import {
-  AttentionLine,
   BackLink,
   CompactHero,
-  DailyActions,
-  MoneyLine,
-  NextLine,
   clientHref,
   type ProtoClientProps,
 } from "./client-parts";
@@ -29,28 +24,21 @@ const TAB_LABELS: Readonly<Record<Tab, string>> = {
   summary: "Στοιχεία",
 };
 
-// Τα παλιά ?tab= (people, Άνθρωποι) πέφτουν στα Στοιχεία· χωρίς tab ανοίγει η Συνεργασία.
+// T7: τα παλιά ?tab= (chat, activities, productions, people…) μεταφράζονται από το BOX_OF_TAB· οι Άνθρωποι είναι στα Στοιχεία.
 const tabOf = (raw: string | undefined, boxes: readonly ClientBox[]): Tab => {
-  const wanted = raw === "people" ? "summary" : raw;
+  const box = raw === undefined ? undefined : BOX_OF_TAB[raw];
+  const wanted = box === "people" ? "summary" : box;
   const tab = TABS.find((t) => t === wanted);
   if (tab && (tab === "summary" || boxes.includes(tab))) return tab;
   return boxes.includes("work") ? "work" : "summary";
 };
 
 function TabBody({ ctx, tab }: { ctx: ClientPageCtx; tab: Tab }) {
-  if (tab === "work") return <WorkBox ctx={ctx} isOpen />;
+  if (tab === "work") return <WorkTab ctx={ctx} />;
   if (tab === "comms") return <CommsBox ctx={ctx} isOpen />;
-  if (tab === "ledger") return <LedgerBox ctx={ctx} isOpen />;
-  return (
-    <>
-      <Box id="b2-summary" title="Στοιχεία" hint={summaryHint(ctx)} isOpen>
-        <Summary ctx={ctx} />
-      </Box>
-      {ctx.boxes.includes("people") && <PeopleBox ctx={ctx} isOpen />}
-    </>
-  );
+  if (tab === "ledger") return <LedgerTab ctx={ctx} />;
+  return <DetailsTab ctx={ctx} />;
 }
-
 function Selector(props: ProtoClientProps & { current: Tab }) {
   const tabs = TABS.filter(
     (tab) => tab === "summary" || props.ctx.boxes.includes(tab),
@@ -74,14 +62,6 @@ function Selector(props: ProtoClientProps & { current: Tab }) {
   );
 }
 
-// Η γραμμή «χρωστά» μόνο όταν όντως χρωστά.
-function OwesLine({ ctx }: { ctx: ClientPageCtx }) {
-  const isOwing =
-    (ctx.data.overdueInvoices ?? []).length > 0 ||
-    (ctx.data.ledger?.balance ?? 0) > 0;
-  return isOwing ? <MoneyLine ctx={ctx} /> : null;
-}
-
 function TeamNote() {
   return (
     <p className="note pc-team-note">
@@ -89,15 +69,6 @@ function TeamNote() {
       <br />
       <small>Μία γραμμή που βλέπουν όλοι, π.χ. «Μιλάμε μόνο με τη Μαρία».</small>
     </p>
-  );
-}
-
-function NewInvoice({ ctx }: { ctx: ClientPageCtx }) {
-  if (ctx.isReadOnly) return null;
-  return (
-    <span className="ml-quick" data-align="start">
-      <Link href={hrefOf("I3", { client: ctx.client.id })}>Νέο τιμολόγιο</Link>
-    </span>
   );
 }
 
@@ -111,13 +82,8 @@ export function ClientB(props: ProtoClientProps) {
         <aside className="pc-aside">
           <CompactHero ctx={ctx} />
           <TeamNote />
-          <Lines label="Μπροστά σου">
-            <AttentionLine {...props} />
-            <NextLine ctx={ctx} />
-            <OwesLine ctx={ctx} />
-          </Lines>
-          <DailyActions ctx={ctx} />
-          <NewInvoice ctx={ctx} />
+          <AheadLines {...props} />
+          <CardActions ctx={ctx} />
         </aside>
         <section className="pc-main">
           <Selector {...props} current={current} />

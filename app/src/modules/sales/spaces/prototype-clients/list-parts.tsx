@@ -8,13 +8,18 @@ import { initialsOf } from "@/spaces/shell/avatar";
 import type { SalesCaps } from "@/modules/sales/types";
 import { b1ColumnsOf, type B1Row } from "../b1-adapter";
 import { ClientsTable } from "../b1-clients-table";
+import { B1FiltersBox } from "../b1-filters-box";
+import {
+  applyB1Filters,
+  b1FilterGroups,
+  type B1Filters,
+} from "../b1-filters";
 import {
   duplicatesOf,
   needsYou,
-  rowsOfPick,
   type Answer,
   type Pick,
-  type RenewIds,
+  type PickSets,
 } from "./list-model";
 import { withVariant, type Variant } from "./variants";
 
@@ -27,8 +32,10 @@ export interface ProtoListProps {
   // «Δείξε όλους» (?all=1).
   isAll: boolean;
   today: string;
-  // Πελάτες με Συμφωνία που λήγει σε 30 μέρες.
-  renew: RenewIds;
+  // Ανανεώσεις (κάρτα «Λήγει η Συμφωνία» του Σήμερα) και ληξιπρόθεσμα (invoices_view).
+  sets: PickSets;
+  // Τα φίλτρα της διεύθυνσης (?status=, ?package=), μόνο μέσα στο «Δείξε όλους».
+  filters: B1Filters;
   // Τα έτοιμα κομμάτια της σημερινής οθόνης: «+ Νέα Ευκαιρία», οι κάρτες «Με μια ματιά», ο Οδηγός.
   newOpportunity: ReactNode;
   glance: ReactNode;
@@ -46,6 +53,9 @@ export function ProtoSearch(props: {
   query: string;
   variant: Variant;
   isLarge?: boolean;
+  // Η αναζήτηση κρατά το πλακίδιο και το «Δείξε όλους».
+  pick?: Pick | null;
+  isAll?: boolean;
 }) {
   return (
     <form
@@ -55,6 +65,8 @@ export function ProtoSearch(props: {
       role="search"
     >
       <input type="hidden" name="variant" value={props.variant} />
+      {props.pick && <input type="hidden" name="pick" value={props.pick} />}
+      {props.isAll && <input type="hidden" name="all" value="1" />}
       <input
         className="input"
         type="search"
@@ -144,13 +156,42 @@ export function ClientCards(props: {
 
 const NO_FILTERS = { status: null, isNoShoot: false, pkg: null } as const;
 
+// Χωρίς φίλτρο Κατάστασης η πλήρης λίστα κρύβει τους Ανενεργούς (φαίνονται με «Κατάσταση: Ανενεργός»).
+const shownRowsOf = (props: ProtoListProps): B1Row[] => {
+  const filtered = applyB1Filters(props.rows, props.filters);
+  return props.filters.status === null
+    ? filtered.filter((row) => row.status !== "Ανενεργός")
+    : filtered;
+};
+
+// Τα φίλτρα του «Δείξε όλους»: Κατάσταση (μέσα και οι Υποψήφιοι) και Πακέτο· οι σύνδεσμοι κρατούν παραλλαγή και «όλους».
+export function AllFilters(props: ProtoListProps) {
+  const groups = b1FilterGroups(props.rows, props.query, props.filters);
+  const keep = (href: string) =>
+    withVariant(href, props.variant, { all: "1" });
+  const filters = groups.filters
+    .filter((group) => group.label !== "Γύρισμα αυτόν τον μήνα")
+    .map((group) => ({
+      ...group,
+      all: group.all && {
+        ...group.all,
+        label:
+          group.label === "Κατάσταση"
+            ? "ενεργοί και υποψήφιοι"
+            : group.all.label,
+        href: keep(group.all.href),
+      },
+      options: group.options.map((option) => ({
+        ...option,
+        href: keep(option.href),
+      })),
+    }));
+  return <B1FiltersBox filters={filters} clearHref={keep(groups.clearHref)} />;
+}
+
 // Η πλήρης λίστα της σημερινής οθόνης (ίδιες γραμμές), με τους συνδέσμους να κρατούν την παραλλαγή.
 export function FullList(props: ProtoListProps) {
-  const source =
-    props.isAll && props.pick === "candidate"
-      ? rowsOfPick(props.rows, "candidate", props.today)
-      : props.rows;
-  const rows = source.map((row) => ({
+  const rows = shownRowsOf(props).map((row) => ({
     ...row,
     href: withVariant(row.href, props.variant),
   }));
@@ -190,7 +231,7 @@ export function GlanceBox({ glance }: { glance: ReactNode }) {
   );
 }
 
-// «⋯»: οι σπάνιες δουλειές — Πιθανά διπλά, η πλήρης λίστα με φίλτρα και στήλες, ο Οδηγός.
+// «⋯»: οι σπάνιες δουλειές — Πιθανά διπλά, η Εξαγωγή (σπίτι της: Αναφορές → Εξαγωγή), ο Οδηγός.
 export function ListMore(props: ProtoListProps) {
   const duplicates = duplicatesOf(props.rows);
   return (
@@ -200,10 +241,9 @@ export function ListMore(props: ProtoListProps) {
         {props.caps.canMerge && (
           <Link href={hrefOf("B6")}>Πιθανά διπλά ({duplicates})</Link>
         )}
-        <Link href={hrefOf("B1")}>Πλήρης λίστα με φίλτρα και στήλες</Link>
-        <span>
-          Εξαγωγή <Sample />
-        </span>
+        <Link href={hrefOf("M2", { dataset: "clients" })}>
+          Εξαγωγή Πελατών
+        </Link>
         {props.guide}
       </div>
     </details>
@@ -215,7 +255,12 @@ export function DailyBar(props: ProtoListProps & { hasSearch?: boolean }) {
   return (
     <div className="pc-bar">
       {props.hasSearch !== false && (
-        <ProtoSearch query={props.query} variant={props.variant} />
+        <ProtoSearch
+          query={props.query}
+          variant={props.variant}
+          pick={props.pick}
+          isAll={props.isAll}
+        />
       )}
       {props.newOpportunity}
       <ListMore {...props} />

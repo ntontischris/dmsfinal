@@ -3,33 +3,35 @@
 import type { B1Row } from "../b1-adapter";
 
 // Τα φίλτρα της παραλλαγής (?pick=): ποιοι χρωστούν, ποιοι δεν έχουν γύρισμα, ποιοι σώπασαν, ποιοι είναι υποψήφιοι.
-export type Pick = "owes" | "noshoot" | "quiet" | "renew" | "candidate";
+export type Pick =
+  | "owes"
+  | "overdue"
+  | "noshoot"
+  | "quiet"
+  | "renew"
+  | "candidate";
 
 const PICKS: readonly Pick[] = ["owes", "noshoot", "quiet", "renew", "candidate"];
+const ALL_PICKS: readonly Pick[] = [...PICKS, "overdue"];
 
-// Πελάτες με ενεργή Συμφωνία που λήγει σε ≤ RENEW_DAYS μέρες (από το agreements_list).
+// Ένα σύνολο Πελατών (ids).
 export type RenewIds = ReadonlySet<string>;
 const NO_RENEW: RenewIds = new Set();
-const RENEW_DAYS = 30;
 
-export const renewIdsOf = (
-  agreements: readonly { clientId: string; state: string; endOn: string | null }[],
-  today: string,
-): RenewIds =>
-  new Set(
-    agreements
-      .filter(
-        (a) =>
-          a.state === "active" &&
-          a.endOn !== null &&
-          daysSince(today, a.endOn) >= 0 &&
-          daysSince(today, a.endOn) <= RENEW_DAYS,
-      )
-      .map((a) => a.clientId),
-  );
+// Τα σύνολα που φέρνει η οθόνη από τις υπάρχουσες αναγνώσεις: ανανεώσεις (η κάρτα «Λήγει η Συμφωνία» του Σήμερα)
+// και ληξιπρόθεσμα (invoices_view «overdue»).
+export interface PickSets {
+  renew: RenewIds;
+  overdue: RenewIds;
+}
+export const NO_SETS: PickSets = { renew: NO_RENEW, overdue: NO_RENEW };
+
+// Ο Πελάτης από τον σύνδεσμο της κάρτας του Σήμερα (/app/clients/<id>?tab=…).
+export const clientIdOfLink = (link: string): string | null =>
+  /^\/app\/clients\/([^/?#]+)/.exec(link)?.[1] ?? null;
 
 export const parsePick = (value: unknown): Pick | null =>
-  PICKS.find((pick) => pick === value) ?? null;
+  ALL_PICKS.find((pick) => pick === value) ?? null;
 
 // Πόσες μέρες χωρίς επαφή κάνουν έναν ενεργό Πελάτη «ήσυχο».
 const QUIET_DAYS = 45;
@@ -46,10 +48,11 @@ const matchesPick = (
   row: B1Row,
   pick: Pick,
   today: string,
-  renew: RenewIds,
+  sets: PickSets,
 ): boolean => {
   if (row.isTaken) return false;
-  if (pick === "renew") return renew.has(row.id);
+  if (pick === "renew") return sets.renew.has(row.id);
+  if (pick === "overdue") return sets.overdue.has(row.id);
   if (pick === "owes") return row.hasBalance === true;
   if (pick === "noshoot") return row.month?.hasNoShoot === true;
   if (pick === "quiet") return isQuiet(row, today);
@@ -60,8 +63,8 @@ export const rowsOfPick = (
   rows: readonly B1Row[],
   pick: Pick,
   today: string,
-  renew: RenewIds = NO_RENEW,
-): B1Row[] => rows.filter((row) => matchesPick(row, pick, today, renew));
+  sets: PickSets = NO_SETS,
+): B1Row[] => rows.filter((row) => matchesPick(row, pick, today, sets));
 
 export interface Answer {
   pick: Pick;
@@ -77,6 +80,11 @@ const TEXT: Readonly<
   Record<Pick, { one: string; many: string; question: string }>
 > = {
   owes: { one: "χρωστά", many: "χρωστούν", question: "Ποιος χρωστά;" },
+  overdue: {
+    one: "με ληξιπρόθεσμο τιμολόγιο",
+    many: "με ληξιπρόθεσμο τιμολόγιο",
+    question: "Ποιος έχει ληξιπρόθεσμο;",
+  },
   noshoot: {
     one: "χωρίς γύρισμα αυτόν τον μήνα",
     many: "χωρίς γύρισμα αυτόν τον μήνα",
@@ -109,9 +117,9 @@ export const answerOf = (
   rows: readonly B1Row[],
   pick: Pick,
   today: string,
-  renew: RenewIds = NO_RENEW,
+  sets: PickSets = NO_SETS,
 ): Answer => {
-  const picked = rowsOfPick(rows, pick, today, renew);
+  const picked = rowsOfPick(rows, pick, today, sets);
   const text = TEXT[pick];
   return {
     pick,
@@ -132,6 +140,15 @@ export const answersOf = (rows: readonly B1Row[], today: string): Answer[] =>
 // Θέλει εσένα: χρωστά ή δεν έχει γύρισμα αυτόν τον μήνα.
 export const needsYou = (row: B1Row): boolean =>
   !row.isTaken && (row.hasBalance === true || row.month?.hasNoShoot === true);
+
+// B: θέλει εσένα = όποιος είναι σε ένα από τα τέσσερα πλακίδια.
+export const TILE_PICKS: readonly Pick[] = ["overdue", "noshoot", "quiet", "renew"];
+
+export const needsYouOf = (
+  row: B1Row,
+  today: string,
+  sets: PickSets,
+): boolean => TILE_PICKS.some((pick) => matchesPick(row, pick, today, sets));
 
 export type Lane = "needs" | "running" | "quiet";
 

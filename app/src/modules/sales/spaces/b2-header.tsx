@@ -33,7 +33,7 @@ function StagePill({ ctx }: { ctx: ClientPageCtx }) {
   );
 }
 
-function MoreMenu({ ctx }: { ctx: ClientPageCtx }) {
+export function MoreMenu({ ctx }: { ctx: ClientPageCtx }) {
   const assignable =
     // Μεταβίβαση μόνο όταν υπάρχουν 2+ πωλητές (F10).
     ctx.caps.canTransfer &&

@@ -13,7 +13,7 @@ interface ClientRemindersProps {
   reminders: readonly ClientReminder[];
 }
 
-function DoneButton({ reminderId }: { reminderId: string }) {
+export function DoneButton({ reminderId }: { reminderId: string }) {
   const { state, isPending, onSubmit } = useKeptForm(completeReminder);
   return (
     <form onSubmit={onSubmit} style={{ display: "inline" }}>
@@ -32,7 +32,7 @@ function DoneButton({ reminderId }: { reminderId: string }) {
   );
 }
 
-function AddForm({
+export function AddForm({
   clientId,
   onClose,
 }: {

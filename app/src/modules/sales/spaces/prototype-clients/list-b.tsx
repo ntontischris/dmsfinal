@@ -2,6 +2,7 @@
 import Link from "next/link";
 
 import {
+  AllFilters,
   AllGood,
   ClientCards,
   DailyBar,
@@ -10,10 +11,10 @@ import {
   listHref,
   type ProtoListProps,
 } from "./list-parts";
-import { answerOf, needsYou, rowsOfPick, type Pick } from "./list-model";
+import { answerOf, needsYouOf, rowsOfPick, type Pick } from "./list-model";
 
 const TILES: readonly { pick: Pick; label: string }[] = [
-  { pick: "owes", label: "χρωστούν" },
+  { pick: "overdue", label: "με ληξιπρόθεσμο τιμολόγιο" },
   { pick: "noshoot", label: "χωρίς γύρισμα" },
   { pick: "quiet", label: "σώπασαν 45+ μέρες" },
   { pick: "renew", label: "ανανεώνονται σύντομα" },
@@ -27,7 +28,7 @@ function Tiles(props: ProtoListProps) {
           props.rows,
           tile.pick,
           props.today,
-          props.renew,
+          props.sets,
         ).count;
         const isCurrent = props.pick === tile.pick;
         return (
@@ -35,7 +36,7 @@ function Tiles(props: ProtoListProps) {
             key={tile.pick}
             className="b1-card pc-tile"
             data-current={isCurrent ? "" : undefined}
-            data-warn={tile.pick === "owes" && count > 0 ? "" : undefined}
+            data-warn={tile.pick === "overdue" && count > 0 ? "" : undefined}
             aria-current={isCurrent ? "true" : undefined}
             href={listHref(props.variant, {
               pick: isCurrent ? undefined : tile.pick,
@@ -54,38 +55,17 @@ function Tiles(props: ProtoListProps) {
 function ShortList(props: ProtoListProps) {
   if (props.isAll || props.query !== "") return <FullList {...props} />;
   const rows = props.pick
-    ? rowsOfPick(props.rows, props.pick, props.today, props.renew)
-    : props.rows.filter(needsYou);
+    ? rowsOfPick(props.rows, props.pick, props.today, props.sets)
+    : props.rows.filter((row) => needsYouOf(row, props.today, props.sets));
   if (rows.length === 0 && props.pick === null) return <AllGood />;
   return <ClientCards rows={rows} variant={props.variant} />;
 }
 
-// Μέσα στο «Δείξε όλους»: οι Υποψήφιοι ως φίλτρο (το σπίτι τους είναι οι Πωλήσεις).
-function CandidateFilter(props: ProtoListProps) {
-  const isOn = props.pick === "candidate";
-  const count = answerOf(props.rows, "candidate", props.today).count;
-  return (
-    <div className="ml-quick" data-align="start">
-      <Link
-        href={listHref(props.variant, {
-          all: "1",
-          pick: isOn ? undefined : "candidate",
-        })}
-        aria-pressed={isOn}
-      >
-        {isOn ? "Όλοι" : `Μόνο υποψήφιοι (${count})`}
-      </Link>
-    </div>
-  );
-}
-
 export function ListB(props: ProtoListProps) {
-  const title = props.isAll
-    ? `Όλοι οι πελάτες (${props.rows.length})`
+  const title = props.isAll || props.query
+    ? "Όλοι οι πελάτες"
     : props.pick
-    ? answerOf(props.rows, props.pick, props.today, props.renew).title
-    : props.isAll || props.query
-      ? `Όλοι οι πελάτες (${props.rows.length})`
+      ? answerOf(props.rows, props.pick, props.today, props.sets).title
       : "Θέλουν εσένα";
   return (
     <div className="pc-page">
@@ -93,7 +73,7 @@ export function ListB(props: ProtoListProps) {
       <Tiles {...props} />
       <section className="pc-section">
         <h2 className="ml-box-title">{title}</h2>
-        {props.isAll && <CandidateFilter {...props} />}
+        {props.isAll && <AllFilters {...props} />}
         <ShortList {...props} />
         <div className="ml-quick" data-align="start">
           {props.isAll ? (

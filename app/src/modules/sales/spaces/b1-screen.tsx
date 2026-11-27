@@ -1,5 +1,6 @@
 import { getViewer } from "@/modules/access";
-import { listAgreements } from "@/modules/agreements";
+import { getInvoices } from "@/modules/finance";
+import { getTodayCard } from "@/modules/today/queries";
 import { getSpaceStrip } from "@/modules/today";
 import {
   columnFilterGroups,
@@ -27,7 +28,7 @@ import { NewOpportunity } from "./b1-new-opportunity";
 import { B1Top } from "./b1-top";
 import { listClientsOnce, listOverviewsOnce } from "./clients-once";
 import { GuideLink } from "./guide-link";
-import { parsePick, renewIdsOf } from "./prototype-clients/list-model";
+import { clientIdOfLink, parsePick } from "./prototype-clients/list-model";
 import type { ProtoListProps } from "./prototype-clients/list-parts";
 import { ProtoList } from "./prototype-clients/list-switch";
 import { SwitcherSlot } from "./prototype-clients/switcher-slot";
@@ -143,7 +144,7 @@ function PrototypeClients({
 }: {
   list: Pick<
     ProtoListProps,
-    "rows" | "query" | "caps" | "variant" | "today" | "renew"
+    "rows" | "query" | "caps" | "variant" | "today" | "sets" | "filters"
   >;
   clients: readonly ClientRow[];
   strip: Awaited<ReturnType<typeof getSpaceStrip>>;
@@ -215,11 +216,30 @@ export async function SpacesClients({
   const variant = parseVariant(prototype?.variant);
   if (variant) {
     const today = athensToday();
-    const agreements = await listAgreements();
-    const renew = renewIdsOf(agreements.ok ? agreements.data : [], today);
+    // Τα πλακίδια από τις υπάρχουσες αναγνώσεις: ληξιπρόθεσμα (invoices_view) και η κάρτα «Λήγει η Συμφωνία» του Σήμερα.
+    const [overdueRead, endingRead] = await Promise.all([
+      getInvoices("overdue"),
+      getTodayCard("agreement_ending"),
+    ]);
+    const overdue = new Set(
+      overdueRead.ok
+        ? overdueRead.data.items
+            .filter((invoice) => invoice.status === "overdue")
+            .map((invoice) => invoice.clientId)
+        : [],
+    );
+    const renew = new Set(
+      endingRead.ok && endingRead.data
+        ? endingRead.data.items.flatMap((item) => {
+            const id = clientIdOfLink(item.link);
+            return id ? [id] : [];
+          })
+        : [],
+    );
+    const sets = { overdue, renew };
     return (
       <PrototypeClients
-        list={{ rows, query, caps, variant, today, renew }}
+        list={{ rows, query, caps, variant, today, sets, filters }}
         clients={clients.data}
         strip={strip}
         extra={{ prototype, newStamp, isDeleted }}

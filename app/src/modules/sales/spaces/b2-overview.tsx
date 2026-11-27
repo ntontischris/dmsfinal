@@ -19,7 +19,7 @@ export const summaryHint = (ctx: ClientPageCtx): string =>
     .join(" · ") || "Στοιχεία, Συμφωνία, υπενθυμίσεις και σχέση";
 
 // Τα στοιχεία σε aside· το «Υπεύθυνος» μόνο για όποιον δεν βλέπει μόνο ανάγνωση.
-function Details({ ctx }: { ctx: ClientPageCtx }) {
+export function Details({ ctx }: { ctx: ClientPageCtx }) {
   const { client } = ctx;
   return (
     <Sub id="b2-details" title="Στοιχεία">
@@ -92,7 +92,7 @@ function Reminders({ ctx }: { ctx: ClientPageCtx }) {
 }
 
 // Υποψήφιος → Πρόταση → Συμφωνία (→ Ανανέωση): το στάδιο αλλάζει μόνο του.
-function Relationship({ ctx }: { ctx: ClientPageCtx }) {
+export function Relationship({ ctx }: { ctx: ClientPageCtx }) {
   if (ctx.isReadOnly) return null;
   return (
     <Sub title="Σχέση με τον Πελάτη">

@@ -56,7 +56,7 @@ const forgottenText = (ctx: ClientPageCtx): string | null => {
   return count === 1 ? "1 ξεχασμένη" : `${count} ξεχασμένες`;
 };
 
-const workHint = (ctx: ClientPageCtx): string =>
+export const workHint = (ctx: ClientPageCtx): string =>
   [
     `${ctx.d.openRows.length} ανοιχτές Ευκαιρίες`,
     forgottenText(ctx),
@@ -181,7 +181,7 @@ export function CommsBox({ ctx, isOpen }: BoxProps) {
 }
 
 // Τα ληξιπρόθεσμα μπαίνουν πρώτα, ως γραμμές με την κόκκινη τελεία.
-function OverdueInvoices({ ctx }: { ctx: ClientPageCtx }) {
+export function OverdueInvoices({ ctx }: { ctx: ClientPageCtx }) {
   const items = ctx.data.overdueInvoices ?? [];
   if (items.length === 0) return null;
   return (
@@ -201,7 +201,7 @@ function OverdueInvoices({ ctx }: { ctx: ClientPageCtx }) {
   );
 }
 
-const ledgerHint = (ctx: ClientPageCtx): string =>
+export const ledgerHint = (ctx: ClientPageCtx): string =>
   ctx.d.money ??
   (ctx.data.ledgerEntries.length === 0
     ? "Καμία κίνηση ακόμα"
