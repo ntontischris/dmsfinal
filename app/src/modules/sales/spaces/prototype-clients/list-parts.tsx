@@ -17,6 +17,7 @@ import {
 import {
   duplicatesOf,
   needsYou,
+  reasonsOf,
   type Answer,
   type Pick,
   type PickSets,
@@ -111,13 +112,24 @@ const glanceOf = (row: B1Row): string =>
     .filter((part): part is string => !!part)
     .join(" · ") || row.city;
 
-// Ένας Πελάτης ως μικρή γραμμή-κάρτα: αρχικά, κατάσταση, όνομα, μία φράση, Υπόλοιπο μόνο όταν χρωστά.
-export function ClientCard({ row, variant }: { row: B1Row; variant: Variant }) {
+// Ένας Πελάτης ως μικρή γραμμή-κάρτα: αρχικά, κατάσταση, όνομα, λόγοι προσοχής, μία φράση, Υπόλοιπο.
+export function ClientCard({
+  row,
+  variant,
+  today,
+  sets,
+}: {
+  row: B1Row;
+  variant: Variant;
+  today?: string;
+  sets?: PickSets;
+}) {
+  const reasons = today && sets ? reasonsOf(row, today, sets) : [];
+  const isOverdue = sets?.overdue.has(row.id) === true;
+  const isUrgent =
+    today && sets ? reasons.some((reason) => reason.isUrgent) : needsYou(row);
   return (
-    <li
-      className="ml-line pc-card"
-      data-urgent={needsYou(row) ? "" : undefined}
-    >
+    <li className="ml-line pc-card" data-urgent={isUrgent ? "" : undefined}>
       <span className="ml-thumb" aria-hidden="true">
         {initialsOf(row.name)}
       </span>
@@ -126,12 +138,25 @@ export function ClientCard({ row, variant }: { row: B1Row; variant: Variant }) {
         <strong>
           <Link href={withVariant(row.href, variant)}>{row.name}</Link>
         </strong>
+        {reasons.length > 0 && (
+          <span className="pc-reasons">
+            {reasons.map((reason) => (
+              <span
+                key={reason.label}
+                className="pc-reason"
+                data-urgent={reason.isUrgent ? "" : undefined}
+              >
+                {reason.label}
+              </span>
+            ))}
+          </span>
+        )}
         <small>{glanceOf(row) || "—"}</small>
       </span>
       {row.hasBalance && (
         <span className="ml-amount">
           {row.balance}
-          <small>χρωστά</small>
+          <small>{isOverdue ? "ληξιπρόθεσμο" : "υπόλοιπο"}</small>
         </span>
       )}
     </li>
@@ -141,6 +166,8 @@ export function ClientCard({ row, variant }: { row: B1Row; variant: Variant }) {
 export function ClientCards(props: {
   rows: readonly B1Row[];
   variant: Variant;
+  today?: string;
+  sets?: PickSets;
   empty?: string;
 }) {
   if (props.rows.length === 0)
@@ -148,7 +175,13 @@ export function ClientCards(props: {
   return (
     <ul className="ml-list pc-cards">
       {props.rows.map((row) => (
-        <ClientCard key={row.id} row={row} variant={props.variant} />
+        <ClientCard
+          key={row.id}
+          row={row}
+          variant={props.variant}
+          today={props.today}
+          sets={props.sets}
+        />
       ))}
     </ul>
   );
@@ -156,9 +189,11 @@ export function ClientCards(props: {
 
 const NO_FILTERS = { status: null, isNoShoot: false, pkg: null } as const;
 
-// Χωρίς φίλτρο Κατάστασης η πλήρης λίστα κρύβει τους Ανενεργούς (φαίνονται με «Κατάσταση: Ανενεργός»).
-const shownRowsOf = (props: ProtoListProps): B1Row[] => {
+// Χωρίς φίλτρο Κατάστασης (και χωρίς αναζήτηση) η πλήρης λίστα κρύβει τους Ανενεργούς.
+// Στην αναζήτηση (?q=) ψάχνουμε πάντα ΟΛΟΥΣ τους πελάτες, ώστε να βρίσκονται και οι Ανενεργοί.
+export const shownRowsOf = (props: ProtoListProps): B1Row[] => {
   const filtered = applyB1Filters(props.rows, props.filters);
+  if (props.query !== "") return filtered;
   return props.filters.status === null
     ? filtered.filter((row) => row.status !== "Ανενεργός")
     : filtered;

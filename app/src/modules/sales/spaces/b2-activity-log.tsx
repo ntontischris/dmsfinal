@@ -29,6 +29,8 @@ interface ActivityLogProps {
   clientId?: string;
   // Σελίδα Πελάτη: οι γραμμές στο ύφος των «Χρημάτων» (ml-line)· η B4 κρατά τις γραμμές της.
   isLines?: boolean;
+  // Γρήγορη καταγραφή (π.χ. πλαϊνή κάρτα B): μόνο η φόρμα, χωρίς επανάληψη του ιστορικού.
+  hideHistory?: boolean;
 }
 
 function KindSelect({
@@ -186,6 +188,7 @@ export function ActivityLog({
   openOpportunities,
   clientId,
   isLines = false,
+  hideHistory = false,
 }: ActivityLogProps) {
   const active = kinds.filter((kind) => !kind.isRetired);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -223,7 +226,7 @@ export function ActivityLog({
         </SpacesActionForm>
       )}
       {notes.view}
-      {rows.length === 0 ? (
+      {hideHistory ? null : rows.length === 0 ? (
         <p className="muted">Καμία Δραστηριότητα ακόμα.</p>
       ) : isLines ? (
         <ActivityLines

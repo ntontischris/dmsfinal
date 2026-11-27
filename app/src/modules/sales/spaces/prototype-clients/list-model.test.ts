@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { B1Row } from "../b1-adapter";
-import { answersOf, laneOf, rowsOfPick } from "./list-model";
+import { answersOf, laneOf, reasonsOf, rowsOfPick } from "./list-model";
 
 const rowOf = (over: Partial<B1Row>): B1Row => ({
   id: "1",
@@ -43,5 +43,21 @@ describe("list-model", () => {
   it("should never count a client of another salesman", () => {
     const rows = [rowOf({ hasBalance: true, isTaken: true })];
     expect(answersOf(rows, TODAY)).toEqual([]);
+  });
+
+  it("should list the exact reasons a client needs attention", () => {
+    const sets = { overdue: new Set(["1"]), renew: new Set(["1"]) };
+    const reasons = reasonsOf(
+      rowOf({ id: "1", lastContact: "2026-09-01" }),
+      TODAY,
+      sets,
+    );
+    expect(reasons.map((r) => r.label)).toEqual([
+      "Ληξιπρόθεσμο",
+      "Σώπασε 86 μέρες",
+      "Ανανεώνεται σύντομα",
+    ]);
+    expect(reasons[0]?.isUrgent).toBe(true);
+    expect(reasons[2]?.isUrgent).toBe(false);
   });
 });

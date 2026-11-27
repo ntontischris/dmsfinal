@@ -18,8 +18,14 @@ export const summaryHint = (ctx: ClientPageCtx): string =>
     .filter((part) => part !== "")
     .join(" · ") || "Στοιχεία, Συμφωνία, υπενθυμίσεις και σχέση";
 
-// Τα στοιχεία σε aside· το «Υπεύθυνος» μόνο για όποιον δεν βλέπει μόνο ανάγνωση.
-export function Details({ ctx }: { ctx: ClientPageCtx }) {
+// Τα στοιχεία σε aside· το «Υπεύθυνος» μόνο για όποιον δεν βλέπει μόνο ανάγνωση (και με 2+ πωλητές όταν κρύβεται).
+export function Details({
+  ctx,
+  hideOwner = false,
+}: {
+  ctx: ClientPageCtx;
+  hideOwner?: boolean;
+}) {
   const { client } = ctx;
   return (
     <Sub id="b2-details" title="Στοιχεία">
@@ -53,7 +59,7 @@ export function Details({ ctx }: { ctx: ClientPageCtx }) {
               />
             </span>
           </dd>
-          {!ctx.isReadOnly && (
+          {!ctx.isReadOnly && !hideOwner && (
             <>
               <dt>Υπεύθυνος</dt>
               <dd>{client.managerName ?? NO_MANAGER_LABEL}</dd>

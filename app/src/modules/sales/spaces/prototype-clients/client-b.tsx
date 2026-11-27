@@ -2,11 +2,12 @@
 // δεξιά τέσσερις καρτέλες: Συνεργασία (πρώτη) · Επικοινωνία · Χρήματα · Στοιχεία (μαζί οι Άνθρωποι).
 import Link from "next/link";
 
-import { CommsBox } from "../b2-boxes";
+import { fmtMoney } from "@/spaces/screens/shared";
+
 import { BOX_OF_TAB, CLIENT_BOX_LABELS, type ClientBox } from "../b2-page-model";
 import type { ClientPageCtx } from "../b2-context";
 import { AheadLines, CardActions } from "./client-b-card";
-import { DetailsTab, LedgerTab, WorkTab } from "./client-b-tabs";
+import { CommsTab, DetailsTab, LedgerTab, WorkTab } from "./client-b-tabs";
 import {
   BackLink,
   CompactHero,
@@ -35,10 +36,34 @@ const tabOf = (raw: string | undefined, boxes: readonly ClientBox[]): Tab => {
 
 function TabBody({ ctx, tab }: { ctx: ClientPageCtx; tab: Tab }) {
   if (tab === "work") return <WorkTab ctx={ctx} />;
-  if (tab === "comms") return <CommsBox ctx={ctx} isOpen />;
+  if (tab === "comms") return <CommsTab ctx={ctx} />;
   if (tab === "ledger") return <LedgerTab ctx={ctx} />;
   return <DetailsTab ctx={ctx} />;
 }
+
+interface TabHint {
+  text: string;
+  isUrgent?: boolean;
+}
+
+const tabHintOf = (ctx: ClientPageCtx, tab: Tab): TabHint | null => {
+  if (tab === "comms") {
+    const count = ctx.data.activities?.length ?? 0;
+    return count > 0 ? { text: String(count) } : null;
+  }
+  if (tab === "ledger") {
+    const overdue = ctx.data.overdueInvoices?.length ?? 0;
+    if (overdue > 0) return { text: `${overdue} ληξ.`, isUrgent: true };
+    const balance = ctx.data.ledger?.balance ?? 0;
+    return balance > 0 ? { text: fmtMoney(balance) } : null;
+  }
+  if (tab === "work") {
+    const open = ctx.d.openRows.length;
+    return open > 0 ? { text: String(open) } : null;
+  }
+  return null;
+};
+
 function Selector(props: ProtoClientProps & { current: Tab }) {
   const tabs = TABS.filter(
     (tab) => tab === "summary" || props.ctx.boxes.includes(tab),
@@ -49,15 +74,26 @@ function Selector(props: ProtoClientProps & { current: Tab }) {
       data-align="start"
       aria-label="Περιοχές του Πελάτη"
     >
-      {tabs.map((tab) => (
-        <Link
-          key={tab}
-          href={clientHref(props.ctx, props.variant, { tab })}
-          aria-current={tab === props.current ? "page" : undefined}
-        >
-          {TAB_LABELS[tab]}
-        </Link>
-      ))}
+      {tabs.map((tab) => {
+        const hint = tabHintOf(props.ctx, tab);
+        return (
+          <Link
+            key={tab}
+            href={clientHref(props.ctx, props.variant, { tab })}
+            aria-current={tab === props.current ? "page" : undefined}
+          >
+            {TAB_LABELS[tab]}
+            {hint && (
+              <span
+                className="pc-tab-badge"
+                data-urgent={hint.isUrgent ? "" : undefined}
+              >
+                {hint.text}
+              </span>
+            )}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

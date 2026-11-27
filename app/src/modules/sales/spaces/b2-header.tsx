@@ -43,12 +43,22 @@ export function MoreMenu({ ctx }: { ctx: ClientPageCtx }) {
       : null;
   // Χωρίς καμία ενέργεια το «⋯» δεν φαίνεται (π.χ. Χρήστης μόνο ανάγνωσης).
   const hasHistory = can(ctx.viewer, "audit.view");
-  if (assignable === null && !hasHistory && ctx.data.deleteState === null)
+  const hasDuplicate =
+    ctx.caps.canMerge && ctx.card?.isPossibleDuplicate === true;
+  if (
+    assignable === null &&
+    !hasHistory &&
+    !hasDuplicate &&
+    ctx.data.deleteState === null
+  )
     return null;
   return (
     <details className="b2-menu">
       <summary aria-label="Περισσότερες ενέργειες">⋯</summary>
       <div className="b2-menu-body">
+        {hasDuplicate && (
+          <Link href={hrefOf("B6")}>Πιθανό διπλό: συγχώνευση</Link>
+        )}
         {assignable !== null && (
           <ClientTransfer
             clientId={ctx.client.id}

@@ -35,33 +35,47 @@ export const BackLink = ({ variant }: { variant: Variant }) => (
 );
 
 function ContactIcons({ ctx }: { ctx: ClientPageCtx }) {
-  const { contactPhone, contactEmail } = ctx.client;
-  if (!contactPhone && !contactEmail) return null;
+  const { contactName, contactPhone, contactEmail } = ctx.client;
+  if (!contactName && !contactPhone && !contactEmail) return null;
   return (
-    <span className="pc-icons">
-      {contactPhone && (
-        <a
-          href={`tel:${contactPhone}`}
-          aria-label={`Κλήση ${contactPhone}`}
-          title={contactPhone}
-        >
-          ☎
-        </a>
+    <div className="pc-contact-row">
+      {contactName && <span className="pc-contact-name">{contactName}</span>}
+      {(contactPhone || contactEmail) && (
+        <span className="pc-icons">
+          {contactPhone && (
+            <a
+              href={`tel:${contactPhone.replace(/\s/g, "")}`}
+              aria-label={`Κλήση ${contactName || contactPhone}`}
+              title={contactPhone}
+            >
+              ☎
+            </a>
+          )}
+          {contactEmail && (
+            <a
+              href={`mailto:${contactEmail}`}
+              aria-label={`Email ${contactName || contactEmail}`}
+              title={contactEmail}
+            >
+              ✉
+            </a>
+          )}
+        </span>
       )}
-      {contactEmail && (
-        <a
-          href={`mailto:${contactEmail}`}
-          aria-label={`Email ${contactEmail}`}
-          title={contactEmail}
-        >
-          ✉
-        </a>
-      )}
-    </span>
+    </div>
   );
 }
 
-// Όνομα, στάδιο, πακέτο, κλήση/email· τίποτα άλλο.
+const activeAgreementsLabel = (ctx: ClientPageCtx): string => {
+  const active = (ctx.data.agreements ?? []).filter(
+    (agreement) => agreement.state === "active",
+  );
+  if (active.length <= 1)
+    return ctx.d.activeAgreement ?? "χωρίς ενεργή Συμφωνία";
+  return `${ctx.d.activeAgreement} (+${active.length - 1} ακόμα)`;
+};
+
+// Όνομα, στάδιο, πακέτο, κύριο πρόσωπο και κλήση/email.
 export function CompactHero({ ctx }: { ctx: ClientPageCtx }) {
   return (
     <header className="pc-hero">
@@ -76,7 +90,7 @@ export function CompactHero({ ctx }: { ctx: ClientPageCtx }) {
           ) : (
             <Badge tone="strong">{ctx.d.stage}</Badge>
           )}{" "}
-          <span>{ctx.d.activeAgreement ?? "χωρίς ενεργή Συμφωνία"}</span>
+          <span>{activeAgreementsLabel(ctx)}</span>
         </p>
       </div>
       <ContactIcons ctx={ctx} />
@@ -91,7 +105,13 @@ export const DailyActions = ({ ctx }: { ctx: ClientPageCtx }) => (
   </div>
 );
 
-export function NextLine({ ctx }: { ctx: ClientPageCtx }) {
+export function NextLine({
+  ctx,
+  hideOwner = false,
+}: {
+  ctx: ClientPageCtx;
+  hideOwner?: boolean;
+}) {
   const next = ctx.d.next;
   if (next === null)
     return (
@@ -118,23 +138,34 @@ export function NextLine({ ctx }: { ctx: ClientPageCtx }) {
       isUrgent={next.isLate}
       title={`${next.step}, ${next.due}`}
       href={hrefOf("B4", { id: next.opportunityId })}
-      sub={`Ευκαιρία «${next.title}» · ${next.owner}`}
+      sub={
+        hideOwner
+          ? `Ευκαιρία «${next.title}»`
+          : `Ευκαιρία «${next.title}» · ${next.owner}`
+      }
     />
   );
 }
 
-export function MoneyLine({ ctx }: { ctx: ClientPageCtx }) {
+export function MoneyLine({
+  ctx,
+  href,
+}: {
+  ctx: ClientPageCtx;
+  href?: string;
+}) {
   if (ctx.data.ledger === null) return null;
   const overdue = ctx.data.overdueInvoices ?? [];
   return (
     <Line
       mark="€"
-      tag={overdue.length > 0 ? "Χρωστά" : "Χρήματα"}
+      tag={overdue.length > 0 ? "Ληξιπρόθεσμο" : "Χρήματα"}
       isUrgent={overdue.length > 0}
       title={ctx.d.money ?? "Τίποτα ανοιχτό"}
+      href={href}
       sub={
         overdue.length > 0
-          ? `${overdue.length} ληξιπρόθεσμα Τιμολόγια`
+          ? `${overdue.length} ${overdue.length === 1 ? "ληξιπρόθεσμο Τιμολόγιο" : "ληξιπρόθεσμα Τιμολόγια"}`
           : undefined
       }
       amount={fmtMoney(ctx.data.ledger.balance)}

@@ -13,6 +13,7 @@ import {
   AttentionLine,
   MoneyLine,
   NextLine,
+  clientHref,
   type ProtoClientProps,
 } from "./client-parts";
 import { NoteOrReminder } from "./note-or-reminder";
@@ -20,29 +21,14 @@ import { NoteOrReminder } from "./note-or-reminder";
 const RENEW_DAYS = 30;
 const MS_PER_DAY = 86_400_000;
 
-// C2: όταν το Επόμενο βήμα έχει περάσει, η «ξεχασμένη Ευκαιρία» λέγεται μία φορά (στη γραμμή του βήματος).
-function Attention(props: ProtoClientProps) {
-  const isSaidByNext =
-    props.ctx.d.next?.isLate === true &&
-    props.ctx.d.attention?.tab === "opportunities";
-  return isSaidByNext ? null : <AttentionLine {...props} />;
-}
+export const isSoloSales = (ctx: ClientPageCtx): boolean =>
+  !ctx.data.assignable?.ok || ctx.data.assignable.data.length < 2;
 
-// C3: το Επόμενο βήμα μόνο όταν υπάρχει (βήμα ή γύρισμα).
-function Next({ ctx }: { ctx: ClientPageCtx }) {
-  if (ctx.d.next === null && !ctx.d.filming) return null;
-  return <NextLine ctx={ctx} />;
-}
+const isOwingOf = (ctx: ClientPageCtx): boolean =>
+  (ctx.data.overdueInvoices ?? []).length > 0 ||
+  (ctx.data.ledger?.balance ?? 0) > 0;
 
-function Owes({ ctx }: { ctx: ClientPageCtx }) {
-  const isOwing =
-    (ctx.data.overdueInvoices ?? []).length > 0 ||
-    (ctx.data.ledger?.balance ?? 0) > 0;
-  return isOwing ? <MoneyLine ctx={ctx} /> : null;
-}
-
-// C5: η ενεργή Συμφωνία που λήγει μέσα σε 30 μέρες (ή έχει ήδη λήξει), με σύνδεσμο στη D2.
-function AgreementEnding({ ctx }: { ctx: ClientPageCtx }) {
+const endingAgreementOf = (ctx: ClientPageCtx) => {
   const active = (ctx.data.agreements ?? []).find(
     (a) => a.state === "active" && a.endOn !== null,
   );
@@ -50,7 +36,39 @@ function AgreementEnding({ ctx }: { ctx: ClientPageCtx }) {
   const days = Math.round(
     (Date.parse(active.endOn) - Date.parse(ctx.today)) / MS_PER_DAY,
   );
-  if (days > RENEW_DAYS) return null;
+  return days <= RENEW_DAYS ? { active, days, endOn: active.endOn } : null;
+};
+
+const showAttentionOf = (ctx: ClientPageCtx): boolean => {
+  const attention = ctx.d.attention;
+  if (!attention) return false;
+  // C2: ξεχασμένη Ευκαιρία → τη λέει ήδη το Επόμενο βήμα· ληξιπρόθεσμα → τα λέει ήδη η MoneyLine.
+  if (ctx.d.next?.isLate === true && attention.tab === "opportunities")
+    return false;
+  if (attention.tab === "ledger" && isOwingOf(ctx)) return false;
+  return true;
+};
+
+// C3: το Επόμενο βήμα μόνο όταν υπάρχει (βήμα ή γύρισμα).
+function Next({ ctx }: { ctx: ClientPageCtx }) {
+  if (ctx.d.next === null && !ctx.d.filming) return null;
+  return <NextLine ctx={ctx} hideOwner={isSoloSales(ctx)} />;
+}
+
+function Owes(props: ProtoClientProps) {
+  return isOwingOf(props.ctx) ? (
+    <MoneyLine
+      ctx={props.ctx}
+      href={clientHref(props.ctx, props.variant, { tab: "ledger" })}
+    />
+  ) : null;
+}
+
+// C5: η ενεργή Συμφωνία που λήγει μέσα σε 30 μέρες (ή έχει ήδη λήξει), με σύνδεσμο στη D2.
+function AgreementEnding({ ctx }: { ctx: ClientPageCtx }) {
+  const ending = endingAgreementOf(ctx);
+  if (!ending) return null;
+  const { active, days, endOn } = ending;
   return (
     <Line
       mark="↻"
@@ -58,7 +76,7 @@ function AgreementEnding({ ctx }: { ctx: ClientPageCtx }) {
       isUrgent={days < 0}
       title={`Συμφωνία «${active.title}»`}
       href={hrefOf("D2", { id: active.id })}
-      sub={`λήγει ${fmtDate(active.endOn)} · ${days < 0 ? "έληξε" : `σε ${days} μέρες`}`}
+      sub={`λήγει ${fmtDate(endOn)} · ${days < 0 ? "έληξε" : `σε ${days} μέρες`}`}
     />
   );
 }
@@ -79,13 +97,22 @@ function Reminders({ ctx }: { ctx: ClientPageCtx }) {
 }
 
 export function AheadLines(props: ProtoClientProps) {
+  const { ctx } = props;
+  const hasAny =
+    showAttentionOf(ctx) ||
+    ctx.d.next !== null ||
+    !!ctx.d.filming ||
+    isOwingOf(ctx) ||
+    endingAgreementOf(ctx) !== null ||
+    (ctx.data.reminders?.length ?? 0) > 0;
+  if (!hasAny) return null;
   return (
     <Lines label="Μπροστά σου">
-      <Attention {...props} />
-      <Next ctx={props.ctx} />
-      <Owes ctx={props.ctx} />
-      <AgreementEnding ctx={props.ctx} />
-      <Reminders ctx={props.ctx} />
+      {showAttentionOf(ctx) && <AttentionLine {...props} />}
+      <Next ctx={ctx} />
+      <Owes {...props} />
+      <AgreementEnding ctx={ctx} />
+      <Reminders ctx={ctx} />
     </Lines>
   );
 }
@@ -107,6 +134,7 @@ export function CardActions({ ctx }: { ctx: ClientPageCtx }) {
           <NoteOrReminder
             clientId={ctx.client.id}
             canLog={canLog}
+            canRemind={canRemind}
             rows={(ctx.data.activities ?? []).slice(0, 3)}
             kinds={ctx.data.lists?.activityKinds ?? []}
             openOpportunities={ctx.d.logOpportunities}

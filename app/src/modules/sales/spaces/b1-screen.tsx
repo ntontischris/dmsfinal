@@ -1,7 +1,6 @@
 import { getViewer } from "@/modules/access";
 import { getInvoices } from "@/modules/finance";
-import { getTodayCard } from "@/modules/today/queries";
-import { getSpaceStrip } from "@/modules/today";
+import { getSpaceStrip, getTodayCard } from "@/modules/today";
 import {
   columnFilterGroups,
   filterByColumns,

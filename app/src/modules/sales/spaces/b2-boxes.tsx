@@ -193,6 +193,7 @@ export function OverdueInvoices({ ctx }: { ctx: ClientPageCtx }) {
           isUrgent
           tag="Ληξιπρόθεσμο"
           title={`Τιμολόγιο ${item.number}`}
+          href={hrefOf("I8", { id: item.id })}
           sub={item.dueDate ? `έληγε ${fmtDate(item.dueDate)}` : undefined}
           amount={fmtMoney(item.remaining)}
         />

@@ -16,6 +16,7 @@ import { listAssignableUsers } from "../queries-queue";
 import type {
   ClientDeleteState,
   ClientDetail,
+  ClientProvision,
   ClientReminder,
   Opportunity,
   SalesCaps,
@@ -54,6 +55,7 @@ export interface Loaded {
   // null = δεν υπάρχουν ληξιπρόθεσμα, δεν τα βλέπει ή δεν φόρτωσαν.
   overdueInvoices: OverdueInvoice[] | null;
   nextFilming: string | null;
+  provisions: readonly ClientProvision[];
   lists: SalesLists | null;
   assignable: Awaited<ReturnType<typeof listAssignableUsers>> | null;
   // null = ο Χρήστης δεν «Διαγράφει Πελάτες» ή δεν φόρτωσε.
@@ -163,6 +165,7 @@ export async function loadClient(input: LoadInput): Promise<Loaded> {
         ? await loadOverdue(client.id, ledger.data.overdue)
       : null,
     nextFilming: overview?.nextFilming ?? null,
+    provisions: overview?.provisions ?? [],
     lists: lists.ok ? lists.data : null,
     assignable,
     deleteState: deleteState?.ok ? deleteState.data : null,

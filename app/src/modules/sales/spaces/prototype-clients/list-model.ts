@@ -144,6 +144,35 @@ export const needsYou = (row: B1Row): boolean =>
 // B: θέλει εσένα = όποιος είναι σε ένα από τα τέσσερα πλακίδια.
 export const TILE_PICKS: readonly Pick[] = ["overdue", "noshoot", "quiet", "renew"];
 
+export interface CardReason {
+  label: string;
+  isUrgent: boolean;
+}
+
+// Γιατί βγήκε ο Πελάτης στο «Θέλουν εσένα» (ώστε η κάρτα να το λέει με μία ματιά).
+export const reasonsOf = (
+  row: B1Row,
+  today: string,
+  sets: PickSets,
+): CardReason[] => {
+  if (row.isTaken) return [];
+  const reasons: CardReason[] = [];
+  if (sets.overdue.has(row.id))
+    reasons.push({ label: "Ληξιπρόθεσμο", isUrgent: true });
+  if (row.month?.hasNoShoot)
+    reasons.push({ label: "Χωρίς γύρισμα", isUrgent: true });
+  if (isQuiet(row, today)) {
+    const days = row.lastContact ? daysSince(row.lastContact, today) : null;
+    reasons.push({
+      label: days !== null ? `Σώπασε ${days} μέρες` : "Χωρίς επαφή",
+      isUrgent: false,
+    });
+  }
+  if (sets.renew.has(row.id))
+    reasons.push({ label: "Ανανεώνεται σύντομα", isUrgent: false });
+  return reasons;
+};
+
 export const needsYouOf = (
   row: B1Row,
   today: string,

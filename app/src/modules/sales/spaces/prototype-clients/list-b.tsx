@@ -7,7 +7,6 @@ import {
   ClientCards,
   DailyBar,
   FullList,
-  GlanceBox,
   listHref,
   type ProtoListProps,
 } from "./list-parts";
@@ -58,15 +57,28 @@ function ShortList(props: ProtoListProps) {
     ? rowsOfPick(props.rows, props.pick, props.today, props.sets)
     : props.rows.filter((row) => needsYouOf(row, props.today, props.sets));
   if (rows.length === 0 && props.pick === null) return <AllGood />;
-  return <ClientCards rows={rows} variant={props.variant} />;
+  return (
+    <ClientCards
+      rows={rows}
+      variant={props.variant}
+      today={props.today}
+      sets={props.sets}
+    />
+  );
 }
 
 export function ListB(props: ProtoListProps) {
-  const title = props.isAll || props.query
-    ? "Όλοι οι πελάτες"
-    : props.pick
-      ? answerOf(props.rows, props.pick, props.today, props.sets).title
-      : "Θέλουν εσένα";
+  const inactiveCount = props.rows.filter(
+    (row) => row.status === "Ανενεργός",
+  ).length;
+  const activeCount = props.rows.length - inactiveCount;
+  const title = props.query
+    ? `Αποτελέσματα για «${props.query}» (${props.rows.length})`
+    : props.isAll
+      ? "Όλοι οι πελάτες"
+      : props.pick
+        ? answerOf(props.rows, props.pick, props.today, props.sets).title
+        : "Θέλουν εσένα";
   return (
     <div className="pc-page">
       <DailyBar {...props} />
@@ -80,12 +92,12 @@ export function ListB(props: ProtoListProps) {
             <Link href={listHref(props.variant)}>Μόνο όσοι θέλουν εσένα</Link>
           ) : (
             <Link href={listHref(props.variant, { all: "1" })}>
-              Δείξε όλους ({props.rows.length})
+              Δείξε όλους ({activeCount}
+              {inactiveCount > 0 ? ` + ${inactiveCount} ανενεργοί` : ""})
             </Link>
           )}
         </div>
       </section>
-      <GlanceBox glance={props.glance} />
     </div>
   );
 }

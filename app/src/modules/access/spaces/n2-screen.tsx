@@ -11,6 +11,8 @@ interface SpacesClientUsersProps {
   clientId: string;
   clientName: string;
   viewer: Viewer;
+  // Κρατά τη φόρμα πρόσκλησης κλειστή πίσω από κουμπί (π.χ. στην καρτέλα Στοιχεία της Β).
+  collapseInvite?: boolean;
 }
 
 // N2 Χρήστες πελάτη στη νέα εμφάνιση (prototype `screens/N2.tsx`), μέσα στη Σελίδα Πελάτη (B2): οι Χρήστες, οι
@@ -19,6 +21,7 @@ export async function SpacesClientUsers({
   clientId,
   clientName,
   viewer,
+  collapseInvite = false,
 }: SpacesClientUsersProps) {
   if (viewer.status !== "signed-in" || !can(viewer, "access.clientUsers"))
     return (
@@ -53,16 +56,32 @@ export async function SpacesClientUsers({
         <ErrorNotice what="τις προσκλήσεις" />
       )}
       {/* Η ίδια «Πρόσκληση» με το «+ Νέο» και την Ομάδα, με τον Πελάτη ήδη διαλεγμένο. */}
-      <InvitePanel
-        title="Πρόσκληση Χρήστη πελάτη"
-        team={null}
-        client={{
-          clients: [{ id: clientId, name: clientName }],
-          roles,
-          presetClientId: clientId,
-        }}
-        footnote="Ο Υπογράφων της πρώτης υπογεγραμμένης Συμφωνίας προσκαλείται αυτόματα ως «Πλήρης»."
-      />
+      {collapseInvite ? (
+        <details className="pc-more-rows">
+          <summary>+ Πρόσκληση Χρήστη πελάτη</summary>
+          <InvitePanel
+            title="Πρόσκληση Χρήστη πελάτη"
+            team={null}
+            client={{
+              clients: [{ id: clientId, name: clientName }],
+              roles,
+              presetClientId: clientId,
+            }}
+            footnote="Ο Υπογράφων της πρώτης υπογεγραμμένης Συμφωνίας προσκαλείται αυτόματα ως «Πλήρης»."
+          />
+        </details>
+      ) : (
+        <InvitePanel
+          title="Πρόσκληση Χρήστη πελάτη"
+          team={null}
+          client={{
+            clients: [{ id: clientId, name: clientName }],
+            roles,
+            presetClientId: clientId,
+          }}
+          footnote="Ο Υπογράφων της πρώτης υπογεγραμμένης Συμφωνίας προσκαλείται αυτόματα ως «Πλήρης»."
+        />
+      )}
     </div>
   );
 }
